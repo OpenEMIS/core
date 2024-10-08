@@ -15,6 +15,8 @@ use Cake\Utility\Text;
 use Cake\Core\Configure;
 use Cake\Log\Log;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 
 class AssessmentItemResultsTable extends AppTable
 {
@@ -72,7 +74,7 @@ class AssessmentItemResultsTable extends AppTable
         //POCOR-6824 start
         $institutionId = $entity->institution_id;
         $InstitutionClassId = $entity->institution_classes_id;
-        $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
+        $institutionClass = self::getDynamicTableInstance('Institution.InstitutionClasses');
         $findclass =
             $institutionClass->find()->select([
                 'id' => $institutionClass->aliasField('id')
@@ -86,7 +88,7 @@ class AssessmentItemResultsTable extends AppTable
             return false;
         } else { //POCOR-6824 end add if else condition
             //POCOR-6947
-            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+            $institutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
             $institutionStudentsData = $institutionStudents
                 ->find()
                 ->where([
@@ -103,7 +105,7 @@ class AssessmentItemResultsTable extends AppTable
                 if ($entity->isNew()) {
                     //POCOR-7536-KHINDOL
                     //AS the ID is not the KEY do shadow save and delete new entity
-                    $assessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+                    $assessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
                     $previousAssessment = $assessmentItemResults->find()
                         ->where([
                             $assessmentItemResults->aliasField('student_id') => $entity->student_id,
@@ -167,7 +169,7 @@ class AssessmentItemResultsTable extends AppTable
         }
 
         $listeners = [
-            TableRegistry::get('Institution.InstitutionSubjectStudents')
+            self::getDynamicTableInstance('Institution.InstitutionSubjectStudents')
         ];
 
         $this->dispatchEventToModels('Model.AssessmentResults.afterSave', [$entity], $this, $listeners);
@@ -196,7 +198,7 @@ class AssessmentItemResultsTable extends AppTable
         }
 
         //Start POCOR-6823
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');
         $conditionsClassStudents = [
             $InstitutionClassStudents->aliasField('academic_period_id = ') => $academicPeriodId,
             $InstitutionClassStudents->aliasField('student_id = ') => $studentId,
@@ -258,93 +260,93 @@ class AssessmentItemResultsTable extends AppTable
     }
 
     /**
-     *  Function to get the assessment results based academic period
+     *   Function to get the assessment results based academic period
      *
-     * @param integer $academicPeriodId The academic period id
-     *
+     * @param $academicPeriodId
+     * @param $assessmentId
+     * @param $subjectId
+     * @param $studentId
+     * @param $classId
      * @return array The assessment results group field - institution id, key field - student id
-     *      value field - assessment item id with array containing marks, grade name and grade code
+     *       value field - assessment item id with array containing marks, grade name and grade code
+     * @throws \Exception
      */
     public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId, $classId)
     {
-        $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
 
-        $query = $this
-            ->find()
+        $query = $this->find('all')
             ->select([
                 'grade_name' => 'AssessmentGradingOptions.name',
                 'grade_code' => 'AssessmentGradingOptions.code',
                 $this->aliasField('student_id'),
                 $this->aliasField('assessment_period_id'),
-//                $this->aliasField('marks'),
-                $this->aliasField('academic_period_id'),//POCOR-6479
-                $this->aliasField('education_subject_id'),//POCOR-6479
-                $this->aliasField('education_grade_id'),//POCOR-6479
-                $this->aliasField('assessment_id'),//POCOR-6479
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('education_subject_id'),
+                $this->aliasField('education_grade_id'),
+                $this->aliasField('assessment_id'),
             ])
             ->contain(['AssessmentGradingOptions'])
-            ->innerJoin([$SubjectStudents->getAlias() => $SubjectStudents->getTable()], [
-                $SubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-                $SubjectStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                $SubjectStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                $SubjectStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                $SubjectStudents->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id')
+            ->innerJoin([$SubjectStudents->getAlias() => $SubjectStudents->getAlias()], [
+                $SubjectStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                $SubjectStudents->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id'),
+                $SubjectStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),
+                $SubjectStudents->aliasField('education_grade_id') . ' = ' . $this->aliasField('education_grade_id'),
+                $SubjectStudents->aliasField('education_subject_id') . ' = ' . $this->aliasField('education_subject_id')
             ])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('assessment_id') => $assessmentId,
                 $this->aliasField('education_subject_id') => $subjectId,
-                $this->aliasField('student_id') => $studentId
-            ])//POCOR-6479 starts
-            ->group([
-                $this->aliasField('assessment_period_id')
-            ])//POCOR-6479 ends
-            ->enableHydration(false);
+                $this->aliasField('student_id') => $studentId,
+            ])
+            ->group([$this->aliasField('assessment_period_id')])
+            ->disableHydration();
+//        Log::debug($query->sql());
         $results = $query->toArray();
-        //
+//        Log::debug('step2');
+        // Step 2: Fetch marks for students using getMarksForClass
+        $options = [
+            "academic_period_id" => $academicPeriodId,
+            "institution_id" => $this->aliasField('institution_id'),
+            "class_id" => $classId,
+            "assessment_id" => $assessmentId,
+            "education_subject_id" => $subjectId,
+            "student_id" => $studentId
+        ];
+//        Log::debug($options);
+        $marks = self::getMarksForClass($options);
+//        Log::debug('step22');
+//        Log::debug($marks);
+        // Step 3: Calculate simple marks using getMarksWithSimpleMarks
+        if(!is_array($marks)){
+            $marks = [];
+        }
+        $marksWithSimpleMarks = self::getMarksWithSimpleMarks($marks);
+//        Log::debug('step3');
+        // Step 4: Group marks per student and subject using getMarksPerStudentPerSubjectArray
+        $marksPerStudent = self::getMarksPerStudentPerSubjectArray($marksWithSimpleMarks);
+//        Log::debug('step4');
+        // Step 5: Process the results and add marks
         $returnArray = [];
-        //POCOR-6479 starts
         foreach ($results as $result) {
-//            $assessmentItemResults = TableRegistry::get('assessment_item_results');
-//            $assessmentItemResultsData = $assessmentItemResults->find()
-//                ->select([
-//                    $assessmentItemResults->aliasField('marks')
-//                ])
-//                ->order([
-//                    $assessmentItemResults->aliasField('modified') => 'DESC',
-//                    $assessmentItemResults->aliasField('created') => 'DESC'
-//
-//                ])
-//                ->where([
-//                    $assessmentItemResults->aliasField('student_id') => $result['student_id'],
-//                    $assessmentItemResults->aliasField('academic_period_id') => $result['academic_period_id'],
-//                    $assessmentItemResults->aliasField('education_grade_id') => $result['education_grade_id'],
-//                    $assessmentItemResults->aliasField('assessment_period_id') => $result['assessment_period_id'],
-//                    $assessmentItemResults->aliasField('education_subject_id') => $result['education_subject_id'],
-//                ])
-//                ->first();
-//
-//            $result['marks'] = $assessmentItemResultsData->marks;
-            $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-            $options = ["student_id" => $result['student_id'],
-//            "institution_id" => $entity->institution_id'],
-//            "institution_class_id" => $entity->institution_class_id,
-                "academic_period_id" => $result['academic_period_id'],
-                "education_grade_id" => $result['education_grade_id'],
-                "education_subject_id" => $result['education_subject_id'],
-                "assessment_period_id" => $result['assessment_period_id'],
-                'assessment_id' => $result['assessment_id']
-            ];
-            $marks = $ItemResults::getLastMark($options);
-            $last_results = array_column($marks, 'marks');
-            $sum_results = array_sum($last_results);
-            $result['marks'] = round($sum_results, 2);
-            $returnArray[$result['student_id']][$subjectId][$result['assessment_period_id']] = [
+            $studentId = $result['student_id'];
+            $assessmentPeriodId = $result['assessment_period_id'];
+            $marks = $marksPerStudent[$studentId][$subjectId][$assessmentPeriodId] ?? [];
+
+            // Sum the marks and round
+            $totalMarks = array_sum(array_column($marks, 'simple_mark'));
+            $result['marks'] = round($totalMarks, 2);
+
+            // Structure the return array
+            $returnArray[$studentId][$subjectId][$assessmentPeriodId] = [
                 'marks' => $result['marks'],
                 'grade_name' => $result['grade_name'],
                 'grade_code' => $result['grade_code']
             ];
-        }//POCOR-6479 ends
+        }
+//        Log::debug('step5');
+//        Log::debug($returnArray);
         return $returnArray;
     }
 
@@ -417,7 +419,7 @@ class AssessmentItemResultsTable extends AppTable
             $assessmentId = $entity->assessment_id;
             $assessmentPeriodId = $entity->assessment_period_id;
 
-            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes');
             $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
                 ->find()
                 ->contain('AssessmentGradingTypes.GradingOptions')
@@ -473,7 +475,7 @@ class AssessmentItemResultsTable extends AppTable
         //POCOR-6479 starts
         $sumMarks = [];
         foreach ($totalMarks as $result) {
-            $assessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+            $assessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
             $assessmentItemResultsData = $assessmentItemResults->find()
                 ->select([
                     $assessmentItemResults->aliasField('marks')
@@ -664,7 +666,7 @@ class AssessmentItemResultsTable extends AppTable
     /**POCOR-6912 ends*/
 
     /*
-     * $assessmentItemResults = Cake\ORM\TableRegistry::get('Assessment.AssessmentItemResults');
+     * $assessmentItemResults = Cake\ORM\self::getDynamicTableInstance('Assessment.AssessmentItemResults');
      * $options = ["student_id" => 45, "academic_period_id" => 32, "education_grade_id" => 189, "education_subject_id" => 60];
      * $mark = $assessmentItemResults::getLastMark($options);
      */
@@ -674,21 +676,48 @@ class AssessmentItemResultsTable extends AppTable
      * @param $archive
      * @return array
      */
-    public static function getClassAssessmentItemResults($options, $archive)
+    public static function getClassAssessmentItemResults($options, $archive=false)
     {
         $marks = self::getMarksForClass($options, $archive);
+        if (!is_array($marks)) {
+            $marks = [];
+        }
         $marksWithSubjectClassificationWeight = self::getMarksWithSimpleMarks($marks);
         $marksPerStudent = self::getMarksPerStudentPerSubjectArray($marksWithSubjectClassificationWeight);
         return $marksPerStudent;
     }
 
+    public static function getClassExemptions($options): array
+    {
+        $exemptions_array = self::getLastExemptions($options);
+
+        $exemptions = [];
+        foreach ($exemptions_array as $exemption) {
+            $student_id = $exemption['student_id'];
+            $education_subject_id = $exemption['education_subject_id'];
+            $assessment_period_id = $exemption['assessment_period_id'];
+            if (!isset($exemptions[$student_id])) {
+                $exemptions[$student_id] = [];
+            }
+            if (!isset($exemptions[$student_id][$education_subject_id])) {
+                $exemptions[$student_id][$education_subject_id] = [];
+            }
+            if (isset($assessment_period_id)) {
+                $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'EXEMPT';
+            }
+        }
+        return $exemptions;
+    }
+
+
     /**
      * @param array $params
      * @param bool $archive
-     * @return float|null
+     * @return array|null
+     * @throws \Exception
      */
 
-    private static function getMarksForClass(array $params, $archive = false)
+    private static function getMarksForClass(array $params, bool $archive = false): ?array
     {
         $academic_period_id = self::getFromArray($params, 'academic_period_id');
         $institution_id = self::getFromArray($params, 'institution_id');
@@ -750,7 +779,7 @@ class AssessmentItemResultsTable extends AppTable
      * @param array $marksWithSubjectClassificationWeight
      * @return array
      */
-    private static function getMarksPerStudentPerSubjectArray(array $marksWithSubjectClassificationWeight)
+    private static function getMarksPerStudentPerSubjectArray(array $marksWithSubjectClassificationWeight): array
     {
         $marksPerStudent = [];
         foreach ($marksWithSubjectClassificationWeight as $record) {
@@ -766,11 +795,15 @@ class AssessmentItemResultsTable extends AppTable
      * @param array $marks
      * @return array
      */
-    private static function getMarksWithSimpleMarks(array $marks)
+    private static function getMarksWithSimpleMarks(array $marks): array
     {
         $new_marks = [];
         foreach ($marks as $mark) {
-            $simple_mark = floatval($mark['marks']);
+            if (is_numeric($mark['marks'])) {
+                $simple_mark = floatval($mark['marks']);
+            } else {
+                $simple_mark = $mark['marks'];
+            }
             $mark['simple_mark'] = $simple_mark;
             $new_marks[] = $mark;
         }
@@ -929,6 +962,64 @@ GROUP BY all_results.student_id
 
     }
 
+    /**
+     * @param $options
+     * @return array
+     */
+    public static function getLastExemptions($options)
+    {
+        $institution_class_id = self::getFromArray($options, 'institution_class_id'); //568
+        $assessment_id = self::getFromArray($options, 'assessment_id');
+        $education_subject_id = self::getFromArray($options, 'education_subject_id'); //60
+        $student_id = self::getFromArray($options, 'student_id');
+        $assessment_period_id = self::getFromArray($options, 'assessment_period_id');
+
+        $exemptions_table = self::getDynamicTableInstance('assessment_item_student_exemptions');
+
+        // Initialize an empty array for the WHERE conditions
+        $where = [];
+
+        // Add conditions only if the corresponding variables are set and greater than zero
+        if ($education_subject_id > 0) {
+            $where[] = 'assessment_items.education_subject_id = ' . $education_subject_id;
+        }
+
+        if ($assessment_id > 0) {
+            $where[] = 'assessment_items.assessment_id = ' . $assessment_id;
+        }
+
+        if ($institution_class_id > 0) {
+            $where[] = 'institution_class_students.institution_class_id = ' . $institution_class_id;
+        }
+
+        if ($student_id > 0) {
+            $where[] = 'institution_class_students.student_id = ' . $student_id;
+        }
+        if ($assessment_period_id > 0) {
+            $where[] = $exemptions_table->aliasField('assessment_period_id = ') . $assessment_period_id;
+        }
+
+        $exemptions_array = $exemptions_table->find('all')
+            ->select([
+                'student_id' => $exemptions_table->aliasField('student_id'),
+                'education_subject_id' => 'assessment_items.education_subject_id',
+                'assessment_period_id' => $exemptions_table->aliasField('assessment_period_id'),
+                'assessment_id' => $exemptions_table->aliasField('assessment_id')
+            ])
+            ->innerJoin(['assessment_items' => 'assessment_items'],
+                [$exemptions_table->aliasField('assessment_id') . ' = assessment_items.assessment_id AND ' .
+                    $exemptions_table->aliasField('education_subject_id') . ' = assessment_items.education_subject_id'])
+            ->innerJoin(['institution_class_students' => 'institution_class_students'],
+                [$exemptions_table->aliasField('student_id') . ' = institution_class_students.student_id AND ' .
+                    $exemptions_table->aliasField('institution_class_id') . ' = institution_class_students.institution_class_id AND ' .
+                    $exemptions_table->aliasField('education_grade_id') . ' = institution_class_students.education_grade_id'])
+            ->where($where)
+            ->disableHydration();
+//        Log::debug($exemptions_array->sql());
+        $exemptions_array = $exemptions_array->toArray();
+        return $exemptions_array;
+    }
+
     private static function getFromArray($options, $field)
     {
         return isset($options[$field]) ? $options[$field] : null;
@@ -978,4 +1069,54 @@ GROUP BY assessment_item_results.student_id
         return null;
 
     }
+
+    /**
+     * POCOR-8224 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $alias, array $options = []): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($alias, $options);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $alias);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($alias);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias, $options);
+    }
+
 }
