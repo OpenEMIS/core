@@ -145,7 +145,7 @@ class TextbooksTable extends ControllerActionTable {
         }
         // end POCOR-1893
 
-        $query->where([$this->aliasField('security_user_id') => $studentId]); //POCOR-7603
+        $query->where([$this->aliasField('security_user_id IS') => $studentId]); //POCOR-7603
 
         $searchKey = $this->getSearchKey();
         if (strlen($searchKey)) {
