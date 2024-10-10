@@ -122,7 +122,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
 	    if (!empty($studentId)) {
 	    	$studentId = $this->getQueryString('student_id');
-	        $conditions[$this->aliasField('student_id')] = $studentId;
+	        $conditions[$this->aliasField('student_id IS')] = $studentId;
 	        $query->where($conditions, [], true);
 	    }
 	}
