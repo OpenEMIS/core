@@ -78,6 +78,7 @@ class ScholarshipsController extends AppController
     public function ScholarshipRecipients()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.ScholarshipRecipients']);
+    
     }
 
     // end
@@ -89,8 +90,8 @@ class ScholarshipsController extends AppController
         $header = __('Scholarships');
         $alias = $model->getAlias();
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
-            $excludedModel = ['Scholarships', 'Applications', 'RecipientPaymentStructures', 'RecipientPayments'];
-
+            $excludedModel = ['Scholarships','ScholarshipRecipients', 'Applications', 'RecipientPaymentStructures', 'RecipientPayments'];
+            
             if (!in_array($alias, $excludedModel)) {
                 $model->toggle('add', false);
                 $model->toggle('edit', false);
