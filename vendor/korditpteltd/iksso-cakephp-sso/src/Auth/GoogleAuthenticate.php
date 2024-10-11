@@ -77,7 +77,7 @@ class GoogleAuthenticate extends BaseAuthenticate
                         if ($event->getResult() === false) {
                             return false;
                         } else {
-                            return $this->_findUser($event->result);
+                            return $this->_findUser($event->getResult());
                         }
                     } else {
                         return false;
