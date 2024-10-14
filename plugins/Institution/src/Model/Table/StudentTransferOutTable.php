@@ -1206,6 +1206,21 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         // Return the table instance
         return $locator->get($tableFullAlias);
     }
+    //POCOR-8642 -- START
+    public function getReceivingInstList($params) {
+        $receivingOptions = [];
 
+        $StudentTransferOut = TableRegistry::get('Institution.StudentTransferOut');
+
+        $receivingOptions = $StudentTransferOut->find()
+            ->select(['institution_id'])
+            ->where([$StudentTransferOut->aliasField('id') => $params])
+            ->first();
+            if ($receivingOptions) {
+                $recvInstitution = $receivingOptions->institution_id; // Assign the institution_id to $newid
+            }
+        return $recvInstitution;
+    }
+    //POCOR-8642 -- END
 
 }
