@@ -272,10 +272,60 @@ class WorkflowsController extends AppController
             $options = $assigneeOptions;
 
         } else {
-            Log::write('debug', 'Auto Assign Assignee');
+            //POCOR-8642 --START
+            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $path = $queryString['path'];
+            $segments = explode('/', $path);
+            if (count($segments) > 0) {
+                $institutionIndex = array_search('Institutions', $segments);
+                if ($institutionIndex !== false && isset($segments[$institutionIndex + 1])) {
+                    $transferType = $segments[$institutionIndex + 1];
+                } else {
+                    $transferType = '';
+                }
+            } else {
+                $transferType = '';
+            }    
 
-            $defaultKey = '';
-            $options = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080
+            if ($transferType === 'StudentTransferOut') {
+                $tableName = 'Institution.StudentTransferOut';
+                $primaryKey = $_SESSION['Institution']['StudentTransferOut']['primaryKey']; // Fetching primaryKey for StudentTransferOut
+            } elseif ($transferType === 'StaffTransferOut') {
+                $tableName = 'Institution.StaffTransferOut';
+                $primaryKey = $_SESSION['Institution']['StaffTransferOut']['primaryKey']; // Fetching primaryKey for StaffTransferOut
+            }
+
+            $id = isset($primaryKey['id']) ? $primaryKey['id'] : null;
+            $institutionId = isset($primaryKey['institution_id']) ? $primaryKey['institution_id'] : null;
+            $receivingInsttutionId = TableRegistry::get($tableName)->getReceivingInstList($id);
+
+            $params = [
+                'is_school_based' => $isSchoolBased,
+                'workflow_step_id' => $nextStepId,
+                'url_institution_id' => $getInstitutionId[1]  //POCOR-6619
+            ];
+         
+            if ($isSchoolBased) {
+                if (!empty($institutionID)) {
+                    $params['institution_id'] = $receivingInsttutionId;
+                }
+            }
+
+            $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+
+            Log::write('debug', 'Assignee:');
+            Log::write('debug', print_r($assigneeOptions, true));
+
+            $defaultKey = empty($assigneeOptions) ? __('No options') : '-- ' . __('Select') . ' --';
+            $options = $assigneeOptions;
+
+            if(empty($options)) {
+                Log::write('debug', 'Auto Assign Assignee');
+
+                $defaultKey = '';
+                $options = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080
+            }
+            //POCOR-8642 --END
         }
 
         $responseData = [
