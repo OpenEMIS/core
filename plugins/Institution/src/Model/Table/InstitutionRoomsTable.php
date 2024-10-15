@@ -785,8 +785,13 @@ class InstitutionRoomsTable extends ControllerActionTable
             $attr['date_options']['endDate'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-
-            $attr['type'] = 'readonly';
+            //POCOR-8655 Start
+            $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
+            $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
+            $attr['date_options']['startDate'] = $startDate;
+            $attr['date_options']['endDate'] = $endDate;
+            //$attr['type'] = 'readonly';
+            //POCOR-8655 End
             $attr['value'] = $entity->start_date->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($entity->start_date);
         }
