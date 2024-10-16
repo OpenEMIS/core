@@ -360,6 +360,23 @@ class WorkflowBehavior extends Behavior
 
     public function onGetWorkflowStatus(Event $event, Entity $entity)
     {
+        //POCOR-8434 Starts
+        if($this->_table->getRegistryAlias() == 'Institution.StudentAdmission'){
+            if(($entity->status->name == 'Approved')){
+                $WorkflowActionsTable = TableRegistry::get('Workflow.WorkflowActions');
+                $WorkflowActions = $WorkflowActionsTable->find()
+                    ->where([
+                        $WorkflowActionsTable->aliasField('next_workflow_step_id') => $entity->status->id
+                    ])->first();
+                if($WorkflowActions->event_key == 'Workflow.onTriggerPendingEnrolment'){
+                    $entity->workflow_status = 'Admitted';
+                }
+            }
+        }else if($this->_table->getRegistryAlias() == 'Institution.StudentEnrolment'){
+            if(($entity->status->name == 'Approved')){
+                $entity->workflow_status = 'Enrolled';
+            }
+        }//POCOR-8434 Ends
         return '<span class="status highlight">' . $entity->workflow_status . '</span>';
     }
 
@@ -885,6 +902,19 @@ class WorkflowBehavior extends Behavior
                         $transitionDisplay = '<span class="status past">' . __($transition->prev_workflow_step_name) . '</span>';
                         $transitionDisplay .= '<span class="transition-arrow"></span>';
                         if (count($transitions) - 1 == $key) {
+                            //POCOR-8434 Starts
+                            if(($workflowStep->name == 'Approved') && ($transition->workflow_step_name == $workflowStep->name) && ($workflowModel == 'Institution.StudentAdmission')){
+                                $WorkflowActionsTable = TableRegistry::get('Workflow.WorkflowActions');
+                                $WorkflowActions = $WorkflowActionsTable->find()
+                                    ->where([
+                                        $WorkflowActionsTable->aliasField('next_workflow_step_id') => $workflowStep->id
+                                    ])->first();
+                                if($WorkflowActions->event_key == 'Workflow.onTriggerPendingEnrolment'){
+                                    $transition->workflow_step_name = 'Admitted';
+                                }
+                            }else if(($workflowStep->name == 'Approved') && ($transition->workflow_step_name == $workflowStep->name) && $workflowModel == 'Institution.StudentEnrolment'){
+                                $transition->workflow_step_name = 'Enrolled';
+                            }//POCOR-8434 Ends
                             $transitionDisplay .= '<span class="status highlight">' . __($transition->workflow_step_name) . '</span>';
                         } else {
                             $transitionDisplay .= '<span class="status past">' . __($transition->workflow_step_name) . '</span>';
@@ -912,34 +942,42 @@ class WorkflowBehavior extends Behavior
                 ]);
                 // End
                 //POCOR-8434 starts
-                if($entity->has('test_score') && $entity->has('interview_score')){
-                    $tableHeaders1[] = __('Shortlist') . '<i class="fa fa-history fa-lg"></i>';
-                    $ControllerAction->field('shortlist', [
-                        'type' => 'element',
-                        'element' => 'Workflow.shortlist',
-                        'override' => true,
-                        'rowClass' => 'transition-container',
-                        'tableHeaders' => $tableHeaders1,
-                       // 'tableCells' => $tableCells
-                    ]);
-                }//POCOR-8434 ends
+                if($model->getAlias() == 'StudentAdmission'){
+                    if($entity->has('test_score') && $entity->has('interview_score')){
+                        $tableHeaders1[] = __('Shortlisting');
+                        $ControllerAction->field('shortlist', [
+                            'type' => 'element',
+                            'element' => 'Workflow.shortlist',
+                            'override' => true,
+                            'rowClass' => 'section-header',
+                            'tableHeaders' => $tableHeaders1
+                        ]);
+                    }
+                }                 
+                //POCOR-8434 ends
                 // Reorder fields
                 $fieldOrder = [];
                 $fields = $model->fields;
+                //POCOR-8434 starts
+                $excludeFields = $model->getAlias() == 'StudentAdmission' 
+                                ? ['workflow_status', 'assignee_id', 'shortlist', 'workflow_transitions'] 
+                                : ['workflow_status', 'assignee_id', 'workflow_transitions'];
                 foreach ($fields as $fieldKey => $fieldAttr) {
-                    if (!in_array($fieldKey, ['workflow_status', 'assignee_id', 'shortlist', 'test_score', 'interview_score', 'workflow_transitions'])) {
+                    if (!in_array($fieldKey, $excludeFields)) {
                         $fieldOrder[$fieldAttr['order']] = $fieldKey;
                     }
-                }
+                }//POCOR-8434 ends
                 ksort($fieldOrder);
                 array_unshift($fieldOrder, 'assignee_id');  // Set workflow_status to second
                 array_unshift($fieldOrder, 'workflow_status');  // Set workflow_status to first
                 //POCOR-8434 starts
-                // Place 'test_score' and 'interview_score' just before 'workflow_transitions'
-                $fieldOrder[] = 'shortlist'; 
-                $fieldOrder[] = 'test_score';  // Set test_score before workflow_transitions
-                $fieldOrder[] = 'interview_score';  // Set interview_score before workflow_transitions
-                //POCOR-8434 ends
+                if($model->getAlias() == 'StudentAdmission'){
+                    $fieldOrder[] = 'shortlist'; // Place 'shortlist' just after 'institution_id'
+                    // Remove "shortlist"
+                    $shortlist = array_splice($fieldOrder, array_search('shortlist', $fieldOrder), 1);
+                    // Insert "shortlist" after "institution_id"
+                    array_splice($fieldOrder, array_search('institution_id', $fieldOrder) + 1, 0, $shortlist);
+                } //POCOR-8434 ends               
                 $fieldOrder[] = 'workflow_transitions'; // Set workflow_transitions to last
                 $ControllerAction->setFieldOrder($fieldOrder);
                 // End

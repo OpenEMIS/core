@@ -141,7 +141,7 @@ class StudentEnrolmentTable extends ControllerActionTable
                         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
                         $multipleInstitutions = $ConfigItems->value('multiple_institutions_student_enrollment');
                         $multipleInstitutions = ($multipleInstitutions == "1") ? true : false ;
-//                        $this->log($multipleInstitutions);
+                        // $this->log($multipleInstitutions);
                         if ($multipleInstitutions) return false;
                         //POCOR-6172-HINDOL[END]
                         if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
@@ -378,8 +378,8 @@ class StudentEnrolmentTable extends ControllerActionTable
         $Withdraw = $statusList['WITHDRAWN'];
         $institution_id = $student->institution_id;
         $student_id = $student->student_id;
-//        $this->log('studentsAfterSave', 'debug');
-//        $this->log($student, 'debug');
+        //        $this->log('studentsAfterSave', 'debug');
+        //        $this->log($student, 'debug');
         //POCOR-6500 starts
         //get student role
         $securityRolesTbl = TableRegistry::get('Security.SecurityRoles');
@@ -927,7 +927,6 @@ class StudentEnrolmentTable extends ControllerActionTable
         }
         return $query;
     }
-
 
     //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)

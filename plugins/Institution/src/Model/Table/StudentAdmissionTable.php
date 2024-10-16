@@ -70,7 +70,23 @@ class StudentAdmissionTable extends ControllerActionTable
             'Dashboard' => ['index'],
             'Students' => ['index', 'add']
         ]);
-
+        //POCOR-8434 add custome fileds record in pending admission starts
+        $this->addBehavior('CustomField.Record', [
+            'model' => 'Institution.StudentAdmission',
+            'behavior' => 'Student',
+            'fieldKey' => 'student_custom_field_id',
+            'tableColumnKey' => 'student_custom_table_column_id',
+            'tableRowKey' => 'student_custom_table_row_id',
+            'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
+            'formKey' => 'student_custom_form_id',
+            'filterKey' => 'student_custom_filter_id',
+            'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+            // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+            'recordKey' => 'student_id',
+            'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+        ]);//POCOR-8434 ends
+        
         $this->toggle('add', true);
         $this->addBehavior('Institution.InstitutionTab',
             ['appliedAction' => ['StudentAdmission' => ['id']]

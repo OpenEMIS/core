@@ -2806,7 +2806,7 @@ class NavigationComponent extends Component
                             'parent' => 'SystemSetup.CustomField',
                             'params' => ['plugin' => 'StudentCustomField'],
                             'selected' => ['StudentCustomFields.Fields',
-                                'StudentCustomFields.Pages']
+                                'StudentCustomFields.Pages', 'StudentCustomFields.Filters']//POCOR-8434 add filters
                         ],
                         'StaffCustomFields.Fields' => [
                             'title' => 'Staff',
@@ -2880,7 +2880,7 @@ class NavigationComponent extends Component
                             'parent' => 'SystemSetup.CustomField',
                             'params' => ['plugin' => 'StudentCustomField'],
                             'selected' => ['StudentCustomFields.Fields',
-                                'StudentCustomFields.Pages']
+                                'StudentCustomFields.Pages', 'StudentCustomFields.Filters']//POCOR-8434 add filters
                         ],
                         'StaffCustomFields.Fields' => [
                             'title' => 'Staff',
@@ -2970,7 +2970,7 @@ class NavigationComponent extends Component
                         'parent' => 'SystemSetup.CustomField',
                         'params' => ['plugin' => 'StudentCustomField'],
                         'selected' => ['StudentCustomFields.Fields',
-                            'StudentCustomFields.Pages']
+                            'StudentCustomFields.Pages', 'StudentCustomFields.Filters']//POCOR-8434 add filters
                     ],
                     'StaffCustomFields.Fields' => [
                         'title' => 'Staff',

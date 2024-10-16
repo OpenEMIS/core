@@ -110,11 +110,14 @@ class BulkStudentEnrolmentTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         switch ($this->action) {
             case 'edit':
                 $toolbarButtons = $extra['toolbarButtons'];
                 $toolbarButtons['back']['url']['action'] = 'StudentEnrolment';
                 $toolbarButtons['back']['url'][0] = 'index';
+                $toolbarButtons['back']['url'][1] = $encodedQueryString;
                 break;
             case 'reconfirm':
                 $sessionKey = $this->getRegistryAlias() . '.confirm';
