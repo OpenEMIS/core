@@ -371,7 +371,12 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if (array_key_exists('edit', $extra['toolbarButtons'])) {
+        if ($extra['toolbarButtons'] instanceof ArrayObject) {
+            $toolbarButtons = $extra['toolbarButtons']->getArrayCopy();
+        } else {
+            $toolbarButtons = $extra['toolbarButtons'];
+        }
+        if (array_key_exists('edit', $toolbarButtons)) {
             $params = $this->getQueryString();
             $timetableId = $entity->id;
             $institutionId = $entity->institution_id;
