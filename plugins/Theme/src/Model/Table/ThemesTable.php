@@ -180,28 +180,30 @@ class ThemesTable extends ControllerActionTable
         $configItems->save($themeConfigItemRecord);
     }
 
-    //POCOR-8268
+    //POCOR-8268 , 
     public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request) 
     {
         $colorListPath = WWW_ROOT . 'themecolor' . DS . 'color.php';
         if (file_exists($colorListPath)) {
-            $colorList = include($colorListPath);
+            //POCOR-8652
+            $colorListing = include($colorListPath);
+            $colorOptions = [];
+            foreach ($colorListing as $colorName => $hexValue) {
+                $colorOptions[$hexValue] = $hexValue;
+            }
         } else {
             throw new \Exception("Color file not found at " . $colorListPath);
         }
-        if ($action == 'add') {
+        // Modify the attributes based on the action
+        if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
-            $attr['options'] = $colorList;
-            $attr['onChangeReload'] = true;
-        } else if ($action == 'edit') {
-            $entity = $attr['entity'];
-            $attr['type'] = 'select';
-            $attr['options'] = $colorList;
+            $attr['options'] = $colorOptions;
             $attr['onChangeReload'] = true;
         }
-        return $attr;
 
+        return $attr;
     }
+
      public function validationDefault(Validator $validator): Validator 
     {
         $validator = parent::validationDefault($validator);
