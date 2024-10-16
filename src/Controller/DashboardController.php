@@ -31,7 +31,7 @@ class DashboardController extends AppController
 
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
-        $this->callAlerts(); //POCOR-7558
+        //$this->callAlerts(); //POCOR-7558
 
     }
 
