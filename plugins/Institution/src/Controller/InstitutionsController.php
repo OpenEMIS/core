@@ -2099,6 +2099,15 @@ class InstitutionsController extends AppController
             if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
                 $externalDataSource = true;
             }
+            //POCOR-8646 Start
+            $labelsTable = TableRegistry::getTableLocator()->get('System.Labels');
+            $labelsData = $labelsTable->find()->where(['module_name' => 'Institutions > Students > Add', 'field_name' => 'OpenEMIS ID'])->first();
+            $dynamicCol = $labelsData->name;
+            if(empty($dynamicCol)) {
+                $dynamicCol = $labelsData->code;
+            }
+            $this->set('dynamicOpenemisNoHeader', $dynamicCol);
+            //POCOR-8646 End
             $this->set('externalDataSource', $externalDataSource);
 
             $this->render('studentAdd');
@@ -2128,7 +2137,15 @@ class InstitutionsController extends AppController
             $this->set('institutionName', $institutionName);
             $this->set('loginUserId', $userId);
             //POCOR-7485 ends
-
+            //POCOR-8646 Start
+            $labelsTable = TableRegistry::getTableLocator()->get('System.Labels');
+            $labelsData = $labelsTable->find()->where(['module_name' => 'Institutions > Staff > Add', 'field_name' => 'OpenEMIS ID'])->first();
+            $dynamicCol = $labelsData->name;
+            if(empty($dynamicCol)) {
+                $dynamicCol = $labelsData->code;
+            }
+            $this->set('dynamicOpenemisNoHeader', $dynamicCol);
+            //POCOR-8646 End
             $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
             $this->set('_createNewStaff', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
