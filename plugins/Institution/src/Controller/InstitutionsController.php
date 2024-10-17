@@ -6615,7 +6615,9 @@ class InstitutionsController extends AppController
                 Log::debug('Error: ' . $exception->getMessage());
             }
         }
-        self::assignStudentRoleGroup($institutionId, $userRecordId);//POCOR-7146
+        if (!empty($institutionId)) {
+            self::assignStudentRoleGroup($institutionId, $userRecordId);//POCOR-8559
+        }
         return $saved_student;
     }
 
