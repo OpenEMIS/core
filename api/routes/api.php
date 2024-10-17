@@ -523,8 +523,8 @@ Route::group(
         //POCOR-8519 end...
 
         //POCOR-8616 starts...
-        Route::get('/timetable-overview', 'TimetableOverviewController@timetableOverview');
-        Route::get('/timetable-download', 'TimetableOverviewController@scheduleTimeTableExport');
+        Route::get('schedule/timetable-overview', 'TimetableOverviewController@timetableOverview');
+        Route::get('schedule/timetable-download', 'TimetableOverviewController@scheduleTimeTableExport');
 
         //POCOR-8616 starts...
     }
