@@ -105,14 +105,14 @@ class TimetableOverviewService extends Controller
     }
 
 
-    public function getScheduleTimeTableExport($params)
+    public function getScheduleTimeTableExportData($params)
     {
         try {
             $data = $this->timetableOverviewRepository->getScheduleTimeTableExport($params);
             
             $response =  [];
 
-            foreach($data as $key => $value){
+            /*foreach($data as $key => $value){
                 $response[$key]['Academic Period'] = $value['academic_period_name'];
                 $response[$key]['Institution Class'] = $value['class_name'];
                 $response[$key]['Institution Name'] = $value['institution_name'];
@@ -125,7 +125,7 @@ class TimetableOverviewService extends Controller
                 }else{
                     $response[$key]['Status'] = 'Published';
                 }
-            }
+            }*/
             
             return $response;
 

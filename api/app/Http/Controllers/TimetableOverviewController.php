@@ -49,12 +49,11 @@ class TimetableOverviewController extends Controller
     {
         try {
             $params = $request->all();
-
-            $data = $this->timetableOverviewService->getScheduleTimeTableExport($params);
+            $data = $this->timetableOverviewService->getScheduleTimeTableExportData($params);
             
-            $str = time();
+            /*$str = time();
             $fileName = 'ScheduleTimetable_'.$str.'.xlsx';
-            return Excel::download(new ScheduleTimeTableExport($data), $fileName);
+            return Excel::download(new ScheduleTimeTableExport($data), $fileName);*/
             
         } catch (\Exception $e) {
             Log::error(

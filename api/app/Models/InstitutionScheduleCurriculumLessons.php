@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class InstitutionScheduleCurriculumLessons extends Model
 {
     use HasFactory;
+
+    public function institutionSubject()
+    {
+        return $this->belongsTo(InstitutionSubjects::class, 'institution_subject_id', 'id');
+    }
 }
