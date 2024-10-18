@@ -109,25 +109,6 @@ class TimetableOverviewService extends Controller
     {
         try {
             $data = $this->timetableOverviewRepository->getScheduleTimeTableExport($params);
-            
-            $response =  [];
-
-            /*foreach($data as $key => $value){
-                $response[$key]['Academic Period'] = $value['academic_period_name'];
-                $response[$key]['Institution Class'] = $value['class_name'];
-                $response[$key]['Institution Name'] = $value['institution_name'];
-                $response[$key]['Institution Code'] = $value['institution_code'];
-                $response[$key]['Institution schedule Interval Name'] = $value['institution_schedule_interval_name'];
-                $response[$key]['Institution schedule Term Name'] = $value['institution_schedule_term_name'];
-                $response[$key]['Name'] = $value['name'];
-                if($value['status'] == 1){
-                    $response[$key]['Status'] = 'Draft';
-                }else{
-                    $response[$key]['Status'] = 'Published';
-                }
-            }*/
-            
-            return $response;
 
         } catch (\Exception $e) {
             Log::error(
