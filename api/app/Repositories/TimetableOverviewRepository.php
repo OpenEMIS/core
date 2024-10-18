@@ -55,7 +55,6 @@ class TimetableOverviewRepository extends Controller
     {
         $timeTableId = $params['timetable_id'];
         $record =  $this->getAllLesson($timeTableId);
-        echo "<pre>"; print_r($record); die;
         try {
             $list = InstitutionScheduleTimetables::join('academic_periods', 'academic_periods.id', '=', 'institution_schedule_timetables.academic_period_id')
                     ->join('institution_classes', 'institution_classes.id', '=', 'institution_schedule_timetables.institution_class_id')
@@ -109,65 +108,101 @@ class TimetableOverviewRepository extends Controller
             ->get()
             ->toArray();
 
-        /*$record = [];
-        foreach ($lessons as $key => $lesson) {
-            $record[$key]['id'] = $lesson['id'] ?? null;
-            $record[$key]['day'] = $lesson['day_of_week'] ?? null;
-            $record[$key]['name'] = $lesson['timeslots']['interval'] ;
-            
-            // Check if schedule_term exists in the lesson data
-            $record[$key]['schedule_term'] = $lesson['scheduleLessonDetails']['schedule_term']['name'] ?? 'Unknown Term';
-        }*/
-
-        $formattedSchedule = [];
 
 $timeSlots = [];
+$formattedSchedule = [];
+
+// Extract class, grade, and schedule names only once
 foreach ($lessons as $item) {
-    $day = '';
-    $timeslot = '';
-    
-    // Determine the day of the week
-    switch ($item['day_of_week']) {
-        case 1: $day = 'mon'; break;
-        case 2: $day = 'tue'; break;
-        case 3: $day = 'wed'; break;
-        case 4: $day = 'thu'; break;
-        case 5: $day = 'fri'; break;
+    $className = $item['timetables']['institution_class']['name'];
+    $gradeName = $item['timetables']['institution_class']['grades'][0]['education_grades']['name'];
+    $scheduleName = $item['timetables']['name'];
+
+    // Store this in the $timeSlots once
+    if (empty($timeSlots)) {
+        $timeSchedule = [
+            'class_name' => $className,
+            'grade_name' => $gradeName,
+            'schedule_name' => $scheduleName,
+        ];
+        $timeSlots[] = $timeSchedule;
     }
 
-    // Determine the time slot
-    $startTime = date('h:i A', strtotime($item['timetables']['schedule_interval']['shift']['start_time']));
-    $endTime = date('h:i A', strtotime($item['timetables']['schedule_interval']['shift']['end_time']));
-    $timeslot = "$startTime - " . date('h:i A', strtotime("+{$item['timeslots']['interval']} minutes", strtotime($item['timetables']['schedule_interval']['shift']['start_time'])));
+    $day = '';
+    $timeslot = '';
 
-    // Add lesson details
+    // Determine the day of the week
+    switch ($item['day_of_week']) {
+        case 1: $day = 'Monday'; break;
+        case 2: $day = 'Tuesday'; break;
+        case 3: $day = 'Wednesday'; break;
+        case 4: $day = 'Thursday'; break;
+        case 5: $day = 'Friday'; break;
+        case 6: $day = 'Saturday'; break;
+        case 7: $day = 'Sunday'; break;
+    }
+
+    // Initialize the start time using DateTime
+    $currentStartTime = new \DateTime($item['timetables']['schedule_interval']['shift']['start_time']);
+
+    // Adjust the timeslot dynamically by adding the interval each time
     foreach ($item['schedule_lesson_details'] as $lessonDetail) {
+        $intervalMinutes = $item['timeslots']['interval']; // Get the interval in minutes
+        $interval = new \DateInterval('PT' . $intervalMinutes . 'M'); // Create DateInterval object
+
+        // Clone the current start time for the end time calculation
+        $endTime = clone $currentStartTime;
+        $endTime->add($interval); // Add interval to get the end time
+
+        // Format the timeslot start and end times
+        $formattedStartTime = $currentStartTime->format('h:i A');
+        $formattedEndTime = $endTime->format('h:i A');
+        $timeslot = "$formattedStartTime - $formattedEndTime";
+
+        // Update the current start time to be the end time for the next iteration
+        $currentStartTime = $endTime;
+
+        // Determine subject and room
         $subject = isset($lessonDetail['institution_schedule_curriculum_lessons']) ? 
             $lessonDetail['institution_schedule_curriculum_lessons']['institution_subject']['name'] : 
             $lessonDetail['institution_schedule_non_curriculum_lessons']['name'];
-        
+
         $room = $lessonDetail['lesson_rooms']['institution_rooms']['name'];
-        
-        $formattedSchedule[$timeslot][] = [
+
+        // Group schedule by timeslot and day
+        $formattedSchedule[$timeslot][$day][] = [
             'subject' => $subject,
             'room' => $room,
-            'day' => $day,
-            'timeslot' => $timeslot,
         ];
-    }
-}
+    
 
-// Rearranging to the final required format
+// Rearrange to final format for export
 $finalArray = [];
-foreach ($formattedSchedule as $time => $lessons) {
-    $tempArray = [];
-    foreach ($lessons as $lesson) {
-        $tempArray[] = $lesson;
+foreach ($formattedSchedule as $time => $days) {
+    $tempArray = ['timeslot' => $time, 'interval' => $intervalMinutes];
+    foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day) {
+        if (isset($days[$day])) {
+            $daySchedule = [];
+            foreach ($days[$day] as $lesson) {
+                $daySchedule[] = "{$lesson['subject']}, Room: {$lesson['room']}";
+            }
+            $tempArray[$day] = implode(' | ', $daySchedule);
+        } else {
+            $tempArray[$day] = ''; // No lessons for this day
+        }
     }
     $finalArray[] = $tempArray;
 }
+}
+}
 
-echo "<pre>"; print_r($finalArray); 
+// Merge class info and schedule for final export structure
+$record = array_merge($timeSlots, $finalArray);
+
+return $record;
+
+
+
 }
 
 
