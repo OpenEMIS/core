@@ -1140,24 +1140,20 @@ class WorkflowBehavior extends Behavior
                     return $buttons;
                 }
             }else{
-                if (!$model->AccessControl->isAdmin()) {
+                if ($model->AccessControl->isAdmin()) {
+               
+
                     $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
 
                     $workflowStep = $this->getWorkflowStep($entity);
                     $isEditable = false;
                     $isDeletable = false;
                     if (!empty($workflowStep)) {
-                        $isEditable = $workflowStep->is_editable == 1 ? true : false;
-                        $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+                        $isEditable = $workflowStep->is_editable == 1 ? true : true;
+                        $isDeletable = $workflowStep->is_removable == 1 ? true : true;
                     }
 
-                    if (isset($buttons['edit']) && !$isEditable) {
-                        unset($buttons['edit']);
-                    }
-
-                    if (isset($buttons['remove']) && !$isDeletable) {
-                        unset($buttons['remove']);
-                    }
+                    
 
                     return $buttons;
                 }
