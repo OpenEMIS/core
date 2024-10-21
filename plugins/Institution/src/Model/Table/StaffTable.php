@@ -4616,4 +4616,15 @@ class StaffTable extends ControllerActionTable
         return $query;
     }
 
+    public function onGetStaffPositionGradeId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->staff_position_grade_id) {
+            $StaffPositionGradesTable = TableRegistry::get('Institution.StaffPositionGrades');
+            $StaffPositionGrades = $StaffPositionGradesTable->get($entity->staff_position_grade_id);
+            $value = $StaffPositionGrades->name;
+        }
+        return $value;
+    }
+
 }

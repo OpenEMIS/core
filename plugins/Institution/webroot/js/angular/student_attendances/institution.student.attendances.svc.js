@@ -1015,7 +1015,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             if (isMarked) {
                 // console.log('in')
                 var id = (data.absence_type_id === null) ? 0 : data.institution_student_absences.absence_type_id;
-                if(noScheduledClicked)
+                if(noScheduledClicked || data.is_NoClassScheduled == 1)//POCOR-8333
+                //if(noScheduledClicked)
                     var absenceTypeObj = {
                         id: null,
                         code: 'NoScheduledClicked',

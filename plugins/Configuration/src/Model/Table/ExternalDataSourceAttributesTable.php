@@ -42,7 +42,7 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable
 
     public function findAttributes(Query $query, array $options = [])
     {
-        $ConfigItemTable = TableRegistry::get('ConfigItems');
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         $externalSourceType = $ConfigItemTable
             ->find()
             ->select([$ConfigItemTable->aliasField('name')]) // POCOR-7981
