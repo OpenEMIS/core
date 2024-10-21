@@ -727,10 +727,10 @@ class RecordBehavior extends Behavior
                     $group = [
                         $this->CustomFormsFields->aliasField($this->getConfig('fieldKey'))
                     ];
-
+                    //POCOR-8434 starts
                     if ($model == 'Institution.StudentAdmission') {
                         $group[] = $this->CustomFormsFields->aliasField($this->getConfig('formKey')); // POCOR-8434 add formkey condition
-                    }
+                    }//POCOR-8434 ends
 
                     $query->group($group);
                     //POCOR-8434 ends
@@ -804,6 +804,8 @@ class RecordBehavior extends Behavior
 
         $values = [];
         if ($model->exists([$idKey => $id])) {
+            //$idKey = 'student_id';  // Use 'student_id' as the foreign key
+            //$id = 14679;//for test POCOR-8434
             $query = $model->find()->contain(['CustomFieldValues.CustomFields'])->where([$idKey => $id]);
 
             $newEntity = $query->first();
@@ -813,7 +815,7 @@ class RecordBehavior extends Behavior
                     $customField = $obj->custom_field;
                     $isCheckbox = $customField->field_type == 'CHECKBOX';//POCOR-8434
                     //POCOR-8434 starts
-                    if($model == 'Institution.StudentAdmission'){
+                    if($model->getRegistryAlias() == 'Institution.StudentAdmission'){
                         if ($isCheckbox) {
                             $checkboxValues = [$obj['number_value']];
                             if (isset($values[$key][$fieldId])) {
@@ -864,8 +866,8 @@ class RecordBehavior extends Behavior
 					if(empty($tabSection) || ($slug == $tabSection)) {
 						$fieldId = $customField->id;
                         //POCOR-8434 starts
-                        $recordKey = ($model == 'Institution.StudentAdmission') ? $entity->student_id : $entity->id;
-                        $fieldValue = ($model == 'Institution.StudentAdmission') ? $values[$key][$fieldId] ?? null : $values[$fieldId] ?? null;
+                        $recordKey = ($model->getRegistryAlias() == 'Institution.StudentAdmission') ? $entity->student_id : $entity->id;
+                        $fieldValue = ($model->getRegistryAlias() == 'Institution.StudentAdmission') ? $values[$key][$fieldId] ?? null : $values[$fieldId] ?? null;
 
                         if ($fieldValue) {
                             $fieldValues[] = $fieldValue;
@@ -1072,7 +1074,7 @@ class RecordBehavior extends Behavior
                                 // POCOR-8352 End
                             }
                             //POCOR-8434 starts
-                            if($model == 'Institution.StudentAdmission'){
+                            if($model->getRegistryAlias() == 'Institution.StudentAdmission'){
                                 $values[$key][$fieldId] = $fieldData;//add $key array
                             }else{//POCOR-8434 ends
                                 $values[$fieldId] = $fieldData;
@@ -1087,7 +1089,7 @@ class RecordBehavior extends Behavior
                         $rowId = $obj->{$tableRowKey};
                         $columnId = $obj->{$tableColumnKey};
                         //POCOR-8434 starts
-                        if($model == 'Institution.StudentAdmission'){
+                        if($model->getRegistryAlias() == 'Institution.StudentAdmission'){
                             //add $key in $cell
                             $cells[$key][$fieldId][$rowId][$columnId] = [
                                 'text_value' => $obj['text_value'],
@@ -1145,7 +1147,7 @@ class RecordBehavior extends Behavior
                                         ],
                                         'valueClass' => $valueClass,
                                         'customField' => $customField,
-                                        'customFieldValues' => $model == 'Institution.StudentAdmission' ? $valuesArray[$key] : $valuesArray,//POCOR-8434 add $key in array
+                                        'customFieldValues' => $model->getRegistryAlias() == 'Institution.StudentAdmission' ? $valuesArray[$key] : $valuesArray,//POCOR-8434 add $key in array
                                         'customTableCells' => $cellsArray
                                     ];
 
