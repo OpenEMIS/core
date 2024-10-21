@@ -1,3 +1,20 @@
+### [4.3.3] - 2024-10-21
+- Bug Fixed:  Summary: The page isn't redirecting properly
+- Bug Fixed: Institutions > Performances > Report Cards : System should retain the GPA and the Report card in the new Class
+- Implemented: Develop an API for student transfer initiation and status
+- Bug Fixed: Administration > Security > Users: Moodle log should show correct response and moodle should show the users that are created
+- Bug Fixed: Administration>System Setup>Education Structure: menus should be in a logical order
+- Bug Fixed: Institutions>Transport>Trips: It is showing other Institution trips
+- Bug Fixed: Administration > Survey > Forms: When the number of displayed records is selected on current page, the records does not follow when navigating to another page
+- Bug Fixed: API: Timetable component /schedules/timetables/1/lessons (API name) need to add few keys in API
+- Bug Fixed: Personal > Scholarship: Student is able to successfully apply scholarship
+- Bug Fixed: Institutions>Overview>Export:Bugs related to V4 deployment
+- Bug Fixed: Institutions>Students>Add: User should be able to save when transferring
+- Bug Fixed: Administration > Security > Roles > Guardian tab: There is no permission to view Students Health under Guardian tab
+- Bug Fixed: Administration > Workflows > Actions:When saving a workflow action, the page gives 404 error
+- Bug Fixed: Institutions > Appointments > Positions > Import: Update template to remove position grade and homeroom teacher
+- Bug Fixed: Institutions > Appointments > Positions > Add: When adding Institutions Positions, the position number generation is not in order
+
 ### [4.3.2] - 2024-10-02
 - Bug Fixed: Errors and Warnings showing up when running migrations 
 - Bug Fixed: Institutions > Students > Pending Transfer Out > Bulk Student Transfer Out: When doing bulk transfer student, the page gives a 404 error 
