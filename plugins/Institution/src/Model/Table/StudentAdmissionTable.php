@@ -70,6 +70,11 @@ class StudentAdmissionTable extends ControllerActionTable
             'Dashboard' => ['index'],
             'Students' => ['index', 'add']
         ]);
+
+        $this->hasMany('StudentCustomFieldValues', ['className' => 'StudentCustomField.StudentCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'student_id']);
+        $this->hasMany('CustomFieldValues', ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id']);
+        $this->hasMany('StudentCustomFields', ['className' => 'StudentCustomField.StudentCustomFields', 'foreignKey' => 'student_id']);
+
         //POCOR-8434 add custome fileds record in pending admission starts
         $this->addBehavior('CustomField.Record', [
             'model' => 'Institution.StudentAdmission',
