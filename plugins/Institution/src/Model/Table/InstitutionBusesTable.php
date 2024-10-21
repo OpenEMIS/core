@@ -211,7 +211,19 @@ class InstitutionBusesTable extends ControllerActionTable
 
    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_transport_provider_id', ['type' => 'select', 'after' => 'comment']);
+        //POCOR-8647 Start
+        //$this->field('institution_transport_provider_id', ['type' => 'select', 'after' => 'comment']);
+        $institutionId = $this->getInstitutionID();
+        $transportProviders = $this->InstitutionTransportProviders
+        ->find('optionList', [
+            'defaultOption' => false,
+            'institution_id' => $institutionId
+        ])
+        ->toArray();
+        $transportProviderOptions = ['' => '-- ' . __('Select Assignee') . ' --'] + $transportProviders;
+        $this->field('institution_transport_provider_id', ['type' => 'select','options' => $transportProviderOptions, 'after' => 'comment']); 
+        //POCOR-8647 End
+        
         $this->field('bus_type_id', ['type' => 'select', 'after' => 'institution_transport_provider_id']);
         $this->field('transport_status_id', ['type' => 'select', 'after' => 'bus_type_id']);
         /*$modelAlias = 'InstitutionBuses';
