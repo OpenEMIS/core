@@ -2800,6 +2800,7 @@ class AttendanceRepository extends Controller
                 'Failed to get archive academic periods.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+            dd($e);
             return $this->sendErrorResponse('Failed to get archive academic periods.');
         }
     }
