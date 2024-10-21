@@ -2378,6 +2378,19 @@ class NavigationComponent extends Component
 
     public function getGuardianNavNavigation()
     {
+        // $request = $this->getController()->getRequest();
+        // $session = $this->getController()->getRequest()->getSession();
+        // $studentId = $session->read('Student.Students.id');
+        // if(empty($studentId) && $request->getParam('action') == 'StudentUser') {
+        //     $studentId = $this->controller->paramsDecode($request->getParam('pass')[1])['id'];
+        // }
+        // $queryString = $this->request->getQuery['queryString']; // comment cakephp4
+        // $queryString = '';
+        // if ($queryString != '') {
+        //     $session->write('queryString', $queryString);
+        // } else {
+        //     $queryString = $session->read('queryString');
+        // }
         // POCOR-8415 start
         $studentId = $this->getStudentID();
         if(!$studentId){
@@ -2397,6 +2410,7 @@ class NavigationComponent extends Component
                     '1' => $queryString], // POCOR-8415
                 'selected' => ['GuardianNavs.StudentUser']
             ],
+            
             'GuardianNavs.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
@@ -2415,7 +2429,25 @@ class NavigationComponent extends Component
                     'GuardianNavs.StudentTextbooks',
                     'GuardianNavs.StudentRisks',
                     'GuardianNavs.StudentAssociations']
+            ],
+            //POCOR-8293 start
+            'GuardianNavs.Healths.index' => [
+                'title' => 'Student Health',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'GuardianNav',
+                    '1' => $this->controller->paramsEncode(['id' => $studentId,'security_user_id'=> $studentId]), 'queryString' => $queryString],
+                'selected' => ['GuardianNavs.Healths',
+                        'GuardianNavs.HealthAllergies',
+                        'GuardianNavs.HealthConsultations',
+                        'GuardianNavs.HealthFamilies',
+                        'GuardianNavs.HealthHistories',
+                        'GuardianNavs.HealthImmunizations',
+                        'GuardianNavs.HealthMedications',
+                        'GuardianNavs.HealthTests',
+                        'GuardianNavs.HealthBodyMasses',
+                        'GuardianNavs.HealthInsurances']
             ]
+            //POCOR-8293 end
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
