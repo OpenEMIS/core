@@ -453,7 +453,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    //$this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),//POCOR-8508
                     $this->StudentsReportCards->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
@@ -463,7 +463,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->ReportCardEmailProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    //$this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),//POCOR-8508
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
@@ -1160,7 +1160,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
+                    //$this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')//POCOR-8508
                 ]
             )
             ->leftJoin([$this->ReportCardEmailProcesses->getAlias() => $this->ReportCardEmailProcesses->getTable()],
@@ -1169,7 +1169,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->ReportCardEmailProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    //$this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),//POCOR-8508
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $params['report_card_id']
                 ])
             ->where($conditions)

@@ -74,4 +74,16 @@ class MoodleApiLogDataTable extends ControllerActionTable
     {
         $this->setfieldOrder($this->fieldsOrder);
     }*/
+
+    public function onGetResponse(Event $event, Entity $entity)
+    {
+        if ($entity->status == 1) {
+            // Success response
+            return json_encode(['success' => true, 'message' => 'created successfully.']);
+        } else {
+            // Error response
+            return json_encode(['success' => false, 'message' => 'An unknown error occurred', 'error' => $entity->response]);
+        }
+    }
+
 }
