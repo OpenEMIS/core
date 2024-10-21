@@ -1520,6 +1520,11 @@ class WorkflowBehavior extends Behavior
             $workflowStep = $entity->status;
             $workflowStepId = $workflowStep ? $workflowStep->id : null;
             //POCOR-8561 -- End
+            //POCOR-8411 -- Start
+            if(empty($workflowStepId)){
+                $workflowStepId = $entity->has('status_id') ? $entity->status_id : -1;
+            }
+            //POCOR-8411 -- End
             $model = $this->_table;
             $userId = $model->Auth->user('id');
             $assigneeId = $entity->assignee_id;
