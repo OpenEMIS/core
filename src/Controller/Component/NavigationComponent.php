@@ -32,10 +32,15 @@ class NavigationComponent extends Component
 
     public function addCrumb($title, $options = [])
     {
+        if (!is_countable($options)) {
+            $size_of_options = 0;
+        } else {
+            $size_of_options = sizeof($options);
+        }
         $item = array(
             'title' => __((string)$title),
             'link' => ['url' => $options],
-            'selected' => sizeof($options) == 0
+            'selected' => $size_of_options == 0
         );
         $this->breadcrumbs[] = $item;
         $this->controller->set('_breadcrumbs', $this->breadcrumbs);
@@ -1324,11 +1329,11 @@ class NavigationComponent extends Component
                     $InstitutionStudentsTable->aliasField('institution_id') => $institutionID,
                 ])
                 ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC']);
-            
+
             $results = $query->all()->extract('id')->toArray();
             $institutionStudentId = !empty($results) ? $results[0] : null;
         }
-        
+
 
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
@@ -2410,7 +2415,7 @@ class NavigationComponent extends Component
                     '1' => $queryString], // POCOR-8415
                 'selected' => ['GuardianNavs.StudentUser']
             ],
-            
+
             'GuardianNavs.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
