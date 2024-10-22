@@ -39,7 +39,14 @@ class POCOR8224 extends AbstractMigration
         ');
 
         // Adding new entry into security_functions table
-        $this->execute("INSERT IGNORE INTO `security_functions` (
+        // CHECK THAT THERE IS NO SUCH SECURITY FUNCTION FIRSt
+        $query = $this->fetchRow("SELECT * FROM `security_functions`
+                          WHERE `name` = 'Exemptions' AND `controller` = 'Institutions'
+                          AND `module` = 'Institutions' AND `category` = 'Students'"
+            );
+
+        if (!$query) {
+            $this->execute("INSERT INTO `security_functions` (
                                   `id`,
                                   `name`,
                                   `controller`,
@@ -58,29 +65,23 @@ class POCOR8224 extends AbstractMigration
                                   `modified`,
                                   `created_user_id`,
                                   `created`) VALUES (NULL,
-                                                     'Exemptions',
-                                                     'Institutions',
-                                                     'Institutions',
-                                                     'Students',
-                                                     '8',
-                                                     NULL,
-                                                     'AssessmentItemExemptions.edit',
-                                                     NULL,
-                                                     NULL,
-                                                     NULL,
-                                                     '72',
-                                                     '1',
-                                                     NULL,
-                                                     NULL,
-                                                     NULL,
-                                                     '2', '2024-09-19 00:01:04');");
+                                                     'Exemptions', 'Institutions', 'Institutions', 'Students', '8',
+                                                     NULL, 'AssessmentItemExemptions.edit',
+                                                     NULL, NULL, NULL,
+                                                     '72', '1', NULL, NULL, NULL,
+                                                     '2', '2024-09-19 00:01:04');"
+                );
+        }
+
     }
 
     public function down()
     {
         // Drop the table if it exists
         $this->execute('DROP TABLE IF EXISTS `assessment_item_student_exemptions`');
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `z_8224_security_functions` TO `security_functions`');
+        $this->execute('SET FOREIGN_KEY_CHECKS=1;');
     }
 }
