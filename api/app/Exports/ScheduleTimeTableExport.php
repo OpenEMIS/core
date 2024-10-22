@@ -144,7 +144,7 @@ class ScheduleTimeTableExport implements FromCollection, WithHeadings
     {
         $options = $this->params;
         $timeTableId = $options['timetable_id'];
-
+        
         // Retrieve lessons with related models
         $lessons = InstitutionScheduleLessons::with([
                 'timetables.scheduleInterval.shift.shiftOption',
@@ -159,7 +159,7 @@ class ScheduleTimeTableExport implements FromCollection, WithHeadings
             ->where('institution_schedule_lessons.institution_schedule_timetable_id', $timeTableId)
             ->get()
             ->toArray();
-
+        //echo "<pre>";print_r($lessons);//dd();
         // Initialize arrays
         $formattedSchedule = [];
         $classInfo = [];
@@ -191,19 +191,23 @@ class ScheduleTimeTableExport implements FromCollection, WithHeadings
                 case 6: $day = 'Sat'; break;
                 case 7: $day = 'Sun'; break;
             }
+            
+            if($key == 0){ 
+                $prevDay = $day;
+            }
 
             // Initialize the start time using DateTime
-            //if($key == 0){
+            if($key == 0 || $prevDay != $day){
                 $shiftStartTime = new \DateTime($item['timetables']['schedule_interval']['shift']['start_time']);
-            //}
-           //echo "<pre>"; print_r($shiftStartTime); 
+            }
+            $prevDay = $day; 
             // Loop through schedule lesson details
 
-            foreach ($item['schedule_lesson_details'] as $lessonDetail) {
-
+            if(empty($item['schedule_lesson_details']) && $prevDay == $day) 
+            {
                 $intervalMinutes = $item['timeslots']['interval'];
                 $institutionTimeslot = $item['institution_schedule_timeslot_id'];
-
+                //dump(($institutionTimeslot . '  '. $previousInstitutionTimeslot));
                 // Compare with previous timeslot ID
                 if ($institutionTimeslot !== $previousInstitutionTimeslot) {
                     // Only calculate start and end times if the timeslot has changed
@@ -219,13 +223,33 @@ class ScheduleTimeTableExport implements FromCollection, WithHeadings
                     // Reset the previous institution timeslot to the current one
                     $previousInstitutionTimeslot = $institutionTimeslot;
                 }
- 
+            }
+            foreach ($item['schedule_lesson_details'] as $lessonDetail) {
+
+                $intervalMinutes = $item['timeslots']['interval'];
+                $institutionTimeslot = $item['institution_schedule_timeslot_id'];
+                //dump(($institutionTimeslot . '  '. $previousInstitutionTimeslot));
+                // Compare with previous timeslot ID
+                if ($institutionTimeslot !== $previousInstitutionTimeslot) {
+                    // Only calculate start and end times if the timeslot has changed
+                    $endTime = clone $shiftStartTime;
+                    $endTime->add(new \DateInterval('PT' . $intervalMinutes . 'M'));
+                    $formattedStartTime = $shiftStartTime->format('h:i A');
+                    $formattedEndTime = $endTime->format('h:i A');
+                    $timeslot = "$formattedStartTime - $formattedEndTime";
+
+                    // Update the current start time for the next lesson
+                    $shiftStartTime = $endTime; // Set current start time to end time for the next iteration
+
+                    // Reset the previous institution timeslot to the current one
+                    $previousInstitutionTimeslot = $institutionTimeslot;
+                }
                 // Prepare subject and room info
                 $subject = isset($lessonDetail['institution_schedule_curriculum_lessons']) ? 
                     $lessonDetail['institution_schedule_curriculum_lessons']['institution_subject']['name'] : 
                     $lessonDetail['institution_schedule_non_curriculum_lessons']['name'];
 
-                $room = $lessonDetail['lesson_rooms']['institution_rooms']['name'];
+                $room = isset($lessonDetail['lesson_rooms']['institution_rooms']['name']) ? $lessonDetail['lesson_rooms']['institution_rooms']['name'] :'';
 
                 // Initialize if it doesn't exist
                 if (!isset($formattedSchedule[$timeslot][$day])) {
@@ -237,7 +261,7 @@ class ScheduleTimeTableExport implements FromCollection, WithHeadings
             }
             
         }
-
+       // dd("sd");
         // Prepare final array for export
         $finalArray = [];
 
