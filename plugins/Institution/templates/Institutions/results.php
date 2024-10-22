@@ -35,6 +35,15 @@ $this->start('toolbar');
         <!-- <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && editPermissionForSelectedSubject" ng-click="onEditClick()">
             <i class="fa kd-edit"></i>
         </button> -->
+        <?php if ($_exempt) : ?>
+            <a ng-show="action == 'view' && (editPermission == 1 || editPermission == undefined)"  href="<?= $exemptUrl ?>">
+                <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body"
+                        title="<?= __('Exempt'); ?>"
+                >
+                    <i class="fa kd-null"></i>
+                </button>
+            </a>
+        <?php endif; ?>
 
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && (editPermission == 1 || editPermission == undefined)" ng-click="onEditClick()">
             <i class="fa kd-edit"></i>
@@ -93,7 +102,7 @@ $roles = '[' . implode(",", $_roles) . ']';
             </div>
         </div>
     </div>
-    
+
     <div ng-init="class_id=<?= $classId; ?>;assessment_id=<?= $assessmentId; ?>;institution_id=<?= $institutionId; ?>;roles=<?=$roles; ?>">
         <div class="scrolltabs sticky-content">
       <scrollable-tabset show-tooltips="false" show-drop-down="false">
