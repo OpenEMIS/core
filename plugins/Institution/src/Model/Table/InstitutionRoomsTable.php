@@ -138,7 +138,7 @@ class InstitutionRoomsTable extends ControllerActionTable
                     }
             
                     // Proceed with validation when datatype is not 'copy'
-                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_room_size');
+                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_room_size', $context);
                 },
                 'provider' => 'table',
                 'last' => true
