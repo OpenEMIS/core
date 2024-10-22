@@ -250,7 +250,7 @@ function InstitutionsResultsController($q,
                         });
                     }, function (error) {
                         params.data.save_error[params.colDef.field] = true;
-                        console.log(error);
+                        console.error(error);
                         AlertSvc.error($scope, 'There was an error when saving the result');
                         params.api.refreshCells({
                             rowNodes: [params.node],
@@ -265,8 +265,8 @@ function InstitutionsResultsController($q,
             .then(handleSuccessGetTranslatedGridLocale, handleErrorGetTranslatedGridLocale);
 
         function handleErrorGetTranslatedGridLocale(error) {
-            console.log('handleErrorGetTranslatedGridLocale');
-            console.log(JSON.stringify(error));
+            console.error('handleErrorGetTranslatedGridLocale');
+            console.error(JSON.stringify(error));
 
         }
 
@@ -300,7 +300,7 @@ function InstitutionsResultsController($q,
                             $scope.gridOptions.api.sizeColumnsToFit();
                         }
                     }, function (error) {
-                        console.log(error);
+                        console.error(error);
                     });
             }
             return true;
@@ -479,7 +479,7 @@ function InstitutionsResultsController($q,
                     AlertSvc.warning($scope, 'You have no permission for this subject.');
                 }
             }, function (error) {
-                console.log(error);
+                console.error(error);
             });
     };
 
