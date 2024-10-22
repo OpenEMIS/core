@@ -2822,11 +2822,11 @@ class InstitutionsController extends AppController
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
-        Log::debug(print_r([$action,
-            $controller,
-            $plugin,
-            $furtherAction],
-            true));
+//        Log::debug(print_r([$action,
+//            $controller,
+//            $plugin,
+//            $furtherAction],
+//            true));
         $primaryActions = [
             'checkUserAlreadyExistByIdentity',
             'saveGuardianData',
