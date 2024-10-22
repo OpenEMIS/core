@@ -4,6 +4,7 @@ namespace Localization\Controller;
 use Cake\Event\Event;
 use Cake\Core\App;
 use Cake\Cache\Cache;
+use Cake\Log\Log;
 
 class TranslationsController extends AppController
 {
@@ -11,6 +12,7 @@ class TranslationsController extends AppController
 
     public function initialize(): void
     {
+        Log::debug('trtr');
         parent::initialize();
         $this->loadComponent('RequestHandler');
         $this->Localization->autoCompile(false);
@@ -18,11 +20,13 @@ class TranslationsController extends AppController
         if ($this->request->is('post') && $this->request->getAttribute('params')['action'] == 'translate') {
             $token = !empty($this->request->getCookie('csrfToken')) ? $this->request->getCookie('csrfToken') : '';
             $this->request->getEnv('HTTP_X_CSRF_TOKEN', $token);
+            Log::debug('trtr1');
         }
     }
 
     public function translate()
     {
+        Log::debug('trtr2');
         $this->RequestHandler->renderAs($this, 'json');
         $text = $this->request->getData('text');
         $translated = __($text);

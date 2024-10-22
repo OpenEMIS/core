@@ -49,8 +49,8 @@ class AssessmentItemStudentExemptionsTable extends AppTable
 //            Log::debug($exempt_students);
 //            Log::debug([$assessment_item_id, $assessment_period_id, $institution_class_id]);
             // Get the table object
-            $AssessmentItemStudentExemptions = self::getDynamicTableInstance('AssessmentItemStudentExemptions');
-            $AssessmentItemsTable = self::getDynamicTableInstance('AssessmentItems');
+            $AssessmentItemStudentExemptions = self::getDynamicTableInstance('assessment_item_student_exemptions');
+            $AssessmentItemsTable = self::getDynamicTableInstance('assessment_items');
 
             // Retrieve assessment_id and education_subject_id from assessment_item_id
             $assessmentItem = $AssessmentItemsTable->find()
@@ -120,8 +120,8 @@ class AssessmentItemStudentExemptionsTable extends AppTable
 //            Log::debug($unexempt_students);
 
             // Get the table object
-            $AssessmentItemStudentExemptions = self::getDynamicTableInstance('AssessmentItemStudentExemptions');
-            $AssessmentItemsTable = self::getDynamicTableInstance('AssessmentItems');
+            $AssessmentItemStudentExemptions = self::getDynamicTableInstance('assessment_item_student_exemptions');
+            $AssessmentItemsTable = self::getDynamicTableInstance('assessment_items');
 
             // Retrieve assessment_id and education_subject_id from assessment_item_id
             $assessmentItem = $AssessmentItemsTable->find()

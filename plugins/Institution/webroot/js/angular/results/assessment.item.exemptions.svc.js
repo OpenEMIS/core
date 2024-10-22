@@ -1,10 +1,10 @@
 angular
-    .module('assessment.item.exemptions.svc', ['kd.data.svc', 'utils.svc'])
+    .module('assessment.item.exemptions.svc', ['kd.data.svc'])
     .service('AssessmentItemExemptionsSvc', AssessmentItemExemptionsSvc);
 
-AssessmentItemExemptionsSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'UtilsSvc'];
+AssessmentItemExemptionsSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc'];
 
-function AssessmentItemExemptionsSvc($http, $q, $filter, KdDataSvc, UtilsSvc) {
+function AssessmentItemExemptionsSvc($http, $q, $filter, KdDataSvc) {
 
     var service = {
         init: init,

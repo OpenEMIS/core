@@ -2822,22 +2822,30 @@ class InstitutionsController extends AppController
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
-//        Log::debug(print_r([$action,
-//            $controller,
-//            $plugin,
-//            $furtherAction],
-//            true));
-        if ($action == 'checkUserAlreadyExistByIdentity'
-           || $action == 'saveGuardianData'
-            || $action == 'saveStudentData'
-            || $action == 'saveStaffData'
-            || $action == 'saveDirectoryData'
-            || $action == 'checkConfigurationForExternalSearch'
-            || $action == 'studentCustomFields'
-            || $action == 'staffCustomFields'
-           || $furtherAction == 'removeReport'
-            || $furtherAction == 'downloadFailed' || $furtherAction == 'downloadPassed'
-        ) {
+        Log::debug(print_r([$action,
+            $controller,
+            $plugin,
+            $furtherAction],
+            true));
+        $primaryActions = [
+            'checkUserAlreadyExistByIdentity',
+            'saveGuardianData',
+            'saveStudentData',
+            'saveStaffData',
+            'saveDirectoryData',
+            'saveAssessmentItemExemptions',
+            'checkConfigurationForExternalSearch',
+            'studentCustomFields',
+            'staffCustomFields'
+        ];
+
+        $furtherActions = [
+            'removeReport',
+            'downloadFailed',
+            'downloadPassed'
+        ];
+
+        if (in_array($action, $primaryActions) || in_array($furtherAction, $furtherActions)) {
             return true;
         }
         if (($furtherAction == 'index'
