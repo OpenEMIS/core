@@ -244,7 +244,11 @@ class InstitutionsController extends AppController
         $this->attachAngularModulesForDirectory();
         $this->loadModel('Institution.StaffBodyMasses');
         //POCOR-5672 it is used for removing csrf token mismatch condition in save student Api
-        if ($this->request->getParam('action') == 'saveStudentData' || $this->request->getParam('action') == 'saveStaffData' || $this->request->getParam('action') == 'saveGuardianData' || $this->request->getParam('action') == 'saveDirectoryData') {
+        if ($this->request->getParam('action') == 'saveStudentData'
+            || $this->request->getParam('action') == 'saveStaffData'
+            || $this->request->getParam('action') == 'saveGuardianData'
+            || $this->request->getParam('action') == 'saveDirectoryData'
+            || $this->request->action == 'saveAssessmentItemExemptions') { // POCOR-8224
             $this->getEventManager()->off($this->Csrf);
         }//POCOR-5672 ends
     }
@@ -298,6 +302,13 @@ class InstitutionsController extends AppController
                     'institutions.results.ctrl',
                     'institutions.results.svc'
                 ]);
+                break;
+            case 'AssessmentItemExemptions':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'assessment.item.exemptions.ctrl',
+                    'assessment.item.exemptions.svc'
+                ]); // POCOR8224
                 break;
             case 'AssessmentItemResultsArchived':
                 $this->Angular->addModules([
@@ -1630,6 +1641,22 @@ class InstitutionsController extends AppController
         $url['controller'] = 'Institutions';
         $url['action'] = 'resultsExport';
         $url['?'] = ['queryString' => $queryString];
+        // POCOR8224-C3 start
+        if ($isActive) {
+            $_exempt = $this->AccessControl->check(['Institutions', 'AssessmentItemExemptions', 'edit'], $roles);
+        } else {
+            $_exempt = false;
+        }
+        $this->set('_exempt', $_exempt);
+        if($_exempt){
+            $exemptUrl = $this->ControllerAction->url('edit');
+            unset($exemptUrl['?']);
+            $exemptUrl['action'] = 'AssessmentItemExemptions';
+            $exemptUrl['0'] = 'edit';
+            $exemptUrl['?']['queryString'] = $queryString;
+            $this->set('exemptUrl', Router::url($exemptUrl));
+        }
+        // POCOR8224-C3 end
 
         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
@@ -8609,15 +8636,15 @@ class InstitutionsController extends AppController
                                     'Users.Identities.IdentityTypes',
                                     'Users.AddressAreas',
                                     'Users.BirthplaceAreas',
-                                    'Users.Contacts.ContactTypes'                   
+                                    'Users.Contacts.ContactTypes'
                                 ],
                     ])->where([
                         $staff->aliasField('staff_id') => $userRecordId
                     ]);
-       
-        if (!empty($bodyData)) { 
+
+        if (!empty($bodyData)) {
             foreach ($bodyData as $key => $value) {
-                $institutionStaffId = $value->id; 
+                $institutionStaffId = $value->id;
                 $user_id = $value->user->id;
                 $openemis_no = $value->user->openemis_no;
                 $first_name = $value->user->first_name;
@@ -8628,13 +8655,13 @@ class InstitutionsController extends AppController
                 $gender = $value->user->gender->name;
                 $nationality = $value->user->main_nationality->name;
                 $dateOfBirth = $value->user->date_of_birth;
-                
+
                 $address = $value->user->address;
                 $postalCode = $value->user->postal_code;
                 $addressArea = $value->user->address_area->name;
                 $birthplaceArea = $value->user->birthplace_area->name;
                 $role = $value->user->is_staff;
-                
+
                 $contactValue = [];
                 $contactType = [];
                 if(!empty($value->user['contacts'])) {
@@ -8643,7 +8670,7 @@ class InstitutionsController extends AppController
                         $contactType[] = $contact->contact_type->name;
                     }
                 }
-                
+
                 $identityNumber = [];
                 $identityType = [];
                 if(!empty($value->user['identities'])) {
@@ -8652,7 +8679,7 @@ class InstitutionsController extends AppController
                         $identityType[] = $identity->identity_type->name;
                     }
                 }
-                
+
                 $username = $value->user->username;
                 $institution_id = $value->institution->id;
                 $institutionName = $value->institution->name;
@@ -8661,23 +8688,23 @@ class InstitutionsController extends AppController
                 $position_no = $value->position->position_no;
                 $staff_position_titles_type = $value->position->staff_position_title->type;
                 $staff_types_name = $value->staff_type->name;
-                
+
                 if($staff_position_titles_type == 1 ){
                     $class= 'Teaching';
                 } else {
                     $class = 'Non-Teaching';
                 }
                 $staff_position_titles_name = $value->position->staff_position_title->name;
-                
+
                 $startDate = $value->start_date;
                 $endDate = $value->end_date;
-                
+
             }
         }
         $shift =  TableRegistry::get('Institution.InstitutionShifts');
         $shiftData = $shift->find('all',
                             [ 'contain' => [
-                                'ShiftOptions'                   
+                                'ShiftOptions'
                             ],
                 ])->where([
                     $shift->aliasField('id') => $userRecordId
@@ -8688,7 +8715,7 @@ class InstitutionsController extends AppController
             }
         }
         $body = array();
-        $body = [   
+        $body = [
             'security_users_id' => !empty($user_id) ? $user_id : NULL,
             'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
             'security_users_first_name' =>  !empty($first_name) ? $first_name : NULL,
@@ -8713,7 +8740,7 @@ class InstitutionsController extends AppController
             'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
             //'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
             'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-            'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL, 
+            'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
             'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
             'staff_position_titles_type'=>!empty($class) ? $class : NULL,
             'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
@@ -8721,7 +8748,7 @@ class InstitutionsController extends AppController
             'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
             'role_name' => ($role == 1) ? 'staff' : NULL
         ];
-    
+
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
         $Webhooks->triggerShell('staff_create', ['username' => ''], $body);
 

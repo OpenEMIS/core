@@ -717,7 +717,7 @@ class AssessmentItemResultsTable extends AppTable
      * @throws \Exception
      */
 
-    private static function getMarksForClass(array $params, bool $archive = false): ?array
+    private static function getMarksForClass(array $params, bool|null $archive = false): ?array
     {
         $academic_period_id = self::getFromArray($params, 'academic_period_id');
         $institution_id = self::getFromArray($params, 'institution_id');
