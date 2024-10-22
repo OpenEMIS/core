@@ -6,8 +6,8 @@ class POCOR8224 extends AbstractMigration
 {
     public function up()
     {
-        $this->execute('CREATE TABLE  `z_8224_security_functions` LIKE `security_functions`');
-        $this->execute('INSERT  INTO `z_8224_security_functions` SELECT * FROM `security_functions`');
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_8224_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT IGNORE INTO `z_8224_security_functions` SELECT * FROM `security_functions`');
 
         // Check if the table already exists before creating it
         $this->execute('
@@ -39,7 +39,7 @@ class POCOR8224 extends AbstractMigration
         ');
 
         // Adding new entry into security_functions table
-        $this->execute("INSERT INTO `security_functions` (
+        $this->execute("INSERT IGNORE INTO `security_functions` (
                                   `id`,
                                   `name`,
                                   `controller`,
