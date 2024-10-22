@@ -310,4 +310,11 @@ class HealthsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //POCOR-8293
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $userId = $this->getUserID();
+        $query->where([ $this->aliasField('security_user_id') => $userId]);
+        return $query;
+    }
 }

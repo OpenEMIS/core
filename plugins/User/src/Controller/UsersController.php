@@ -45,7 +45,7 @@ class UsersController extends AppController
         
         if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {
             $this->getEventManager()->off($this->Csrf);
-            $this->Security->config('unlockedActions', [$action]);
+            $this->Security->setConfig('unlockedActions', [$action]);
         }
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $localLoginEnabled = $ConfigItems->value('enable_local_login');

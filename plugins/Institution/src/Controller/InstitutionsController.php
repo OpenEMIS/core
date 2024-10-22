@@ -2748,6 +2748,14 @@ class InstitutionsController extends AppController
         if ($furtherAction == 'ajaxInstitutionsAutocomplete') {
             return true;
         }
+        // POCOR-7799 start
+        if ($furtherAction == 'downloadPassed' ) {
+            return true;
+        }
+        if ($furtherAction == 'downloadFailed') {
+            return true;
+        }
+        // POCOR-7799 end
 //        $this->log(print_r($request,true), debug);
         return false;
     }
