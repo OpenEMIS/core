@@ -104,22 +104,6 @@ class TimetableOverviewService extends Controller
         }
     }
 
-
-    public function getScheduleTimeTableExportData($params)
-    {
-        try {
-            $data = $this->timetableOverviewRepository->getScheduleTimeTableExport($params);
-
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to Export Schedule TimeTable from DB.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to Export Schedule TimeTable from DB.');
-        }
-    }
-
 }
 
     
