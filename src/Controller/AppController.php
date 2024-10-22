@@ -884,6 +884,7 @@ class AppController extends Controller
                 'studentCustomFields',
                 'staffCustomFields',
                 'saveStudentData',
+                'saveAssessmentItemExemptions', // POCOR-8224
                 'saveStaffData',
                 'saveGuardianData',
                 'saveDirectoryData',
