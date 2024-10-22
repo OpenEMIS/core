@@ -11137,8 +11137,8 @@ components:
                         institution_class_id:
                             type: integer
                             nullable: true
-                        institution_class_id:
-                            type: integer
+                        institution_class_name:
+                            type: string
                             nullable: true
                         institution_grade_id:
                             type: integer
@@ -11179,8 +11179,6 @@ components:
                             type: string
                             format: date-time
                             nullable: true
-                        created_user_id:
-                            type: integer
                         created:
                             type: string
                             format: date-time
@@ -11235,22 +11233,23 @@ components:
                                     "institution_schedule_interval_name": "shift"
                                     "institution_schedule_term_id": 3
                                     "institution_schedule_term_name": "test"
-                                    "status": "Draft"
-                                    "status_id": 1
-                                    "modified_user_id": null
-                                    "modified": null
-                                    "created_user_id": 2
-                                    "created": "2024-01-30 17:37:41"
-                                    "first_page_url": "http://127.0.0.1/pocor-openemis-core/api/v4/schedule/timetable-overview?page=1",
-                                    "from": 1
-                                    "last_page": 1
-                                    "last_page_url": "http://127.0.0.1/pocor-openemis-core/api/v4/schedule/timetable-overview?page=1"
-                                    "next_page_url": null
-                                    "path": "http://127.0.0.1/pocor-openemis-core/api/v4/schedule/timetable-overview"
-                                    "per_page": "10"
-                                    "prev_page_url": null
-                                    "to": 4
-                                    "total": 4
+                                    status: "Draft"
+                                    status_id: 1
+                                    modified_user_id: null
+                                    modified: null
+                                    created_user_id: 2
+                                    created: "2024-01-30 17:37:41"
+                                    first_page_url: "http://127.0.0.1/pocor-openemis-core/api/v4/schedule/timetable-overview?page=1"
+                                    from: 1
+                                    last_page: 1
+                                    last_page_url: "http://127.0.0.1/pocor-openemis-core/api/v4/schedule/timetable-overview?page=1"
+                                    next_page_url: null
+                                    path: "http://127.0.0.1/pocor-openemis-core/api/v4/schedule/timetable-overview"
+                                    per_page: "10"
+                                    prev_page_url: null
+                                    to: 4
+                                    total: 4
+
                         time_slots:
                             type: object
                             properties:
