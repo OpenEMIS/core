@@ -8,10 +8,10 @@ angular.module('assessment.item.exemptions.ctrl', [
     'alert.svc',
     'aggrid.locale.svc',
     'assessment.item.exemptions.svc',
-    'institution.class.students.svc',
     'angular.chosen'
 ])
-    .controller('AssessmentItemExemptionsCtrl', AssessmentItemExemptionsController);
+    .controller('AssessmentItemExemptionsCtrl',
+        AssessmentItemExemptionsController);
 
 AssessmentItemExemptionsController.$inject = [
     '$scope',
@@ -21,7 +21,6 @@ AssessmentItemExemptionsController.$inject = [
     'UtilsSvc',
     'AlertSvc',
     'AggridLocaleSvc',
-    'InstitutionClassStudentsSvc',
     'AssessmentItemExemptionsSvc',
 ];
 
@@ -33,7 +32,6 @@ function AssessmentItemExemptionsController(
     UtilsSvc,
     AlertSvc,
     AggridLocaleSvc,
-    InstitutionClassStudentsSvc,
     AssessmentItemExemptionsSvc
 ) {
     const ctrl = this;
@@ -76,7 +74,6 @@ function AssessmentItemExemptionsController(
     angular.element(document).ready(initPage);
 
     function initPage() {
-        InstitutionClassStudentsSvc.init(angular.baseUrl);
         AssessmentItemExemptionsSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
 
@@ -179,11 +176,11 @@ function AssessmentItemExemptionsController(
         // console.log(options);
         AssessmentItemExemptionsSvc.getExemptStudents(options)
             .then(setClassDetails)
-            .then(translateColumnHeaders)
-            .then(translatedText => {
-                translatedText.forEach((text, index) => {
-                    ctrl.colDef[index].headerName = text;
-                });
+            // .then(translateColumnHeaders)
+            .then(() => {
+                // translatedText.forEach((text, index) => {
+                //     ctrl.colDef[index].headerName = text;
+                // });
                 ctrl.setTop(ctrl.colDef, ctrl.unexemptStudents);
                 ctrl.setBottom(ctrl.colDef, ctrl.exemptStudents);
             })
@@ -229,7 +226,10 @@ function AssessmentItemExemptionsController(
 
     function translateColumnHeaders() {
         const toTranslate = ctrl.colDef.map(col => col.headerName);
-        return InstitutionClassStudentsSvc.translate(toTranslate);
+        const tr = AssessmentItemExemptionsSvc.translate(toTranslate);
+        console.log(toTranslate)
+        console.log(tr)
+        return tr;
     }
 
     function handleError(error) {
