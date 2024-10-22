@@ -106,8 +106,8 @@ class AcademicPeriodBehavior extends Behavior {
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'view':
-				if (isset($this->request->data[$this->_table->getAlias()]['editable'])) {
-					$isEditable = $this->request->data[$this->_table->getAlias()]['editable'];
+				if (isset($this->request->getData()[$this->_table->getAlias()]['editable'])) {
+					$isEditable = $this->request->getData()[$this->_table->getAlias()]['editable'];
 					if (!$isEditable) {
 						if(isset($toolbarButtons['edit'])) {
 							unset($toolbarButtons['edit']);

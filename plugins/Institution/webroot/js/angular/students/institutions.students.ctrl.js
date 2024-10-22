@@ -222,6 +222,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         if (period.current === 1) {
                             userCtrl.currentAcademicPeriod = period.id;
                             userCtrl.currentAcademicPeriodName = period.name;
+                            const academicPeriod = period.id; //POCOR-8411 -- Start
                             userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
                                     const startDateRangeResponse = response;
                                     const {start_date, end_date} = startDateRangeResponse.data[0];
@@ -711,6 +712,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     userCtrl.changeDateOfBirth = function() {
         directorySvc.changeDateOfBirth($scope);
+    };
+    //POCOR-8411 -- Start
+    userCtrl.changeTransferStartDate = function() {
+        userCtrl.unsetError('transferStartDate');
     };
 
     userCtrl.setError = function(field, message) {
