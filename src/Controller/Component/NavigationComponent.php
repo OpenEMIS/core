@@ -931,6 +931,7 @@ class NavigationComponent extends Component
                     'Institutions.ImportAssessmentItemResults.add',
                     'Institutions.ImportAssessmentItemResults.results',
                     'Institutions.AssessmentItemResultsArchived',
+                    'Institutions.AssessmentItemExemptions', //POCOR-8224
                     'Institutions.reportCardGenerate'],
             ],
 
