@@ -804,8 +804,6 @@ class RecordBehavior extends Behavior
 
         $values = [];
         if ($model->exists([$idKey => $id])) {
-            //$idKey = 'student_id';  // Use 'student_id' as the foreign key
-            //$id = 14679;//for test POCOR-8434
             $query = $model->find()->contain(['CustomFieldValues.CustomFields'])->where([$idKey => $id]);
 
             $newEntity = $query->first();
@@ -814,26 +812,14 @@ class RecordBehavior extends Behavior
                     $fieldId = $obj->{$this->getConfig('fieldKey')};
                     $customField = $obj->custom_field;
                     $isCheckbox = $customField->field_type == 'CHECKBOX';//POCOR-8434
-                    //POCOR-8434 starts
-                    if($model->getRegistryAlias() == 'Institution.StudentAdmission'){
-                        if ($isCheckbox) {
-                            $checkboxValues = [$obj['number_value']];
-                            if (isset($values[$key][$fieldId])) {
-                                $checkboxValues = array_merge($checkboxValues, $values[$key][$fieldId]['number_value']);
-                            }
-                            $obj['number_value'] = $checkboxValues;
+                    if ($isCheckbox) {
+                        $checkboxValues = [$obj['number_value']];
+                        if (isset($values[$fieldId])) {
+                            $checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
                         }
-                        $values[$key][$fieldId] = $obj;
-                    }else{//POCOR-8434 ends
-                        if ($isCheckbox) {
-                            $checkboxValues = [$obj['number_value']];
-                            if (isset($values[$fieldId])) {
-                                $checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
-                            }
-                            $obj['number_value'] = $checkboxValues;
-                        }
-                        $values[$fieldId] = $obj;
-                    }                    
+                        $obj['number_value'] = $checkboxValues;
+                    }
+                    $values[$fieldId] = $obj;
                 }
             }
         }
@@ -866,9 +852,8 @@ class RecordBehavior extends Behavior
 					if(empty($tabSection) || ($slug == $tabSection)) {
 						$fieldId = $customField->id;
                         //POCOR-8434 starts
-                        $recordKey = ($model->getRegistryAlias() == 'Institution.StudentAdmission') ? $entity->student_id : $entity->id;
-                        $fieldValue = ($model->getRegistryAlias() == 'Institution.StudentAdmission') ? $values[$key][$fieldId] ?? null : $values[$fieldId] ?? null;
-
+                        $recordKey = $entity->id;
+                        $fieldValue = $values[$fieldId] ?? null;
                         if ($fieldValue) {
                             $fieldValues[] = $fieldValue;
                         } else {
@@ -881,8 +866,13 @@ class RecordBehavior extends Behavior
                                 'time_value' => null,
                                 $this->getConfig('fieldKey') => $fieldId,
                                 $this->getConfig('recordKey') => $recordKey,
-                                'custom_field' => null // set after data is patched else will be lost
+                                'custom_field' => null, // set after data is patched else will be lost
                             ];
+                            
+                            if ($model->getRegistryAlias() == 'Institution.StudentAdmission') {
+                                $valueData['student_id'] = $entity->student_id;
+                            }
+                            
                             $valueEntity = $this->CustomFieldValues->newEntity($valueData, ['validate' => false]);
                             $valueEntity->custom_field = $customField;
                             $fieldValues[] = $valueEntity;
@@ -1073,36 +1063,26 @@ class RecordBehavior extends Behavior
                                 }
                                 // POCOR-8352 End
                             }
-                            //POCOR-8434 starts
-                            if($model->getRegistryAlias() == 'Institution.StudentAdmission'){
-                                $values[$key][$fieldId] = $fieldData;//add $key array
-                            }else{//POCOR-8434 ends
                                 $values[$fieldId] = $fieldData;
+                                $values[$fieldId] = $fieldData;
+                            }
+                            $values[$fieldId] = $fieldData;
                             }
                         }
                     }
-                }
+                }  
 
                 if ($entity->has('custom_table_cells')) {
                     foreach ($entity->custom_table_cells as $key => $obj) {
                         $fieldId = $obj->{$fieldKey};
                         $rowId = $obj->{$tableRowKey};
                         $columnId = $obj->{$tableColumnKey};
-                        //POCOR-8434 starts
-                        if($model->getRegistryAlias() == 'Institution.StudentAdmission'){
-                            //add $key in $cell
-                            $cells[$key][$fieldId][$rowId][$columnId] = [
-                                'text_value' => $obj['text_value'],
-                                'number_value' => $obj['number_value'],
-                                'decimal_value' => $obj['decimal_value']
-                            ];
-                        }else{//POCOR-8434 ends
-                            $cells[$fieldId][$rowId][$columnId] = [
-                                'text_value' => $obj['text_value'],
-                                'number_value' => $obj['number_value'],
-                                'decimal_value' => $obj['decimal_value']
-                            ];
-                        }                        
+
+                        $cells[$fieldId][$rowId][$columnId] = [
+                            'text_value' => $obj['text_value'],
+                            'number_value' => $obj['number_value'],
+                            'decimal_value' => $obj['decimal_value']
+                        ];
                     }
                 }
             }
@@ -1147,7 +1127,7 @@ class RecordBehavior extends Behavior
                                         ],
                                         'valueClass' => $valueClass,
                                         'customField' => $customField,
-                                        'customFieldValues' => $model->getRegistryAlias() == 'Institution.StudentAdmission' ? $valuesArray[$key] : $valuesArray,//POCOR-8434 add $key in array
+                                        'customFieldValues' => $valuesArray,
                                         'customTableCells' => $cellsArray
                                     ];
 

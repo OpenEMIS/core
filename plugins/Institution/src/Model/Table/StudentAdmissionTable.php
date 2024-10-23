@@ -71,9 +71,9 @@ class StudentAdmissionTable extends ControllerActionTable
             'Students' => ['index', 'add']
         ]);
 
-        $this->hasMany('StudentCustomFieldValues', ['className' => 'StudentCustomField.StudentCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'student_id']);
-        $this->hasMany('CustomFieldValues', ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id']);
-        $this->hasMany('StudentCustomFields', ['className' => 'StudentCustomField.StudentCustomFields', 'foreignKey' => 'student_id']);
+        $this->hasMany('StudentCustomFieldValues', ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_student_admission_id']);
+        $this->hasMany('CustomFieldValues', ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'foreignKey' => 'institution_student_admission_id']);
+        //$this->hasMany('StudentCustomFields', ['className' => 'StudentCustomField.StudentCustomFields', 'foreignKey' => 'student_id']);
 
         //POCOR-8434 add custome fileds record in pending admission starts
         $this->addBehavior('CustomField.Record', [
@@ -87,9 +87,12 @@ class StudentAdmissionTable extends ControllerActionTable
             'filterKey' => 'student_custom_filter_id',
             'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
             // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-            'recordKey' => 'student_id',
-            'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+            'recordKey' => 'institution_student_admission_id',
+            //'recordKey' => 'student_id',
+            //'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],//old
+            'fieldValueClass' => ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'foreignKey' => 'institution_student_admission_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            //'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+            'tableCellClass' => null
         ]);//POCOR-8434 ends
         
         $this->toggle('add', true);
