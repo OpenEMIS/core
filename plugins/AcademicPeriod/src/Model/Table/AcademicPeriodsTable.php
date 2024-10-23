@@ -1660,7 +1660,7 @@ class AcademicPeriodsTable extends ControllerActionTable
      */
     private function getInstitutionClasses($institutionId)
     {
-        $tableClasses = TableRegistry::get('institution_classes');
+        $tableClasses = TableRegistry::get('Institution.InstitutionClasses');
         $distinctClasses = $tableClasses->find('all')
             ->where(['institution_id' => $institutionId])
             ->select(['id'])
