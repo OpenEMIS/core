@@ -211,21 +211,31 @@ class AppController extends Controller
 
     private function darkenColour($rgb, $darker = 2)
     {
+        // Check if $rgb is null or not a valid string
+        if (!is_string($rgb) || strlen($rgb) < 6) {
+            return '#000000'; // Return black if $rgb is not valid
+        }
+
         $hash = (strpos($rgb, '#') !== false) ? '#' : '';
         $rgb = (strlen($rgb) == 7) ? str_replace('#', '', $rgb) : ((strlen($rgb) == 6) ? $rgb : false);
-        if (strlen($rgb) != 6) {
+        
+        if ($rgb === false) {
             return $hash . '000000';
         }
+
         $darker = ($darker > 1) ? $darker : 1;
 
+        // Split the RGB string into its red, green, and blue components
         list($R16, $G16, $B16) = str_split($rgb, 2);
 
+        // Darken each color component and format it as a 2-digit hex value
         $R = sprintf("%02X", floor(hexdec($R16) / $darker));
         $G = sprintf("%02X", floor(hexdec($G16) / $darker));
         $B = sprintf("%02X", floor(hexdec($B16) / $darker));
 
         return $hash . $R . $G . $B;
     }
+
 
     public function getTheme()
     {
