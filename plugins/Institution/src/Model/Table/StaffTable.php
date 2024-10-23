@@ -1316,15 +1316,18 @@ class StaffTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
+        $institutionId = $this->getQueryString('institution_id');
         $encodedQueryString = $this->paramsEncode($queryString);
 
         if (isset($extra['toolbarButtons'])) {
             $toolbarButtons = $extra['toolbarButtons'];
-
             if (isset($toolbarButtons['edit'])) {
                 $url = $toolbarButtons['edit']['url'];
                 $staffId = $url[1];
                 unset($url[1]);
+                if(isset($url[2])) { //POCOR-8447
+                    unset($url[2]);
+                }
                 $url[0] = 'add';
                 $url['institution_staff_id'] = $staffId;
                 $url['action'] = 'StaffPositionProfiles';
@@ -1633,6 +1636,8 @@ class StaffTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view'])) {
             // $primaryKey = is_array($this->getPrimaryKey()) ? array_flip($this->getPrimaryKey()) : [0 => $this->primaryKey()];
@@ -1682,6 +1687,7 @@ class StaffTable extends ControllerActionTable
             $primaryKey = is_array($this->getPrimaryKey()) ? array_flip($this->getPrimaryKey()) : [0 => $this->getPrimaryKey()];
             $url = $this->url('add');
             $url['action'] = 'StaffPositionProfiles';
+            $url[1] = $encodedQueryString;
             $url['institution_staff_id'] = $this->paramsEncode(['id' => $entity->id]);
             $url['action'] = 'StaffPositionProfiles';
             $buttons['edit']['url'] = $url;
@@ -2788,7 +2794,7 @@ class StaffTable extends ControllerActionTable
      */
     public function findByPositions(Query $query, array $options)
     {
-        if (array_key_exists('Institutions.id', $options) && isset($options['type'])) {
+        if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
             $positions = $this->Positions->find('list')
                 ->select([
                     $this->Positions->aliasField('id'),
@@ -2831,7 +2837,7 @@ class StaffTable extends ControllerActionTable
      */
     public function findByType(Query $query, array $options)
     {
-        if (isset($options['type'])) {
+        if (array_key_exists('type', $options)) {
             $types = $this->StaffTypes->getList()->toArray();
             if (is_array($types) && in_array($options['type'], $types)) {
                 $typeId = array_search($options['type'], $types);
@@ -2856,7 +2862,7 @@ class StaffTable extends ControllerActionTable
      */
     public function findByStatus(Query $query, array $options)
     {
-        if (isset($options['status'])) {
+        if (array_key_exists('status', $options)) {
             $statuses = $this->StaffStatuses->getList()->toArray();
             if (is_array($statuses) && in_array($options['status'], $statuses)) {
                 $statusId = array_search($options['status'], $statuses);
@@ -2871,11 +2877,11 @@ class StaffTable extends ControllerActionTable
 
     public function findStaffRecords(Query $query, array $options)
     {
-        $academicPeriodId = (isset($options['academicPeriodId'])) ? $options['academicPeriodId'] : null;
-        $positionType = (isset($options['positionType'])) ? $options['positionType'] : null;
-        $staffId = (isset($options['staffId'])) ? $options['staffId'] : null;
-        $institutionId = (isset($options['institutionId'])) ? $options['institutionId'] : null;
-        $isHomeroom = (isset($options['isHomeroom'])) ? $options['isHomeroom'] : null;
+        $academicPeriodId = (array_key_exists('academicPeriodId', $options)) ? $options['academicPeriodId'] : null;
+        $positionType = (array_key_exists('positionType', $options)) ? $options['positionType'] : null;
+        $staffId = (array_key_exists('staffId', $options)) ? $options['staffId'] : null;
+        $institutionId = (array_key_exists('institutionId', $options)) ? $options['institutionId'] : null;
+        $isHomeroom = (array_key_exists('isHomeroom', $options)) ? $options['isHomeroom'] : null;
 
         if (!is_null($academicPeriodId)) {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -3665,12 +3671,7 @@ class StaffTable extends ControllerActionTable
         $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $staffRecord = $institutionStaff->find('all', ['conditions' => ['staff_id' => $staffId]])
             ->first();
-        //POCOR-8379 starts
-        if(!empty($staffRecord)){
-            $staffStatusId = $staffRecord['staff_status_id'];
-        }else{
-            $staffStatusId = '';
-        }//POCOR-8379 ends
+        $staffStatusId = $staffRecord['staff_status_id'];
         //End of POCOR-7020
         $conditions = [];
         if ($institutionId != '') {
