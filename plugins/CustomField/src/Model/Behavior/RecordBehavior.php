@@ -869,10 +869,6 @@ class RecordBehavior extends Behavior
                                 'custom_field' => null, // set after data is patched else will be lost
                             ];
                             
-                            if ($model->getRegistryAlias() == 'Institution.StudentAdmission') {
-                                $valueData['student_id'] = $entity->student_id;
-                            }
-                            
                             $valueEntity = $this->CustomFieldValues->newEntity($valueData, ['validate' => false]);
                             $valueEntity->custom_field = $customField;
                             $fieldValues[] = $valueEntity;
