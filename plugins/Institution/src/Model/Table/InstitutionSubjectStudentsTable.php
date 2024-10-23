@@ -5,7 +5,6 @@ namespace Institution\Model\Table;
 use App\Model\Traits\UserTrait;
 use ArrayObject;
 use Cake\Datasource\ResultSetInterface;
-use Cake\I18n\Date;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\I18n\Time;
 use Cake\Event\Event;
@@ -13,8 +12,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
-use Cake\Validation\Validator;
-use Cake\Utility\Text;
 use Cake\Log\Log;
 use Cake\ORM\Locator\TableLocator;
 
@@ -384,6 +381,8 @@ class InstitutionSubjectStudentsTable extends AppTable
     {
 //    POCOR-7419-KHINDOL
 //        $this->log('findStudentResults', 'debug');
+        //        Log::debug(__FUNCTION__);
+//        Log::debug($options);
         $institution_id = self::getFromArray($options, 'institution_id');
         $institution_class_id = self::getFromArray($options, 'institution_class_id'); //568
         $assessment_id = self::getFromArray($options, 'assessment_id');

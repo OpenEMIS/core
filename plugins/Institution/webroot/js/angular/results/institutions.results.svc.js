@@ -122,6 +122,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 .then(handleGetPermissions, handleError)
                 .then(checkAllMyHomeSecondaryPermissions, handleError)
                 .then(function (response) {
+                    // POCOR-8224 removed log output
                     // console.log('getPermissions');
                     // console.log(response);
                     var allSubjectsPermission = response[0];
@@ -147,7 +148,6 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                     // For no subjects
                     var fail = function (response, deferred) {
-                        // console.error(fail);
                         console.error('allSubjectsPermission');
                         deferred.reject('You do not have access to subjects');
                     };
@@ -576,7 +576,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 },
                 valueGetter: function (params) {
                     var value = params.data[params.colDef.field];
-
+                    console.log(value);
                     if (!isNaN(parseFloat(value))) {
                         return $filter('number')(value, 2);
                     } else {
@@ -1086,7 +1086,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     deferred.reject(response.data.error);
                 } else {
                     var subjectStudents = response.data.data;
-                    // console.log(subjectStudents);
+                    console.log(subjectStudents);
                     var periodObj = {};
                     angular.forEach(periods, function (period, key) {
                         periodObj[period.id] = period;
@@ -1163,9 +1163,11 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                             if (isMarksType) {
                                 // console.log("isMarksType");
                                 var marks = parseFloat(subjectStudent.mark);
-                                studentResults['period_' + parseInt(assessmentPeriodId)] = '';
+                                // studentResults['period_' + parseInt(assessmentPeriodId)] = '';
                                 if (!isNaN(marks)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
+                                }else{
+                                    studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.mark;
                                 }
 
 
