@@ -1063,11 +1063,7 @@ class RecordBehavior extends Behavior
                                 }
                                 // POCOR-8352 End
                             }
-                                $values[$fieldId] = $fieldData;
-                                $values[$fieldId] = $fieldData;
-                            }
                             $values[$fieldId] = $fieldData;
-                            }
                         }
                     }
                 }  
