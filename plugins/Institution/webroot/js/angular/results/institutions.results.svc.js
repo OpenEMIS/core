@@ -591,7 +591,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         'oe-cell-highlight': function (params) {
                             var field = params.colDef.field;
                             const exempt = params.node.data[field];
-                            console.log(exempt);
+                            console.log(field);
                             //POCOR-7550 start
                             if(exempt === 'EXEMPT'){
                                 return 0;
@@ -611,6 +611,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         }
                     },
                     editable: function (params) {
+                        var field = params.colDef.field;
                         // console.log(params);
                         // only enrolled student is editable
                         const exempt = params.node.data[field];
@@ -1235,24 +1236,34 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
         },
 
         calculateTotal: function (data) {
-            var returnValue = 0;
+            var totalMark = 0;
+            var sumMark = 0;
+            var totalWeight = 0;
+            var sumWeight = 0;
             var valueEnabled = false;
-            angular.forEach(data, function (value, key) {
+            var weight = 0;
+            angular.forEach(data, function (mark, key) {
                 if (key.indexOf('period_') >= 0) {
                     var periodId = parseInt(key.replace('period_', ''));
-                    if (!isNaN(parseFloat(value))) {
-                        var weightVar = 'weight_' + periodId;
-                        if (typeof data[weightVar] == 'number') {
-                            returnValue = returnValue + (value * data[weightVar]);
+                    var weightVar = 'weight_' + periodId;
+                    if (!isNaN(parseFloat(data[weightVar]))) {
+                        weight = data[weightVar];
+                        totalWeight = totalWeight + weight;
+                        if (!isNaN(parseFloat(mark))) {
+                            sumMark = sumMark + (mark * weight);
+                            sumWeight = sumWeight + weight;
+                            console.log(sumWeight);
                             valueEnabled = true;
                         }
                     }
                 }
             });
-            if (!isNaN(parseFloat(returnValue)) && valueEnabled) {
-                return $filter('number')(returnValue, 2);
+            // console.log(sumMark, sumWeight, totalWeight);
+            if (!isNaN(parseFloat(sumWeight)) && valueEnabled & sumWeight > 0) {
+                totalMark = (sumMark / sumWeight) * totalWeight;
+                return $filter('number')(totalMark, 2);
             } else {
-                return returnValue;
+                return ""; // POCOR-8224-C3
             }
         },
 
