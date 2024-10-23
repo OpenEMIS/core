@@ -623,9 +623,11 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
         } else if (isRtl) {
             direction = 'right';
         }
+        //POCOR-8636 add this header name
+    const fallbackHeaderName = (key) => (translateText && translateText.translated && translateText.translated[key]) || key;
 
         columnDefs.push({
-            headerName: translateText.translated.OpenEmisId,
+            headerName: fallbackHeaderName('OpenEmisId'),
             field: 'openemis_no',
             filterParams: filterParams,
             pinned: direction,
@@ -633,7 +635,7 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
             filter: 'text'
         });
         columnDefs.push({
-            headerName: translateText.translated.Name,
+            headerName: fallbackHeaderName('Name'),
             field: 'student_name',
             filterParams: filterParams,
             pinned: direction,
@@ -642,7 +644,7 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Attendance,
+            headerName: fallbackHeaderName('Attendance'),
             field: 'absence_type_code',
             suppressSorting: true,
             menuTabs: [],
@@ -672,7 +674,7 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
         });
 
         columnDefs.push({
-            headerName: translateText.translated.ReasonComment,
+            headerName: fallbackHeaderName('ReasonComment'),
             field: "2",
             menuTabs: [],
             suppressSorting: true,
