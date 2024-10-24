@@ -116,13 +116,7 @@ class UserService extends Controller
     {
         try {
             $data = $this->userRepository->getUsersData($userId);
-            //POCOR-8639 start
-            if(!empty($data->userContacts->isNotEmpty())){
-               $contactType =  $data['userContacts'][0]['value'];
-            }else{
-                $contactType = '';
-            } //POCOR-8639 end
-
+           
             $resp = [];
             if(isset($data)){
                 if($data['photo_content']){
@@ -151,6 +145,7 @@ class UserService extends Controller
                         "last_name" => $data['last_name'],
                         "preferred_name" => $data['preferred_name'],
                         "email" => $data['email'],
+                        "user_contact" => $data['mobile_number'],//POCOR-8639
                         "address" => $data['address'],
                         "postal_code" => $data['postal_code'],
                         "address_area_id" => $data['address_area_id'],
@@ -204,7 +199,7 @@ class UserService extends Controller
                         "staff_position_grade_name" => $staff_position_grade_name,
                         "institution-staff" => $data['institution_staff'],
                         "institution-students" => $data['institution_students'],
-                        "user_contact" => $contactType, //POCOR-8639
+                         //POCOR-8639
                     ];
             }
             
