@@ -122,10 +122,6 @@ class UserRepository extends Controller
                     'userContacts'
                 )
                     ->where('id', $userId)
-                    ->orWhereHas('userContacts', function($query) { //POCOR-8639
-                        $query->where('contact_type_id', 1)
-                              ->orWhere('preferred', 1);
-                    })
                     ->first();
 
             //For POCOR-8536 Start...
