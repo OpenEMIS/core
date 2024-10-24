@@ -350,6 +350,7 @@ Route::group(
         Route::post('schedules/timetables/lessons', 'ScheduleController@addLesson');
         Route::delete('institutions/{institutionId}/schedules/timetables/lessons/{id}', 'ScheduleController@deleteTimeTableLessonById');
         Route::get('schedules/timetables/statuses', 'ScheduleController@getTimeTableStatus');
+        Route::get('schedules/timetables/{id}', 'ScheduleController@getTimeTableById');
         Route::get('schedules/timetables/{id}/lessons', 'ScheduleController@getLessonsByTimeTableId');
         Route::get('schedules/lessons/types', 'ScheduleController@getLessonType');
         Route::get('schedules/timeslots/{intervalId}', 'ScheduleController@getTimeSlotsByIntervalId');
@@ -521,5 +522,11 @@ Route::group(
         //POCOR-8519 start...
         Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
         //POCOR-8519 end...
+
+
+        //POCOR-8221 start...
+        Route::get('institutions/{institutionId}/students/{studentId}/student-transfer', 'StudentController@getStudentTransferData');
+        Route::post('institutions/{institutionId}/student-transfer', 'StudentController@addStudentTransferData');
+        //POCOR-8221 end...
     }
 );
