@@ -327,45 +327,48 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $institutionClassId = $options['institution_class_id'];
         $educationGradeId = $options['education_grade_id'];        
         $day = $options['day_id'];
+        $period = $options['attendance_period_id'];//POCOR-8383
 
-        $query->where([$this->aliasField('institution_id') => $institutionId, $this->aliasField('academic_period_id') => $academicPeriodId,$this->aliasField('institution_class_id') => $institutionClassId,$this->aliasField('education_grade_id') => $educationGradeId,$this->aliasField('date') => $day]); //POCOR-8372 taking long time in load
+        $query->where([$this->aliasField('institution_id') => $institutionId, $this->aliasField('academic_period_id') => $academicPeriodId,$this->aliasField('institution_class_id') => $institutionClassId,$this->aliasField('education_grade_id') => $educationGradeId,$this->aliasField('date') => $day,$this->aliasField('period') => $period]); //POCOR-8372,POCOR-8383 taking long
         $row = [];
         
         return $query
-                ->formatResults(function (ResultSetInterface $results) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day) { 
-                            return $results->map(function ($row) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day) {
+                ->formatResults(function (ResultSetInterface $results) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day,$period) { 
+                            return $results->map(function ($row) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day,$period) {
                                     $getRecord = $this->find('all')
                                             ->where([
                                                 $this->aliasField('institution_class_id') => $institutionClassId,
                                                 $this->aliasField('education_grade_id') => $educationGradeId,
                                                 $this->aliasField('institution_id') => $institutionId,
                                                 $this->aliasField('academic_period_id') => $academicPeriodId,
-                                                $this->aliasField('date') => $day
+                                                $this->aliasField('date') => $day,
+                                                $this->aliasField('period IS') => $period //POCOR-8383
                                         ])->toArray();
                                     if (!empty($getRecord)) {
-                                        $this->deleteAll([
+                                        /*$this->deleteAll([
                                             $this->aliasField('institution_class_id') => $institutionClassId,
                                             $this->aliasField('education_grade_id') => $educationGradeId,
                                             $this->aliasField('institution_id') => $institutionId,
                                             $this->aliasField('academic_period_id') => $academicPeriodId,
                                             $this->aliasField('date') => $day,
                                             $this->aliasField('no_scheduled_class') => 0,
-                                        ]);
+                                        ]);*/
                                             $query = $this->query();
                                             $query ->update()
-                                                    ->set(['period' => 0, 'subject_id' => 0, 'no_scheduled_class' => 1])
+                                                    ->set(['period' => $period, 'subject_id' => 0, 'no_scheduled_class' => 1])
                                                     ->where([
                                                         $this->aliasField('institution_class_id') => $institutionClassId,
                                                         $this->aliasField('education_grade_id') => $educationGradeId,
                                                         $this->aliasField('institution_id') => $institutionId,
                                                         $this->aliasField('academic_period_id') => $academicPeriodId,
-                                                        $this->aliasField('date') => $day
+                                                        $this->aliasField('date') => $day,
+                                                        $this->aliasField('period') => $period //POCOR-8383
                                                     ])
                                                     ->execute();
                                                 
                                     } else {
                                         try{
-                                            $connection = ConnectionManager::get('default');
+                                            /*$connection = ConnectionManager::get('default');
                                             $sql = "INSERT INTO student_attendance_marked_records (
                                                 institution_class_id,
                                                 education_grade_id,
@@ -381,22 +384,22 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                                                 $institutionId,
                                                 $academicPeriodId,
                                                 '$day', -- Make sure the date is formatted correctly and enclosed in quotes
-                                                0,
+                                                $period,
                                                 0,
                                                 1
                                             )";
-                                            $result = $connection->execute($sql);
-                                            // $newRecord = $this->newEntity([
-                                            //     'institution_class_id' => $institutionClassId,
-                                            //     'education_grade_id' => $educationGradeId,
-                                            //     'institution_id' => $institutionId,
-                                            //     'academic_period_id' => $academicPeriodId,
-                                            //     'date' => $day,
-                                            //     'period' => 0,
-                                            //     'subject_id' => 0,
-                                            //     'no_scheduled_class' => 1
-                                            // ]);
-                                            // $this->save($newRecord);
+                                            $result = $connection->execute($sql);*/
+                                            $newRecord = $this->newEntity([
+                                                'institution_class_id' => $institutionClassId,
+                                                'education_grade_id' => $educationGradeId,
+                                                'institution_id' => $institutionId,
+                                                'academic_period_id' => $academicPeriodId,
+                                                'date' => $day,
+                                                'period' => $period,
+                                                'subject_id' => 0,
+                                                'no_scheduled_class' => 1
+                                            ]);
+                                            $this->save($newRecord);
                                         } catch (\Exception $e) {
                                             echo "<pre>";print_r($e);die;
                                         }
@@ -412,7 +415,8 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                                             $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
                                             $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
                                             $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
-                                            $StudentAttendanceMarkedRecords->aliasField('date') => $day 
+                                            $StudentAttendanceMarkedRecords->aliasField('date') => $day,
+                                            $StudentAttendanceMarkedRecords->aliasField('period IS') => $period, 
                                         ])
                                         ->first();
                                         if(!empty($totalMarkedCount)){

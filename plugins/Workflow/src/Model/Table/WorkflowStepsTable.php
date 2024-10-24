@@ -63,7 +63,7 @@ class WorkflowStepsTable extends AppTable {
 
 	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
-
+		$validator->setProvider('custom', $this);
 		return $validator
 			->requirePresence('name', 'create')
 			->requirePresence('category')

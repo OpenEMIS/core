@@ -8,7 +8,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class UserEmploymentsTable extends ControllerActionTable {
-	public function initialize(array $config): void { 
+	public function initialize(array $config): void {
 		$this->setTable('user_employments');
 		parent::initialize($config);
 
@@ -34,10 +34,10 @@ class UserEmploymentsTable extends ControllerActionTable {
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
         $this->setupTabElements();
-		
+
 		// Start POCOR-5188
 		if($this->request->getParam('controller') == 'Students'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Employment','Students - Professional');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Employment','Students - Professional');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -46,7 +46,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 					'escape' => false,
 					'target'=>'_blank'
 				];
-	
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -56,7 +56,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 			}
 
 		}else if($this->request->getParam('controller') == 'Staff'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Employment','Staff - Professional');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Employment','Staff - Professional');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -65,7 +65,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 					'escape' => false,
 					'target'=>'_blank'
 				];
-	
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -74,8 +74,8 @@ class UserEmploymentsTable extends ControllerActionTable {
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
 
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Employment','Professional');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Employment','Professional');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -93,9 +93,9 @@ class UserEmploymentsTable extends ControllerActionTable {
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Profiles'){ 
-            $is_manual_exist = $this->getManualUrl('Personal','Employments','Professional');       
-            if(!empty($is_manual_exist)){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){
+            $is_manual_exist = $this->getManualUrl('Personal','Employments','Professional');
+            if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
@@ -103,7 +103,7 @@ class UserEmploymentsTable extends ControllerActionTable {
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -140,7 +140,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 		$this->field('position');
 		$this->field('industry_id',["type"=>"select"]);
         $this->setFieldOrder([
-            'date_from', 'date_to', 'organisation', 'position', 'industry_id', 
+            'date_from', 'date_to', 'organisation', 'position', 'industry_id',
         ]);
     }
 }

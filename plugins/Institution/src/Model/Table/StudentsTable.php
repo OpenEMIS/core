@@ -871,7 +871,13 @@ class StudentsTable extends ControllerActionTable
         $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
         $result = $this->checkStudentRecords($entity);
         if ($result) {
-            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            // POCOR-8411 start
+            try {
+                $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            } catch (\Exception $exception) {
+                Log::error(__FUNCTION__ . ':' . $exception->getMessage());
+            }
+            // POCOR-8411 end
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
         } else {
@@ -1307,7 +1313,11 @@ class StudentsTable extends ControllerActionTable
         if (!empty($request->getQuery('academic_period_id'))) {
             $selectedAcademicPeriod = $request->getQuery('academic_period_id');
         }else{
-            $existCurrentAcademicStudent = $this->find('all', ['conditions'=>[ 'academic_period_id' => $this->AcademicPeriods->getCurrent(), 'institution_id' => $institutionId]])->toArray();
+            $existCurrentAcademicStudent = $this->find('all',
+                ['conditions'=>[
+                    'academic_period_id' => $this->AcademicPeriods->getCurrent(),
+                    'institution_id' => $institutionId]
+                ])->toArray();
             if($existCurrentAcademicStudent){
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }else{
@@ -3547,9 +3557,8 @@ class StudentsTable extends ControllerActionTable
      */
     private function addUserBasicFields(Query $query)
     {
-
         $query = $query->select([
-            'student_name' => 'CONCAT(`Users`.`first_name`, " ", `Users`.`last_name`)',
+            'student_name' => 'CONCAT_WS(" ", `Users`.`first_name`, `Users`.`middle_name`, `Users`.`third_name`, `Users`.`last_name`)',//POCOR-8582
             'student_openemis_no' => 'Users.openemis_no',
             'student_username' => 'Users.username',
             'student_date_of_birth' => 'Users.date_of_birth',
@@ -3700,6 +3709,11 @@ class StudentsTable extends ControllerActionTable
     private function setInstitutionID()
     {
         $institutionId = $this->getInstitutionID();
+        //POCOR-8411 -- Start - avoid null in where
+        if (empty($institutionId)) {
+            $institutionId = -1; // Use -1 to return zero records; behaves similarly to null in CakePHP 3, ensuring compatibility.
+        }
+        //POCOR-8411 -- End
         $this->institution_id = $institutionId;
     }
 

@@ -468,13 +468,13 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                         }
                     }
                 }
-            }            
+            }
         }
 
 		$InstitutionStudents = TableRegistry::get('Institution.Students');
 		$eventAction = explode('.', $mainEvent->name);
-		
-		if(!empty($eventAction[2]) && ($eventAction[2] == 'afterSave')) {  
+
+		if(!empty($eventAction[2]) && ($eventAction[2] == 'afterSave')) {
 			$bodyData = $InstitutionStudents->find('all',
 							[ 'contain' => [
 								'Institutions',
@@ -493,7 +493,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 							$InstitutionStudents->aliasField('student_id') => $studentId
 						]);
 
-			if (!empty($bodyData)) { 
+			if (!empty($bodyData)) {
 				foreach ($bodyData as $key => $value) {
                     $user = $value->user;
                     $user_id = $user->id;
@@ -531,7 +531,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                         $birthplaceArea = null;
                     }
                     $role = $user->is_student;
-					
+
 					$contactValue = [];
 					$contactType = [];
 					if(!empty($user['contacts'])) {
@@ -548,7 +548,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                             }
 						}
 					}
-					
+
 					$identityNumber = [];
 					$identityType = [];
 					if(!empty($user['identities'])) {
@@ -565,7 +565,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                             }
 						}
 					}
-					
+
 					$username = $user->username;
                     $institution = $value->institution;
                     $institution_id = $institution->id;
@@ -590,7 +590,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 				}
 			}
 			$bodys = array();
-			$bodys = [   
+			$bodys = [
 				'security_users_id' => !empty($user_id) ? $user_id : NULL,
 				'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
 				'security_users_first_name' =>	!empty($first_name) ? $first_name : NULL,
@@ -619,7 +619,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 				'student_status_name' => !empty($studentStatus) ? $studentStatus : NULL,
 				'institution_students_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
 				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
-                'role_name' => ($role == 1) ? 'student' : NULL	
+                'role_name' => ($role == 1) ? 'student' : NULL
 			];
             $custom_field = array();
 			if($user_id){
@@ -655,7 +655,9 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                     ])
                     ->where([
                     $studentCustomFieldValues->aliasField('student_id') => $user_id,
-                    ])->hydrate(false)->toArray();
+                    ])
+                ->disableHydration() // POCOR-8533
+                ->toArray();
 
             $count = 0;
             if(!empty($studentCustomData)){
@@ -931,13 +933,13 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                 return __('Status');
             case 'name':
                 return __('Name');
-            case 'number_of_risk_index':  
+            case 'number_of_risk_index':
                 return __('Number Of Risk Index');
             case 'education_subject_id':
                 return __('Education Subject');
-            case 'textbook_id':  
+            case 'textbook_id':
                 return __('Textbooks');
-            case 'allocated_to':  
+            case 'allocated_to':
                 return __('Allocation');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);

@@ -294,7 +294,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                     ->where([$InstitutionGradesTable->aliasField('education_grade_id') => $educationGradeId])
                     ->select(['institution_id' => 'Institutions.id', 'institution_name' => 'Institutions.name', 'institution_code' => 'Institutions.code'])
                     ->group('institution_id')
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->toArray();
                 foreach ($institutionsData as $data) {
                     $institutions[$data['institution_id']] = $data['institution_code']. ' - ' . $data['institution_name'];
@@ -445,7 +445,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                             foreach ($entities as $entity) {
                                 $examinationStudentSubjects->save($entity);
                             }
-                       } 
+                       }
                     }
                      //POCOR-7512 end
                     $studentCount = $this->find()
@@ -519,7 +519,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                 $ExaminationSubjects=TableRegistry::get('Examination.ExaminationSubjects');
                 $subjects=$ExaminationSubjects->find()
                                                ->where([
-                                                 $ExaminationSubjects->aliasField('examination_id')=>$request->getData[$this->getAlias()]['examination_id']   
+                                                 $ExaminationSubjects->aliasField('examination_id')=>$request->getData[$this->getAlias()]['examination_id']
                                                ])->toArray();
             }
         $attr['label']="Education Subjects";
