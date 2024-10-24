@@ -14,11 +14,6 @@ class CustomFieldValuesTable extends AppTable
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
 		$this->belongsTo('CustomRecords', ['className' => 'CustomField.CustomRecords']);
-		//POCOR-8434 starts use for test purpose 
-		// $this->belongsTo('StudentAdmission', [
-		// 	'foreignKey' => 'student_id',  // Match 'student_id' here as well
-		// 	'className' => 'Institution.StudentAdmission'
-		// ]);//POCOR-8434 ends
 	}
 
 	public function validationDefault(Validator $validator): Validator
