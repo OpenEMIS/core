@@ -56,6 +56,24 @@ class StudentCustomFiltersTable extends ControllerActionTable
         return $validator;
 	}
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+       
+        foreach ($buttons as $key => $button){
+            
+            if($button['url'][0] == 'edit'){
+                $buttonUrl = $button['url'];
+                $queryString = $button['url'][1];
+
+                $custom_module_id = $entity->custom_module_id;
+                $button['url']['?']['custom_module_id'] = $custom_module_id;
+                $buttons[$key] = $button;
+            }
+        }
+        return $buttons;
+    }
+
     public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request)
     {
         //POCOR-8434 starts
@@ -64,20 +82,47 @@ class StudentCustomFiltersTable extends ControllerActionTable
         $module = $CustomModulesTable
                     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                     ->where([$CustomModulesTable->aliasField('code IN') => $selectedModuels])
-                    ->toArray();                        
-        
-        //$selectedModule = $module->id;
-        //$request->getQuery['module'] = $selectedModule;
+                    ->toArray(); 
+        if ($action == 'add' || $action == 'edit') {
+            if ($action == 'add') {
+                $attr['options'] = $module;
+                $attr['onChangeReload'] = 'customModule';
+            } else {
+                if(!is_null($request->getData('StudentCustomFilters')['custom_module_id'])){
+                    $custom_module_id = $request->getData('StudentCustomFilters')['custom_module_id'];
+                }
+                
+                $attr['value'] = $custom_module_id;
+                $attr['options'] = $module;
+                $attr['attr']['value'] = $module->name;
+                $attr['onChangeReload'] = 'customModule';
+            }
+        }
         $attr['type'] = 'select';
-        $attr['options'] = $module;
-        //$attr['value'] = $selectedModule;
-        //$attr['attr']['value'] = $module->name;
         //POCOR-8434 ends
         return $attr;
     }
 
+    public function addEditOnCustomModule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+       
+        $request = $request->withQueryParams($request->getQueryParams());
+        unset($request->getQueryParams()['period']);
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('custom_module_id', $request->getData()[$this->getAlias()])) {
+                    $customModuleId = $request->getData()[$this->getAlias()]['custom_module_id'];
+                    $this->request = $request->withQueryParams(['custom_module_id' => $customModuleId]);
+
+                }
+            }
+        }
+    }
+
     public function onUpdateFieldStudentCustomFormId(Event $event, array $attr, $action, $request) {
-		if(!is_null($request->getData('StudentCustomFilters')['custom_module_id'])){
+        if(!is_null($request->getData('StudentCustomFilters')['custom_module_id'])){
             $custom_module_id = $request->getData('StudentCustomFilters')['custom_module_id'];
             $StudentCustomFormsTable = TableRegistry::get('StudentCustomField.StudentCustomForms');
             $module = $StudentCustomFormsTable
@@ -87,6 +132,24 @@ class StudentCustomFiltersTable extends ControllerActionTable
             if(empty($module)){
                 $attr['empty'] = 'Select'; 
                 return $attr;
+            }
+        }else{
+            if ($action == 'add' || $action == 'edit') {
+                if ($action == 'add') {
+                    $module = [];
+                } else {
+                    if(!is_null($request->getQuery('custom_module_id'))){
+                        $custom_module_id = $request->getQuery('custom_module_id');
+                        $StudentCustomFormsTable = TableRegistry::get('StudentCustomField.StudentCustomForms');
+                        $module = $StudentCustomFormsTable
+                                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                                    ->where([$StudentCustomFormsTable->aliasField('custom_module_id') => $custom_module_id])
+                                    ->toArray();
+                    }
+                    $attr['value'] = $custom_module_id;
+                    $attr['options'] = $module;
+                    $attr['attr']['value'] = $module->name;
+                }
             }
         }
         $attr['type'] = 'select';
@@ -100,7 +163,6 @@ class StudentCustomFiltersTable extends ControllerActionTable
         $periodOptions = $AcademicPeriods->getYearList();
 				
         $attr['type'] = 'select';
-
         $attr['placeholder'] = __('Select Academic Periods');
         $attr['attr']['options'] = $periodOptions;
 		$attr['onChangeReload'] = true;
@@ -119,24 +181,13 @@ class StudentCustomFiltersTable extends ControllerActionTable
             $academicPeriodId = !is_null($academic_period_id) ? $academic_period_id : $AcademicPeriod->getCurrent();
             $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
             if ($action == 'add') {
-                
-                
                 $programmeOptions = $EducationProgrammes
                         ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                         ->find('availableProgrammes')
                         ->contain(['EducationCycles.EducationLevels.EducationSystems'])
                         ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
                         ->toArray();
-                $attr['options'] = $programmeOptions;
-                $attr['onChangeReload'] = 'changeEducationProgrammeId';
-
             } else {
-                //echo "anubhav stopss it for edit"; die;
-                //since programme_id is not stored, then during edit need to get from grade
-                //$programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
-//                 $programmeId = $request->getData('StudentCustomFilters')['education_programme_id'];
-//                 echo "<pre>"; print_r($this->request->getData('StudentCustomFilters.education_programme_id'));
-// die; 
                 $programmeId = $this->request->getData('StudentCustomFilters.education_programme_id');
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
@@ -145,27 +196,10 @@ class StudentCustomFiltersTable extends ControllerActionTable
                     ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
                     ->toArray();
 
-                $attr['options'] = $programmeOptions;
                 $attr['value'] = $programmeId;
-                $attr['onChangeReload'] = 'changeEducationProgrammeId';
-                // $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
-                // $attr['type'] = 'readonly';
-                 
-                // $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
-
             }
+            $attr['options'] = $programmeOptions;
         }
         return $attr;
     }
-
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-//                 echo "<pre>"; print_r($entity);
-// die;
-    }
-
-    // public function beforeSave(Event $event, Entity $entity, ArrayObject $options){
-    //     echo "<pre>"; print_r($entity);
-    //      die;
-    // }
 }
