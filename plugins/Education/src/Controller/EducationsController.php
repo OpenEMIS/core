@@ -54,7 +54,7 @@ class EducationsController extends AppController {
                 ],
                 $setupTab => [
                     'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $setupTab],
-                    'text' => __('Setup')
+                    'text' => __('Others')//POCOR-8644
                 ]
             ];
             $tabElements = $this->TabPermission->checkTabPermission($tabElements);

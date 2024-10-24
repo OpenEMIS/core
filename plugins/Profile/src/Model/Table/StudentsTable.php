@@ -14,9 +14,9 @@ class StudentsTable extends ControllerActionTable
 {
     private $editButtonAction = 'GuardianUser';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_guardians');
+        $this->setTable('student_guardians');
         parent::initialize($config);
 
         $this->belongsTo('StudentUser', ['className' => 'Student.GuardianUser', 'foreignKey' => 'guardian_id']);
