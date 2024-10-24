@@ -20,9 +20,9 @@ class InstitutionClassStudentsTable extends AppTable
     private $assessmentItemResults = [];
     private $lastQueriedClass = null;
     private $allowedSubjects = [];
-    private $assessmentPeriodWeightedMark = 0;
-    private $totalMark = 0;
-    private $totalWeightedMark = 0;
+    private $assessmentPeriodWeightedMark = "";
+    private $totalMark = "";
+    private $totalWeightedMark = "";
 
     // Report permission
     private $allSubjectsPermission = true;
@@ -534,27 +534,48 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function onExcelRenderAssessmentPeriodWeightedMark(Event $event, Entity $entity, array $attr)
     {
+//        $marksum = array_sum($this->assessmentMarks);
+        $weightsum = array_sum($this->assessmentPeriodWeights);
         $assessmentPeriodWeightedMark = $this->assessmentPeriodWeightedMark;
-        $this->totalMark += $assessmentPeriodWeightedMark;
-        $this->totalWeightedMark += ($assessmentPeriodWeightedMark * $attr['subjectWeight']);
+//        Log::debug($assessmentPeriodWeightedMark);
+        if ($weightsum > 0) {
+            $assessmentPeriodWeightedMark = $assessmentPeriodWeightedMark / $weightsum;
+        }
+//        Log::debug($weightsum);
+//        Log::debug($assessmentPeriodWeightedMark);
+//        Log::debug($entity->user->name);
+        $this->assessmentPeriodWeights = [];
 
+//        $assessmentPeriodWeightedMark = $this->assessmentPeriodWeightedMark;
+        if (is_numeric($assessmentPeriodWeightedMark)) {
+            $this->totalMark += $assessmentPeriodWeightedMark;
+            $this->totalWeightedMark += ($assessmentPeriodWeightedMark * $attr['subjectWeight']);
+        }
         // reset the assessmentPeriodWeightedMark mark
-        $this->assessmentPeriodWeightedMark = 0;
-
+        $this->assessmentPeriodWeightedMark = "";
+        if(is_numeric($assessmentPeriodWeightedMark)){
+            $assessmentPeriodWeightedMark = number_format($assessmentPeriodWeightedMark, 2);
+        }
         return ' '.$assessmentPeriodWeightedMark;
     }
 
     public function onExcelRenderTotalWeightedMark(Event $event, Entity $entity, array $attr)
     {
         $totalWeightedMark = $this->totalWeightedMark;
-        $this->totalWeightedMark = 0;
+        $this->totalWeightedMark = "";
+        if(is_numeric($totalWeightedMark)){
+            $totalWeightedMark = number_format($totalWeightedMark, 2);
+        }
         return ' '.$totalWeightedMark;
     }
 
     public function onExcelRenderTotalMark(Event $event, Entity $entity, array $attr)
     {
         $totalMark = $this->totalMark;
-        $this->totalMark = 0;
+        $this->totalMark = "";
+        if(is_numeric($totalMark)){
+            $totalMark = number_format($totalMark, 2);
+        }
         return ' '.$totalMark;
     }
 

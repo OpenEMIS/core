@@ -116,7 +116,7 @@ class ExcelReportBehavior extends Behavior
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this); // POCOR-7443
         $extra['vars'] = $this->getVars($params, $extra);
 
-        
+
         $extra['file'] = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
         $extra['path'] = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
 
@@ -135,7 +135,7 @@ class ExcelReportBehavior extends Behavior
             Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
             $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id'],$params['report_card_id']);
         }
-        
+
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
             $this->deleteFile($extra['temp_logo']);
@@ -155,17 +155,17 @@ class ExcelReportBehavior extends Behavior
         if (!empty($params['student_id'])) {
             $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
-            
+
             $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
             // save Pdf file
             $StudentsReportCards->updateAll([
                 'file_content_pdf' => $pdfFileContent,
                 'status'=>3//POCOR-7530
             ], $params);
-            
+
             $this->deleteFile($pdfFilePath);
         }
-        
+
         if ($this->getConfig('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
@@ -218,7 +218,9 @@ class ExcelReportBehavior extends Behavior
                 // End create a temporary file
                 try {
                     // Read back from same temporary file
+                    Log::debug($filepath);
                     $inputFileType = IOFactory::identify($filepath);
+                    Log::debug($inputFileType);
                     $objReader = IOFactory::createReader($inputFileType);
                     $objSpreadsheet = $objReader->load($filepath);
                     // End read back from same temporary file
@@ -411,7 +413,7 @@ class ExcelReportBehavior extends Behavior
 
     }
     /**
-    * POCOR-6908 
+    * POCOR-6908
     */
     public function saveFileAssessment($objSpreadsheet, $filepath, $format, $student_id,$paramVal)
     {
@@ -727,7 +729,7 @@ class ExcelReportBehavior extends Behavior
                 $pos = strpos($cellValue, $value);
                 if ($pos !== false) {
                     if($function == 'table') {
-                        $function = 'tableData';//POCOR-8529 
+                        $function = 'tableData';//POCOR-8529
                     }
                     if (method_exists($this, $function)) {
                         $jsonArray = $this->convertPlaceHolderToArray($cellValue);
