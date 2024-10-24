@@ -15,8 +15,8 @@ use Cake\Utility\Text;
 use Cake\Core\Configure;
 use Cake\Log\Log;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
-use Cake\ORM\Table;
-use Cake\Utility\Inflector;
+use Cake\ORM\Table; //POCOR-8224
+use Cake\Utility\Inflector; //POCOR-8224
 
 class AssessmentItemResultsTable extends AppTable
 {
@@ -74,7 +74,7 @@ class AssessmentItemResultsTable extends AppTable
         //POCOR-6824 start
         $institutionId = $entity->institution_id;
         $InstitutionClassId = $entity->institution_classes_id;
-        $institutionClass = self::getDynamicTableInstance('Institution.InstitutionClasses');
+        $institutionClass = self::getDynamicTableInstance('Institution.InstitutionClasses'); //POCOR-8224
         $findclass =
             $institutionClass->find()->select([
                 'id' => $institutionClass->aliasField('id')
@@ -88,7 +88,7 @@ class AssessmentItemResultsTable extends AppTable
             return false;
         } else { //POCOR-6824 end add if else condition
             //POCOR-6947
-            $institutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
+            $institutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents'); //POCOR-8224
             $institutionStudentsData = $institutionStudents
                 ->find()
                 ->where([
@@ -105,7 +105,7 @@ class AssessmentItemResultsTable extends AppTable
                 if ($entity->isNew()) {
                     //POCOR-7536-KHINDOL
                     //AS the ID is not the KEY do shadow save and delete new entity
-                    $assessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+                    $assessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults'); //POCOR-8224
                     $previousAssessment = $assessmentItemResults->find()
                         ->where([
                             $assessmentItemResults->aliasField('student_id') => $entity->student_id,
@@ -169,7 +169,7 @@ class AssessmentItemResultsTable extends AppTable
         }
 
         $listeners = [
-            self::getDynamicTableInstance('Institution.InstitutionSubjectStudents')
+            self::getDynamicTableInstance('Institution.InstitutionSubjectStudents') //POCOR-8224
         ];
 
         $this->dispatchEventToModels('Model.AssessmentResults.afterSave', [$entity], $this, $listeners);
@@ -198,7 +198,7 @@ class AssessmentItemResultsTable extends AppTable
         }
 
         //Start POCOR-6823
-        $InstitutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');
+        $InstitutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents'); //POCOR-8224
         $conditionsClassStudents = [
             $InstitutionClassStudents->aliasField('academic_period_id = ') => $academicPeriodId,
             $InstitutionClassStudents->aliasField('student_id = ') => $studentId,
@@ -260,6 +260,7 @@ class AssessmentItemResultsTable extends AppTable
     }
 
     /**
+     * POCOR-8224 refactured
      * Retrieves assessment item results for a student.
      *
      * @param int $academicPeriodId
@@ -422,7 +423,7 @@ class AssessmentItemResultsTable extends AppTable
             $assessmentId = $entity->assessment_id;
             $assessmentPeriodId = $entity->assessment_period_id;
 
-            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes');
+            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes'); //POCOR-8224
             $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
                 ->find()
                 ->contain('AssessmentGradingTypes.GradingOptions')
@@ -478,7 +479,7 @@ class AssessmentItemResultsTable extends AppTable
         //POCOR-6479 starts
         $sumMarks = [];
         foreach ($totalMarks as $result) {
-            $assessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+            $assessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults'); //POCOR-8224
             $assessmentItemResultsData = $assessmentItemResults->find()
                 ->select([
                     $assessmentItemResults->aliasField('marks')
@@ -669,7 +670,7 @@ class AssessmentItemResultsTable extends AppTable
     /**POCOR-6912 ends*/
 
     /*
-     * $assessmentItemResults = Cake\ORM\self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+     * $assessmentItemResults = Cake\ORM\TableRegistry::get('Assessment.AssessmentItemResults');
      * $options = ["student_id" => 45, "academic_period_id" => 32, "education_grade_id" => 189, "education_subject_id" => 60];
      * $mark = $assessmentItemResults::getLastMark($options);
      */
@@ -678,19 +679,26 @@ class AssessmentItemResultsTable extends AppTable
      * @param $options
      * @param $archive
      * @return array
-     * @throws \Exception
+     * @throws \Exception //POCOR-8224
      */
-    public static function getClassAssessmentItemResults($options, $archive=false)
+    public static function getClassAssessmentItemResults($options, $archive=false) //POCOR-8224
     {
         $marks = self::getMarksForClass($options, $archive);
+        //POCOR-8224 start
         if (!is_array($marks)) {
             $marks = [];
         }
+        //POCOR-8224 end
         $marksWithSubjectClassificationWeight = self::getMarksWithSimpleMarks($marks);
         $marksPerStudent = self::getMarksPerStudentPerSubjectArray($marksWithSubjectClassificationWeight);
         return $marksPerStudent;
     }
 
+    /**
+     * POCOR-8224
+     * @param $options
+     * @return array
+     */
     public static function getClassExemptions($options): array
     {
         $exemptions_array = self::getLastExemptions($options);
@@ -717,11 +725,11 @@ class AssessmentItemResultsTable extends AppTable
     /**
      * @param array $params
      * @param bool $archive
-     * @return array|null
-     * @throws \Exception
+     * @return array|null // POCOR-8224
+     * @throws \Exception // POCOR-8224
      */
 
-    private static function getMarksForClass(array $params, bool|null $archive = false): ?array
+    private static function getMarksForClass(array $params, bool|null $archive = false): ?array //POCOR-8224
     {
         $academic_period_id = self::getFromArray($params, 'academic_period_id');
         $institution_id = self::getFromArray($params, 'institution_id');
@@ -791,12 +799,14 @@ class AssessmentItemResultsTable extends AppTable
             $studentId = $record['student_id'];
             $assessment_period_id = $record['assessment_period_id'];
             $subject_id = $record['education_subject_id'];
+            //POCOR-8224 start
             if(!isset($marksPerStudent[$studentId])){
                 $marksPerStudent[$studentId] = [];
             }
             if(!isset($marksPerStudent[$studentId][$subject_id])){
                 $marksPerStudent[$studentId][$subject_id] = [];
             }
+            //POCOR-8224 end
             $marksPerStudent[$studentId][$subject_id][$assessment_period_id][] = $record;
         }
         return $marksPerStudent;
@@ -806,13 +816,13 @@ class AssessmentItemResultsTable extends AppTable
      * @param array $marks
      * @return array
      */
-    private static function getMarksWithSimpleMarks(array $marks): array
+    private static function getMarksWithSimpleMarks(array $marks): array //POCOR-8224
     {
         $new_marks = [];
         foreach ($marks as $mark) {
-            if (is_numeric($mark['marks'])) {
+            if (is_numeric($mark['marks'])) { //POCOR-8224
                 $simple_mark = floatval($mark['marks']);
-            } else {
+            } else { //POCOR-8224
                 $simple_mark = $mark['marks'];
             }
             $mark['simple_mark'] = $simple_mark;
@@ -823,11 +833,12 @@ class AssessmentItemResultsTable extends AppTable
     }
 
     /**
+     * //POCOR-8224 refactured
      * @param $options
      * @return |null
      * @throws \Exception
      */
-    public static function getLastMark($options): false|array
+    public static function getLastMark($options): false|array //POCOR-8224
     {
         $id = self::getFromArray($options, 'id');
         $studentId = self::getFromArray($options, 'student_id');
@@ -883,7 +894,7 @@ class AssessmentItemResultsTable extends AppTable
 
     }
 
-    /**
+    /** //POCOR-8224
      * @param $options
      * @return array
      */
@@ -941,16 +952,30 @@ class AssessmentItemResultsTable extends AppTable
         return $exemptions_array;
     }
 
+    /**
+     * @param $options
+     * @param $field
+     * //POCOR-8224
+     */
     private static function getFromArray($options, $field)
     {
         return $options[$field] ?? null;
     }
 
+    /**
+     * @param $options
+     * //POCOR-8224
+     */
     private static function getGradeId($options)
     {
         return self::getFromArray($options, 'education_grade_id') ?: self::getFromArray($options, 'grade_id');
     }
 
+    /**
+     * @param $options
+     * //POCOR-8224
+     *
+     */
     private static function getClassId($options)
     {
         return self::getFromArray($options, 'institution_class_id')
@@ -958,6 +983,11 @@ class AssessmentItemResultsTable extends AppTable
                 ?: self::getFromArray($options, 'institution_classes_id');
     }
 
+    /**
+     * @param $options
+     * @return string
+     * POCOR-8224
+     */
     private static function buildSelectFields($options): string
     {
         $fields = ['marks'];
@@ -976,6 +1006,11 @@ class AssessmentItemResultsTable extends AppTable
         return implode(', ', $fields);
     }
 
+    /**
+     * @param $conditions
+     * @return string
+     * POCOR-8224
+     */
     private static function buildWhereClauses($conditions): string
     {
         $clauses = ["WHERE 1 = 1"];
@@ -987,6 +1022,14 @@ class AssessmentItemResultsTable extends AppTable
         return implode(' ', $clauses);
     }
 
+    /**
+     * @param $academicPeriodId
+     * @param $educationGradeId
+     * @param $institutionId
+     * @param $institutionClassesId
+     * @return string
+     * POCOR-8224
+     */
     private static function buildInstitutionClassStudentsWhere($academicPeriodId, $educationGradeId, $institutionId, $institutionClassesId): string
     {
         $clauses = ['INNER JOIN institution_class_students ON institution_class_students.student_id = all_results.student_id'];
@@ -1009,6 +1052,7 @@ class AssessmentItemResultsTable extends AppTable
 
     /**
      * @throws \Exception
+     * POCOR-8224
      */
     private static function getArchiveTableAndConnection($archive, $tableName): array
     {

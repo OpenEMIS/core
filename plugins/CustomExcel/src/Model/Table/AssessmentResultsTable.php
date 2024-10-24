@@ -19,8 +19,8 @@ class AssessmentResultsTable extends AppTable
 {
     use OptionsTrait;
     private $groupAssessmentPeriodCount = 0;
-    private $groupAssessmentItemsGradingTypes = []; // POCOR-8618 to excape double calculation
-    private $groupAssessmentItems = []; // POCOR-8618 to excape double calculation
+    private $groupAssessmentItemsGradingTypes = []; // POCOR-8224 to excape double calculation
+    private $groupAssessmentItems = []; // POCOR-8224 to excape double calculation
 
     const STUDENT_ENROLLED_STATUS = 1;
 
@@ -177,6 +177,13 @@ class AssessmentResultsTable extends AppTable
         }
     }
 
+    /**
+     * POCOR-8224 refactured
+     * @param Event $event
+     * @param array $params
+     * @param ArrayObject $extra
+     * @return array|null
+     */
     public function onExcelTemplateInitialiseGroupAssessmentItems(Event $event, array $params, ArrayObject $extra)
     {
         $groupAssessmentItems = $this->groupAssessmentItems;
@@ -187,8 +194,16 @@ class AssessmentResultsTable extends AppTable
         return $groupAssessmentItems;
     }
 
+    /**
+     * @param Event $event
+     * @param array $params
+     * @param ArrayObject $extra
+     * @return array|null
+     *  POCOR-8224 refactured
+     */
     public function onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes(Event $event, array $params, ArrayObject $extra)
     {
+
         $groupAssessmentItemsGradingTypes = $this->groupAssessmentItemsGradingTypes;
         if(empty($groupAssessmentItemsGradingTypes)){
             $groupAssessmentItemsGradingTypes = $this->getGroupAssessmentItemsGradingTypes($params);
