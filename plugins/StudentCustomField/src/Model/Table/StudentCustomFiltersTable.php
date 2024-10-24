@@ -62,7 +62,7 @@ class StudentCustomFiltersTable extends ControllerActionTable
        
         foreach ($buttons as $key => $button){
             
-            if($button['url'][0] == 'edit'){
+            if($button['url'][0] == 'edit' || $button['url'][0] == 'view'){
                 $buttonUrl = $button['url'];
                 $queryString = $button['url'][1];
 
