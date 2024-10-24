@@ -183,6 +183,7 @@ class AssessmentResultsTable extends AppTable
         if(empty($groupAssessmentItems)){
             $groupAssessmentItems = $this->getGroupAssessmentItems($params);
         }
+        $this->groupAssessmentItems = [];
         return $groupAssessmentItems;
     }
 
@@ -334,6 +335,7 @@ class AssessmentResultsTable extends AppTable
             }
             $groupAssessmentItemResults = $this->getGroupAssessmentItemResults($options);
         }
+        return $groupAssessmentItemResults;
     }
 
     public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
@@ -1027,7 +1029,8 @@ class AssessmentResultsTable extends AppTable
         }
         $marks = self::getMarksForClass($params);
         $exempts = self::getExemptsForClass($params);
-
+//        Log::debug(print_r($marks, true));
+//        Log::debug(print_r($exempts, true));
         $marksWithSubjectClassificationWeight = self::getMarksWithSubjectClassificationWeight($marks, $exempts);
 
         $marksPerStudent = self::getMarksPerStudentPerTermArray($marksWithSubjectClassificationWeight);
