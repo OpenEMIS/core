@@ -57,8 +57,9 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_shift_id">{{ error }}</p>
         </div>
     </div>
+    <!-- removed  unit and course visibility  for POCOR-8617 -- --->
     <!-- create if condition for unit and course visibility  for POCOR-8107 -- --->
-<?php if ($viewUrl['unit_field'] == 1){ ?>
+<!-- <?php if ($viewUrl['unit_field'] == 1){ ?>
     <div class="input select error">
         <label><?= __('Internal Verification') ?></label>
         <div class="input-select-wrapper">
@@ -74,9 +75,9 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_unit_id">{{ error }}</p>
         </div>
     </div>
-<?php } ?>
+<?php } ?> -->
 <?php if ($viewUrl['course_field'] == 1){ ?>
-    <div class="input select error">
+    <!-- <div class="input select error">
         <label><?= __('External Verification') ?></label>
         <div class="input-select-wrapper">
             <select name="InstitutionClasses[institution_course_id]" id="institutionclasses-institution-course-id"
@@ -90,7 +91,7 @@ $this->start('panelBody');
         <div ng-if="InstitutionClassStudentsController.postError.institution_course_id" class="error-message">
             <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_course_id">{{ error }}</p>
         </div>
-    </div>
+    </div> -->
     <?php } ?>
     <div class="input select">
         <label><?= __('Home Room Teacher') ?></label>
