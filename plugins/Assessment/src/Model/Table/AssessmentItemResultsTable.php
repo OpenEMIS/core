@@ -272,7 +272,8 @@ class AssessmentItemResultsTable extends AppTable
      */
     public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId, $classId): array
     {
-        $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
+        $SubjectStudents = self::getDynamicTableInstance('institution_subject_students');
+
 
         $query = $this->find('all')
             ->select([
@@ -286,7 +287,7 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('assessment_id'),
             ])
             ->contain(['AssessmentGradingOptions'])
-            ->innerJoin([$SubjectStudents->getAlias() => $SubjectStudents->getAlias()], [
+            ->innerJoin([$SubjectStudents->getAlias() => $SubjectStudents->getTable()], [
                 $SubjectStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
                 $SubjectStudents->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id'),
                 $SubjectStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),
@@ -305,9 +306,12 @@ class AssessmentItemResultsTable extends AppTable
         $results = $query->toArray();
 //        Log::debug('step2');
         // Step 2: Fetch marks for students using getMarksForClass
+        if(!empty($classId)){
+            //can get institution
+        }
         $options = [
             "academic_period_id" => $academicPeriodId,
-            "institution_id" => $this->aliasField('institution_id'),
+//            "institution_id" => $this->aliasField('institution_id'),
             "class_id" => $classId,
             "assessment_id" => $assessmentId,
             "education_subject_id" => $subjectId,
