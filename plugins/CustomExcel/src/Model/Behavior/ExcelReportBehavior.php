@@ -218,9 +218,7 @@ class ExcelReportBehavior extends Behavior
                 // End create a temporary file
                 try {
                     // Read back from same temporary file
-                    Log::debug($filepath);
                     $inputFileType = IOFactory::identify($filepath);
-                    Log::debug($inputFileType);
                     $objReader = IOFactory::createReader($inputFileType);
                     $objSpreadsheet = $objReader->load($filepath);
                     // End read back from same temporary file
