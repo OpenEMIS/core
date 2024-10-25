@@ -173,8 +173,9 @@ class InstitutionsTable extends ControllerActionTable
             'dependent' => true
         ]);
         //POCOR-6520 starts: add isset condition only
-        $request = Router::getRequest();
-        if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel') {//POCOR-6520 ends
+        
+        if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel'&& $request->getParam('action') != "Classes") {//POCOR-8538
+            
             $this->addBehavior('CustomField.Record', [
                 'fieldKey' => 'institution_custom_field_id',
                 'tableColumnKey' => 'institution_custom_table_column_id',

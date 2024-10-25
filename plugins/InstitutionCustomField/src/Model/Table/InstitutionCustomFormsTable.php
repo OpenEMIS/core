@@ -89,13 +89,15 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 	//POCOR-8538 start
 	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-		$module = $this->CustomModules
-			->find()
-			->where([$this->CustomModules->aliasField('id')=>$this->request->getQuery('module')])
-			->first();//POCOR-8538
-        if (isset($extra['toolbarButtons']['add']) && $data->count() ==1 && $module->name=="Institution > Classes") {
-            unset($extra['toolbarButtons']['add']);
-        }
+		if($this->request->getQuery('module')){
+			$module = $this->CustomModules
+				->find()
+				->where([$this->CustomModules->aliasField('id')=>$this->request->getQuery('module')])
+				->first();//POCOR-8538
+			if (isset($extra['toolbarButtons']['add']) && $data->count() ==1 && $module->name=="Institution > Classes") {
+				unset($extra['toolbarButtons']['add']);
+			}
+	    }
     }
 	//POCOR-8538 end
 	
