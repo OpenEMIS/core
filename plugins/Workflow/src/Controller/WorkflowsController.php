@@ -276,6 +276,7 @@ class WorkflowsController extends AppController
             $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $path = $queryString['path'];
             $segments = explode('/', $path);
+            //echo "<pre>";print_r($_SESSION);exit;
             if (count($segments) > 0) {
                 $institutionIndex = array_search('Institutions', $segments);
                 if ($institutionIndex !== false && isset($segments[$institutionIndex + 1])) {
@@ -286,19 +287,19 @@ class WorkflowsController extends AppController
             } else {
                 $transferType = '';
             }    
-
-            if ($transferType === 'StudentTransferOut') {
+           
+            if ($transferType === 'StudentTransferOut' || $transferType === 'StudentTransferIn') {
                 $tableName = 'Institution.StudentTransferOut';
-                $primaryKey = $_SESSION['Institution']['StudentTransferOut']['primaryKey']; // Fetching primaryKey for StudentTransferOut
-            } elseif ($transferType === 'StaffTransferOut') {
+                $primaryKey = $_SESSION['Institution'][$transferType]['primaryKey']; // Fetching primaryKey for StudentTransferOut
+            } elseif ($transferType === 'StaffTransferOut' || $transferType === 'StaffTransferIn') {
                 $tableName = 'Institution.StaffTransferOut';
-                $primaryKey = $_SESSION['Institution']['StaffTransferOut']['primaryKey']; // Fetching primaryKey for StaffTransferOut
+                $primaryKey = $_SESSION['Institution'][$transferType]['primaryKey']; // Fetching primaryKey for StaffTransferOut
             }
 
             $id = isset($primaryKey['id']) ? $primaryKey['id'] : null;
             $institutionId = isset($primaryKey['institution_id']) ? $primaryKey['institution_id'] : null;
             $receivingInsttutionId = TableRegistry::get($tableName)->getReceivingInstList($id);
-
+            
             $params = [
                 'is_school_based' => $isSchoolBased,
                 'workflow_step_id' => $nextStepId,
