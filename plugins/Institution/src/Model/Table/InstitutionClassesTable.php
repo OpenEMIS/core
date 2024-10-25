@@ -96,6 +96,30 @@ class InstitutionClassesTable extends ControllerActionTable
             'appliedAction' => ['Classes' =>['id']
             ]
         ]);
+        //POCOR-8538 start
+        $this->hasMany('InstitutionClassesCustomFieldValues', [
+            'className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', // Correct class name
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+            'foreignKey' => 'institution_class_id'
+        ]);
+        $this->hasMany('CustomFieldValues', 
+        ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', 'foreignKey' => 'institution_class_id']);
+       
+        $this->addBehavior('CustomField.Record', [
+            'model' => 'Institution.InstitutionClasses',
+            'fieldKey' => 'institution_custom_field_id',
+            'tableColumnKey' => 'institution_custom_table_column_id',
+            'tableRowKey' => 'institution_custom_table_row_id',
+            'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
+            'formKey' => 'institution_custom_form_id',
+            'filterKey' => 'institution_custom_filter_id',
+            'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
+            'recordKey' => 'institution_class_id',
+            'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', 'foreignKey' => 'institution_class_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => null
+        ]);
+        //POCOR-8538 end
 // POCOR-8391 remove annoing log
 //        Log::write('debug', 'Here it us beforeFilter initialize End');
     }
@@ -273,13 +297,15 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+       
 // POCOR-8391 remove annoing log
 //        Log::write('debug', 'Here it us beforeFilter beforeAction Start');
+    
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $query = $this->request->getQuery();
-
+        
         if(!empty($this->request->getData['InstitutionClasses']['institution_shift_id'])){
             $extra['institution_shift_id'] = $this->request->getData['InstitutionClasses']['institution_shift_id'];
         }
@@ -775,7 +801,7 @@ class InstitutionClassesTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $query = $this->request->getQuery();
+        $query = $this->request->getQuery();     
         if (isset($query['grade_type'])) {
             $action = $this->url('index');
             unset($action['grade_type']);
@@ -899,7 +925,7 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
+    { 
         $sortable = !is_null($this->request->getQuery('sort')) ? true : false;
 
         $query
@@ -929,7 +955,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassesSecondaryStaff.SecondaryStaff',
                 'Staff' => [
                     'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
-                ]
+                ],
+                'CustomFieldValues.CustomFields'//POCOR-8538 
             ])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
             ->group([$this->aliasField('id')]);
@@ -941,7 +968,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     $this->aliasField('name') => 'ASC'
                 ]);
         }
-        //echo "<pre>";print_r($query->toArray());die;
+       
     }
 
 
@@ -1009,7 +1036,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassStudents.Users.Genders',
                 'ClassStudents.EducationGrades',
                 'AcademicPeriods',
-                'ClassesSecondaryStaff.SecondaryStaff'
+                'ClassesSecondaryStaff.SecondaryStaff',
+                'CustomFieldValues.CustomFields'//POCOR-8538
             ]);
     }
 
@@ -1056,6 +1084,7 @@ class InstitutionClassesTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
+        
         if ($extra['selectedAcademicPeriodId'] == -1) {
             return $this->controller->redirect([
                 'plugin' => $this->controller->getPlugin(),
@@ -1136,6 +1165,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+       
         $decodedClass = $this->paramsDecode($this->request->getParam('pass')[1]);
         if (!empty($decodedClass)) {
             $classId = $decodedClass['id'];
@@ -2545,4 +2575,36 @@ class InstitutionClassesTable extends ControllerActionTable
         }
         return $result;
     }
+   //POCOR-8538 start
+    public function indexAfterAction(Event $event, $data)
+    {
+        $uniqueFieldValues = [];
+        foreach ($data as $entity) {
+            // Check if custom field values exist for the entity
+            if (!empty($entity->custom_field_values)) {
+                foreach ($entity->custom_field_values as $customFieldValue) {
+                    $fieldname=$customFieldValue->custom_field->name;
+                    $fieldTypeKey = strtolower($customFieldValue->custom_field->field_type) . '_value';
+                    $fieldValue=$customFieldValue[$fieldTypeKey];
+                    $entity[$fieldname]=$fieldValue;
+
+                    if (!isset($uniqueFieldValues[$fieldname])) {
+                        $uniqueFieldValues[$fieldname] = [];
+                    }
+        
+                    // Add unique values to the array for each field name
+                    if (!in_array($fieldValue, $uniqueFieldValues[$fieldname])) {
+                        $uniqueFieldValues[$fieldname][] = $fieldValue;
+                    }
+                }
+            }
+        }
+        if (!empty($uniqueFieldValues)) {
+            foreach ($uniqueFieldValues as $fieldName => $values) {
+                $this->field($fieldName);
+            }
+        }
+        
+    }
+    //POCOR-8538 end
 }
