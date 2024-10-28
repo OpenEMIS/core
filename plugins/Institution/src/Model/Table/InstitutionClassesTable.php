@@ -20,6 +20,7 @@ use Cake\Routing\Router;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Datasource\ConnectionManager;
 
 class InstitutionClassesTable extends ControllerActionTable
 {
@@ -1038,7 +1039,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'AcademicPeriods',
                 'ClassesSecondaryStaff.SecondaryStaff',
                 'CustomFieldValues.CustomFields'//POCOR-8538
-            ]);
+            ]);         
     }
 
     public function findByGrades(Query $query, array $options)
@@ -2606,5 +2607,42 @@ class InstitutionClassesTable extends ControllerActionTable
         }
         
     }
-    //POCOR-8538 end
+
+    private function getCustomFieldData($class_id){
+        $connection = ConnectionManager::get('default');
+
+        $sql = "
+            SELECT 
+                CustomModules.*, 
+                InstitutionCustomForms.*, 
+                InstitutionCustomFormsFields.*, 
+                InstitutionCustomFields.*, 
+                InstitutionCustomFieldOptions.*, 
+                InstitutionClassesCustomFieldValues.*, 
+                InstitutionClasses.*
+            FROM 
+                custom_modules AS CustomModules
+            INNER JOIN 
+                institution_custom_forms AS InstitutionCustomForms ON InstitutionCustomForms.custom_module_id = CustomModules.id
+            INNER JOIN 
+                institution_custom_forms_fields AS InstitutionCustomFormsFields ON InstitutionCustomFormsFields.institution_custom_form_id = InstitutionCustomForms.id
+            INNER JOIN 
+                institution_custom_fields AS InstitutionCustomFields ON InstitutionCustomFields.id = InstitutionCustomFormsFields.institution_custom_field_id
+            LEFT JOIN 
+                institution_custom_field_options AS InstitutionCustomFieldOptions ON InstitutionCustomFieldOptions.institution_custom_field_id = InstitutionCustomFields.id
+            LEFT JOIN 
+                institution_classes_custom_field_values AS InstitutionClassesCustomFieldValues ON 
+                InstitutionClassesCustomFieldValues.institution_custom_field_id = InstitutionCustomFormsFields.institution_custom_field_id 
+            LEFT JOIN 
+            institution_classes AS InstitutionClasses ON 
+            InstitutionClassesCustomFieldValues.institution_class_id = InstitutionClasses.id
+            WHERE 
+                CustomModules.code = 'Institution > Classes' AND InstitutionClasses.id = ".$class_id;
+
+
+        $result = $connection->execute($sql)->fetchAll('assoc');
+
+        return $result;
+    }
+      //POCOR-8538 end
 }
