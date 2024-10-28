@@ -48,8 +48,8 @@ class SendingAlertShell extends Shell
             // sending Email if the destination email is exist
             $emailObj = new Email('openemis');
             $emailObj
-                ->to($sendTo)
-                ->subject($obj->subject)
+                ->setTo($sendTo)
+                ->setSubject($obj->subject)
                 ->send($obj->message);
 
             // update the alertLog
