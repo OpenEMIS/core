@@ -25,10 +25,10 @@ class ScannedRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
+
             $storeArr = [
                 'openemis_no' => $param['openemis_no'],
-                'date' => $param['date'],
-                'time' => $param['time'],
+                'datetime' => Carbon::parse($param['datetime']),
                 'latitude' => $param['latitude'],
                 'longitude' => $param['longitude'],
                 'created_user_id' => JWTAuth::user()->id,
@@ -37,7 +37,6 @@ class ScannedRepository extends Controller
             $scannedAttendance = new ScannedAttendance();
             $scannedAttendance->fill($storeArr);
             $scannedAttendance->save(); // Call save() on the instance
-
             DB::commit();
             return 1;
         } catch (\Exception $e) {
@@ -53,13 +52,14 @@ class ScannedRepository extends Controller
 
     public function updateScannedUserData($scannedId, ScannedAttendanceRequest $request)
     {
+
         DB::beginTransaction();
         try {
             $param = $request->all();
+            echo "<pre>"; print_r($param); die;
             $storeArr = [
                 'openemis_no' => $param['openemis_no'],
-                'date' => $param['date'],
-                'time' => $param['time'],
+                'datetime' => $param['datetime'],
                 'latitude' => $param['latitude'],
                 'longitude' => $param['longitude'],
                 'created_user_id' => JWTAuth::user()->id,
@@ -93,8 +93,6 @@ class ScannedRepository extends Controller
             $params = $request->all();
             $dateTo = $params['date_to'] ?? null;
             $dateFrom = $params['date_from'] ?? null;
-
-            // Adjust dates if date_from is after date_to
             if ($dateFrom && $dateTo && $dateFrom > $dateTo) {
                 [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
             }
@@ -104,7 +102,7 @@ class ScannedRepository extends Controller
 
             // Date filtering
             if (!empty($dateFrom) && !empty($dateTo)) {
-                $userListingRecord = $userListingRecord->whereBetween('date', [$dateFrom, $dateTo]);
+                $userListingRecord = $userListingRecord->whereBetween('datetime', [$dateFrom, $dateTo]);
             }
 
             // Ordering

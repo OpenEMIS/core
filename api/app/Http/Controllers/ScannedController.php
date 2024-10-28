@@ -97,7 +97,6 @@ class ScannedController extends Controller
                 return $this->sendErrorResponse("Scanned User Data not Added successfully.");
             }
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to save Scanned User Data in DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
