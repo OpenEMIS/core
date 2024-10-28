@@ -156,10 +156,13 @@ class RecordBehavior extends Behavior
 
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
+        
+       
         // do not contain CustomFieldValues
         if (!is_null($this->getConfig('tableCellClass'))) {
             $query->contain(['CustomTableCells']);
         }
+        
     }
 
     public function editAfterQuery(Event $event, Entity $entity)
@@ -169,8 +172,8 @@ class RecordBehavior extends Behavior
 
     public function viewAfterAction(Event $event, Entity $entity)
     {
+       
         $model = $this->_table;
-        // add here to make view has the same format in edit
         $this->formatEntity($entity);
         $this->setupCustomFields($entity);
         // check if the query string contains tab_section if tab_section exists for a particular survey
@@ -1058,7 +1061,7 @@ class RecordBehavior extends Behavior
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
 
-                            if (!empty($sectionName)&&$model->request->getParam('action')!="Surveys") {
+                            if (!empty($sectionName)&&$model->request->getParam('action')!="Surveys" && $model->request->getParam('action')!="Classes") {//POCOR-8538
                                 $ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName[$key]]);
                                 $fieldOrder[++$order] = $fieldName;
                                // echo "<pre>";print_r($customFields);die;
@@ -1116,7 +1119,7 @@ class RecordBehavior extends Behavior
                                             $renderField = $forRender;
                                         }
                                     }
-
+                                                                     
                                     if ($renderField) {
                                         $ControllerAction->field($fieldName, $attr);
                                         $fieldOrder[++$order] = $fieldName;
@@ -1138,7 +1141,11 @@ class RecordBehavior extends Behavior
                     $fieldOrder[++$order] = $field;
                 }
             }
-            ksort($fieldOrder);
+            //POCOR-8538 start
+            if($model->request->getParam('action')=="Classes"){
+              $fieldOrder=$this->setUpFieldOrderForClasses($fieldOrder);
+            }
+            //POCOR-8538 end
             $ControllerAction->setFieldOrder($fieldOrder);
         }
     }
@@ -1545,6 +1552,14 @@ class RecordBehavior extends Behavior
     {
         return null;
     }
-    //POCOR-2135 end
-
+    //POCOR-8538 start
+    public function setUpFieldOrderForClasses($fieldOrder){
+               
+        $position = array_search('institution_shift_id', $fieldOrder);
+        $customFields = array_values(array_filter($fieldOrder, fn($field) => strpos($field, 'custom') === 0));
+        $fieldOrder = array_values(array_filter($fieldOrder, fn($field) => strpos($field, 'custom') !== 0));
+        array_splice($fieldOrder, $position + 1, 0, $customFields);
+        return $fieldOrder;
+    }
+    //POCOR-8538 end
 }
