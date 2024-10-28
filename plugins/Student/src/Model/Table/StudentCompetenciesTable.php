@@ -219,7 +219,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                 [$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()],
                 [$InstitutionClassStudents->aliasField('institution_class_id = ') . $this->aliasField('id')]
             )
-            ->where(['InstitutionClassStudents.student_id' => $studentId])
+            ->where(['InstitutionClassStudents.student_id IS' => $studentId])
             //Start POCOR-6718
             // ->group([
             //     $ClassGrades->aliasField('institution_class_id'),
@@ -257,10 +257,10 @@ class StudentCompetenciesTable extends ControllerActionTable
         // End
 
         if (!empty($selectedPeriod)) {
-            $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
+            $query->where([$this->aliasField('academic_period_id IS') => $selectedPeriod]);
             $InstitutionClassStudentGrade = $InstitutionClassStudents->find()->where([
-                'student_id' =>$studentId,
-                'academic_period_id' => $selectedPeriod
+                'student_id IS' =>$studentId,
+                'academic_period_id IS' => $selectedPeriod
                 ])->first();
           
             // Competencies
