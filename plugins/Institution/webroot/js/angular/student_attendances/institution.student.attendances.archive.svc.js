@@ -551,15 +551,20 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
             direction = 'right';
         }
         columnDefs.push({
-            headerName: translateText.translated.OpenEmisId,
+            headerName: translateText && translateText.translated && translateText.translated.OpenEmisId 
+                ? translateText.translated.OpenEmisId 
+                : "Openemis No", // Provide a default fallback name if translation is unavailable
             field: "openemis_no",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
             filter: "text"
         });
+
         columnDefs.push({
-            headerName: translateText.translated.Name,
+            headerName: translateText && translateText.translated && translateText.translated.OpenEmisId 
+                ? translateText.translated.OpenEmisId 
+                : "Student Name",
             field: "student_name",
             filterParams: filterParams,
             pinned: direction,
