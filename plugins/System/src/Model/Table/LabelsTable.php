@@ -7,14 +7,10 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
-use Cake\ORM\Entity;
-use Cake\Log\Log;
-use Cake\Cache\Cache;
 
 class LabelsTable extends ControllerActionTable
 {
     private $fieldsOrder = ['created', 'message'];
-    private $defaultConfig = 'labels';
     public function initialize(array $config): void
     {
        parent::initialize($config);
@@ -67,36 +63,8 @@ class LabelsTable extends ControllerActionTable
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
-    //POCOR-8679 start
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $keyFetch = $entity->module.'.'.$entity->field;
-        $keyValue = self::concatenateLabel($entity);
-        Log::debug(print_r([1, $keyFetch, $keyValue],true));
-        Cache::write($keyFetch, $keyValue, $this->defaultConfig);
-    }
-
-    public function concatenateLabel($entity)
-    {
-        $keyFetch = $entity->module.'.'.$entity->field;
-        $keyValue = (!is_null($entity->name) && ($entity->name != "")) ? $entity->name : $entity->field_name;
-
-        if (!is_null($entity->code) && ($entity->code != "")) {
-            $keyValue = ucfirst($entity->code).' '.ucfirst($keyValue); // POCOR-4095 Remove the bracket on the label code
-        }
-
-        return $keyValue;
-    }
-
-    public function getDefaultConfig()
-    {
-        return $this->defaultConfig;
-    }
-    //POCOR-8679 end
-
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->setfieldOrder($this->fieldsOrder);
     }
-
 }

@@ -47,7 +47,7 @@ class LabelsTable extends AppTable
                 $filteredFiles[] = $value;
             }
         }
-
+        
         if (empty($filteredFiles)) {
             $keyArray = [];
             $allLabels = $this->find();
