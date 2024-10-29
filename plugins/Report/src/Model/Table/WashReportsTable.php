@@ -52,7 +52,7 @@ class WashReportsTable extends AppTable
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) 
     {
-        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+        $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         return $attr;
     }
     
@@ -95,15 +95,38 @@ class WashReportsTable extends AppTable
             'key' => 'code',
             'field' => 'code',
             'type' => 'string',
-            'label' => __('Code')
+            'label' => ($washType == 'Sanitation') ? __('Institution Code') :  __('Code') //POCOR-8161
         ];
         
         $extraFields[] = [
             'key' => 'name',
             'field' => 'name',
             'type' => 'string',
-            'label' => __('Name')
+            'label' => ($washType == 'Sanitation') ? __('Institution Name') : __('Name')//POCOR-8161
         ];
+        //POCOR-8161 starts
+        if ($washType == 'Sanitation'){
+            $extraFields[] = [
+                'key' => 'institution_type_name',
+                'field' => 'institution_type_name',
+                'type' => 'string',
+                'label' => __('Institution Type')
+            ];
+
+            $extraFields[] = [
+                'key' => 'institution_sector_name',
+                'field' => 'institution_sector_name',
+                'type' => 'string',
+                'label' => __('Institution Sector')
+            ];
+
+            $extraFields[] = [
+                'key' => 'institution_provider_name',
+                'field' => 'institution_provider_name',
+                'type' => 'string',
+                'label' => __('Institution Provider')
+            ];
+        }//POCOR-8161 ends
 
         //add columns  POCOR-5865 starts
         $extraFields[] = [
@@ -115,7 +138,7 @@ class WashReportsTable extends AppTable
 
         //start POCOR-6732
         
-        $AreaLevelTbl = TableRegistry::get('area_levels');
+        $AreaLevelTbl = TableRegistry::get('Area.AreaLevels');
         $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
 
         $extraFields[] = [
@@ -345,159 +368,157 @@ class WashReportsTable extends AppTable
         }
 
         else if ($washType == 'Water'){
-                $extraFields[] = [
-                    'key' => 'InfrastructureWashWaterProximities.name',
-                    'field' => 'infrastructure_wash_proximity',
-                    'type' => 'string',
-                    'label' => __('Proximity')
-                ];
-
-                $extraFields[] = [
-                    'key' => 'InfrastructureWashWaterQuantities.name',
-                    'field' => 'infrastructure_wash_quantity',
-                    'type' => 'string',
-                    'label' => __('Quantity')
-                ];
-
-                 $extraFields[] = [
-                'key' => 'InfrastructureWashWaterQualities.name',
-                'field' => 'infrastructure_wash_quality',
+            $extraFields[] = [
+                'key' => 'InfrastructureWashWaterProximities.name',
+                'field' => 'infrastructure_wash_proximity',
                 'type' => 'string',
-                'label' => __('Quality')
-                ];
+                'label' => __('Proximity')
+            ];
 
-                $extraFields[] = [
-                    'key' => 'InfrastructureWashWaterAccessibilities.name',
-                    'field' => 'infrastructure_wash_accessibility',
-                    'type' => 'string',
-                    'label' => __('Accessibility')
-                ];
-            }
-            else if ($washType == 'Hygiene'){
-                
-                $extraFields[] = [
-                    'key' => 'InfrastructureWashHygieneSoapashAccessibilities.name',
-                    'field' => 'infrastructure_wash_accessibility',
-                    'type' => 'string',
-                    'label' => __('Soap/Ash Availability')
-                ]; 
-               
-                $extraFields[] = [
-                    'key' => 'InfrastructureWashHygieneEducations.name',
-                    'field' => 'infrastructure_wash_hygiene_education',
-                    'type' => 'string',
-                    'label' => __('Hygiene Education')
-                ];
-
-                $extraFields[] = [
-                'key' => 'maleHygieneFunctional',
-                'field' => 'maleHygieneFunctional',
+            $extraFields[] = [
+                'key' => 'InfrastructureWashWaterQuantities.name',
+                'field' => 'infrastructure_wash_quantity',
                 'type' => 'string',
-                'label' => __('Male (Functional)')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'maleHygieneNonFunctional',
-                    'field' => 'maleHygieneNonFunctional',
-                    'type' => 'string',
-                    'label' => __('Male (Non-Functional)')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'femaleHygieneFunctional',
-                    'field' => 'femaleHygieneFunctional',
-                    'type' => 'string',
-                    'label' => __('Female (Functional)')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'femaleHygieneNonFunctional',
-                    'field' => 'femaleHygieneNonFunctional',
-                    'type' => 'string',
-                    'label' => __('Female (Non-Functional)')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'mixedHygieneFunctional',
-                    'field' => 'mixedHygieneFunctional',
-                    'type' => 'string',
-                    'label' => __('Mixed (Functional)')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'mixedHygieneNonFunctional',
-                    'field' => 'mixedHygieneNonFunctional',
-                    'type' => 'string',
-                    'label' => __('Mixed (Non-Functional)')
-                ]; 
-            }
-
-            else if ($washType == 'Sanitation'){
-                $extraFields[] = [
-                    'key' => 'InfrastructureWashSanitationUses.name',
-                    'field' => 'infrastructure_wash_uses',
-                    'type' => 'string',
-                    'label' => __('Use')
-                ];
+                'label' => __('Quantity')
+            ];
 
                 $extraFields[] = [
-                'key' => 'maleSanitationFunctional',
-                'field' => 'maleSanitationFunctional',
+            'key' => 'InfrastructureWashWaterQualities.name',
+            'field' => 'infrastructure_wash_quality',
+            'type' => 'string',
+            'label' => __('Quality')
+            ];
+
+            $extraFields[] = [
+                'key' => 'InfrastructureWashWaterAccessibilities.name',
+                'field' => 'infrastructure_wash_accessibility',
                 'type' => 'string',
-                'label' => __('Male (Functional)')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'maleSanitationNonFunctional',
-                    'field' => 'maleSanitationNonFunctional',
-                    'type' => 'string',
-                    'label' => __('Male (Non-Functional)')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'femaleSanitationFunctional',
-                    'field' => 'femaleSanitationFunctional',
-                    'type' => 'string',
-                    'label' => __('Female (Functional)')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'femaleSanitationNonFunctional',
-                    'field' => 'femaleSanitationNonFunctional',
-                    'type' => 'string',
-                    'label' => __('Female (Non-Functional)')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'mixedSanitationFunctional',
-                    'field' => 'mixedSanitationFunctional',
-                    'type' => 'string',
-                    'label' => __('Mixed (Functional)')
-                ];
-                
-                $extraFields[] = [
-                    'key' => 'mixedSanitationNonFunctional',
-                    'field' => 'mixedSanitationNonFunctional',
-                    'type' => 'string',
-                    'label' => __('Mixed (Non-Functional)')
-                ];
-
-                $extraFields[] = [
-                'key' => 'InfrastructureWashWaterQualities.name',
-                'field' => 'infrastructure_wash_quality',
+                'label' => __('Accessibility')
+            ];
+        }
+        else if ($washType == 'Hygiene'){
+            
+            $extraFields[] = [
+                'key' => 'InfrastructureWashHygieneSoapashAccessibilities.name',
+                'field' => 'infrastructure_wash_accessibility',
                 'type' => 'string',
-                'label' => __('Quality')
-                ];
+                'label' => __('Soap/Ash Availability')
+            ]; 
+            
+            $extraFields[] = [
+                'key' => 'InfrastructureWashHygieneEducations.name',
+                'field' => 'infrastructure_wash_hygiene_education',
+                'type' => 'string',
+                'label' => __('Hygiene Education')
+            ];
 
-                $extraFields[] = [
-                    'key' => 'InfrastructureWashWaterAccessibilities.name',
-                    'field' => 'infrastructure_wash_accessibility',
-                    'type' => 'string',
-                    'label' => __('Accessibility')
-                ];
-            }
+            $extraFields[] = [
+            'key' => 'maleHygieneFunctional',
+            'field' => 'maleHygieneFunctional',
+            'type' => 'string',
+            'label' => __('Male (Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'maleHygieneNonFunctional',
+                'field' => 'maleHygieneNonFunctional',
+                'type' => 'string',
+                'label' => __('Male (Non-Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'femaleHygieneFunctional',
+                'field' => 'femaleHygieneFunctional',
+                'type' => 'string',
+                'label' => __('Female (Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'femaleHygieneNonFunctional',
+                'field' => 'femaleHygieneNonFunctional',
+                'type' => 'string',
+                'label' => __('Female (Non-Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'mixedHygieneFunctional',
+                'field' => 'mixedHygieneFunctional',
+                'type' => 'string',
+                'label' => __('Mixed (Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'mixedHygieneNonFunctional',
+                'field' => 'mixedHygieneNonFunctional',
+                'type' => 'string',
+                'label' => __('Mixed (Non-Functional)')
+            ]; 
+        }
 
-        
+        else if ($washType == 'Sanitation'){
+            $extraFields[] = [
+                'key' => 'InfrastructureWashSanitationUses.name',
+                'field' => 'infrastructure_wash_uses',
+                'type' => 'string',
+                'label' => __('Use')
+            ];
+
+            $extraFields[] = [
+            'key' => 'maleSanitationFunctional',
+            'field' => 'maleSanitationFunctional',
+            'type' => 'string',
+            'label' => __('Male (Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'maleSanitationNonFunctional',
+                'field' => 'maleSanitationNonFunctional',
+                'type' => 'string',
+                'label' => __('Male (Non-Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'femaleSanitationFunctional',
+                'field' => 'femaleSanitationFunctional',
+                'type' => 'string',
+                'label' => __('Female (Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'femaleSanitationNonFunctional',
+                'field' => 'femaleSanitationNonFunctional',
+                'type' => 'string',
+                'label' => __('Female (Non-Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'mixedSanitationFunctional',
+                'field' => 'mixedSanitationFunctional',
+                'type' => 'string',
+                'label' => __('Mixed (Functional)')
+            ];
+            
+            $extraFields[] = [
+                'key' => 'mixedSanitationNonFunctional',
+                'field' => 'mixedSanitationNonFunctional',
+                'type' => 'string',
+                'label' => __('Mixed (Non-Functional)')
+            ];
+
+            $extraFields[] = [
+            'key' => 'InfrastructureWashWaterQualities.name',
+            'field' => 'infrastructure_wash_quality',
+            'type' => 'string',
+            'label' => __('Quality')
+            ];
+
+            $extraFields[] = [
+                'key' => 'InfrastructureWashWaterAccessibilities.name',
+                'field' => 'infrastructure_wash_accessibility',
+                'type' => 'string',
+                'label' => __('Accessibility')
+            ];
+        }
         $fields->exchangeArray($extraFields);
     }
 
@@ -510,8 +531,7 @@ class WashReportsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $washType = $requestData->wash_type;
 
-         if($washType == 'All'){
-
+        if($washType == 'All'){
             foreach ($infrastructureTabsData as $key => $val)
             {
                 $tabsName = $val;
@@ -524,7 +544,15 @@ class WashReportsTable extends AppTable
                         ]) */
                 , 'orientation' => 'landscape'];
             }
-        }
+        }else{//POCOR-8161 starts
+            foreach ($infrastructureTabsData as $key => $val)
+            {
+                $tabsName = $val;
+                if($tabsName == $washType){
+                    $sheets[] = ['sheetData' => ['infrastructure_tabs_type' => $washType], 'name' => $tabsName, 'table' => $this, 'query' => $this->find(), 'orientation' => 'landscape'];
+                }
+            }
+        }//POCOR-8161 ends
 
     }
 
@@ -630,7 +658,13 @@ class WashReportsTable extends AppTable
                     'infrastructure_wash_uses' => 'InfrastructureWashSanitationUses.name',
                     'infrastructure_wash_accessibility' => 'InfrastructureWashSanitationAccessibilities.name',                    
                     'infrastructure_wash_quality' => 'InfrastructureWashSanitationQualities.name',
-                    'infrastructure_wash_id_sanitation' => 'InfrastructureWashSanitations.id'
+                    'infrastructure_wash_id_sanitation' => 'InfrastructureWashSanitations.id',
+                    'institution_type_id' => $this->aliasField('institution_type_id'),//POCOR-8161 starts
+                    'institution_sector_id' => $this->aliasField('institution_sector_id'),
+                    'institution_provider_id' => $this->aliasField('institution_provider_id'),                    
+                    'institution_type_name' => 'InstitutionTypes.name',                    
+                    'institution_sector_name' => 'InstitutionSectors.name',                    
+                    'institution_provider_name' => 'InstitutionProviders.name',//POCOR-8161 ends                
                 ])
                 ->contain(['Areas', 'AreaAdministratives'])
                 ->leftJoin(
@@ -664,7 +698,16 @@ class WashReportsTable extends AppTable
                     [
                         'AcademicPeriods.id = ' . $academicPeriodId
                     ]
-                )
+                )->leftJoin(//POCOR-8161 starts
+                    ['InstitutionTypes' => 'institution_types'],
+                    ['InstitutionTypes.id = ' . $this->aliasField('institution_type_id')]
+                )->leftJoin(
+                    ['InstitutionSectors' => 'institution_sectors'],
+                    ['InstitutionSectors.id = ' . $this->aliasField('institution_sector_id')]
+                )->leftJoin(
+                    ['InstitutionProviders' => 'institution_providers'],
+                    ['InstitutionProviders.id = ' . $this->aliasField('institution_provider_id')]
+                )//POCOR-8161 ends
                 ->where($conditions);
         }
         if ($infrastructureType == 'Hygiene')
@@ -816,17 +859,17 @@ class WashReportsTable extends AppTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 
-                $areas1 = TableRegistry::get('areas');
+                $areas1 = TableRegistry::get('Area.Areas');
                 $areasData = $areas1
                             ->find()
-                            ->where([$areas1->alias('code')=>$row->area_code])
+                            ->where([$areas1->aliasField('code IS')=>$row->area_code])
                             ->first();
                 $row['region_code'] = '';            
                 $row['region_name'] = '';
                 if(!empty($areasData)){
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
+                    $areas = TableRegistry::get('Area.Areas');
+                    $areaLevels = TableRegistry::get('Area.AreaLevels');
+                    $institutions = TableRegistry::get('Institution.Institutions');
                     $val = $areas
                                 ->find()
                                 ->select([
@@ -834,13 +877,13 @@ class WashReportsTable extends AppTable
                                     $areas->aliasField('name'),
                                     ])
                                 ->leftJoin(
-                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [$areaLevels->getAlias() => $areaLevels->getTable()],
                                     [
                                         $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
                                     ]
                                 )
                                 ->leftJoin(
-                                    [$institutions->alias() => $institutions->table()],
+                                    [$institutions->getAlias() => $institutions->getTable()],
                                     [
                                         $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                                     ]
