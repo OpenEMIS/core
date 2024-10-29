@@ -660,7 +660,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 scope.internalGridOptions = {
                     columnDefs: [
                         {
-                            headerName: scope.translateFields.openemis_no,
+                            headerName: angular.isDefined(scope.dynamicOpenemisNoHeader) ? scope.dynamicOpenemisNoHeader : scope.translateFields.openemis_no,
                             field: "openemis_no",
                             suppressMenu: true,
                             suppressSorting: true
@@ -1141,7 +1141,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         function filterBySection(item, section) {
             return section === item.section;
         }
-        console.log(scope.customFields);
+        // console.log(scope.customFields);
         if(scope.customFields && scope.customFields.length > 0) {
             var selectedCustomField = scope.customFields;
             var filteredSections = Array.from(new Set(scope.customFields.map((item) => mapBySection(item))));
