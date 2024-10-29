@@ -1221,6 +1221,26 @@ class UsersTable extends AppTable
     public function onChangeUserIdentities(Event $event, Entity $entity)
     {
         $UserNationalityTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
+        //POCOR-8664 start
+        $UserNationalityTable->updateAll(
+            [
+                'preferred' => 1,
+            ],
+            [
+                'security_user_id' => $entity->security_user_id,
+                'nationality_id' => $entity->nationality_id
+            ]
+        );
+        $UserNationalityTable->updateAll(
+            [
+                'preferred' => 0,
+            ],
+            [
+                'security_user_id' => $entity->security_user_id,
+                'nationality_id <>' => $entity->nationality_id
+            ]
+        );
+        //POCOR-8664 end
         //check whether identity number / type is tied to preferred nationality.
         $preferredNationality = $UserNationalityTable
             ->find()
@@ -1232,7 +1252,6 @@ class UsersTable extends AppTable
                 $UserNationalityTable->aliasField('preferred') => 1
             ])
             ->first();
-
         if (!empty($preferredNationality)) {
             // to get the identity record for the user based on the default identity type linked to this nationality
             $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
@@ -1283,7 +1302,7 @@ class UsersTable extends AppTable
                             ])
                             ->order([$UserIdentities->aliasField('created') => 'desc'])
                             ->first();
-
+                            
                         if (empty($latestIdentity)) {
                             $this->updateAll(
                                 [
