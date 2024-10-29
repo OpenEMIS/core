@@ -15,6 +15,7 @@
                     </div>
                 </div>
                 <div class="row row-content">
+                    <?php $dynamicOpenemisNoHeader = (isset($dynamicOpenemisNoHeader) && !empty($dynamicOpenemisNoHeader)) ? h($dynamicOpenemisNoHeader) : __('OpenEMIS ID'); ?>
                     <div class="col-xs-6 col-md-3 form-label"><?= $dynamicOpenemisNoHeader ?></div>
                     <div class="form-input">{{selectedUserData.openemis_no}}</div>
                 </div>
