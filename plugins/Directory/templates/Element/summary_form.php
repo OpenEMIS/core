@@ -15,7 +15,7 @@
                     </div>
                 </div>
                 <div class="row row-content">
-                    <div class="col-xs-6 col-md-3 form-label"><?= __('OpenEMIS ID') ?></div>
+                    <div class="col-xs-6 col-md-3 form-label"><?= $dynamicOpenemisNoHeader ?></div>
                     <div class="form-input">{{selectedUserData.openemis_no}}</div>
                 </div>
                 <div class="row row-content">
