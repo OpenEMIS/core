@@ -222,6 +222,13 @@ class ExcelBehavior extends Behavior
                         }
                     }
                 }//POCOR-8484 ends
+                //POCOR-8627 Start
+                if($settings['sheet']['name'] == 'StaffAppraisals' && $action == 'excel' && isset($settings['id']) && !empty(isset($settings['id']))) {
+                    $id = $settings['id'];
+                    $primaryKey = $table->getPrimaryKey();
+                    $query->where([$table->aliasField($primaryKey) => $id]);
+                }
+                //POCOR-8627 End
             //POCOR-8515 starts    
             }else{
                 if (isset($settings['id'])) {
