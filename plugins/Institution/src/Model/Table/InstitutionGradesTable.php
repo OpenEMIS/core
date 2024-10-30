@@ -271,7 +271,7 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                             $lastInsertId = $result['id'];
                             //echo "<pre>";print_r($lastInsertId);die;
                             // POCOR 5001
-                            if (count($data['grades']['education_grade_subject_id']) > 0) {
+                            if (!empty($data['grades']['education_grade_subject_id']) && count($data['grades']['education_grade_subject_id']) > 0) {
                                 $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
                                 $createdUserId = $this->Session->read('Auth.User.id');
                                 $institutionProgramGradeSubjectID = [];
@@ -1068,7 +1068,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
         if ($request->is(['post', 'put'])) {
 
             $educationGradeId = $request->getData($this->aliasField('grades.education_grade_id'));
-
+            $subjectOptions = [];
             if (!empty($educationGradeId)) {
 
                 $existingSubjectsInGrade =
@@ -1090,9 +1090,10 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
                     $subjectQuery->where([
                         'EducationSubjects.id IN ' => $existingSubjectsInGrade
                     ]);
+                    $subjectOptions = $subjectQuery->toArray();
                 }
 
-                $subjectOptions = $subjectQuery->toArray();
+            
             }
 
             $attr['data'] = $subjectOptions;
