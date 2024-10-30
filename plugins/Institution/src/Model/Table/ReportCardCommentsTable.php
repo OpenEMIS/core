@@ -124,7 +124,7 @@ class ReportCardCommentsTable extends ControllerActionTable
         if (!$isSuperAdmin) {
             $allclassesPermission = TableRegistry::get('Institution.InstitutionClasses')->getRolePermissionAccessForAllClasses($staffId, $institutionId);
             $myClassesPermission = TableRegistry::get('Institution.InstitutionClasses')->getRolePermissionAccessForMyClasses($staffId, $institutionId);
-            if ($myClassesPermission && !$allclassesPermission) {
+            if (!$allclassesPermission) {
                 //$where[$this->aliasField('staff_id')] = $staffId;
                 $where = [
                     'OR' => [
