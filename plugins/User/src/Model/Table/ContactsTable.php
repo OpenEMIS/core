@@ -32,12 +32,15 @@ class ContactsTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
-        $this->addBehavior('Institution.InstitutionTab',
-            ['implementedMethods' =>
+        $this->addBehavior(
+            'Institution.InstitutionTab',
+            [
+                'implementedMethods' =>
                 [
                     'setUserTabElements' => 'setUserTabElements',
                 ],
-            ]);
+            ]
+        );
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.UserTab');
 
@@ -90,7 +93,6 @@ class ContactsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-
         } elseif ($this->request->getParam('controller') == 'Directories') {
             $is_manual_exist = $this->getManualUrl('Directory', 'Contacts', 'General');
             if (!empty($is_manual_exist)) {
@@ -109,7 +111,6 @@ class ContactsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-
         } elseif ($this->request->getParam('controller') == 'Profiles') {
             $is_manual_exist = $this->getManualUrl('Personal', 'Contacts', 'General');
             if (!empty($is_manual_exist)) {
@@ -128,7 +129,6 @@ class ContactsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-
         }
         // End POCOR-5188
 
@@ -145,7 +145,7 @@ class ContactsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-		if($this->request->getParam('controller') == 'Staff') {
+        if ($this->request->getParam('controller') == 'Staff') {
             $userId = $this->getUserID();
             $this->field('security_user_id', ['attr' => ['value' => $userId], 'type' => 'hidden']);
         }
@@ -196,13 +196,19 @@ class ContactsTable extends ControllerActionTable
 
             // POCOR-8080-1
             // I've checked the new code
-            if ($contactOption == $this->contactOptionsArray['EMA']) { //if updating preferred email
+            //POCOR-8660 update mobile no in security user table
+            if ($contactOption == $this->contactOptionsArray['EMA'] || $contactOption == $this->contactOptionsArray['MOB'] || $contactOption == $this->contactOptionsArray['PHO']) { //if updating preferred email
+                $key = array_search($contactOption, $this->contactOptionsArray);
+                $entity->set('contact_option_code', $key);
                 //update information on security user table
                 $listeners = [
                     TableRegistry::get('User.Users')
                 ];
+
                 $this->dispatchEventToModels('Model.UserContacts.onChange', [$entity], $this, $listeners);
+                unset($entity['contact_option_code']);
             }
+            //POCOR-8660 end
         }
     }
 
@@ -272,13 +278,13 @@ class ContactsTable extends ControllerActionTable
                     // POCOR-8080-1 start
                     // I've cleaned the new code
                     $contactOptionId = (isset($context['data']['contact_option_id'])) ? $context['data']['contact_option_id'] : null;
-                    if(!is_numeric($contactOptionId)){
+                    if (!is_numeric($contactOptionId)) {
                         $contactOption = $this->ContactOptionsTable
                             ->find('all')
-                            ->select([ 'id' => $this->ContactOptionsTable->aliasField('id')])
+                            ->select(['id' => $this->ContactOptionsTable->aliasField('id')])
                             ->where([$this->ContactOptionsTable->aliasField('name') => $contactOptionId])
                             ->first();
-                        if($contactOption){
+                        if ($contactOption) {
                             $contactOptionId = $contactOption->id;
                         }
                     }
@@ -293,10 +299,9 @@ class ContactsTable extends ControllerActionTable
 
                     if ($query > 0) {
                         $contactOptionId = 0;
-
                     }
                     $in_array = false;
-                    if(in_array($contactOptionId, [$this->contactOptionsArray['MOB'], $this->contactOptionsArray['PHO'], $this->contactOptionsArray['FAX']])){
+                    if (in_array($contactOptionId, [$this->contactOptionsArray['MOB'], $this->contactOptionsArray['PHO'], $this->contactOptionsArray['FAX']])) {
                         $in_array = true;
                     };
 
@@ -310,13 +315,13 @@ class ContactsTable extends ControllerActionTable
                     // POCOR-8080-1 start
                     // I've cleaned the new code
                     $contactOptionId = (isset($context['data']['contact_option_id'])) ? $context['data']['contact_option_id'] : null;
-                    if(!is_numeric($contactOptionId)){
+                    if (!is_numeric($contactOptionId)) {
                         $contactOption = $this->ContactOptionsTable
                             ->find('all')
-                            ->select([ 'id' => $this->ContactOptionsTable->aliasField('id')])
+                            ->select(['id' => $this->ContactOptionsTable->aliasField('id')])
                             ->where([$this->ContactOptionsTable->aliasField('name') => $contactOptionId])
                             ->first();
-                        if($contactOption){
+                        if ($contactOption) {
                             $contactOptionId = $contactOption->id;
                         }
                     }
@@ -330,13 +335,13 @@ class ContactsTable extends ControllerActionTable
                     // POCOR-8080-1 start
                     // I've cleaned the new code
                     $contactOptionId = (isset($context['data']['contact_option_id'])) ? $context['data']['contact_option_id'] : null;
-                    if(!is_numeric($contactOptionId)){
+                    if (!is_numeric($contactOptionId)) {
                         $contactOption = $this->ContactOptionsTable
                             ->find('all')
-                            ->select([ 'id' => $this->ContactOptionsTable->aliasField('id')])
+                            ->select(['id' => $this->ContactOptionsTable->aliasField('id')])
                             ->where([$this->ContactOptionsTable->aliasField('name') => $contactOptionId])
                             ->first();
-                        if($contactOption){
+                        if ($contactOption) {
                             $contactOptionId = $contactOption->id;
                         }
                     }
@@ -349,7 +354,6 @@ class ContactsTable extends ControllerActionTable
             ]);
 
         return $validator;
-
     }
 
     public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, ServerRequest $request)
@@ -379,10 +383,15 @@ class ContactsTable extends ControllerActionTable
                 ->select('name')
                 ->where([
                     $this->ContactOptionsTable->aliasField('id') => $contact_option_id
-                    ])->first();
-            $attr['value'] = $contactOption->name;
+                ])->first();
+            //POCOR-8660 start
+            // $attr['value'] = $contactOption->name;
+            $attr['value'] = $contact_option_id;
+            // POCOR-8660 end
             $attr['attr']['value'] = $contactOption->name;
             $attr['type'] = 'readonly';
+            // dd( $attr);
+
 
         }
         // POCOR-8080-1 end
@@ -397,10 +406,12 @@ class ContactsTable extends ControllerActionTable
         $alias = $this->getAlias();
         $contactOptionId = null;
         $entity = $attr['entity'];
-        if ($action == 'add' || $action == 'edit' ) {
+        if ($action == 'add' || $action == 'edit') {
             if (isset($queryData[$alias])) {
-                if (isset($queryData[$alias]['contact_option_id']) &&
-                    is_numeric($queryData[$alias]['contact_option_id'])) {
+                if (
+                    isset($queryData[$alias]['contact_option_id']) &&
+                    is_numeric($queryData[$alias]['contact_option_id'])
+                ) {
                     $contactOptionId = $queryData[$alias]['contact_option_id'];
                 }
             }
@@ -428,7 +439,6 @@ class ContactsTable extends ControllerActionTable
             $attr['value'] = $entity->contact_type_id;
             $attr['attr']['value'] = $attr['value'];
             $attr['options'] = $contactTypes;
-
         }
         // POCOR-8080-1 end
 
@@ -468,7 +478,7 @@ class ContactsTable extends ControllerActionTable
     public
     function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
     /**
@@ -479,6 +489,4 @@ class ContactsTable extends ControllerActionTable
     {
         return $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
     }
-
-
 }
