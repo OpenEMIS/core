@@ -177,6 +177,21 @@ class POCOR8434 extends AbstractMigration
                         CONSTRAINT `student_admission_custom_field_values_ibfk_3` FOREIGN KEY (`modified_user_id`) REFERENCES `security_users` (`id`),
                         CONSTRAINT `student_admission_custom_field_values_ibfk_4` FOREIGN KEY (`created_user_id`) REFERENCES `security_users` (`id`)
                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+        
+        //create new table `student_custom_filters`  
+        $this->execute("CREATE TABLE `student_custom_filters` (
+            `id` INT(11) NOT NULL AUTO_INCREMENT,
+            `name` VARCHAR(250) COLLATE utf8_general_ci NOT NULL,
+            `custom_module_id` INT(11) NOT NULL COMMENT 'Links to custom_modules.id',
+            `student_custom_form_id` INT(11) NOT NULL COMMENT 'Link to student_custom_forms.id',
+            `education_programme_id` INT(11) NOT NULL COMMENT 'Links to education_programmes.id',
+            `academic_period_id` INT(11) NOT NULL COMMENT 'Links to academic_periods.id',
+            `modified_user_id` INT(11) NULL DEFAULT NULL,
+            `modified` DATETIME NULL DEFAULT NULL,
+            `created_user_id` INT(11) NOT NULL,
+            `created` DATETIME NOT NULL,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;");
     }
 
     public function down() {
