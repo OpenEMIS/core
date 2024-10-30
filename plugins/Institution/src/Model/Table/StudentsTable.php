@@ -462,6 +462,14 @@ class StudentsTable extends ControllerActionTable
             'label' => __('Student Name')
         ];
 
+        //POCOR-8656 start
+         $extraField[] = [
+            'key' => 'student_email',
+            'field' => 'student_email',
+            'type' => 'string',
+            'label' => __('Student Email')
+        ];
+        //POCOR-8656 end
 
         $extraField[] = [
             'key' => 'education_grade_id',
@@ -3562,6 +3570,9 @@ class StudentsTable extends ControllerActionTable
             'student_date_of_birth' => 'Users.date_of_birth',
             'student_address' => 'Users.address',
             'student_identity_number' => 'Users.identity_number',
+            //POCOR-8656 start
+            'student_email' => 'Users.email',
+            //POCOR-8656 end
         ]);
         return $query;
     }

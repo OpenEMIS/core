@@ -77,8 +77,8 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $studentGrades = $InstitutionStudents->find()
             ->where([
-                $InstitutionStudents->aliasField('student_id') => $this->studentId,
-                $InstitutionStudents->aliasField('academic_period_id') => $selectedAcademicPeriod
+                $InstitutionStudents->aliasField('student_id IS') => $this->studentId,
+                $InstitutionStudents->aliasField('academic_period_id IS') => $selectedAcademicPeriod
             ])
             ->extract('education_grade_id')
             ->toArray();
