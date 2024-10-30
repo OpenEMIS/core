@@ -461,6 +461,10 @@ class ExaminationCentresTable extends ControllerActionTable {
                 Log::write('debug', __METHOD__ . ': Record not found for special need type id: ' . $id);
             }
         }
+        //POCOR-8674 start
+         // Ensure the data is properly set in the request
+         $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]);
+        //POCOR-8674 end
     }
 
     public function onGetCustomExamCentreSpecialNeedsElement(Event $event, $action, $entity, $attr, $options=[])
@@ -582,13 +586,22 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function onUpdateFieldAddAllInstitutions(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $academicPeriodId = isset($request->data[$this->getAlias()]['academic_period_id']) ? $request->data[$this->getAlias()]['academic_period_id'] : 0;
+            //POCOR-8674 start
+            // $academicPeriodId = isset($request->data[$this->getAlias()]['academic_period_id']) ? $request->data[$this->getAlias()]['academic_period_id'] : 0;
+            $academicPeriodId = isset($request->getData()[$this->getAlias()]['academic_period_id']) ? $request->getData()[$this->getAlias()]['academic_period_id'] : 0;
+            //POCOR-8674 end
             $institutionOptions = $this->Institutions->find('NotExamCentres', ['academic_period_id' => $academicPeriodId]);
 
-            if (!empty($request->data[$this->getAlias()]['institution_type'])) {
-                $type = $request->data[$this->getAlias()]['institution_type'];
+            //POCOR-8674 start
+            // if (!empty($request->data[$this->getAlias()]['institution_type'])) {
+            //     $type = $request->data[$this->getAlias()]['institution_type'];
+            //     $institutionOptions->where([$this->Institutions->aliasField('institution_type_id') => $type]);
+            // }
+            if (!empty($request->getData()[$this->getAlias()]['institution_type'])) {
+                $type = $request->getData()[$this->getAlias()]['institution_type'];
                 $institutionOptions->where([$this->Institutions->aliasField('institution_type_id') => $type]);
             }
+            //POCOR-8674 end
 
             $institutionsCount = $institutionOptions->count();
 
@@ -609,34 +622,53 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function addOnChangeAddAllInstitutions(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
-            if (array_key_exists('institutions', $data[$this->getAlias()])) {
-                $data[$this->getAlias()]['institutions'] = '';
+        //POCOR-8674 start
+        // if (array_key_exists($this->getAlias(), $data)) {
+        //     if (array_key_exists('institutions', $data[$this->getAlias()])) {
+        //         $data[$this->getAlias()]['institutions'] = '';
+        //     }
+        // }
+        $dataArray = $data->getArrayCopy();
+        if (array_key_exists($this->getAlias(), $dataArray)) {
+            if (array_key_exists('institutions', $dataArray[$this->getAlias()])) {
+                $dataArray[$this->getAlias()]['institutions'] = '';
             }
         }
+        //POCOR-8674 end
     }
 
     public function onUpdateFieldInstitutions(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $addAllInstitutions = isset($request->data[$this->getAlias()]['add_all_institutions']) ? $request->data[$this->getAlias()]['add_all_institutions'] : 0;
-
+            //POCOR-8674 start
+            // $addAllInstitutions = isset($request->data[$this->getAlias()]['add_all_institutions']) ? $request->data[$this->getAlias()]['add_all_institutions'] : 0;
+            $addAllInstitutions = isset($request->getData()[$this->getAlias()]['add_all_institutions']) ? $request->getData()[$this->getAlias()]['add_all_institutions'] : 0;
+            //POCOR-8674 end
             if ($addAllInstitutions == 1) {
                 $attr['type'] = 'hidden';
 
             } else {
-                $academicPeriodId = isset($request->data[$this->getAlias()]['academic_period_id']) ? $request->data[$this->getAlias()]['academic_period_id'] : 0;
+                //POCOR-8674 start
+                // $academicPeriodId = isset($request->data[$this->getAlias()]['academic_period_id']) ? $request->data[$this->getAlias()]['academic_period_id'] : 0;
+                $academicPeriodId = isset($request->getData()[$this->getAlias()]['academic_period_id']) ? $request->getData()[$this->getAlias()]['academic_period_id'] : 0;
+                //POCOR-8674 end
                 $institutionQuery = $this->Institutions
                     ->find()
                     ->find('NotExamCentres', ['academic_period_id' => $academicPeriodId])
                     ->contain(['Statuses'])
                     ->order([$this->Institutions->aliasField('name')]);
 
+                //POCOR-8674 start
                 // if no institution type is selected, all institutions will be shown
-                if (!empty($request->data[$this->getAlias()]['institution_type'])) {
-                    $type = $request->data[$this->getAlias()]['institution_type'];
+                // if (!empty($request->data[$this->getAlias()]['institution_type'])) {
+                //     $type = $request->data[$this->getAlias()]['institution_type'];
+                //     $institutionQuery->where([$this->Institutions->aliasField('institution_type_id') => $type]);
+                // }
+                if (!empty($request->getData()[$this->getAlias()]['institution_type'])) {
+                    $type = $request->getData()[$this->getAlias()]['institution_type'];
                     $institutionQuery->where([$this->Institutions->aliasField('institution_type_id') => $type]);
                 }
+                //POCOR-8674 end
 
                 $institutionRecords = $institutionQuery->all();
 
@@ -655,11 +687,13 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $attr['type'] = 'chosenSelect';
                 $attr['options'] = $institutionOptions;
                 $attr['fieldName'] = $this->getAlias().'.institutions';
+                
             }
 
             return $attr;
         }
     }
+
 
     public function onUpdateFieldCreateAs(Event $event, array $attr, $action, ServerRequest $request)
     {
