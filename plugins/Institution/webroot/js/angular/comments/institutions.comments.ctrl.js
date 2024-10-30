@@ -158,9 +158,11 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             }
             if(homeroomTeacherPermissionData.data.result == 4){
                 vm.isHomeRoomClass = 1;
+                $scope.isHomeRoomClass = 1;
             }
             if(homeroomTeacherPermissionData.data.result == 2){
                 vm.isHomeRoomClass = 1;
+                $scope.isHomeRoomClass = 1;
             }
             // else if((userData.super_admin != 1) && homeroomTeacherPermissionData.data.result <= 0){
             //     vm.homeroomTeacherCommentsRequired = 0;
