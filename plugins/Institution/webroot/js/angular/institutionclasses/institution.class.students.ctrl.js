@@ -163,7 +163,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 Controller.maxStudentsPerClass = parseInt(promises[3]);
                 Controller.unitOptions = promises[4];
                 Controller.courseOptions = promises[5];
-  
+
                 Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
                 Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
 
@@ -184,6 +184,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
             }, function (error) {
                 console.log(error);
             })
+            .then(Controller.createCustomFieldsArray)
             .finally(function(){
                 Controller.dataReady = true;
                 UtilsSvc.isAppendLoader(false);
@@ -191,7 +192,9 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         }
 
     });
-
+    Controller.createCustomFieldsArray = function() {
+        InstitutionClassStudentsSvc.createCustomFieldsArray(Controller);
+    }
     function changeStaff(key) {
         console.log("Controller.mainTeacherOptions");
         console.log(Controller.mainTeacherOptions);
@@ -206,7 +209,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     newOptions.push(Controller.mainTeacherOptions[i]);
                 }
             }
-            
+
         }
         return newOptions;
     }

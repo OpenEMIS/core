@@ -14,6 +14,7 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
         getInstitutionShifts: getInstitutionShifts,
         getInstitutionUnits: getInstitutionUnits,
         getInstitutionCourses: getInstitutionCourses,
+        createCustomFieldsArray: createCustomFieldsArray,
         getTeacherOptions: getTeacherOptions,
         saveClass: saveClass,
         getConfigItemValue: getConfigItemValue
@@ -37,6 +38,108 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
         KdDataSvc.init(models);
     };
 
+    function createCustomFieldsArray(scope) {
+        if (scope.customFields === "null") return;
+
+        function mapBySection(item) {
+            return item.section;
+        }
+
+        function filterBySection(item, section) {
+            return section === item.section;
+        }
+        console.log(scope.customFields);
+        if(scope.customFields && scope.customFields.length > 0) {
+            var selectedCustomField = scope.customFields;
+            var filteredSections = Array.from(new Set(scope.customFields.map((item) => mapBySection(item))));
+            filteredSections.forEach((section)=>{
+                let filteredArray = selectedCustomField.filter((item) => filterBySection(item, section));
+                scope.customFieldsArray.push({sectionName: section , data: filteredArray});
+            });
+            scope.customFieldsArray.forEach((customField) => {
+                customField.data.forEach((fieldData) => {
+                    fieldData.answer = '';
+                    fieldData.errorMessage = '';
+                    if(fieldData.field_type === 'TEXT' || fieldData.field_type === 'TEXTAREA' || fieldData.field_type === 'NOTE') {
+                        fieldData.answer = fieldData.values ? fieldData.values : '';
+                    }
+                    if(fieldData.field_type === 'DROPDOWN') {
+                        fieldData.selectedOptionId = '';
+                        fieldData.answer = fieldData.values && fieldData.values.length > 0 && fieldData.values[0].dropdown_val ? fieldData.values[0].dropdown_val : '';
+                        fieldData.option.forEach((option) => {
+                            if(option.option_id === fieldData.answer) {
+                                fieldData.selectedOption = option.option_name;
+                            }
+                        })
+                    }
+                    if(fieldData.field_type === 'DATE') {
+                        fieldData.isDatepickerOpen = false;
+                        let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
+                        fieldData.params = params;
+                        fieldData.datePickerOptions = {
+                            minDate: fieldData.params && fieldData.params.start_date ? new Date(fieldData.params.start_date): new Date(),
+                            maxDate: new Date('01/01/2100'),
+                            showWeeks: false
+                        };
+                        fieldData.answer = new Date(fieldData.values);
+                    }
+                    if(fieldData.field_type === 'TIME') {
+                        fieldData.hourStep = 1;
+                        fieldData.minuteStep = 5;
+                        fieldData.isMeridian = true;
+                        let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
+                        fieldData.params = params;
+                        if(fieldData.params && fieldData.params.start_time) {
+                            var startTimeArray = fieldData.params.start_time.split(" ");
+                            var startTimes = startTimeArray[0].split(":");
+                            if(startTimes[0] === 12) {
+                                var startTimeHour = startTimeArray[1] === 'PM' ? Number(startTimes[0]) : Number(startTimes[0]) - 12;
+                            } else {
+                                var startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
+                            }
+                        }
+                        if(fieldData.params && fieldData.params.end_time) {
+                            var endTimeArray = fieldData.params.end_time.split(" ");
+                            var endTimes = endTimeArray[0].split(":");
+                            if(startTimes[0] === 12) {
+                                var endTimeHour = endTimeArray[1] === 'PM' ? Number(endTimes[0]) : Number(endTimes[0]) - 12;
+                            } else {
+                                var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
+                            }
+                        }
+                        if(fieldData.values !== '') {
+                            let timeValuesArray = fieldData.values.split(':');
+                            fieldData.answer = new Date(new Date(new Date().setHours(timeValuesArray[0])).setMinutes(timeValuesArray[1]));
+                        } else {
+                            fieldData.answer = new Date();
+                        }
+                    }
+                    if(fieldData.field_type === 'CHECKBOX') {
+                        fieldData.answer = [];
+                        fieldData.option.forEach((option) => {
+                            option.selected = false;
+                        });
+                        if(fieldData.values && fieldData.values.length > 0) {
+                            fieldData.values.forEach((value) => {
+                                fieldData.answer.push(value.checkbox_val);
+                                fieldData.option.forEach((option)=> {
+                                    if(option.option_id === value.checkbox_val) {
+                                        option.selected = true;
+                                    }
+                                })
+                            });
+                        }
+                    }
+                    if(fieldData.field_type === 'DECIMAL' || fieldData.field_type === 'NUMBER') {
+                        let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
+                        fieldData.params = params;
+                        fieldData.answer = Number(fieldData.values);
+                    }
+                });
+            });
+        }
+
+    }
     function translate(data) {
         KdDataSvc.init({translation: 'translate'});
         var success = function(response, deferred) {
