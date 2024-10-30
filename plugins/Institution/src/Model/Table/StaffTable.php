@@ -488,6 +488,9 @@ class StaffTable extends ControllerActionTable
             'staff_date_of_birth' => 'Users.date_of_birth',
             'staff_address' => 'Users.address',
             'staff_identity_number' => 'Users.identity_number',
+            //POCOR-8656 start
+            'staff_email' => 'Users.email',
+            //POCOR-8656 end
         ])
             ->formatResults(function ($results) {
                 return $results->map(function ($row) {
@@ -736,6 +739,15 @@ class StaffTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Staff')
         ];
+
+        //POCOR-8656 start
+         $extraField[] = [
+            'key' => '',
+            'field' => 'staff_email',
+            'type' => 'string',
+            'label' => __('Staff Email')
+        ];
+        //POCOR-8656 end
 //
 //        $extraField[] = [
 //            'key' => '',
