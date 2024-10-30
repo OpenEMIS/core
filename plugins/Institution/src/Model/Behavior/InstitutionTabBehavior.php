@@ -153,6 +153,11 @@ class InstitutionTabBehavior extends Behavior
         if (!$userID) {
             $userID = $model->getQueryString('user_id');
         }
+        //POCOR-8653 start
+        if (!$userID) {
+            $userID = $model->getQueryString('id');
+        }
+        // POCOR-8653 end
         if (!$userID) {
             return null;
         }

@@ -332,7 +332,37 @@ class AccessControlComponent extends Component
             $event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
             if ($event->getResult() == true) {
                 return true;
+            } 
+            //POCOR-8662 -- START
+            if ($action === 'ScheduleTimetable') {
+                $userId = $this->Auth->user('id');
+                $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+                $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+            
+                $roleIds = $GroupRoles->find()
+                    ->where([$GroupRoles->aliasField('security_user_id') => $userId])
+                    ->group([$GroupRoles->aliasField('security_role_id')])
+                    ->select(['security_role_id' => $GroupRoles->aliasField('security_role_id')])
+                    ->extract('security_role_id')
+                    ->toArray();
+
+                $functions = $SecurityRoleFunctions->find()
+                    ->contain(['SecurityFunctions'])
+                    ->where([
+                        $SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roleIds,
+                        'SecurityFunctions.controller' => $controller,
+                        'SecurityFunctions.category' => 'Schedules',
+                        'SecurityFunctions.name' => 'Timetable'
+                    ])
+                    ->all();
+                foreach ($functions as $function) {
+                    if ($function->_view !== 1 || $function->_edit !== 1 || $function->_add !== 1 || $function->_delete !== 1) {
+                        return false;
+                    }
+                }
+                return true;
             }
+            //POCOR-8662 -- END
         }
 
         if ($this->Session->check($permissionKey)) {
