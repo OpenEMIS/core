@@ -54,7 +54,7 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
         return deferred.promise;
     }
     function createCustomFieldsArray(scope) {
-        console.log('createCustomFieldsArray SVC')
+        // console.log('createCustomFieldsArray SVC')
         if (scope.customFields === "null") return;
 
         function mapBySection(item) {
@@ -64,14 +64,17 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
         function filterBySection(item, section) {
             return section === item.section;
         }
-        console.log(scope.customFields);
+        // console.log(scope.customFields);
         if(scope.customFields && Array.isArray(scope.customFields)) {
             var selectedCustomField = scope.customFields;
+
+
             var filteredSections = Array.from(new Set(scope.customFields.map((item) => mapBySection(item))));
             filteredSections.forEach((section)=>{
                 let filteredArray = selectedCustomField.filter((item) => filterBySection(item, section));
                 scope.customFieldsArray.push({sectionName: section , data: filteredArray});
             });
+            console.log(filteredSections);
             scope.customFieldsArray.forEach((customField) => {
                 customField.data.forEach((fieldData) => {
                     fieldData.answer = '';
@@ -154,7 +157,8 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
                 });
             });
         }
-
+        console.log(scope.customFieldsArray);
+        return scope.customFieldsArray;
     }
     function translate(data) {
         KdDataSvc.init({translation: 'translate'});

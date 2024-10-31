@@ -5812,21 +5812,31 @@ class InstitutionsController extends AppController
         $prefix = 'InstitutionClasses';
         $tables = $this->getTables($prefix);
         $customModuleId = $this->getCustomModuleId('Institution > Classes');
-        Log::debug(print_r('customModuleId', true));
-        Log::debug(print_r($customModuleId, true));
+//        Log::debug(print_r('customModuleId', true));
+//        Log::debug(print_r($customModuleId, true));
         $sections = $this->getSections($tables["{$prefix}CustomForms"], $tables["{$prefix}CustomFormsFields"], $customModuleId, $prefix);
-        Log::debug(print_r($sections, true));
+//        Log::debug(print_r($sections, true));
         $classId = $this->getValue($requestData, 'class_id', '') ?? 0;
         Log::debug(print_r($classId, true));
         $fieldsArr = $this->getFieldsData($sections, $tables, $classId, ['COORDINATES', 'TABLE'], $prefix, $customModuleId);
-        Log::debug(print_r($fieldsArr, true));
+
         foreach ($fieldsArr as &$item) {
+
             $item[$this->getPrefixedFieldName($prefix, 'custom_form_id')] = $item['custom_form_id'];
             $item[$this->getPrefixedFieldName($prefix, 'custom_field_id')] = $item['custom_field_id'];
+            if($item['section'] === ""){
+                $item['section'] = __('Additional Information');
+            }
+            if(empty($item['section'])){
+                $item['section'] = __('Additional Information');
+            }
+            if($item['section'] === null){
+                $item['section'] = __('Additional Information');
+            }
         }
         unset($item); // Unset reference to avoid potential issues
 
-        Log::debug(print_r($fieldsArr, true));
+//        Log::debug(print_r($fieldsArr, true));
         echo json_encode($fieldsArr);
         die;
     }
@@ -5909,9 +5919,12 @@ class InstitutionsController extends AppController
             foreach ($fields as $field) {
 //                Log::debug('$field');
 //                Log::debug(print_r($field, true));
-                $fieldData = $this->getFieldData($field, $tables["{$prefix}CustomFieldOptions"], $tables["{$prefix}CustomFieldValues"], $entityId, $prefix);
-//                Log::debug('$fieldData');
-//                Log::debug(print_r($fieldData, true));
+                $fieldData = $this->getFieldData($field, $tables["{$prefix}CustomFieldOptions"],
+                    $tables["{$prefix}CustomFieldValues"],
+                    $entityId,
+                    $prefix);
+                Log::debug('$fieldData');
+                Log::debug(print_r($fieldData, true));
                 $fieldsArr[] = $fieldData;
             }
         }
@@ -6241,7 +6254,7 @@ class InstitutionsController extends AppController
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
-        Log::debug(print_r($requestData, true));
+//        Log::debug(print_r($requestData, true));
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
         $staffData = $this->extractSecurityUserData($requestData, $userId, false,true);
 

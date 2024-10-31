@@ -137,12 +137,17 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionClassStudentsController.postError.capacity">{{ error }}</p>
         </div>
     </div>
-    <div ng-repeat="customField in customFieldsArray">
+
+    <div ng-repeat="customField in InstitutionClassStudentsController.customFieldsArray">
         <div class="row section-header header-space-lg">{{customField.sectionName}}</div>
+
         <div ng-repeat="field in customField.data">
             <div class="input string" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL'">
                 <label>{{field.name}}</label>
-                <input ng-if="field.field_type === 'TEXT'" ng-model="field.answer" type="text" ng-required="field.is_mandatory !== 0">
+                <pre>   {{ field }}</pre>
+                <input ng-if="field.field_type === 'TEXT'"
+                       ng-model="field.answer" type="text"
+                       ng-required="field.is_mandatory !== 0">
                 <textarea ng-if="field.field_type === 'TEXTAREA' || field.field_type === 'NOTE'" ng-model="field.answer" type="text" ng-required="field.is_mandatory !== 0"></textarea>
                 <input ng-if="field.field_type === 'NUMBER'" ng-model="field.answer" type="number" ng-required="field.is_mandatory !== 0">
                 <input ng-if="field.field_type === 'DECIMAL'" ng-model="field.answer" type="number" step="0.01" onKeyPress="if(this.value.length === 10) return false;"
