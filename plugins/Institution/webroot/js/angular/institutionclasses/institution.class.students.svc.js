@@ -41,7 +41,7 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
 
     function getClassCustomFields(userId){
         var params = {
-            student_id: userId,
+            class_id: userId,
         };
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/classCustomFields';

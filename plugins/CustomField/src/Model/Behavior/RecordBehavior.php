@@ -156,13 +156,13 @@ class RecordBehavior extends Behavior
 
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
-        
-       
+
+
         // do not contain CustomFieldValues
         if (!is_null($this->getConfig('tableCellClass'))) {
             $query->contain(['CustomTableCells']);
         }
-        
+
     }
 
     public function editAfterQuery(Event $event, Entity $entity)
@@ -172,7 +172,7 @@ class RecordBehavior extends Behavior
 
     public function viewAfterAction(Event $event, Entity $entity)
     {
-       
+
         $model = $this->_table;
         $this->formatEntity($entity);
         $this->setupCustomFields($entity);
@@ -1119,7 +1119,7 @@ class RecordBehavior extends Behavior
                                             $renderField = $forRender;
                                         }
                                     }
-                                                                     
+
                                     if ($renderField) {
                                         $ControllerAction->field($fieldName, $attr);
                                         $fieldOrder[++$order] = $fieldName;
@@ -1552,9 +1552,10 @@ class RecordBehavior extends Behavior
     {
         return null;
     }
+    //POCOR-2135 end
     //POCOR-8538 start
     public function setUpFieldOrderForClasses($fieldOrder){
-               
+
         $position = array_search('institution_shift_id', $fieldOrder);
         $customFields = array_values(array_filter($fieldOrder, fn($field) => strpos($field, 'custom') === 0));
         $fieldOrder = array_values(array_filter($fieldOrder, fn($field) => strpos($field, 'custom') !== 0));

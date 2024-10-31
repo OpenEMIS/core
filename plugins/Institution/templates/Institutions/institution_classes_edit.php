@@ -144,7 +144,6 @@ $this->start('panelBody');
         <div ng-repeat="field in customField.data">
             <div class="input string" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL'">
                 <label>{{field.name}}</label>
-                <pre>   {{ field }}</pre>
                 <input ng-if="field.field_type === 'TEXT'"
                        ng-model="field.answer" type="text"
                        ng-required="field.is_mandatory !== 0">
@@ -202,6 +201,7 @@ $this->start('panelBody');
             </div>
         </div>
     </div>
+    <div class="row section-header header-space-lg"><?= __('Students') ?></div>
 
     <div class="input select">
         <label><?= __('Add Student') ?></label>
