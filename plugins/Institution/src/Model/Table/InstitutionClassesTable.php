@@ -20,7 +20,8 @@ use Cake\Routing\Router;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Datasource\ConnectionManager;
+use Cake\Datasource\ConnectionManager; //POCOR-8538 start
+
 
 class InstitutionClassesTable extends ControllerActionTable
 {
@@ -490,8 +491,6 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-//        Log::debug(print_r($entity,true));
-//        Log::debug(print_r($options, true));
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
 
@@ -588,6 +587,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 // POCOR-5435 ->Webhook Feature class (create) -- end
             }
         } else {
+            // POCOR-8538 start
             if ($entity->has('custom') && !empty($entity->custom)) {
                 $createdUserId = $entity->created_user_id;
                 $classId = $entity->id;
@@ -598,6 +598,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $cv = self::saveCustomFields($customFields, $classId, $createdUserId);
                 Log::debug(print_r($cv, true));
             }
+            // POCOR-8538 end
             $editAction  = json_decode(json_encode($options), true);
             $webhook_action = $editAction['extra']['action'];
 
@@ -749,6 +750,7 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
+    // POCOR-8538 start
     private static function saveCustomFields($customFields, $classId, $createdUserId)
     {
         $cv = [];
@@ -819,7 +821,7 @@ class InstitutionClassesTable extends ControllerActionTable
         }
         return $cv;
     }
-
+    // POCOR-8538 end
     /******************************************************************************************************************
     **
     ** delete action methods
@@ -1033,13 +1035,6 @@ class InstitutionClassesTable extends ControllerActionTable
                 'created_user_id',
                 'created',
                 'education_stage_order' => $query->func()->min('EducationStages.order')
-            ])
-            ->contain([
-                'ClassesSecondaryStaff.SecondaryStaff',
-                'Staff' => [
-                    'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
-                ],
-                'CustomFieldValues.CustomFields'//POCOR-8538
             ])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
             ->group([$this->aliasField('id')]);
@@ -2659,37 +2654,6 @@ class InstitutionClassesTable extends ControllerActionTable
         return $result;
     }
    //POCOR-8538 start
-    public function indexAfterAction(Event $event, $data)
-    {
-        $uniqueFieldValues = [];
-        foreach ($data as $entity) {
-            // Check if custom field values exist for the entity
-            if (!empty($entity->custom_field_values)) {
-                foreach ($entity->custom_field_values as $customFieldValue) {
-                    $fieldname=$customFieldValue->custom_field->name;
-                    $fieldTypeKey = strtolower($customFieldValue->custom_field->field_type) . '_value';
-                    $fieldValue=$customFieldValue[$fieldTypeKey];
-                    $entity[$fieldname]=$fieldValue;
-
-                    if (!isset($uniqueFieldValues[$fieldname])) {
-                        $uniqueFieldValues[$fieldname] = [];
-                    }
-
-                    // Add unique values to the array for each field name
-                    if (!in_array($fieldValue, $uniqueFieldValues[$fieldname])) {
-                        $uniqueFieldValues[$fieldname][] = $fieldValue;
-                    }
-                }
-            }
-        }
-        if (!empty($uniqueFieldValues)) {
-            foreach ($uniqueFieldValues as $fieldName => $values) {
-                $this->field($fieldName);
-            }
-        }
-
-    }
-
     private function getCustomFieldData($class_id){
         $connection = ConnectionManager::get('default');
 

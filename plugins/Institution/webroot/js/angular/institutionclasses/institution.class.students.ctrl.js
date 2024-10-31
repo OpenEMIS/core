@@ -403,7 +403,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     $http.get(Controller.alertUrl)
                     .then(function(response) {
                         //alert(Controller.redirectUrl);
-                        // $window.location.href = Controller.redirectUrl;
+                        $window.location.href = Controller.redirectUrl;
                     }, function (error) {
                         console.log(error);
                     });

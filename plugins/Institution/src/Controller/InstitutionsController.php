@@ -2502,9 +2502,11 @@ class InstitutionsController extends AppController
         if ($this->request->getParam('action') == 'studentCustomFields') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'studentCustomFields';
         }
+        //POCOR-8538 start
         if ($this->request->getParam('action') == 'classCustomFields') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'classCustomFields';
         }
+        //POCOR-8538 end
         if ($this->request->getParam('action') == 'staffCustomFields') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'staffCustomFields';
         }
@@ -2736,7 +2738,7 @@ class InstitutionsController extends AppController
             || $action == 'checkConfigurationForExternalSearch'
             || $action == 'studentCustomFields'
             || $action == 'staffCustomFields'
-            || $action == 'classCustomFields'
+            || $action == 'classCustomFields' //POCOR-8538
             || $furtherAction == 'removeReport'
             || $furtherAction == 'downloadFailed'
             || $furtherAction == 'downloadPassed'
@@ -5804,6 +5806,11 @@ class InstitutionsController extends AppController
         die;
     }
 
+    /**
+     * POCOR-8538
+     * @return void
+     * @throws Exception
+     */
     public
     function classCustomFields()
     {
@@ -5812,12 +5819,8 @@ class InstitutionsController extends AppController
         $prefix = 'InstitutionClasses';
         $tables = $this->getTables($prefix);
         $customModuleId = $this->getCustomModuleId('Institution > Classes');
-//        Log::debug(print_r('customModuleId', true));
-//        Log::debug(print_r($customModuleId, true));
         $sections = $this->getSections($tables["{$prefix}CustomForms"], $tables["{$prefix}CustomFormsFields"], $customModuleId, $prefix);
-//        Log::debug(print_r($sections, true));
-        $classId = $this->getValue($requestData, 'class_id', '') ?? 0;
-        Log::debug(print_r($classId, true));
+        $classId = $this->getValue($requestData, 'class_id', 0) ?? 0;
         $fieldsArr = $this->getFieldsData($sections, $tables, $classId, ['COORDINATES', 'TABLE'], $prefix, $customModuleId);
 
         foreach ($fieldsArr as &$item) {
@@ -5836,13 +5839,14 @@ class InstitutionsController extends AppController
         }
         unset($item); // Unset reference to avoid potential issues
 
-//        Log::debug(print_r($fieldsArr, true));
         echo json_encode($fieldsArr);
         die;
     }
 
     private function getTables($prefix)
     {
+        //POCOR-8538 start
+
         if ($prefix != "InstitutionClasses") {
             return [
                 "{$prefix}CustomForms" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomForms"),
@@ -5860,6 +5864,8 @@ class InstitutionsController extends AppController
             "{$prefix}CustomFieldOptions" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$overallPrefix}CustomFieldOptions"),
             "{$prefix}CustomFieldValues" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$prefix}CustomFieldValues"),
         ];
+        //POCOR-8538 end
+
     }
 
     private function getCustomModuleId($moduleCode)
@@ -5894,18 +5900,24 @@ class InstitutionsController extends AppController
     private function getPrefixedFieldName($prefix, $fieldName)
     {
         $_prefix = strtolower($prefix);
+        //POCOR-8538 start
         if($prefix == "InstitutionClasses"){
             $_prefix = "institution";
         }
+        //POCOR-8538 end
         return "{$_prefix}_{$fieldName}";
     }
 
-    private function getFieldsData($sections, $tables, $entityId, $excludeFieldTypes, $prefix, $customModuleId)
+    //POCOR-8538 start
+    private function getFieldsData($sections,
+                                   $tables,
+                                   $entityId,
+                                   $excludeFieldTypes,
+                                   $prefix,
+                                   $customModuleId)
     {
         $fieldsArr = [];
         foreach ($sections as $section) {
-//            Log::debug('$section');
-//            Log::debug(print_r($section, true));
             $fields = $this->getCustomFields(
                 $tables["{$prefix}CustomFormsFields"],
                 $tables["{$prefix}CustomFields"],
@@ -5914,17 +5926,13 @@ class InstitutionsController extends AppController
                 $prefix,
                 $tables["{$prefix}CustomForms"],
                 $customModuleId);
-//            Log::debug('$fields');
-//            Log::debug(print_r($fields, true));
             foreach ($fields as $field) {
-//                Log::debug('$field');
-//                Log::debug(print_r($field, true));
-                $fieldData = $this->getFieldData($field, $tables["{$prefix}CustomFieldOptions"],
+                $fieldData = $this->getFieldData($field,
+                    $tables["{$prefix}CustomFieldOptions"],
                     $tables["{$prefix}CustomFieldValues"],
                     $entityId,
                     $prefix);
-                Log::debug('$fieldData');
-                Log::debug(print_r($fieldData, true));
+
                 $fieldsArr[] = $fieldData;
             }
         }
@@ -5986,12 +5994,16 @@ class InstitutionsController extends AppController
 
         return $result;
     }
+    //POCOR-8538 end
+
 
 
 
 
     private function getFieldData($field, $customFieldOptionsTable, $customFieldValuesTable, $entityId, $prefix)
     {
+        //POCOR-8538 start
+        $fieldValues = $this->getFieldValues($field, $customFieldValuesTable, $entityId, $prefix);
         $fieldData = [
             'custom_form_id' => $field->custom_form_id,
             'custom_field_id' => $field->custom_field_id,
@@ -6003,8 +6015,9 @@ class InstitutionsController extends AppController
             'is_mandatory' => $field->is_mandatory,
             'is_unique' => $field->is_unique,
             'params' => $field->params,
-            'values' => $this->getFieldValues($field, $customFieldValuesTable, $entityId, $prefix),
+            'values' => $fieldValues,
         ];
+        //POCOR-8538 end
 
         if (in_array($field->field_type, ['DROPDOWN', 'CHECKBOX'])) {
             $fieldData['option'] = $this->getFieldOptions($field->custom_field_id, $customFieldOptionsTable, $prefix);
@@ -6018,6 +6031,7 @@ class InstitutionsController extends AppController
         if (empty($entityId)) {
             return '';
         }
+        //POCOR-8538 end
         $fieldNameId = $this->getPrefixedFieldName($prefix, 'id');
         if ($prefix == 'InstitutionClasses') {
             $fieldNameId = 'institution_class_id';
@@ -6037,10 +6051,14 @@ class InstitutionsController extends AppController
             $prefixedFieldNameId,
             $fieldNameId
         ];
+
+
         $fieldValues = $customFieldValuesTable->find()
             ->select($select)
-            ->where($where)
-            ->toArray();
+            ->where($where);
+
+        $fieldValues = $fieldValues->toArray();
+        //POCOR-8538 end
 
         if (empty($fieldValues)) {
             return '';
