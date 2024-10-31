@@ -184,7 +184,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
             }, function (error) {
                 console.log(error);
             })
-            .then(Controller.createCustomFieldsArray)
+            .then(Controller.getClassCustomFields)
             .finally(function(){
                 Controller.dataReady = true;
                 UtilsSvc.isAppendLoader(false);
@@ -192,12 +192,29 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         }
 
     });
+
+
+    Controller.getClassCustomFields = function() {
+        let classId = Controller.classId;
+        InstitutionClassStudentsSvc.getClassCustomFields(classId).then(function(resp){
+
+            Controller.customFields = resp.data;
+            Controller.customFieldsArray = [];
+            Controller.createCustomFieldsArray();
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.error(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
     Controller.createCustomFieldsArray = function() {
+        console.log('createCustomFieldsArray CTRL')
         InstitutionClassStudentsSvc.createCustomFieldsArray(Controller);
     }
     function changeStaff(key) {
-        console.log("Controller.mainTeacherOptions");
-        console.log(Controller.mainTeacherOptions);
+        // console.log("Controller.mainTeacherOptions");
+        // console.log(Controller.mainTeacherOptions);
         var newOptions = [];
         for (var i = 0; i < Controller.mainTeacherOptions.length; i++) {
             if (key instanceof Array) {

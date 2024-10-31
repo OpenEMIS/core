@@ -14,6 +14,7 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
         getInstitutionShifts: getInstitutionShifts,
         getInstitutionUnits: getInstitutionUnits,
         getInstitutionCourses: getInstitutionCourses,
+        getClassCustomFields: getClassCustomFields,
         createCustomFieldsArray: createCustomFieldsArray,
         getTeacherOptions: getTeacherOptions,
         saveClass: saveClass,
@@ -38,7 +39,22 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
         KdDataSvc.init(models);
     };
 
+    function getClassCustomFields(userId){
+        var params = {
+            student_id: userId,
+        };
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/classCustomFields';
+        $http.post(url, {params: params})
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    }
     function createCustomFieldsArray(scope) {
+        console.log('createCustomFieldsArray SVC')
         if (scope.customFields === "null") return;
 
         function mapBySection(item) {
@@ -49,7 +65,7 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
             return section === item.section;
         }
         console.log(scope.customFields);
-        if(scope.customFields && scope.customFields.length > 0) {
+        if(scope.customFields && Array.isArray(scope.customFields)) {
             var selectedCustomField = scope.customFields;
             var filteredSections = Array.from(new Set(scope.customFields.map((item) => mapBySection(item))));
             filteredSections.forEach((section)=>{
@@ -177,8 +193,8 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
 
     function getInstitutionUnits(institutionId, academicPeriodId) {
         var success = function(response, deferred) {
-            console.log("response here");
-            console.log(response);
+            // console.log("response here");
+            // console.log(response);
             deferred.resolve(response.data.data);
         };
         return InstitutionUnits.find('unitOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
