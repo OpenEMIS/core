@@ -2502,6 +2502,9 @@ class InstitutionsController extends AppController
         if ($this->request->getParam('action') == 'studentCustomFields') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'studentCustomFields';
         }
+        if ($this->request->getParam('action') == 'classCustomFields') {
+            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'classCustomFields';
+        }
         if ($this->request->getParam('action') == 'staffCustomFields') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'staffCustomFields';
         }
@@ -2733,8 +2736,10 @@ class InstitutionsController extends AppController
             || $action == 'checkConfigurationForExternalSearch'
             || $action == 'studentCustomFields'
             || $action == 'staffCustomFields'
-           || $furtherAction == 'removeReport'
-            || $furtherAction == 'downloadFailed' || $furtherAction == 'downloadPassed'
+            || $action == 'classCustomFields'
+            || $furtherAction == 'removeReport'
+            || $furtherAction == 'downloadFailed'
+            || $furtherAction == 'downloadPassed'
         ) {
             return true;
         }
@@ -5799,14 +5804,51 @@ class InstitutionsController extends AppController
         die;
     }
 
+    public
+    function classCustomFields()
+    {
+        $this->autoRender = false;
+        $requestData = $this->getRequestData();
+        $prefix = 'InstitutionClasses';
+        $tables = $this->getTables($prefix);
+        $customModuleId = $this->getCustomModuleId('Institution > Classes');
+        Log::debug(print_r('customModuleId', true));
+        Log::debug(print_r($customModuleId, true));
+        $sections = $this->getSections($tables["{$prefix}CustomForms"], $tables["{$prefix}CustomFormsFields"], $customModuleId, $prefix);
+        Log::debug(print_r($sections, true));
+        $classId = $this->getValue($requestData, 'class_id', '') ?? 0;
+        Log::debug(print_r($classId, true));
+        $fieldsArr = $this->getFieldsData($sections, $tables, $classId, ['COORDINATES', 'TABLE'], $prefix, $customModuleId);
+        Log::debug(print_r($fieldsArr, true));
+        foreach ($fieldsArr as &$item) {
+            $item[$this->getPrefixedFieldName($prefix, 'custom_form_id')] = $item['custom_form_id'];
+            $item[$this->getPrefixedFieldName($prefix, 'custom_field_id')] = $item['custom_field_id'];
+        }
+        unset($item); // Unset reference to avoid potential issues
+
+        Log::debug(print_r($fieldsArr, true));
+        echo json_encode($fieldsArr);
+        die;
+    }
+
     private function getTables($prefix)
     {
+        if ($prefix != "InstitutionClasses") {
+            return [
+                "{$prefix}CustomForms" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomForms"),
+                "{$prefix}CustomFormsFields" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomFormsFields"),
+                "{$prefix}CustomFields" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomFields"),
+                "{$prefix}CustomFieldOptions" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomFieldOptions"),
+                "{$prefix}CustomFieldValues" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomFieldValues"),
+            ];
+        }
+        $overallPrefix = "Institution";
         return [
-            "{$prefix}CustomForms" => TableRegistry::getTableLocator()->get("{$prefix}CustomField.{$prefix}CustomForms"),
-            "{$prefix}CustomFormsFields" => TableRegistry::getTableLocator()->get("{$prefix}CustomField.{$prefix}CustomFormsFields"),
-            "{$prefix}CustomFields" => TableRegistry::getTableLocator()->get("{$prefix}CustomField.{$prefix}CustomFields"),
-            "{$prefix}CustomFieldOptions" => TableRegistry::getTableLocator()->get("{$prefix}CustomField.{$prefix}CustomFieldOptions"),
-            "{$prefix}CustomFieldValues" => TableRegistry::getTableLocator()->get("{$prefix}CustomField.{$prefix}CustomFieldValues"),
+            "{$prefix}CustomForms" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$overallPrefix}CustomForms"),
+            "{$prefix}CustomFormsFields" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$overallPrefix}CustomFormsFields"),
+            "{$prefix}CustomFields" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$overallPrefix}CustomFields"),
+            "{$prefix}CustomFieldOptions" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$overallPrefix}CustomFieldOptions"),
+            "{$prefix}CustomFieldValues" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$prefix}CustomFieldValues"),
         ];
     }
 
@@ -5842,56 +5884,93 @@ class InstitutionsController extends AppController
     private function getPrefixedFieldName($prefix, $fieldName)
     {
         $_prefix = strtolower($prefix);
+        if($prefix == "InstitutionClasses"){
+            $_prefix = "institution";
+        }
         return "{$_prefix}_{$fieldName}";
     }
 
-    private function getFieldsData($sections, $tables, $entityId, $excludeFieldTypes, $prefix)
+    private function getFieldsData($sections, $tables, $entityId, $excludeFieldTypes, $prefix, $customModuleId)
     {
         $fieldsArr = [];
         foreach ($sections as $section) {
-            $fields = $this->getCustomFields($tables["{$prefix}CustomFormsFields"], $tables["{$prefix}CustomFields"], $section->section, $excludeFieldTypes, $prefix);
+//            Log::debug('$section');
+//            Log::debug(print_r($section, true));
+            $fields = $this->getCustomFields(
+                $tables["{$prefix}CustomFormsFields"],
+                $tables["{$prefix}CustomFields"],
+                $section->section,
+                $excludeFieldTypes,
+                $prefix,
+                $tables["{$prefix}CustomForms"],
+                $customModuleId);
+//            Log::debug('$fields');
+//            Log::debug(print_r($fields, true));
             foreach ($fields as $field) {
+//                Log::debug('$field');
+//                Log::debug(print_r($field, true));
                 $fieldData = $this->getFieldData($field, $tables["{$prefix}CustomFieldOptions"], $tables["{$prefix}CustomFieldValues"], $entityId, $prefix);
+//                Log::debug('$fieldData');
+//                Log::debug(print_r($fieldData, true));
                 $fieldsArr[] = $fieldData;
             }
         }
         return $fieldsArr;
     }
 
-    private function getCustomFields($customFormsFieldsTable, $customFieldsTable, $section, $excludeFieldTypes, $prefix)
+    private function getCustomFields($customFormsFieldsTable,
+                                     $customFieldsTable,
+                                     $section,
+                                     $excludeFieldTypes,
+                                     $prefix,
+                                     $customFormsTable,
+                                     $customModuleId)
     {
         $result = [];
         if ($section) {
-            $result = $customFormsFieldsTable->find()
-                ->select([
-                    'custom_form_id' => $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_form_id')),
-                    'custom_field_id' => $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_field_id')),
-                    'section' => $customFormsFieldsTable->aliasField('section'),
-                    'name' => $customFormsFieldsTable->aliasField('name'),
-                    'field_order' => $customFormsFieldsTable->aliasField('order'), // Change alias here
-                    'description' => $customFieldsTable->aliasField('description'),
-                    'field_type' => $customFieldsTable->aliasField('field_type'),
-                    'is_mandatory' => $customFieldsTable->aliasField('is_mandatory'),
-                    'is_unique' => $customFieldsTable->aliasField('is_unique'),
-                    'params' => $customFieldsTable->aliasField('params'),
-                ])
-                ->leftJoin([$customFieldsTable->getAlias() => $customFieldsTable->getTable()], [
-                    $customFieldsTable->aliasField('id =') . $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_field_id')),
-                ])
-                ->where([
-                    $customFormsFieldsTable->aliasField('section') => $section,
-                    $customFieldsTable->aliasField('field_type NOT IN') => $excludeFieldTypes,
-                ])
-                ->order([$customFormsFieldsTable->aliasField('order') => 'ASC'])
-                ->toArray();
-
-            // Change 'field_order' back to 'order' in the resulting array
-            $result = array_map(function ($item) {
-                $item['order'] = $item['field_order'];
-                unset($item['field_order']);
-                return $item;
-            }, $result);
+            $where = [
+                $customFormsTable->aliasField('custom_module_id') => $customModuleId,
+                $customFormsFieldsTable->aliasField('section') => $section,
+                $customFieldsTable->aliasField('field_type NOT IN') => $excludeFieldTypes,
+            ];
+        } else {
+            $where = [
+                $customFormsTable->aliasField('custom_module_id') => $customModuleId,
+                $customFormsFieldsTable->aliasField('section') => "",
+                $customFieldsTable->aliasField('field_type NOT IN') => $excludeFieldTypes,
+            ];
         }
+        $result = $customFormsFieldsTable->find()
+            ->select([
+                'custom_form_id' => $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_form_id')),
+                'custom_field_id' => $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_field_id')),
+                'section' => $customFormsFieldsTable->aliasField('section'),
+                'name' => $customFormsFieldsTable->aliasField('name'),
+                'field_order' => $customFormsFieldsTable->aliasField('order'), // Change alias here
+                'description' => $customFieldsTable->aliasField('description'),
+                'field_type' => $customFieldsTable->aliasField('field_type'),
+                'is_mandatory' => $customFieldsTable->aliasField('is_mandatory'),
+                'is_unique' => $customFieldsTable->aliasField('is_unique'),
+                'params' => $customFieldsTable->aliasField('params'),
+            ])
+            ->leftJoin([$customFieldsTable->getAlias() => $customFieldsTable->getTable()], [
+                $customFieldsTable->aliasField('id =') . $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_field_id')),
+            ])
+            ->innerJoin([$customFormsTable->getAlias() => $customFormsTable->getTable()], [
+                $customFormsTable->aliasField('id =') . $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_form_id')),
+            ])
+            ->where($where)
+            ->order([$customFormsFieldsTable->aliasField('order') => 'ASC']);
+//        Log::debug($result->sql());
+        $result = $result->toArray();
+
+        // Change 'field_order' back to 'order' in the resulting array
+        $result = array_map(function ($item) {
+            $item['order'] = $item['field_order'];
+            unset($item['field_order']);
+            return $item;
+        }, $result);
+
         return $result;
     }
 
@@ -5926,15 +6005,28 @@ class InstitutionsController extends AppController
         if (empty($entityId)) {
             return '';
         }
-
+        $fieldNameId = $this->getPrefixedFieldName($prefix, 'id');
+        if ($prefix == 'InstitutionClasses') {
+            $fieldNameId = 'institution_class_id';
+        }
+        $prefixedFieldNameId = $this->getPrefixedFieldName($prefix, 'custom_field_id');
+        $where = [
+            $prefixedFieldNameId => $field->custom_field_id,
+            $fieldNameId => $entityId,
+        ];
+        $select = [
+            'text_value',
+            'number_value',
+            'decimal_value',
+            'textarea_value',
+            'date_value',
+            'time_value',
+            $prefixedFieldNameId,
+            $fieldNameId
+        ];
         $fieldValues = $customFieldValuesTable->find()
-            ->select([
-                'text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', $this->getPrefixedFieldName($prefix, 'custom_field_id'), $this->getPrefixedFieldName($prefix, 'id')
-            ])
-            ->where([
-                $this->getPrefixedFieldName($prefix, 'custom_field_id') => $field->custom_field_id,
-                $this->getPrefixedFieldName($prefix, 'id') => $entityId,
-            ])
+            ->select($select)
+            ->where($where)
             ->toArray();
 
         if (empty($fieldValues)) {
