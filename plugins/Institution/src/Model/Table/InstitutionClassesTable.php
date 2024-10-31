@@ -104,9 +104,9 @@ class InstitutionClassesTable extends ControllerActionTable
             'cascadeCallbacks' => true,
             'foreignKey' => 'institution_class_id'
         ]);
-        $this->hasMany('CustomFieldValues', 
+        $this->hasMany('CustomFieldValues',
         ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', 'foreignKey' => 'institution_class_id']);
-       
+
         $this->addBehavior('CustomField.Record', [
             'model' => 'Institution.InstitutionClasses',
             'fieldKey' => 'institution_custom_field_id',
@@ -298,15 +298,15 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-       
+
 // POCOR-8391 remove annoing log
 //        Log::write('debug', 'Here it us beforeFilter beforeAction Start');
-    
+
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $query = $this->request->getQuery();
-        
+
         if(!empty($this->request->getData['InstitutionClasses']['institution_shift_id'])){
             $extra['institution_shift_id'] = $this->request->getData['InstitutionClasses']['institution_shift_id'];
         }
@@ -490,6 +490,8 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+//        Log::debug(print_r($entity,true));
+//        Log::debug(print_r($options, true));
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
 
@@ -586,7 +588,16 @@ class InstitutionClassesTable extends ControllerActionTable
                 // POCOR-5435 ->Webhook Feature class (create) -- end
             }
         } else {
-
+            if ($entity->has('custom') && !empty($entity->custom)) {
+                $createdUserId = $entity->created_user_id;
+                $classId = $entity->id;
+                if (!empty($entity->modified_user_id)) {
+                    $createdUserId = $entity->modified_user_id;
+                }
+                $customFields = $entity->custom;
+                $cv = self::saveCustomFields($customFields, $classId, $createdUserId);
+                Log::debug(print_r($cv, true));
+            }
             $editAction  = json_decode(json_encode($options), true);
             $webhook_action = $editAction['extra']['action'];
 
@@ -738,6 +749,77 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
+    private static function saveCustomFields($customFields, $classId, $createdUserId)
+    {
+        $cv = [];
+
+        if (!empty($customFields)) {
+            $customFieldValuesTable =
+                TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionClassesCustomFieldValues');
+;
+
+            // Delete existing custom fields
+            $customFieldValuesTable->deleteAll(
+                [$customFieldValuesTable->aliasField('institution_class_id') => $classId]);
+            $relevantFields = [
+                'text_value',
+                'number_value',
+                'decimal_value',
+                'textarea_value',
+                'time_value',
+                'date_value',
+                'file'
+            ];
+            // Save new custom fields
+            foreach ($customFields as $field) {
+                $fieldData = [
+                    'id' => Text::uuid(),
+                    'institution_class_id' => $classId,
+                    'created_user_id' => $createdUserId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+
+                // Relevant fields to check
+
+
+                $hasValue = false;
+
+                foreach ($field as $key => $value) {
+
+                    // Check if the current key is in the relevant fields and has a value
+                    if (in_array($key, $relevantFields) && (!empty($value) || $value !== null || $value != '')) {
+                        $fieldData[$key] = $value;
+                        $hasValue = true;
+//                        Log::debug(print_r([$key, $value], true));
+                    }
+                    if (!in_array($key, $relevantFields)) {
+                        $fieldData[$key] = $value;
+                    }
+                }
+
+                // Only create and save the entity if at least one relevant field has a value
+                if ($hasValue) {
+                    if (isset($fieldData['custom_field_id'])) {
+                        // Copy the value from 'custom_field_id' to 'student_custom_field_id'
+                        $fieldData['institution_custom_field_id'] = $fieldData['custom_field_id'];
+                        // Remove the old 'custom_field_id' key
+                        unset($fieldData['custom_field_id']);
+                    }
+
+//                    Log::debug(print_r($fieldData, true));
+                    $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
+                    try {
+                        $cv[] = $customFieldValuesTable->save($fieldEntity);
+                    } catch (\Exception $e) {
+                        Log::debug(__FUNCTION__);
+                        Log::debug('Error: ' . $e->getMessage());
+                    }
+                }
+            }
+        }
+        return $cv;
+    }
+
     /******************************************************************************************************************
     **
     ** delete action methods
@@ -802,7 +884,7 @@ class InstitutionClassesTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $query = $this->request->getQuery();     
+        $query = $this->request->getQuery();
         if (isset($query['grade_type'])) {
             $action = $this->url('index');
             unset($action['grade_type']);
@@ -926,7 +1008,7 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    { 
+    {
         $sortable = !is_null($this->request->getQuery('sort')) ? true : false;
 
         $query
@@ -957,7 +1039,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'Staff' => [
                     'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
                 ],
-                'CustomFieldValues.CustomFields'//POCOR-8538 
+                'CustomFieldValues.CustomFields'//POCOR-8538
             ])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
             ->group([$this->aliasField('id')]);
@@ -969,7 +1051,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     $this->aliasField('name') => 'ASC'
                 ]);
         }
-       
+
     }
 
 
@@ -1039,7 +1121,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'AcademicPeriods',
                 'ClassesSecondaryStaff.SecondaryStaff',
                 'CustomFieldValues.CustomFields'//POCOR-8538
-            ]);         
+            ]);
     }
 
     public function findByGrades(Query $query, array $options)
@@ -1085,7 +1167,7 @@ class InstitutionClassesTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        
+
         if ($extra['selectedAcademicPeriodId'] == -1) {
             return $this->controller->redirect([
                 'plugin' => $this->controller->getPlugin(),
@@ -1166,7 +1248,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-       
+
         $decodedClass = $this->paramsDecode($this->request->getParam('pass')[1]);
         if (!empty($decodedClass)) {
             $classId = $decodedClass['id'];
@@ -2592,7 +2674,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     if (!isset($uniqueFieldValues[$fieldname])) {
                         $uniqueFieldValues[$fieldname] = [];
                     }
-        
+
                     // Add unique values to the array for each field name
                     if (!in_array($fieldValue, $uniqueFieldValues[$fieldname])) {
                         $uniqueFieldValues[$fieldname][] = $fieldValue;
@@ -2605,38 +2687,38 @@ class InstitutionClassesTable extends ControllerActionTable
                 $this->field($fieldName);
             }
         }
-        
+
     }
 
     private function getCustomFieldData($class_id){
         $connection = ConnectionManager::get('default');
 
         $sql = "
-            SELECT 
-                CustomModules.*, 
-                InstitutionCustomForms.*, 
-                InstitutionCustomFormsFields.*, 
-                InstitutionCustomFields.*, 
-                InstitutionCustomFieldOptions.*, 
-                InstitutionClassesCustomFieldValues.*, 
+            SELECT
+                CustomModules.*,
+                InstitutionCustomForms.*,
+                InstitutionCustomFormsFields.*,
+                InstitutionCustomFields.*,
+                InstitutionCustomFieldOptions.*,
+                InstitutionClassesCustomFieldValues.*,
                 InstitutionClasses.*
-            FROM 
+            FROM
                 custom_modules AS CustomModules
-            INNER JOIN 
+            INNER JOIN
                 institution_custom_forms AS InstitutionCustomForms ON InstitutionCustomForms.custom_module_id = CustomModules.id
-            INNER JOIN 
+            INNER JOIN
                 institution_custom_forms_fields AS InstitutionCustomFormsFields ON InstitutionCustomFormsFields.institution_custom_form_id = InstitutionCustomForms.id
-            INNER JOIN 
+            INNER JOIN
                 institution_custom_fields AS InstitutionCustomFields ON InstitutionCustomFields.id = InstitutionCustomFormsFields.institution_custom_field_id
-            LEFT JOIN 
+            LEFT JOIN
                 institution_custom_field_options AS InstitutionCustomFieldOptions ON InstitutionCustomFieldOptions.institution_custom_field_id = InstitutionCustomFields.id
-            LEFT JOIN 
-                institution_classes_custom_field_values AS InstitutionClassesCustomFieldValues ON 
-                InstitutionClassesCustomFieldValues.institution_custom_field_id = InstitutionCustomFormsFields.institution_custom_field_id 
-            LEFT JOIN 
-            institution_classes AS InstitutionClasses ON 
+            LEFT JOIN
+                institution_classes_custom_field_values AS InstitutionClassesCustomFieldValues ON
+                InstitutionClassesCustomFieldValues.institution_custom_field_id = InstitutionCustomFormsFields.institution_custom_field_id
+            LEFT JOIN
+            institution_classes AS InstitutionClasses ON
             InstitutionClassesCustomFieldValues.institution_class_id = InstitutionClasses.id
-            WHERE 
+            WHERE
                 CustomModules.code = 'Institution > Classes' AND InstitutionClasses.id = ".$class_id;
 
 
