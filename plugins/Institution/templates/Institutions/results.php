@@ -103,7 +103,7 @@ $roles = '[' . implode(",", $_roles) . ']';
         </div>
     </div>
 
-    <div ng-init="class_id=<?= $classId; ?>;assessment_id=<?= $assessmentId; ?>;institution_id=<?= $institutionId; ?>;roles=<?=$roles; ?>">
+    <div ng-init="class_id=<?= $classId; ?>;assessment_id=<?= $assessmentId; ?>;institution_id=<?= $institutionId; ?>;roles=<?=$roles; ?>;dynamicTotalMarkHeader='<?= addslashes($dynamicTotalMarkHeader); ?>'">
         <div class="scrolltabs sticky-content">
       <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
