@@ -288,6 +288,9 @@ function InstitutionsResultsController($q,
             if ($scope.gridOptions != null) {
                 var textToTranslate = [];
                 angular.forEach(response.data, function (value, key) {
+                    if (value.headerName == 'Total Mark' && $scope.dynamicTotalMarkHeader) { //POCOR-8146
+                        value.headerName = $scope.dynamicTotalMarkHeader;
+                    }
                     textToTranslate.push(value.headerName);
                 });
                 InstitutionsResultsSvc.translate(textToTranslate)

@@ -2092,7 +2092,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $StudentMinimumHeight = $ConfigItems->value($code);
-        if ($field < $StudentMinimumHeight) {
+        if (!empty($StudentMinimumHeight) && $field < $StudentMinimumHeight) {
             return $model->getMessage('general.validation_minimum_height');
         }
         return true;
@@ -2104,7 +2104,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $StudentMaximumHeight = $ConfigItems->value($code);
-        if($field > $StudentMaximumHeight){
+        if(!empty($StudentMaximumHeight) && $field > $StudentMaximumHeight){
             return $model->getMessage('general.validation_maximum_height');
         }
         return true;
@@ -2116,7 +2116,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $StudentMinimumWeight = $ConfigItems->value($code);
-        if ($field < $StudentMinimumWeight) {
+        if (!empty($StudentMinimumWeight) && $field < $StudentMinimumWeight) {
             return $model->getMessage('general.validation_minimum_weight');
         }
         return true;
@@ -2128,7 +2128,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $StudentMinimumWeight = $ConfigItems->value($code);
-        if ($field > $StudentMinimumWeight) {
+        if (!empty($StudentMinimumWeight) && $field > $StudentMinimumWeight) {
             return $model->getMessage('general.validation_maximum_weight');
         }
         return true;
