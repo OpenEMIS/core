@@ -5384,6 +5384,78 @@ paths:
                 "500":
                     description: Something went wrong
 
+
+    #POCOR-8616 start
+    /api/v4/schedules/schedule/timetable-overview:
+        get:
+            tags:
+                - Institution Time Table Overview
+            summary: Time Table Overview
+            description: Get Time table overview by schedule term id.
+            parameters:
+                - name: institution_id
+                  in: query
+                  description: To store institution id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: academic_period_id
+                  in: query
+                  description: To store academic period id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_class_id
+                  in: query
+                  description: To store institution class id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+                - name: institution_schedule_term_id
+                  in: query
+                  description: To store institution schedule term id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/time-table-overview"
+                "500":
+                    description: Something went wrong
+
+    #POCOR-8616 start
+    /api/v4/schedule/timetable-download:
+        get:
+            tags:
+                - Institution Time Table Export
+            summary: Time Table Export
+            description: Get Time table Export by timetable id.
+            parameters:
+                - name: timetable_id
+                  in: query
+                  description: To send timetable id.
+                  required: true
+                  schema:
+                      type: integer
+                      format: int
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/time-table-export"
+                "500":
+                    description: Something went wrong
+
     /api/v4/schedules/timetables/{id}/lessons:
         get:
             tags:
@@ -11034,6 +11106,203 @@ components:
                                 created:
                                     type: string
                                     format: date-time
+
+
+        #POCOR-8616
+        time-table-overview:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Time table overview"
+                data:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        name:
+                            type: string
+                        schedule_term:
+                            type: integer
+                        shift_option:
+                            type: string
+                        shift_time:
+                            type: date-time
+                        shift_option_id:
+                            type: integer
+                        academic_period_id:
+                            type: integer
+                        academic_period_name:
+                            type: string
+                        institution_class_id:
+                            type: integer
+                            nullable: true
+                        institution_class_name:
+                            type: string
+                            nullable: true
+                        institution_grade_id:
+                            type: integer
+                            nullable: true
+                        institution_grade_name:
+                            type: string
+                            nullable: true
+                        institution_id:
+                            type: integer
+                            nullable: true
+                        institution_code:
+                            type: string
+                            nullable: true
+                        institution_name:
+                            type: string
+                            nullable: true
+                        institution_schedule_interval_id:
+                            type: integer
+                            nullable: true
+                        institution_schedule_interval_name:
+                            type: string
+                            nullable: true
+                        institution_schedule_term_id:
+                            type: integer
+                            nullable: true
+                        institution_schedule_term_name:
+                            type: string
+                            nullable: true
+                        status:
+                            type: string
+                            nullable: true
+                        status_id:
+                            type: integer
+                            nullable: true
+                        created_user_id:
+                            type: integer
+                        modified:
+                            type: string
+                            format: date-time
+                            nullable: true
+                        created:
+                            type: string
+                            format: date-time
+                        first_page_url:
+                            type: string
+                            nullable: true
+                        from:
+                            type: integer
+                            nullable: true
+                        last_page:
+                            type: integer
+                            nullable: true
+                        last_page_url:
+                            type: string
+                            nullable: true
+                        next_page_url:
+                            type: string
+                            nullable: true   
+                        path:
+                            type: string
+                            nullable: true   
+                        per_page:
+                            type: integer
+                            nullable: true
+                        prev_page_url:
+                            type: integer
+                            nullable: true   
+                        to:
+                            type: integer
+                            nullable: true
+                        total:
+                            type: integer
+                            nullable: true   
+                        example:
+                                    "id": 2
+                                    "name": "tes"
+                                    "schedule_term": "test"
+                                    "schedule_term_id": 3
+                                    "shift_option": "First Shift"
+                                    "shift_time": "07:00:00"
+                                    "shift_option_id": 1
+                                    "academic_period_id": 33
+                                    "academic_period_name": "2024"
+                                    "institution_class_id": 591
+                                    "institution_class_name": "Primary 1-A"
+                                    "institution_grade_id": 206
+                                    "institution_grade_name": "Primary 1"
+                                    "institution_id": 6
+                                    "institution_code": "P1002"
+                                    "institution_name": "Avory Primary School"
+                                    "institution_schedule_interval_id": 4
+                                    "institution_schedule_interval_name": "shift"
+                                    "institution_schedule_term_id": 3
+                                    "institution_schedule_term_name": "test"
+                                    status: "Draft"
+                                    status_id: 1
+                                    modified_user_id: null
+                                    modified: null
+                                    created_user_id: 2
+                                    created: "2024-01-30 17:37:41"
+                                    first_page_url: "http://127.0.0.1/pocor-openemis-core/api/v4/schedule/timetable-overview?page=1"
+                                    from: 1
+                                    last_page: 1
+                                    last_page_url: "http://127.0.0.1/pocor-openemis-core/api/v4/schedule/timetable-overview?page=1"
+                                    next_page_url: null
+                                    path: "http://127.0.0.1/pocor-openemis-core/api/v4/schedule/timetable-overview"
+                                    per_page: "10"
+                                    prev_page_url: null
+                                    to: 4
+                                    total: 4
+
+                        time_slots:
+                            type: object
+                            properties:
+                                start_time:
+                                    type: string
+                                    format: date-time
+                                    nullable: true
+                                end_time:
+                                    type: string
+                                    format: date-time
+                                    nullable: true
+                                interval:
+                                    type: string
+                                    format: date-time
+                                    nullable: true
+                            example:
+                                    start_time: "11:00:00"
+                                    end_time: "12:00:00"
+                                    interval: "30"
+                        links:
+                            type: object
+                            properties:
+                                url:
+                                    type: string
+                                    nullable: true
+                                label:
+                                    type: string
+                                    nullable: true
+                                active:
+                                    type: boolean
+                                    example: false
+                                example:
+                                    url: ""
+                                    label: "&laquo; Previous"
+                                    active: false
+
+
+
+        #POCOR-8616
+        time-table-export:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: "Time table export"
+                data:
+                    type: object
+                    properties:
+                        value:
+                            type: binary
+                        example:
+                            "value": "[Content_Types].xml"
+                                    
 
         time-table-lesson-detail:
             type: object
