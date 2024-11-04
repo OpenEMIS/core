@@ -1462,7 +1462,7 @@ class InstitutionClassStudentsTable extends AppTable
                 'assessment_items.classification',
             ])
             ->disableHydration();
-        Log::debug($query->sql());
+//        Log::debug($query->sql());
         // Format the results
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
