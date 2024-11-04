@@ -109,27 +109,29 @@ class POCOR8434 extends AbstractMigration
             }
         }
 
-        //add two columns (`interview_score` and `test_score`) in `institution_student_admission` table
-        $this->execute("ALTER TABLE `institution_student_admission` ADD `test_score` INT(11) NULL DEFAULT NULL AFTER `institution_class_id`, ADD `interview_score` INT(11) NULL DEFAULT NULL AFTER `test_score`;");
         //create new record for `Student > Registrations` in `custom_modules` table   
         $this->execute("INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `visible`, `parent_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, 'Student', 'Student > Registrations', 'Student.Students', '1', '0', NULL, NULL, '1', NOW());");
-        //create new table `institution_student_enrolment`    
-        $this->execute("CREATE TABLE `institution_student_enrolment` (
-                        `id` int(11) NOT NULL AUTO_INCREMENT,
-                        `start_date` date NOT NULL,
-                        `end_date` date NOT NULL,
-                        `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-                        `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
-                        `assignee_id` int(11) NOT NULL DEFAULT 0 COMMENT 'links to security_users.id',
-                        `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-                        `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
-                        `education_grade_id` int(11) NOT NULL COMMENT 'links to education_grades.id',
-                        `institution_class_id` int(11) DEFAULT NULL COMMENT 'links to institution_classes.id',
-                        `comment` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-                        `modified_user_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
-                        `modified` datetime DEFAULT NULL,
-                        `created_user_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-                        `created` datetime NOT NULL,
+        //Rename `institution_student_admission` INTO `institution_student_enrolment` table
+        $this->execute("RENAME TABLE `institution_student_admission` TO `institution_student_enrolment`");
+        //create new table `institution_student_admission`    
+        $this->execute("CREATE TABLE `institution_student_admission` (
+                        `id` INT(11) NOT NULL AUTO_INCREMENT,
+                        `start_date` DATE NOT NULL,
+                        `end_date` DATE NOT NULL,
+                        `student_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+                        `status_id` INT(11) NOT NULL COMMENT 'links to workflow_steps.id',
+                        `assignee_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+                        `institution_id` INT(11) NOT NULL COMMENT 'links to institutions.id',
+                        `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id',
+                        `education_grade_id` INT(11) NOT NULL COMMENT 'links to education_grades.id',
+                        `institution_class_id` INT(11) DEFAULT NULL COMMENT 'links to institution_classes.id',
+                        `test_score` INT(11) DEFAULT NULL,
+                        `interview_score` INT(11) DEFAULT NULL,
+                        `comment` TEXT COLLATE utf8mb4_unicode_ci  DEFAULT NULL,
+                        `modified_user_id` INT(11) DEFAULT NULL COMMENT 'links to security_users.id',
+                        `modified` DATETIME DEFAULT NULL,
+                        `created_user_id` INT(11) NOT NULL COMMENT 'links to security_users.id',
+                        `created` DATETIME NOT NULL,
                         PRIMARY KEY (`id`),
                         KEY `student_id` (`student_id`),
                         KEY `status_id` (`status_id`),
@@ -140,16 +142,14 @@ class POCOR8434 extends AbstractMigration
                         KEY `institution_class_id` (`institution_class_id`),
                         KEY `modified_user_id` (`modified_user_id`),
                         KEY `created_user_id` (`created_user_id`),
-                        CONSTRAINT `institution_student_enrolment_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `security_users` (`id`),
-                        CONSTRAINT `institution_student_enrolment_ibfk_2` FOREIGN KEY (`status_id`) REFERENCES `workflow_steps` (`id`),
-                        CONSTRAINT `institution_student_enrolment_ibfk_3` FOREIGN KEY (`assignee_id`) REFERENCES `security_users` (`id`),
-                        CONSTRAINT `institution_student_enrolment_ibfk_4` FOREIGN KEY (`institution_id`) REFERENCES `institutions` (`id`),
-                        CONSTRAINT `institution_student_enrolment_ibfk_5` FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods` (`id`),
-                        CONSTRAINT `institution_student_enrolment_ibfk_6` FOREIGN KEY (`education_grade_id`) REFERENCES `education_grades` (`id`),
-                        CONSTRAINT `institution_student_enrolment_ibfk_7` FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes` (`id`),
-                        CONSTRAINT `institution_student_enrolment_ibfk_8` FOREIGN KEY (`modified_user_id`) REFERENCES `security_users` (`id`),
-                        CONSTRAINT `institution_student_enrolment_ibfk_9` FOREIGN KEY (`created_user_id`) REFERENCES `security_users` (`id`)
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+                        CONSTRAINT `fk_student_id` FOREIGN KEY (`student_id`) REFERENCES `security_users`(`id`),
+                        CONSTRAINT `fk_status_id` FOREIGN KEY (`status_id`) REFERENCES `workflow_steps`(`id`),
+                        CONSTRAINT `fk_assignee_id` FOREIGN KEY (`assignee_id`) REFERENCES `security_users`(`id`),
+                        CONSTRAINT `fk_institution_id` FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`),
+                        CONSTRAINT `fk_academic_period_id` FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`),
+                        CONSTRAINT `fk_education_grade_id` FOREIGN KEY (`education_grade_id`) REFERENCES `education_grades`(`id`),
+                        CONSTRAINT `fk_institution_class_id` FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
         
         //create new table `student_admission_custom_field_values`    
         $this->execute("CREATE TABLE `student_admission_custom_field_values` (
