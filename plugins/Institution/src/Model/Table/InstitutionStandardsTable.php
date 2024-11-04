@@ -119,6 +119,7 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('birthplace_area_id', ['type' => 'hidden']);
         $this->ControllerAction->field('photo_content', ['type' => 'hidden']);
         $this->ControllerAction->field('failed_logins', ['type' => 'hidden']);
+        $this->ControllerAction->field('mobile_number', ['type' => 'hidden']); //POCOR-8627
         $this->ControllerAction->field('appraisal_form_id', ['select' => false, 'type' => 'hidden']);
         $session = $this->request->getSession();
         $params = $this->getQueryString();
