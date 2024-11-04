@@ -95,6 +95,10 @@ class ExcelReportBehavior extends Behavior
     }
 
     //POCOR-8568[Here added  Event $event]
+
+    /**
+     * @throws \Exception
+     */
     public function renderExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
     {
         $model = $this->_table;
@@ -208,21 +212,24 @@ class ExcelReportBehavior extends Behavior
 
             if ($entity->has('excel_template_name')) {
                 $file = $this->getFile($entity->excel_template);
-                // Create a temporary file
-                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_');
+                if ($file === false || empty($file)) {
+                    throw new \Exception('Invalid file content.');
+                }
+
+                // Create a temporary file with the correct extension
+                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_') . '.xlsx';
                 $extra['tmp_file_path'] = $filepath;
 
                 $excelTemplate = new File($filepath, true, 0777);
                 $excelTemplate->write($file);
                 $excelTemplate->close();
-                // End create a temporary file
+
                 try {
-                    // Read back from same temporary file
+                    // Read back from the same temporary file
                     $inputFileType = IOFactory::identify($filepath);
                     $objReader = IOFactory::createReader($inputFileType);
                     $objSpreadsheet = $objReader->load($filepath);
-                    // End read back from same temporary file
-                } catch(Exception $e) {
+                } catch (\Exception $e) {
                     Log::write('debug', $e->getMessage());
                 }
             }
