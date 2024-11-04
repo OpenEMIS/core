@@ -45,7 +45,7 @@ class UsersController extends AppController
         
         if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {
             $this->getEventManager()->off($this->Csrf);
-            $this->Security->config('unlockedActions', [$action]);
+            $this->Security->setConfig('unlockedActions', [$action]);
         }
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $localLoginEnabled = $ConfigItems->value('enable_local_login');
@@ -860,10 +860,15 @@ class UsersController extends AppController
     {
         //POCOR-2976 start
         $SecurityUser = TableRegistry::getTableLocator()->get('User.Users');
-        $userData = $SecurityUser->find()
+        //POCOR-8498 Start
+        $userData = '';
+        if(!empty($this->request->getData()['username'])) {
+            $userData = $SecurityUser->find()
             ->where(
-                [$SecurityUser->aliasField('username') => $this->request->getData('username')]
+                [$SecurityUser->aliasField('username') => $this->request->getData()['username']]
             )->first();
+        }
+        //POCOR-8498 End
         if (!$extra['loginStatus']) {
             if (!$extra['status']) {
                 $this->Alert->error('security.login.inactive', ['reset' => true]);

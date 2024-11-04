@@ -1061,7 +1061,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     //POCOR-6981
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (in_array($action, ['edit', 'add'])) {
+        if (in_array($action, ['edit', 'add', 'approve'])) { // POCOR-8411 start
             $workflowModel = 'Institutions > Student Transfer > Sending';
             $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
