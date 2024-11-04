@@ -1249,10 +1249,13 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     if (!isNaN(parseFloat(data[weightVar]))) {
                         weight = data[weightVar];
                         totalWeight = totalWeight + weight;
-                        if (!isNaN(parseFloat(mark))) {
+                        if (mark !== 'EXEMPT') {
+                            if (isNaN(parseFloat(mark))){
+                                mark = 0;
+                            }
                             sumMark = sumMark + (mark * weight);
                             sumWeight = sumWeight + weight;
-                            console.log(sumWeight);
+                            // console.log(sumWeight);
                             valueEnabled = true;
                         }
                     }

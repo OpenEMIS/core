@@ -12,6 +12,8 @@ use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 
 class InstitutionClassStudentsTable extends AppTable
 {
@@ -20,14 +22,32 @@ class InstitutionClassStudentsTable extends AppTable
     private $assessmentItemResults = [];
     private $lastQueriedClass = null;
     private $allowedSubjects = [];
-    private $assessmentPeriodWeightedMark = "";
-    private $totalMark = "";
-    private $totalWeightedMark = "";
+    private $assessmentPeriodWeightedMark = 0;
+    private $totalMark = 0;
+    private $totalWeightedMark = 0;
 
     // Report permission
     private $allSubjectsPermission = true;
     private $mySubjectsPermission = true;
     private $staffId = 0;
+
+    // POCOR-8224-EXEMPT
+    private $institution_id;
+    private $institution;
+    private $institution_class_id;
+    private $institution_class;
+    private $assessment_id;
+    private $assessment;
+    private $academic_period_id;
+    private $academic_period;
+    private $education_grade_id;
+    private $education_grade;
+
+    private $results;
+    private $i = 1;
+
+    private $assessmentPeriodWeights = [];
+
 
     public function initialize(array $config): void
     {
@@ -141,11 +161,28 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings)
     {
-        $classId = $settings['class_id'];
-        $institutionId = $settings['institution_id'];
-        $institutionCode = $this->Institutions->get($institutionId)->code;
-        $className = $this->InstitutionClasses->get($classId)->name;
-        $settings['file'] = str_replace($this->getAlias(), str_replace(' ', '_', $institutionCode).'-'.str_replace(' ', '_', $className).'_Results', $settings['file']);
+        $this->institution_class_id = $settings['class_id'];
+        $this->institution_id = $settings['institution_id'];
+        if (isset($settings['assessment_id']) && is_numeric($settings['assessment_id']) && $settings['assessment_id'] > 0) {
+            $assessment_id = $settings['assessment_id'];
+            $assessmentsTable = self::getDynamicTableInstance('assessments');
+            $this->assessment_id = $assessment_id;
+            $this->assessment = $assessmentsTable->get($assessment_id);
+
+            $this->academic_period_id = $this->assessment->academic_period_id;
+            $this->academic_period = $this->AcademicPeriods->get($this->academic_period_id);
+
+            $this->education_grade_id = $this->assessment->education_grade_id;
+            $this->education_grade = $this->EducationGrades->get($this->education_grade_id); // Fixed assignment
+        }
+
+        $this->institution = $this->Institutions->get($this->institution_id);
+        $this->institution_class = $this->InstitutionClasses->get($this->institution_class_id);
+
+        // Prepare file name for export
+        $institution_code = $this->institution->code;
+        $className = $this->institution_class->name;
+        $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institution_code) . '-' . str_replace(' ', '_', $className) . '_Results', $settings['file']);
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -498,8 +535,10 @@ class InstitutionClassStudentsTable extends AppTable
                 switch ($resultType) {
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
-                        $this->assessmentPeriodWeightedMark += ($result['marks'] * $attr['assessmentPeriodWeight']);
-                        $printedResult = ' '.$result['marks'];
+                        if ($result['mark'] != 'EXEMPT') {
+                            $this->assessmentPeriodWeightedMark += ($result['marks'] * $attr['assessmentPeriodWeight']);
+                        }
+                        $printedResult = print_r($result, true);//' '.$result['marks'];
                         break;
                     case 'GRADES':
                         $printedResult = $result['grade_code'] . ' - ' . $result['grade_name'];
@@ -552,7 +591,7 @@ class InstitutionClassStudentsTable extends AppTable
             $this->totalWeightedMark += ($assessmentPeriodWeightedMark * $attr['subjectWeight']);
         }
         // reset the assessmentPeriodWeightedMark mark
-        $this->assessmentPeriodWeightedMark = "";
+        $this->assessmentPeriodWeightedMark = 0;
         if(is_numeric($assessmentPeriodWeightedMark)){
             $assessmentPeriodWeightedMark = number_format($assessmentPeriodWeightedMark, 2);
         }
@@ -562,7 +601,7 @@ class InstitutionClassStudentsTable extends AppTable
     public function onExcelRenderTotalWeightedMark(Event $event, Entity $entity, array $attr)
     {
         $totalWeightedMark = $this->totalWeightedMark;
-        $this->totalWeightedMark = "";
+        $this->totalWeightedMark = 0;
         if(is_numeric($totalWeightedMark)){
             $totalWeightedMark = number_format($totalWeightedMark, 2);
         }
@@ -572,7 +611,7 @@ class InstitutionClassStudentsTable extends AppTable
     public function onExcelRenderTotalMark(Event $event, Entity $entity, array $attr)
     {
         $totalMark = $this->totalMark;
-        $this->totalMark = "";
+        $this->totalMark = 0;
         if(is_numeric($totalMark)){
             $totalMark = number_format($totalMark, 2);
         }
@@ -1413,4 +1452,54 @@ class InstitutionClassStudentsTable extends AppTable
 
         return $query;
     }
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }
