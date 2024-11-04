@@ -363,6 +363,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     }
 
     function onChangeSubject(tab, limit = 10) {
+        $scope.subjectIsEditable = 0;
+        if(vm.currentTab.tabName == 'Expressive Arts Teacher'){
+            $scope.subjectIsEditable = 1;
+        }
         if (vm.currentTab !== tab) {
             vm.gridOptions.api.paginationSetPageSize(Number(limit));
             if (vm.pageSizeDropdown !== null) vm.pageSizeDropdown.value = 10;
