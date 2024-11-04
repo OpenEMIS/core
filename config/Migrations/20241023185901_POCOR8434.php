@@ -41,7 +41,12 @@ class POCOR8434 extends AbstractMigration
         $this->execute('INSERT INTO `z_8434_custom_modules` SELECT * FROM `custom_modules`');
                 
         //create new record for `Student Enrolment` in `workflow_models` table 
-        $this->execute("INSERT INTO `workflow_models` (`name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES ('Institutions > Students > Student Enrolment', 'Institution.StudentEnrolment', NULL, '1', '1', NOW());");
+        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+        $WorkflowModelsCount = $WorkflowModelsTable->find()->count();
+        if(!empty($WorkflowModelsCount)){
+            $id = $WorkflowModelsCount + 1;
+            $this->execute("INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES ($id, 'Institutions > Students > Student Enrolment', 'Institution.StudentEnrolment', NULL, '1', '1', NOW());");
+        }
         
         $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
         $WorkflowModels = $WorkflowModelsTable->find()->select(['id' => $WorkflowModelsTable->aliasField('id')])->where([$WorkflowModelsTable->aliasField('name')=> 'Institutions > Students > Student Enrolment'])->first();
