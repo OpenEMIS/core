@@ -5449,7 +5449,7 @@ class InstitutionsController extends AppController
 //        Log::debug('$expectedStaffStatuses');
 //        Log::debug(print_r($expectedStaffStatuses, true));
 
-        if (!empty($expectedStaffStatuses)) {
+        if (!empty($expectedStaffStatuses && !empty($staffUserPriId))) {//POCOR-8613
             $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id') . ' NOT IN '] = $expectedStaffStatuses;
         }
 
@@ -5542,7 +5542,7 @@ class InstitutionsController extends AppController
         $alreadyAssignedStaffs = $StaffTable->find()->select([
             'institution_position_id' => $StaffTable->aliasField('institution_position_id'),
             'status_id' => $institutionPositionsTable->aliasField('status_id'),
-            'staff_position_title_id' => $institutionPositionsTable->aliasField('staff_position_title_id')
+            'staff_position_title_id' => $institutionPositionsTable->aliasField('staff_position_title_id')//POCOR-8613
         ])->innerJoin([$institutionPositionsTable->getAlias() => $institutionPositionsTable->getTable()], [
             $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
         ])->where([
@@ -5628,7 +5628,8 @@ class InstitutionsController extends AppController
             ->contain(['Users'])
             ->where([
                 $StaffTable->aliasField('institution_id') => $institutionId,
-                'Users.openemis_no' => $openemisNo
+                'Users.openemis_no' => $openemisNo,
+                 $StaffTable->aliasField('end_date') . ' IS NULL'
             ])
             ->disableHydration();
 
