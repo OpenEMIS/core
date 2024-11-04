@@ -76,7 +76,6 @@ class UsersTable extends AppTable
         ]);
 
         $this->getDisplayField('first_name');
-
     }
 
     public function implementedEvents(): array
@@ -311,7 +310,7 @@ class UsersTable extends AppTable
             ])
             ->contain('SpecialNeeds')
             ->group([$this->aliasField('id')])
-            ->order([$this->aliasField('first_name', 'last_name')])// POCOR-2547 sort list of staff and student by name
+            ->order([$this->aliasField('first_name', 'last_name')]) // POCOR-2547 sort list of staff and student by name
             ->formatResults(function ($results) use ($institutionClassId, $institutionId) {
                 $arrReturn = [];
                 foreach ($results as $result) {
@@ -383,7 +382,7 @@ class UsersTable extends AppTable
                 $this->aliasField('preferred_name')
             ])
             ->group([$this->aliasField('id')])
-            ->order([$this->aliasField('first_name', 'last_name')])// POCOR-2547 sort list of staff and student by name
+            ->order([$this->aliasField('first_name', 'last_name')]) // POCOR-2547 sort list of staff and student by name
             ->formatResults(function ($results) use ($institutionId) {
                 $arrReturn = [];
                 foreach ($results as $result) {
@@ -669,7 +668,6 @@ class UsersTable extends AppTable
             $openemisTemps->save($openemisTemp);
         }
         return $newOpenemisNo;
-
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -896,7 +894,7 @@ class UsersTable extends AppTable
                 $value = $this->defaultUserProfileView;
             }
         } else {
-            $value = base64_encode(stream_get_contents($fileContent));//$fileContent;
+            $value = base64_encode(stream_get_contents($fileContent)); //$fileContent;
         }
 
         return $value;
@@ -1099,18 +1097,18 @@ class UsersTable extends AppTable
                 switch ($column) {
                     case 'Identity':*/
         //comment for ticket POCOR-6512
-//                        $userIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
-//
-//                        $defaultValue = $userIdentitiesTable->IdentityTypes->getDefaultValue();
-//
-//                      //  if ($defaultValue) {
-//                            $userIdentityData = $userIdentitiesTable->newEntity([
-//                                'identity_type_id' => $entity->identity_type_id,
-//                                'number' => $entity->identity_number,
-//                                'security_user_id' => $entity->id,
-//                                'nationality_id' =>$entity->nationality_id
-//                            ]);
-//                            $userIdentitiesTable->save($userIdentityData);
+        //                        $userIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
+        //
+        //                        $defaultValue = $userIdentitiesTable->IdentityTypes->getDefaultValue();
+        //
+        //                      //  if ($defaultValue) {
+        //                            $userIdentityData = $userIdentitiesTable->newEntity([
+        //                                'identity_type_id' => $entity->identity_type_id,
+        //                                'number' => $entity->identity_number,
+        //                                'security_user_id' => $entity->id,
+        //                                'nationality_id' =>$entity->nationality_id
+        //                            ]);
+        //                            $userIdentitiesTable->save($userIdentityData);
         // }
         //comment for ticket POCOR-6512
         /*  break;
@@ -1202,9 +1200,10 @@ class UsersTable extends AppTable
         }
 
         // POCOR 3804
-        $UserIdentities->updateAll([
-            'nationality_id' => $nationalityId
-        ],
+        $UserIdentities->updateAll(
+            [
+                'nationality_id' => $nationalityId
+            ],
             ['security_user_id' => $entity->security_user_id]
         );
 
@@ -1334,10 +1333,19 @@ class UsersTable extends AppTable
     public function onChangeUserContacts(Event $event, Entity $entity)
     {
         $securityUserId = $entity->security_user_id;
-        $email = $entity->value;
-
-        // update the user email with preferred email
-        $this->updateAll(['email' => $email], ['id' => $securityUserId]);
+        //POCOR-8660 start
+        $contactOptionCode = $entity->contact_option_code;
+        if ($contactOptionCode == 'MOB' || $contactOptionCode == 'PHO') {
+            $phone = $entity->value;
+            // update the user mobile_number with preferred mobile_number
+            $this->updateAll(['mobile_number' => $phone], ['id' => $securityUserId]);
+        }
+        //POCOR-8660 end
+        else {
+            $email = $entity->value;
+            // update the user email with preferred email
+            $this->updateAll(['email' => $email], ['id' => $securityUserId]);
+        }
     }
 
     public function beforeFind(Event $event, Query $query, ArrayObject $options)
@@ -1380,7 +1388,9 @@ class UsersTable extends AppTable
         $studentQuery = $query->find()
             ->contain(['Users'])
             ->where(['institution_id' => $institutionId]);
-        $student = $studentQuery->select(['id' => 'Users.openemis_no', 'openemis_no' => 'Users.openemis_no',
+        $student = $studentQuery->select([
+            'id' => 'Users.openemis_no',
+            'openemis_no' => 'Users.openemis_no',
             'first_name' => "Users.first_name",
             'middle_name' => "Users.middle_name",
             'third_name' => "Users.third_name",

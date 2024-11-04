@@ -171,7 +171,7 @@ class StudentClassesTable extends ControllerActionTable
         if ($this->request->getParam('controller') == 'GuardianNavs' || 
             (empty($userData['System']['User']['roles']) && !empty($studentId))) {
             // Set the condition for student_id if applicable
-            $conditions[$this->aliasField('student_id')] = $studentId;
+            $conditions[$this->aliasField('student_id IS')] = $studentId; //POCOR-8640
         }
         /*POCOR-6267 ends*/
 
