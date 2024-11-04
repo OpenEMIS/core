@@ -25,6 +25,7 @@ use Exception;
 use PHPExcel_IOFactory;
 use Cake\Event\EventInterface;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Cake\I18n\Time;
 
 //POCOR-5672
 
@@ -1653,6 +1654,15 @@ class InstitutionsController extends AppController
             $exportPDF_Url['?'] = ['queryString' => $queryString];
             $this->set('exportPDF', Router::url($exportPDF_Url));
         }
+        //POCOR-8146 Start
+        $labelsTable = TableRegistry::getTableLocator()->get('System.Labels');
+        $labelsData = $labelsTable->find()->where(['module_name' => 'Institutions > Performance > Assessments', 'field_name' => 'Total Mark'])->first();
+        $dynamicTotalMarkHeader = $labelsData->name;
+        if(empty($dynamicTotalMarkHeader)) {
+            $dynamicTotalMarkHeader = $labelsData->code;
+        }
+        $this->set('dynamicTotalMarkHeader', $dynamicTotalMarkHeader);
+        //POCOR-8146 End
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
@@ -2765,6 +2775,14 @@ class InstitutionsController extends AppController
         if ($furtherAction == 'ajaxInstitutionsAutocomplete') {
             return true;
         }
+        // POCOR-7799 start
+        if ($furtherAction == 'downloadPassed' ) {
+            return true;
+        }
+        if ($furtherAction == 'downloadFailed') {
+            return true;
+        }
+        // POCOR-7799 end
 //        $this->log(print_r($request,true), debug);
         return false;
     }
@@ -6631,7 +6649,212 @@ class InstitutionsController extends AppController
                 Log::debug('Error: ' . $exception->getMessage());
             }
         }
+        if (!empty($institutionId)) {
+            self::assignStudentRoleGroup($institutionId, $userRecordId);//POCOR-8559
+        }
         return $saved_student;
+    }
+
+    /**
+     * POCOR-7146
+     * POCOR-7224 refactored
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * assign Role and group to student while creating student
+     **/
+    private
+    static function assignStudentRoleGroup($institution_id, $student_id)
+    {
+        $student_role_id = self::getStudentSecurityRoleId();
+        $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
+        //check student already exist
+        $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
+        //check that the student is not in other groups
+        if (sizeof($student_security_groups) == 0) {
+            self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+            return;
+        }
+        //update user's security_group_id in security_group_users table
+        $previous_security_group_id = self::getPreviousSecurityGroupId($institution_id, $student_id);
+        //check that the student is should be transferred
+        if (in_array($previous_security_group_id, $student_security_groups)) {
+            $security_group = self::makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id);
+            return;
+        }
+        //if he/she is not transferred - create new security group
+        $security_group = self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+        return ;
+
+    }
+
+    /**
+     * @return int
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function getStudentSecurityRoleId(): int
+    {
+        $securityRolesTbl = self::getDynamicTableInstance('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'STUDENT',
+            ])->first();
+        $student_role_id = $securityRoles->id;
+        return $student_role_id;
+    }
+
+    /**
+     * @param $institutionId
+     * @return integer
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function getInstitutionSecurityGroupId($institutionId)
+    {
+        $institutionTbl = self::getDynamicTableInstance('institutions');
+        $security_group_id = null;
+        $institutions = $institutionTbl->find()
+            ->where([
+                $institutionTbl->aliasField('id') => $institutionId
+            ])->first();
+        if (!empty($institutions)) {
+            $security_group_id = $institutions->security_group_id;
+        }
+        if ($security_group_id != null) {
+            $securityGroupInstitutionsTbl = self::getDynamicTableInstance('security_group_institutions');
+            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
+                ->where([
+                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
+                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
+                ])
+                ->first();
+            //save security group for institution
+            if (empty($securityGroupInstitutions)) {
+                $security_group_ins_data = [
+                    'security_group_id' => $security_group_id,
+                    'institution_id' => $institutionId,
+                    'created_user_id' => 1,
+                    'created' => new Time('NOW')
+                ];
+                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
+                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
+            }
+        }
+        return $security_group_id;
+    }
+
+    /**
+     * @param $student_id
+     * @param $student_role_id
+     * @return array
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function getStudentSecurityGroups($student_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = self::getDynamicTableInstance('security_group_users');
+        $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
+            ->select('security_group_id')
+            ->where([
+                $securityGroupUsersTbl->aliasField('security_user_id') => $student_id,
+                $securityGroupUsersTbl->aliasField('security_role_id') => $student_role_id
+            ])
+            ->extract('security_group_id')
+            ->toArray();
+        return $countSecurityGroupStudent;
+    }
+
+    /**
+     * @param $student_id
+     * @param $security_group_id
+     * @param $student_role_id
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
+    {
+        $id = Text::uuid();
+        $securityGroupUsersTbl = self::getDynamicTableInstance('security_group_users');
+        $security_group_data = [
+            'id' => $id,
+            'security_group_id' => $security_group_id,
+            'security_user_id' => $student_id,
+            'security_role_id' => $student_role_id,
+            'created_user_id' => 1,
+            'created' => new Time('NOW')
+        ];
+        $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
+        $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
+        return $newEntity;
+    }
+
+    /**
+     * @param $institution_id
+     * @param $student_id
+     * @param $institutionTbl
+     * @return mixed
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function getPreviousSecurityGroupId($institution_id, $student_id)
+    {
+        $previous_security_group_id = 0;
+        $institutionTbl = self::getDynamicTableInstance('institutions');
+        $InstitutionStudentsTbl = self::getDynamicTableInstance('institution_students');
+        $TransfersTbl = self::getDynamicTableInstance('institution_student_transfers');
+        $StudentTransfers = $InstitutionStudentsTbl
+            ->find()
+            ->select([
+                $InstitutionStudentsTbl->aliasField('student_id'),
+                $TransfersTbl->aliasField('institution_id'),
+                $TransfersTbl->aliasField('previous_institution_id')
+            ])
+            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+                [
+                    $TransfersTbl->aliasField('student_id') . '=' . $student_id,
+                    $TransfersTbl->aliasField('institution_id') => $institution_id
+                ]
+            )
+            ->where([
+                $InstitutionStudentsTbl->aliasField('student_id') => $student_id,
+                $InstitutionStudentsTbl->aliasField('institution_id') => $institution_id,
+                $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
+            ])
+            ->first();
+        if (!empty($StudentTransfers)) {
+            if (!empty($StudentTransfers->institution_student_transfers['previous_institution_id'])) {
+                $PreviousInstitutions = $institutionTbl->find()
+                    ->where([
+                        $institutionTbl->aliasField('id') => $StudentTransfers->institution_student_transfers['previous_institution_id']
+                    ])
+                    ->first();
+                $previous_security_group_id = $PreviousInstitutions->security_group_id;
+            }
+        }
+        return $previous_security_group_id;
+    }
+
+    /**
+     * @param $student_id
+     * @param $security_group_id
+     * @param $previous_security_group_id
+     * @param $student_role_id
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = self::getDynamicTableInstance('security_group_users');
+        $securityGroupUsersTbl->updateAll(
+            [
+                'security_group_id' => $security_group_id,
+                'created' => new Time('NOW')
+            ],
+            [
+                'security_group_id' => $previous_security_group_id,
+                'security_user_id' => $student_id,
+                'security_role_id' => $student_role_id
+            ]
+        );
     }
 
     /**
@@ -8604,7 +8827,7 @@ class InstitutionsController extends AppController
     //POCOR-7971 start
     public function triggerWebhooksForStaff($userRecordId)
     {
-        $staff = TableRegistry::get('Institution.Staff');
+        $staff = self::getDynamicTableInstance('Institution.Staff');
         $bodyData = $staff->find('all',
                                 [ 'contain' => [
                                     'Institutions',
@@ -8618,15 +8841,15 @@ class InstitutionsController extends AppController
                                     'Users.Identities.IdentityTypes',
                                     'Users.AddressAreas',
                                     'Users.BirthplaceAreas',
-                                    'Users.Contacts.ContactTypes'                   
+                                    'Users.Contacts.ContactTypes'
                                 ],
                     ])->where([
                         $staff->aliasField('staff_id') => $userRecordId
                     ]);
-       
-        if (!empty($bodyData)) { 
+
+        if (!empty($bodyData)) {
             foreach ($bodyData as $key => $value) {
-                $institutionStaffId = $value->id; 
+                $institutionStaffId = $value->id;
                 $user_id = $value->user->id;
                 $openemis_no = $value->user->openemis_no;
                 $first_name = $value->user->first_name;
@@ -8637,13 +8860,13 @@ class InstitutionsController extends AppController
                 $gender = $value->user->gender->name;
                 $nationality = $value->user->main_nationality->name;
                 $dateOfBirth = $value->user->date_of_birth;
-                
+
                 $address = $value->user->address;
                 $postalCode = $value->user->postal_code;
                 $addressArea = $value->user->address_area->name;
                 $birthplaceArea = $value->user->birthplace_area->name;
                 $role = $value->user->is_staff;
-                
+
                 $contactValue = [];
                 $contactType = [];
                 if(!empty($value->user['contacts'])) {
@@ -8652,7 +8875,7 @@ class InstitutionsController extends AppController
                         $contactType[] = $contact->contact_type->name;
                     }
                 }
-                
+
                 $identityNumber = [];
                 $identityType = [];
                 if(!empty($value->user['identities'])) {
@@ -8661,7 +8884,7 @@ class InstitutionsController extends AppController
                         $identityType[] = $identity->identity_type->name;
                     }
                 }
-                
+
                 $username = $value->user->username;
                 $institution_id = $value->institution->id;
                 $institutionName = $value->institution->name;
@@ -8670,23 +8893,23 @@ class InstitutionsController extends AppController
                 $position_no = $value->position->position_no;
                 $staff_position_titles_type = $value->position->staff_position_title->type;
                 $staff_types_name = $value->staff_type->name;
-                
+
                 if($staff_position_titles_type == 1 ){
                     $class= 'Teaching';
                 } else {
                     $class = 'Non-Teaching';
                 }
                 $staff_position_titles_name = $value->position->staff_position_title->name;
-                
+
                 $startDate = $value->start_date;
                 $endDate = $value->end_date;
-                
+
             }
         }
-        $shift =  TableRegistry::get('Institution.InstitutionShifts');
+        $shift =  self::getDynamicTableInstance('Institution.InstitutionShifts');
         $shiftData = $shift->find('all',
                             [ 'contain' => [
-                                'ShiftOptions'                   
+                                'ShiftOptions'
                             ],
                 ])->where([
                     $shift->aliasField('id') => $userRecordId
@@ -8697,7 +8920,7 @@ class InstitutionsController extends AppController
             }
         }
         $body = array();
-        $body = [   
+        $body = [
             'security_users_id' => !empty($user_id) ? $user_id : NULL,
             'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
             'security_users_first_name' =>  !empty($first_name) ? $first_name : NULL,
@@ -8722,7 +8945,7 @@ class InstitutionsController extends AppController
             'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
             //'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
             'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-            'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL, 
+            'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
             'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
             'staff_position_titles_type'=>!empty($class) ? $class : NULL,
             'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
@@ -8730,8 +8953,8 @@ class InstitutionsController extends AppController
             'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
             'role_name' => ($role == 1) ? 'staff' : NULL
         ];
-    
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+
+        $Webhooks = self::getDynamicTableInstance('Webhook.Webhooks');
         $Webhooks->triggerShell('staff_create', ['username' => ''], $body);
 
     }

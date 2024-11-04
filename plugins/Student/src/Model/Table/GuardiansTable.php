@@ -124,10 +124,11 @@ class GuardiansTable extends ControllerActionTable
         } elseif ($this->controller->getName() == 'Guardians' || $this->controller->getName() == 'GuardianNavs') {
             $studentId = $this->Session->read('Auth.User.id');
         } elseif ($this->controller->getName() == 'Students' && isset($this->request->getParam('pass')[1])) {
-            $studentId = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['student_id'];
+            $studentId = $this->getQueryString('student_id');
         } else {
             //$studentId = $this->Session->read('Student.Students.id');
-            $studentId = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
+            //echo "<pre>"; print_r($this->getQueryString('security_user_id')); die;
+            $studentId = $this->getQueryString('security_user_id');
         }
 
         $this->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
@@ -195,8 +196,12 @@ class GuardiansTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-
+        $queryString = $this->getQueryString('security_user_id');
         $search = $this->getSearchKey();
+
+        // Add your custom WHERE condition here
+        $query->where(['student_id' => $queryString]);
+
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);

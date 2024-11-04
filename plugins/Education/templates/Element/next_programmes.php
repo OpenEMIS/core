@@ -13,7 +13,7 @@
 			</table>
 		</div>
 	</div>
-<?php elseif ($ControllerAction['action'] == 'edit') : ?>
+<?php elseif ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
 	<?php
 		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];

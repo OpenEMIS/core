@@ -23,8 +23,9 @@ class GoogleAuthComponent extends Component
 
     public function initialize(array $config): void
     {
+        $this->request = $this->getController()->getRequest();
         $this->controller = $this->_registry->getController();
-        $this->session = $this->request->session();
+        $this->session = $this->getController()->getRequest()->getSession();
         $googleAttributes = $config['authAttribute'];
         $mappingAttributes = $config['mappingAttribute'];
         $this->clientId = $googleAttributes['client_id'];
@@ -47,7 +48,7 @@ class GoogleAuthComponent extends Component
         $client->setHostedDomain($this->hostedDomain);
         $this->client = $client;
         $this->controller = $this->_registry->getController();
-        $this->Auth->config('authenticate', [
+        $this->Auth->setConfig('authenticate', [
                 'Form' => [
                     'userModel' => $config['userModel'],
                     'passwordHasher' => [
@@ -64,7 +65,7 @@ class GoogleAuthComponent extends Component
             ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.Auth.authenticate'] = 'authenticate';
@@ -79,9 +80,9 @@ class GoogleAuthComponent extends Component
           If we have a code back from the OAuth 2.0 flow, we need to exchange that with the authenticate()
           function. We store the resultant access token bundle in the session, and redirect to ourself.
          ************************************************************************************************/
-        if ($this->request->query('code')) {
+        if ($this->request->getQuery('code')) {
             try {
-                $client->authenticate($this->request->query('code'));
+                $client->authenticate($this->request->getQuery('code'));
             } catch (Google_Auth_Exception $e) {
                 return;
             }
@@ -118,7 +119,14 @@ class GoogleAuthComponent extends Component
             // Check if the access token is expired, if it is expired reauthenticate
             if (!$client->isAccessTokenExpired()) {
                 $this->session->write('Google.accessToken', $client->getAccessToken());
-                $tokenData = $client->verifyIdToken()->getAttributes();
+                //POCOR-8498 start
+                //  $tokenData = $client->verifyIdToken()->getAttributes();
+                $tokenData = $client->verifyIdToken();
+        
+                if (is_object($tokenData) && method_exists($tokenData, 'getAttributes')) {
+                    $tokenData = $tokenData->getAttributes();
+                }
+                //POCOR-8498 End
             } else {
                 $authUrl = $client->createAuthUrl();
             }
@@ -134,7 +142,7 @@ class GoogleAuthComponent extends Component
           data only if the hosted domain matches our setting.
          ************************************************************************************************/
         if (isset($tokenData)) {
-            $username = $tokenData['payload']['email'];
+            $username = isset($tokenData['payload']['email']) ? $tokenData['payload']['email']: $tokenData['email'] ;
             return $this->checkLogin($username);
         }
         return false;

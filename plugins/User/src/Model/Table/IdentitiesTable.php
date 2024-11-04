@@ -170,6 +170,7 @@ class IdentitiesTable extends ControllerActionTable
         $this->fields['nationality_id']['type'] = 'select';
         $this->fields['nationality_id']['options'] = (!empty($NationalityOptions)) ? $NationalityOptions : ['' => $this->getMessage('general.select.noOptions')]; //POCOR-6396
         $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number', 'issue_date', 'expiry_date', 'issue_location', 'comments']);
+
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
