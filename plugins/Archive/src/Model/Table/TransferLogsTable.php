@@ -10,7 +10,7 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -506,8 +506,9 @@ class TransferLogsTable extends ControllerActionTable
                 $recordsToArchiveStr = number_format($recordsToArchive, 0, '', ',');
                 $todoing = trim($entity['features']) . ': '
                     . $recordsToArchiveStr . ' / ' . $recordsInArchiveStr;  // POCOR-7957
+
                 $alreadytransferring = $this->find('all')
-                    ->where(['academic_period_id' => $entity->academic_perid_id,
+                    ->where(['academic_period_id IS' => $entity->academic_perid_id,//POCOR-8636
                         'process_status' => self::IN_PROGRESS,
                         'p_id !=' => $entity->p_id
                     ])
