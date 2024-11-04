@@ -369,7 +369,32 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
     }
 
+    //POCOR-8662 -- START
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $extraArray = $extra->getArrayCopy();
+        if (isset($extraArray['toolbarButtons']) && is_array($extraArray['toolbarButtons'])) {
+            if (array_key_exists('edit', $extraArray['toolbarButtons'])) {
+                $params = $this->getQueryString();
+                $timetableId = $entity->id;
+                $institutionId = $entity->institution_id;
+                $params['institution_id'] = $institutionId;
+                $params['timetable_id'] = $timetableId;
+                $encodedQueryString = $this->paramsEncode($params);
+                $timetableEditUrl = [
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
+                    'action' => 'ScheduleTimetableOverview',
+                    '0' => 'edit',
+                    '1' => $encodedQueryString,
+                ];
+                $extraArray['toolbarButtons']['edit']['url'] = $timetableEditUrl;
+            }
+        }
+    }
+    //POCOR-8662 -- END
+
+    public function viewAfterActionOld(Event $event, Entity $entity, ArrayObject $extra)
     {
         if (array_key_exists('edit', $extra['toolbarButtons'])) {
             $params = $this->getQueryString();
