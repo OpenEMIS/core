@@ -1515,7 +1515,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     userCtrl.message = 'Student is added successfully.';
                     userCtrl.messageClass = 'alert-success';
                     UtilsSvc.isAppendLoader(false);
-                    // userCtrl.step = "summary";
+                    userCtrl.step = "summary"; // POCOR-8559
                     var todayDate = new Date();
                     userCtrl.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
                     userCtrl.getRedirectToGuardian();

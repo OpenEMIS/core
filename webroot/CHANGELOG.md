@@ -1,3 +1,30 @@
+### [4.3.4] - 2024-10-30
+- Bug Fixed: Administrations > System Setup > System Configurations : Pagination and Displaying rows should be at the bottom of the list page
+- Bug Fixed: Institutions>Academic>Classes: User is unable to view and edit
+- Bug Fixed: Administration>Appraisals:Unable to add slider
+- Bug Fixed: Institutions > Academic > Schedules > Timetables: when accessing timetable module, the page navigate to the home page even when permission is given
+- Bug Fixed: Institutions>Students>Bulk Transfer: Getting 404 error 
+- Bug Fixed: Students/Staff: Removes the failed login and email from overview page
+- Bug Fixed: Reports > Audits > Last Login: When generating Last Login report, the page navigates to 'Page not working'
+- Bug Fixed: Institutions > Students > Export: There is no email data (email column) showing in the export file
+- Bug Fixed: Institutions>Infrastructure>Overview>Edit:User should be able to edit start date
+- Bug Fixed: Guardian>Student Health: Getting 404 error when opening module
+- Bug Fixed: Administration > Communications > Alert Rules: When alert for student attendance - absent is already configured and email is already input in the user information, there is no email alert received
+- Bug Fixed: Administration>System Setup>Label: OpenEMIS ID is not showing for add staff and add student
+- Bug Fixed: Administration>System Setup>Academic Period: If child period is current, parent period should be current 
+- Bug Fixed: Guardian>Academic>Classes/Behaviours/Competencies/Textbooks/Houses: Getting 404 error
+- Bug Fixed: Institutions>Staff>Career>Appraisals: Increase character length
+- Bug Fixed: Institutions > Staff > Transfer: Whenever user go through different workflow for staff transfer a 404 error will show but changes is changed successfully
+- Bug Fixed: Institutions>Students>Add: Does not go summary page
+- Bug Fixed: Login Page > Login via Google SSO: When login in via google sso, the page gives an error message
+- Bug Fixed: Institutions>Students>Health:When inputting student height and weight, the system gives error message "Height is more then maximum height." or "Height is more then maximum weight." eventhough there is no configuration.
+- Bug Fixed: Administration>System Configuration>Student Report Card: Config should be moved to Attendance instead
+- Bug Fixed: Institutions > Staff > Career > View : Staff position title is not showing the correct data
+- Bug Fixed: Administration > System Setup > Labels: No labels to allow user to configure the naming of "Total Marks" in the assessments page (Institutions > Performance > Assessments
+- Bug Fixed: Administration > Survey > Forms > Status Tab: When the date of the status is no longer the current date, the edit button is still showing
+- Bug Fixed: Update Google Analytics Code in OpenEMIS core
+- Bug Fixed: Institutions > Academic > Programmes: Subjects are showing eventhough no subject is configured under Education Structure in Administration > System Setup > Education Structure page
+
 ### [4.3.3] - 2024-10-21
 - Bug Fixed:  Summary: The page isn't redirecting properly
 - Bug Fixed: Institutions > Performances > Report Cards : System should retain the GPA and the Report card in the new Class
