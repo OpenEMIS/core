@@ -685,55 +685,92 @@ class AssessmentResultsTable extends AppTable
      */
     private static function getMarksWithSubjectClassificationWeight(array $marks, array $exempts = [])
     {
+//        $start_time = microtime(true);
         $exemptions = [];
         foreach ($exempts as $exempt){
             $exempt['exemption'] = 'EXEMPT';
             $exemptions[] = $exempt;
         }
-        $assessment_items = []; // POCOR-8578
-        $education_subjects = []; // POCOR-8578
-        $assessment_periods = []; // POCOR-8578
         $new_marks = [];
-
+        // POCOR-8330 START
+        $uniqueCombinations = [];
         $marks_exempts = array_merge($marks, $exemptions);
+        foreach ($marks_exempts as $mark) {
+            $combination = [
+                'assessment_id' => $mark['assessment_id'],
+                'education_subject_id' => $mark['education_subject_id'],
+            ];
+            $assessment_ids = $mark['assessment_id'];
+            $assessment_period_ids[] = $mark['assessment_period_id'];
+            $education_subject_ids[] = $mark['education_subject_id'];
+            $uniqueCombinations[] = $combination;
+            $student_ids[] = $mark['student_id'];
+        }
+        $uniqueCombinations = array_unique($uniqueCombinations, SORT_REGULAR);
+        $assessment_period_ids = array_unique($assessment_period_ids, SORT_REGULAR);
+        $education_subject_ids = array_unique($education_subject_ids, SORT_REGULAR);
+        $student_ids = array_unique($student_ids, SORT_REGULAR);
+
+        $assessmentItems = [];
+        $educationSubjects = [];
+        $assessmentPeriods = [];
+
+
+// Remove duplicate combinations
+        foreach ($uniqueCombinations as $combination) {
+            $where = [
+                'education_subject_id' => $combination['education_subject_id'],
+                'assessment_id' => $combination['assessment_id']
+            ];
+            $assessmentItems[$combination['assessment_id']][$combination['education_subject_id']] = self::getRecordByOptions('assessment_items', $where);
+        }
+        foreach ($assessment_period_ids as $assessment_period_id) {
+            $assessmentPeriods[$assessment_period_id] = self::getRelatedRecord('assessment_periods', $assessment_period_id);
+        }
+        foreach ($education_subject_ids as $education_subject_id) {
+            $educationSubjects[$education_subject_id] = self::getRelatedRecord('education_subjects', $education_subject_id);
+        }
+        $marks_absents = [];
+        $sep = [];
+        foreach ($marks_exempts as $mark) {
+            $sep[$mark['student_id']]
+            [$mark['education_subject_id']]
+            [$mark['assessment_period_id']] = 1;
+        }
+
+        foreach ($assessmentItems as $assessment_id => $subjects) {
+            foreach ($subjects as $education_subject_id => $assessment_item) {
+                foreach ($assessmentPeriods as $assessment_period_id => $assessment_period) {
+                    foreach ($student_ids as $student_id) {
+                        if (!isset($sep[$student_id][$education_subject_id][$assessment_period_id])) {
+                            $missingMark = [
+                                'student_id' => $student_id,
+                                'assessment_id' => $assessment_id,
+                                'education_subject_id' => $education_subject_id,
+                                'assessment_period_id' => $assessment_period_id,
+                            ];
+                            $marks_exempts[] = $missingMark;
+                        }
+                    }
+                }
+
+            }
+        }
         foreach ($marks_exempts as $mark) {
             $assessment_id = $mark['assessment_id'];
             $education_subject_id = $mark['education_subject_id'];
             $assessment_period_id = $mark['assessment_period_id'];
-            $where = ['education_subject_id' => $education_subject_id,
-                'assessment_id' => $assessment_id];
-            // POCOR-8578: start
-            if(isset($assessment_items[$education_subject_id])
-                && isset($assessment_items[$education_subject_id][$assessment_id])){
-                $assessment_item = $assessment_items[$education_subject_id][$assessment_id];
-            }
-            if(!isset($assessment_items[$education_subject_id])){
-                $assessment_items[$education_subject_id] = [];
-            }
-            if(!isset($assessment_items[$education_subject_id][$assessment_id])){
-                $assessment_item = self::getRecordByOptions('Assessment.AssessmentItems', $where);
-                $assessment_items[$education_subject_id][$assessment_id] = $assessment_item;
-            }
-            if(isset($education_subjects[$education_subject_id])){
-                $education_subject = $education_subjects[$education_subject_id];
-            }
-            if(!isset($education_subjects[$education_subject_id])){
-                $education_subject = self::getRelatedRecord('Education.EducationSubjects', $education_subject_id);
-                $education_subjects[$education_subject_id] = $education_subject;
-            }
-            if(isset($assessment_periods[$assessment_period_id])){
-                $assessment_period = $assessment_periods[$assessment_period_id];
-            }
-            if(!isset($assessment_periods[$assessment_period_id])){
-                $assessment_period = self::getRelatedRecord('Assessment.AssessmentPeriods', $assessment_period_id);
-                $assessment_periods[$assessment_period_id] = $assessment_period;
-            }
-            // POCOR-8578: end
-            $weight = floatval($assessment_period['weight']);
+
+            // Use pre-fetched records
+            $assessment_item = $assessmentItems[$assessment_id][$education_subject_id];
+            $education_subject = $educationSubjects[$education_subject_id];
+            $assessment_period = $assessmentPeriods[$assessment_period_id];
             $simple_mark = 0;
             if (isset($mark['marks'])) {
                 $simple_mark = floatval($mark['marks']);
             }
+            $weight = floatval($assessment_period['weight']);
+            // POCOR-8330 END
             $weighted_mark = $simple_mark * $weight;
             $assessment_period_name = $assessment_period['name'];
             $academic_term = trim($assessment_period['academic_term']);
@@ -753,12 +790,6 @@ class AssessmentResultsTable extends AppTable
             $mark['assessment_period_name'] = $assessment_period_name;
             $new_marks[] = $mark;
         }
-//        }
-//        $functionName = __FUNCTION__;
-//        $end_time = microtime(true);
-//        $executionTimeMs = ($end_time - $start_time) * 1000;
-//        Log::write('debug', "{$functionName}\n
-//            Function execution time: {$executionTimeMs} ms");
         return $new_marks;
     }
 
@@ -817,16 +848,16 @@ class AssessmentResultsTable extends AppTable
                     $totalMarksPerStudent[$assessmentI][$student_id][$subject_classification] = $subject_classification_marks;
                     $halfArr = [];
                     $terms = 0;
-                    $weighted_marks_term_sum = "";
-                    $weighted_marks_term = "";
+                    $weighted_marks_term_sum = 0;
+                    $weighted_marks_term = 0;
                     foreach ($subject_classification_marks as $academic_term => $academic_term_marks) {
                         $terms = $terms + 1;
                         $total_weight = intval($assessmentItemsTotalMarks[$subject_classification][$academic_term]);
 //                        Log::debug(print_r(["assessmentItemsTotalMarks[$subject_classification][$academic_term]" => $total_weight], true));
 //                        $totalMarksPerStudent[$assessmentI][$student_id][$subject_classification][$academic_term] = $academic_term_marks;
-                        $simple_marks_sum = "";
-                        $weighted_marks_sum = "";
-                        $weight_sum = "";
+                        $simple_marks_sum = 0;
+                        $weighted_marks_sum = 0;
+                        $weight_sum = 0;
 
                         foreach ($academic_term_marks as $markkey => $markval) {
                             $weighted_marks_term = 0;
@@ -855,6 +886,9 @@ class AssessmentResultsTable extends AppTable
                                         $weight_sum = 0;
                                     }
                                     $weight_sum = $weight_sum + $markval['weight'];
+                                }
+                                if(isset($markval['absence'])) {
+
                                 }
                             }else{
                                 $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'EXEMPT';
@@ -891,7 +925,7 @@ class AssessmentResultsTable extends AppTable
                         if (is_numeric($weighted_marks_term_sum)) {
                             $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = $weighted_marks_term_sum / $terms;
                         } else {
-                            $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = "";
+                            $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 0;
                         }
                     } else {
                         $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = "";
@@ -1085,7 +1119,7 @@ class AssessmentResultsTable extends AppTable
         if (!$where) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = self::getDynamicTableInstance($tableName);
         try {
             $related = $Table->find()->where($where)->first();
             //POCOR-8483[START]
