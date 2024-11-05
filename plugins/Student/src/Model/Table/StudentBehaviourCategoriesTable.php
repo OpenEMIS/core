@@ -101,6 +101,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+        $connection->execute('SET FOREIGN_KEY_CHECKS = 0');
     }
 
     public function beforeDelete(Event $event, Entity $entity)
