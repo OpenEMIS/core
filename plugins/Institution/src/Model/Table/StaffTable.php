@@ -3181,6 +3181,8 @@ class StaffTable extends ControllerActionTable
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
         $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $institutionSubjectsTbl = TableRegistry::get('Institution.InstitutionSubjects');
+        $institutionClassSubjectsTbl = TableRegistry::get('Institution.InstitutionClassSubjects');
 
         $homeroomRoleId = $SecurityRoles->getHomeroomRoleId();
         $SecurityGroupInsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
@@ -3200,7 +3202,6 @@ class StaffTable extends ControllerActionTable
                 $SecurityGroupUsersTbl->aliasField('security_user_id') => $staffId,
                 $SecurityGroupUsersTbl->aliasField('security_role_id') => $homeroomRoleId,
             ])->count();
-
         if (($SecurityGroupIns > 0) || ($superAdmin == 1)) {
             if ($superAdmin == 1) { // Super Role/Admin
                 $homeroomTeacherPermissionArr = ['result' => 1];
@@ -3267,7 +3268,17 @@ class StaffTable extends ControllerActionTable
                         if($InstitutionClassesSecondary > 0){
                             $homeroomTeacherPermissionArr = ['result' => 4];
                         }else{
-                            $homeroomTeacherPermissionArr = ['result' => 'Not homeroom class'];
+                            $InstitutionSubjectStaffData = $InstitutionSubjectStaff
+                                                            ->find()
+                                                            ->select([
+                                                                $InstitutionSubjectStaff->aliasField('staff_id'),
+                                                                $InstitutionSubjectStaff->aliasField('institution_subject_id')
+                                                            ])
+                                                            ->where([
+                                                                $InstitutionSubjectStaff->aliasField('institution_id') => $institutionId,
+                                                                $InstitutionSubjectStaff->aliasField('staff_id') => $staffId
+                                                            ])->first();
+                            $homeroomTeacherPermissionArr = ['result' => 'Not homeroom class', 'subject_edit_data' =>  $InstitutionSubjectStaffData];
                         }
                     }
                 }
