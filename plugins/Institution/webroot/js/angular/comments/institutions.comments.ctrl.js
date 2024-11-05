@@ -164,6 +164,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 vm.isHomeRoomClass = 1;
                 $scope.isHomeRoomClass = 1;
             }
+            $scope.editable_subject_id = homeroomTeacherPermissionData.data.subject_edit_data.institution_subject_id;
             // else if((userData.super_admin != 1) && homeroomTeacherPermissionData.data.result <= 0){
             //     vm.homeroomTeacherCommentsRequired = 0;
             //     vm.homeroomTeacherEditCommentsRequired = 0;
@@ -373,8 +374,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     }
 
     function onChangeSubject(tab, limit = 10) {
+        console.log(tab.id)
+        console.log($scope.editable_subject_id)
         $scope.subjectIsEditable = 0;
-        if(vm.currentTab.tabName == 'Expressive Arts Teacher'){
+        if(tab.id == $scope.editable_subject_id){
             $scope.subjectIsEditable = 1;
         }
         if (vm.currentTab !== tab) {
