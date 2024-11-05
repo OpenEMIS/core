@@ -9,6 +9,8 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
+use Cake\Utility\Text;//POCOR-8538
+use Cake\Log\Log;//POCOR-8538
 
 use ControllerAction\Model\Traits\EventTrait;
 
@@ -207,6 +209,7 @@ class SingleGradeBehavior extends Behavior
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
+        
         $process = function ($model, $entity) use ($requestData, $extra) {
             $commonData = $requestData['InstitutionClasses'];
             /**
@@ -287,7 +290,7 @@ class SingleGradeBehavior extends Behavior
                 return false;
             }
         };
-
+        
         return $process;
     }
 
@@ -295,6 +298,13 @@ class SingleGradeBehavior extends Behavior
     {
         $model = $this->_table;
         $errors = $entity->getErrors();
+        //POCOR-8538 start
+        $classData=$this->_table->find('all', [
+            'order' => ['InstitutionClasses.id' => 'DESC']
+        ])->first();
+        $cv = self::saveCustomFieldsForSingleGrade($entity->custom_field_values, $classData->id, $classData->created_user_id);
+        $requestData['errorMessage']=[];//removed for staff id
+        //POCOR-8538 end
         if (isset($requestData['errorMessage'])) {
             if (!empty($requestData['errorMessage'])) {
                 $model->Alert->error($requestData['errorMessage'], ['reset'=>true]);
@@ -315,4 +325,65 @@ class SingleGradeBehavior extends Behavior
 
         return $options;
     }
+    //POCOR-8538 start
+    public static function saveCustomFieldsForSingleGrade($customFields, $classId, $createdUserId)
+    {
+        $cv = [];
+       
+        if (!empty($customFields)) {
+            $customFieldValuesTable =
+                TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionClassesCustomFieldValues');
+            // Delete existing custom fields
+            $customFieldValuesTable->deleteAll(
+                [$customFieldValuesTable->aliasField('institution_class_id') => $classId]);
+            $relevantFields = [
+                    "text" => "text_value",
+                    "number" => "number_value",
+                    "decimal" => "decimal_value",
+                    "textarea" => "textarea_value",
+                    "time" => "time_value",
+                    "date" => "date_value",
+                    "file" => "file"
+            ];
+                
+            // Save new custom fields
+            foreach ($customFields as $field) {
+                $fieldData = [
+                    'id' => Text::uuid(),
+                    'institution_class_id' => $classId,
+                    'created_user_id' => $createdUserId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+
+                $hasValue = false;
+                // Relevant fields to check
+                $key=strtolower($field->field_type);
+                
+                if(array_key_exists($key, $relevantFields)){
+                 
+                    if(!empty($field[$relevantFields[$key]])){
+                        $fieldname=$relevantFields[$key];
+                        $value=$field[$relevantFields[$key]];
+                        $fieldData[$fieldname]=$value;
+                        $hasValue = true;
+                    }
+                }
+                
+                // Only create and save the entity if at least one relevant field has a value
+                if ($hasValue) {
+                        $fieldData['institution_custom_field_id'] =$field['institution_custom_field_id'];
+                    $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
+                    try {
+                        $cv[] = $customFieldValuesTable->save($fieldEntity);
+                    } catch (\Exception $e) {
+                        Log::debug(__FUNCTION__);
+                        Log::debug('Error: ' . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        return $cv;
+    }
+    //POCOR-8538 end
 }
