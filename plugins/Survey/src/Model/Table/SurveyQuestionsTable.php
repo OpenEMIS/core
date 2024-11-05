@@ -45,7 +45,9 @@ class SurveyQuestionsTable extends CustomFieldsTable
                     'provider' => 'table',
                     'message' => 'This code already exists in the system'
                 ]
-            ]);
+            ])
+            ->notEmpty('name')
+            ->notEmpty('field_type');//POCOR-8682
 
         return $validator;
     }
