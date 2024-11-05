@@ -107,7 +107,6 @@ class InstitutionClassesTable extends ControllerActionTable
         ]);
         $this->hasMany('CustomFieldValues',
         ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', 'foreignKey' => 'institution_class_id']);
-
         $this->addBehavior('CustomField.Record', [
             'model' => 'Institution.InstitutionClasses',
             'fieldKey' => 'institution_custom_field_id',
@@ -120,8 +119,15 @@ class InstitutionClassesTable extends ControllerActionTable
             'recordKey' => 'institution_class_id',
             'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', 'foreignKey' => 'institution_class_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => null
-        ]);
-        //POCOR-8538 end
+                ,'events' => [
+                'ControllerAction.Model.add.onInitialize'       => [],
+                'ControllerAction.Model.add.beforeSave'         => [],
+                'ControllerAction.Model.addEdit.beforePatch'    => [],
+                'ControllerAction.Model.addEdit.afterAction'    => [],
+                'ControllerAction.Model.add.beforeSave'         => ['callable' => 'addBeforeSave', 'priority' => 500]
+                  
+        ],]);
+    //POCOR-8538 end
 // POCOR-8391 remove annoing log
 //        Log::write('debug', 'Here it us beforeFilter initialize End');
     }
@@ -336,7 +342,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $this->addBehavior('Institution.SingleGrade');
             } else {
                 $this->addBehavior('Institution.MultiGrade');
-            }
+            }  
             $extra['selectedGradeType'] = $selectedGradeType;
         }
         if (array_key_exists($this->getAlias(), $this->request->getData())) {
@@ -492,6 +498,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
+       
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
 
              if(!empty($this->controllerAction) && ($this->controllerAction == 'Classes')) {
@@ -754,7 +761,6 @@ class InstitutionClassesTable extends ControllerActionTable
     private static function saveCustomFields($customFields, $classId, $createdUserId)
     {
         $cv = [];
-
         if (!empty($customFields)) {
             $customFieldValuesTable =
                 TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionClassesCustomFieldValues');
@@ -781,13 +787,11 @@ class InstitutionClassesTable extends ControllerActionTable
                     'created' => date('Y-m-d H:i:s')
                 ];
 
-                // Relevant fields to check
-
+                // Relevant fields to check     
 
                 $hasValue = false;
 
-                foreach ($field as $key => $value) {
-
+                foreach ($field as $key => $value) {                  
                     // Check if the current key is in the relevant fields and has a value
                     if (in_array($key, $relevantFields) && (!empty($value) || $value !== null || $value != '')) {
                         $fieldData[$key] = $value;
@@ -807,7 +811,6 @@ class InstitutionClassesTable extends ControllerActionTable
                         // Remove the old 'custom_field_id' key
                         unset($fieldData['custom_field_id']);
                     }
-
 //                    Log::debug(print_r($fieldData, true));
                     $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
                     try {

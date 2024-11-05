@@ -336,13 +336,19 @@ class RecordBehavior extends Behavior
 
     private function processSave(Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
+        
         $model = $this->_table;
+        //POCOR-8538 start
+        if($model->getRegistryAlias()=="Institution.InstitutionClasses"){
+            return;
+        }
+        //POCOR-8538 end
         $process = function ($model, $entity) use ($data) {
             try {
                 $repeaterSuccess = true;
                 $repeaterErrors = false;
                 $errors = $entity->getErrors();
-
+                
                 $fileErrors = [];
                 $session = $model->request->getSession();
                 $sessionErrors = $model->getRegistryAlias().'.parseFileError';
