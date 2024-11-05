@@ -236,6 +236,16 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             getCurrentUserRole = response.data;
             console.log('getCurrentUserRole ctrl==>>>');
             console.log(getCurrentUserRole);
+            if(getCurrentUserRole[0] == 'PRINCIPAL' && getCurrentUserRole[1] == 'HOMEROOM_TEACHER'){
+                if(vm.homeroomTeacherCommentsRequired == 0 && vm.principalEditCommentsRequired == 0){
+                    $scope.isHomeRoomClass = 0;
+                }
+            }
+            if(getCurrentUserRole[1] == 'PRINCIPAL' && getCurrentUserRole[0] == 'HOMEROOM_TEACHER'){
+                if(vm.homeroomTeacherCommentsRequired == 0 && vm.principalEditCommentsRequired == 0){
+                    $scope.isHomeRoomClass = 0;
+                }
+            }
             console.log('GET TABS==>>> reportCardId = '+ $scope.reportCardId +', classId =  / '+ $scope.classId +', institutionId =  / '+ $scope.institutionId +', currentUserId =  / '+ vm.currentUserId + ', principalCommentsRequired =  / '+ vm.principalCommentsRequired + ', principalEditCommentsRequired =  / '+ vm.principalEditCommentsRequired +', homeroomTeacherCommentsRequired =  / '+ vm.homeroomTeacherCommentsRequired +', homeroomTeacherEditCommentsRequired =  / '+ vm.homeroomTeacherEditCommentsRequired +', teacherCommentsRequired =  / '+ vm.teacherCommentsRequired +', mySubjectTeacherCommentsRequired =  / '+ vm.mySubjectTeacherCommentsRequired +', mySubjectTeacherEditCommentsRequired =  / '+ vm.mySubjectTeacherCommentsRequired + ', allCommentsViewRequired = / '+ vm.allCommentsViewRequired +', allCommentsEditRequired = / '+ vm.allCommentsEditRequired);
             return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.principalEditCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.homeroomTeacherEditCommentsRequired, vm.teacherCommentsRequired, vm.mySubjectTeacherCommentsRequired, vm.mySubjectTeacherEditCommentsRequired, vm.allCommentsViewRequired, vm.allCommentsEditRequired, vm.allSubjectViewRequired, getCurrentUserRole, vm.isHomeRoomClass);//POCOR-6800 add vm.allCommentsEditRequired
             
