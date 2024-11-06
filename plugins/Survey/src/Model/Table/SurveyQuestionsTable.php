@@ -46,8 +46,8 @@ class SurveyQuestionsTable extends CustomFieldsTable
                     'message' => 'This code already exists in the system'
                 ]
             ])
-            ->notEmpty('name')
-            ->notEmpty('field_type');//POCOR-8682
+            ->notEmpty('name') //POCOR-8635
+            ->notEmpty('field_type');//POCOR-8635
 
         return $validator;
     }
@@ -148,12 +148,12 @@ class SurveyQuestionsTable extends CustomFieldsTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         $a = $this->request->getParam('pass')[0];
-        if ($field == 'question') {
-            return __('Question');
+        if ($field == 'name') { //POCOR-8635
+            return __('Question'); //POCOR-8635
         } elseif ($field == 'code') {
             return __('Code');
-        } elseif ($field == 'name') {
-            return __('Name');
+        // } elseif ($field == 'name') {
+        //     return __('Name');
         } elseif ($field == 'field_type') {
             return __('field Type');
         }  elseif ($field == 'is_mandatory') {

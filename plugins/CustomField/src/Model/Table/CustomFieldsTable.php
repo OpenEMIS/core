@@ -206,6 +206,7 @@ class CustomFieldsTable extends ControllerActionTable
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
             $selectedFieldType = $this->request->getQuery('field_type');
+            $selectedFieldType = (empty($selectedFieldType) && is_array($this->request->getData()[$this->getAlias()]) && array_key_exists('field_type', $this->request->getData()[$this->getAlias()])) ? $this->request->getData()[$this->getAlias()]['field_type'] : $selectedFieldType; //POCOR-8634
             $mandatoryOptions = $this->getSelectOptions('general.yesno');
             $isMandatory = !is_null($selectedFieldType) ? $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_mandatory : 0;
 
@@ -228,6 +229,7 @@ class CustomFieldsTable extends ControllerActionTable
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
             $selectedFieldType = $this->request->getQuery('field_type');
+            $selectedFieldType = (empty($selectedFieldType) && is_array($this->request->getData()[$this->getAlias()]) && array_key_exists('field_type', $this->request->getData()[$this->getAlias()])) ? $this->request->getData()[$this->getAlias()]['field_type'] : $selectedFieldType;//POCOR-8634
             $uniqueOptions = $this->getSelectOptions('general.yesno');
             $isUnique = !is_null($selectedFieldType) ? $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_unique : 0;
 
