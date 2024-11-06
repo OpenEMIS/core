@@ -236,7 +236,7 @@
     </div>
 </div>
 
-<script>
+<!-- <script  POCOR-8613>
 $(function () {
 var datepicker0 = $('#User_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
 $( document ).on('DOMMouseScroll mousewheel scroll', function(){
@@ -245,10 +245,10 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         datepicker0.datepicker('place');
     });
 });
-});
+}); 
 
 //]]>
-</script>
+</script> -->
 
 <style>
     .pd-10 {
