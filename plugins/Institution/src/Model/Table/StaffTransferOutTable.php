@@ -878,4 +878,21 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             return $attr;
         }
     }
+
+    //POCOR-8642 -- START
+    public function getReceivingInstList($params) {
+        $receivingOptions = [];
+        $StaffTransferOut = TableRegistry::get('Institution.StaffTransferOut');
+
+        $receivingOptions = $StaffTransferOut->find()
+            ->select(['new_institution_id'])
+            ->where([$StaffTransferOut->aliasField('id') => $params])
+            ->first();
+
+        if ($receivingOptions) {
+            $recvInstitution = $receivingOptions->new_institution_id; 
+        }
+        return $recvInstitution;
+    }
+    //POCOR-8642 -- END
 }

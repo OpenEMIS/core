@@ -362,7 +362,7 @@ class UsersController extends AppController
                         Log::write('error', __METHOD__ . ' 2: ' . $exception->getMessage() . ": $userEmail");
                     }
                     try {
-                        $emailMessage = "Dear " . $name . ",\n\nWe received a username recovery request for your account.\nYour username is: " . $username . "\n\nThank you.";
+                        $emailMessage = "Dear " . $name . ",\n\nWe received a username recovery request for your account.\n\nYour username is: " . $username . "\n\nThank you."; //POCOR-8198 space added in second line
                     } catch (\Exception $exception) {
                         Log::write('error', __METHOD__ . ' 3: ' . $exception->getMessage() . ": $userEmail");
                     }

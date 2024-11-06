@@ -168,7 +168,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
             $InstitutionBuilding = $InstitutionBuildings->get($entity['institution_building_id']);
         }
-        if($entity['area'] >= $InstitutionBuilding['area']){
+        if($entity['area'] > $InstitutionBuilding['area']){
             if (Router::getRequest()->getParam('action') == "CopyData") {
             } else {//POCOR_7657
             $this->Alert->warning('InstitutionFloors.sizeGreater', ['reset' => true]);

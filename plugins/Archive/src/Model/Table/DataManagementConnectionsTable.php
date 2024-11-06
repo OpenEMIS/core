@@ -357,6 +357,8 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
     }
 
+    
+
     /**
      * a common function to check whether there is an archive table or not.
      * If the archive table is absent it is created.
@@ -370,7 +372,6 @@ class DataManagementConnectionsTable extends ControllerActionTable
      */
     public static function hasArchiveTable($sourceTableName, $db_name = 'default')
     {
-
         $targetTableName = $sourceTableName . '_archived';
         $archive_connection = ConnectionManager::get($db_name);
         $default_connection = ConnectionManager::get('default');
@@ -801,5 +802,6 @@ die;*/
 //        Log::write('debug', $distinctDateValues);
         return $distinctDateValues;
     }
+
 
 }
