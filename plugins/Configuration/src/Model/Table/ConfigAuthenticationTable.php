@@ -96,7 +96,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
     public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {   //POCOR-7156 starts
         if (in_array($action, ['edit', 'add'])) {
-            $id= $this->paramsDecode($request->params['pass'][1]);
+            $id= $this->paramsDecode($request->getParam('pass')[1]); //POCOR-8680
             if (!empty($id)) {
                 $entity = $this->get($id);
                 $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
