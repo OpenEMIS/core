@@ -42,9 +42,9 @@ class POCOR8434 extends AbstractMigration
                 
         //create new record for `Student Enrolment` in `workflow_models` table 
         $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-        $WorkflowModelsCount = $WorkflowModelsTable->find()->count();
-        if(!empty($WorkflowModelsCount)){
-            $id = $WorkflowModelsCount + 1;
+        $WorkflowModelsRes = $WorkflowModelsTable->find()->order([$WorkflowModelsTable->aliasField('id')=> 'DESC'])->first();
+        if(!empty($WorkflowModelsRes)){
+            $id = $WorkflowModelsRes->id + 1;
             $this->execute("INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES ($id, 'Institutions > Students > Student Enrolment', 'Institution.StudentEnrolment', NULL, '1', '1', NOW());");
         }
         
