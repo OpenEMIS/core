@@ -1,3 +1,20 @@
+### [4.3.5] - 2024-11-07
+- Bug Fixed: Administrations > Data Management > Archive : Archive is not working in version 4
+- Bug Fixed: Institutions>Staff>Add: When adding new positions to Appointment>Positions, user is unable to add staff to new positions
+- Bug Fixed: Institutions>Surveys>Forms: User is not able to view any survey
+- Bug Fixed: Administrations > Field Options > Student Behaviour Categories: Remove Student Behaviour Classification
+- Bug Fixed: Administration>Surveys>Forms: Unable to edit forms
+- Bug Fixed: Survey > Form > Questions: When adding survey questions without selecting the question field type, the system allow to save the question
+- Bug Fixed: Survey > Form > Questions: When selecting the option on validation rule, the 'Is Mandatory' and 'Is Unique' field disappear
+- Bug Fixed: Institutions > Staff > Edit: Change of Start Date: There is 404 error when approving staff start date
+- Bug Fixed: Infrastructure > Overview: If user key in the same size as building when adding floor, they are not able to proceed
+- Bug Fixed: Administration>Communications>Alert Rules: Update email message format
+- Bug Fixed: Student/Staff Transfer In/Out : Upon saving the workflow, Auto-assign does not update the assignee based on the Security Roles configured in the workflow.
+- Bug Fixed: API: /api/v4/users include user contacts data
+- Bug Fixed: Institutions>Surveys>Forms: When user updates the same question on different repeaters, both are updated
+- Bug Fixed: Reports>Surveys: User should be able to generate report when student list and staff list are used
+- Bug Fixed: Administration>Survey>Forms:When selecting the number of records to be displayed on the current page, the page does not update to the selected number of records
+
 ### [4.3.4] - 2024-10-30
 - Bug Fixed: Administrations > System Setup > System Configurations : Pagination and Displaying rows should be at the bottom of the list page
 - Bug Fixed: Institutions>Academic>Classes: User is unable to view and edit
