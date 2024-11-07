@@ -118,8 +118,27 @@ class POCOR8434 extends AbstractMigration
         $this->execute("INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `visible`, `parent_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, 'Student', 'Student > Registrations', 'Student.Students', '1', '0', NULL, NULL, '1', NOW());");
         //Rename `institution_student_admission` INTO `institution_student_enrolment` table
         $this->execute("RENAME TABLE `institution_student_admission` TO `institution_student_enrolment`");
+        //Drop FOREIGN KEY CONSTRAINT from `institution_student_enrolment` table
+        $this->execute("ALTER TABLE `institution_student_enrolment`
+            DROP FOREIGN KEY insti_stude_admis_fk_aca_per_id,
+            DROP FOREIGN KEY insti_stude_admis_fk_ass_id,
+            DROP FOREIGN KEY insti_stude_admis_fk_edu_gra_id,
+            DROP FOREIGN KEY insti_stude_admis_fk_ins_cla_id,
+            DROP FOREIGN KEY insti_stude_admis_fk_ins_id,
+            DROP FOREIGN KEY insti_stude_admis_fk_statu_id,
+            DROP FOREIGN KEY insti_stude_admis_fk_stude_id;");
+        //Not able to add FOREIGN KEY CONSTRAINT in `institution_student_enrolment` table because in this table in assignee_id column have 0 and -1 value 
+        // $this->execute("ALTER TABLE `institution_student_enrolment`
+        //     ADD CONSTRAINT insti_stude_enrol_fk_stude_id FOREIGN KEY (student_id) REFERENCES security_users(id),
+        //     ADD CONSTRAINT insti_stude_enrol_fk_status_id FOREIGN KEY (status_id) REFERENCES workflow_steps(id),
+        //     ADD CONSTRAINT insti_stude_enrol_fk_ass_id FOREIGN KEY (assignee_id) REFERENCES security_users(id),
+        //     ADD CONSTRAINT insti_stude_enrol_fk_ins_id FOREIGN KEY (institution_id) REFERENCES institutions(id),
+        //     ADD CONSTRAINT insti_stude_enrol_fk_aca_per_id FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
+        //     ADD CONSTRAINT insti_stude_enrol_fk_edu_gra_id FOREIGN KEY (education_grade_id) REFERENCES education_grades(id),
+        //     ADD CONSTRAINT insti_stude_enrol_fk_ins_cla_id FOREIGN KEY (institution_class_id) REFERENCES institution_classes(id);");
+        
         //create new table `institution_student_admission`    
-        $this->execute("CREATE TABLE `institution_student_admission` (
+        $this->execute("CREATE TABLE IF NOT EXISTS `institution_student_admission` (
                         `id` INT(11) NOT NULL AUTO_INCREMENT,
                         `start_date` DATE NOT NULL,
                         `end_date` DATE NOT NULL,
@@ -147,17 +166,17 @@ class POCOR8434 extends AbstractMigration
                         KEY `institution_class_id` (`institution_class_id`),
                         KEY `modified_user_id` (`modified_user_id`),
                         KEY `created_user_id` (`created_user_id`),
-                        CONSTRAINT `fk_student_id` FOREIGN KEY (`student_id`) REFERENCES `security_users`(`id`),
-                        CONSTRAINT `fk_status_id` FOREIGN KEY (`status_id`) REFERENCES `workflow_steps`(`id`),
-                        CONSTRAINT `fk_assignee_id` FOREIGN KEY (`assignee_id`) REFERENCES `security_users`(`id`),
-                        CONSTRAINT `fk_institution_id` FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`),
-                        CONSTRAINT `fk_academic_period_id` FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`),
-                        CONSTRAINT `fk_education_grade_id` FOREIGN KEY (`education_grade_id`) REFERENCES `education_grades`(`id`),
-                        CONSTRAINT `fk_institution_class_id` FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)
+                        CONSTRAINT `insti_stude_admis_fk_stude_id` FOREIGN KEY (`student_id`) REFERENCES `security_users`(`id`),
+                        CONSTRAINT `insti_stude_admis_fk_statu_id` FOREIGN KEY (`status_id`) REFERENCES `workflow_steps`(`id`),
+                        CONSTRAINT `insti_stude_admis_fk_ass_id` FOREIGN KEY (`assignee_id`) REFERENCES `security_users`(`id`),
+                        CONSTRAINT `insti_stude_admis_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`),
+                        CONSTRAINT `insti_stude_admis_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`),
+                        CONSTRAINT `insti_stude_admis_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES `education_grades`(`id`),
+                        CONSTRAINT `insti_stude_admis_fk_ins_cla_id` FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
         
         //create new table `student_admission_custom_field_values`    
-        $this->execute("CREATE TABLE `student_admission_custom_field_values` (
+        $this->execute("CREATE TABLE IF NOT EXISTS `student_admission_custom_field_values` (
                         `id` char(36) NOT NULL,
                         `text_value` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
                         `number_value` int(11) DEFAULT NULL,
@@ -184,7 +203,7 @@ class POCOR8434 extends AbstractMigration
                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
         
         //create new table `student_custom_filters`  
-        $this->execute("CREATE TABLE `student_custom_filters` (
+        $this->execute("CREATE TABLE IF NOT EXISTS `student_custom_filters` (
             `id` INT(11) NOT NULL AUTO_INCREMENT,
             `name` VARCHAR(250) COLLATE utf8_general_ci NOT NULL,
             `custom_module_id` INT(11) NOT NULL COMMENT 'Links to custom_modules.id',
@@ -212,14 +231,14 @@ class POCOR8434 extends AbstractMigration
         //Restore workflow_actions table 
         $this->execute('DROP TABLE IF EXISTS `workflow_actions`');
         $this->execute('RENAME TABLE `z_8434_workflow_actions` TO `workflow_actions`');
+        //Drop institution_student_enrolment table 
+        $this->execute('DROP TABLE IF EXISTS `institution_student_enrolment`');
         //Restore institution_student_admission table 
         $this->execute('DROP TABLE IF EXISTS `institution_student_admission`');
         $this->execute('RENAME TABLE `z_8434_institution_student_admission` TO `institution_student_admission`');
         //Restore custom_modules table 
         $this->execute('DROP TABLE IF EXISTS `custom_modules`');
-        $this->execute('RENAME TABLE `z_8434_custom_modules` TO `custom_modules`');
-        //Drop institution_student_enrolment table 
-        $this->execute('DROP TABLE IF EXISTS `institution_student_enrolment`');
+        $this->execute('RENAME TABLE `z_8434_custom_modules` TO `custom_modules`');        
         //Drop student_admission_custom_field_values table 
         $this->execute('DROP TABLE IF EXISTS `student_admission_custom_field_values`');
     }
