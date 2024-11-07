@@ -46,8 +46,8 @@ class SurveyQuestionsTable extends CustomFieldsTable
                     'message' => 'This code already exists in the system'
                 ]
             ])
-            ->requirePresence('name') //POCOR-8635
-            ->requirePresence('field_type');//POCOR-8635
+            ->notEmpty('name') //POCOR-8635
+            ->notEmpty('field_type');//POCOR-8635
 
         return $validator;
     }
