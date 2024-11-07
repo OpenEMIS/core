@@ -395,6 +395,10 @@ class ControllerActionHelper extends Helper
         */
         //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $html = '';
+        $alias = $this->_View->get('ControllerAction')['table']->getRegistryAlias();//POCOR-8677
+        $session = $this->_View->getRequest()->getSession();
+        $limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : 0;
+
         $config = $this->_View->get('ControllerAction');
         if (!is_null($config['pageOptions'])) {
             $pageOptions = $config['pageOptions'];
@@ -402,6 +406,7 @@ class ControllerActionHelper extends Helper
                 $html .= $this->Form->input('Search.limit', [
                     'type' =>'select',
                     'label' => false,
+                    'value' => !empty($limit) ?  $limit : 0,//POCOR-8677
                     'options' => $pageOptions,
                     'onchange' => "$(this).closest('form').submit()",
                     'templates' => $this->getFormTemplate()
