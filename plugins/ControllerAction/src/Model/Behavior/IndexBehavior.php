@@ -108,10 +108,11 @@ class IndexBehavior extends Behavior
             $limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : $defaults;
         //END: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
             if ($request->is(['post', 'put'])) {
-                if (isset($request->getData['Search'])) {
+                $requestData  = $request->getData();
+                if (isset($requestData['Search'])) {
                     //if (array_key_exists('limit', $request->data['Search'])) {
                     if (array_key_exists('limit', $request->getData()['Search'])) {
-                        //$limit = $request->data['Search']['limit'];
+                        $limit = $request->getData()['Search']['limit'];
                         $request->getData()['Search']['limit'] = $limit;
                         $session->write($alias.'.search.limit', $limit);
                     }
@@ -122,7 +123,7 @@ class IndexBehavior extends Behavior
 
 
             $extra['options']['limit'] = $pageOptions[$limit];
-            $request->getData('Search')['limit'] = $limit;
+            $this->_table->request = $request->withData('Search', ['limit' => $limit]);
         }
 
         if ($event->isStopped()) {
