@@ -35,6 +35,14 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
   counter: any = 0;
   themeArray = DEFAULT_TEMPLATE_THEME;
   academicYear: any = [];
+  academic_week: any = [];
+  academic_period_week: any;
+  start_day: any;
+  end_day: any;
+  selected_day_week: any;
+  selected_day: any;
+  academic_day: any = [];
+
   academic_Period: any;
   public miniDashboardConfig: IMiniDashboardConfig = MINI_DASHBOARD_CONFIG;
   public miniDashboardData: Array<IMiniDashboardItem>;
@@ -140,6 +148,16 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
   ]
   absent: number;
   late: number;
+  academic_period_day: any;
+  academic_class: any[] = [];
+  selected_academic_class: any;
+  education_grade: any[];
+  education_grade_id: any;
+  selected_education_grade: any;
+  attendanceMarkType: any[];
+  selected_institution_subject: number;
+  instution_subject: any[];
+  selectedInstitutionSubject: any;
 
   constructor(
     private _router: Router,
@@ -302,7 +320,7 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
           this.academic_Period = this.academicYear[0].key;
           this.academicPeriod[0].options = this.academicYear;
           this.academicPeriod[0].value = this.academic_Period;
-          // this.getAcademicWeek(this.academic_Period);
+          this.getAcademicWeek(this.academic_Period);
         } else {
           let obj = {
             key: "",
@@ -335,34 +353,148 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
 
           this.setDashboard();
           console.log(this._column,"this._column");
-          this._config = {
-            id: this.TABLEID,
-            rowIdKey: "id",
-            gridHeight: "auto",
-            rowContentHeight: 60,
-            loadType: "normal",
-            externalFilter: false,
-            paginationConfig: {
-              pagesize: this.PAGESIZE,
-              total: this.TOTALROWS,
-            },
-            context: {
-              // absenceTypes: this.absenceTypeList,
-              education_grade_id: 189,
-              isMarked: false,
-              mode: 'view',
-              period: 1,
-              schoolClosed: true,
-              // studentAbsenceReasons: this.studentAbsenceReasons,
-              subject_id: 0,
-              week: 49,
-              scope: {
-                data: []
-              }
+        }
+        this._config = {
+          id: this.TABLEID,
+          rowIdKey: "id",
+          gridHeight: "auto",
+          rowContentHeight: 60,
+          loadType: "normal",
+          externalFilter: false,
+          paginationConfig: {
+            pagesize: this.PAGESIZE,
+            total: this.TOTALROWS,
+          },
+          context: {
+            // absenceTypes: this.absenceTypeList,
+            education_grade_id: 189,
+            isMarked: false,
+            mode: 'view',
+            period: 1,
+            schoolClosed: true,
+            // studentAbsenceReasons: this.studentAbsenceReasons,
+            subject_id: 0,
+            week: 49,
+            scope: {
+              data: []
             }
           }
-          
-          this.displayMiniDashboard = true;
+        }
+        
+        this.displayMiniDashboard = true;
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
+
+  getAcademicWeek(id: any) {
+    this.academic_Period = id;
+    this.Rest.getWithToken('academic-periods/' + this.academic_Period + '/weeks').subscribe({
+      next: (response: any) => {
+        this.academic_week = [];
+        response?.data?.list?.weeks.forEach((element: any) => {
+          let obj = {
+            key: element?.id,
+            value: element?.name,
+            start_day: element?.start_day,
+            end_day: element?.end_day,
+            selected: element?.selected
+          }
+          if (obj.selected) {
+            this.academic_period_week = element.id;
+            this.selected_day_week = element?.start_day;
+            this.start_day = element?.start_day;
+            this.end_day = element?.end_day;
+            this.selected_day = element?.selected
+          }
+          this.academic_week.push(obj);
+        });
+        let academicWeekData = this.week;
+        academicWeekData[0].options = this.academic_week;
+        academicWeekData[0].value = this.academic_period_week;
+        this.week = [...academicWeekData];
+
+        this.getAcademicDay(this.academic_period_week);
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
+
+  getAcademicDay(id: any) {
+    this.academic_period_week = id;
+    this.Rest.getWithToken('academic-periods/' + this.academic_Period + '/weeks/' + this.academic_period_week + '/days?institution_id=' + this.institution_id + '&school_closed_required=true').subscribe({
+      next: (response: any) => {
+        this.academic_day = [];
+        this.academic_period_day = '';
+        response?.data?.list.forEach((element: any, index: any) => {
+          let obj = {
+            key: element.date,
+            value: element.name,
+            current_week_number_selected: element.current_week_number_selected,
+            date: element.date,
+            selected: element.day_number
+          }
+          if (obj.selected) {
+            this.academic_period_day = element.date;
+          }
+          this.academic_day.push(obj);
+        });
+
+        console.log(this.academic_day,"this.academic_day");
+        this.academic_day.shift();
+        if (this.academic_period_day == '') {
+          this.academic_period_day = this.academic_day[1].key;
+        }
+        let newDay = this.day;
+        newDay[0].options = this.academic_day;
+        newDay[0].value = this.academic_period_day;
+        this.day = [...newDay];
+        this.getClassData(this.academic_period_day);
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
+
+  getClassData(id: any) {
+    this.academic_period_day = id;
+    this.Rest.getWithToken(`institutions/${this.institution_id}/classes?order=id&academic_period_id=${this.academic_Period}`).subscribe({
+      next: (response: any) => {
+        if (response) {
+          this.academic_class = [];
+          response?.data?.data.forEach((element: any) => {
+            let obj = {
+              key: element.id,
+              value: element.name
+            }
+            this.academic_class.push(obj);
+          });
+          this.selected_academic_class = this.academic_class[0]?.key;
+          let classData = this.class;
+          classData[0].options = this.academic_class;
+          classData[0].value = this.selected_academic_class;
+          this.class = [...classData];
+          this.getEducationGrade(this.selected_academic_class);
         }
       },
       error: (error: any) => {
@@ -372,6 +504,228 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
             this.loginData();
           }
         }
+      }
+    })
+  }
+
+  getEducationGrade(id: any) {
+    this.selected_academic_class = id;
+    this.Rest.getWithToken(`institutions/classes/${id}/grades`).subscribe({
+      next: (response: any) => {
+        if (response) {
+          this.education_grade = [];
+          response?.data.forEach((element: any) => {
+            let obj = {
+              key: element.education_grades.id,
+              value: element.education_grades.code,
+              education_grade_id: element.education_grade_id
+            }
+            this.education_grade.push(obj);
+          });
+          this.education_grade_id = this.education_grade[0].education_grade_id;
+          this.selected_education_grade = this.education_grade[0].key;
+          let education_grade_data = this.educationGrade;
+          education_grade_data[0].options = this.education_grade;
+          education_grade_data[0].value = this.selected_education_grade;
+          this.educationGrade = [...education_grade_data];
+          this.subjectDayInstitution(this.selected_education_grade);
+        }
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
+
+  subjectDayInstitution(id: any) {
+    this.selected_education_grade = id;
+    this.Rest.getWithToken(`grades/${this.selected_education_grade}/attendance-types?academic_period_id=${this.academic_Period}&institution_class_id=${this.selected_academic_class}&day_id=${this.selected_day_week}`).subscribe({
+      next: (response: any) => {
+        console.log(response, "response Data Topa");
+        if (response) {
+          if (response?.data?.data[0].code == 'DAY') {
+            this.displayDaySubject = true;
+            this.studentAttendanceType();
+          } else {
+            this.displayDaySubject = false;
+            this.institutionSubjectClass(id);
+          }
+        }
+
+      }, error: () => {
+
+      }
+    })
+  }
+
+  
+  institutionSubjectClass(id: any) {
+    this.selected_education_grade = id;
+    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/subjects?academic_period_id=${this.academic_Period}`).subscribe({
+      next: (response: any) => {
+        if (response) {
+          this.instution_subject = [];
+          response?.data?.data.forEach((element: any) => {
+            let obj = {
+              key: element.id,
+              value: element.name
+            }
+            this.instution_subject.push(obj);
+          });
+          this.selectedInstitutionSubject = this.instution_subject[0].key;
+          this.selected_institution_subject = this.instution_subject[0].key;
+          let insitution_subject_data = this.institutionSubject;
+          insitution_subject_data[0].options = this.instution_subject;
+          this.institutionSubject = [...insitution_subject_data];
+          this.studentAttendanceMarked(this.selected_institution_subject);
+        }
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
+
+  studentAttendanceType() {
+    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendance-types?academic_period_id=${this.academic_Period}&day_id=${this.selected_day_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
+      next: (response: any) => {
+        this.attendanceMarkType = [];
+        if (response) {
+          response?.data?.data.forEach((element: any) => {
+            let obj = {
+              'title': element.name,
+              'value': element.id
+            }
+            this.attendanceMarkType.push(obj);
+          });
+          let attendance_mark = this.period;
+          attendance_mark[0].list = this.attendanceMarkType;
+          attendance_mark[0].value = this.attendanceMarkType[0].value;
+          this.period = [...attendance_mark];
+          this.selected_institution_subject = 0;
+          this.studentAttendanceMarked(0);
+        }
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
+
+  studentAttendanceMarked(subjectId: any) {
+    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendance-marked?academic_period_id=${this.academic_Period}&day_id=${this.selected_day_week}&attendance_period_id=1&subject_id=${subjectId}`).subscribe({
+      next: (response: any) => {
+        if (response) {
+          this.getStudentAttendanceData();
+        }
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
+
+  getStudentAttendanceData() {
+    // insitutions/6/grades/206/classes/591/student-attendances?academic_period_id=33&day_id=2024-02-05&attendance_period_id=1&subject_id=0&week_id=6&week_start_day=2024-02-05&week_end_day=2024-02-11
+    if(this.academic_period_day == -1) {
+      console.log(this._column,"this._column");
+      this._column = [
+        TABLE_COLUMN_LIST.openEmisId,
+        TABLE_COLUMN_LIST.personName,
+        TABLE_COLUMN_LIST.monday,
+        TABLE_COLUMN_LIST.tuesday,
+        TABLE_COLUMN_LIST.wednesday,
+        TABLE_COLUMN_LIST.thursday,
+        TABLE_COLUMN_LIST.friday
+      ];
+    } else {
+      this._column = [
+        TABLE_COLUMN_LIST.openEmisId,
+        TABLE_COLUMN_LIST.personName,
+        TABLE_COLUMN_LIST.student_attendance_select_new,
+        TABLE_COLUMN_LIST.reasonOrComment_select_new
+      ];
+    }
+    this._row = [
+      { 
+        user: {
+          openemis_no: 111,
+          full_name: 'Abcd'
+        },
+        M1: 1,
+        M2: 2,
+        T1: '-',
+        T2: '-',
+        W1: 3,
+        W2: 4,
+        TH1: '-',
+        TH2: '-',
+        F1: 5,
+        F2: 6
+      }
+    ]
+    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendances?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
+      next: (response: any) => {
+        if (response) {
+          console.log(response.data.data, "this._row 1111");
+          this._row = [];
+          response?.data?.data.forEach((element: any, index: any) => {
+            if (element?.is_NoClassScheduled == 1) {
+              element.institution_student_absences.absence_type_id = 99;
+              element.institution_student_absences.absence_type_code = 99;
+            }
+            let obj = {
+              academic_period_id: element?.academic_period_id,
+              created_date: element?.created_date,
+              institution_class_id: element?.institution_class_id,
+              institution_class_name: element?.institution_class_name,
+              institution_id: element?.institution_id,
+              institution_student_absences: element?.institution_student_absences,
+              is_NoClassScheduled: element?.is_NoClassScheduled,
+              student_id: element?.student_id,
+              user: element?.user
+            }
+            this._row.push(obj);
+            // this.oldRowData.push(obj);
+          });
+          // this._row = newRow;
+          //   this.displayLoading = false;
+          // this._row = response?.data?.data;
+          console.log(this._row, "this._row 1111");
+          this.displayLoading = false;
+          // this.oldRowData = JSON.parse(JSON.stringify(this._row));
+          this.setDashboard();
+        }
+
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+        this.displayLoading = false;
       }
     })
   }
