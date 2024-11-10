@@ -1525,6 +1525,7 @@ class ProfilesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
     }
+
     public function ScholarshipApplicationInstitutionChoices()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.InstitutionChoices']);
@@ -1533,5 +1534,9 @@ class ProfilesController extends AppController
     public function ScholarshipApplicationAttachments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.InstitutionApplicationAttachment']);
+
+    public function StudentStudentGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
     }
 }
