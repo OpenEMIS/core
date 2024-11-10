@@ -3,8 +3,6 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
     <?php
         $alias = $ControllerAction['table']->getAlias();
-        $this->Form->create();
-        $this->Form->unlockField('Gpa.cumulative_gpa_grades');
     ?>
 <div class="input clearfix">
     <label><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
@@ -24,7 +22,7 @@
                         <tr>
                             <td class="checkbox-column">
                                 <?php
-                                $fieldPrefix = "$alias.cumulative_gpa_grades.$i";
+                                $fieldPrefix = "$alias.education_grades_cumulative_gpa.$i";
                                 $joinDataPrefix = $fieldPrefix ;
                                 $checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
                                 $checkboxOptions['value'] = $obj->id ?? '';
@@ -49,7 +47,8 @@
     </div>
 </div>
 
-<?php elseif ($action == 'view') : ?>
+<?php elseif ($action == 'view') :
+ ?>
 
 <div class="input clearfix">
     <div class="table-wrapper">
@@ -61,14 +60,20 @@
                         <th><?= __('Name') ?></th>
                     </tr>
                 </thead>
-                <?php if (isset($data['education_grades'])) : ?>
+                <?php if (isset($attr['data'])) : 
+
+                ?>
                     <tbody>
                         
-                        <?php foreach ($data['education_grades'] as $i => $obj) : ?>
+                        <?php foreach ($attr['data'] as $i => $obj) : 
+
+                        ?>
                         <tr>
-                            
+                          <?php  if (!empty($attr['exists']) && in_array($obj->id, $attr['exists'])) { ?>        
                             <td><?= $obj->code ?></td>
                             <td><?= $obj->name ?></td>
+                            <?php    } ?>
+                            
                         </tr>
                         <?php endforeach ?>
                     </tbody>

@@ -92,6 +92,6 @@ class GpaController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.Cumulative']); 
     }
     public function GpaGradingType() { 
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.GpaGradingType']); 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.GpaGradingTypes']); 
     }
 }
