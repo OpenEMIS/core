@@ -252,7 +252,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     this.displayLoading = true;
     this.counter = 0;
     this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
-    this.institution_id = 6;
+    // this.institution_id = 6;
     this.institution_name = localStorage.getItem("institutionName");
     this.pageheader.pageheaderText = `${this.institution_name} - Student Attendances`
 
