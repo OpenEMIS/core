@@ -309,7 +309,7 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
   getAPIData() {
     this.Rest.getWithToken(`academic-period/archive?institution_id=${this.institution_id}`).subscribe({
       next: (response: any) => {
-        if (response?.data?.data) {
+        if (response?.data?.data.length > 0) {
           response?.data?.data.forEach((element: any) => {
             let obj = {
               key: element.id,
@@ -322,6 +322,13 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
           this.academicPeriod[0].value = this.academic_Period;
           this.getAcademicWeek(this.academic_Period);
         } else {
+          let toasterConfig: any = {
+            title: 'No Archive data available',
+            showCloseButton: true,
+            tapToDismiss: true,
+          };
+
+          this._kdAlertEvent.warn(toasterConfig);
           let obj = {
             key: "",
             value: "No option"
@@ -628,7 +635,7 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
   }
 
   studentAttendanceMarked(subjectId: any) {
-    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendance-marked?academic_period_id=${this.academic_Period}&day_id=${this.selected_day_week}&attendance_period_id=1&subject_id=${subjectId}`).subscribe({
+    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendance-marked/archive?academic_period_id=${this.academic_Period}&day_id=${this.selected_day_week}&attendance_period_id=1&subject_id=${subjectId}`).subscribe({
       next: (response: any) => {
         if (response) {
           this.getStudentAttendanceData();
@@ -666,25 +673,7 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
         TABLE_COLUMN_LIST.reasonOrComment_select_new
       ];
     }
-    this._row = [
-      { 
-        user: {
-          openemis_no: 111,
-          full_name: 'Abcd'
-        },
-        M1: 1,
-        M2: 2,
-        T1: '-',
-        T2: '-',
-        W1: 3,
-        W2: 4,
-        TH1: '-',
-        TH2: '-',
-        F1: 5,
-        F2: 6
-      }
-    ]
-    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendances?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
+    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendances/archive?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
       next: (response: any) => {
         if (response) {
           console.log(response.data.data, "this._row 1111");
