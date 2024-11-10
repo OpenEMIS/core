@@ -209,11 +209,18 @@ class AppController extends Controller
 
     private function darkenColour($rgb, $darker = 2)
     {
+        // Ensure $rgb is a string and not null
+        if (!is_string($rgb) || empty($rgb)) {
+            return '#000000'; // Return a default color if $rgb is invalid
+        }
+        
         $hash = (strpos($rgb, '#') !== false) ? '#' : '';
         $rgb = (strlen($rgb) == 7) ? str_replace('#', '', $rgb) : ((strlen($rgb) == 6) ? $rgb : false);
-        if (strlen($rgb) != 6) {
-            return $hash . '000000';
+        
+        if ($rgb === false || strlen($rgb) != 6) {
+            return $hash . '000000'; // Return black if the format is invalid
         }
+
         $darker = ($darker > 1) ? $darker : 1;
 
         list($R16, $G16, $B16) = str_split($rgb, 2);
@@ -223,7 +230,8 @@ class AppController extends Controller
         $B = sprintf("%02X", floor(hexdec($B16) / $darker));
 
         return $hash . $R . $G . $B;
-    }
+}
+
 
     public function getTheme()
     {
