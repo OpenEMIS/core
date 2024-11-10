@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { ITableApi, ITableColumn, KdAlertEvent, KdPageBase, KdPageBaseEvent, KdTable, KdToolbarEvent } from 'openemis-styleguide-lib';
+import { ITableApi, ITableColumn, ITableConfig, KdAlertEvent, KdPageBase, KdPageBaseEvent, KdTable, KdToolbarEvent } from 'openemis-styleguide-lib';
 import { MINI_DASHBOARD_CONFIG, TABLE_COLUMN_LIST } from './student_attendance.config';
 import { IMiniDashboardConfig, IMiniDashboardItem } from 'openemis-styleguide-lib/kd-components/kd-angular-mini-dashboard/kd-angular-mini-dashboard-interface';
 import { Subscription, timer } from 'rxjs';
@@ -107,7 +107,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
 
   public studentAbsenceReasons: any = [];
 
-  public _config: any;
+  public _config: ITableConfig;
 
   public _tableApi: ITableApi = {};
   private _toolbarSearchSub: Subscription;
@@ -252,7 +252,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     this.displayLoading = true;
     this.counter = 0;
     this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
-    // this.institution_id = 6;
+    this.institution_id = 6;
     this.institution_name = localStorage.getItem("institutionName");
     this.pageheader.pageheaderText = `${this.institution_name} - Student Attendances`
 
