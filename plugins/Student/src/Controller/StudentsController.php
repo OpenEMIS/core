@@ -1111,4 +1111,9 @@ class StudentsController extends AppController
     }
 
 
+    public function StudentGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
+    }
+
 }

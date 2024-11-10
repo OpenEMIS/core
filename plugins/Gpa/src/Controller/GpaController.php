@@ -1,0 +1,97 @@
+<?php
+namespace Gpa\Controller;
+
+use App\Controller\AppController;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
+
+class GpaController extends AppController
+{
+    
+	public function initialize(): void {
+        parent::initialize();
+    }
+    
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event) 
+    {
+        parent::beforeFilter($event);
+        if ($this->getPlugin() == 'Gpa') {
+            $this->Security->setConfig('validatePost', false);
+        }
+
+        $Tabname = $this->request->getParam('action');
+        $header = $this->splitOnCapitalLetters($Tabname);
+        
+        $action = $this->request->getParam('action');
+        $header .= ' - '.__(Inflector::humanize($action));
+
+        $this->Navigation->addCrumb($header , ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'index']);
+
+        //$this->set('contentHeader', $header);
+        
+    }
+    private function splitOnCapitalLetters($string) {
+        
+        $words = preg_split('/(?=[A-Z])/', $string);
+
+        return implode(' ', $words);
+    }
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+       $Tabname = $this->request->getParam('action');
+        $header = $this->splitOnCapitalLetters($Tabname);
+        
+
+        /*$alias = ($model->alias == 'ExamResults') ? 'Results' : $model->alias;
+        $header .= ' - ' . $model->getHeader($alias);
+        $this->Navigation->addCrumb('Examination', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->alias]);
+        $this->Navigation->addCrumb($model->getHeader($model->alias));*/
+
+        $this->set('contentHeader', $header);
+
+        $persona = false;
+        $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
+        $event = $model->getEventManager()->dispatch($event);
+    }
+
+    public function getGpaTab($action = null)
+    {
+        $tabElements = [
+            'Gpa' => [
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'GpaSystem'],
+                'text' => __('GPA')
+            ],
+            'Cumulative' => [
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Cumulative'],
+                'text' => __('Cumulative GPA')
+            ],
+            'GpaGradingType' => [
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'GpaGradingType'],
+                'text' => __('Grading Types')
+            ]
+        ];
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+        
+        $this->set('tabElements', $tabElements);
+        $action = !is_null($action) ? $action : $this->request->getParam('action');
+        $this->set('selectedAction', $action);
+    }
+
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
+
+    public function GpaSystem() { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.GpaSystem']); 
+    }
+
+    public function Cumulative() { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.Cumulative']); 
+    }
+    public function GpaGradingType() { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Gpa.GpaGradingTypes']); 
+    }
+}
