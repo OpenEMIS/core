@@ -105,7 +105,7 @@ export class StudentAttendanceImportResultComponent implements OnInit {
       this.institution_name = localStorage.getItem("institutionName");
       this.pageheader.pageheaderText = `${this.institution_name} - Import Student Attendances`;
       this.institution_id = localStorage.getItem("institution_id");
-      this.institution_id = 6;
+      // this.institution_id = 6;
       this.loginData();
     }
   }

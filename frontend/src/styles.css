@@ -39,6 +39,9 @@ footer {
 .ag-body-viewport.ag-layout-normal.ag-row-no-animation {
   margin-top: 38px !important;
 }
+.ag-body-viewport.ag-layout-normal.ag-row-no-animation.all-days {
+  margin-top: 70px !important;
+}
 
 .ui-menu.ui-widget.ui-widget-content.ui-corner-all.ui-menu-dynamic.ui-shadow {
   display: block !important;

@@ -16,12 +16,13 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
   public displayLoading: boolean = false;
 
   public pageheader = {
-    leftBtn: [{
-      type: "export",
-      callback: (): void => {
-        this.exportData();
-      }
-    }
+    leftBtn: [
+    //   {
+    //   type: "export",
+    //   callback: (): void => {
+    //     this.exportData();
+    //   }
+    // }
     ],
     moreAction: [],
     moreBtn: false,
@@ -158,6 +159,9 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
   selected_institution_subject: number;
   instution_subject: any[];
   selectedInstitutionSubject: any;
+  studentAbsenceReasons: any = [];
+  absenceTypeList: any;
+  displayEditTable: boolean = false;
 
   constructor(
     private _router: Router,
@@ -183,7 +187,7 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
     super.updateBreadcrumb();
 
     this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
-    this.institution_id = 6;
+    // this.institution_id = 6;
     this.institution_name = localStorage.getItem("institutionName");
     this.pageheader.pageheaderText = `${this.institution_name} - Institution Student Absences Archived`;
 
@@ -225,7 +229,7 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
     } else {
       this.setTheme();
       this.getAPIData();
-      // this.absenceTypeAPI();
+      this.absenceTypeAPI();
     }
   }
 
@@ -236,7 +240,7 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
           localStorage.setItem("loginToken", response?.data?.token);
           this.setTheme();
           this.getAPIData();
-          // this.absenceTypeAPI();
+          this.absenceTypeAPI();
           this.removeSession();
         }
       },
@@ -306,6 +310,70 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
     ]
   }
 
+  absenceTypeAPI() {
+    this.Rest.getWithToken('absence-types').subscribe({
+      next: (response: any) => {
+        if (response) {
+          this.absenceTypeList = response?.data?.data;
+          this.absenceReasonAPI();
+        }
+
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
+
+  absenceReasonAPI() {
+    this.Rest.getWithToken('absence-reasons').subscribe({
+      next: (response: any) => {
+        if (response) {
+          this.studentAbsenceReasons = response?.data?.data;
+          this._config = {
+            id: this.TABLEID,
+            rowIdKey: "id",
+            gridHeight: "auto",
+            rowContentHeight: 60,
+            loadType: "normal",
+            externalFilter: false,
+            paginationConfig: {
+              pagesize: this.PAGESIZE,
+              total: this.TOTALROWS,
+            },
+            context: {
+              absenceTypes: this.absenceTypeList,
+              education_grade_id: 189,
+              isMarked: false,
+              mode: this.displayEditTable ? 'edit' : 'view',
+              period: 1,
+              schoolClosed: true,
+              studentAbsenceReasons: this.studentAbsenceReasons,
+              subject_id: 0,
+              week: 49,
+              scope: {
+                data: []
+              }
+            }
+          }
+        }
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
+
   getAPIData() {
     this.Rest.getWithToken(`academic-period/archive?institution_id=${this.institution_id}`).subscribe({
       next: (response: any) => {
@@ -359,35 +427,35 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
           this.institutionSubject = [...institutionSubjectData];
 
           this.setDashboard();
-          console.log(this._column,"this._column");
+          console.log(this._column, "this._column");
         }
-        this._config = {
-          id: this.TABLEID,
-          rowIdKey: "id",
-          gridHeight: "auto",
-          rowContentHeight: 60,
-          loadType: "normal",
-          externalFilter: false,
-          paginationConfig: {
-            pagesize: this.PAGESIZE,
-            total: this.TOTALROWS,
-          },
-          context: {
-            // absenceTypes: this.absenceTypeList,
-            education_grade_id: 189,
-            isMarked: false,
-            mode: 'view',
-            period: 1,
-            schoolClosed: true,
-            // studentAbsenceReasons: this.studentAbsenceReasons,
-            subject_id: 0,
-            week: 49,
-            scope: {
-              data: []
-            }
-          }
-        }
-        
+        // this._config = {
+        //   id: this.TABLEID,
+        //   rowIdKey: "id",
+        //   gridHeight: "auto",
+        //   rowContentHeight: 60,
+        //   loadType: "normal",
+        //   externalFilter: false,
+        //   paginationConfig: {
+        //     pagesize: this.PAGESIZE,
+        //     total: this.TOTALROWS,
+        //   },
+        //   context: {
+        //     // absenceTypes: this.absenceTypeList,
+        //     education_grade_id: 189,
+        //     isMarked: false,
+        //     mode: 'view',
+        //     period: 1,
+        //     schoolClosed: true,
+        //     studentAbsenceReasons: this.studentAbsenceReasons,
+        //     subject_id: 0,
+        //     week: 49,
+        //     scope: {
+        //       data: []
+        //     }
+        //   }
+        // }
+
         this.displayMiniDashboard = true;
       },
       error: (error: any) => {
@@ -460,11 +528,9 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
           }
           this.academic_day.push(obj);
         });
-
-        console.log(this.academic_day,"this.academic_day");
         this.academic_day.shift();
         if (this.academic_period_day == '') {
-          this.academic_period_day = this.academic_day[1].key;
+          this.academic_period_day = this.academic_day[0].key;
         }
         let newDay = this.day;
         newDay[0].options = this.academic_day;
@@ -570,7 +636,7 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
     })
   }
 
-  
+
   institutionSubjectClass(id: any) {
     this.selected_education_grade = id;
     this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/subjects?academic_period_id=${this.academic_Period}`).subscribe({
@@ -654,8 +720,8 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
 
   getStudentAttendanceData() {
     // insitutions/6/grades/206/classes/591/student-attendances?academic_period_id=33&day_id=2024-02-05&attendance_period_id=1&subject_id=0&week_id=6&week_start_day=2024-02-05&week_end_day=2024-02-11
-    if(this.academic_period_day == -1) {
-      console.log(this._column,"this._column");
+    if (this.academic_period_day == -1) {
+      console.log(this._column, "this._column");
       this._column = [
         TABLE_COLUMN_LIST.openEmisId,
         TABLE_COLUMN_LIST.personName,
@@ -673,7 +739,7 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
         TABLE_COLUMN_LIST.reasonOrComment_select_new
       ];
     }
-    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendances/archive?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
+    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendance/archive?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
       next: (response: any) => {
         if (response) {
           console.log(response.data.data, "this._row 1111");
@@ -683,13 +749,18 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
               element.institution_student_absences.absence_type_id = 99;
               element.institution_student_absences.absence_type_code = 99;
             }
+            let institution_student_absences = {
+              student_absence_reason_id: element?.student_absence_reason_id,
+              absence_type_id: element?.absence_type_id,
+              student_absence_reason_name: element?.student_absence_reason
+            }
             let obj = {
               academic_period_id: element?.academic_period_id,
               created_date: element?.created_date,
               institution_class_id: element?.institution_class_id,
               institution_class_name: element?.institution_class_name,
               institution_id: element?.institution_id,
-              institution_student_absences: element?.institution_student_absences,
+              institution_student_absences: institution_student_absences,
               is_NoClassScheduled: element?.is_NoClassScheduled,
               student_id: element?.student_id,
               user: element?.user

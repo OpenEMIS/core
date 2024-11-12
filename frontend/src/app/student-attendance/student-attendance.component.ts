@@ -309,7 +309,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
   }
 
   loginData() {
-    // this.Rest.setSession();
+    this.Rest.setSession();
     let token = localStorage.getItem("loginToken");
     if (!token) {
       let userName = sessionStorage.getItem('username');
@@ -724,8 +724,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
 
   getStudentAttendanceData() {
     // insitutions/6/grades/206/classes/591/student-attendances?academic_period_id=33&day_id=2024-02-05&attendance_period_id=1&subject_id=0&week_id=6&week_start_day=2024-02-05&week_end_day=2024-02-11
-    if(this.academic_period_day == -1) {
-      console.log(this._column,"this._column");
+    if (this.academic_period_day == -1) {
+      console.log(this._column, "this._column");
       this._column = [
         TABLE_COLUMN_LIST.openEmisId,
         TABLE_COLUMN_LIST.personName,
@@ -735,6 +735,39 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
         TABLE_COLUMN_LIST.thursday,
         TABLE_COLUMN_LIST.friday
       ];
+      this.pageheader = {
+        leftBtn: [{
+          type: "export",
+          callback: (): void => {
+            this.exportData();
+          }
+        },
+        {
+          type: "import",
+          callback: (): void => {
+            this.editTableFields();
+          }
+        },
+        {
+          custom: true,
+          icon: 'fa fa-folder',
+          tooltip: 'Archive',
+          callback: (): void => {
+            this.archiveData();
+          }
+        }
+        ],
+        moreAction: [],
+        moreBtn: false,
+        pageheaderText: `${this.institution_name} - Student Attendances`,
+        searchBtn: false,
+        searchEvent: ['change', 'keyup']
+      }
+      let classData = document.getElementsByClassName("ag-row-no-animation")[0];
+      if (classData) {
+        classData.classList.add("all-days");
+      }
+
     } else {
       this._column = [
         TABLE_COLUMN_LIST.openEmisId,
@@ -742,24 +775,70 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
         TABLE_COLUMN_LIST.student_attendance_select_new,
         TABLE_COLUMN_LIST.reasonOrComment_select_new
       ];
+      this.pageheader = {
+        leftBtn: [{
+          type: "export",
+          callback: (): void => {
+            this.exportData();
+          }
+        },
+        {
+          type: "import",
+          callback: (): void => {
+            this.editTableFields();
+          }
+        },
+        {
+          type: "edit",
+          callback: (): void => {
+            this.onEditClick();
+          }
+        },
+        {
+          custom: true,
+          icon: 'fa kd-null',
+          tooltip: 'No Scheduled Class',
+          callback: (): void => {
+            this.nullData();
+          }
+        },
+        {
+          custom: true,
+          icon: 'fa fa-folder',
+          tooltip: 'Archive',
+          callback: (): void => {
+            this.archiveData();
+          }
+        }
+        ],
+        moreAction: [],
+        moreBtn: false,
+        pageheaderText: `${this.institution_name} - Student Attendances`,
+        searchBtn: false,
+        searchEvent: ['change', 'keyup']
+      }
+      let classData = document.getElementsByClassName("ag-row-no-animation")[0];
+      if (classData) {
+        classData.classList.remove("all-days");
+      }
     }
     this._row = [
-      { 
-        user: {
-          openemis_no: 111,
-          full_name: 'Abcd'
-        },
-        M1: 1,
-        M2: 2,
-        T1: '-',
-        T2: '-',
-        W1: 3,
-        W2: 4,
-        TH1: '-',
-        TH2: '-',
-        F1: 5,
-        F2: 6
-      }
+      // { 
+      //   user: {
+      //     openemis_no: 111,
+      //     full_name: 'Abcd'
+      //   },
+      //   M1: 1,
+      //   M2: 2,
+      //   T1: '-',
+      //   T2: '-',
+      //   W1: 3,
+      //   W2: 4,
+      //   TH1: '-',
+      //   TH2: '-',
+      //   F1: 5,
+      //   F2: 6
+      // }
     ]
     this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendances?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
       next: (response: any) => {
@@ -802,6 +881,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
             this.loginData();
           }
         }
+        this.setDashboard();
         this.displayLoading = false;
       }
     })
@@ -861,8 +941,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       "subject_id": this.selectedInstitutionSubject ? this.selectedInstitutionSubject : 0,
       "education_grade_id": this.education_grade_id
     }
-    console.log(obj,"obj");
-    
+    console.log(obj, "obj");
+
     this.Rest.postWithToken(`institutions/students/absences`, obj).subscribe({
       next: (response: any) => {
         if (response) {
@@ -1063,8 +1143,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     this.Rest.getWithToken(`institutions/students/attendances/no-scheduled-class?institution_id=${this.institution_id}&institution_class_id=${this.selected_academic_class}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}`).subscribe({
       next: (response: any) => {
         if (response) {
-          console.log(response,"response data");
-          
+          this.displayLoading = true;
+          this.getStudentAttendanceData();
         }
 
       },
@@ -1081,76 +1161,10 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
   }
 
   archiveData() {
-    this.Rest.getWithToken(`academic-period/archive?institution_id=${this.institution_id}`).subscribe({
-      next: (response: any) => {
-        if (response) {
-          console.log(response, "response data");
-          if (response?.data?.original?.message == "Unsuccessful.") {
-            let toasterConfig: any = {
-              title: 'No Archive data available',
-              showCloseButton: true,
-              tapToDismiss: true,
-            };
-
-            this._kdAlertEvent.warn(toasterConfig);
-            return;
-          } else {
-            this.studentAttendanceMarkedArchive();
-            this.studentAttendanceArchive();
-          }
-        }
-
-      },
-      error: (error: any) => {
-        if (error) {
-          if (error.message == "Token has expired") {
-            localStorage.removeItem("loginToken");
-            this.loginData();
-          }
-        }
-        this.displayLoading = false;
-      }
-    })
-  }
-
-  studentAttendanceMarkedArchive() {
-    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendance-marked/archive?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}`).subscribe({
-      next: (response: any) => {
-        if (response) {
-          console.log(response, "response data");
-        }
-
-      },
-      error: (error: any) => {
-        if (error) {
-          if (error.message == "Token has expired") {
-            localStorage.removeItem("loginToken");
-            this.loginData();
-          }
-        }
-        this.displayLoading = false;
-      }
-    })
-  }
-
-  studentAttendanceArchive() {
-    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendances/archive?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
-      next: (response: any) => {
-        if (response) {
-          console.log(response, "response data");
-        }
-
-      },
-      error: (error: any) => {
-        if (error) {
-          if (error.message == "Token has expired") {
-            localStorage.removeItem("loginToken");
-            this.loginData();
-          }
-        }
-        this.displayLoading = false;
-      }
-    })
+    let tokenData = localStorage.getItem('encoded_url');
+    if (tokenData) {
+      this._router.navigateByUrl(`Institution/Institutions/InstitutionStudentAbsencesArchived/${tokenData}`);
+    }
   }
 
   exportData() {
