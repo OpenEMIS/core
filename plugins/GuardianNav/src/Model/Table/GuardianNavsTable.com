@@ -1138,7 +1138,7 @@ class GuardianNavsTable extends ControllerActionTable
                 ->where($queryCondition)
                 ->group(['gender_name', $this->aliasField('academic_period_id')])
                 ->order('AcademicPeriods.order DESC')
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray()
                 ;
 

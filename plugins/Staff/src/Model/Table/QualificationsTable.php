@@ -346,13 +346,14 @@ class QualificationsTable extends ControllerActionTable
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
-
-        $currentYear = new Date();
-        $currentYear = $currentYear->format('Y');
-
-        if (($action == 'add') || ($action == 'edit')) {
-            for ($i=$currentYear;$i>=$lowestYear;$i--) {
-                $attr['options'][$i] = $i;
+        if(!empty($lowestYear)) {
+            $currentYear = new Date();
+            $currentYear = $currentYear->format('Y');
+            
+            if (($action == 'add') || ($action == 'edit')) {
+                for ($i=$currentYear;$i>=$lowestYear;$i--) {
+                    $attr['options'][$i] = $i;
+                }
             }
         }
         return $attr;

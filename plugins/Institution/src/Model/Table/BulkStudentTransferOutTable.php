@@ -353,13 +353,15 @@ class BulkStudentTransferOutTable extends ControllerActionTable
 
     public function reconfirm()
     {
+        $getQueryString = $this->getQueryString(); //POCOR-8624
         $this->Alert->info($this->aliasField('reconfirm'), ['reset' => true]);
         $this->setupFields();
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'BulkStudentTransferOut',
-            'edit'
+                0 =>'edit',
+                1 => $getQueryString //POCOR-8624
         ];
         $sessionKey = $this->getRegistryAlias() . '.confirm';
         if ($this->Session->check($sessionKey)) {
@@ -389,11 +391,13 @@ class BulkStudentTransferOutTable extends ControllerActionTable
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
+        $getQueryString = $this->getQueryString(); //POCOR-8624
         $process = function ($model, $entity) use ($event, $data) {
             // Removal of some fields that are not in use in the table validation
             $errors = $entity->getErrors();
             if (empty($errors)) {
-                if (array_key_exists($this->getAlias(), $data)) {
+                $dataArray = $data->getArrayCopy();
+                if (array_key_exists($this->getAlias(), $dataArray)) {
                     $selectedStudent = false;
                     if (array_key_exists('students', $data[$this->getAlias()])) {
                         foreach ($data[$this->getAlias()]['students'] as $key => $value) {
@@ -403,13 +407,15 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                             }
                         }
                     }
+                    $encodedQueryParams = $this->request->getParam('pass')[1];
                     if ($selectedStudent) {
                         // redirects to confirmation page
                         $url = [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'BulkStudentTransferOut',
-                            'reconfirm'
+                                0 => 'reconfirm',
+                                1 => $encodedQueryParams //POCOR-8624
                         ];
                         $this->currentEntity = $entity;
                         $session = $this->Session;
@@ -431,12 +437,18 @@ class BulkStudentTransferOutTable extends ControllerActionTable
     }
     public function saveBulkStudentTransferOut(Entity $entity, ArrayObject $data)
     {
+        $getQueryString = $this->getQueryString(); //POCOR-8624
+        $encodedQueryString = $this->paramsEncode([
+            'id' => $getQueryString['institution_id'],
+            'institution_id' => $getQueryString['institution_id']
+        ]); //POCOR-8624
         $primaryKey = $this->StudentTransferIn->getPrimaryKey();
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'StudentTransferOut',
-            'index'
+                0 =>    'index',
+                1 => $encodedQueryString //POCOR-8624
         ];
         $workflowTransitionObj = [];
         foreach ($data[$this->getAlias()]['students'] as $key => $studentObj) {
@@ -489,12 +501,14 @@ class BulkStudentTransferOutTable extends ControllerActionTable
             $this->log($entity->getErrors(), 'debug');
             $url['action'] = 'BulkStudentTransferOut';
             $url[0] = 'edit';
+            $url[1] = $getQueryString; //POCOR-8624
         }
         return $this->controller->redirect($url);
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
+        $getQueryString = $this->getQueryString();
         switch ($this->action) {
             case 'edit':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
@@ -509,7 +523,8 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'BulkStudentTransferOut',
-                            'edit'
+                                0 => 'edit',
+                                1 => $getQueryString //POCOR-8624
                         ];
                 $cancelButton['url'] = $cancelUrl;
                 $buttons[0] = $confirmButton;

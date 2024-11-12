@@ -9,8 +9,8 @@ use Exception;
 use DateTime;
 
 class StudentIdentitiesTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('user_identities');
+	public function initialize(array $config): void {
+		$this->setTable('user_identities');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);

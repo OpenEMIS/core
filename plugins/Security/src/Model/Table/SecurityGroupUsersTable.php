@@ -52,7 +52,7 @@ class SecurityGroupUsersTable extends AppTable {
             'security_role_id',
             'institution_id' => $SecurityInstitutions->aliasField('institution_id')
         ])
-        ->leftJoin([$SecurityInstitutions->alias() => $SecurityInstitutions->table()], [
+        ->leftJoin([$SecurityInstitutions->getAlias() => $SecurityInstitutions->getTable()], [
             $SecurityInstitutions->aliasField('security_group_id = ') . $this->aliasField('security_group_id'),
         ])
         ->where(['security_user_id' => $security_user_id]);
@@ -165,7 +165,7 @@ class SecurityGroupUsersTable extends AppTable {
                         ]
                 )
                 ->where([$this->aliasField('security_user_id') => $userId, $this->aliasField('security_group_id') => $securityGroupId])
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray();
         return $results;
     }
