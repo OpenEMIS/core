@@ -37,7 +37,8 @@
 </div>
 <div class="input date required">
     <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
-    <div class="input-group date " id="User_date_of_birth" style="">
+    <div class="input-group date " style="">
+        <!-- POCOR-8613 -->
         <input type="text" class="form-control " name="User[date_of_birth]"
                ng-model="selectedUserData.date_of_birth"
                ng-disabled="selectedUserData.date_of_birth">

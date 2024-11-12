@@ -580,9 +580,11 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                         'controller' => 'Institutions',
                         'action' => 'StudentTransferIn',
                         '0' => 'view',
-                        '1' => $encodedQueryString,
-                        '2' => $this->paramsEncode(['id' => $row->id]),
-                        // 'institution_id' => $row->institution_id
+                        '1' => $this->paramsEncode(['id' => $row->id, //POCOR-8642
+                         'institution_id' => $row->institution_id]),
+                        // '1' => $encodedQueryString,
+                        // '2' => $this->paramsEncode(['id' => $row->id]),
+                        // // 'institution_id' => $row->institution_id
                     ];
 
                     if (is_null($row->modified)) {
