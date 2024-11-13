@@ -20,7 +20,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
 
         $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_behaviour_category_id']);
 
-        $this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
+        $this->belongsTo('BehaviourClassifications', ['className' => 'Student.StudentBehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -101,6 +101,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+        $connection->execute('SET FOREIGN_KEY_CHECKS = 0');
     }
 
     public function beforeDelete(Event $event, Entity $entity)

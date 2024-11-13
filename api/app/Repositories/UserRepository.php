@@ -118,7 +118,8 @@ class UserRepository extends Controller
                     'nationality',
                     'identityType',
                     'institutionStaff',
-                    'institutionStaff.staffPositionGrade'
+                    'institutionStaff.staffPositionGrade',
+                    'userContacts'
                 )
                     ->where('id', $userId)
                     ->first();
@@ -137,10 +138,11 @@ class UserRepository extends Controller
                 $user->institution_students = $studIns;
             }
             //For POCOR-8536 End...
-            
+          
             return $user;
             
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
