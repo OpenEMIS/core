@@ -1655,8 +1655,10 @@ class InstitutionsController extends AppController
             $this->set('exportPDF', Router::url($exportPDF_Url));
         }
         //POCOR-8146 Start
-        $labelsTable = TableRegistry::getTableLocator()->get('System.Labels');
-        $labelsData = $labelsTable->find()->where(['module_name' => 'Institutions > Performance > Assessments', 'field_name' => 'Total Mark'])->first();
+        $labelsTable = self::getDynamicTableInstance('labels');
+        $labelsData = $labelsTable->find()->where([
+            $labelsTable->aliasField('module') => 'Institution Assessments',
+            $labelsTable->aliasField('field') => 'total_mark'])->first();
         $dynamicTotalMarkHeader = $labelsData->name;
         if(empty($dynamicTotalMarkHeader)) {
             $dynamicTotalMarkHeader = $labelsData->code;
@@ -2110,12 +2112,16 @@ class InstitutionsController extends AppController
                 $externalDataSource = true;
             }
             //POCOR-8646 Start
-            $labelsTable = TableRegistry::getTableLocator()->get('System.Labels');
-            $labelsData = $labelsTable->find()->where(['module_name' => 'Institutions > Students > Add', 'field_name' => 'OpenEMIS ID'])->first();
+            $labelsTable = self::getDynamicTableInstance('labels');
+            $labelsData = $labelsTable->find()->where(
+                [$labelsTable->aliasField('module') => 'InstitutionStudentAdd',
+                    $labelsTable->aliasField('field') => 'openemis_no'])
+                ->first();
             $dynamicCol = $labelsData->name;
             if(empty($dynamicCol)) {
                 $dynamicCol = $labelsData->code;
             }
+
             $this->set('dynamicOpenemisNoHeader', $dynamicCol);
             //POCOR-8646 End
             $this->set('externalDataSource', $externalDataSource);
@@ -2148,9 +2154,11 @@ class InstitutionsController extends AppController
             $this->set('loginUserId', $userId);
             //POCOR-7485 ends
             //POCOR-8646 Start
-            $labelsTable = TableRegistry::getTableLocator()->get('System.Labels');
-            $labelsData = $labelsTable->find()->where(['module_name' => 'Institutions > Staff > Add', 'field_name' => 'OpenEMIS ID'])->first();
-            $dynamicCol = $labelsData->name;
+            $labelsTable = self::getDynamicTableInstance('labels');
+            $labelsData = $labelsTable->find()->where(
+                [$labelsTable->aliasField('module') => 'InstitutionStaffAdd',
+                    $labelsTable->aliasField('field') => 'openemis_no'])
+                ->first();$dynamicCol = $labelsData->name;
             if(empty($dynamicCol)) {
                 $dynamicCol = $labelsData->code;
             }
@@ -3124,7 +3132,12 @@ class InstitutionsController extends AppController
                 } elseif (in_array($alias, ['FeederOutgoingInstitutions'])) {
                     $params = [];
                     $params[$model->aliasField('feeder_institution_id')] = $institutionID;
-                    $exists = $model->exists($params);
+                    
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] == 'add') {//POCOR-8691 
+                        $exists = true;
+                    } else {
+                        $exists = $model->exists($params);
+                    }
                 }elseif (in_array($alias, ['InstitutionAssociations'])) { //POCOR-8556
                     $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
                     $activeInstitution = $this->Institutions->get($institutionId);
@@ -3158,7 +3171,9 @@ class InstitutionsController extends AppController
 
                 // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                 if (!$exists && !$isDownload) {
-                    $this->Alert->warning('general.notExists');
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] != 'add') {//POCOR-8691 
+                        $this->Alert->info('general.notExists');//POCOR-8691
+                    }
                     //                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
                     //                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                 }
