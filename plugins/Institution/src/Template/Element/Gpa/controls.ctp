@@ -3,11 +3,9 @@
         <div class="toolbar-wrapper">
             <?php
                 $baseUrl = $this->Url->build([
-                    'plugin' => $this->request->getParam('plugin'),
-                    'controller' => $this->request->getParam('controller'),
-                    'action' => $this->request->getParam('action'),
-                    '0' => 'index',
-                    '1' => $encodedQueryString,
+                    'plugin' => $this->request->params['plugin'],
+                    'controller' => $this->request->params['controller'],
+                    'action' => $this->request->params['action']
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);
@@ -47,6 +45,19 @@
                         'url' => $baseUrl,
                         'data-named-key' => 'class_id',
                         'data-named-group' => 'academic_period_id,education_grade_id'
+                    ));
+                }
+
+                if (!empty($nameOption)) {
+                    echo $this->Form->input('gpa_name', array(
+                        'type' => 'select',
+                        'class' => 'form-control',
+                        'label' => false,
+                        'options' => $nameOption,
+                        'default' => $selectedName,
+                        'url' => $baseUrl,
+                        'data-named-key' => 'gpa_name',
+                        'data-named-group' => 'academic_period_id,education_grade_id,class_id'
                     ));
                 }
             ?>
