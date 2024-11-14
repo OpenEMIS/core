@@ -42,3 +42,4 @@ $totalRecords = isset($params['count']) ? $params['count'] : 0;
 	</div>
 </div>
 <?php endif ?>
+<?php echo $this->Html->script('Survey.limit', ['block' => true]);?>
