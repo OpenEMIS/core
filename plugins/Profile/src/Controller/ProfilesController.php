@@ -721,9 +721,16 @@ class ProfilesController extends AppController
         if ($alias == 'HealthImmunizations') {
             $alias = __('Vaccinations');
         }
-        //POCOR-5890 ends
-        $this->Navigation->addCrumb($model->getHeader($alias));
-        //POCOR-5675
+        if($alias == 'StudentGpa' || $alias == 'Gpa'){
+            $alias = 'Student GPA';
+            $alias = $model->getHeader($alias);
+            $alias = preg_replace('/G\s*P\s*A/', 'GPA', $alias);
+            $this->Navigation->addCrumb($alias);
+            $header = $header . ' - ' . $alias;
+
+        }else{
+            $this->Navigation->addCrumb($model->getHeader($alias));
+        }
         $action = $this->request->getParam('action');
         if ($action == 'Profiles') {
             $action = __('Personal');
@@ -1054,7 +1061,8 @@ class ProfilesController extends AppController
             'Assessments' => ['text' => __('Assessments')],
             //'Results' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
-            'ReportCards' => ['text' => __('Report Cards')],
+            'ReportCardswww' => ['text' => __('Report Cards')],
+            'Gpa' => ['text' => __('GPA')], //POCOR-8222
             'Awards' => ['text' => __('Awards')],
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7413
             'Textbooks' => ['text' => __('Textbooks')],
@@ -1534,6 +1542,7 @@ class ProfilesController extends AppController
     public function ScholarshipApplicationAttachments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.InstitutionApplicationAttachment']);
+    }
 
     public function StudentStudentGpa()
     {

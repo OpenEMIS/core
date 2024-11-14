@@ -140,6 +140,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $selectedGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
         $this->controller->set(compact('educationGradeOptions', 'selectedGrade'));
         //End
+     //   echo "<pre>"; print_r($selectedGrade);die;
 
         // Class filter
         $classOptions = [];
@@ -222,11 +223,10 @@ class ReportCardGpaTable extends ControllerActionTable
                 ->contain('Users')
                 ->order(['Users.first_name', 'Users.last_name']);
         }
-        $queryString = $this->request->getQuery('queryString');
-        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $encodedQueryString = $this->request->getParam('pass')[1];
 
         $extra['elements']['controls'] = ['name' => 'Institution.Gpa/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
-
         // sort
         $sortList = ['report_card_status', 'Users.first_name', 'Users.openemis_no'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
@@ -1216,7 +1216,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $gpaRecord = $studentGpa->find()
                         ->select(['name' => $gpaTable->aliasField('name')])
                         ->leftJoin(
-                            [$gpaTable->alias() => $gpaTable->table()],
+                            [$gpaTable->getAlias() => $gpaTable->getTable()],
                             $gpaTable->aliasField('id') . ' = ' . $studentGpa->aliasField('education_grades_gpa_id')
                         )
                         ->where([
