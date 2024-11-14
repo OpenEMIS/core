@@ -5727,7 +5727,7 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addStudentBehaviour($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Student Behaviour is added/updated successfully..");
+                return $this->sendSuccessResponse("Student Behaviour is added/updated successfully..");
             } elseif($data == 2) {
                 return $this->sendErrorResponse("Invalid academic period.");
             } elseif($data == 3) {
@@ -5737,7 +5737,7 @@ class InstitutionController extends Controller
             } elseif($data == 5) {
                 return $this->sendErrorResponse("Invalid student behaviour category.");
             } else {
-                return $this->sendSuccessResponse("The update of student behaviour could not be completed successfully.");
+                return $this->sendErrorResponse("The update of student behaviour could not be completed successfully.");
             }
             
         } catch (\Exception $e) {
