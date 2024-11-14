@@ -112,13 +112,19 @@ class InstallerController extends AppController
                 Log::error(
                     'PDO exception during installation'.$e->getMessage(),
                     ['message'=> $e->getMessage(),'trace' => $e->getTraceAsString()]
-                );   //POCOR-8308         
+                );   //POCOR-8308    
+                if (file_exists(CONFIG . 'app_local.php')){
+                    unlink(CONFIG . 'app_local.php');
+                }//POCOR-8308      
                 $this->Alert->error($e->getMessage(), ['type' => 'text']);
                 $this->set('code', 500);
                 $this->set('message', 'PDOException');
                 $this->response->withStatus(500);//POCOR-8308
             } catch (Exception $e) {
                 //POCOR-8308 start
+                if (file_exists(CONFIG . 'app_local.php')){
+                    unlink(CONFIG . 'app_local.php');
+                } 
                 if ($e instanceof \mysqli_sql_exception) {
                     Log::error(
                         'Other exception during installation'.$e->getMessage(),
