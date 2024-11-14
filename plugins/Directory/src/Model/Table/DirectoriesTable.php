@@ -51,6 +51,8 @@ class DirectoriesTable extends ControllerActionTable
         $dateOfBirth = $requestDataParams['date_of_birth'] ?? null;
         $identityTypeId = $requestDataParams['identity_type_id'] ?? null;
         $nationalityId = $requestDataParams['nationality_id'] ?? null;
+        $studentOpenemisNo = $requestDataParams['student_openemis_no'] ?? null; // POCOR-8063
+        $guardianTypeId = $requestDataParams['guardian_type_id'] ?? null; // POCOR-8063
         $limit = $requestDataParams['limit'] ?? 10;
         $page = $requestDataParams['page'] ?? 1;
         $userId = $requestDataParams['id'] ?? null;
@@ -64,6 +66,7 @@ class DirectoriesTable extends ControllerActionTable
         $nationalitiesTable = self::getDynamicTableInstance('FieldOption.Nationalities');
         $areaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
         $birthAreaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
+
         if($userId){
             $openemisNo = null;
             $identityNumber = null;
@@ -82,10 +85,17 @@ class DirectoriesTable extends ControllerActionTable
             $lastName = null;
             $dateOfBirth = null;
         }
-        $conditions = [];
-        if (!$identityNumber) {
-            $conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+        // POCOR-8063: start
+        $base_conditions = [];
+        if ($studentOpenemisNo && $guardianTypeId) {
+            $base_conditions = [$securityUsersTable->aliasField('openemis_no !=') => $studentOpenemisNo];
         }
+        if (!$identityNumber) {
+            $new_conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+            $conditions = array_merge($base_conditions, $new_conditions);
+//            Log::debug(print_r($conditions, true));
+        }
+        // POCOR-8063: end
         $usersSearchResult = [];
 
         if (!empty($conditions)) {
@@ -107,10 +117,14 @@ class DirectoriesTable extends ControllerActionTable
         $identityUsersResult = [];
 
         if ($identityNumber) {
-            $identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
+            // POCOR-8063: start
+            $new_identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
                 $identityNumber,
                 $nationalityId,
                 $userIdentitiesTable);
+            $identityCondition = array_merge($base_conditions, $new_identityCondition);
+//            Log::debug(print_r($conditions, true));
+            // POCOR-8063: end
             $identityUsersResult = self::getUsersSearchWithIdentityArr($securityUsersTable,
                 $gendersTable,
                 $identityTypesTable,
