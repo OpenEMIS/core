@@ -1,3 +1,21 @@
+### [4.3.7] - 2024-11-15
+- Bug Fixed: API : Student assessment POST API does not insert a new record in the table
+- Bug Fixed: API : Develop Student Behaviour API as the existing Behaviour API fetches Staff Behaviour API
+
+### [4.3.6] - 2024-11-14
+- Bug Fixed: Administration>System Setup>Field Options: Getting 404 when adding
+- Bug Fixed: Institutions>Staff>Career>Appraisal: Unable to add new appraisals
+- Bug Fixed: Student Behaviour POST/GET API is not working
+- Bug Fixed: Student Attendance POST API should insert a record in student_attendance_marked_records table
+- Bug Fixed: Administration>System Setup>Label: Label is not showing for all add student and add staff page for OpenEMIS ID
+- Bug Fixed: System errors are not logged
+- Bug Fixed: Directory/Institutions > Students > Guardian > Add: When adding guardian to student account, user is able to add ownself(eg. student) as a guardian.
+- Bug Fixed: Institutions > Academic > Feeders > Outgoing: "The record does not exist" should be BLUE
+- Bug Fixed: Login Page: When entering incorrect username/password for 2FA login, the page navigate to OTP page
+- Bug Fixed: Institutions>Students/Staff>Identities: Develop a preferred identity type
+- Bug Fixed: Institutions > Students: When doing transfer for enrolled (repeater) student, the status enrolled (repeater) does not follow to the next institution
+- Bug Fixed: Institutions > Student > Student1 > Academic > Subject: Total marks not updated correctly
+
 ### [4.3.5] - 2024-11-07
 - Bug Fixed: Administrations > Data Management > Archive : Archive is not working in version 4
 - Bug Fixed: Institutions>Staff>Add: When adding new positions to Appointment>Positions, user is unable to add staff to new positions
