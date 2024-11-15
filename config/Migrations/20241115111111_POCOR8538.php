@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use Migrations\AbstractMigration;
+use Cake\Datasource\ConnectionManager;
 
 class POCOR8538 extends AbstractMigration
 {
@@ -15,9 +16,11 @@ class POCOR8538 extends AbstractMigration
     public function up()
     {
         // backup
-        $this->execute('CREATE TABLE `z_8538_custom_modules` LIKE `custom_modules`');
+        $this->execute('DROP TABLE IF EXISTS  `z_8538_custom_modules`');
+        $this->execute('CREATE TABLE  `z_8538_custom_modules` LIKE `custom_modules`');
         $this->execute('INSERT INTO `z_8538_custom_modules` SELECT * FROM `custom_modules`');
 
+// Data to insert
         $data = [
             'code' => 'Institution > Classes',
             'name' => 'Institution > Classes',
@@ -29,7 +32,25 @@ class POCOR8538 extends AbstractMigration
             'modified' => null,
             'modified_user_id' => null
         ];
-        $this->table('custom_modules')->insert($data)->save();
+
+// Get the database connection
+        $conn = ConnectionManager::get('default');
+
+// Check if a record with the same first 5 fields already exists
+        $exists = $conn->execute('SELECT 1 FROM custom_modules WHERE code = :code AND name = :name AND model = :model AND visible = :visible AND parent_id = :parent_id', [
+            'code' => $data['code'],
+            'name' => $data['name'],
+            'model' => $data['model'],
+            'visible' => $data['visible'],
+            'parent_id' => $data['parent_id']
+        ])->fetch('assoc');
+
+        if (!$exists) {
+            // Insert only if the record doesn't exist
+            $this->table('custom_modules')->insert($data)->save();
+        }
+
+        $this->execute("DROP TABLE IF EXISTS  `institution_classes_custom_field_values`");
 
         $this->execute("CREATE TABLE `institution_classes_custom_field_values` (
     `id` char(36) NOT NULL,
@@ -54,8 +75,8 @@ class POCOR8538 extends AbstractMigration
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
 
-
     }
+
     //rollback
     public function down()
     {
