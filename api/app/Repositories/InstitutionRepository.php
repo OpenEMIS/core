@@ -3850,6 +3850,69 @@ class InstitutionRepository extends Controller
         }
     }
 
+    //POCOR-8711 starts
+    public function getStudentBehaviourCategories($request)
+    {
+        try {
+            $params = $request->all();
+
+            $behaviourCategoryQuery = new StudentBehaviourCategory();
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $behaviourCategoryQuery = $behaviourCategoryQuery->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $behaviourCategoryQuery->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $behaviourCategoryQuery->get()->toArray();
+            }
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Room Type Summaries List Not Found');
+        }
+    }
+
+    public function getStaffBehaviourCategories($request)
+    {
+        try {
+            $params = $request->all();
+
+            $behaviourCategoryQuery = new StaffBehaviourCategories();
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $behaviourCategoryQuery = $behaviourCategoryQuery->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $behaviourCategoryQuery->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $behaviourCategoryQuery->get()->toArray();
+            }
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Room Type Summaries List Not Found');
+        }
+    }//POCOR-8711 Ends
+
     public function getInstitutionStudentBehaviour($params, $institutionId, $studentId)
     {
         try {
