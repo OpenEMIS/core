@@ -1,3 +1,7 @@
+### [4.3.7] - 2024-11-15
+- Bug Fixed: API : Student assessment POST API does not insert a new record in the table
+- Bug Fixed: API : Develop Student Behaviour API as the existing Behaviour API fetches Staff Behaviour API
+
 ### [4.3.6] - 2024-11-14
 - Bug Fixed: Administration>System Setup>Field Options: Getting 404 when adding
 - Bug Fixed: Institutions>Staff>Career>Appraisal: Unable to add new appraisals
