@@ -100,7 +100,11 @@ class TransitionTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //POCOR-8713 Start
+		$tabElements = $this->getAcademicTabElements($options);
+		if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}  //POCOR-8713 End
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
@@ -282,12 +286,13 @@ class TransitionTable extends ControllerActionTable
                     ])->enableHydration(false)->toArray();
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-        $selectedProgramme = $EducationProgrammes
-                             ->find()
-                            //  ->where([$EducationProgrammes->aliasField('id') => $request['data']['Transition']['education_programme_id']])->first()->id;
-                             ->where([$EducationProgrammes->aliasField('id') => $request->getData('Transition.education_programme_id')])->first()->id;
-        if (!empty($request['data'])) {//die("if");
-            $programmeId = $request['data']['Transition']['education_programme_id'];
+        // $selectedProgramme = $EducationProgrammes
+        //                      ->find()
+        //                     //  ->where([$EducationProgrammes->aliasField('id') => $request['data']['Transition']['education_programme_id']])->first()->id;
+        //                      ->where([$EducationProgrammes->aliasField('id') => $request->getData('Transition.education_programme_id')])->first()->id;
+        $requestData = $request->getData(); //POCOR-8713
+        if (!empty($requestData)) {//die("if");
+            $programmeId = $requestData['Transition']['education_programme_id'];
             $gradeOptions = $EducationGrades
                         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                         ->contain(['EducationProgrammes'])
