@@ -1975,6 +1975,39 @@ class InstitutionService extends Controller
         }
     }
 
+    //POCOR-8711 starts
+    public function getStudentBehaviourCategories($request)
+    {
+        try {
+            $data = $this->institutionRepository->getStudentBehaviourCategories($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Student Behaviour Categories Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Student Behaviour Categories List.');
+        }
+    }
+
+    public function getStaffBehaviourCategories($request)
+    {
+        try {
+            $data = $this->institutionRepository->getStaffBehaviourCategories($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Staff Behaviour Categories Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Staff Behaviour Categories List.');
+        }
+    }//POCOR-8711 Ends
+
     public function getInstitutionStudentBehaviour($params, $institutionId, $studentId)
     {
         try {
