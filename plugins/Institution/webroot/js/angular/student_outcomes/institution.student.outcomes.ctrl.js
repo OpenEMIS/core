@@ -139,8 +139,9 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
             }, function (error) {
                 console.log(error);
             })
-            .then(function (outcomeFinalResult) {
-                var outcomeValue=outcomeFinalResult.length > 0 ? outcomeFinalResult[0].outcome_result : '';
+            .then(function (outcomeFinalResults) {//POCOR-8345
+                Controller.outcomeFinalResult="";
+                var outcomeValue=outcomeFinalResults.length > 0 ? outcomeFinalResults[0].outcome_result : '';
                 if(outcomeValue){
                     Controller.outcomeFinalResult= Controller.finalGradingOptions.find((item=>item.name==outcomeValue))?.id
                 }
@@ -309,10 +310,24 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
         }, function (error) {
         })
+        //POCOR-8435 start
         .then(function (outcomeComments) {
             Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
+            return InstitutionStudentOutcomesSvc.getStudentOutcomeFinalResult(
+                Controller.selectedStudent, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
+        },
+        function (error) {
+        })
+        .then(function (outcomeFinalResults) {
+            Controller.outcomeFinalResult="";
+            var outcomeValue=outcomeFinalResults.length > 0 ? outcomeFinalResults[0].outcome_result : '';
+            if(outcomeValue){
+                Controller.outcomeFinalResult= Controller.finalGradingOptions.find((item=>item.name==outcomeValue))?.id
+            }
             Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode,Controller.finalGradingOptions);//POCOR-8435
-        }, function (error) {
+        },
+        //POCOR-8435 end
+        function (error) {
         });
     }
 
@@ -335,8 +350,21 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 Controller.selectedStudent, Controller.outcomeTemplateId, Controller.selectedPeriod, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
         }, function (error) {
         })
+        //POCOR-8435 start
         .then(function (outcomeComments) {
             Controller.studentComments = outcomeComments.length > 0 ? outcomeComments[0].comments : '';
+            return InstitutionStudentOutcomesSvc.getStudentOutcomeFinalResult(
+                Controller.selectedStudent, Controller.educationGradeId, Controller.selectedSubject, Controller.institutionId, Controller.academicPeriodId);
+        },
+        function (error) {
+        })
+        .then(function (outcomeFinalResults) {
+            Controller.outcomeFinalResult="";
+            var outcomeValue=outcomeFinalResults.length > 0 ? outcomeFinalResults[0].outcome_result : '';
+            if(outcomeValue){
+                Controller.outcomeFinalResult= Controller.finalGradingOptions.find((item=>item.name==outcomeValue))?.id
+            }
+            //POCOR-8435 end
             Controller.resetColumnDefs(Controller.gradingOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedSubject, Controller.selectedStudent, Controller.selectedStudentStatusCode,Controller.finalGradingOptions);//POCOR-8435
             // 6198 starts
             return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId, Controller.selectedStudent)

@@ -341,7 +341,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                             selectInput.setAttribute("class", "oe-cell-editable");
                             // Default option for the dropdown
                             var defaultOption = document.createElement("option");
-                            defaultOption.value = "-"; // Default value
+                            defaultOption.value = ""; // Default value
                             defaultOption.text = "-- Select --"; // Default display text
                             selectInput.appendChild(defaultOption);
                         
@@ -360,7 +360,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                             // Add event listener for the dropdown change event
                             selectInput.addEventListener('change', function() {
                                 var newValue = selectInput.value;
-                                if (newValue !== oldValue) {
+                                if (newValue!="" && newValue !== oldValue) {
                                     // Update the value in params.data
                                     params.data[params.colDef.field] = newValue;
                                     oldValue = newValue;
@@ -453,7 +453,8 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                             }
                         });
 
-                    } else {
+                    }
+                   } else {
                         // don't allow input if period is not editable
                         var cellValue = '';
                         if (angular.isDefined(params.value) && params.value.length != 0) {
