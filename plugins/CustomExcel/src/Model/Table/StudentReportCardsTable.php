@@ -1254,7 +1254,7 @@ class StudentReportCardsTable extends AppTable
                     'EducationLevels' => [
                         'table' => 'education_levels',
                         'type' => 'INNER',
-                        'conditions' => 'Educationlevels.id = EducationCycles.education_level_id'
+                        'conditions' => 'EducationLevels.id = EducationCycles.education_level_id'
                     ],
                 ])
                 ->innerJoin([$Assessments->getAlias() => $Assessments->getTable()], [
