@@ -535,12 +535,12 @@ class InstitutionRepository extends Controller
 
 
             //For POCOR-8540 Start
-            if($loggedInUser->is_student == 1 && $loggedInUser->super_admin == 0){
+            if($loggedInUser->is_student == 1 && $loggedInUser->is_staff == 0 && $loggedInUser->super_admin == 0){
                 $institutionClasses = $institutionClasses->join('institution_class_students', 'institution_class_students.institution_class_id', '=', 'institution_classes.id')
                     ->where('institution_class_students.student_id', $loggedInUser->id);
             } 
 
-            if($loggedInUser->is_staff == 1 && $loggedInUser->super_admin == 0){
+            if($loggedInUser->is_staff == 1 && $loggedInUser->is_student == 0 && $loggedInUser->super_admin == 0){
                 $institutionClasses = $institutionClasses->where('staff_id', $loggedInUser->id);
             } 
             //For POCOR-8540 End
