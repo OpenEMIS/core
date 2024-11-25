@@ -18,6 +18,7 @@ use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Core\Configure;
 use Cake\Log\Log;
+use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -3731,15 +3732,48 @@ class StudentsTable extends ControllerActionTable
      * @return string|null
      */
 
+    //POCOR-8643 -- To resolve Enrolled(Repeater) issue
+    public function getOldRecords($previous_institution_student_id)
+    {
+        $connection = ConnectionManager::get('default');
+        $sql = "SELECT is3.id, is3.student_id, is3.student_status_id, is3.start_date, is3.end_date FROM institution_students is1 JOIN institution_students is2 ON is1.student_id = is2.student_id AND is1.start_date > is2.start_date JOIN institution_students is3 ON is2.student_id = is3.student_id AND is2.start_date > is3.start_date WHERE is1.student_status_id = 1 AND is2.student_status_id = 3 AND is3.student_status_id = 8 AND is3.start_date < is2.start_date AND is2.start_date < is1.start_date AND is1.previous_institution_student_id IS NOT NULL;";
+
+        $result = $connection->execute($sql)->fetchAll('assoc');
+        return $result;
+    }
+
     private function getStudentStatus($student_status_id, $previous_institution_student_id)
     {
-
         $statusOptions = $this->student_status_names_array;
         $value = $statusOptions[$student_status_id];
         $previousStudents = $this->previousStudents;
         if (isset($previous_institution_student_id)) {
-            if (isset($previousStudents[$previous_institution_student_id]))
+            if (array_key_exists($previous_institution_student_id, $previousStudents)) {
                 $value = __("Enrolled (Repeater)");
+            }
+            else { //POCOR-8643 -- To resolve Enrolled(Repeater) issue
+                $result = $this->getOldRecords($previous_institution_student_id);
+                $oldStatus = $result;
+                if(isset($previous_institution_student_id) && $previous_institution_student_id !== null) {
+                    $studentID = $this->find('all', [
+                        'conditions' => ['previous_institution_student_id' => $previous_institution_student_id],
+                        'fields' => ['student_id']
+                    ])->first();
+                    $studentId = $studentID->student_id;
+                    if(isset($studentId)) {
+                        $found = false;
+                        foreach ($oldStatus as $status) {
+                            if ($status['student_id'] == $studentId) {
+                                $found = true;
+                                break;
+                            }
+                        }
+                        if ($found) {
+                            $value = __("Enrolled (Repeater)");
+                        }
+                    }
+                }
+            }
         }
         return $value;
     }

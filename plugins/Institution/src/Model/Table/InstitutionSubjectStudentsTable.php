@@ -192,6 +192,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                     'academic_period_id' => $academicPeriodId,
                     'education_subject_id' => $educationSubjectId,
                     'education_grade_id' => $educationGradeId,
+                    'institution_id' => $institutionId,//POCOR-6516
                     //'institution_class_id' => $institutionClassesId,//POCOR-6479 comment this code of POCOR-6468
                 ])
                 ->execute();
@@ -381,8 +382,6 @@ class InstitutionSubjectStudentsTable extends AppTable
     {
 //    POCOR-7419-KHINDOL
 //        $this->log('findStudentResults', 'debug');
-        //        Log::debug(__FUNCTION__);
-//        Log::debug($options);
         $institution_id = self::getFromArray($options, 'institution_id');
         $institution_class_id = self::getFromArray($options, 'institution_class_id'); //568
         $assessment_id = self::getFromArray($options, 'assessment_id');
@@ -391,7 +390,6 @@ class InstitutionSubjectStudentsTable extends AppTable
         $institution_subject_id = self::getFromArray($options, 'institution_subject_id'); //60
         $education_grade_id = self::getFromArray($options, 'education_grade_id');
         $archive = self::getFromArray($options, 'archive');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         if($archive){
             $archive = true;
         }
