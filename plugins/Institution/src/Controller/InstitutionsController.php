@@ -3139,8 +3139,8 @@ class InstitutionsController extends AppController
                 } elseif (in_array($alias, ['FeederOutgoingInstitutions'])) {
                     $params = [];
                     $params[$model->aliasField('feeder_institution_id')] = $institutionID;
-                    
-                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] == 'add') {//POCOR-8691 
+
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] == 'add') {//POCOR-8691
                         $exists = true;
                     } else {
                         $exists = $model->exists($params);
@@ -3178,7 +3178,7 @@ class InstitutionsController extends AppController
 
                 // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                 if (!$exists && !$isDownload) {
-                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] != 'add') {//POCOR-8691 
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] != 'add') {//POCOR-8691
                         $this->Alert->info('general.notExists');//POCOR-8691
                     }
                     //                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
@@ -6109,10 +6109,17 @@ class InstitutionsController extends AppController
 
     private function getFieldOptions($fieldId, $customFieldOptionsTable, $prefix)
     {
-        $options = $customFieldOptionsTable->find()
-            ->select(['option_id' => 'id', 'option_name' => 'name', 'is_default', 'visible', 'option_order' => 'order'])
-            ->where([$this->getPrefixedFieldName($prefix, 'custom_field_id') => $fieldId])
-            ->toArray();
+        $prefixedFieldName = $this->getPrefixedFieldName($prefix, 'custom_field_id');
+        $optionsQuery = $customFieldOptionsTable->find()
+            ->select(['option_id' => $customFieldOptionsTable->aliasField('id'),
+                'option_name' => $customFieldOptionsTable->aliasField('name'),
+                'is_default' => $customFieldOptionsTable->aliasField('is_default'),
+                'visible' => $customFieldOptionsTable->aliasField('visible'),
+                'option_order' => $customFieldOptionsTable->aliasField('order')])
+            ->where([$customFieldOptionsTable->aliasField($prefixedFieldName) => $fieldId]);
+//        Log::debug(print_r(['$fieldId' => $fieldId], true));
+//        Log::debug(print_r(['sql' => $optionsQuery->sql()], true));
+        $options = $optionsQuery->toArray();
 
         return array_map(function ($option) {
             return [
