@@ -27,7 +27,7 @@ use PHPExcel_Style_NumberFormat;
 use PHPExcel_Shared_Date;
 use PHPExcel_IOFactory;
 use PHPExcel_Cell;
-//POCOR-8343 
+//POCOR-8343
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as SpreadsheetDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -622,7 +622,7 @@ class ImportBehavior extends Behavior
         try {
             $objWriter->save($excelPath);
         } catch (\Throwable $th) {
-            
+
         }
 
         $this->performDownload($excelFile);
@@ -832,7 +832,7 @@ class ImportBehavior extends Behavior
         $currentRowHeight = $objPHPExcel->getActiveSheet()->getRowDimension(2)->getRowHeight();
         foreach ($codesData as $columnOrder => $modelArr) {
             $modelData = $modelArr['data'];
-            $firstColumn = $lastColumn == -1 ? 1 : 1 + $lastColumn ;  //POCOR-8343 
+            $firstColumn = $lastColumn == -1 ? 1 : 1 + $lastColumn ;  //POCOR-8343
             $modelDataCount = is_array($modelArr['data'][0]) ?  count($modelArr['data'][0])  : 0; //POCOR-8343
             $lastColumn = $firstColumn + $modelDataCount - 1;
             $objPHPExcel->getActiveSheet()->mergeCells($this->getExcelColumnAlpha($firstColumn) . "2:" . $this->getExcelColumnAlpha($lastColumn) . "2");
@@ -954,7 +954,7 @@ class ImportBehavior extends Behavior
             try {
                 $objWriter->save($excelPath);
             } catch (\Throwable $th) {
-                
+
             }
 
             $downloadUrl = $this->_table->ControllerAction->url('download' . ucwords($type));
@@ -1658,7 +1658,7 @@ class ImportBehavior extends Behavior
             } elseif ($foreignKey == self::NON_TABLE_LIST) {
                 if (strlen($cellValue) > 0) {
                     $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet' . $excelMappingObj->lookup_model . 'Id'), 'onImportGet' . $excelMappingObj->lookup_model . 'Id', [$cellValue]);
-                    $recordId = $getIdEvent->result;
+                    $recordId = $getIdEvent->getResult();
                     if (strlen($recordId) > 0) {
                         $val = $recordId;
                     } else {
@@ -1676,7 +1676,7 @@ class ImportBehavior extends Behavior
                 $params = [$tempRow, $cellValue];
                 $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck' . ucfirst($excelMappingObj->column_name) . 'Config'), 'onImportCheck' . $excelMappingObj->column_name . 'Config', $params);
 
-                if ($event->result !== true) {
+                if ($event->getResult() !== true) {
                     $rowInvalidCodeCols[$columnName] = __($event->result);
                     $rowPass = false;
                 } else {
