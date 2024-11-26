@@ -354,13 +354,15 @@ class ImportUsersTable extends AppTable
                         $data['preferred'] = 0;
                         $contactEntity = $ContactTable->newEntity($data);
                     } else {
-                        $contactEntity = $ContactTable->newEntity($data, ['validate' => 'importType']);
+                        $contactEntity = $ContactTable->newEntity($data,
+//                            ['validate' => 'importType']
+                        );
                     }
 
                     //Display all the error msgs
                     if ($contactEntity) { // POCOR-7973
-                        if ($contactEntity->errors()) {
-                            $errorMsgArray = $contactEntity->errors();
+                        if ($contactEntity->getErrors()) {
+                            $errorMsgArray = $contactEntity->getErrors();
                             $errorMessages = [];
 
                             foreach ($errorMsgArray as $key => $value) {

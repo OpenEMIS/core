@@ -1151,7 +1151,7 @@ class UsersTable extends AppTable
                     $contactEntity = $ContactsTable->newEntity($userContactsData);
 
                     // Save into user_contacts if no errors
-                    if (!$contactEntity->errors()) {
+                    if (!$contactEntity->getErrors()) {
                         $ContactsTable->save($contactEntity);
                     }
                 }
@@ -1301,7 +1301,7 @@ class UsersTable extends AppTable
                             ])
                             ->order([$UserIdentities->aliasField('created') => 'desc'])
                             ->first();
-                            
+
                         if (empty($latestIdentity)) {
                             $this->updateAll(
                                 [
