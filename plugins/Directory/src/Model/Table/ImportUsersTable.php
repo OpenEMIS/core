@@ -3,18 +3,24 @@
 namespace Directory\Model\Table;
 
 use ArrayObject;
-use PHPExcel_Worksheet;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 
 class ImportUsersTable extends AppTable
 {
     const IS_STAFF = "is_staff";
     const IS_STUDENT = "is_student";
-
+    private $Users;
+    private $ConfigItems;
+//    private $Nationalities;
+    private $IdentityTypes;
+    private $UserIdentities;
+    private $accountTypes;
     public function initialize(array $config): void
     {
         $this->setTable('import_mapping');
@@ -23,11 +29,11 @@ class ImportUsersTable extends AppTable
         $this->addBehavior('Import.Import', ['plugin' => 'User', 'model' => 'Users']);
 
         // register table once
-        $this->Users = TableRegistry::get('User.Users');
-        $this->ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $this->Nationalities = TableRegistry::get('FieldOption.Nationalities');
-        $this->IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-        $this->UserIdentities = TableRegistry::get('User.Identities');
+        $this->Users = self::getDynamicTableInstance('User.Users');
+        $this->ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+//        $this->Nationalities = self::getDynamicTableInstance('FieldOption.Nationalities');
+        $this->IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+        $this->UserIdentities = self::getDynamicTableInstance('User.Identities');
 
         $prefix = $this->ConfigItems->value('openemis_id_prefix');
         $prefix = explode(",", $prefix);
@@ -239,7 +245,7 @@ class ImportUsersTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $isStudentIdentityMandatory = $ConfigItems->value('StudentIdentities');
         $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
         $isStaffNationalitiesMandatory = $ConfigItems->value('StaffNationalities');
@@ -327,8 +333,8 @@ class ImportUsersTable extends AppTable
                 return false;
             } else {
                 //use contact_type_id to get contact_options id to save.
-                $ContactTypesTable = TableRegistry::get('User.ContactTypes');
-                $ContactTable = TableRegistry::get('User.Contacts');
+                $ContactTypesTable = self::getDynamicTableInstance('User.ContactTypes');
+                $ContactTable = self::getDynamicTableInstance('User.Contacts');
 
                 $contactOptionId = $ContactTypesTable->find()
                     ->select([$ContactTypesTable->aliasField('contact_option_id')])
@@ -355,28 +361,32 @@ class ImportUsersTable extends AppTable
                         $contactEntity = $ContactTable->newEntity($data);
                     } else {
                         $contactEntity = $ContactTable->newEntity($data,
-//                            ['validate' => 'importType']
+//                            ['validate' => 'importType'] // todo removed validations for further check
                         );
                     }
 
                     //Display all the error msgs
-                    if ($contactEntity) { // POCOR-7973
-                        if ($contactEntity->getErrors()) {
-                            $errorMsgArray = $contactEntity->getErrors();
-                            $errorMessages = [];
+                    // Display all the error messages
+                    if ($contactEntity && $contactEntity->getErrors()) { // POCOR-7973
+                        $errorMessages = array_reduce(
+                            $contactEntity->getErrors(),
+                            function ($carry, $errors) {
+                                return array_merge($carry, $errors);
+                            },
+                            []
+                        );
 
-                            foreach ($errorMsgArray as $key => $value) {
-                                foreach ($errorMsgArray[$key] as $errorMsg) {
-                                    $errorMessages[] = $errorMsg;
-                                }
-                            }
+                        $rowInvalidCodeCols['contact'] = implode(',', $errorMessages);
+                        $tempRow['contact_error'] = true;
 
-                            $errorMessageToShow = implode(",", $errorMessages);
-                            $rowInvalidCodeCols['contact'] = $errorMessageToShow;
-                            $tempRow['contact_error'] = true;
-                            return false;
-                        }
-                    } // POCOR-7973
+                        return false;
+                    } elseif (!$contactEntity) {
+                        $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
+                        $tempRow['contact_error'] = true;
+
+                        return false;
+                    }
+
                 } else {
                     $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
                     $tempRow['contact_error'] = true;
@@ -491,7 +501,7 @@ class ImportUsersTable extends AppTable
     {
         $result = true;
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $isStudentIdentityMandatory = $ConfigItems->value('StudentIdentities');
         $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
 
@@ -583,4 +593,54 @@ class ImportUsersTable extends AppTable
         return $isValidIdentityNumber;
     }
     // POCOR-7973:end
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }
