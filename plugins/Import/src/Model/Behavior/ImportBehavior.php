@@ -34,6 +34,8 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use function PHPUnit\Framework\isEmpty;
+
 /**
  * ImportBehavior is to be used with import_mapping table.
  *
@@ -400,11 +402,11 @@ class ImportBehavior extends Behavior
                     }
                     continue;
                 }
-                if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
+//                if ($row == $highestRow) { // check if the row cells are really empty, if yes then end the loop
                     if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
                         break;
                     }
-                }
+//                }
 
                 // check for unique record
                 $tempRow = new ArrayObject;
@@ -987,19 +989,27 @@ class ImportBehavior extends Behavior
      */
     public function checkRowCells($sheet, $totalColumns, $row)
     {
+
         $cellsState = [];
         for ($col = 0; $col < $totalColumns; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
             $value = $cell->getValue();
-            if (empty($value)) {
-                $cellsState[] = false;
-            } else {
-                $cellsState[] = true;
+            $coordinate = $cell->getCoordinate();
+//            Log::debug(print_r(['$value' => $value], true));
+//            Log::debug(print_r(['$coordinate' => $coordinate], true));
+            if(is_string($value)){
+                $value = trim($value);
             }
+            // Consider both null and empty string ("") as empty
+            $cellState = !($value === null || $value === "" || empty($value));
+            $cellsState[] = $cellState;
         }
-        return in_array(true, $cellsState);
-    }
 
+        // Return true if at least one cell is non-empty
+        $rowState = in_array(true, $cellsState, true);
+//        Log::debug(print_r(['$rowState' => $rowState], true));
+        return $rowState;
+    }
     /**
      * Check if the uploaded file is the correct template by comparing the headers extracted from mapping table
      * and first row of the uploaded file record
