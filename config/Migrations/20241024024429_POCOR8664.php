@@ -14,13 +14,10 @@ class POCOR8664 extends AbstractMigration
      */
     public function up()
     {
-        $this->execute('DROP TABLE IF EXISTS `z_8664_user_identities`');
         $this->execute('CREATE TABLE `z_8664_user_identities` LIKE `user_identities`');
         $this->execute('INSERT INTO `z_8664_user_identities` SELECT * FROM `user_identities`');
-        $table = $this->table('user_identities');
-        if (!$table->hasColumn('preferred')) {
-            $this->execute("ALTER TABLE `user_identities` ADD `preferred` INT NOT NULL DEFAULT '1' AFTER `comments`");}
 
+        $this->execute("ALTER TABLE `user_identities` ADD `preferred` INT NOT NULL DEFAULT '1' AFTER `comments`");
     }
 
     public function down()
