@@ -1,3 +1,13 @@
+### [4.3.8] - 2024-11-22
+- Bug Fixed: Institutions>Attendance>Students: Unable to update absences when using other roles
+- Bug Fixed: Institutions>Attendance>Students: Unable to edit attendance due to wrong permissions
+- Bug Fixed: Institutions>Attendance>Students: Superrole cannot see classes
+- Bug Fixed: Institutions>Academic>Textbooks: Getting 404 when adding
+
+### [4.3.7] - 2024-11-15
+- Bug Fixed: API : Student assessment POST API does not insert a new record in the table
+- Bug Fixed: API : Develop Student Behaviour API as the existing Behaviour API fetches Staff Behaviour API
+
 ### [4.3.6] - 2024-11-14
 - Bug Fixed: Administration>System Setup>Field Options: Getting 404 when adding
 - Bug Fixed: Institutions>Staff>Career>Appraisal: Unable to add new appraisals
@@ -375,6 +385,31 @@
 - Bug Fixed: Institutions>Students>Account>Edit: User should be able to edit and success message should return
 - Bug Fixed: Institutions>Students>Academic: Academic module is not working and giving blank page
 - Bug Fixed: Institutions>Staff>General>Nationalities: User is unable to add Nationalities
+
+### [3.111.2] - 2024-11-21
+- Bug Fixed: Administrations > Performances > GPA/ Cumulative GPA : Issues when viewing GPA/Cumulative GPA
+- Bug Fixed: Institutions > Students > Academic > GPA: Duplicate christmas terms
+- Bug Fixed: Institutions>Performance>Assessments: Updates to Exemptions
+
+### [3.111.1] - 2024-11-12
+- Bug Fixed: Institutions>Performance>Assessments: When marks are not entered, it should considered as 0
+- Bug Fixed: Develop a field, configuration and placeholder for Cumulative GPA Part 2
+
+### [3.111.0] - 2024-10-25
+- Implemented: Develop a field, configuration and placeholder for Cumulative GPA
+- Implemented: Develop a function to flag specific students as exempt from specific assessments items - part 2 (reports)
+- Bug Fixed: Institutions > Staff > Transfer: When user initiate a transfer, the staff did not show on the new institution even after transfer is successful
+- Bug Fixed: Institutions > Performances > Assessments: Total marks are not showing correctly
+- Bug Fixed: Institutions > Academic > Schedules > Timetables: when accessing timetable module, the page navigate to the home page even when permission is given
+- Bug Fixed: Institutions>Students/Staff>Identities: Develop a preferred identity type
+
+### [3.110.0] - 2024-10-17
+- Implemented: Develop changes to the Add Student Wizard for Refugee Identity Type
+- Bug Fixed: Institutions > Students > Export: There is no email data (email column) showing in the export file
+- Bug Fixed: Institutions>Infrastructure>Overview>Edit:User should be able to edit start date
+- Bug Fixed: Directory>General>Identities: It redirects to the wrong student when trying to edit identities
+- Bug Fixed: Update Google Analytics Code in OpenEMIS core
+- Bug Fixed: Administration > APIs > Credentials: when using a superrole user to create API credentials, the page gives a message that "You are not authorized to access this page"
 
 ### [3.109.0] - 2024-09-26
 - Implemented: Develop a function to flag specific students as exempt from specific assessments items
