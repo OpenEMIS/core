@@ -15,6 +15,7 @@ use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 
 use App\Model\Table\ControllerActionTable;
+use Cake\Log\Log;
 
 class IdentitiesTable extends ControllerActionTable
 {
@@ -64,7 +65,9 @@ class IdentitiesTable extends ControllerActionTable
         $options['identity_number'] = $entity->number;
         if ($entity->isNew()) {
             $userID = $this->getUserID();
-            $entity['security_user_id'] = $userID;
+            if ($userID) {
+                $entity['security_user_id'] = $userID;
+            }
         }
         $message = $this->checkCustomIdentityNumber($options);
         if ($message != "") {
@@ -328,6 +331,7 @@ class IdentitiesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
     {
+        Log::debug(__FUNCTION__ . '1');
         if (!empty($entity->nationality_id)) {
             $nationalitiesLookUp = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')->get($entity->nationality_id);
             // if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
@@ -339,6 +343,7 @@ class IdentitiesTable extends ControllerActionTable
                         'preferred' => self::ISPREFERRED
                     ])
                     ->first();
+                Log::debug(__FUNCTION__ . '2');
 
                 $userDetail = $user->get($entity->security_user_id);
                 if (!empty($preferredNationality)) {
@@ -346,6 +351,8 @@ class IdentitiesTable extends ControllerActionTable
                 }
                 $userDetail->identity_type_id = $entity->identity_type_id;
                 $userDetail->identity_number = $entity->number;
+                Log::debug(__FUNCTION__ . '3');
+
                 $user->save($userDetail);
             }
         }
@@ -359,10 +366,13 @@ class IdentitiesTable extends ControllerActionTable
                 ->first();
             if ((($result['identity_number'] == null || $result['identity_number'] == '') && ($result['identity_type_id'] == null || $result['identity_type_id'] == ''))) {
                 $Users->updateAll(
-                    ['identity_number' => $entity->number, 'identity_type_id' => $entity->identity_type_id],    //field
+                    ['identity_number' => $entity->number,
+                        'identity_type_id' => $entity->identity_type_id],    //field
                     ['id' => $entity->security_user_id] //condition
                 );
             }
+            Log::debug(__FUNCTION__ . '4');
+
         } catch (\Exception $e) {
         }
 
@@ -371,7 +381,7 @@ class IdentitiesTable extends ControllerActionTable
         //     TableRegistry::getTableLocator()->get('User.Users')
         // ];
         // $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
-        
+
         if (($entity->isDirty('preferred') && $entity->preferred == 1) || $entity->preferred == 1) {
             $identity = $this->find()
                 ->where([

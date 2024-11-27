@@ -10,6 +10,7 @@ use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\Log\Log;
 
 class ImportUsersTable extends AppTable
 {
@@ -105,7 +106,8 @@ class ImportUsersTable extends AppTable
         $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'openemis_no';
         });
-        $openemisNoIndex = key($extractedOpenemisNo->toArray());
+
+        $openemisNoIndex = key($extractedOpenemisNo->toArray()) + 1;
         $openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
 
         if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
@@ -116,9 +118,10 @@ class ImportUsersTable extends AppTable
         $accountType = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'account_type';
         });
-        $accountTypeIndex = key($accountType->toArray());
+        $accountTypeIndex = key($accountType->toArray()) + 1;
         $accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
-        $tempRow['account_type'] = $this->getAccountTypeId($accountType);
+        $accountTypeId = $this->getAccountTypeId($accountType);
+        $tempRow['account_type'] = $accountTypeId;
         if (empty($tempRow['account_type'])) {
             $tempRow['duplicates'] = __('Account type cannot be empty');
             $rowInvalidCodeCols['account_type'] = $tempRow['duplicates'];
@@ -129,9 +132,14 @@ class ImportUsersTable extends AppTable
 
         $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
         if (!$user) {
-            $tempRow['entity'] = $this->Users->newEntity();
-            $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
-            $tempRow['username'] = $tempRow['openemis_no'];
+            try{
+                $tempRow['entity'] = $this->Users->newEntity(['openemis_no' => $openemisNo]);
+                $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
+                $tempRow['username'] = $tempRow['openemis_no'];
+            } catch (\Exception $exception) {
+                $rowInvalidCodeCols['openemis_no'] = __($exception->getMessage());
+                return false;
+            }
         } else {
             $tempRow['entity'] = $user;
         }
