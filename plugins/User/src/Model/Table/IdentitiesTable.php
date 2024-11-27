@@ -83,14 +83,23 @@ class IdentitiesTable extends ControllerActionTable
         //$this->log($entity, 'debug');
         //whichever identity type and number that came from import user, will be treat as new identity user record.
         $options = [];
-        $options['identity_type_id'] = $entity->identity_type_id;
-        $options['identity_number'] = $entity->identity_number;
+        $identity_type_id = $entity->identity_type_id;
+        $nationality_id = $entity->nationality_id;
+        $identity_number = $entity->identity_number;
+        if(!$identity_number || !$nationality_id || !$identity_type_id){
+            return;
+        }
+        $options['identity_type_id'] = $identity_type_id;
+        $options['identity_number'] = $identity_number;
 
         $message = $this->checkCustomIdentityNumber($options);
         if ($message == "") {
+
             $userIdentityEntity = $this->newEntity([
-                'identity_type_id' => $entity->identity_type_id,
-                'number' => $entity->identity_number,
+
+                'nationality_id' => $nationality_id,
+                'identity_type_id' => $identity_type_id,
+                'number' => $identity_number,
                 'security_user_id' => $entity->id,
                 'created_user_id' => 1,
                 'created' => new Time()
