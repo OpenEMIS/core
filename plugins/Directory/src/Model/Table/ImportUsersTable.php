@@ -27,7 +27,33 @@ class ImportUsersTable extends AppTable
         $this->setTable('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin' => 'User', 'model' => 'Users']);
+        $this->addBehavior('Import.Import', [
+                'plugin' => 'User',
+                'model' => 'Users',
+                'row_heights' => [75, 25, 25],
+                'header_font_size' => 16,
+                'headings' => [
+                    [
+                        'title' => 'Import Users Data',
+                        'title_range' => 'C1:R1',
+                        'subtitle' => '* Mandatory for User Import',
+                        'subtitle_range' => 'D2:R2'
+                    ],
+                    [
+                        'title' => 'Import User into an Institution',
+                        'title_range' => 'S1:W1',
+                        'subtitle' => '** Mandatory for Institution Import',
+                        'subtitle_range' => 'S2:W2'
+                    ],
+                    [
+                        'title' => 'Import Guardian for the User',
+                        'title_range' => 'X1:AN1',
+                        'subtitle' => '*** Mandatory for Guardian Import',
+                        'subtitle_range' => 'X2:AN2'
+                    ]
+                ]
+            ]
+        );
 
         // register table once
         $this->Users = self::getDynamicTableInstance('User.Users');
