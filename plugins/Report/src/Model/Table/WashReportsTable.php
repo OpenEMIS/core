@@ -555,6 +555,20 @@ class WashReportsTable extends AppTable
         }//POCOR-8161 ends
 
     }
+    //POCOR-8161 starts
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                            ->where([
+                                $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+        foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
+    }//POCOR-8161 ends
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
@@ -564,7 +578,17 @@ class WashReportsTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $washType = $requestData->wash_type;
-        $areaId = $requestData->area_education_id;
+        $selectedArea = $requestData->area_education_id;//POCOR-8161
+        //POCOR-8161 starts
+        $areaIds = [];
+        $allgetArea = $this->getChildren($selectedArea, $areaIds);
+        $selectedArea1[]= $selectedArea;
+        if(!empty($allgetArea)){
+            $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+        }else{
+            $allselectedAreas = $selectedArea1;
+        }//POCOR-8161 ends
+
         $conditions = [];
         $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
         if (!empty($academicPeriodId)) {
@@ -573,9 +597,9 @@ class WashReportsTable extends AppTable
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions[$this->aliasField('id')] = $institutionId;
         }
-        if (!empty($areaId) && $areaId > 0) {
-            $conditions[$this->aliasField('area_id')] = $areaId;
-        }
+        if (!empty($allselectedAreas) && count($allselectedAreas) > 0) {//POCOR-8161 starts
+            $conditions[$this->aliasField('area_id IN')] = $allselectedAreas;
+        }//POCOR-8161 ends
 
         $sheetData = $settings['sheet']['sheetData'];
         $infrastructureType = $sheetData['infrastructure_tabs_type'];
