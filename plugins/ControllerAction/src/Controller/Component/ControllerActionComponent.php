@@ -1025,7 +1025,7 @@ class ControllerActionComponent extends Component
         }
 
         $indexElements = [
-            ['name' => 'OpenEmis.ControllerAction/index', 'data' => [], 'options' => []]
+            ['name' => 'OpenEmis.ControllerAction/index', 'data' => [], 'options' => [],'order' => 4]
         ];
 
         try {
@@ -1034,7 +1034,7 @@ class ControllerActionComponent extends Component
                     $model = TableRegistry::getTableLocator()->get($settings['model']);
                 }
                 $data = $this->search($model);
-                $indexElements[] = ['name' => 'OpenEmis.pagination', 'data' => [], 'options' => []];
+                $indexElements[] = ['name' => 'OpenEmis.pagination', 'data' => [], 'options' => [],'order' => 5];
             } else {
                 $data = $query->all();
             }

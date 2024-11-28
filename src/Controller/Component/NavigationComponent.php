@@ -1622,7 +1622,7 @@ class NavigationComponent extends Component
                     'Institutions.HistoricalStaffLeave',
                     'Staff.Behaviours',
                     'Institutions.Staff',
-                    'Institutions.StaffPositionProfiles.add',
+                    'Institutions.StaffPositionProfiles',
                     //'Institutions.StaffAppraisals', POCOR-7485 not use becuase now StaffAppraisals's controller change
                     'Staff.StaffAppraisals',
                     'Institutions.ImportStaffLeave',
@@ -2721,6 +2721,8 @@ class NavigationComponent extends Component
                         'Configurations.add',
                         'Configurations.view',
                         'Configurations.edit',
+                        'Configurations.Authentication',
+                        'Configurations.AuthSystemAuthentications',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',

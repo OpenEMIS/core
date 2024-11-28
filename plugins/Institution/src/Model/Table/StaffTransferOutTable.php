@@ -267,6 +267,8 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
+//         echo "<pre>"; print_r($queryString);
+// die;
         $encodedQueryString = $this->paramsEncode($queryString);
         $session = $this->request->getSession();
         $institutionId = !is_null($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
@@ -302,10 +304,16 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                         $visible = 1;
                     }
                 }
-
+                
                 if ($visible) {
                     $url = $this->url('view');
+                    
+                    //POCOR-8604 starts add id in queryString
+                    $newQueryString = array_merge($queryString,['id' => $pendingTransfer->id]);
+                    $url['?']['queryString'] = $this->paramsEncode($newQueryString);
                     $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
+                    $url['queryString'] = $this->paramsEncode($newQueryString); 
+                    //POCOR-8604 ends
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
                 } else {
@@ -336,9 +344,15 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
+        
         // redirect to view page of record after save
         $extra['redirect'][0] = 'view';
         $extra['redirect'][1] = $this->paramsEncode(['id' => $entity->id]);
+        //POCOR-8604 starts
+        $queryString = $this->getQueryString();
+        $newQueryString = array_merge($queryString,['id' => $entity->id]);
+        $extra['redirect']['?']['queryString'] = $this->paramsEncode($newQueryString);
+        //POCOR-8604 ends
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -864,4 +878,21 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             return $attr;
         }
     }
+
+    //POCOR-8642 -- START
+    public function getReceivingInstList($params) {
+        $receivingOptions = [];
+        $StaffTransferOut = TableRegistry::get('Institution.StaffTransferOut');
+
+        $receivingOptions = $StaffTransferOut->find()
+            ->select(['new_institution_id'])
+            ->where([$StaffTransferOut->aliasField('id') => $params])
+            ->first();
+
+        if ($receivingOptions) {
+            $recvInstitution = $receivingOptions->new_institution_id; 
+        }
+        return $recvInstitution;
+    }
+    //POCOR-8642 -- END
 }
