@@ -267,6 +267,9 @@ return [
             fwrite($appExtraHandle, $app_extra_text);
             $this->createDb($pdo, $db);
             $this->createDbUser($pdo, $dbUserHostPermission, $dbUser, $dbPassword, $db);
+            $pdo_query = "SET GLOBAL sql_mode = REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', '')";
+            $stmt = $pdo->prepare($pdo_query);
+            $stmt->execute(); 
             $template = str_replace('{database}', "'$db'", $template);
             $template = str_replace('{user}', "'$dbUser'", $template);
             fwrite($dbFileHandle, $template);
