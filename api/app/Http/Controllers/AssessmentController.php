@@ -40,6 +40,20 @@ class AssessmentController extends Controller
      *     description="Returns a list of assessment items",
      *     tags={"Assessment"},
      *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic Period Id",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="education_grade_id",
+     *         in="query",
+     *         required=false,
+     *         description="Education Grade Id",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="order",
      *         in="query",
      *         required=false,

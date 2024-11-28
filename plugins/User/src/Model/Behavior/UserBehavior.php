@@ -1,4 +1,5 @@
 <?php
+
 namespace User\Model\Behavior;
 
 use ArrayObject;
@@ -28,7 +29,7 @@ class UserBehavior extends Behavior
     private $defaultUserProfileView = "<div class='profile-image'><i class='fa fa-user'></i></div>";
 
     private $defaultImgIndexClass = "profile-image-thumbnail";
-    private $defaultImgViewClass= "profile-image";
+    private $defaultImgViewClass = "profile-image";
     private $photoMessage = 'Advisable photo dimension %width by %height';
     private $formatSupport = 'Format Supported: %s';
     private $defaultImgMsg = "<p>* %s <br>* %s</p>";
@@ -94,63 +95,69 @@ class UserBehavior extends Behavior
     {
         if ($entity->isNew()) {
             $entity->preferred_language = 'en';
-        }else{
-            $dob = date('Y-m-d',strtotime($entity->date_of_birth));
-            $dod = date('Y-m-d',strtotime($entity->date_of_death));
-            if($dob > $dod){
-                 $entity->dod_range = "greater";
+        } else {
+            $dob = date('Y-m-d', strtotime($entity->date_of_birth));
+            $dod = date('Y-m-d', strtotime($entity->date_of_death));
+            if ($dob > $dod) {
+                $entity->dod_range = "greater";
             }
         }
     }
 
     private function isCAv4()
     {
-        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion == '4.0';
     }
 
     public function beforeAction(Event $event)
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $configData = $ConfigItems->find('all',['conditions'=>['name LIKE' => '%' . 'Date of Death' . '%']])->first();
+        $configData = $ConfigItems->find('all', ['conditions' => ['name LIKE' => '%' . 'Date of Death' . '%']])->first();
         $schema = $this->_table->getSchema();
         $columns = $schema->columns();
         switch ($this->_table->getTable()) {
             case 'institution_students':
             case 'institution_staff':
-             case 'student_guardians':
+            case 'student_guardians':
                 break;
             default:
                 $this->_table->fields['username']['visible'] = false;
                 $this->_table->fields['last_login']['visible'] = false;
-            break;
+                //POCOR-8660 start
+                $this->_table->fields['failed_logins']['visible'] = false;
+                $this->_table->fields['email']['visible'] =  false;
+                $this->_table->fields['mobile_number']['visible'] =  false;
+                //POCOR-8660 end
+
+                break;
         }
         if ($this->_table->getTable() == 'security_users') {
             $this->_table->addBehavior('OpenEmis.Section');
-           // $table = new $this->_table;
-           // $this->_table->fields = $table->getSchema()->columns();
+            // $table = new $this->_table;
+            // $this->_table->fields = $table->getSchema()->columns();
             // $this->_table->fields = $this->_table->getFields();
 
-                // // Access the table schema
-                // $schema = $this->_table->getSchema();
+            // // Access the table schema
+            // $schema = $this->_table->getSchema();
 
-                // // Get the field information
-                // $fieldInfo = $schema->getColumn('is_student');
+            // // Get the field information
+            // $fieldInfo = $schema->getColumn('is_student');
 
-                // // Modify the type to 'hidden'
-                // $fieldInfo['type'] = 'hidden';
+            // // Modify the type to 'hidden'
+            // $fieldInfo['type'] = 'hidden';
 
-                // // Update the schema
-                // $schema->addColumn('is_student', $fieldInfo);
-                // echo "<pre>"; print_r($fieldInfo);
-                // die;
+            // // Update the schema
+            // $schema->addColumn('is_student', $fieldInfo);
+            // echo "<pre>"; print_r($fieldInfo);
+            // die;
             $this->_table->fields['is_student']['type'] = 'hidden';
             $this->_table->fields['is_staff']['type'] = 'hidden';
             $this->_table->fields['is_guardian']['type'] = 'hidden';
             $this->_table->fields['photo_name']['visible'] = false;
             $this->_table->fields['super_admin']['visible'] = false;
-            if($configData->value == 1){
+            if ($configData->value == 1) {
                 $this->_table->fields['date_of_death']['visible'] = ['index' => false, 'view' => true, 'edit' => true, 'add' => false];
-            }else{
+            } else {
                 $this->_table->fields['date_of_death']['visible'] = ['index' => false, 'view' => false, 'edit' => false, 'add' => false];
             }
             $this->_table->fields['external_reference']['visible'] = false;
@@ -181,7 +188,9 @@ class UserBehavior extends Behavior
                     'default_date' => false,
                 ]);
             } else {
-                $this->_table->ControllerAction->field('date_of_birth', [
+                $this->_table->ControllerAction->field(
+                    'date_of_birth',
+                    [
                         'date_options' => [
                             'endDate' => date('d-m-Y')
                         ],
@@ -222,8 +231,10 @@ class UserBehavior extends Behavior
                     $this->_table->ControllerAction->field('date_of_death', ['type' => 'date', 'after' => 'date_of_birth']); //POCOR-7982
                 }
             }
+
             //POCOR-7982
             if ($this->_table->action == 'view') {
+
                 if ($this->isCAv4()) {
                     $this->_table->field('date_of_death', ['type' => 'date', 'after' => 'date_of_birth']);
                 } else {
@@ -248,18 +259,18 @@ class UserBehavior extends Behavior
                     $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
                     $security_users_id = '';
                     $model = $this->_table;
-                    if($this->_table->controller->getRequest()->getAttribute('params')['pass'][0] == 'view'){
+                    if ($this->_table->controller->getRequest()->getAttribute('params')['pass'][0] == 'view') {
                         $security_users_id = $model->paramsDecode($this->_table->controller->getRequest()->getAttribute('params')['pass'][1]);
-                        if(count($security_users_id) >= 1){
+                        if (count($security_users_id) >= 1) {
                             $security_users_id = $security_users_id['user_id'];
                         }
                     }
-                    if($security_users_id > 0){
+                    if ($security_users_id > 0) {
                         $this->_table->field('details', [
                             'type' => 'element',
                             'after' => 'identity_section',
                             'element' => 'User.UserIdentities/details',
-                            'visible' => ['view'=>true],
+                            'visible' => ['view' => true],
                             'data' => $this->getViewUserIdentities($security_users_id)
                         ]);
                     }
@@ -279,18 +290,18 @@ class UserBehavior extends Behavior
                     $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
                     $security_users_id = '';
                     $model = $this->_table;
-                    if($this->_table->controller->getRequest()->getAttribute('params')['pass'][0] == 'view'){
+                    if ($this->_table->controller->getRequest()->getAttribute('params')['pass'][0] == 'view') {
                         $security_users_id = $model->paramsDecode($this->_table->controller->getRequest()->getAttribute('params')['pass'][1]);
-                        if(count($security_users_id) >= 1){
+                        if (count($security_users_id) >= 1) {
                             $security_users_id = $security_users_id['user_id'];
                         }
                     }
-                    if($security_users_id > 0){
+                    if ($security_users_id > 0) {
                         $this->_table->field('details', [
                             'type' => 'element',
                             'after' => 'identity_section',
                             'element' => 'User.UserIdentities/details',
-                            'visible' => ['view'=>true],
+                            'visible' => ['view' => true],
                             'data' => $this->getViewUserIdentities($security_users_id)
                         ]);
                     }
@@ -318,35 +329,38 @@ class UserBehavior extends Behavior
         $Nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')->setAlias('nationalities');
 
         $data = $UserIdentities->find()
-                ->select([
-                    $UserIdentities->aliasField('id'),
-                    $UserIdentities->aliasField('identity_type_id'),
-                    $IdentityTypes->aliasField('name'),
-                    $UserIdentities->aliasField('number'),
-                    $UserIdentities->aliasField('nationality_id'),
-                    $Nationalities->aliasField('name'),
-                    $UserNationalities->aliasField('preferred')
-                ])
-                ->leftJoin(
-                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
-                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
-                    ]
-                )
-                ->leftJoin(
-                    [$UserNationalities->getAlias() => $UserNationalities->getTable()], [
-                        $UserNationalities->aliasField('security_user_id = ') . $UserIdentities->aliasField('security_user_id'),
-                        $UserNationalities->aliasField('nationality_id = ') . $UserIdentities->aliasField('nationality_id')
-                    ]
-                )
-                ->leftJoin(
-                    [$Nationalities->getAlias() => $Nationalities->getTable()], [
-                        $Nationalities->aliasField('id = ') . $UserIdentities->aliasField('nationality_id')
-                    ]
-                )
-                ->where([
-                    $UserIdentities->aliasField('security_user_id') => $security_users_id,
-                ])
-                ->toArray();
+            ->select([
+                $UserIdentities->aliasField('id'),
+                $UserIdentities->aliasField('identity_type_id'),
+                $IdentityTypes->aliasField('name'),
+                $UserIdentities->aliasField('number'),
+                $UserIdentities->aliasField('nationality_id'),
+                $Nationalities->aliasField('name'),
+                $UserNationalities->aliasField('preferred')
+            ])
+            ->leftJoin(
+                [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
+                [
+                    $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+                ]
+            )
+            ->leftJoin(
+                [$UserNationalities->getAlias() => $UserNationalities->getTable()],
+                [
+                    $UserNationalities->aliasField('security_user_id = ') . $UserIdentities->aliasField('security_user_id'),
+                    $UserNationalities->aliasField('nationality_id = ') . $UserIdentities->aliasField('nationality_id')
+                ]
+            )
+            ->leftJoin(
+                [$Nationalities->getAlias() => $Nationalities->getTable()],
+                [
+                    $Nationalities->aliasField('id = ') . $UserIdentities->aliasField('nationality_id')
+                ]
+            )
+            ->where([
+                $UserIdentities->aliasField('security_user_id') => $security_users_id,
+            ])
+            ->toArray();
         return $data;
     }
     //POCOR-5668 add identity section ends
@@ -428,7 +442,7 @@ class UserBehavior extends Behavior
         }
 
         if ($this->isCAv4()) {
-            $this->_table->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
+            $this->_table->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"' . $imageDefault . '"', 'order' => 0]);
 
             // check if the openemis_no isset, if its set, the field got the sort field no need to sort = true
             $openemisNoAttr = ['type' => 'readonly', 'order' => 1];
@@ -438,7 +452,7 @@ class UserBehavior extends Behavior
 
             $this->_table->field('openemis_no', $openemisNoAttr);
         } else {
-            $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
+            $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"' . $imageDefault . '"', 'order' => 0]);
             $this->_table->ControllerAction->field('openemis_no', [
                 'type' => 'readonly',
                 'order' => 1,
@@ -616,10 +630,10 @@ class UserBehavior extends Behavior
     {
         $prefix = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('openemis_id_prefix');
         $prefix = explode(",", $prefix);
-        $prefix = ($prefix[1] > 0)? $prefix[0]: '';
+        $prefix = ($prefix[1] > 0) ? $prefix[0] : '';
 
-          $latest = $this->_table->find()
-            ->order($this->_table->aliasField('id').' DESC')
+        $latest = $this->_table->find()
+            ->order($this->_table->aliasField('id') . ' DESC')
             ->first();
 
 
@@ -631,7 +645,7 @@ class UserBehavior extends Behavior
             $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
         }
 
-         $currentStamp = time();
+        $currentStamp = time();
 
         if ($latestDbStamp >= $currentStamp) {
             $newStamp = $latestDbStamp + 1;
@@ -641,12 +655,12 @@ class UserBehavior extends Behavior
             $newStamp = time() + str_pad(mt_rand(0, $random), 9, '0', STR_PAD_LEFT);
         }
 
-        return $prefix.$newStamp;
+        return $prefix . $newStamp;
     }
 
     public function getImage($id)
     {
-        $base64Format = (array_key_exists('base64', $this->_table->controller->request->query))? $this->_table->controller->request->query['base64']: false;
+        $base64Format = (array_key_exists('base64', $this->_table->controller->request->query)) ? $this->_table->controller->request->query['base64'] : false;
 
         $this->_table->controller->autoRender = false;
         $this->_table->controller->ControllerAction->autoRender = false;
@@ -656,8 +670,7 @@ class UserBehavior extends Behavior
             ->contain('Users')
             ->select(['Users.photo_content'])
             ->where([$currModel->aliasField($currModel->getPrimaryKey()) => $id])
-            ->first()
-            ;
+            ->first();
 
         if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
             $phpResourceFile = $photoData->Users->photo_content;
