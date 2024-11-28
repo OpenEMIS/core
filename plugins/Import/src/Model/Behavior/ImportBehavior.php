@@ -95,7 +95,8 @@ class ImportBehavior extends Behavior
         'max_rows' => 2000,
         'max_size' => 524288,
         'backUrl' => [],
-        'custom_text' => ''
+        'custom_text' => '',
+        'row_heights' => [75,25],
     ];
     protected $rootFolder = 'import';
     protected $_fileTypesMap = [
@@ -149,14 +150,25 @@ class ImportBehavior extends Behavior
 
     private function isCustomText()
     {
+        $headings = $this->getConfig('headings') ?? [];
+
+        foreach ($headings as $heading) {
+            if (!empty($heading['subtitle'])) {
+                return true; // At least one subheading exists
+            }
+        }
         $this->customText = $this->getConfig('custom_text');
         if (!empty($this->customText) && strlen($this->customText) > 0) {
+            $row_heights = $this->getConfig('row_heights');
+            if(!isset($row_heights[2])){
+                $row_heights[2] = 25;
+            }
+            $this->getConfig('row_heights', $row_heights);
             return true;
         } else {
             return false;
         }
     }
-
 
     /******************************************************************************************************************
      **
@@ -684,20 +696,82 @@ class ImportBehavior extends Behavior
      **
      ** Import Functions
      **
-     ******************************************************************************************************************/
-    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = '')
+     *****************************************************************************************************************
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     */
+    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $defaultTitle = ''): void
     {
-        if (empty($title)) {
-            $title = $dataSheetName;
-        } else {//5695 starts
-            if ($title == 'Import Training Session Trainee Results Data') {
-                $title = 'Import Training Results Data';
-            }//5695 ends
+
+        // Set default title if not provided
+        if (empty($defaultTitle)) {
+            $defaultTitle = $dataSheetName;
+        } else { // 5695 starts
+            if ($defaultTitle == 'Import Training Session Trainee Results Data') {
+                $defaultTitle = 'Import Training Results Data';
+            } // 5695 ends
         }
+
+// Set up the sheet
         $activeSheet = $objPHPExcel->getActiveSheet();
+        $activeSheetIndex = $objPHPExcel->getIndex($activeSheet); // Get current sheet index
         $activeSheet->setTitle($dataSheetName);
+        $this->addLogo($activeSheet);
+// Logic for the first sheet
+        if ($activeSheetIndex === 0) {
+            // Add a logo if the function is available
+
+
+            // Get titles and subtitles from config
+            $headings = $this->getConfig('headings') ?? [
+                [
+                    'title' => $defaultTitle,
+                    'title_range' => 'C1:R1',
+                ]
+            ];
+            $rowHeights = $this->getConfig('row_heights') ?? [75, 25]; // Default heights for rows
+            $headerFontSize = $this->getConfig('header_font_size') ?? 16;
+
+            // Set default row heights
+            foreach ($rowHeights as $index => $height) {
+                $activeSheet->getRowDimension($index + 1)->setRowHeight($height);
+            }
+            $activeSheet->getRowDimension(3)->setRowHeight(25);
+
+            // Process each title and subtitle
+            $titleindex = 1; // Start at the first row
+            foreach ($headings as $index => $heading) {
+                $this->applyHeadingToSheet($activeSheet, $heading, $titleindex, $headerFontSize);
+
+                // Add custom text for headings other than the first/default heading
+                if ($index > 0 && $this->customText != "") {
+                    $customTextColumn = explode(':', $heading['title_range'])[0]; // Start column of the title range
+                    $customTextCell = $customTextColumn . "3"; // Custom text in the third row of the title's start column
+                    $activeSheet->setCellValue($customTextCell, $this->customText);
+                }
+
+                $titleindex++;
+            }
+
+            // Add custom text only for subheaders
+            if ($this->isCustomText() && $this->customText != "") {
+                $activeSheet->setCellValue("A3", $this->customText);
+            }
+        } else {
+            // Logic for subsequent sheets
+            $activeSheet->getRowDimension(1)->setRowHeight(75); // Default row height for header
+            $activeSheet->setCellValue("C1", "Resources"); // Add "Resources" as the only header
+            $activeSheet->getStyle("C1")->getFont()->setBold(true)->setSize(16);
+        }
+
+
+    }
+
+    /**
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     */
+    private function addLogo($activeSheet): void
+    {
         if (function_exists('imagecreatefromjpeg')) {
-            //POCOR-7474-HINDOL - in case that imagecreatefromjpeg is not available
             $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
             $objDrawing = new \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing();
             $objDrawing->setName('OpenEMIS Logo');
@@ -709,12 +783,50 @@ class ImportBehavior extends Behavior
             $objDrawing->setCoordinates('A1');
             $objDrawing->setWorksheet($activeSheet);
         }
-        $activeSheet->getRowDimension(1)->setRowHeight(75);
-        $activeSheet->getRowDimension(2)->setRowHeight(25);
+    }
 
-        ($this->isCustomText()) ? $activeSheet->getRowDimension(3)->setRowHeight(25) : '';
+    private function applyHeadingToSheet($activeSheet, $heading, $titleindex, $fontSize): void
+    {
+        $title = $heading['title'] ?? '';
+        $titleRange = $heading['title_range'] ?? '';
+        $subtitle = $heading['subtitle'] ?? [];
+        $subtitleRange = $heading['subtitle_range'] ?? '';
+//        Log::debug($titleRange);
+//        Log::debug($subtitleRange);
+        // Apply title if it exists
+        if (!empty($title) && !empty($titleRange)) {
+            $this->applyCellStyle($activeSheet, $titleRange, $fontSize, true);
+            if ($titleindex > 1) {
+                $activeSheet->mergeCells($titleRange);
+            }
+            $activeSheet->setCellValue(explode(':', $titleRange)[0], $title); // Set title in the first cell of the range
+        }
 
-        $activeSheet->setCellValue("C1", $title);
+        // Apply subtitle if it exists
+        if (!empty($subtitle) && !empty($subtitleRange)) {
+//            $this->applyCellStyle($activeSheet, $subtitleRange, $fontSize, false);
+            $subtitleCells = explode(':', $subtitleRange);
+            $startColumn = $subtitleCells[0];
+            $cell = $startColumn; // Subtitle row is after the title
+            $activeSheet->mergeCells($subtitleRange);
+            $activeSheet->setCellValue($cell, $subtitle);
+        }
+    }
+
+    private function applyCellStyle($activeSheet, $range, $fontSize, $bold)
+    {
+        $style = [
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'font' => [
+                'bold' => $bold,
+                'size' => $fontSize,
+            ],
+        ];
+
+        $activeSheet->getStyle($range)->applyFromArray($style);
     }
 
     public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign = 2, $applyFillFontSetting = [], $applyCellBorder = [])
@@ -728,10 +840,20 @@ class ImportBehavior extends Behavior
         }
 
         $activeSheet = $objPHPExcel->getActiveSheet();
-
+        if ($this->getConfig('headings')) {
+            // Get the last column of the first title range from config
+            $headings = $this->getConfig('headings');
+            if (!empty($headings[0]['title_range'])) {
+                $headerLastAlphaOne = explode(':', $headings[0]['title_range'])[1][0]; // Extract column from "R1"
+            } else {
+                $headerLastAlphaOne = $headerLastAlpha; // Fallback to default
+            }
+        } else {
+            $headerLastAlphaOne = $headerLastAlpha; // Fallback to default
+        }
         // merging should start from cell C1 instead of A1 since the title is already set in cell C1 in beginExcelHeaderStyling()
         if (!in_array($headerLastAlpha, ['A', 'B', 'C'])) {
-            $activeSheet->mergeCells('C1:' . $headerLastAlpha . '1');
+            $activeSheet->mergeCells('C1:' . $headerLastAlphaOne . '1');
         }
 
         $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
