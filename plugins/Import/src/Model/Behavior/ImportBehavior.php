@@ -33,6 +33,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as SpreadsheetDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use function PHPUnit\Framework\isEmpty;
 
@@ -771,17 +772,17 @@ class ImportBehavior extends Behavior
      */
     private function addLogo($activeSheet): void
     {
-        if (function_exists('imagecreatefromjpeg')) {
-            $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
-            $objDrawing = new \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing();
-            $objDrawing->setName('OpenEMIS Logo');
-            $objDrawing->setDescription('OpenEMIS Logo');
-            $objDrawing->setImageResource($gdImage);
-            $objDrawing->setRenderingFunction(\PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::RENDERING_JPEG);
-            $objDrawing->setMimeType(\PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::MIMETYPE_DEFAULT);
-            $objDrawing->setHeight(100);
-            $objDrawing->setCoordinates('A1');
-            $objDrawing->setWorksheet($activeSheet);
+        $imagePath = ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg';
+        Log::debug($imagePath);
+        if (file_exists($imagePath)) {
+            Log::debug('exists');
+            $drawing = new Drawing();
+            $drawing->setName('OpenEMIS Logo');
+            $drawing->setDescription('OpenEMIS Logo');
+            $drawing->setPath($imagePath); // Set the path to the image file
+            $drawing->setHeight(100); // Set the height of the image
+            $drawing->setCoordinates('A1'); // Position the image
+            $drawing->setWorksheet($activeSheet); // Add the image to the active sheet
         }
     }
 
