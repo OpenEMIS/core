@@ -53,6 +53,10 @@ class GpaGradingTypesTable extends ControllerActionTable {
                     'rule' => ['range', 0, 9999.99]
                 ]
             ])
+            ->add('name', 'ruleUniqueCode', [
+                'rule' => ['checkUniqueCode', null]
+            ])
+            ->requirePresence('result_type')
             ->requirePresence('grading_options');
     }
 
@@ -206,7 +210,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
             $allowedDeleteAll = max($gradingOptions);
 
             $currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->getPrimaryKey())->toArray();
-            $originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->primaryKey())->toArray();
+            $originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->getPrimaryKey())->toArray();
             $tempRemovedGradingOptionIds = array_diff($originalGradingOptionIds, $currentGradingOptionIds);
 
             // get the array of gradeOption that will be deleted, if the gradeOption was in-used it will be excluded from this array.
@@ -221,7 +225,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
             // remove all the gradeOptions if no in-use gradeOption.
             if (!empty($removedGradingOptionIds)) {
                 $this->GradingOptions->deleteAll([
-                    $this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
+                    $this->GradingOptions->aliasField($this->GradingOptions->getPrimaryKey()) . ' IN ' => $removedGradingOptionIds
                 ]);
             } else if ((!array_key_exists('grading_options', $requestData['GpaGradingTypes'])) && (!$allowedDeleteAll)){
                 $this->GradingOptions->deleteAll([

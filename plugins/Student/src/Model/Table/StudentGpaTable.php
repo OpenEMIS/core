@@ -15,7 +15,7 @@ use Cake\ORM\Query;
 **/
 class StudentGpaTable extends ControllerActionTable
 {
-    public function initialize(array $config): void
+    public function initialize(array $config):void
     {
         $this->setTable('institution_students_gpa');
         parent::initialize($config);
@@ -41,14 +41,14 @@ class StudentGpaTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        if($this->getAlias() == 'StudentGpa' && $this->controller->request->getParam('controller') == 'Students'){
+        $options['type'] = 'student';
+        if($this->getAlias() == 'StudentGpa' && $this->request->getParam('controller') == 'Students'){
             $selectedAlias = 'StudentGpa';
-        }if($this->getAlias() == 'StudentGpa' && $this->controller->request->getParam('controller') == 'Profiles'){
+        }if($this->getAlias() == 'StudentGpa' && $this->request->getParam('controller') == 'Profiles'){
             $selectedAlias = 'Gpa';
         }else{
             $selectedAlias = $this->getAlias();
         }
-        $options['type'] = 'student';
         $tabElements = $this->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $selectedAlias);
@@ -56,45 +56,80 @@ class StudentGpaTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        if($this->request->getParam('controller') == 'Profiles'){
+        $institutionGrade = TableRegistry::get('Institution.InstitutionGrades');
+        if($this->request->getParam('controller') == 'Profiles') {
+            $userId = $this->Auth->user()['id'];
             $Classes = TableRegistry::get('Institution.InstitutionClasses');
             $classStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+            $institution = TableRegistry::get('Institution.Institutions');
             $gpaGrades = TableRegistry::get('Gpa.GpaSystem');
 
             // Academic Periods filter
             $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $academicPeriodOptions = ['-1' => '-- '.__('All Academic Period').' --'] + $academicPeriodOptions;
-            $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id'): -1 ;
+            $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : -1;
             $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
             $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-            //End
 
-            $availableGrades = $gpaGrades->find()
-                            ->where([
-                                $gpaGrades->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                            ])
-                            ->extract('education_grade_id')
-                            ->toArray();
-            //Education Grade filter
-            $educationGradeOptions = [];
-            if (!empty($availableGrades)) {
-                $educationGradeOptions = $this->EducationGrades->find('list')
+            // Institution Filter
+            $InstitutionOptions = [];
+            $InstitutionOptions = $institutionStudents->find()
+                ->where([
+                    $institutionStudents->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                    $institutionStudents->aliasField('student_id') => $userId,
+                ])
+                ->extract('institution_id')
+                ->toArray();
+
+            if (!empty($InstitutionOptions)) {
+                $InstitutionOptions = $institution->find('list')
                     ->where([
-                        $this->EducationGrades->aliasField('id IN ') => $availableGrades
+                        $institution->aliasField('id IN') => $InstitutionOptions
                     ])
                     ->toArray();
             }
+            $InstitutionOptions = ['-1' => '-- '.__('All Institution').' --'] + $InstitutionOptions;
+            $selectedInstitution = !is_null($this->request->getQuery('institution_id')) ? $this->request->getQuery('institution_id') : -1;
+            $this->controller->set(compact('InstitutionOptions', 'selectedInstitution'));
+
+            // Education Grade Filter
+            $educationGradeOptions = [];
+            $availableGrades = $InstitutionGrades->find()
+                ->where([
+                    $InstitutionGrades->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                    $InstitutionGrades->aliasField('institution_id') => $selectedInstitution,
+                ])
+                ->extract('education_grade_id')
+                ->toArray();
+
+            if (!empty($availableGrades)) {
+                $educationGradeOptions = $this->EducationGrades->find('list')
+                    ->where([
+                        $this->EducationGrades->aliasField('id IN') => $availableGrades
+                    ])
+                    ->toArray();
+            }
+    
             $educationGradeOptions = ['-1' => '-- '.__('All Education Grade').' --'] + $educationGradeOptions;
             $selectedGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
             $this->controller->set(compact('educationGradeOptions', 'selectedGrade'));
-            //End
+            $where[$this->aliasField('education_grade_id')] = $selectedGrade;
 
-            // Class filter
+            // Class Filter
             $classOptions = [];
             $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : -1;
 
-            $institutionId = $classStudents->find()->where([$classStudents->aliasField('academic_period_id') => $selectedAcademicPeriod, $classStudents->aliasField('education_grade_id') => $selectedGrade, $classStudents->aliasField('student_status_id') => 1])->first()->institution_id;
+            $institutionId = $classStudents->find()
+                ->where([
+                    $classStudents->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                    $classStudents->aliasField('education_grade_id') => $selectedGrade,
+                    $classStudents->aliasField('student_status_id') => 1
+                ])
+                ->first()
+                ->institution_id;
+
             if (!empty($this->request->getQuery('education_grade_id'))) {
                 $classOptions = $Classes->find('list')
                     ->matching('ClassGrades')
@@ -102,56 +137,48 @@ class StudentGpaTable extends ControllerActionTable
                         $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
                         'ClassGrades.education_grade_id' => $this->request->getQuery('education_grade_id'),
                         $Classes->aliasField('institution_id') => $institutionId,
-                    ])->group([$Classes->aliasField('id')])
+                    ])
+                    ->group([$Classes->aliasField('id')])
                     ->order([$Classes->aliasField('name')])
                     ->toArray();
             } else {
-                
                 $selectedClass = -1;
             }
 
             if (!empty($classOptions)) {
                 $classOptions['all'] = "All Classes";
             }
-            
+
             $classOptions = ['-1' => '-- ' . __('All Institution Class') . ' --'] + $classOptions;
             $this->controller->set(compact('classOptions', 'selectedClass'));
-            $where[$this->aliasField('education_grade_id')] = $selectedGrade;
-           
-            //End
+
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-             $encodedQueryString = $this->request->getParam('pass')[1];
-            
+            $encodedQueryString = $this->request->getParam('pass')[1];
 
-            $extra['elements']['controls'] = ['name' => 'Profile.Gpa/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
-            $userId = $this->Auth->user()['id'];
+            $extra['elements']['controls'] = [
+                'name' => 'Profile.Gpa/studentcontrols',
+                'data' => ['encodedQueryString' => $encodedQueryString],
+                'options' => [],
+                'order' => 1
+            ];
 
-            // Check if academic period is unselected or null
+            // Filtering conditions based on selected options
             if ($selectedAcademicPeriod == -1 || $selectedAcademicPeriod === null) {
                 return $query->where([
                     $this->aliasField('student_id') => $userId
                 ]);
-            }
-
-            // Check if only academic period is selected
-            elseif ($selectedAcademicPeriod != -1 && $selectedGrade == -1) {
+            } elseif ($selectedAcademicPeriod != -1 && $selectedGrade == -1) {
                 return $query->where([
                     $this->aliasField('student_id') => $userId,
                     $this->aliasField('academic_period_id') => $selectedAcademicPeriod
                 ]);
-            }
-
-            // Check if academic period and education grade are selected, but class is unselected
-            elseif ($selectedAcademicPeriod != -1 && $selectedGrade != -1 && $selectedClass == -1) {
+            } elseif ($selectedAcademicPeriod != -1 && $selectedGrade != -1 && $selectedClass == -1) {
                 return $query->where([
                     $this->aliasField('student_id') => $userId,
                     $this->aliasField('academic_period_id') => $selectedAcademicPeriod,
                     $this->aliasField('education_grade_id') => $selectedGrade
                 ]);
-            }
-
-            // If all filters are selected, including class
-            else {
+            } else {
                 return $query
                     ->innerJoin(
                         ['InstitutionClassStudents' => 'institution_class_students'],
@@ -165,8 +192,8 @@ class StudentGpaTable extends ControllerActionTable
                         'InstitutionClassStudents.institution_class_id' => $selectedClass,
                     ]);
             }
-
         }
+
         if($this->request->getParam('controller') == 'Students'){
             $queryString = $this->getQueryString();
             $studentId = $this->getQueryString('student_id');
@@ -185,21 +212,22 @@ class StudentGpaTable extends ControllerActionTable
             $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
             //End
 
-            $availableGrades = $gpaGrades->find()
-                            ->where([
-                                $gpaGrades->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                            ])
-                            ->extract('education_grade_id')
-                            ->toArray();
-            //Education Grade filter
             $educationGradeOptions = [];
+            $availableGrades = $institutionGrade->find()
+                        ->where([
+                            $institutionGrade->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                            $institutionGrade->aliasField('institution_id') => $institutionId,
+                        ])
+                        ->extract('education_grade_id')
+                        ->toArray();
             if (!empty($availableGrades)) {
                 $educationGradeOptions = $this->EducationGrades->find('list')
                     ->where([
-                        $this->EducationGrades->aliasField('id IN ') => $availableGrades
+                        $this->EducationGrades->aliasField('id IN') => $availableGrades
                     ])
                     ->toArray();
-            }
+
+            } 
             $educationGradeOptions = ['-1' => '-- '.__('All Education Grade').' --'] + $educationGradeOptions;
             $selectedGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
             $this->controller->set(compact('educationGradeOptions', 'selectedGrade'));
@@ -276,20 +304,6 @@ class StudentGpaTable extends ControllerActionTable
                         'InstitutionClassStudents.institution_class_id' => $selectedClass,
                     ]);
             }
-            $extra['elements']['control'] = [
-                'name' => 'Student.Gpa/controls',
-                'data' => [
-                    'academicPeriodOptions'=>$academicPeriodOptions,
-                    'encodedQueryString' => $encodedQueryString,
-                    'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
-                    'gradeOptions'=>$gradeOptions,
-                    'selectedGrade'=>$selectedGrade,
-                    'classOptions'=>$classOptions,
-                    'selectedClass'=>$selectedClass,
-                ],
-                'options' => [],
-                'order' => 3
-            ];
 
         }
     }
@@ -321,7 +335,8 @@ class StudentGpaTable extends ControllerActionTable
                             $studentGpa->aliasField('academic_period_id') => $entity->academic_period_id,
                             $studentGpa->aliasField('student_id') => $entity->student_id,
                             $studentGpa->aliasField('institution_id') => $entity['institution']['id'],
-                            $studentGpa->aliasField('education_grade_id') => $entity->education_grade_id
+                            $studentGpa->aliasField('education_grade_id') => $entity->education_grade_id,
+                            $studentGpa->aliasField('education_grades_gpa_id') => $entity->education_grades_gpa_id
                         ])
                         ->first();
                         

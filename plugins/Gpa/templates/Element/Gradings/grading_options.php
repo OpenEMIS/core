@@ -17,7 +17,7 @@
 	<div class="input clearfix">
 		<div class="clearfix">
 		<?php
-			echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Option').'</span>', [
+			echo $this->Form->input(__('Add New Option'), [
 				'label' => __('Grading Options'),
 				'type' => 'button',
 				'class' => 'btn btn-default',
@@ -93,11 +93,15 @@
 
 									<td class="<?= $tdClass ?>">
 										<?php if ($fieldErrors) : ?>
-											<ul class="error-message">
 											<?php foreach ($fieldErrors as $error) : ?>
-												<li><?= $error ?></li>
-											<?php endforeach ?>
-											</ul>
+										        <?php if (is_array($error)) : ?>
+										            <?php foreach ($error as $subError) : ?>
+										                <li><?= h(__($subError)) ?></li>
+										            <?php endforeach; ?>
+										        <?php else : ?>
+										            <li><?= h(__($error)) ?></li>
+										        <?php endif; ?>
+										    <?php endforeach; ?>
 										<?php else: ?>
 											&nbsp;
 										<?php endif; ?>
@@ -117,7 +121,7 @@
 											if ($gradingOptions[$data->grading_options[$key]['id']]) {
 												echo __('In use');
 											} else {
-												echo $this->Form->input('<i class="fa fa-trash"></i> <span>Delete</span>', [
+												echo $this->Form->input('Delete', [
 													'label' => false,
 													'type' => 'button',
 													'class' => 'btn btn-dropdown action-toggle btn-single-action',

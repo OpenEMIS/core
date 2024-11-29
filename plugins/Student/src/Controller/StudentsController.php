@@ -587,6 +587,7 @@ class StudentsController extends AppController
                 }
             }
             if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $id])) {
+
                 $entity = $this->StudentUser->get($id);
                 $queryString = $this->getQueryString();
                 $name = $entity->name;
@@ -812,9 +813,19 @@ class StudentsController extends AppController
             if ($model->getHeader($alias) == 'HealthImmunizations') {
                 $alias = __('Vaccinations');
             }
-            //POCOR-5890 ends
-            $this->Navigation->addCrumb($model->getHeader($alias));
-            $header = $header . ' - ' . $model->getHeader($alias);
+            
+            if($alias == 'StudentGpa' || $alias == 'Gpa'){
+                $alias = 'Student GPA';
+                $alias = $model->getHeader($alias);
+                $alias = preg_replace('/G\s*P\s*A/', 'GPA', $alias);
+                $this->Navigation->addCrumb($alias);
+                $header = $header . ' - ' . $alias;
+
+            }else{
+                $this->Navigation->addCrumb($model->getHeader($alias));
+                $header = $header . ' - ' . $model->getHeader($alias);
+            }
+            
 
             // $params = $this->request->params;
             $this->set('contentHeader', $header);
@@ -1109,7 +1120,6 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
     }
-
 
     public function StudentGpa()
     {

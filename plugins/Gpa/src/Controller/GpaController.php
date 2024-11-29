@@ -23,13 +23,10 @@ class GpaController extends AppController
 
         $Tabname = $this->request->getParam('action');
         $header = $this->splitOnCapitalLetters($Tabname);
-        
         $action = $this->request->getParam('action');
-        $header .= ' - '.__(Inflector::humanize($action));
-
-        $this->Navigation->addCrumb($header , ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'index']);
-
-        //$this->set('contentHeader', $header);
+        //$header .= ' - '.__(Inflector::humanize($action));
+        $this->Navigation->addCrumb($header , ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $action]);
+        $this->set('contentHeader', $header);
         
     }
     private function splitOnCapitalLetters($string) {
@@ -37,22 +34,6 @@ class GpaController extends AppController
         $words = preg_split('/(?=[A-Z])/', $string);
 
         return implode(' ', $words);
-    }
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
-       $Tabname = $this->request->getParam('action');
-        $header = $this->splitOnCapitalLetters($Tabname);
-        
-
-        /*$alias = ($model->alias == 'ExamResults') ? 'Results' : $model->alias;
-        $header .= ' - ' . $model->getHeader($alias);
-        $this->Navigation->addCrumb('Examination', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->alias]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));*/
-
-        $this->set('contentHeader', $header);
-
-        $persona = false;
-        $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
-        $event = $model->getEventManager()->dispatch($event);
     }
 
     public function getGpaTab($action = null)
@@ -72,9 +53,13 @@ class GpaController extends AppController
             ]
         ];
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
-        
         $this->set('tabElements', $tabElements);
         $action = !is_null($action) ? $action : $this->request->getParam('action');
+        if($action == 'GpaSystem'){
+            $action = 'Gpa';
+        }else {
+          $action = $action;  
+        }
         $this->set('selectedAction', $action);
     }
 

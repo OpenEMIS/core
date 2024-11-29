@@ -159,18 +159,17 @@ class GpaSystemTable extends ControllerActionTable {
     {
         $request = $this->request;
         if ($action == 'add' || $action == 'edit' ) {
-            $selectedProgramme =  $request->getData()[$this->getAlias()]['gpa_education_programme_id'];
+            $selectedProgramme = isset($request->getData()[$this->getAlias()]['gpa_education_programme_id']) 
+            ? $request->getData()[$this->getAlias()]['gpa_education_programme_id'] 
+            : null;
             if ($action == 'add') {
-                if (!is_null($selectedProgramme)) {
-                    $gradeOptions = $this->GpaEducationGrades
-                        ->find('list')
-                        ->find('visible')
-                        ->contain(['EducationProgrammes'])
-                        ->where([$this->GpaEducationGrades->aliasField('education_programme_id') => $selectedProgramme])
-                        ->order(['EducationProgrammes.order' => 'ASC', $this->GpaEducationGrades->aliasField('order') => 'ASC'])
-                        ->toArray();
-                }
-                echo "<pre>"; print_r($gradeOptions);die;
+                $gradeOptions = $this->GpaEducationGrades
+                    ->find('list')
+                    ->find('visible')
+                    ->contain(['EducationProgrammes'])
+                    ->where([$this->GpaEducationGrades->aliasField('education_programme_id IS') => $selectedProgramme])
+                    ->order(['EducationProgrammes.order' => 'ASC', $this->GpaEducationGrades->aliasField('order') => 'ASC'])
+                    ->toArray();
                 $attr['options'] = $gradeOptions;
                 $attr['onChangeReload'] = 'changeEducationGrade';
 
@@ -231,11 +230,19 @@ class GpaSystemTable extends ControllerActionTable {
     }
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data) 
     {
-        if (isset($entity->start_date) && isset($entity->end_date)) {
-            $entity->start_date = date('Y-m-d', strtotime($entity->start_date));
-            $entity->end_date = date('Y-m-d', strtotime($entity->end_date));
+        $request = \Cake\Routing\Router::getRequest();
+
+        if ($request && isset($request->getData()['GpaSystem'])) {
+            $gpaData = $request->getData()['GpaSystem'];
+            if (isset($gpaData['start_date'])) {
+                $entity->start_date = date('Y-m-d', strtotime($gpaData['start_date']));
+            }
+            if (isset($gpaData['end_date'])) {
+                $entity->end_date = date('Y-m-d', strtotime($gpaData['end_date']));
+            }
         }
     }
+
     
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
     {
