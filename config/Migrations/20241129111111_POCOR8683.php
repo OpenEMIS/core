@@ -41,34 +41,33 @@ class POCOR8683 extends AbstractMigration
             $this->execute($query);
         }
 
-        // Insert records with IDs 248 to 272, setting id to null
-        $data = [
-            ['model' => 'User.Users', 'column_name' => 'institution_code', 'description' => '**', 'order' => 19, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'academic_period_id', 'description' => '** Code', 'order' => 20, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => 'AcademicPeriod', 'lookup_model' => 'AcademicPeriods', 'lookup_column' => 'code'],
-            ['model' => 'User.Users', 'column_name' => 'education_grade_id', 'description' => '**', 'order' => 21, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'class_name', 'description' => '**', 'order' => 22, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'start_date', 'description' => '** ( DD/MM/YYYY )', 'order' => 23, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_relation_id', 'description' => '*** Relation Code (Guardian)', 'order' => 24, 'is_optional' => 0, 'foreign_key' => 2, 'lookup_plugin' => 'Student', 'lookup_model' => 'GuardianRelations', 'lookup_column' => 'id'],
-            ['model' => 'User.Users', 'column_name' => 'guardian_openemis_no', 'description' => '(Leave as blank for new entries)', 'order' => 25, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_first_name', 'description' => '***', 'order' => 26, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_middle_name', 'description' => null, 'order' => 27, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_third_name', 'description' => null, 'order' => 28, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_last_name', 'description' => '***', 'order' => 29, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_preferred_name', 'description' => null, 'order' => 30, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_gender_id', 'description' => 'Code (M/F) ***', 'order' => 31, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => 'User', 'lookup_model' => 'Genders', 'lookup_column' => 'code'],
-            ['model' => 'User.Users', 'column_name' => 'guardian_date of Birth', 'description' => '*** ( DD/MM/YYYY )', 'order' => 32, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_address', 'description' => null, 'order' => 33, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_postal', 'description' => null, 'order' => 34, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_address_area_id', 'description' => 'Code', 'order' => 35, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => 'Area', 'lookup_model' => 'AreaAdministratives', 'lookup_column' => 'code'],
-            ['model' => 'User.Users', 'column_name' => 'guardian_birthplace_area_id', 'description' => 'Code', 'order' => 36, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => 'Area', 'lookup_model' => 'AreaAdministratives', 'lookup_column' => 'code'],
-            ['model' => 'User.Users', 'column_name' => 'guardian_nationality_id', 'description' => null, 'order' => 37, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => 'FieldOption', 'lookup_model' => 'Nationalities', 'lookup_column' => 'id'],
-            ['model' => 'User.Users', 'column_name' => 'guardian_identity_type', 'description' => 'Code', 'order' => 38, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => 'FieldOption', 'lookup_model' => 'IdentityTypes', 'lookup_column' => 'national_code'],
-            ['model' => 'User.Users', 'column_name' => 'guardian_identity_number', 'description' => null, 'order' => 39, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_contact_email', 'description' => null, 'order' => 40, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-            ['model' => 'User.Users', 'column_name' => 'guardian_contact_cell_phone', 'description' => null, 'order' => 41, 'is_optional' => 0, 'foreign_key' => 0, 'lookup_plugin' => null, 'lookup_model' => null, 'lookup_column' => null],
-        ];
-
-        $this->insert('import_mapping', $data);
+        // Insert records with IDs 248 to 272 using execute
+        $this->execute("
+        INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `is_optional`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) VALUES
+        ('User.Users', 'institution_code', '**', 19, 0, 0, null, null, null),
+        ('User.Users', 'academic_period_id', '** Code', 20, 0, 0, 'AcademicPeriod', 'AcademicPeriods', 'code'),
+        ('User.Users', 'education_grade_id', '**', 21, 0, 0, null, null, null),
+        ('User.Users', 'class_name', '**', 22, 0, 0, null, null, null),
+        ('User.Users', 'start_date', '** ( DD/MM/YYYY )', 23, 0, 0, null, null, null),
+        ('User.Users', 'guardian_relation_id', '*** Relation Code (Guardian)', 24, 0, 2, 'Student', 'GuardianRelations', 'id'),
+        ('User.Users', 'guardian_openemis_no', '(Leave as blank for new entries)', 25, 0, 0, null, null, null),
+        ('User.Users', 'guardian_first_name', '***', 26, 0, 0, null, null, null),
+        ('User.Users', 'guardian_middle_name', null, 27, 0, 0, null, null, null),
+        ('User.Users', 'guardian_third_name', null, 28, 0, 0, null, null, null),
+        ('User.Users', 'guardian_last_name', '***', 29, 0, 0, null, null, null),
+        ('User.Users', 'guardian_preferred_name', null, 30, 0, 0, null, null, null),
+        ('User.Users', 'guardian_gender_id', 'Code (M/F) ***', 31, 0, 0, 'User', 'Genders', 'code'),
+        ('User.Users', 'guardian_date of Birth', '*** ( DD/MM/YYYY )', 32, 0, 0, null, null, null),
+        ('User.Users', 'guardian_address', null, 33, 0, 0, null, null, null),
+        ('User.Users', 'guardian_postal', null, 34, 0, 0, null, null, null),
+        ('User.Users', 'guardian_address_area_id', 'Code', 35, 0, 0, 'Area', 'AreaAdministratives', 'code'),
+        ('User.Users', 'guardian_birthplace_area_id', 'Code', 36, 0, 0, 'Area', 'AreaAdministratives', 'code'),
+        ('User.Users', 'guardian_nationality_id', null, 37, 0, 0, 'FieldOption', 'Nationalities', 'id'),
+        ('User.Users', 'guardian_identity_type', 'Code', 38, 0, 0, 'FieldOption', 'IdentityTypes', 'national_code'),
+        ('User.Users', 'guardian_identity_number', null, 39, 0, 0, null, null, null),
+        ('User.Users', 'guardian_contact_email', null, 40, 0, 0, null, null, null),
+        ('User.Users', 'guardian_contact_cell_phone', null, 41, 0, 0, null, null, null);
+    ");
     }
 
     public function down(): void
