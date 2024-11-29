@@ -2357,7 +2357,7 @@ class NavigationComponent extends Component
                     'Profiles.StudentAssociations',
                     'Profiles.Absences',
                     'Profiles.StudentCurriculars',
-                    'Profiles.StudentStudentGpa']
+                    'Profiles.StudentGpa']
             ],//POCOR-6701 added Profiles.Absences becasue navigation was collapsing //POCOR-6699 adding studentAssessment
             'Profiles.StudentScheduleTimetable' => [
                 'title' => 'Timetables',

@@ -1061,8 +1061,8 @@ class ProfilesController extends AppController
             'Assessments' => ['text' => __('Assessments')],
             //'Results' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
-            'ReportCardswww' => ['text' => __('Report Cards')],
-            'Gpa' => ['text' => __('GPA')], //POCOR-8222
+            'ReportCards' => ['text' => __('Report Cards')],
+            'StudentGpa' => ['text' => __('GPA')], //POCOR-8222
             'Awards' => ['text' => __('Awards')],
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7413
             'Textbooks' => ['text' => __('Textbooks')],
@@ -1544,7 +1544,7 @@ class ProfilesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.InstitutionApplicationAttachment']);
     }
 
-    public function StudentStudentGpa()
+    public function StudentGpa()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
     }
