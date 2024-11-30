@@ -773,9 +773,7 @@ class ImportBehavior extends Behavior
     private function addLogo($activeSheet): void
     {
         $imagePath = ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg';
-        Log::debug($imagePath);
         if (file_exists($imagePath)) {
-            Log::debug('exists');
             $drawing = new Drawing();
             $drawing->setName('OpenEMIS Logo');
             $drawing->setDescription('OpenEMIS Logo');
@@ -1336,11 +1334,17 @@ class ImportBehavior extends Behavior
                 }
 
                 if ($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
-
                     $emptyCodeRecords = $relatedModel;
                     $modelData = $relatedModel;
                 } else {
-                    $modelData = $relatedModel->getList($relatedModel->find());
+                    $relatedQuery = $relatedModel->find();
+
+// Check if the 'order' field exists in the model's schema
+                    if ($relatedModel->getSchema()->hasColumn('order')) {
+                        $relatedQuery->order($relatedModel->aliasField('order'));
+                    }
+
+                    $modelData = $relatedModel->getList($relatedQuery);
                     $emptyCodeRecords = $modelData;
                     $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
                         return !empty($record->national_code);
