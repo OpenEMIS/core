@@ -112,6 +112,7 @@ class ImportUsersTable extends AppTable
             'Model.import.onImportPopulateContactTypesData' => 'onImportPopulateContactTypesData',
             'Model.import.onImportGetAccountTypesId' => 'onImportGetAccountTypesId',
             'Model.import.onImportPopulateAcademicPeriodsData' => 'onImportPopulateAcademicPeriodsData',
+            'Model.import.onImportPopulateEducationGradesData' => 'onImportPopulateEducationGradesData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.import.onImportCustomHeader' => 'onImportCustomHeader',
             'Model.import.onImportCheckIdentityConfig' => 'onImportCheckIdentityConfig',
@@ -651,6 +652,33 @@ class ImportUsersTable extends AppTable
             }
         }
     }
+
+    public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
+        $programmeHeader = $this->getExcelLabel($lookedUpTable, 'education_programme_id');
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+        $data[$columnOrder]['lookupColumn'] = 3;
+        $data[$columnOrder]['data'][] = [$programmeHeader, $translatedReadableCol, $translatedCol];
+        $modelData = $lookedUpTable->find('visible')
+            ->contain(['EducationProgrammes'])
+            ->select(['code', 'name', 'EducationProgrammes.name'])
+            ->order([
+                'EducationProgrammes.order',
+                $lookupModel.'.order'
+            ]);
+
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->education_programme->name,
+                    $row->name,
+                    $row->{$lookupColumn}
+                ];
+            }
+        }
+    }
+
     /**
      * POCOR-8391 added
      * Get a dynamic table instance with all associations.

@@ -45,7 +45,7 @@ class POCOR8683 extends AbstractMigration
         $data = [
             ['User.Users', 'institution_code', '**', 19, 0, 0, null, null, null],
             ['User.Users', 'academic_period_id', '** Code', 20, 0, 2, 'AcademicPeriod', 'AcademicPeriods', 'code'],
-//            ['User.Users', 'education_grade_id', '**', 21, 0, 0, null, null, null],
+            ['User.Users', 'education_grade_id', '** Code', 21, 0, 2, 'Education', 'EducationGrades', 'code'],
 //            ['User.Users', 'class_name', '**', 22, 0, 0, null, null, null],
 //            ['User.Users', 'start_date', '** ( DD/MM/YYYY )', 23, 0, 0, null, null, null],
 //            ['User.Users', 'guardian_relation_id', '*** Relation Code (Guardian)', 24, 0, 2, 'Student', 'GuardianRelations', 'id'],
