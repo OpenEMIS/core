@@ -111,6 +111,7 @@ class ImportUsersTable extends AppTable
             'Model.import.onImportPopulateAccountTypesData' => 'onImportPopulateAccountTypesData',
             'Model.import.onImportPopulateContactTypesData' => 'onImportPopulateContactTypesData',
             'Model.import.onImportGetAccountTypesId' => 'onImportGetAccountTypesId',
+            'Model.import.onImportPopulateAcademicPeriodsData' => 'onImportPopulateAcademicPeriodsData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.import.onImportCustomHeader' => 'onImportCustomHeader',
             'Model.import.onImportCheckIdentityConfig' => 'onImportCheckIdentityConfig',
@@ -215,7 +216,7 @@ class ImportUsersTable extends AppTable
     public function onImportPopulateContactTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         //Join contact type and contact options for displaying the name of contact type and its contact option name at excel for user to see
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all', [
             'contain' => ['ContactOptions']
         ])
@@ -237,7 +238,7 @@ class ImportUsersTable extends AppTable
 
     public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
             ->select(['name', $lookupColumn])
                                 ->order($lookupModel.'.area_administrative_level_id', $lookupModel.'.order')
@@ -258,7 +259,7 @@ class ImportUsersTable extends AppTable
 
     public function onImportPopulateGendersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
             ->select(['name', $lookupColumn])
                                 ->order([$lookupModel.'.order'])
@@ -437,7 +438,7 @@ class ImportUsersTable extends AppTable
 
     public function onImportPopulateNationalitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
 
         $modelData = $lookedUpTable->find()
             ->contain('IdentityTypes')
@@ -504,7 +505,7 @@ class ImportUsersTable extends AppTable
     public function onImportCustomHeader(Event $event, $customDataSource, ArrayObject $customHeaderData)
     {
 
-        $customTable = TableRegistry::get($customDataSource);
+        $customTable = self::getDynamicTableInstance($customDataSource);
 
         switch ($customDataSource) { //this is for specify column name based on the data
             case 'FieldOption.IdentityTypes':
@@ -627,7 +628,29 @@ class ImportUsersTable extends AppTable
         return $isValidIdentityNumber;
     }
     // POCOR-7973:end
-
+    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
+        $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+        $startDateLabel = $this->getExcelLabel($lookedUpTable, 'start_date');
+        $endDateLabel = $this->getExcelLabel($lookedUpTable, 'end_date');
+        $data[$columnOrder]['lookupColumn'] = 4;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $startDateLabel, $endDateLabel, $translatedCol];
+        if (!empty($modelData)) {
+            foreach($modelData as $row) {
+                if ($row->academic_period_level_id == 1) { //validate that only period level "year" will be shown
+                    $date = $row->start_date;
+                    $data[$columnOrder]['data'][] = [
+                        $row->name,
+                        $row->start_date->format('d/m/Y'),
+                        $row->end_date->format('d/m/Y'),
+                        $row->{$lookupColumn}
+                    ];
+                }
+            }
+        }
+    }
     /**
      * POCOR-8391 added
      * Get a dynamic table instance with all associations.
