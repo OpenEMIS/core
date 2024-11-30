@@ -113,6 +113,7 @@ class ImportUsersTable extends AppTable
             'Model.import.onImportGetAccountTypesId' => 'onImportGetAccountTypesId',
             'Model.import.onImportPopulateAcademicPeriodsData' => 'onImportPopulateAcademicPeriodsData',
             'Model.import.onImportPopulateEducationGradesData' => 'onImportPopulateEducationGradesData',
+            'Model.import.onImportPopulateGuardianRelationsData' => 'onImportPopulateGuardianRelationsData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.import.onImportCustomHeader' => 'onImportCustomHeader',
             'Model.import.onImportCheckIdentityConfig' => 'onImportCheckIdentityConfig',
@@ -677,6 +678,32 @@ class ImportUsersTable extends AppTable
                 ];
             }
         }
+    }
+    public function onImportPopulateGuardianRelationsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
+
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'Relation');
+
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+
+        $modelData = $lookedUpTable->find('all')
+            ->select([
+                'name',
+                'id'
+            ]);
+
+        if (!empty($modelData)) {
+            foreach($modelData->toArray() as $row) {
+
+                $data[$columnOrder]['data'][] = [
+                    $row->name,
+                    $row->id,
+                ];
+            }
+        }
+
     }
 
     /**
