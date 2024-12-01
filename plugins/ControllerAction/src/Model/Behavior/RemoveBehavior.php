@@ -527,7 +527,7 @@ class RemoveBehavior extends Behavior
         foreach ($model->associations() as $assoc) {
             if (in_array($assoc->getDependent(), $dependent)) {
                 if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-                    Log::debug(print_r($assoc, true));
+
                     try{
                         $assocTable = self::getDynamicTableInstance($assoc->getAlias());
                     }catch (\Exception $exception){
@@ -536,10 +536,8 @@ class RemoveBehavior extends Behavior
                     if (!array_key_exists($assoc->getAlias(), $associations)) {
 //                        $count = 0;
                         $assocTable =$assoc;
-                        Log::debug($assocTable->aliasField('_x'));
                         if ($assoc->type() == 'manyToMany') {
                             $assocTable = $assoc->junction()->getAlias();
-                            Log::debug($assocTable->aliasField('_y'));
                         }
 //                        Log::write('debug', $assoc);
                         $bindingKey = $assoc->getBindingKey();
@@ -553,7 +551,6 @@ class RemoveBehavior extends Behavior
                         } else {
                             $conditions[$assocTable->aliasField($foreignKey)] = $ids[$bindingKey];
                         }
-                        Log::debug(print_r($conditions,true));
 
                         $query = $assocTable->find()->where($conditions);
                         $event = $model->dispatchEvent('ControllerAction.Model.getAssociatedRecordConditions', [$query, $assocTable, $extra], $this);
