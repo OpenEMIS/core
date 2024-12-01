@@ -1164,16 +1164,16 @@ class UsersTable extends AppTable
         // This logic is meant for Import
         if ($entity->has('record_source')) {
             if ($entity->record_source == 'import_user') {
-                $identity_id = $entity->identity_id;
+                $identity_type_id = $entity->identity_type_id;
                 $nationality_id = $entity->nationality_id;
                 if($nationality_id){
                 $listeners = [
                     TableRegistry::getTableLocator()->get('User.UserNationalities'),
                 ];
-                    if($identity_id){
+                    if($identity_type_id){
                         $listeners = [
                             TableRegistry::getTableLocator()->get('User.UserNationalities'),
-                            TableRegistry::getTableLocator()->get('User.UserNationalities'),
+                            TableRegistry::getTableLocator()->get('User.Identities'),
                         ];
                     }
                 }

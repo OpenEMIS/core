@@ -165,7 +165,10 @@ class ImportUsersTable extends AppTable
             try{
                 $tempRow['entity'] = $this->Users->newEntity(['openemis_no' => $openemisNo]);
                 $username = Text::slug($openemisNo);
-//                $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
+                if(strlen($username) < 6){
+                    $username = $username . $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
+                    $tempRow['openemis_no'] = $username;
+                }
                 $tempRow['username'] = $username;
             } catch (\Exception $exception) {
                 $rowInvalidCodeCols['openemis_no'] = __($exception->getMessage());
