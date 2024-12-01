@@ -294,128 +294,32 @@ class ImportUsersTable extends AppTable
         //            Log::debug(print_r($tempRow, true));
 
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-        $isStudentIdentityMandatory = $ConfigItems->value('StudentIdentities');
-        $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
-        $isStaffNationalitiesMandatory = $ConfigItems->value('StaffNationalities');
-        $isStudentNationalitiesMandatory = $ConfigItems->value('StudentNationalities');
         // POCOR-7973:start
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
         $identity_type_id = isset($tempRow['identity_type_id']) ? $tempRow['identity_type_id'] : false;
         $identity_number = isset($tempRow['identity_number']) ? $tempRow['identity_number'] : false;
-        $nationality_id = isset($tempRow['nationality_id']) ? $tempRow['nationality_id'] : false;
         $have_error = false;
         // identity number mandatory
         if ($isStaff) {
-            if ($isStaffIdentityMandatory == 1) {
-                if (!$identity_type_id || !$identity_number) {
-                    //POCOR-7973
-                    $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
-                    $have_error = true;
-                }
-            }
-            if ($isStaffNationalitiesMandatory == 1) {
-                if (!$nationality_id) {
-                    $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
-                    $have_error = true;
-                }
-            }
+            $have_error = $this->checkStaffIdentityNationality($tempRow, $rowInvalidCodeCols);
         }
 
         if ($isStudent) {
-            if ($isStudentIdentityMandatory == 1) {
-                if (!$identity_type_id || !$identity_number) {
-                    $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
-                    $have_error = true;
-                }
-            }
-            if ($isStudentNationalitiesMandatory == 1) {
-                if (!$nationality_id) {
-                    $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
-                    $have_error = true;
-                }
-            }
-        }
+            $have_error = $this->checkStudentIdentityNationality($tempRow, $rowInvalidCodeCols);
 
-        if ($isStudent) {
-            $institution_code = $tempRow['institution_code'];
-            $institution = null;
-            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
-            $StudentAdmissions = self::getDynamicTableInstance('Institution.StudentAdmission');
-            if (strlen($institution_code) > 1) {
-                $institution = $Institutions->find()->where([$Institutions->aliasField('code') => $institution_code])->first();
-                $tempRow['institution_id'] = $institution->id;
-            }
-            if (!$institution) {
-                $rowInvalidCodeCols['institution_code'] = __('Institution With This Code Not Found');
-                $have_error = true;
-            }
-            if($institution){
-                $user = $tempRow['entity'];
-                if($user){
-                    $securityUserId = $user->id;
-                }
-                $admission = [
-                    'institution_id' => $institution->id
-                ];
-                if($securityUserId){
-                  $admission['student_id'] = $securityUserId;
-                }
-                $admissionEntity = $StudentAdmissions->newEntity($admission);
-                if ($admissionEntity && $admissionEntity->getErrors()) { // POCOR-7973
-                    $errorMessages = array_reduce(
-                        $admissionEntity->getErrors(),
-                        function ($carry, $errors) {
-                            return array_merge($carry, $errors);
-                        },
-                        []
-                    );
-
-                    $rowInvalidCodeCols['institution_code'] = implode(',', $errorMessages);
-                    $have_error = true;
-                }
-                $tempRow['admission_entity'] = $admissionEntity;
-                $tempRow['end_date'] = false;
-                $tempRow['assignee_id'] = $this->Auth->user('id'); //POCOR-7282
-                // Optional fields which will be validated should be set with a default value on initialisation
-                $tempRow['institution_class_id'] = null;
-            }
         }
-        Log::debug(print_r($tempRow, true));
-        // Nationalities Mandatory
 
         //if identity type selected, then need to specify identity number
         if ($identity_type_id) {
-            if (!$identity_number) {
-                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_for_type_required');
-                $have_error = true;
-            }
+            $have_error = $this->checkIdentityNumber($tempRow, $rowInvalidCodeCols);
         }
 
         //if identity number is not empty, need to ensure it has identity type selected, it has to be unique and following the validation patter (if there is)
         if ($identity_number) {
-            if (!$identity_type_id) {
-                $rowInvalidCodeCols['identity_type'] = $this->getExcelLabel('Import', 'identity_type_for_number_required');
-                $have_error = true;
-            }
-            if ($identity_type_id) {
-                // check whether same identity number exist for the selected identity type
-                $identityTypeName = $this->alreadyPresentIdentityTypeName($identity_number, $identity_type_id, $nationality_id);
-                if ($identityTypeName) {
-                    $rowInvalidCodeCols['identity_number'] = $this->getMessage('Import.identity_number_exist', ['sprintf' => [$identityTypeName]]);
-                    $have_error = true;
-                }
-                // following validation pattern.
-                $isValidIdentityNumber = $this->checkIdentityNumberPattern($identity_type_id, $identity_number);
-                if (!$isValidIdentityNumber) {
-                    $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_invalid_pattern');
-                    $have_error = true;
-                }
-            }
+            $have_error = $this->checkIdentityTypeId($tempRow, $rowInvalidCodeCols);
         }
-        if($have_error == true){
-            return false;
-        }
+
         // POCOR-7973:end
         //Validation of contact_type and contact
         if (isset($tempRow['contact_type'])) {
@@ -486,13 +390,121 @@ class ImportUsersTable extends AppTable
                 }
             }
         }
+        if ($isStudent) {
+            $institution_code = $tempRow['institution_code'];
+            $institution = null;
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
+            $StudentAdmissions = self::getDynamicTableInstance('Institution.StudentAdmission');
+            if (strlen($institution_code) > 1) {
+                $institution = $Institutions->find()->where([$Institutions->aliasField('code') => $institution_code])->first();
+                $tempRow['institution_id'] = $institution->id;
+            }
+            if (!$institution) {
+                $rowInvalidCodeCols['institution_code'] = __('Institution With This Code Not Found');
+                $have_error = true;
+            }
+            if($institution){
+                $user = $tempRow['entity'];
+                if($user){
+                    $securityUserId = $user->id;
+                }
+                $admission = [
+                    'institution_id' => $institution->id
+                ];
+                if($securityUserId){
+                  $admission['student_id'] = $securityUserId;
+                }
+                $admissionEntity = $StudentAdmissions->newEntity($admission);
+                if ($admissionEntity && $admissionEntity->getErrors()) { // POCOR-7973
+                    $errorMessages = array_reduce(
+                        $admissionEntity->getErrors(),
+                        function ($carry, $errors) {
+                            return array_merge($carry, $errors);
+                        },
+                        []
+                    );
+
+                    $rowInvalidCodeCols['institution_code'] = implode(',', $errorMessages);
+                    $have_error = true;
+                }
+                $tempRow['admission_entity'] = $admissionEntity;
+                $tempRow['end_date'] = false;
+                $tempRow['assignee_id'] = $this->Auth->user('id'); //POCOR-7282
+                // Optional fields which will be validated should be set with a default value on initialisation
+                $tempRow['institution_class_id'] = null;
+            }
+        }
+        Log::debug(print_r($tempRow, true));
+        // Nationalities Mandatory
+
+        if($have_error == true){
+            return false;
+        }
 
         //add identifier that later will be used on User afterSave
         $tempRow['record_source'] = 'import_user';
 
         return true;
     }
+    private static function getInstitutionGradeIds($academic_period_id, $institution_id): array
+    {
+        $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
 
+        return $InstitutionGrades->find('list', [
+            'keyField' => 'id',
+            'valueField' => 'education_grade_id'
+        ])
+            ->LeftJoin(['EducationGrades' => 'education_grades'], [
+                'EducationGrades.id = ' . $InstitutionGrades->aliasField('education_grade_id')
+            ])
+            ->LeftJoin(['EducationProgrammes' => 'education_programmes'], [
+                'EducationProgrammes.id = EducationGrades.education_programme_id'
+            ])
+            ->LeftJoin(['EducationCycles' => 'education_cycles'], [
+                'EducationCycles.id = EducationProgrammes.education_cycle_id'
+            ])
+            ->LeftJoin(['EducationLevels' => 'education_levels'], [
+                'EducationLevels.id = EducationCycles.education_level_id'
+            ])
+            ->LeftJoin(['EducationSystems' => 'education_systems'], [
+                'EducationSystems.id = EducationLevels.education_system_id'
+            ])
+            ->LeftJoin(['AcademicPeriods' => 'academic_periods'], [
+                'AcademicPeriods.id = EducationSystems.academic_period_id'
+            ])
+            ->where([
+                $InstitutionGrades->aliasField('institution_id') => $institution_id,
+                'AcademicPeriods.id' => $academic_period_id
+            ])
+            ->toArray();
+    }
+
+    private static function checkInstitutionGrade(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols)
+    {
+        $academic_period_id = $tempRow['academic_period_id'];
+        $institution_id = $tempRow['institution_id'];
+        $gradesInInstitution = self::getInstitutionGradeIds($academic_period_id, $institution_id);
+        $education_grade_id = $tempRow['education_grade_id'];
+        $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
+        if (!in_array($education_grade_id, $gradesInInstitution)) {
+            $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade is not being offered in this institution');
+            return false;
+        }
+        $institutionGrade = $InstitutionGrades
+            ->find()
+            ->contain('EducationGrades.EducationProgrammes.EducationCycles')
+            ->where([
+                $InstitutionGrades->aliasField('education_grade_id') => $education_grade_id,
+                $InstitutionGrades->aliasField('institution_id') => $institution_id
+            ]);
+        if ($institutionGrade->isEmpty()) {
+            $rowInvalidCodeCols['education_grade_id'] = __('No matching education grade.');
+            return false;
+        }
+
+        $institutionGrade = $institutionGrade->first();
+        return $institutionGrade;
+    }
     public function onImportPopulateNationalitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
@@ -808,6 +820,116 @@ class ImportUsersTable extends AppTable
 
         // Return the table instance
         return $locator->get($tableFullAlias);
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkStaffIdentityNationality(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+        $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
+        $isStaffNationalitiesMandatory = $ConfigItems->value('StaffNationalities');
+        $identity_type_id = isset($tempRow['identity_type_id']) ? $tempRow['identity_type_id'] : false;
+        $identity_number = isset($tempRow['identity_number']) ? $tempRow['identity_number'] : false;
+        $nationality_id = isset($tempRow['nationality_id']) ? $tempRow['nationality_id'] : false;
+
+        if ($isStaffIdentityMandatory == 1) {
+            if (!$identity_type_id || !$identity_number) {
+                //POCOR-7973
+                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
+                $have_error = true;
+            }
+        }
+        if ($isStaffNationalitiesMandatory == 1) {
+            if (!$nationality_id) {
+                $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
+                $have_error = true;
+            }
+        }
+        return $have_error;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkStudentIdentityNationality(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+        $isStudentIdentityMandatory = $ConfigItems->value('StudentIdentities');
+        $isStudentNationalitiesMandatory = $ConfigItems->value('StudentNationalities');
+        $identity_type_id = isset($tempRow['identity_type_id']) ? $tempRow['identity_type_id'] : false;
+        $identity_number = isset($tempRow['identity_number']) ? $tempRow['identity_number'] : false;
+        $nationality_id = isset($tempRow['nationality_id']) ? $tempRow['nationality_id'] : false;
+
+        if ($isStudentIdentityMandatory == 1) {
+            if (!$identity_type_id || !$identity_number) {
+                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_required');
+                $have_error = true;
+            }
+        }
+        if ($isStudentNationalitiesMandatory == 1) {
+            if (!$nationality_id) {
+                $rowInvalidCodeCols['nationality_id'] = $this->getExcelLabel('Import', 'nationality_required');
+                $have_error = true;
+            }
+        }
+        return $have_error;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkIdentityNumber(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $identity_number = isset($tempRow['identity_number']) ? $tempRow['identity_number'] : false;
+
+        if (!$identity_number) {
+            $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_for_type_required');
+            $have_error = true;
+        }
+        return $have_error;
+    }
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkIdentityTypeId(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $identity_type_id = isset($tempRow['identity_type_id']) ? $tempRow['identity_type_id'] : false;
+        $identity_number = isset($tempRow['identity_number']) ? $tempRow['identity_number'] : false;
+        $nationality_id = isset($tempRow['nationality_id']) ? $tempRow['nationality_id'] : false;
+
+        if (!$identity_type_id) {
+            $rowInvalidCodeCols['identity_type'] = $this->getExcelLabel('Import', 'identity_type_for_number_required');
+            $have_error = true;
+        }
+        if ($identity_type_id) {
+            // check whether same identity number exist for the selected identity type
+            $identityTypeName = $this->alreadyPresentIdentityTypeName($identity_number, $identity_type_id, $nationality_id);
+            if ($identityTypeName) {
+                $rowInvalidCodeCols['identity_number'] = $this->getMessage('Import.identity_number_exist', ['sprintf' => [$identityTypeName]]);
+                $have_error = true;
+            }
+            // following validation pattern.
+            $isValidIdentityNumber = $this->checkIdentityNumberPattern($identity_type_id, $identity_number);
+            if (!$isValidIdentityNumber) {
+                $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_invalid_pattern');
+                $have_error = true;
+            }
+        }
+        return $have_error;
     }
 
 }
