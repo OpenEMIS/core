@@ -232,12 +232,13 @@ class UsersTable extends AppTable
 
     public function afterAction(Event $event)
     {
-        if (isset($this->action) && in_array($this->action, ['view', 'edit'])) {
+        $action = $this->action;
+        if (isset($action) && in_array($action, ['view', 'edit'])) {
             $this->setTabElements();
         }
 
-        if (isset($this->action) && strtolower($this->action) != 'index') {
-            $this->Navigation->addCrumb($this->getHeader($this->action));
+        if (isset($action) && strtolower($action) != 'index') {
+            $this->Navigation->addCrumb($this->getHeader($action));
         }
     }
 
