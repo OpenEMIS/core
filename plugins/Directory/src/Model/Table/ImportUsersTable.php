@@ -159,12 +159,16 @@ class ImportUsersTable extends AppTable
 //            $tempRow['username'] = $tempRow['openemis_no'];
             return false;
         }
-
-        $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+        if ($openemisNo) {
+            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+        }
         if (!$user) {
             try{
+                $username = "";
                 $tempRow['entity'] = $this->Users->newEntity(['openemis_no' => $openemisNo]);
-                $username = Text::slug($openemisNo);
+                if(strlen($openemisNo) > 1){
+                    $username = Text::slug($openemisNo);
+                }
                 if(strlen($username) < 6){
                     $username = $username . $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
                     $tempRow['openemis_no'] = $username;
@@ -287,6 +291,8 @@ class ImportUsersTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
+        //            Log::debug(print_r($tempRow, true));
+
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $isStudentIdentityMandatory = $ConfigItems->value('StudentIdentities');
         $isStaffIdentityMandatory = $ConfigItems->value('StaffIdentities');
@@ -331,6 +337,51 @@ class ImportUsersTable extends AppTable
             }
         }
 
+        if ($isStudent) {
+            $institution_code = $tempRow['institution_code'];
+            $institution = null;
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
+            $StudentAdmissions = self::getDynamicTableInstance('Institution.StudentAdmission');
+            if (strlen($institution_code) > 1) {
+                $institution = $Institutions->find()->where([$Institutions->aliasField('code') => $institution_code])->first();
+                $tempRow['institution_id'] = $institution->id;
+            }
+            if (!$institution) {
+                $rowInvalidCodeCols['institution_code'] = __('Institution With This Code Not Found');
+                $have_error = true;
+            }
+            if($institution){
+                $user = $tempRow['entity'];
+                if($user){
+                    $securityUserId = $user->id;
+                }
+                $admission = [
+                    'institution_id' => $institution->id
+                ];
+                if($securityUserId){
+                  $admission['student_id'] = $securityUserId;
+                }
+                $admissionEntity = $StudentAdmissions->newEntity($admission);
+                if ($admissionEntity && $admissionEntity->getErrors()) { // POCOR-7973
+                    $errorMessages = array_reduce(
+                        $admissionEntity->getErrors(),
+                        function ($carry, $errors) {
+                            return array_merge($carry, $errors);
+                        },
+                        []
+                    );
+
+                    $rowInvalidCodeCols['institution_code'] = implode(',', $errorMessages);
+                    $have_error = true;
+                }
+                $tempRow['admission_entity'] = $admissionEntity;
+                $tempRow['end_date'] = false;
+                $tempRow['assignee_id'] = $this->Auth->user('id'); //POCOR-7282
+                // Optional fields which will be validated should be set with a default value on initialisation
+                $tempRow['institution_class_id'] = null;
+            }
+        }
+        Log::debug(print_r($tempRow, true));
         // Nationalities Mandatory
 
         //if identity type selected, then need to specify identity number
@@ -368,7 +419,6 @@ class ImportUsersTable extends AppTable
         // POCOR-7973:end
         //Validation of contact_type and contact
         if (isset($tempRow['contact_type'])) {
-            Log::debug(print_r($tempRow, true));
             if (!isset($tempRow['contact'])) {
                 $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'contact_required');
                 $tempRow['contact_error'] = true;
