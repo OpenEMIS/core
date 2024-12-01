@@ -289,155 +289,91 @@ class ImportUsersTable extends AppTable
         }
     }
 
+    /**
+     * @throws \Exception
+     */
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         //            Log::debug(print_r($tempRow, true));
 
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-        // POCOR-7973:start
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
         $identity_type_id = isset($tempRow['identity_type_id']) ? $tempRow['identity_type_id'] : false;
         $identity_number = isset($tempRow['identity_number']) ? $tempRow['identity_number'] : false;
+        $contact_type = $tempRow['contact_type'];
         $have_error = false;
         // identity number mandatory
         if ($isStaff) {
-            $have_error = $this->checkStaffIdentityNationality($tempRow, $rowInvalidCodeCols);
+            $have_error = $have_error || $this->checkStaffIdentityNationality($tempRow, $rowInvalidCodeCols);
         }
 
         if ($isStudent) {
-            $have_error = $this->checkStudentIdentityNationality($tempRow, $rowInvalidCodeCols);
+            $have_error = $have_error || $this->checkStudentIdentityNationality($tempRow, $rowInvalidCodeCols);
 
         }
 
         //if identity type selected, then need to specify identity number
         if ($identity_type_id) {
-            $have_error = $this->checkIdentityNumber($tempRow, $rowInvalidCodeCols);
+            $have_error = $have_error ||  $this->checkIdentityNumber($tempRow, $rowInvalidCodeCols);
         }
 
         //if identity number is not empty, need to ensure it has identity type selected, it has to be unique and following the validation patter (if there is)
         if ($identity_number) {
-            $have_error = $this->checkIdentityTypeId($tempRow, $rowInvalidCodeCols);
+            $have_error = $have_error ||  $this->checkIdentityTypeId($tempRow, $rowInvalidCodeCols);
         }
-
-        // POCOR-7973:end
-        //Validation of contact_type and contact
-        if (isset($tempRow['contact_type'])) {
-            if (!isset($tempRow['contact'])) {
-                $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'contact_required');
-                $tempRow['contact_error'] = true;
-                return false;
-            } else {
-                //use contact_type_id to get contact_options id to save.
-                $ContactTypesTable = self::getDynamicTableInstance('User.ContactTypes');
-                $ContactTable = self::getDynamicTableInstance('User.Contacts');
-                $contactType = $tempRow['contact_type'];
-                $contactOptionId = $ContactTypesTable->find()
-                    ->select([$ContactTypesTable->aliasField('contact_option_id')])
-                    ->where([$ContactTypesTable->aliasField('id') => $contactType])
-                    ->first();
-
-                if ($contactOptionId) {
-                    $contactEntity = null; // POCOR-7973
-
-                    $securityUserId = $this->Users->find()
-                        ->select([$this->Users->aliasField('id')])
-                        ->where([$this->Users->aliasField('openemis_no') => $tempRow['openemis_no']])
-                        ->first();
-
-                    $data = [
-                        'contact_type_id' => $tempRow['contact_type'],
-                        'value' => $tempRow['contact'],
-                        'contact_option_id' => $contactOptionId['contact_option_id'],
-                    ];
-
-                    if ($securityUserId) {  //if is existing user validation will be different
-                        $data['security_user_id'] = $securityUserId->id;
-                        $data['preferred'] = 0;
-                        $contactEntity = $ContactTable->newEntity($data);
-                    } else {
-                        $contactEntity = $ContactTable->newEntity($data,
-//                            ['validate' => 'importType'] // todo removed validations for further check
-                        );
-                    }
-
-                    //Display all the error msgs
-                    // Display all the error messages
-                    if ($contactEntity && $contactEntity->getErrors()) { // POCOR-7973
-                        $errorMessages = array_reduce(
-                            $contactEntity->getErrors(),
-                            function ($carry, $errors) {
-                                return array_merge($carry, $errors);
-                            },
-                            []
-                        );
-
-                        $rowInvalidCodeCols['contact'] = implode(',', $errorMessages);
-                        $tempRow['contact_error'] = true;
-
-                        return false;
-                    } elseif (!$contactEntity) {
-                        $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
-                        $tempRow['contact_error'] = true;
-
-                        return false;
-                    }
-
-                } else {
-                    $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
-                    $tempRow['contact_error'] = true;
-                    return false;
-                }
-            }
+        if (isset($contact_type)) {
+            $have_error = $have_error ||  $this->checkContact($tempRow, $rowInvalidCodeCols);
         }
         if ($isStudent) {
-            $institution_code = $tempRow['institution_code'];
-            $institution = null;
-            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
-            $StudentAdmissions = self::getDynamicTableInstance('Institution.StudentAdmission');
-            if (strlen($institution_code) > 1) {
-                $institution = $Institutions->find()->where([$Institutions->aliasField('code') => $institution_code])->first();
-                $tempRow['institution_id'] = $institution->id;
-            }
-            if (!$institution) {
-                $rowInvalidCodeCols['institution_code'] = __('Institution With This Code Not Found');
-                $have_error = true;
-            }
-            if($institution){
-                $user = $tempRow['entity'];
-                if($user){
-                    $securityUserId = $user->id;
-                }
-                $admission = [
-                    'institution_id' => $institution->id
-                ];
-                if($securityUserId){
-                  $admission['student_id'] = $securityUserId;
-                }
-                $admissionEntity = $StudentAdmissions->newEntity($admission);
-                if ($admissionEntity && $admissionEntity->getErrors()) { // POCOR-7973
-                    $errorMessages = array_reduce(
-                        $admissionEntity->getErrors(),
-                        function ($carry, $errors) {
-                            return array_merge($carry, $errors);
-                        },
-                        []
-                    );
+            $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
+            $institution_id = $tempRow['institution_id'];
+            $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
+            $start_date = $tempRow['start_date'];
+            $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
+            $academicPeriodId = $tempRow['academic_period_id'];
+            $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
+            $institution_id = $tempRow['institution_id'];
+            $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
+            $institution_id = $tempRow['institution_id'];
 
-                    $rowInvalidCodeCols['institution_code'] = implode(',', $errorMessages);
-                    $have_error = true;
-                }
-                $tempRow['admission_entity'] = $admissionEntity;
-                $tempRow['end_date'] = false;
-                $tempRow['assignee_id'] = $this->Auth->user('id'); //POCOR-7282
-                // Optional fields which will be validated should be set with a default value on initialisation
-                $tempRow['institution_class_id'] = null;
-            }
+//            if($institution_id){
+//                $user = $tempRow['entity'];
+//                if($user){
+//                    $security_user_id = $user->id;
+//                }
+//                $currentUserId = $this->Auth->user('id');
+//                $admission = [
+//                    'institution_id' => $institution_id,
+//                    'assignee_id' => $currentUserId,
+//                ];
+//                if($security_user_id){
+//                  $admission['student_id'] = $security_user_id;
+//                }
+//                $admissionEntity = $StudentAdmissions->newEntity($admission);
+//                if ($admissionEntity && $admissionEntity->getErrors()) { // POCOR-7973
+//                    $errorMessages = array_reduce(
+//                        $admissionEntity->getErrors(),
+//                        function ($carry, $errors) {
+//                            return array_merge($carry, $errors);
+//                        },
+//                        []
+//                    );
+//
+//                    $rowInvalidCodeCols['institution_code'] = implode(',', $errorMessages);
+//                    $have_error = true;
+//                }
+//                $tempRow['admission_entity'] = $admissionEntity;
+//                $tempRow['end_date'] = false;
+//                $tempRow[] =; //POCOR-7282
+//                // Optional fields which will be validated should be set with a default value on initialisation
+//                $tempRow['institution_class_id'] = null;
+//            }
         }
         Log::debug(print_r($tempRow, true));
         // Nationalities Mandatory
 
-        if($have_error == true){
+        if($have_error){
             return false;
         }
 
@@ -899,6 +835,7 @@ class ImportUsersTable extends AppTable
         }
         return $have_error;
     }
+
     /**
      * @param $tempRow
      * @param $rowInvalidCodeCols
@@ -931,5 +868,178 @@ class ImportUsersTable extends AppTable
         }
         return $have_error;
     }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkContact(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $contact = $tempRow['contact'];
+        $contactType = $tempRow['contact_type'];
+        if (!isset($contact)) {
+            $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'contact_required');
+            $tempRow['contact_error'] = true;
+            $have_error = true;
+        }
+        if (!isset($contact)) {
+            //use contact_type_id to get contact_options id to save.
+            $ContactTypesTable = self::getDynamicTableInstance('User.ContactTypes');
+            $ContactTable = self::getDynamicTableInstance('User.Contacts');
+
+            $contactOptionId = $ContactTypesTable->find()
+                ->select([$ContactTypesTable->aliasField('contact_option_id')])
+                ->where([$ContactTypesTable->aliasField('id') => $contactType])
+                ->first();
+
+            if ($contactOptionId) {
+                $contactEntity = null; // POCOR-7973
+                $securityUserId = null;
+                $openemis_no = $tempRow['openemis_no'];
+                if($openemis_no){
+                $securityUserId = $this->Users->find()
+                    ->select([$this->Users->aliasField('id')])
+                    ->where([$this->Users->aliasField('openemis_no') => $openemis_no])
+                    ->first();
+                }
+                $data = [
+                    'contact_type_id' => $tempRow['contact_type'],
+                    'value' => $contact,
+                    'contact_option_id' => $contactOptionId['contact_option_id'],
+                ];
+
+                if ($securityUserId) {  //if is existing user validation will be different
+                    $data['security_user_id'] = $securityUserId->id;
+                    $data['preferred'] = 0;
+                    $contactEntity = $ContactTable->newEntity($data);
+                } else {
+                    $contactEntity = $ContactTable->newEntity($data,
+                    );
+                }
+
+                //Display all the error msgs
+                // Display all the error messages
+                if ($contactEntity && $contactEntity->getErrors()) { // POCOR-7973
+                    $errorMessages = array_reduce(
+                        $contactEntity->getErrors(),
+                        function ($carry, $errors) {
+                            return array_merge($carry, $errors);
+                        },
+                        []
+                    );
+
+                    $rowInvalidCodeCols['contact'] = implode(',', $errorMessages);
+                    $tempRow['contact_error'] = true;
+
+                    $have_error = true;
+                } elseif (!$contactEntity) {
+                    $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
+                    $tempRow['contact_error'] = true;
+
+                    $have_error = true;
+                }
+
+            } else {
+                $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
+                $tempRow['contact_error'] = true;
+                $have_error = true;
+            }
+        }
+        return $have_error;
+    }
+
+   /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkInstitution(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $institution_code = $tempRow['institution_code'];
+        $institution = null;
+        $Institutions = self::getDynamicTableInstance('Institution.Institutions');
+        if (strlen($institution_code) > 1) {
+            $institution = $Institutions->find()->where([$Institutions->aliasField('code') => $institution_code])->first();
+            $tempRow['institution_id'] = $institution->id;
+        }
+        if (!$institution) {
+            $rowInvalidCodeCols['institution_code'] = __('Institution With This Code Not Found');
+            $have_error = true;
+        }
+
+        return $have_error;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     * @throws \Exception
+     */
+    private function checkStartDate(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $timeZone = $this->getTimeZone();
+        $dateTimeZone = new \DateTimeZone($timeZone);
+
+//        $this->log(__FUNCTION__, 'debug');
+//        $this->log($tempRow, 'debug');
+//        $this->log($rowInvalidCodeCols, 'debug');
+        // from string to dateObject
+        $start_date = $tempRow['start_date'];
+        if (empty($start_date)) {
+            $rowInvalidCodeCols['start_date'] = __('No start date specified');
+            $have_error = true;
+            $tempRow['start_date'] = null;
+            return $have_error;
+        }
+        try {
+            $formattedDate = DateTime::createFromFormat('d/m/Y', $start_date, $dateTimeZone);
+        } catch (\Exception $exception) {
+            $rowInvalidCodeCols['start_date'] = $exception->getMessage() . ": " . $start_date;
+            $have_error = true;
+            $tempRow['start_date'] = null;
+            return $have_error;
+        }
+        if (!($formattedDate instanceof DateTimeInterface)) {
+            $rowInvalidCodeCols['start_date'] = __('Unknown date format') . __('Date format should be d/m/Y');
+            $have_error = true;
+            $tempRow['start_date'] = null;
+            return $have_error;
+        }
+        $tempRow['start_date'] = $formattedDate;
+        return $have_error;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     * @throws \Exception
+     */
+    private function checkAcademicPeriodId(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $academic_period_id = null;
+
+        $tempRow['academic_period_id'] = $academic_period_id;
+        return $have_error;
+    }
+
+    /**
+     * @return string
+     */
+    private function getTimeZone(): string
+    {
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+        $setTimeZone = $ConfigItems->value("time_zone");
+        $timeZone = !empty($setTimeZone) ? $setTimeZone : 'UTC'; //POCOR-6732
+        date_default_timezone_set($timeZone);
+        return $timeZone;
+    }
+
 
 }
