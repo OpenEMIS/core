@@ -11,6 +11,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
+use Cake\Utility\Text;
 
 class ImportUsersTable extends AppTable
 {
@@ -154,8 +155,8 @@ class ImportUsersTable extends AppTable
         if (empty($tempRow['account_type'])) {
             $tempRow['duplicates'] = __('Account type cannot be empty');
             $rowInvalidCodeCols['account_type'] = $tempRow['duplicates'];
-            $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, 'others');
-            $tempRow['username'] = $tempRow['openemis_no'];
+//            $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, 'others');
+//            $tempRow['username'] = $tempRow['openemis_no'];
             return false;
         }
 
@@ -163,8 +164,9 @@ class ImportUsersTable extends AppTable
         if (!$user) {
             try{
                 $tempRow['entity'] = $this->Users->newEntity(['openemis_no' => $openemisNo]);
-                $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
-                $tempRow['username'] = $tempRow['openemis_no'];
+                $username = Text::slug($openemisNo);
+//                $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
+                $tempRow['username'] = $username;
             } catch (\Exception $exception) {
                 $rowInvalidCodeCols['openemis_no'] = __($exception->getMessage());
                 return false;
