@@ -480,7 +480,7 @@ class ImportBehavior extends Behavior
                 if ($extra['entityValidate'] == true) {
                     // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
                     try {
-//                        Log::debug(print_r($tableEntity, true));
+                        Log::debug(print_r($tableEntity, true));
                         $newEntity = $activeModel->save($tableEntity);
                     } catch (Exception $e) {
                         $newEntity = false;

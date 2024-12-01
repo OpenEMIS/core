@@ -364,9 +364,9 @@ class ImportUsersTable extends AppTable
         }
         // POCOR-7973:end
         //Validation of contact_type and contact
-        if ($tempRow->offsetExists('contact_type') && !empty($tempRow['contact_type'])) {
-
-            if (!$tempRow->offsetExists('contact') || empty($tempRow['contact'])) {
+        if (isset($tempRow['contact_type'])) {
+            Log::debug(print_r($tempRow, true));
+            if (!isset($tempRow['contact'])) {
                 $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'contact_required');
                 $tempRow['contact_error'] = true;
                 return false;
@@ -374,10 +374,10 @@ class ImportUsersTable extends AppTable
                 //use contact_type_id to get contact_options id to save.
                 $ContactTypesTable = self::getDynamicTableInstance('User.ContactTypes');
                 $ContactTable = self::getDynamicTableInstance('User.Contacts');
-
+                $contactType = $tempRow['contact_type'];
                 $contactOptionId = $ContactTypesTable->find()
                     ->select([$ContactTypesTable->aliasField('contact_option_id')])
-                    ->where([$ContactTypesTable->aliasField('id') => $tempRow['contact_type']])
+                    ->where([$ContactTypesTable->aliasField('id') => $contactType])
                     ->first();
 
                 if ($contactOptionId) {
