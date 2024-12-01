@@ -1166,7 +1166,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->hasMany('InstitutionStudentsReportCardsCommentsStaff', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionStudentsReportCardsCommentsStudent', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'student_id', 'dependent' => true]);
        // not found
-        $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
+//        $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionSubjectStaff', ['className' => 'Staff.StaffSubjects', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Student.StudentSubjects', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionTripPassengers', ['className' => 'Student.StudentTransport', 'foreignKey' => 'student_id', 'dependent' => true]);
@@ -2080,7 +2080,7 @@ public function getIdentityTypeData($value_selection)
             ],
             'url' => '#',
             'label' => '<i class="fa fa-search-plus"></i>',
-        ];    
+        ];
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)

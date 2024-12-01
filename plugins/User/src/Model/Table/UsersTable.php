@@ -1125,34 +1125,37 @@ class UsersTable extends AppTable
                 $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
                 $preferred = 1;
 
-                $contactOptionId = $ContactTypesTable->find()
-                    ->select([$ContactTypesTable->aliasField('contact_option_id')])
-                    ->where([$ContactTypesTable->aliasField('id') => $entity->contact_type])
-                    ->first();
+                $contact_type = $entity->contact_type;
+                if($contact_type){
+                    $contactOptionId = $ContactTypesTable->find()
+                        ->select([$ContactTypesTable->aliasField('contact_option_id')])
+                        ->where([$ContactTypesTable->aliasField('id') => $contact_type])
+                        ->first();
 
-                if ($contactOptionId && $contactOptionId->has('contact_option_id')) {
-                    $conditions = [
-                        $ContactsTable->aliasField('security_user_id') => $entity->id
-                    ];
+                    if ($contactOptionId && $contactOptionId->has('contact_option_id')) {
+                        $conditions = [
+                            $ContactsTable->aliasField('security_user_id') => $entity->id
+                        ];
 
-                    //Check if there is any existing records
-                    if ($ContactsTable->exists($conditions)) {
-                        $preferred = 0;
-                    }
+                        //Check if there is any existing records
+                        if ($ContactsTable->exists($conditions)) {
+                            $preferred = 0;
+                        }
 
-                    $userContactsData = [
-                        'contact_type_id' => $entity->contact_type,
-                        'value' => $entity->contact,
-                        'security_user_id' => $entity->id,
-                        'contact_option_id' => $contactOptionId->contact_option_id,
-                        'preferred' => $preferred
-                    ];
+                        $userContactsData = [
+                            'contact_type_id' => $contact_type,
+                            'value' => $entity->contact,
+                            'security_user_id' => $entity->id,
+                            'contact_option_id' => $contactOptionId->contact_option_id,
+                            'preferred' => $preferred
+                        ];
 
-                    $contactEntity = $ContactsTable->newEntity($userContactsData);
+                        $contactEntity = $ContactsTable->newEntity($userContactsData);
 
-                    // Save into user_contacts if no errors
-                    if (!$contactEntity->getErrors()) {
-                        $ContactsTable->save($contactEntity);
+                        // Save into user_contacts if no errors
+                        if (!$contactEntity->getErrors()) {
+                            $ContactsTable->save($contactEntity);
+                        }
                     }
                 }
             }
@@ -1161,10 +1164,19 @@ class UsersTable extends AppTable
         // This logic is meant for Import
         if ($entity->has('record_source')) {
             if ($entity->record_source == 'import_user') {
+                $identity_id = $entity->identity_id;
+                $nationality_id = $entity->nationality_id;
+                if($nationality_id){
                 $listeners = [
                     TableRegistry::getTableLocator()->get('User.UserNationalities'),
-                    TableRegistry::getTableLocator()->get('User.Identities')
                 ];
+                    if($identity_id){
+                        $listeners = [
+                            TableRegistry::getTableLocator()->get('User.UserNationalities'),
+                            TableRegistry::getTableLocator()->get('User.UserNationalities'),
+                        ];
+                    }
+                }
                 $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
             }
         }
