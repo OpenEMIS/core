@@ -17,60 +17,90 @@ class POCOR8222 extends AbstractMigration
 
         //backup
         $this->execute('CREATE TABLE `z_8222_assessments` LIKE `assessments`');
-        $this->execute('INSERT INTO `z_8222_assessments` SELECT * FROM `assessments`'); 
+        $this->execute('INSERT INTO `z_8222_assessments` SELECT * FROM `assessments`');
 
         // security_functions Set Permission
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 482');
+        
+        $row = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions` WHERE `module` = 'Administration' AND `category` = 'Report Cards'");
+        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions` WHERE `module` = 'Administration' AND `category` = 'Report Cards'");
+        $parentId = $parent_id[0];
+        $order = $row[0] + 1;
         $record = [
             [
-                'name' => 'Gpa', 'controller' => 'Gpa', 'module' => 'Administration', 'category' => 'Gpa', 'parent_id' => 2000,'_view' => 'GpaSystem.index|GpaSystem.view', '_edit' => 'GpaSystem.edit', '_add' => 'GpaSystem.add', '_delete' => 'GpaSystem.remove', '_execute' => NULL, 'order' => 483, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Gpa', 'controller' => 'Gpa', 'module' => 'Administration', 'category' => 'Report Cards', 'parent_id' => $parentId,'_view' => 'GpaSystem.index|GpaSystem.view', '_edit' => 'GpaSystem.edit', '_add' => 'GpaSystem.add', '_delete' => 'GpaSystem.remove', '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->table('security_functions')->insert($record)->save();
 
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 483');
+       // $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 483');
+        $row = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions` WHERE `module` = 'Administration' AND `category` = 'Report Cards'");
+        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions` WHERE `module` = 'Administration' AND `category` = 'Report Cards'");
+        $parentId = $parent_id[0];
+        $order = $row[0] + 1;
         $record = [
             [
-                'name' => 'Cumulative', 'controller' => 'Gpa', 'module' => 'Administration', 'category' => 'Gpa', 'parent_id' => 3000,'_view' => 'Cumulative.index|Cumulative.view', '_edit' => 'Cumulative.edit', '_add' => 'Cumulative.add', '_delete' => 'Cumulative.remove', '_execute' => NULL, 'order' => 484, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Cumulative', 'controller' => 'Gpa', 'module' => 'Administration', 'category' => 'Report Cards', 'parent_id' => $parentId,'_view' => 'Cumulative.index|Cumulative.view', '_edit' => 'Cumulative.edit', '_add' => 'Cumulative.add', '_delete' => 'Cumulative.remove', '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->table('security_functions')->insert($record)->save();
 
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 484');
+        
+        $row = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions` WHERE `module` = 'Administration' AND `category` = 'Report Cards'");
+        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions` WHERE `module` = 'Administration' AND `category` = 'Report Cards'");
+        $parentId = $parent_id[0];
+        $order = $row[0] + 1;
         $record = [
             [
-                'name' => 'Gpa Grading Type', 'controller' => 'Gpa', 'module' => 'Administration', 'category' => 'Gpa', 'parent_id' => 3000,'_view' => 'GpaGradingType.index|GpaGradingType.view', '_edit' => 'GpaGradingType.edit', '_add' => 'GpaGradingType.add', '_delete' => 'GpaGradingType.remove', '_execute' => NULL, 'order' => 485, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Gpa Grading Type', 'controller' => 'Gpa', 'module' => 'Administration', 'category' => 'Report Cards', 'parent_id' => $parentId,'_view' => 'GpaGradingType.index|GpaGradingType.view', '_edit' => 'GpaGradingType.edit', '_add' => 'GpaGradingType.add', '_delete' => 'GpaGradingType.remove', '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->table('security_functions')->insert($record)->save();
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 560');
+       
+
+        $row = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions` WHERE `module` = 'Institutions' AND `category` = 'Report Cards'");
+        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions` WHERE `module` = 'Institutions' AND `category` = 'Report Cards'");
+        $parentId = $parent_id[0];
+        $order = $row[0] + 1;
+
         $record = [
             [
-                'name' => 'Institution Student GPA', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Report Card', 'parent_id' => 4001,'_view' => 'ReportCardGpa.index|ReportCardGpa.view', '_edit' => 'ReportCardGpa.edit', '_add' => 'ReportCardGpa.add', '_delete' => 'ReportCardGpa.remove', '_execute' => NULL, 'order' => 561, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Institution Student GPA', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Report Cards', 'parent_id' => $parentId,'_view' => 'ReportCardGpa.index|ReportCardGpa.view', '_edit' => 'ReportCardGpa.edit', '_add' => 'ReportCardGpa.add', '_delete' => 'ReportCardGpa.remove', '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->table('security_functions')->insert($record)->save();
 
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 561');
+       
+        $row = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions` WHERE `module` = 'Institutions' AND `category` = 'Report Cards'");
+        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions` WHERE `module` = 'Institutions' AND `category` = 'Report Cards'");
+        $parentId = $parent_id[0];
+        $order = $row[0] + 1;
         $record = [
             [
-                'name' => 'Institution Student Cumulative GPA', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Report Card', 'parent_id' => 4002,'_view' => 'ReportCardCumulativeGpa.index|ReportCardCumulativeGpa.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 562, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Institution Student Cumulative GPA', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Report Cards', 'parent_id' => $parentId,'_view' => 'ReportCardCumulativeGpa.index|ReportCardCumulativeGpa.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->table('security_functions')->insert($record)->save();
 
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 563');
+        
+        $row = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions` WHERE `module` = 'Institutions' AND `category` = 'Students - Academic'");
+        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions` WHERE `module` = 'Institutions' AND `category` = 'Students - Academic'");
+        $parentId = $parent_id[0];
+        $order = $row[0] + 1;
         $record = [
             [
-                'name' => 'GPA', 'controller' => 'Students', 'module' => 'Institutions', 'category' => 'Students - Academic', 'parent_id' => 4003,'_view' => 'StudentGpa.index|StudentGpa.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 564, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
-            ]
+                'name' => 'GPA', 'controller' => 'Students', 'module' => 'Institutions', 'category' => 'Students - Academic', 'parent_id' => $parentId,'_view' => 'StudentGpa.index|StudentGpa.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                            ]
         ];
         $this->table('security_functions')->insert($record)->save();
 
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 563');
+        
+        $row = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions` WHERE `module` = 'Personal' AND `category` = 'Students - Academic'");
+        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions` WHERE `module` = 'Personal' AND `category` = 'Students - Academic'");
+        $parentId = $parent_id[0];
+        $order = $row[0] + 1;
         $record = [
             [
-                'name' => 'GPA', 'controller' => 'Profiles', 'module' => 'Personal', 'category' => 'Students - Academic', 'parent_id' => 4003,'_view' => 'StudentGpa.index|StudentGpa.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 564, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'GPA', 'controller' => 'Profiles', 'module' => 'Personal', 'category' => 'Students - Academic', 'parent_id' => $parentId,'_view' => 'StudentGpa.index|StudentGpa.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->table('security_functions')->insert($record)->save();
@@ -81,7 +111,7 @@ class POCOR8222 extends AbstractMigration
                       `start_date` datetime DEFAULT NULL,
                       `end_date` datetime DEFAULT NULL,
                       `education_grade_id` int(11) NOT NULL,
-                      `gpa_grading_type_id` int(11) NOT NULL,
+                      `gpa_grading_type_id` int(11) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -124,8 +154,8 @@ class POCOR8222 extends AbstractMigration
                       `code` varchar(255) DEFAULT NULL,
                       `name` varchar(255) NOT NULL,
                       `description` text DEFAULT NULL,
-                      `min` int(11) NOT NULL,
-                      `max` int(11) NOT NULL,
+                      `min` decimal(10,2) NOT NULL,
+                      `max` decimal(10,2) NOT NULL,
                       `point` decimal(10,2) DEFAULT NULL,
                       `order` int(11) NOT NULL,
                       `visible` int(11) NOT NULL DEFAULT 1,
@@ -154,6 +184,7 @@ class POCOR8222 extends AbstractMigration
 
         $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
         $dataToSave = [];
+        $i = 0 ;
         foreach ($recordValue as $value) {
             if($value['gpa'] != NULL) {
                 $dataToSave[] = $StudentsGpa->newEntity([
@@ -163,11 +194,17 @@ class POCOR8222 extends AbstractMigration
                     'education_grade_id' => $value['education_grade_id'],
                     'gpa' => $value['gpa'],
                 ]);
+                
+                $i++;
+
+                if ($i % 500 == 0) { 
+                    sleep(5);
+                }
             }
         }
 
         if (!empty($dataToSave)) {
-            $StudentsGpa->getConnection()->transactional(function () use ($StudentsGpa, $dataToSave) {
+            $StudentsGpa->connection()->transactional(function () use ($StudentsGpa, $dataToSave) {
                 if ($StudentsGpa->saveMany($dataToSave)) {
                     // Success handling
                 } else {
@@ -175,16 +212,20 @@ class POCOR8222 extends AbstractMigration
                 }
             });
         }
-        // Drop the gpa column 
-        $this->execute('ALTER TABLE `institution_students_report_cards` DROP COLUMN `gpa` decimal(6,2) COLLATE utf8_general_ci');
+        // Drop the gpa column
+        $this->execute('ALTER TABLE `institution_students_report_cards` DROP COLUMN `gpa`');
 
-        // Drop the assessment_grading_type_id column 
-        $this->execute('ALTER TABLE `assessments` DROP COLUMN `assessment_grading_type_id` int(11) COLLATE utf8_general_ci');
+        // Drop the assessment_grading_type_id column
+        $this->execute('ALTER TABLE `assessments` DROP COLUMN `assessment_grading_type_id`');
+
     }
 
     public function down()
     {
         // Rollback changes
+        $this->execute('DROP TABLE IF EXISTS `institution_students_report_cards`');
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('DROP TABLE IF EXISTS `assessments`');
         $this->execute('RENAME TABLE `z_8222_institution_students_report_cards` TO `institution_students_report_cards`');
         $this->execute('RENAME TABLE `z_8222_security_functions` TO `security_functions`');
         $this->execute('RENAME TABLE `z_8222_assessments` TO `assessments`');

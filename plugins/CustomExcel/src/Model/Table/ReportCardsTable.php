@@ -85,6 +85,8 @@ class ReportCardsTable extends AppTable
                 'SubjectTeacher',
                 'AttendanceAge',
                 'CompetencyPeriodsByTemplate',
+                'InstitutionStudentsReportCardGpa',//POCOR-8222
+                'InstitutionStudentGradeGpa'//POCOR-8222
             ]
         ]);
     }
@@ -141,6 +143,8 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentNextYearClass'] = 'onExcelTemplateInitialiseStudentNextYearClass';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentIdentities'] = 'onExcelTemplateInitialiseStudentIdentities';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseSubjectTeacher'] = 'onExcelTemplateInitialiseSubjectTeacher';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'; //POCOR-8222
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentGradeGpa'] = 'onExcelTemplateInitialiseInstitutionStudentGradeGpa'; //POCOR-8222
         return $events;
     }
 
@@ -2483,5 +2487,98 @@ class ReportCardsTable extends AppTable
         };
         return $uniqu_array;
     }
-    //POCOR-8013 end
+
+    /**
+     * POCOR-8222
+     * Event handler for initializing the Excel template for Institution Students' Report Card and GPA.
+     * This method is triggered when the report card template is being prepared with student GPA data for the institution.
+     *
+     * @param Event $event The event that triggered the method.
+     * @param array $params Parameters passed to the event.
+     * @param ArrayObject $extra Additional data passed to the event.
+     */
+    public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpa(Event $event, array $params, ArrayObject $extra)
+    {
+        if (!empty($params['student_id']) && !empty($params['institution_id']) &&
+            !empty($params['education_grade_id']) && !empty($params['academic_period_id'])) {
+            $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+            $entity = $StudentsGpa->find()
+                ->select(['gpa' =>$StudentsGpa->aliasField('gpa')])
+                ->where([
+                    $StudentsGpa->aliasField('student_id') => $params['student_id'],
+                    $StudentsGpa->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $StudentsGpa->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $StudentsGpa->aliasField('institution_id') => $params['institution_id']
+                ])
+                ->first();
+        }
+        return $entity;
+    }
+
+    /**
+     * POCOR-8222
+     * Event handler for initializing the Excel template for Institution Student Grade and GPA.
+     * This method is triggered when the Excel template is being prepared with student grades and GPA data.
+     *
+     * @param Event $event The event that triggered the method.
+     * @param array $params Parameters passed to the event.
+     * @param ArrayObject $extra Additional data passed to the event.
+     */
+    public function onExcelTemplateInitialiseInstitutionStudentGradeGpa(Event $event, array $params, ArrayObject $extra)
+    {
+        $entity = null;
+        if (!empty($params['student_id']) && !empty($params['institution_id']) && !empty($params['academic_period_id'])) {
+            $educationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $educationGrades = TableRegistry::get('Education.EducationGrades');
+            $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+            $GradesGpa = TableRegistry::get('Gpa.EducationGradesGpa');
+            $result = $StudentsGpa->find()
+                    ->select(['gpa' => $StudentsGpa->aliasField('gpa'),
+                            'cumulative_gpa' => $StudentsGpa->aliasField('cumulative_gpa'),
+                            'academic_period' => $academicPeriod->aliasField('name'),
+                            'education_grade' => $educationGrades->aliasField('name'),
+                            'start_date' => $GradesGpa->aliasField('start_date'),
+                            'end_date' => $GradesGpa->aliasField('end_date'),
+                            'student_id' => $StudentsGpa->aliasField('student_id'),
+                    ])
+                    ->LeftJoin(
+                            [$academicPeriod->alias() => $academicPeriod->table()], [
+                                $academicPeriod->aliasField('id = ') . $StudentsGpa->aliasField('academic_period_id')
+                            ])
+                    ->LeftJoin(
+                            [$educationGrades->alias() => $educationGrades->table()], [
+                                $educationGrades->aliasField('id = ') . $StudentsGpa->aliasField('education_grade_id')
+                            ])
+                    ->LeftJoin(
+                            [$GradesGpa->alias() => $GradesGpa->table()], [
+                                $GradesGpa->aliasField('education_grade_id = ') . $StudentsGpa->aliasField('education_grade_id')
+                            ])
+                    ->where([
+                        $StudentsGpa->aliasField('student_id') => $params['student_id'],
+                        $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
+                        $GradesGpa->aliasField('gpa_grading_type_id IS NOT') => NULL
+                    ])->group([$StudentsGpa->aliasField('education_grade_id')])
+                    ->toArray();
+                $entity = [];
+                $i = 1;
+                foreach ($result as $row) {
+                    $entity[] = [
+                        'id' => $i,
+                        'academic_period' => $row['academic_period'],
+                        'education_grade' => $row['education_grade'],
+                        'gpa' => $row['gpa'],
+                        'cumulative' => $row['cumulative_gpa'],
+                        'start_date' => $row['start_date'],  // Null if not a valid date
+                        'end_date' => $row['end_date'],      // Null if not a valid date
+                    ];
+                    $i++;
+                }
+
+
+
+        }
+            return $entity;
+    }
+    
 }
