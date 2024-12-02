@@ -17,6 +17,13 @@ use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager; 
 use App\Model\Table\ControllerActionTable;
 
+/**
+ * ReportCardGpaTable class. Generate GPA for student
+ * POCOR-8222
+ * This class handles operations related to the GPA data for students' report cards within the application.
+ * It extends from the `ControllerActionTable` class and is responsible for interacting with the database
+ * to manage the GPA data, as well as any logic needed for generating or processing report card-related information.
+ */
 class ReportCardGpaTable extends ControllerActionTable
 {
     public function initialize(array $config): void
@@ -68,11 +75,6 @@ class ReportCardGpaTable extends ControllerActionTable
             ];
         }
         
-        
-        /*$reportExists = $this->EducationGrades->exists([$this->ReportCards->getPrimaryKey() => $educationGradeId]);
-        if (!$reportExists) {
-            return $buttons;
-        }*/
         $params = [
             'education_grade_id' => $educationGradeId,
             'student_id' => $entity->student_id,
