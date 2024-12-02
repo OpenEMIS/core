@@ -298,7 +298,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentsReportCards(Event $event, array $params, ArrayObject $extra)
     {
-        $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa')
+        $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
         if (isset($params['report_card_id'], $params['student_id'], $params['institution_id'], $params['academic_period_id'], $extra['report_card_education_grade_id'])) {
             $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
@@ -1319,7 +1319,7 @@ class ReportCardsTable extends AppTable
 
             $entity = $CompetencyPeriods->find()
                 ->where([
-                    $CompetencyPeriods->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $CompetencyPeriods->aliasField('academic_period_id IS') => $params['academic_period_id'],
                     $CompetencyPeriods->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
                     $CompetencyPeriods->aliasField('start_date >= ') => $extra['report_card_start_date'],
                     $CompetencyPeriods->aliasField('end_date <= ') => $extra['report_card_end_date']
@@ -2574,8 +2574,6 @@ class ReportCardsTable extends AppTable
                     ];
                     $i++;
                 }
-
-
 
         }
             return $entity;
