@@ -1040,6 +1040,4 @@ class ImportUsersTable extends AppTable
         date_default_timezone_set($timeZone);
         return $timeZone;
     }
-
-
 }
