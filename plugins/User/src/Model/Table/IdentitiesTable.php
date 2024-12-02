@@ -12,12 +12,14 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\I18n\Time;
+use App\Model\Traits\OptionsTrait;
 
 use App\Model\Table\ControllerActionTable;
 
 class IdentitiesTable extends ControllerActionTable
 {
     const ISPREFERRED = 1;
+    use OptionsTrait;
 
     public function initialize(array $config): void
     {
@@ -169,7 +171,11 @@ class IdentitiesTable extends ControllerActionTable
         $this->fields['identity_type_id']['type'] = 'select';
         $this->fields['nationality_id']['type'] = 'select';
         $this->fields['nationality_id']['options'] = (!empty($NationalityOptions)) ? $NationalityOptions : ['' => $this->getMessage('general.select.noOptions')]; //POCOR-6396
-        $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number', 'issue_date', 'expiry_date', 'issue_location', 'comments']);
+         // POCOR-8664 start
+         $this->fields['preferred']['type'] = 'select';
+         $this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
+         // POCOR-8664 end
+        $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number','preferred','issue_date', 'expiry_date', 'issue_location', 'comments']);
 
     }
 
@@ -360,10 +366,31 @@ class IdentitiesTable extends ControllerActionTable
         } catch (\Exception $e) {
         }
 
-        $listeners = [
-            TableRegistry::getTableLocator()->get('User.Users')
-        ];
-        $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+        // POCOR-8664 start
+        // $listeners = [
+        //     TableRegistry::getTableLocator()->get('User.Users')
+        // ];
+        // $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+        
+        if (($entity->isDirty('preferred') && $entity->preferred == 1) || $entity->preferred == 1) {
+            $identity = $this->find()
+                ->where([
+                    $this->aliasField('id !=') => $entity->id,
+                    // $this->aliasField('nationality_id') => $entity->nationality_id,
+                    $this->aliasField('security_user_id') => $entity->security_user_id
+                ]);
+            if (!empty($identity->toArray())) {
+                foreach ($identity->toArray() as $key => $value) {
+                    $value->preferred = 0;
+                    $this->save($value);
+                }
+            }
+            $listeners = [
+                TableRegistry::getTableLocator()->get('User.Users')
+            ];
+            $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+        }
+        //POCOR-8664 end
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
