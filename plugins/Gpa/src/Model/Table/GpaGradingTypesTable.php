@@ -288,7 +288,8 @@ class GpaGradingTypesTable extends ControllerActionTable {
             
             $url = $this->request->referer();
             $event->stopPropagation();
-            return $this->controller->redirect($url);
+            //return $this->controller->redirect($url);
+            return $entity;
         }
     }
 

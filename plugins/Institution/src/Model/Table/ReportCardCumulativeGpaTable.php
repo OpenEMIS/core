@@ -44,7 +44,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $this->ReportCards = TableRegistry::get('ReportCard.ReportCards');
         $this->ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['ReportCardCumulativeGpa' =>['id','student_id','academic_period_id','education_grade_id']
+            'appliedAction' => ['ReportCardCumulativeGpa' =>['id','student_id','academic_period_id','education_grade_id','institution_class_id']
             ]
         ]);
 
@@ -71,9 +71,9 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'ReportCardCumulativeGpa',
-                  'view',
-                //'queryString'= $this->paramsEncode(['id' => $entity->id,'institution_id' => $queryString['institution_id'],'student_id'=> $entity->student_id]),
-                'queryString'=> $this->paramsEncode(['id' => $entity->id]),
+                0 =>  'view',
+                1 => $this->paramsEncode(['id' => $entity->id,'institution_id' => $this->getInstitutionID(),'student_id'=> $entity->student_id,'institution_class_id' => $entity->institution_class_id]),
+                
             ];
         }
         
@@ -86,7 +86,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         ];
         
         $params['institution_class_id'] = $entity->institution_class_id;
-        //$buttons['view']['url'] = $url;
+       // $buttons['view']['url'] = $url;
         // Generate button, all statuses
         $buttons = $this->addGenerateButton($buttons, $params);
         
@@ -1164,7 +1164,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
 
     private function getUserSecurityRoles()
     {
-        $SecurityGroupUsers = TableRegistry::get('security_group_users');
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $current_user = $this->Auth->user('id');
         $SecurityGroupUsersData = $SecurityGroupUsers
             ->find()
@@ -1187,7 +1187,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $security_role_ids = $this->getUserSecurityRoles();
         $ExcludedSecurityRoleCount = -1;
         if (!empty($security_role_ids)) {
-            $ExcludedSecurityRoleTable = TableRegistry::get('report_card_excluded_security_roles');
+            $ExcludedSecurityRoleTable = TableRegistry::get('ReportCard.ReportCardExcludedSecurityRoles');
             $ExcludedSecurityRoleCount = $ExcludedSecurityRoleTable->find('all')
                 ->where([
                     'security_role_id IN' => $security_role_ids,
@@ -1201,6 +1201,5 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             return false;
         }
     }
-
 
 }
