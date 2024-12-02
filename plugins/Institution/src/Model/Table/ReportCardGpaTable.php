@@ -44,9 +44,10 @@ class ReportCardGpaTable extends ControllerActionTable
         $this->ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['ReportCardGpa' =>['id','student_id','academic_period_id','education_grade_id']
+            'appliedAction' => ['ReportCardGpa' =>['id','student_id','academic_period_id','education_grade_id','institution_class_id']
             ]
         ]);
+       
     }
 
     public function implementedEvents(): array
@@ -59,37 +60,43 @@ class ReportCardGpaTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+       
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $educationGradeId = $this->request->getQuery('education_grade_id');
-        if (is_null($educationGradeId)) {
-            return $buttons;
-        }
+        $institutionClassId = $this->request->getQuery('class_id');
         $queryString = $this->request->getQuery('queryString');
        if (isset($buttons['view'])) {
             $url = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'ReportCardGpa',
-                0 =>  'view',
-                1 => $this->paramsEncode(['id' => $entity->id,'institution_id' => $this->getInstitutionID(),'student_id'=> $entity->student_id]),
-            ];
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'ReportCardGpa',
+                    0 => 'view',
+                    1 => $this->paramsEncode([
+                        'id' => $entity->id,
+                        'institution_id' => $entity->institution_id,
+                        'student_id' => $entity->student_id,
+                        'institution_class_id' => $institutionClassId,
+                    ]),
+                ];
+
+           // $buttons['view']['url'] = $url;
         }
         
         $params = [
             'education_grade_id' => $educationGradeId,
             'student_id' => $entity->student_id,
-            // 'institution_id' => $entity->institution_id, V4
-            'institution_id' => $entity['institution']['id'],
+            'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
         ];
         
-        $params['institution_class_id'] = $entity->institution_class_id;
-        //$buttons['view']['url'] = $url;
+        $params['institution_class_id'] = $institutionClassId;
+        
         // Generate button, all statuses
         $buttons = $this->addGenerateButton($buttons, $params);
-        
+       
         return $buttons;
+
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -98,6 +105,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $this->field('student_name', ['type' => 'integer','sort' => ['field' => 'Users.first_name']]);
         $this->field('student_id', ['type' => 'hidden']);
         $this->field('next_institution_class_id', ['type' => 'hidden']);
+        $this->field('institution_class_id', ['type' => 'hidden']);
         $this->field('student_status_id', ['type' => 'hidden']);
         $this->field('gpa_name');
         $this->field('gpa');
@@ -109,7 +117,6 @@ class ReportCardGpaTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        
         $institutionId = $this->getInstitutionID();
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $gpaGrades = TableRegistry::get('Gpa.GpaSystem');
@@ -192,7 +199,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $classOptions = ['-1' => '-- ' . __('Select Class') . ' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
         if($selectedClass != 'all'){
-            $where[$this->aliasField('institution_class_id')] = $selectedClass;
+            $where[$this->aliasField('institution_class_id IS')] = $selectedClass;
         }
         
         $where[$this->aliasField('institution_id')] = $institutionId; 
@@ -478,6 +485,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $this->field('academic_period_id');
         //$this->field('institution_class_id', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
+        $this->field('institution_class_id', ['visible' => false]);
         $this->field('student_status_id', ['visible' => false]);
         $this->field('next_institution_class_id', ['visible' => false]);
         $this->field('gpa', ['visible' => true]);
@@ -501,7 +509,6 @@ class ReportCardGpaTable extends ControllerActionTable
         $params = $this->getQueryString();
         if ($params) {
             $this->addGpaReportCards($params['student_id'], $params['academic_period_id'],$params['institution_id'], $params['education_grade_id']);
-            
             $this->Alert->success('ReportCardStatuses.gpa');
         } else {
             $url = $this->url('index');
@@ -1042,7 +1049,7 @@ class ReportCardGpaTable extends ControllerActionTable
     */
     private function addGenerateButton(array $buttons, $params)
     {
-        $params['institution_id'] = $this->getInstitutionID();//POCOR-8699
+        $params['institution_id'] = $this->getInstitutionID();
         $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
         $educationGradeId = $this->request->getQuery('education_grade_id');
         $isAdmin = $this->AccessControl->isAdmin();
@@ -1224,7 +1231,7 @@ class ReportCardGpaTable extends ControllerActionTable
     {
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $getName = $InstitutionClasses->find()
-                    ->where([$InstitutionClasses->aliasField('id') => $entity->institution_class_id])
+                    ->where([$InstitutionClasses->aliasField('id IS') => $entity->institution_class_id])
                     ->first()
                     ->name;
         return $getName ;
@@ -1255,7 +1262,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $security_role_ids = $this->getUserSecurityRoles();
         $ExcludedSecurityRoleCount = -1;
         if (!empty($security_role_ids)) {
-            $ExcludedSecurityRoleTable = TableRegistry::get('report_card_excluded_security_roles');
+            $ExcludedSecurityRoleTable = TableRegistry::get('ReportCard.ReportCardExcludedSecurityRoles');
             $ExcludedSecurityRoleCount = $ExcludedSecurityRoleTable->find('all')
                 ->where([
                     'security_role_id IN' => $security_role_ids,
@@ -1297,5 +1304,14 @@ class ReportCardGpaTable extends ControllerActionTable
         
         return '';
     }
+
+   
+    /*public function viewBeforeQuery(Event $event, Query $query, Entity $entity)
+    {
+       
+        $query->where([$this->aliasField('institution_class_id IS') => $entity-]);
+        
+    }*/
+
 
 }
