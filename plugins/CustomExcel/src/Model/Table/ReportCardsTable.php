@@ -317,7 +317,6 @@ class ReportCardsTable extends AppTable
                     $StudentsReportCards->aliasField('academic_period_id'),
                     $StudentsReportCards->aliasField('education_grade_id'),
                     $StudentsReportCards->aliasField('institution_class_id'),
-                    $StudentsGpa->aliasField('gpa'),
                 ])
                 ->contain([
                     'Students' => [
@@ -373,12 +372,6 @@ class ReportCardsTable extends AppTable
                         ]
                     ]
                 ])
-                ->leftJoin(
-                        [$StudentsGpa->getAlias() => $StudentsGpa->getTable()],
-                        [
-                            $StudentsGpa->aliasField('student_id') . ' = ' . $StudentsReportCards->aliasField('student_id')
-                        ]
-                    )
                 ->where([
                     $StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
                     $StudentsReportCards->aliasField('student_id') => $params['student_id'],
@@ -1319,7 +1312,7 @@ class ReportCardsTable extends AppTable
 
             $entity = $CompetencyPeriods->find()
                 ->where([
-                    $CompetencyPeriods->aliasField('academic_period_id IS') => $params['academic_period_id'],
+                    $CompetencyPeriods->aliasField('academic_period_id') => $params['academic_period_id'],
                     $CompetencyPeriods->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
                     $CompetencyPeriods->aliasField('start_date >= ') => $extra['report_card_start_date'],
                     $CompetencyPeriods->aliasField('end_date <= ') => $extra['report_card_end_date']
