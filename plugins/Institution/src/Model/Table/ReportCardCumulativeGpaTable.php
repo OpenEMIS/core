@@ -17,6 +17,14 @@ use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager; 
 use App\Model\Table\ControllerActionTable;
 
+/**
+ * ReportCardCumulativeGpaTable class, Generate cumulative GPA for student.
+ * POCOR-8222
+ * This class is responsible for handling the cumulative GPA data for students' report cards.
+ * It extends from the `ControllerActionTable` class and interacts with the database to manage
+ * and process cumulative GPA information for report cards. The class may include logic for 
+ * calculating or retrieving cumulative GPAs, ensuring that the data aligns with institutional requirements.
+ */
 class ReportCardCumulativeGpaTable extends ControllerActionTable
 {
     public function initialize(array $config): void
@@ -69,15 +77,9 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             ];
         }
         
-        
-        /*$reportExists = $this->ReportCards->exists([$this->ReportCards->getgetPrimaryKey() => $reportCardId]);
-        if (!$reportExists) {
-            return $buttons;
-        }*/
         $params = [
             'education_grade_id' => $educationGradeId,
             'student_id' => $entity->student_id,
-            // 'institution_id' => $entity->institution_id, V4
             'institution_id' => $entity['institution']['id'],
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
@@ -1132,7 +1134,6 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             return null;
         }
     }
-
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
