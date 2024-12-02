@@ -195,6 +195,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                     'academic_period_id' => $academicPeriodId,
                     'education_subject_id' => $educationSubjectId,
                     'education_grade_id' => $educationGradeId,
+                    'institution_id' => $institutionId,//POCOR-6516
                     //'institution_class_id' => $institutionClassesId,//POCOR-6479 comment this code of POCOR-6468  
                 ])
                 ->execute();
