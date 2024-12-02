@@ -1405,6 +1405,27 @@ export class AddDirectoryComponent extends KdPageBase implements OnInit {
       viewQuestion[10].value = finalObj?.email ? finalObj?.email : '';
       this._viewQuestion = [...viewQuestion];
       this.saveDetails('institutions/save-guardian', obj);
+    } else if (finalObj?.user_type == 1) {
+      obj = {
+        "openemis_no": finalObj?.username,
+        "first_name": finalObj?.first_name,
+        "middle_name": finalObj?.middle_name ? finalObj?.middle_name : '',
+        "third_name": finalObj?.third_name ? finalObj?.third_name : '',
+        "last_name": finalObj?.last_name,
+        "preferred_name": finalObj?.preferred_name ? finalObj?.preferred_name : '',
+        "gender_id": finalObj?.gender,
+        "date_of_birth": finalObj?.date_of_birth,
+        "identity_number": finalObj?.identity_number ? finalObj?.identity_number : '',
+        "nationality_id": finalObj?.nationality ? finalObj?.nationality : '',
+        "username": finalObj?.username,
+        "password": finalObj?.password,
+        "postal_code": finalObj?.postal_code ? finalObj?.postal_code : '',
+        "address": finalObj?.address ? finalObj?.address : '',
+        "birthplace_area_id": "16",
+        "address_area_id": "24",
+        "identity_type_id": finalObj?.identity_type ? finalObj?.identity_type : ''
+      }
+      this.saveDetails('institutions/save-student', obj);
     }
   }
 
