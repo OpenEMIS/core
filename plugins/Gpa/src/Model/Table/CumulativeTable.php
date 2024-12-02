@@ -479,10 +479,10 @@ class CumulativeTable extends ControllerActionTable {
             
         // If associated records exist, show alert message and abort deletion
         if ($associatedRecordsExist) {
-            $message = __('Delete operation is not allowed as there are. Other information linked to this record.');
+            $message = __('Delete operation is not allowed as there are other information linked to this record.');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             
-            $url = $this->controller->request->referer();
+            $url = $this->request->referer();
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }

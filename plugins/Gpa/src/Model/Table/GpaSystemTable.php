@@ -255,22 +255,35 @@ class GpaSystemTable extends ControllerActionTable {
     }
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->Gpa = TableRegistry::get('Gpa.GpaSystem');
-        $this->InstitutionStudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
-        // Check if any associated records exist in any related tables.
-        $associatedRecordsExist = 
-            $this->Gpa->exists(['education_grade_id' => $entity->education_grade_id, 'gpa_grading_type_id IS' => NULL]) ||  $this->InstitutionStudentsGpa->exists(['education_grades_gpa_id' => $entity->id, 'education_grade_id' => $entity->education_grade_id]) ;
-            
-        // If associated records exist, show alert message and abort deletion
-        if ($associatedRecordsExist) {
-            $message = __('Delete operation is not allowed. Gpa information linked to this record.');
-            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            
-            $url = $this->controller->request->referer();
-            $event->stopPropagation();
-            return $this->controller->redirect($url);
-        }
+{
+    $this->Gpa = TableRegistry::get('Gpa.GpaSystem');
+    $this->Cumulative = TableRegistry::get('Gpa.Cumulative');
+    $this->InstitutionStudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+
+    // Check if any associated records exist in related tables
+    $associatedRecordsExist = 
+        $this->Gpa->exists([
+            'education_grade_id' => $entity->education_grade_id, 
+            'gpa_grading_type_id IS' => null
+        ]) || 
+        $this->InstitutionStudentsGpa->exists([
+            'education_grades_gpa_id' => $entity->id, 
+            'education_grade_id' => $entity->education_grade_id
+        ]) || 
+        $this->Cumulative->exists([
+            'main_education_grade_id' => $entity->education_grade_id
+        ]);
+
+    // If associated records exist, show alert message and abort deletion
+    if ($associatedRecordsExist) {
+        $message = __('Delete operation is not allowed. Gpa information linked to this record.');
+        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+
+        $url = $this->request->referer(); // Get the referring URL
+        $event->stopPropagation(); // Stop further propagation of the event
+        return $this->controller->redirect($url); // Redirect back to the referring URL
     }
+}
+
 }
 
