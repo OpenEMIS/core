@@ -115,6 +115,15 @@ class ThemesTable extends ControllerActionTable
                 'visible' => 'false'
             ]);
         }
+        
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity) {
+        $this->field('color_themes', [
+            'type' => 'element',
+            'element' => 'themecolor',
+            
+        ]); 
     }
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
