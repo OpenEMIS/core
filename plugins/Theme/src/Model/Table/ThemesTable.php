@@ -35,6 +35,7 @@ class ThemesTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        $this->toggle('add', false);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
