@@ -186,7 +186,7 @@ class AppraisalBehavior extends Behavior
                 $appraisalPeriodEntity = $model->AppraisalPeriods->get($appraisalPeriodId, ['contain' => ['AppraisalForms']]);
                 $attr['value'] = $appraisalPeriodEntity->appraisal_form_id;
                 $attr['attr']['value'] = $appraisalPeriodEntity->appraisal_form->code_name;
-                $data = $this->_table->request->getData($model->getAlias()) ?? []; //POCOR-8627
+                $data = $this->_table->request->getData($model->getAlias()) ?? []; //POCOR-8688
                 $data['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
                 $this->_table->request = $this->_table->request->withData($model->getAlias(), $data);
 

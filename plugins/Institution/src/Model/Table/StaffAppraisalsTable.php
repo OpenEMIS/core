@@ -157,7 +157,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
             }
         }
-        $institutionId = $this->getInstitutionID(); //POCOR-8627 s
+        $institutionId = $this->getInstitutionID(); // POCOR-8688 
         $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
     }
 
@@ -421,7 +421,7 @@ class StaffAppraisalsTable extends ControllerActionTable
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;
             $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
-            $attr['onChangeReload'] = 'changeStatus';
+           // $attr['onChangeReload'] = 'changeStatus'; //POCOR-8688
             return $attr;
         }
     }
