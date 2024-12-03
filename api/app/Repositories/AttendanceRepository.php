@@ -1716,7 +1716,7 @@ class AttendanceRepository extends Controller
                             ->where('student_attendance_marked_records.institution_id', $institutionId)
                             ->where('student_attendance_marked_records.date', $findDay)
                             ->where('student_attendance_marked_records.subject_id', $subjectId)
-                            ->where('institution_students.start_date', $findDay)
+                            //->where('institution_students.start_date', $findDay)
                             ->get()
                             ->toArray();
 
@@ -2800,6 +2800,7 @@ class AttendanceRepository extends Controller
                 'Failed to get archive academic periods.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+            dd($e);
             return $this->sendErrorResponse('Failed to get archive academic periods.');
         }
     }

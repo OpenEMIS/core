@@ -46,6 +46,7 @@ class TestsTable extends ControllerActionTable
         $this->field('health_test_type_id', ['type' => 'select', 'after' => 'comment']);
         $this->field('file_name', ['visible' => false]);
         $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']); //POCOR-8293
         $this->field('file_content', ['after' => 'health_test_type_id','attr' => ['value' => $userID, 'label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
@@ -230,4 +231,11 @@ class TestsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $userId = $this->getUserID();
+        $query->where([ $this->aliasField('security_user_id') => $userId]);
+        return $query;
+    }
+
 }

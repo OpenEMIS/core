@@ -177,10 +177,12 @@ class NumericPaginator implements PaginatorInterface
         //POCOR-8611 start
         if (isset($_POST['Search']['limit'])) {
             $defaults = $_POST['Search']['limit'];
-            } else {
-                $defaults = 0; // POCOR-8446
-            }
-            
+        } else {
+            $defaults = 0; // POCOR-8446
+        }
+        if(isset($settings['limit']) && !empty($settings['limit'])) { //POCOR-8677
+            $defaultvals = $settings['limit'];
+        } else {
             if ($defaults == 0) {
                 $defaultvals = 10;
             } elseif ($defaults == 1) {
@@ -196,6 +198,7 @@ class NumericPaginator implements PaginatorInterface
             } elseif ($defaults == 6) {
                 $defaultvals = 200;
             }
+        }
         $settings['limit'] = $defaultvals; 
         //POCOR-8611 end
         $query = null;

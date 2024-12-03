@@ -212,7 +212,7 @@
     </div>
 </div>
 
-<script>
+<!-- <script POCOR-8613>
     $(function () {
         var datepicker0 = $('#User_date_of_birth').datepicker({
             "format": "dd-mm-yyyy",
@@ -230,7 +230,7 @@
     });
 
     //]]>
-</script>
+</script> -->
 
 <style>
     .pd-10 {
