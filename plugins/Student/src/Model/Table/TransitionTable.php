@@ -146,7 +146,7 @@ class TransitionTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'edit', $this->paramsEncode(['id' => $entity->id]),
+                    'url' => [0 => 'edit', $this->paramsEncode(['id' => $entity->id,'institution_id' => $entity->institution_id, 'student_id'=>$entity->student_id]),
                 'institution_id' => $entity->institution->id]
                 ];
                 $button['url']['action'] = $attr['action'];
@@ -178,7 +178,8 @@ class TransitionTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'index'] 
+                    'url' => [0 => 'index', $this->paramsEncode(['institution_id' => $entity->institution_id, 'student_id'=>$entity->student_id])]
+                   // 'url' => [0 => 'index'] 
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
@@ -393,7 +394,7 @@ class TransitionTable extends ControllerActionTable
                 $button = [
                     'type' => 'hidden',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'index'] 
+                    'url' =>  [0 => 'index', $this->paramsEncode(['institution_id' => $entity->institution_id, 'student_id'=>$entity->student_id])]//[0 => 'index'] 
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
@@ -424,7 +425,7 @@ class TransitionTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'index'] 
+                    'url' =>  [0 => 'index', $this->paramsEncode(['institution_id' => $entity->institution_id, 'student_id'=>$entity->student_id])]//[0 => 'index'] 
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
