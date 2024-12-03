@@ -92,6 +92,28 @@ export class AddDirectoryComponent extends KdPageBase implements OnInit {
       order: 1,
       controlType: 'text',
     },
+    {
+      key: 'is_refugee',
+      label: 'Is Refugee',
+      visible: true,
+      required: false,
+      order: 1,
+      readonly: false,
+      controlType: 'dropdown',
+      options: [
+        { key: '', value: '--Select--'},
+        { key: 'Enable', value: 'Enable Refugee'},
+      ],
+      events: true,
+    },
+    {
+      key: 'refugee_number',
+      label: 'Refugee Number',
+      visible: true,
+      required: false,
+      order: 1,
+      controlType: 'text',
+    },
     { key: 'SearchByBasicInformation', label: 'Search By Basic Information', visible: true, controlType: 'section' },
     {
       key: 'openEMIS_id',
