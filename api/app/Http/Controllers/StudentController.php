@@ -9,6 +9,7 @@ use App\Http\Requests\ClassAttendanceAdd;
 use App\Http\Requests\StudentAbsenceAdd;
 use App\Http\Requests\StaffAttendanceAdd;
 use App\Http\Requests\UpdateStaffDetails;
+use App\Http\Requests\StudentTransferAddRequest;
 
 
 class StudentController extends Controller
@@ -1036,7 +1037,7 @@ class StudentController extends Controller
         try {
 
             //For POCOR-7772 Start
-            $checkPermission = checkPermission(['Institutions', 'Absences', 'add'], ['institution_id' => $request['institution_id']]);
+            $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'edit'], ['institution_id' => $request['institution_id']]);
             
             if(!$checkPermission){
                 return $this->sendAuthorizationErrorResponse();
@@ -1195,4 +1196,52 @@ class StudentController extends Controller
     }
 
     //POCOR-7547 Ends...
+
+
+    //POCOR-8221 Starts...
+    public function getStudentTransferData(Request $request, $institutionId, $studentId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->studentService->getStudentTransferData($params, $institutionId, $studentId);
+            return $this->sendSuccessResponse("Student Transfer List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Transfer List Not Found');
+        }
+    }
+
+
+    public function addStudentTransferData(StudentTransferAddRequest $request, $institutionId)
+    {
+        try {
+            $params = $request->all();
+
+            $data = $this->studentService->addStudentTransferData($params, $institutionId);
+
+            if($data == 0){
+                return $this->sendErrorResponse('Invalid Institution Id.');
+            } elseif($data == 1){
+                return $this->sendSuccessResponse("Student Transfer In Added Successfully.");
+            } elseif($data == 2){
+                return $this->sendSuccessResponse("Student Transfer Out Added Successfully.");
+            } else{
+                return $this->sendErrorResponse('Failed to add student tranfer data.');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add student tranfer data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add student tranfer data.');
+        }
+    }
+    //POCOR-8221 Ends...
 }

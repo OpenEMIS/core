@@ -939,6 +939,26 @@
                 "operationId": "a2626e42141a8f05f8358319013468ac",
                 "parameters": [
                     {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic Period Id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "education_grade_id",
+                        "in": "query",
+                        "description": "Education Grade_id Id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "order",
                         "in": "query",
                         "description": "Order",
@@ -19676,6 +19696,252 @@
                 "summary": "Get list of behaviour categories",
                 "description": "Returns a list of behaviour categories",
                 "operationId": "2d0ae004bdd5061bbf4374e9f4f67eab",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items to return per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Repeated Tardiness"
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "visible": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "editable": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "default": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "international_code": {
+                                                        "type": "integer",
+                                                        "example": ""
+                                                    },
+                                                    "national_code": {
+                                                        "type": "integer",
+                                                        "example": ""
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2022-01-01 10:32:20"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2022-01-01 10:32:20"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/behaviours/categories/students": {
+            "get": {
+                "tags": [
+                    "Institutions"
+                ],
+                "summary": "Get list of Student behaviour categories",
+                "description": "Returns a list of Student behaviour categories",
+                "operationId": "024ddb68c733027bb81b6090c8f77b07",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items to return per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Classroom Conduct"
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "visible": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "editable": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "default": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "international_code": {
+                                                        "type": "integer",
+                                                        "example": ""
+                                                    },
+                                                    "national_code": {
+                                                        "type": "integer",
+                                                        "example": ""
+                                                    },
+                                                    "behaviour_classification_id": {
+                                                        "type": "integer",
+                                                        "example": ""
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2022-01-01 10:32:20"
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2022-01-01 10:32:20"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/behaviours/categories/staff": {
+            "get": {
+                "tags": [
+                    "Institutions"
+                ],
+                "summary": "Get list of Staff behaviour categories",
+                "description": "Returns a list of Staff behaviour categories",
+                "operationId": "486eba6311f9cd3e1f2f6ff731f3c889",
                 "parameters": [
                     {
                         "name": "order",
@@ -40373,5 +40639,99 @@
                 }
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Examinations",
+            "description": "Examinations"
+        },
+        {
+            "name": "Assessment",
+            "description": "Assessment"
+        },
+        {
+            "name": "Attendance",
+            "description": "Attendance"
+        },
+        {
+            "name": "Student Attendance Archive",
+            "description": "Student Attendance Archive"
+        },
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Directory",
+            "description": "Directory"
+        },
+        {
+            "name": "Education Structure",
+            "description": "Education Structure"
+        },
+        {
+            "name": "Institutions",
+            "description": "Institutions"
+        },
+        {
+            "name": "Users",
+            "description": "Users"
+        },
+        {
+            "name": "Meals",
+            "description": "Meals"
+        },
+        {
+            "name": "Academic Period",
+            "description": "Academic Period"
+        },
+        {
+            "name": "Nationalities",
+            "description": "Nationalities"
+        },
+        {
+            "name": "Identity types",
+            "description": "Identity types"
+        },
+        {
+            "name": "Institution Grades",
+            "description": "Institution Grades"
+        },
+        {
+            "name": "Areas",
+            "description": "Areas"
+        },
+        {
+            "name": "Miscellaneous",
+            "description": "Miscellaneous"
+        },
+        {
+            "name": "Report card",
+            "description": "Report card"
+        },
+        {
+            "name": "Institution time table",
+            "description": "Institution time table"
+        },
+        {
+            "name": "System Configuration",
+            "description": "System Configuration"
+        },
+        {
+            "name": "Textbook",
+            "description": "Textbook"
+        },
+        {
+            "name": "Themes",
+            "description": "Themes"
+        },
+        {
+            "name": "Training",
+            "description": "Training"
+        },
+        {
+            "name": "Workbench",
+            "description": "Workbench"
+        }
+    ]
 }

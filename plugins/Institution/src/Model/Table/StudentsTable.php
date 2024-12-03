@@ -18,6 +18,7 @@ use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Core\Configure;
 use Cake\Log\Log;
+use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -462,6 +463,14 @@ class StudentsTable extends ControllerActionTable
             'label' => __('Student Name')
         ];
 
+        //POCOR-8656 start
+         $extraField[] = [
+            'key' => 'student_email',
+            'field' => 'student_email',
+            'type' => 'string',
+            'label' => __('Student Email')
+        ];
+        //POCOR-8656 end
 
         $extraField[] = [
             'key' => 'education_grade_id',
@@ -870,7 +879,13 @@ class StudentsTable extends ControllerActionTable
         $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
         $result = $this->checkStudentRecords($entity);
         if ($result) {
-            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            // POCOR-8411 start
+            try {
+                $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            } catch (\Exception $exception) {
+                Log::error(__FUNCTION__ . ':' . $exception->getMessage());
+            }
+            // POCOR-8411 end
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
         } else {
@@ -1305,7 +1320,11 @@ class StudentsTable extends ControllerActionTable
         if (!empty($request->getQuery('academic_period_id'))) {
             $selectedAcademicPeriod = $request->getQuery('academic_period_id');
         }else{
-            $existCurrentAcademicStudent = $this->find('all', ['conditions'=>[ 'academic_period_id' => $this->AcademicPeriods->getCurrent(), 'institution_id' => $institutionId]])->toArray();
+            $existCurrentAcademicStudent = $this->find('all',
+                ['conditions'=>[
+                    'academic_period_id' => $this->AcademicPeriods->getCurrent(),
+                    'institution_id' => $institutionId]
+                ])->toArray();
             if($existCurrentAcademicStudent){
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }else{
@@ -3552,6 +3571,9 @@ class StudentsTable extends ControllerActionTable
             'student_date_of_birth' => 'Users.date_of_birth',
             'student_address' => 'Users.address',
             'student_identity_number' => 'Users.identity_number',
+            //POCOR-8656 start
+            'student_email' => 'Users.email',
+            //POCOR-8656 end
         ]);
         return $query;
     }
@@ -3696,6 +3718,11 @@ class StudentsTable extends ControllerActionTable
     private function setInstitutionID()
     {
         $institutionId = $this->getInstitutionID();
+        //POCOR-8411 -- Start - avoid null in where
+        if (empty($institutionId)) {
+            $institutionId = -1; // Use -1 to return zero records; behaves similarly to null in CakePHP 3, ensuring compatibility.
+        }
+        //POCOR-8411 -- End
         $this->institution_id = $institutionId;
     }
 
@@ -3705,15 +3732,48 @@ class StudentsTable extends ControllerActionTable
      * @return string|null
      */
 
+    //POCOR-8643 -- To resolve Enrolled(Repeater) issue
+    public function getOldRecords($previous_institution_student_id)
+    {
+        $connection = ConnectionManager::get('default');
+        $sql = "SELECT is3.id, is3.student_id, is3.student_status_id, is3.start_date, is3.end_date FROM institution_students is1 JOIN institution_students is2 ON is1.student_id = is2.student_id AND is1.start_date > is2.start_date JOIN institution_students is3 ON is2.student_id = is3.student_id AND is2.start_date > is3.start_date WHERE is1.student_status_id = 1 AND is2.student_status_id = 3 AND is3.student_status_id = 8 AND is3.start_date < is2.start_date AND is2.start_date < is1.start_date AND is1.previous_institution_student_id IS NOT NULL;";
+
+        $result = $connection->execute($sql)->fetchAll('assoc');
+        return $result;
+    }
+
     private function getStudentStatus($student_status_id, $previous_institution_student_id)
     {
-
         $statusOptions = $this->student_status_names_array;
         $value = $statusOptions[$student_status_id];
         $previousStudents = $this->previousStudents;
         if (isset($previous_institution_student_id)) {
-            if (isset($previousStudents[$previous_institution_student_id]))
+            if (array_key_exists($previous_institution_student_id, $previousStudents)) {
                 $value = __("Enrolled (Repeater)");
+            }
+            else { //POCOR-8643 -- To resolve Enrolled(Repeater) issue
+                $result = $this->getOldRecords($previous_institution_student_id);
+                $oldStatus = $result;
+                if(isset($previous_institution_student_id) && $previous_institution_student_id !== null) {
+                    $studentID = $this->find('all', [
+                        'conditions' => ['previous_institution_student_id' => $previous_institution_student_id],
+                        'fields' => ['student_id']
+                    ])->first();
+                    $studentId = $studentID->student_id;
+                    if(isset($studentId)) {
+                        $found = false;
+                        foreach ($oldStatus as $status) {
+                            if ($status['student_id'] == $studentId) {
+                                $found = true;
+                                break;
+                            }
+                        }
+                        if ($found) {
+                            $value = __("Enrolled (Repeater)");
+                        }
+                    }
+                }
+            }
         }
         return $value;
     }

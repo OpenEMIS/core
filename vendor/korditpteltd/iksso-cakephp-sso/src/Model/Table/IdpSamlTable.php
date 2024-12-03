@@ -6,13 +6,13 @@ use Cake\Validation\Validator;
 
 class IdpSamlTable extends Table
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasOne('SystemAuthentications', ['className' => 'SSO.SystemAuthentications', 'foreignKey' => 'id']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator) : Validator
     {
         return $validator
             ->requirePresence('idp_entity_id')
