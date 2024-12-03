@@ -2741,8 +2741,10 @@ class InstitutionsController extends AppController
             || $action == 'checkConfigurationForExternalSearch'
             || $action == 'studentCustomFields'
             || $action == 'staffCustomFields'
-           || $furtherAction == 'removeReport'
-            || $furtherAction == 'downloadFailed' || $furtherAction == 'downloadPassed'
+            || $action == 'ImportInstitutions' // POCOR-8683
+            || $furtherAction == 'removeReport'
+            || $furtherAction == 'downloadFailed'
+            || $furtherAction == 'downloadPassed'
         ) {
             return true;
         }
@@ -2776,10 +2778,14 @@ class InstitutionsController extends AppController
         if ($furtherAction == 'image' || $furtherAction == 'download') {
             return true;
         }
-        if ($furtherAction == 'add'
-            && $action == 'ImportInstitutions') {
+        // POCOR-8683 start
+        if (($furtherAction == 'add'
+                || $furtherAction == 'template'
+                ||  $furtherAction == 'results')
+            && $action == 'ComponentAction') {
             return true;
         }
+        // POCOR-8683 end
         if ($furtherAction == 'ajaxInstitutionsAutocomplete') {
             return true;
         }
@@ -3132,8 +3138,8 @@ class InstitutionsController extends AppController
                 } elseif (in_array($alias, ['FeederOutgoingInstitutions'])) {
                     $params = [];
                     $params[$model->aliasField('feeder_institution_id')] = $institutionID;
-                    
-                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] == 'add') {//POCOR-8691 
+
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] == 'add') {//POCOR-8691
                         $exists = true;
                     } else {
                         $exists = $model->exists($params);
@@ -3171,7 +3177,7 @@ class InstitutionsController extends AppController
 
                 // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                 if (!$exists && !$isDownload) {
-                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] != 'add') {//POCOR-8691 
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] != 'add') {//POCOR-8691
                         $this->Alert->info('general.notExists');//POCOR-8691
                     }
                     //                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');

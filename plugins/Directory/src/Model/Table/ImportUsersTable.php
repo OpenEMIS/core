@@ -328,14 +328,14 @@ class ImportUsersTable extends AppTable
         if ($isStudent) {
             $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
             $institution_id = $tempRow['institution_id'];
-            $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-            $start_date = $tempRow['start_date'];
             $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
             $academicPeriodId = $tempRow['academic_period_id'];
-            $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
+            $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
             $institution_id = $tempRow['institution_id'];
-            $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
+            $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
             $institution_id = $tempRow['institution_id'];
+            $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
+            $start_date = $tempRow['start_date'];
 
 //            if($institution_id){
 //                $user = $tempRow['entity'];
@@ -1020,11 +1020,66 @@ class ImportUsersTable extends AppTable
      * @return bool
      * @throws \Exception
      */
+    private function checkEducationGrade(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+
+        return $have_error;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     * @throws \Exception
+     */
+    private function checkClassName(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+
+        return $have_error;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     * @throws \Exception
+     */
     private function checkAcademicPeriodId(&$tempRow, &$rowInvalidCodeCols): bool
     {
         $have_error = false;
         $academic_period_id = null;
-
+        $academic_period = $tempRow['academic_period'];
+        if (empty($academic_period)) {
+            $rowInvalidCodeCols['academic_period'] = __('No academic period specified');
+            $have_error = true;
+            $tempRow['academic_period'] = null;
+            return $have_error;
+        }
+        $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+        $academicPeriod = $AcademicPeriods->find()->select(['id' => $AcademicPeriods->aliasField('id')])->where([
+             $AcademicPeriods->aliasField('editable') => 1,
+                $AcademicPeriods->aliasField('visible') . ' >' => 0,
+                $AcademicPeriods->aliasField('parent_id') . ' >' => 0,
+                $AcademicPeriods->aliasField('code')  => $academic_period,
+            ])
+            ->first();
+        if(!$academicPeriod){
+            $rowInvalidCodeCols['academic_period'] = __('No academic period with this code found');
+            $have_error = true;
+            $tempRow['academic_period'] = null;
+            return $have_error;
+        }
+        $academic_period_id = $academicPeriod->id;
+        $academicPeriodLevel = $this->getAcademicPeriodLevel($academic_period_id);
+        if (is_array( $academicPeriodLevel) && count($academicPeriodLevel) > 0) {
+            if ($academicPeriodLevel[0]['academic_period_level_id'] != 1) { //if the level is not year
+                $rowInvalidCodeCols['academic_period'] = __('Academic period must be in year level');
+                $tempRow['academic_period'] = null;
+                return false;
+            }
+        }
         $tempRow['academic_period_id'] = $academic_period_id;
         return $have_error;
     }
@@ -1040,4 +1095,6 @@ class ImportUsersTable extends AppTable
         date_default_timezone_set($timeZone);
         return $timeZone;
     }
+
+
 }
