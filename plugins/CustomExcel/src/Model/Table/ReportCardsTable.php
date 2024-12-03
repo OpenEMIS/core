@@ -753,18 +753,20 @@ class ReportCardsTable extends AppTable
             ]);
             //POCOR-7033[START]
             if (!empty($entity)) {
-                if ($entity->staff->gender_id == '1') {
-                    $entity->staff->gender_id = "Male";
-                } else {
-                    $entity->staff->gender_id = "Female";
-                }
-                if (!empty($entity->classes_secondary_staff)) {
-                    $entity->secondary = $entity->classes_secondary_staff[0]->secondary_staff->name;
-                }
                 if (!empty($entity->staff)) {
+                    if ($entity->staff->gender_id == '1') {
+                        $entity->staff->gender_id = "Male";
+                    } else {
+                        $entity->staff->gender_id = "Female";
+                    }
                     $entity->homeroom = $entity->staff->name;
                 }
+
+                if (!empty($entity->classes_secondary_staff) && !empty($entity->classes_secondary_staff[0]->secondary_staff)) {
+                    $entity->secondary = $entity->classes_secondary_staff[0]->secondary_staff->name;
+                }
             }
+
             //POCOR-7033[END]
             return $entity;
         }
