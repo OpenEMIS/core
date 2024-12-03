@@ -327,15 +327,21 @@ class ImportUsersTable extends AppTable
         }
         if ($isStudent) {
             $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
-            $institution_id = $tempRow['institution_id'];
-            $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
-            $academicPeriodId = $tempRow['academic_period_id'];
-            $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
-            $institution_id = $tempRow['institution_id'];
-            $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
-            $institution_id = $tempRow['institution_id'];
-            $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-            $start_date = $tempRow['start_date'];
+            $institution_id = $tempRow['institution_id'] ?? null;
+            if(!empty($institution_id)) {
+                $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
+                $academic_period_id = $tempRow['academic_period_id']  ?? null;
+                if (!empty($academic_period_id)) {
+                    $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
+                    $education_grade_id = $tempRow['education_grade_id']  ?? null;
+                    if (!empty($education_grade_id)) {
+                        $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
+                        $institution_class_id = $tempRow['institution_class_id']  ?? null;
+                        $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
+                        $start_date = $tempRow['start_date'];
+                    }
+                }
+            }
 
 //            if($institution_id){
 //                $user = $tempRow['entity'];
@@ -382,65 +388,7 @@ class ImportUsersTable extends AppTable
 
         return true;
     }
-    private static function getInstitutionGradeIds($academic_period_id, $institution_id): array
-    {
-        $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
 
-        return $InstitutionGrades->find('list', [
-            'keyField' => 'id',
-            'valueField' => 'education_grade_id'
-        ])
-            ->LeftJoin(['EducationGrades' => 'education_grades'], [
-                'EducationGrades.id = ' . $InstitutionGrades->aliasField('education_grade_id')
-            ])
-            ->LeftJoin(['EducationProgrammes' => 'education_programmes'], [
-                'EducationProgrammes.id = EducationGrades.education_programme_id'
-            ])
-            ->LeftJoin(['EducationCycles' => 'education_cycles'], [
-                'EducationCycles.id = EducationProgrammes.education_cycle_id'
-            ])
-            ->LeftJoin(['EducationLevels' => 'education_levels'], [
-                'EducationLevels.id = EducationCycles.education_level_id'
-            ])
-            ->LeftJoin(['EducationSystems' => 'education_systems'], [
-                'EducationSystems.id = EducationLevels.education_system_id'
-            ])
-            ->LeftJoin(['AcademicPeriods' => 'academic_periods'], [
-                'AcademicPeriods.id = EducationSystems.academic_period_id'
-            ])
-            ->where([
-                $InstitutionGrades->aliasField('institution_id') => $institution_id,
-                'AcademicPeriods.id' => $academic_period_id
-            ])
-            ->toArray();
-    }
-
-    private static function checkInstitutionGrade(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols)
-    {
-        $academic_period_id = $tempRow['academic_period_id'];
-        $institution_id = $tempRow['institution_id'];
-        $gradesInInstitution = self::getInstitutionGradeIds($academic_period_id, $institution_id);
-        $education_grade_id = $tempRow['education_grade_id'];
-        $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
-        if (!in_array($education_grade_id, $gradesInInstitution)) {
-            $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade is not being offered in this institution');
-            return false;
-        }
-        $institutionGrade = $InstitutionGrades
-            ->find()
-            ->contain('EducationGrades.EducationProgrammes.EducationCycles')
-            ->where([
-                $InstitutionGrades->aliasField('education_grade_id') => $education_grade_id,
-                $InstitutionGrades->aliasField('institution_id') => $institution_id
-            ]);
-        if ($institutionGrade->isEmpty()) {
-            $rowInvalidCodeCols['education_grade_id'] = __('No matching education grade.');
-            return false;
-        }
-
-        $institutionGrade = $institutionGrade->first();
-        return $institutionGrade;
-    }
     public function onImportPopulateNationalitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
@@ -949,152 +897,191 @@ class ImportUsersTable extends AppTable
         }
         return $have_error;
     }
-
-   /**
-     * @param $tempRow
-     * @param $rowInvalidCodeCols
-     * @return bool
-     */
-    private function checkInstitution(&$tempRow, &$rowInvalidCodeCols): bool
+    private function addError(array &$rowInvalidCodeCols, string|array $fields, string $message): void
     {
-        $have_error = false;
-        $institution_code = $tempRow['institution_code'];
-        $institution = null;
-        $Institutions = self::getDynamicTableInstance('Institution.Institutions');
-        if (strlen($institution_code) > 1) {
-            $institution = $Institutions->find()->where([$Institutions->aliasField('code') => $institution_code])->first();
-            $tempRow['institution_id'] = $institution->id;
+        $fields = (array) $fields; // Always convert to array for consistent handling
+        foreach ($fields as $field) {
+            $rowInvalidCodeCols[$field] = $message;
         }
+    }
+    private function checkInstitution(array &$tempRow, array &$rowInvalidCodeCols): bool
+    {
+        $institution_code = $tempRow['institution_code'] ?? '';
+
+        if (trim($institution_code) === '') {
+            $this->addError($rowInvalidCodeCols, 'institution_code', __('No Institution Code Provided'));
+            return true;
+        }
+
+        $institution = $this->findInstitutionByCode($institution_code);
+
         if (!$institution) {
-            $rowInvalidCodeCols['institution_code'] = __('Institution With This Code Not Found');
-            $have_error = true;
+            $this->addError($rowInvalidCodeCols, 'institution_code', __('Institution With This Code Not Found'));
+            return true;
         }
 
-        return $have_error;
+        $tempRow['institution_id'] = $institution->id;
+        return false;
     }
-
-    /**
-     * @param $tempRow
-     * @param $rowInvalidCodeCols
-     * @return bool
-     * @throws \Exception
-     */
-    private function checkStartDate(&$tempRow, &$rowInvalidCodeCols): bool
+    private function findInstitutionByCode(string $code): array|\Cake\Datasource\EntityInterface|null
     {
-        $have_error = false;
-        $timeZone = $this->getTimeZone();
-        $dateTimeZone = new \DateTimeZone($timeZone);
-
-//        $this->log(__FUNCTION__, 'debug');
-//        $this->log($tempRow, 'debug');
-//        $this->log($rowInvalidCodeCols, 'debug');
-        // from string to dateObject
-        $start_date = $tempRow['start_date'];
-        if (empty($start_date)) {
-            $rowInvalidCodeCols['start_date'] = __('No start date specified');
-            $have_error = true;
-            $tempRow['start_date'] = null;
-            return $have_error;
-        }
-        try {
-            $formattedDate = DateTime::createFromFormat('d/m/Y', $start_date, $dateTimeZone);
-        } catch (\Exception $exception) {
-            $rowInvalidCodeCols['start_date'] = $exception->getMessage() . ": " . $start_date;
-            $have_error = true;
-            $tempRow['start_date'] = null;
-            return $have_error;
-        }
-        if (!($formattedDate instanceof DateTimeInterface)) {
-            $rowInvalidCodeCols['start_date'] = __('Unknown date format') . __('Date format should be d/m/Y');
-            $have_error = true;
-            $tempRow['start_date'] = null;
-            return $have_error;
-        }
-        $tempRow['start_date'] = $formattedDate;
-        return $have_error;
+        $Institutions = self::getDynamicTableInstance('Institution.Institutions');
+        return $Institutions->find()->where([$Institutions->aliasField('code') => $code])->first();
     }
 
-    /**
-     * @param $tempRow
-     * @param $rowInvalidCodeCols
-     * @return bool
-     * @throws \Exception
-     */
-    private function checkEducationGrade(&$tempRow, &$rowInvalidCodeCols): bool
-    {
-        $have_error = false;
-
-        return $have_error;
-    }
-
-    /**
-     * @param $tempRow
-     * @param $rowInvalidCodeCols
-     * @return bool
-     * @throws \Exception
-     */
     private function checkClassName(&$tempRow, &$rowInvalidCodeCols): bool
     {
-        $have_error = false;
 
-        return $have_error;
+        $class_name = $tempRow['class_name'] ?? '';
+
+        if (trim($class_name) === '') {
+            $this->addError($rowInvalidCodeCols, 'class_name', __('No class name specified'));
+            $tempRow['class_name'] = null;
+            $tempRow['institution_class_id'] = null;
+            return true;
+        }
+
+        $institution_class_id = $this->getInstitutionClass(
+            $class_name,
+            $tempRow['institution_id'],
+            $tempRow['academic_period_id'],
+            $tempRow['education_grade_id'],
+        );
+
+        if ($institution_class_id > 0) {
+            $tempRow['institution_class_id'] = $institution_class_id;
+            return false;
+        }
+
+        $tempRow['class_name'] = null;
+        $tempRow['institution_class_id'] = null;
+        $this->addError($rowInvalidCodeCols, 'class_name', __('Institution class not found/full'));
+        return true;
     }
 
-    /**
-     * @param $tempRow
-     * @param $rowInvalidCodeCols
-     * @return bool
-     * @throws \Exception
-     */
-    private function checkAcademicPeriodId(&$tempRow, &$rowInvalidCodeCols): bool
+    private function getInstitutionClass($class_name, $institution_id, $academic_period_id, $education_grade_id)
     {
-        $have_error = false;
-        $academic_period_id = null;
-        $academic_period = $tempRow['academic_period'];
-        if (empty($academic_period)) {
-            $rowInvalidCodeCols['academic_period'] = __('No academic period specified');
-            $have_error = true;
-            $tempRow['academic_period'] = null;
-            return $have_error;
-        }
-        $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
-        $academicPeriod = $AcademicPeriods->find()->select(['id' => $AcademicPeriods->aliasField('id')])->where([
-             $AcademicPeriods->aliasField('editable') => 1,
-                $AcademicPeriods->aliasField('visible') . ' >' => 0,
-                $AcademicPeriods->aliasField('parent_id') . ' >' => 0,
-                $AcademicPeriods->aliasField('code')  => $academic_period,
-            ])
-            ->first();
-        if(!$academicPeriod){
-            $rowInvalidCodeCols['academic_period'] = __('No academic period with this code found');
-            $have_error = true;
-            $tempRow['academic_period'] = null;
-            return $have_error;
-        }
-        $academic_period_id = $academicPeriod->id;
-        $academicPeriodLevel = $this->getAcademicPeriodLevel($academic_period_id);
-        if (is_array( $academicPeriodLevel) && count($academicPeriodLevel) > 0) {
-            if ($academicPeriodLevel[0]['academic_period_level_id'] != 1) { //if the level is not year
-                $rowInvalidCodeCols['academic_period'] = __('Academic period must be in year level');
-                $tempRow['academic_period'] = null;
-                return false;
+        if (!empty($tempRow['institution_class_id'])) {
+            $availableClasses = $this->getInstitutionClasses($institution_id,
+                $academic_period_id,
+                $education_grade_id);
+            foreach ($availableClasses as $id => $name) {
+                if ($class_name == $name) {
+                    return $id;
+                }
             }
         }
-        $tempRow['academic_period_id'] = $academic_period_id;
-        return $have_error;
+        return 0;
     }
 
-    /**
-     * @return string
-     */
-    private function getTimeZone(): string
+
+    private function getInstitutionClasses($institution_id, $academic_period_id, $education_grade_id): array
     {
-        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-        $setTimeZone = $ConfigItems->value("time_zone");
-        $timeZone = !empty($setTimeZone) ? $setTimeZone : 'UTC'; //POCOR-6732
-        date_default_timezone_set($timeZone);
-        return $timeZone;
+        $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
+        $institutionClassesList = $InstitutionClasses->getClassOptions($academic_period_id, $institution_id, $education_grade_id);
+        $resultList = [];
+        foreach ($institutionClassesList as $id => $className) {
+            $InstitutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');
+            $countStudent = $InstitutionClassStudents->getStudentCountByClass($id);
+            $classCapacity = $InstitutionClasses->get($id)->capacity;
+            if ($countStudent + 1 >= $classCapacity) {
+                $resultList[$id] = $className;
+            }
+        }
+        return $resultList;
     }
 
+    private function checkStartDate(array &$tempRow, array &$rowInvalidCodeCols): bool
+    {
+        $start_date = $tempRow['start_date'] ?? '';
+
+        if (trim($start_date) === '') {
+            $this->addError($rowInvalidCodeCols, 'start_date', __('No start date specified'));
+            $tempRow['start_date'] = null;
+            return true;
+        }
+
+        $formattedDate = $this->parseDate($start_date, 'd/m/Y');
+        if (!$formattedDate) {
+            $this->addError($rowInvalidCodeCols, 'start_date', __('Unknown date format. Date format should be d/m/Y.'));
+            $tempRow['start_date'] = null;
+            return true;
+        }
+
+        $tempRow['start_date'] = $formattedDate;
+        return false;
+    }
+
+    private function parseDate(string $date, string $format): ?DateTime
+    {
+        $dateTimeZone = new \DateTimeZone($this->getTimeZone());
+        return DateTime::createFromFormat($format, $date, $dateTimeZone) ?: null;
+    }
+
+    private function checkEducationGrade(array &$tempRow, array &$rowInvalidCodeCols): bool
+    {
+        $education_grade = $tempRow['education_grade'] ?? '';
+        if (trim($education_grade) === '') {
+            $this->addError($rowInvalidCodeCols, 'education_grade', __('No education grade specified'));
+            $tempRow['education_grade'] = null;
+            return true;
+        }
+
+        $education_grade_id = $this->getEducationGrade(
+            $education_grade,
+            $tempRow['institution_id'],
+            $tempRow['academic_period_id']
+        );
+
+        if ($education_grade_id > 0) {
+            $tempRow['education_grade_id'] = $education_grade_id;
+            return false;
+        }
+
+        $tempRow['education_grade_id'] = null;
+        $this->addError($rowInvalidCodeCols, 'education_grade', __('Education grade not found'));
+        return true;
+    }
+
+    private function getEducationGrade($education_grade, $institution_id, $academic_period_id)
+    {
+        $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
+        $institutionGrade = $InstitutionGrades
+            ->find()
+            ->select(['education_grade_id' => $InstitutionGrades->aliasField('education_grade_id')])
+            ->contain('EducationGrades')
+            ->where([
+                $InstitutionGrades->aliasField('academic_period_d') => $academic_period_id,
+                $InstitutionGrades->aliasField('institution_id') => $institution_id,
+                'EducationGrades.code' => $education_grade
+            ])->first();
+        if (empty($institutionGrade)) {
+            return 0;
+        }
+        $education_grade_id = $institutionGrade->education_grade_id;
+        return $education_grade_id;
+    }
+
+    private function checkAcademicPeriodId(array &$tempRow, array &$rowInvalidCodeCols): bool
+    {
+        $institution_id = $tempRow['institution_id'];
+        $academic_period = $tempRow['academic_period'];
+
+        if (empty($institution_id) || empty($academic_period)) {
+            $this->addError($rowInvalidCodeCols, 'academic_period', __('No institution or academic period specified'));
+            $tempRow['academic_period'] = $tempRow['academic_period_id'] = null;
+            return true;
+        }
+
+        $academicPeriod = $this->findAcademicPeriod($academic_period);
+        if (!$academicPeriod || !$this->isYearLevel($academicPeriod->id)) {
+            $this->addError($rowInvalidCodeCols, 'academic_period', __('Invalid academic period'));
+            $tempRow['academic_period'] = $tempRow['academic_period_id'] = null;
+            return true;
+        }
+
+        $tempRow['academic_period_id'] = $academicPeriod->id;
+        return false;
+    }
 
 }
