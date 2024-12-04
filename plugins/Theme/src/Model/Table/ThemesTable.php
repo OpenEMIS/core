@@ -191,7 +191,7 @@ class ThemesTable extends ControllerActionTable
     }
 
     //POCOR-8268 , 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request) 
+    /*public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request) 
     {
         $colorListPath = WWW_ROOT . 'themecolor' . DS . 'color.php';
         if (file_exists($colorListPath)) {
@@ -212,7 +212,7 @@ class ThemesTable extends ControllerActionTable
         }
 
         return $attr;
-    }
+    }*/
 
      public function validationDefault(Validator $validator): Validator 
     {
@@ -222,4 +222,67 @@ class ThemesTable extends ControllerActionTable
             ->requirePresence('value');
 
     }
+
+public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
+{
+    \Cake\Log\Log::debug('onUpdateFieldValue called with action: ' . $action);
+
+    $colorListPath = WWW_ROOT . 'themecolor' . DS . 'color.php';
+    
+    if (!file_exists($colorListPath)) {
+        \Cake\Log\Log::error("Color file not found at " . $colorListPath);
+        throw new \Exception("Color file not found at " . $colorListPath);
+    }
+
+    $colorListing = include($colorListPath);
+    
+    if (empty($colorListing)) {
+        \Cake\Log\Log::error("Color listing is empty");
+        throw new \Exception("No colors found in color list");
+    }
+
+    $options = [];
+    foreach ($colorListing as $hexValue) {
+        // Ensure the hex value starts with '#' if it doesn't
+        $hexValue = (strpos($hexValue, '#') !== 0) ? '#' . $hexValue : $hexValue;
+
+        // Validate the hex color format (supports 3 or 6 characters)
+        if (!preg_match('/^#([a-fA-F0-9]{3}){1,2}$/', $hexValue)) {
+            \Cake\Log\Log::warning("Invalid hex color: " . $hexValue);
+            continue;
+        }
+
+        // Get the contrast color (for better readability)
+        $contrastColor = $this->getContrastColor($hexValue);
+        $style = sprintf('background-color: %s; color: %s;', $hexValue, $contrastColor);
+
+        // Create the <option> HTML directly
+        $options[$hexValue] = sprintf('style="%s">%s', $hexValue, $style, $hexValue);
+    }
+
+    // If action is 'add' or 'edit', set up the select element
+    if (in_array($action, ['add', 'edit'])) {
+        $attr['type'] = 'select'; // Set input type to 'select'
+        $attr['options'] = $options; // Add the generated options to the select
+        $attr['empty'] = 'Select a Theme Color'; // Add an empty placeholder option
+    }
+
+    return $attr;
+}
+
+private function getContrastColor($hexColor)
+{
+    $hexColor = ltrim($hexColor, '#');
+
+    $r = hexdec(substr($hexColor, 0, 2));
+    $g = hexdec(substr($hexColor, 2, 2));
+    $b = hexdec(substr($hexColor, 4, 2));
+
+    $brightness = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+
+    return $brightness > 128 ? '#000000' : '#FFFFFF';
+}
+
+
+
 }
