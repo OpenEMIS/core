@@ -1,5 +1,8 @@
+<?php //echo $this->Form->control('Themes.value', $attr);
+
+?>
 <!--POCOR-8652 start-->
-<script type="text/javascript">
+<!-- <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOMContentLoaded event fired');
 
@@ -45,5 +48,46 @@
             console.log('"Configurations/Themes" not found in the URL.');
         }
     });
-</script>
+</script> -->
 <!--POCOR-8652 end-->
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+    const selectElement = document.getElementById('themes-value');
+    const options = selectElement.querySelectorAll('option');
+
+    // Loop through all options in the select element
+    options.forEach(option => {
+        // Skip the placeholder option (empty value)
+        if (option.value === "") return;
+
+        // Create the correct option structure with style
+        const hexValue = option.value;
+        const contrastColor = getContrastColor(hexValue); // Assuming this function exists to determine contrast color
+
+        // Set the correct styles and text for each option
+        option.style.backgroundColor = hexValue;
+        option.style.color = contrastColor;
+        option.textContent = hexValue; // Set text content to the hex value
+    });
+});
+
+// Function to calculate contrast color (for readability, use a simple light/dark contrast)
+function getContrastColor(hex) {
+    // Convert hex to RGB
+    let r = parseInt(hex.slice(1, 3), 16);
+    let g = parseInt(hex.slice(3, 5), 16);
+    let b = parseInt(hex.slice(5, 7), 16);
+    
+    // Calculate the luminance
+    let luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    
+    // Return black or white based on luminance
+    return luminance > 0.5 ? '#000000' : '#FFFFFF';
+}
+
+</script>
+
+
+
+
