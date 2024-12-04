@@ -292,15 +292,15 @@ class ImportUsersTable extends AppTable
     /**
      * @throws \Exception
      */
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(Event $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         //            Log::debug(print_r($tempRow, true));
 
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
-        $identity_type_id = isset($tempRow['identity_type_id']) ? $tempRow['identity_type_id'] : false;
-        $identity_number = isset($tempRow['identity_number']) ? $tempRow['identity_number'] : false;
+        $identity_type_id = $tempRow['identity_type_id'] ??  false;
+        $identity_number = $tempRow['identity_number'] ?? false;
         $contact_type = $tempRow['contact_type'];
         $have_error = false;
         // identity number mandatory
@@ -325,22 +325,24 @@ class ImportUsersTable extends AppTable
         if (isset($contact_type)) {
             $have_error = $have_error ||  $this->checkContact($tempRow, $rowInvalidCodeCols);
         }
+        Log::debug(print_r($tempRow, true));
+
         if ($isStudent) {
             $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
             $institution_id = $tempRow['institution_id'] ?? null;
             if(!empty($institution_id)) {
                 $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
                 $academic_period_id = $tempRow['academic_period_id']  ?? null;
-                if (!empty($academic_period_id)) {
-                    $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
-                    $education_grade_id = $tempRow['education_grade_id']  ?? null;
-                    if (!empty($education_grade_id)) {
-                        $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
-                        $institution_class_id = $tempRow['institution_class_id']  ?? null;
-                        $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-                        $start_date = $tempRow['start_date'];
-                    }
-                }
+//                if (!empty($academic_period_id)) {
+//                    $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
+//                    $education_grade_id = $tempRow['education_grade_id']  ?? null;
+//                    if (!empty($education_grade_id)) {
+//                        $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
+//                        $institution_class_id = $tempRow['institution_class_id']  ?? null;
+//                        $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
+//                        $start_date = $tempRow['start_date'];
+//                    }
+//                }
             }
 
 //            if($institution_id){
@@ -386,7 +388,7 @@ class ImportUsersTable extends AppTable
         //add identifier that later will be used on User afterSave
         $tempRow['record_source'] = 'import_user';
 
-        return true;
+        return false; //todo replace to true to import to work
     }
 
     public function onImportPopulateNationalitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
@@ -897,36 +899,141 @@ class ImportUsersTable extends AppTable
         }
         return $have_error;
     }
-    private function addError(array &$rowInvalidCodeCols, string|array $fields, string $message): void
+    private function addError(array|ArrayObject &$rowInvalidCodeCols, string|array $fields, string $message): void
     {
         $fields = (array) $fields; // Always convert to array for consistent handling
         foreach ($fields as $field) {
             $rowInvalidCodeCols[$field] = $message;
         }
     }
-    private function checkInstitution(array &$tempRow, array &$rowInvalidCodeCols): bool
+
+    private function checkInstitution(&$tempRow, &$rowInvalidCodeCols): bool
     {
         $institution_code = $tempRow['institution_code'] ?? '';
+        $gender_id = $tempRow['gender_id'] ?? '';
 
         if (trim($institution_code) === '') {
-            $this->addError($rowInvalidCodeCols, 'institution_code', __('No Institution Code Provided'));
-            return true;
+//            $this->addError($rowInvalidCodeCols, 'institution_code', __('No Institution Code Provided'));
+            unset($tempRow['institution_code']);
+            unset($tempRow['institution_id']);
+            unset($tempRow['academic_period']);
+            unset($tempRow['education_grade']);
+            unset($tempRow['class_name']);
+            unset($tempRow['start_date']);
+            return false;
         }
 
-        $institution = $this->findInstitutionByCode($institution_code);
+        $institution = $this->getInstitutionByCodeAndGender($institution_code, $gender_id);
 
-        if (!$institution) {
+        if (empty($institution)) {
             $this->addError($rowInvalidCodeCols, 'institution_code', __('Institution With This Code Not Found'));
             return true;
         }
+        if (isset($institution['id'])) {
+            $tempRow['institution_id'] = $institution['id'];
+            return false;
+        }
+        if (isset($institution['error'])) {
+            $this->addError($rowInvalidCodeCols, 'institution_code', $institution['error']);
+            return true;
+        }
+        return true;
+    }
+    private function getInstitutionByCodeAndGender(string $code, string $gender_id): array
+    {
+        $Institutions = self::getDynamicTableInstance('institutions');
+        $query = $Institutions->find()
+            ->select(['id' => $Institutions->aliasField('id'),
+                $Institutions->aliasField('institution_gender_id'),
+                'gender_id' => 'real_genders.id',
+                'gender_code' => 'institution_genders.code',
+                'gender_name' => 'institution_genders.name'])
+            ->leftJoin(['institution_genders' => 'institution_genders'],
+                [$Institutions->aliasField('institution_gender_id') . ' = institution_genders.id'])
+            ->leftJoin(['real_genders' => 'genders'],
+                ['institution_genders.code = real_genders.code'])
+            ->where([
+                $Institutions->aliasField('code') => $code,
+            ])
+            ->first();
+        if(empty($query)){
+            return [];
+        }
+//        Log::debug(print_r($query, true));
+        $institution_id = $query->id;
+        $institution_gender = $query->gender_name;
+        $institution_gender_id = $query->gender_id;
+        $institution_gender_code = $query->gender_code;
+//        Log::debug(print_r(['$institution_gender_id' =>$institution_gender_id,
+//            '$gender_id' =>$gender_id],true));
+        if ($institution_gender_code == 'X') { //if mixed then always true
+            return ['id' => $institution_id];
+        } else {
+            if ($gender_id != $institution_gender_id) {
+                return ['error' => __(sprintf('Institution only accepts %s student.', $institution_gender))];
+            } else {
+                return ['id' => $institution_id];
+            }
+        }
+    }
 
-        $tempRow['institution_id'] = $institution->id;
+
+
+    private function checkAcademicPeriodId( &$tempRow,  &$rowInvalidCodeCols): bool
+    {
+        $institution_id = $tempRow['institution_id'];
+        $academic_period = $tempRow['academic_period'];
+
+        if (empty($institution_id) || empty($academic_period)) {
+            $this->addError($rowInvalidCodeCols, 'academic_period', __('No institution or academic period specified'));
+            $tempRow['academic_period'] = $tempRow['academic_period_id'] = null;
+            return true;
+        }
+
+        [$academic_period_id, $education_grades] = $this->getAcademicPeriod($institution_id, $academic_period);
+        Log::debug(print_r( [$academic_period_id, $education_grades], true));
+        if (!$academic_period_id) {
+            $this->addError($rowInvalidCodeCols, 'academic_period', __('Invalid academic period'));
+            $tempRow['academic_period'] = $tempRow['academic_period_id'] = null;
+            return true;
+        }
+        $tempRow['academic_period_id'] = $academic_period_id;
+        $tempRow['education_grades'] = $education_grades;
         return false;
     }
-    private function findInstitutionByCode(string $code): array|\Cake\Datasource\EntityInterface|null
+
+    private function getAcademicPeriod($institution_id, $academic_period)
     {
-        $Institutions = self::getDynamicTableInstance('Institution.Institutions');
-        return $Institutions->find()->where([$Institutions->aliasField('code') => $code])->first();
+        $InstitutionGrades = self::getDynamicTableInstance('institution_grades');
+        $educationsGrades = $InstitutionGrades
+            ->find()
+            ->select(['academic_period_id' => $InstitutionGrades->aliasField('academic_period_id'),
+                'education_grade_id' => $InstitutionGrades->aliasField('education_grade_id'),
+                'education_grade_code' => 'education_grades.code',
+                ])
+            ->leftJoin(['education_grades' => 'education_grades'],
+                [$InstitutionGrades->aliasField('education_grade_id') . ' = education_grades.id'])
+            ->leftJoin(['academic_periods' => 'academic_periods'],
+                [$InstitutionGrades->aliasField('academic_period_id') . ' = academic_periods.id'])
+            ->leftJoin(['academic_period_levels' => 'academic_period_levels'],
+                ['academic_periods.academic_period_level_id = academic_period_levels.id'])
+            ->where([
+                $InstitutionGrades->aliasField('institution_id') => $institution_id,
+                'academic_periods.id' => $academic_period,
+                'academic_periods.editable' => 1,
+                'academic_periods.visible' => 1,
+                'academic_period_levels.level' => 1,
+            ])->toArray();
+        if (empty($educationsGrades)) {
+            return 0;
+        }
+        $academic_period_id = $educationsGrades[0]->academic_period_id;
+        $education_grades = [];
+        foreach ($educationsGrades as $educationsGrade){
+            $education_grades[] = ['id' => $educationsGrade->education_grade_id,
+                'code' => $educationsGrade->education_grade_code];
+        }
+        return [$academic_period_id,$education_grades];
     }
 
     private function checkClassName(&$tempRow, &$rowInvalidCodeCols): bool
@@ -991,7 +1098,7 @@ class ImportUsersTable extends AppTable
         return $resultList;
     }
 
-    private function checkStartDate(array &$tempRow, array &$rowInvalidCodeCols): bool
+    private function checkStartDate( &$tempRow,  &$rowInvalidCodeCols): bool
     {
         $start_date = $tempRow['start_date'] ?? '';
 
@@ -1018,7 +1125,7 @@ class ImportUsersTable extends AppTable
         return DateTime::createFromFormat($format, $date, $dateTimeZone) ?: null;
     }
 
-    private function checkEducationGrade(array &$tempRow, array &$rowInvalidCodeCols): bool
+    private function checkEducationGrade( &$tempRow,  &$rowInvalidCodeCols): bool
     {
         $education_grade = $tempRow['education_grade'] ?? '';
         if (trim($education_grade) === '') {
@@ -1062,26 +1169,5 @@ class ImportUsersTable extends AppTable
         return $education_grade_id;
     }
 
-    private function checkAcademicPeriodId(array &$tempRow, array &$rowInvalidCodeCols): bool
-    {
-        $institution_id = $tempRow['institution_id'];
-        $academic_period = $tempRow['academic_period'];
-
-        if (empty($institution_id) || empty($academic_period)) {
-            $this->addError($rowInvalidCodeCols, 'academic_period', __('No institution or academic period specified'));
-            $tempRow['academic_period'] = $tempRow['academic_period_id'] = null;
-            return true;
-        }
-
-        $academicPeriod = $this->findAcademicPeriod($academic_period);
-        if (!$academicPeriod || !$this->isYearLevel($academicPeriod->id)) {
-            $this->addError($rowInvalidCodeCols, 'academic_period', __('Invalid academic period'));
-            $tempRow['academic_period'] = $tempRow['academic_period_id'] = null;
-            return true;
-        }
-
-        $tempRow['academic_period_id'] = $academicPeriod->id;
-        return false;
-    }
 
 }
