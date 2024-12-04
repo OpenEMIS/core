@@ -1142,29 +1142,32 @@ class ReportCardsTable extends AppTable
         if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
 
-            // only get competency templates that have periods within the report card date
-            $entity = $CompetencyTemplates->find()
+            $query = $CompetencyTemplates->find()
                 ->innerJoinWith('Periods')
                 ->where([
-                    $CompetencyTemplates->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $CompetencyTemplates->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
-                    'Periods.start_date >= ' => $extra['report_card_start_date'],
-                    'Periods.end_date <= ' => $extra['report_card_end_date']
+                    'CompetencyTemplates.academic_period_id' => $params['academic_period_id'],
+                    'CompetencyTemplates.education_grade_id' => $extra['report_card_education_grade_id'],
+                    'Periods.start_date >=' => $extra['report_card_start_date'],
+                    'Periods.end_date <=' => $extra['report_card_end_date']
                 ])
-                ->group($CompetencyTemplates->aliasField('id'));
+                ->group(['CompetencyTemplates.id']); 
 
-            if ($entity->count() > 0) {
-                $extra['competency_templates_ids'] = $entity->extract('id')->toArray();
+            $results = $query->toArray();
+
+            if (!empty($results)) {
+                $extra['competency_templates_ids'] = array_column($results, 'id');
             }
-            return $entity->toArray();
+
+            return $results;
         }
     }
+
 
     //POCOR-7315::Start
     public function onExcelTemplateInitialiseAttendanceAge(Event $event, array $params, ArrayObject $extra)
     {
-        $EducationGradesTable = TableRegistry::get('education_grades');
-        $ConfigItemsTable = TableRegistry::get('config_items');
+        $EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
         $results = [];
         $EducationGrades = $EducationGradesTable->get($params['education_grade_id']);
         $AgePlus = $ConfigItemsTable->find()->where(['code' => 'admission_age_plus'])->first();
@@ -1504,20 +1507,26 @@ class ReportCardsTable extends AppTable
         if (isset($extra['assessment_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
 
-            $entity = $AssessmentPeriods->find()
+            // Fetch the query result using all() to get the actual result set
+            $query = $AssessmentPeriods->find()
                 ->where([
-                    $AssessmentPeriods->aliasField('assessment_id') => $extra['assessment_id'],
-                    $AssessmentPeriods->aliasField('start_date >= ') => $extra['report_card_start_date'],
-                    $AssessmentPeriods->aliasField('end_date <= ') => $extra['report_card_end_date']
+                    'assessment_id' => $extra['assessment_id'],
+                    'start_date >=' => $extra['report_card_start_date'],
+                    'end_date <=' => $extra['report_card_end_date']
                 ])
-                ->order([$AssessmentPeriods->aliasField('start_date')]);
+                ->order(['start_date']);
+            $results = $query->toArray();
 
-            if ($entity->count() > 0) {
-                $extra['assessment_period_ids'] = $entity->extract('id')->toArray();
+            if (!empty($results)) {
+                $extra['assessment_period_ids'] = array_column($results, 'id'); 
             }
-            return $entity->toArray();
+
+            return $results;
         }
     }
+
+
+
 
     public function onExcelTemplateInitialiseAssessmentItems(Event $event, array $params, ArrayObject $extra)
     {
@@ -2558,6 +2567,7 @@ class ReportCardsTable extends AppTable
                 $entity = [];
                 $i = 1;
                 foreach ($result as $row) {
+                    //echo "<pre>"; print_r($row); die;
                     $entity[] = [
                         'id' => $i,
                         'academic_period' => $row['academic_period'],
