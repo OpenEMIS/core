@@ -2294,53 +2294,29 @@ class StudentsTable extends ControllerActionTable
         return $params;
     }
 
-    // Function use by the mini dashboard (For Institution Students)
+    // Function use by the mini dashboard (For Institution Students)(POCOR-8721 start - for query optimization)
     public function getNumberOfStudentsByAge($params = [])
     {
-        $query = $params['query'];
-        $InstitutionRecords = $query->cleanCopy();
-        $ageQuery = $InstitutionRecords
-            ->select([
-                'age' => $InstitutionRecords->func()->dateDiff([
-                    $InstitutionRecords->func()->now(),
-                    'Users.date_of_birth' => 'literal'
-                ]),
-                'student' => $this->aliasField('student_id')
-            ])
-            ->distinct(['student'])
-            ->order('age');
-
-        $InstitutionStudentCount = $ageQuery->toArray();
-
-        $convertAge = [];
-
-        // (Logic to be reviewed)
-        // Calculate the age taking account to the average of leap years
-        foreach ($InstitutionStudentCount as $val) {
-            $convertAge[] = floor($val['age'] / 365.25);
-        }
-        // Count and sort the age
-        $result = [];
-        $prevValue = ['age' => -1, 'count' => null];
-        foreach ($convertAge as $val) {
-            if ($prevValue['age'] != $val) {
-                unset($prevValue);
-                $prevValue = ['age' => $val, 'count' => 0];
-                $result[] =& $prevValue;
-            }
-            $prevValue['count']++;
-        }
-
-        // Creating the data set
-        $dataSet = [];
-        foreach ($result as $value) {
-            //Compile the dataset
-            $dataSet[] = [__('Age') . ' ' . $value['age'], $value['count']];
-        }
+        $academicPeriod = $this->request->getQueryParams()['academic_period_id'];
+        $institutionId = $this->getInstitutionID();
+        $connection = ConnectionManager::get('default');
+        $sql = "SELECT FLOOR(DATEDIFF(CURRENT_DATE, u.date_of_birth) / 365.25) AS age,
+                    COUNT(DISTINCT s.student_id) AS student_count
+                    FROM security_users u
+                    INNER JOIN  institution_students s ON s.student_id = u.id
+                    WHERE  s.institution_id = ".$institutionId." AND academic_period_id = ".$academicPeriod." 
+                    GROUP BY  age ORDER BY age";
+            
+        $ageCounts = $connection->execute($sql)->fetchAll('assoc');
+        $dataSet = array_map(function($row) {
+            return [__('Age') . ' ' . $row['age'], $row['student_count']];
+        }, $ageCounts);
+    
         $params['dataSet'] = $dataSet;
-        unset($InstitutionRecords);
+        
         return $params;
     }
+    //POCOR-8721 end
 
     // Function use by the mini dashboard (For Institution Students)
     public function getNumberOfStudentsByGradeByInstitution($params = [])
