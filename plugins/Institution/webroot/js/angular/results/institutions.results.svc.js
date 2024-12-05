@@ -576,7 +576,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 },
                 valueGetter: function (params) {
                     var value = params.data[params.colDef.field];
-                    console.log(value);
+                    // console.log(value);
                     if (!isNaN(parseFloat(value))) {
                         return $filter('number')(value, 2);
                     } else {
@@ -1087,7 +1087,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     deferred.reject(response.data.error);
                 } else {
                     var subjectStudents = response.data.data;
-                    console.log(subjectStudents);
+                    // console.log(subjectStudents);
                     var periodObj = {};
                     angular.forEach(periods, function (period, key) {
                         periodObj[period.id] = period;
