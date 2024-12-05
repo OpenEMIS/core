@@ -1,3 +1,24 @@
+### [4.4.0] - 2024-12-05
+- Implemented: Develop Timetable APIs
+- Implemented: Develop changes to the education structure and student subjects page
+- Implemented: Develop changes to remove the api4.yaml file
+- Bug Fixed: Institutions>Attendance>Students: Attendance is controlled by add permission instead of edit permission
+- Bug Fixed: Institutions > Performance > Assessments: Other education grades assessments are showing eventhough the institution did not offer that education grades
+- Bug Fixed: Institutions>Attachments: The record does not exist
+- Bug Fixed: Administrations > System Setup > Manuals: Institution and Report tab has missing permissions
+- Bug Fixed: Students > Academic > Programmes: The student academic history is not updated even though student have transferred and enrolled status
+- Bug Fixed: OpenEMIS Classroom App: Permissions related api is not working for Assessments
+- Bug Fixed: Directory: Duplicate advanced search button
+- Bug Fixed: Administrations > System Setup > System Configurations > Themes > Login Page Image: When changing the login page image, the system gives an error 
+- Bug Fixed: Unable to install v4
+- Bug Fixed: Institutions > Students > Academic > Programmes > Transition: When clicking on the transition button, the page gives 404 error
+- Bug Fixed: Institutions > Students > Add: The provided student (1528907855) is added to school provided (Christ Church Foundation) however the confirm button cannot be click
+- Bug Fixed: Administrations > Survey > Forms > Rules: The questions listed in rules page is not according to the questions ordered in forms page
+- Bug Fixed: Administration > Communication > Alerts Rules: After successfully adding alerts, the method is not showing any data
+- Bug Fixed: Swagger: Incorrect API naming standards
+- Bug Fixed: Institutions > Reports > Students: When generating student reports for all areas, all institutions and all programmes, the report got stuck in progress
+- Bug Fixed: Institutions > Students > Undo > Promoted: 404 error when undoing student promotion
+
 ### [4.3.8] - 2024-11-22
 - Bug Fixed: Institutions>Attendance>Students: Unable to update absences when using other roles
 - Bug Fixed: Institutions>Attendance>Students: Unable to edit attendance due to wrong permissions
