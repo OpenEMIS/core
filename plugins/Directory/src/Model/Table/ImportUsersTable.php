@@ -132,6 +132,7 @@ class ImportUsersTable extends AppTable
                                         ArrayObject $importedUniqueCodes,
                                         ArrayObject $rowInvalidCodeCols) //POCOR-8082
     {
+        $tempRow['columns'] = $columns;
         $columns = new Collection($columns);
         $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'openemis_no';
@@ -186,6 +187,7 @@ class ImportUsersTable extends AppTable
             // setting is_student = 1, or is_staff = 1, or is_guardian = 1
             $tempRow[$tempRow['account_type']] = 1;
         }
+
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
@@ -295,7 +297,6 @@ class ImportUsersTable extends AppTable
     public function onImportModelSpecificValidation(Event $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         //            Log::debug(print_r($tempRow, true));
-
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
@@ -325,7 +326,8 @@ class ImportUsersTable extends AppTable
         if (isset($contact_type)) {
             $have_error = $have_error ||  $this->checkContact($tempRow, $rowInvalidCodeCols);
         }
-        Log::debug(print_r($tempRow, true));
+//        Log::debug(print_r($tempRow, true));
+        Log::debug(print_r($originalRow, true));
 
         if ($isStudent) {
             $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
@@ -333,8 +335,13 @@ class ImportUsersTable extends AppTable
             if(!empty($institution_id)) {
                 $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
                 $academic_period_id = $tempRow['academic_period_id']  ?? null;
-//                if (!empty($academic_period_id)) {
-//                    $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
+                if (!empty($academic_period_id)) {
+                    $columns = $tempRow['columns'];
+                    $keys = array_flip($columns);
+                    $education_grade_key = $keys['education_grade'];
+                    $education_grade_code = $originalRow[$education_grade_key];
+                    $tempRow['education_grade_code'] = $education_grade_code;
+                    $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
 //                    $education_grade_id = $tempRow['education_grade_id']  ?? null;
 //                    if (!empty($education_grade_id)) {
 //                        $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
@@ -342,7 +349,7 @@ class ImportUsersTable extends AppTable
 //                        $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
 //                        $start_date = $tempRow['start_date'];
 //                    }
-//                }
+                }
             }
 
 //            if($institution_id){
@@ -990,7 +997,7 @@ class ImportUsersTable extends AppTable
             return true;
         }
 
-        [$academic_period_id, $education_grades] = $this->getAcademicPeriod($institution_id, $academic_period);
+        [$academic_period_id, $education_grades] = $this->getAcademicPeriodAndGrades($institution_id, $academic_period);
         Log::debug(print_r( [$academic_period_id, $education_grades], true));
         if (!$academic_period_id) {
             $this->addError($rowInvalidCodeCols, 'academic_period', __('Invalid academic period'));
@@ -1002,7 +1009,7 @@ class ImportUsersTable extends AppTable
         return false;
     }
 
-    private function getAcademicPeriod($institution_id, $academic_period)
+    private function getAcademicPeriodAndGrades($institution_id, $academic_period)
     {
         $InstitutionGrades = self::getDynamicTableInstance('institution_grades');
         $educationsGrades = $InstitutionGrades
@@ -1127,6 +1134,7 @@ class ImportUsersTable extends AppTable
 
     private function checkEducationGrade( &$tempRow,  &$rowInvalidCodeCols): bool
     {
+
         $education_grade = $tempRow['education_grade'] ?? '';
         if (trim($education_grade) === '') {
             $this->addError($rowInvalidCodeCols, 'education_grade', __('No education grade specified'));
@@ -1134,11 +1142,15 @@ class ImportUsersTable extends AppTable
             return true;
         }
 
-        $education_grade_id = $this->getEducationGrade(
-            $education_grade,
-            $tempRow['institution_id'],
-            $tempRow['academic_period_id']
-        );
+        $education_grades = $tempRow['education_grades'];
+        $education_grade_code = $tempRow['education_grade_code'];
+        $education_grade_id = 0;
+        foreach ($education_grades as $education_grade){
+            if($education_grade['code'] == $education_grade_code){
+                $education_grade_id = $education_grade['id'];
+                break;
+            }
+        }
 
         if ($education_grade_id > 0) {
             $tempRow['education_grade_id'] = $education_grade_id;
@@ -1146,7 +1158,7 @@ class ImportUsersTable extends AppTable
         }
 
         $tempRow['education_grade_id'] = null;
-        $this->addError($rowInvalidCodeCols, 'education_grade', __('Education grade not found'));
+        $this->addError($rowInvalidCodeCols, 'education_grade', __('Education grade not found/not present'));
         return true;
     }
 
