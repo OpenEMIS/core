@@ -387,7 +387,7 @@ function InstitutionsResultsController($q,
             promise = InstitutionsResultsSvc.getNewRowData(
                 options);
             return promise.then(function (result) {
-                console.log(result);
+                // console.log(result);
                 return result;
             });
         }

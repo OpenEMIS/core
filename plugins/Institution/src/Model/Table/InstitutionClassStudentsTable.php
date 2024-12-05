@@ -54,7 +54,7 @@ class InstitutionClassStudentsTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id', 'joinType' => 'INNER']);
-        $this->belongsTo('Students', ['className' => 'API.Students', 'foreignKey' => 'student_id', 'joinType' => 'INNER']);
+//        $this->belongsTo('Students', ['className' => 'API.Students', 'foreignKey' => 'student_id', 'joinType' => 'INNER']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'joinType' => 'INNER']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'joinType' => 'INNER']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses', 'joinType' => 'INNER']);
