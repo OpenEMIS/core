@@ -19,7 +19,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-
+        $this->belongsTo('OutcomeGradingTypes', ['className' => 'Outcome.OutcomeGradingTypes']);//POCOR-8435
         $this->hasMany('Periods', [
             'className' => 'Outcome.OutcomePeriods',
             'foreignKey' => ['outcome_template_id', 'academic_period_id'],
@@ -135,8 +135,9 @@ class OutcomeTemplatesTable extends ControllerActionTable
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('education_programme_id', ['entity' => $entity]);
         $this->field('education_grade_id', ['entity' => $entity]);
+        $this->field('outcome_grading_type_id', ['entity' => $entity]);//POCOR-8435
         $this->setFieldOrder([
-            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id'
+            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id','outcome_grading_type_id'
         ]);
     }
 
@@ -254,7 +255,10 @@ class OutcomeTemplatesTable extends ControllerActionTable
             return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
-        } else {
+        } elseif ($field =='outcome_grading_type_id' ){//POCOR-8435
+            return __('Final Result');
+        }
+        else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -290,4 +294,33 @@ class OutcomeTemplatesTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
     }
+    // POCOR-8435 start
+    /**
+     * Configures the "outcome grading type" field for user interaction.
+     * 
+     * This method sets up the "outcome grading type" field as a dropdown (select) input. 
+     * It fetches the available grading types from the `OutcomeGradingTypes` table and 
+     * populates the dropdown options with the `id` as the key and the `name` as the value.
+     * 
+     * @param Event $event The event object that triggered this method.
+     * @param array $attr An array containing the attributes of the field being modified.
+     * @param string $action The action being performed (e.g., add, edit).
+     * @param ServerRequest $request The HTTP request object containing context for the action.
+     * 
+     * @return array The modified attributes array with dropdown type and options for the "outcome grading type" field.
+     */
+    public function onUpdateFieldOutcomeGradingTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        $OutcomeGradingTypes = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingTypes');
+        $OutcomeGradingTypesOptions = $OutcomeGradingTypes
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+            ->toArray();
+
+        $attr['type'] = 'select';
+        $attr['options'] = $OutcomeGradingTypesOptions;
+
+        return $attr;
+    }
+    // POCOR-8435 end
+
 }
