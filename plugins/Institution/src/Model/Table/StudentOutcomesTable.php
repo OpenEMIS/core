@@ -934,6 +934,7 @@ class StudentOutcomesTable extends ControllerActionTable
             $OutcomeCriterias = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
             $OutcomeResults = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeResults');
             $SubjectComments = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeSubjectComments');
+            $SubjectStudent = TableRegistry::getTableLocator()->get('Student.StudentSubjects');//POCOR-8435
 
             $criteriaResults = $OutcomeCriterias->find()
                 ->select([
@@ -994,14 +995,33 @@ class StudentOutcomesTable extends ControllerActionTable
                     $SubjectComments->aliasField('academic_period_id') => $this->academicPeriodId
                 ])
                 ->first();
+            //POCOR-8435 start(for displaying final result for outcome)
+            $subjectFinalResult = $SubjectStudent->find()
+                ->select([$SubjectStudent->aliasField('outcome_result')])
+                ->where([
+                    $SubjectStudent->aliasField('student_id') => $this->studentId,
+                    $SubjectStudent->aliasField('education_grade_id') => $this->gradeId,
+                    $SubjectStudent->aliasField('education_subject_id') => $this->subjectId,
+                    $SubjectStudent->aliasField('institution_id') => $this->institutionId,
+                    $SubjectStudent->aliasField('academic_period_id') => $this->academicPeriodId
+                ])
+                ->first();
 
             // table footers
             $comments = '';
+            $final_result = '';
+
             if (!empty($subjectComment) && $subjectComment->comments != '') {
                 $comments = $subjectComment->comments;
             }
-            $tableFooters[] = __('Comments');
-            $tableFooters[] = $comments;
+            if (!empty($subjectFinalResult) && $subjectFinalResult->outcome_result != null) {
+                $final_result = $subjectFinalResult->outcome_result;
+            }
+            $tableFooters = [
+                [__('Comments'), $comments],
+                [__('Final Result'), $final_result],
+            ];
+             //POCOR-8435 end(for displaying final result for outcome)
         } else {
             // table headers
             $tableHeaders[] = __('Outcome Criteria');
