@@ -232,12 +232,13 @@ class UsersTable extends AppTable
 
     public function afterAction(Event $event)
     {
-        if (isset($this->action) && in_array($this->action, ['view', 'edit'])) {
+        $action = $this->action;
+        if (isset($action) && in_array($action, ['view', 'edit'])) {
             $this->setTabElements();
         }
 
-        if (isset($this->action) && strtolower($this->action) != 'index') {
-            $this->Navigation->addCrumb($this->getHeader($this->action));
+        if (isset($action) && strtolower($action) != 'index') {
+            $this->Navigation->addCrumb($this->getHeader($action));
         }
     }
 
@@ -1125,9 +1126,11 @@ class UsersTable extends AppTable
                 $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
                 $preferred = 1;
 
+                $contact_type = $entity->contact_type;
+                if($contact_type){
                 $contactOptionId = $ContactTypesTable->find()
                     ->select([$ContactTypesTable->aliasField('contact_option_id')])
-                    ->where([$ContactTypesTable->aliasField('id') => $entity->contact_type])
+                        ->where([$ContactTypesTable->aliasField('id') => $contact_type])
                     ->first();
 
                 if ($contactOptionId && $contactOptionId->has('contact_option_id')) {
@@ -1141,7 +1144,7 @@ class UsersTable extends AppTable
                     }
 
                     $userContactsData = [
-                        'contact_type_id' => $entity->contact_type,
+                            'contact_type_id' => $contact_type,
                         'value' => $entity->contact,
                         'security_user_id' => $entity->id,
                         'contact_option_id' => $contactOptionId->contact_option_id,
@@ -1157,14 +1160,24 @@ class UsersTable extends AppTable
                 }
             }
         }
+        }
 
         // This logic is meant for Import
         if ($entity->has('record_source')) {
             if ($entity->record_source == 'import_user') {
+                $identity_type_id = $entity->identity_type_id;
+                $nationality_id = $entity->nationality_id;
+                if($nationality_id){
                 $listeners = [
                     TableRegistry::getTableLocator()->get('User.UserNationalities'),
-                    TableRegistry::getTableLocator()->get('User.Identities')
                 ];
+                    if($identity_type_id){
+                $listeners = [
+                    TableRegistry::getTableLocator()->get('User.UserNationalities'),
+                            TableRegistry::getTableLocator()->get('User.Identities'),
+                ];
+                    }
+                }
                 $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
             }
         }
