@@ -1934,7 +1934,7 @@ class AttendanceController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance/archive",
+     *     path="/api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance/archive",
      *     summary="Get archived student attendance",
      *     description="Retrieve archived attendance records for students in a specific class, grade, and institution.",
      *     tags={"Student Attendance Archive"},
