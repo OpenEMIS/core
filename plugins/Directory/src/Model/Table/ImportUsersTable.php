@@ -132,6 +132,15 @@ class ImportUsersTable extends AppTable
         $user = null;
         if ($openemisNo) {
             $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+        }else{
+            try{
+                $tempRow['entity'] = $this->Users->newEntity(['openemis_no' => $openemisNo]);
+                $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
+                $tempRow['username'] = $tempRow['openemis_no'];
+            } catch (\Exception $exception) {
+                $rowInvalidCodeCols['openemis_no'] = 'New User Creation Error: ' . __($exception->getMessage());
+                return false;
+            }
         }
         if (!$user) {
             try{
@@ -143,6 +152,7 @@ class ImportUsersTable extends AppTable
                 return false;
             }
         } else {
+            $tempRow['openemis_no'] = $openemisNo;
             $tempRow['entity'] = $user;
         }
 
