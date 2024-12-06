@@ -111,7 +111,7 @@ class ImportUsersTable extends AppTable
         $openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
 
         if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
-            $rowInvalidCodeCols['openemis_no'] = $this->getExcelLabel('Import', 'duplicate_unique_key');
+            $rowInvalidCodeCols['openemis_no'] = 'This OpenEMIS No is Already Present';//$this->getExcelLabel('Import', 'duplicate_unique_key');
             return false;
         }
 
@@ -139,7 +139,7 @@ class ImportUsersTable extends AppTable
                 $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
                 $tempRow['username'] = $tempRow['openemis_no'];
             } catch (\Exception $exception) {
-                $rowInvalidCodeCols['openemis_no'] = __($exception->getMessage());
+                $rowInvalidCodeCols['openemis_no'] = 'New User Creation Error: ' . __($exception->getMessage());
                 return false;
             }
         } else {
