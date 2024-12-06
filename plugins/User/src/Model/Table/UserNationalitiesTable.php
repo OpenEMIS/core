@@ -16,6 +16,7 @@ use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\OptionsTrait;
 use Cake\Http\Client;
 use Cake\Http\Session;
+use Cake\Log\Log;
 
 class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
@@ -58,27 +59,41 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function afterSaveUsers(Event $event, Entity $entity)
     {
         //check whether the combination user and nationality exist
-        $userID = $this->getUserID();
+        $userID = $entity->id ?? -1;
+        $nationalityID = $entity->nationality_id ?? -1;
+        if($nationalityID == -1 || $userID == -1){
+            return;
+        }
+        try{
         $query = $this->find()
                 ->where([
                     $this->aliasField('security_user_id') => $userID,
-                    $this->aliasField('nationality_id') => $entity->nationality_id
+                    $this->aliasField('nationality_id') => $nationalityID
                 ]);
+        }catch (\Exception $exception){
+            Log::debug($exception->getMessage());
+            return;
+        }
+//        Log::debug($query->sql());
 
         if ($query->count()) { //if exist then set as preferred.
-
             //use save instead of update to trigger after save events
-            $userNationalityEntity = $this->patchEntity($query->first(), ['preferred' => 1], ['validate' =>false]);
+            $userNationalityEntity = $this->patchEntity($query->first(),
+                ['preferred' => 1],
+                ['validate' =>false]);
+//            Log::debug(print_r(['old' => $userNationalityEntity], true));
+
             $this->save($userNationalityEntity);
 
         } else { //not exist then add new record and set as preferred.
             $userNationalityEntity = $this->newEntity([
                 'preferred' => 1,
-                'nationality_id' => $entity->nationality_id,
+                'nationality_id' => $nationalityID,
                 'security_user_id' => $userID,
                 'created_user_id' => 1,
                 'created' => new Time()
             ]);
+//            Log::debug(print_r(['new' => $userNationalityEntity], true));
             $this->save($userNationalityEntity);
         }
     }
@@ -149,7 +164,9 @@ class UserNationalitiesTable extends ControllerActionTable {
     {
         if ($entity->isNew()) {
             $userID = $this->getUserID();
-            $entity['security_user_id'] = $userID;
+            if ($userID) {
+                $entity['security_user_id'] = $userID;
+            }
         }
         if ($entity->isNew()) {
             if (!$this->exists([$this->aliasField('security_user_id') =>
@@ -180,19 +197,23 @@ class UserNationalitiesTable extends ControllerActionTable {
            }
        }
        // task POCOR-5668 starts
-       if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'add'){
+
+       if(isset($this->request) && isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'add'){
            if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
            {
                if($entity->validate_number == 1){
                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-                   $newEntity = $UserIdentities->newEntity([
+                   $newIdentity = [
                        'identity_type_id' => $entity->identity_type_id,
                        'number' => $entity->number,
                        'security_user_id' => $entity->security_user_id,
                        'created_user_id' => $entity->created_user_id,
                        'nationality_id' => $entity->nationality_id,
                        'created' => Time::now()
-                   ]);
+                   ];
+//                   Log::debug(print_r($newIdentity,true));
+//                   Log::debug(print_r($entity,true));
+                   $newEntity = $UserIdentities->newEntity($newIdentity);
                    $UserIdentities->save($newEntity);
 
                    //update identity_type_id in nationalities table
@@ -211,7 +232,6 @@ class UserNationalitiesTable extends ControllerActionTable {
            {
                $UserIdentitiesData = $this->findDataExistInUserIdentityTable($entity->identity_type_id, $entity->nationality_id, $entity->security_user_id);
                if($UserIdentitiesData->number != $entity->number){
-
                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                    $update_identity_data = [
                        'id' => $UserIdentitiesData->id,
@@ -222,8 +242,9 @@ class UserNationalitiesTable extends ControllerActionTable {
                        'nationality_id' => $entity->nationality_id,
                        'modified' => Time::now()
                    ];
+//                   Log::debug(print_r($update_identity_data,true));
                    $patchOptions = ['validate' => false];
-                   $newEntity = $UserIdentities->newEntity();
+                   $newEntity = $UserIdentities->newEntity([]);
                    $newEntity = $UserIdentities->patchEntity($newEntity, $update_identity_data, $patchOptions);
                    $UserIdentities->save($newEntity);
 
@@ -761,7 +782,13 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function findDataExistInUserIdentityTable($nationality_table_identity_type_id, $nationality_table_id, $userId){
         $IdentityTypes = TableRegistry::get('identity_types');
-        $UserIdentities = TableRegistry::get('UserIdentities');
+        $UserIdentities = TableRegistry::get('user_identities');
+        $where = [
+            'UserIdentities.identity_type_id' => $nationality_table_identity_type_id,
+            'UserIdentities.nationality_id' => $nationality_table_id,
+            'UserIdentities.security_user_id' => $userId
+        ];
+//        Log::debug(print_r($where,true));
         $identityTypeData = $UserIdentities
                                 ->find()
                                 ->select([
@@ -776,11 +803,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                         $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
                                     ]
                                 )
-                                ->where([
-                                    'UserIdentities.identity_type_id' => $nationality_table_identity_type_id,
-                                    'UserIdentities.nationality_id' => $nationality_table_id,
-                                    'UserIdentities.security_user_id' => $userId
-                                ])
+                                ->where($where)
                                 ->first();
         return $identityTypeData;
     }
@@ -843,7 +866,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     }
                 }
             }
- 
+
             $conditions = [
                     'code' => $identityName,
                     'value' => 1,
@@ -853,9 +876,9 @@ class UserNationalitiesTable extends ControllerActionTable {
                 ->count();
             //$count =1;//for testing purpose
             //check nationality has default 1 or 0, if 1 than show identity type/number
-            if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'edit'){ //when edit nationality
+            if(isset($this->request) && isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'edit'){ //when edit nationality
                 $nationalityId = $this->paramsDecode($this->request->getParam('pass')['1'])['nationality_id'];
-            }else if(isset($this->request->getData()['UserNationalities']['nationality_id'])){
+            }else if(isset($this->request) && isset($this->request->getData()['UserNationalities']['nationality_id'])){
                 $nationalityId = $this->request->getData()['UserNationalities']['nationality_id'];
             }
             $nationalityData = $this->getNationalityTableData($nationalityId);
