@@ -99,7 +99,7 @@ class ThemesTable extends ControllerActionTable
                 'visible' => 'false'
             ]);
             $this->field('value', [ //POCOR-8268
-                'type' => 'select'
+                'visible' => 'false'
             ]);
         }else{
             $this->field('name', [
@@ -118,6 +118,15 @@ class ThemesTable extends ControllerActionTable
         
     }
 
+    /**
+     * POCOR-8652
+     * This function handles the action to add or edit after performing some operations.
+     * It modifies the 'color_themes' field by setting its type to 'element' 
+     * and associates it with a custom element named 'themecolor'.
+     *
+     * @param Event $event The event that triggered the action
+     * @param Entity $entity The entity being processed
+     */
     public function addEditAfterAction(Event $event, Entity $entity) {
         $this->field('color_themes', [
             'type' => 'element',
@@ -159,8 +168,7 @@ class ThemesTable extends ControllerActionTable
         }
         if($entity->id == 5){ //POCOR-8268
             $colorValue = $this->request->getData($this->aliasField('value'));
-            //$entity->default_value = '';
-            $entity->value = $colorValue;
+            $entity->value = ltrim($colorValue, '#');
         }
     }
 
@@ -190,31 +198,7 @@ class ThemesTable extends ControllerActionTable
         $configItems->save($themeConfigItemRecord);
     }
 
-    //POCOR-8268 , 
-    /*public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request) 
-    {
-        $colorListPath = WWW_ROOT . 'themecolor' . DS . 'color.php';
-        if (file_exists($colorListPath)) {
-            //POCOR-8652
-            $colorListing = include($colorListPath);
-            $colorOptions = [];
-            foreach ($colorListing as $colorName => $hexValue) {
-                $colorOptions[$hexValue] = $hexValue;
-            }
-        } else {
-            throw new \Exception("Color file not found at " . $colorListPath);
-        }
-        // Modify the attributes based on the action
-        if ($action == 'add' || $action == 'edit') {
-            $attr['type'] = 'select';
-            $attr['options'] = $colorOptions;
-            $attr['onChangeReload'] = true;
-        }
-
-        return $attr;
-    }*/
-
-     public function validationDefault(Validator $validator): Validator 
+    public function validationDefault(Validator $validator): Validator 
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
@@ -222,67 +206,5 @@ class ThemesTable extends ControllerActionTable
             ->requirePresence('value');
 
     }
-
-public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
-{
-    \Cake\Log\Log::debug('onUpdateFieldValue called with action: ' . $action);
-
-    $colorListPath = WWW_ROOT . 'themecolor' . DS . 'color.php';
-    
-    if (!file_exists($colorListPath)) {
-        \Cake\Log\Log::error("Color file not found at " . $colorListPath);
-        throw new \Exception("Color file not found at " . $colorListPath);
-    }
-
-    $colorListing = include($colorListPath);
-    
-    if (empty($colorListing)) {
-        \Cake\Log\Log::error("Color listing is empty");
-        throw new \Exception("No colors found in color list");
-    }
-
-    $options = [];
-    foreach ($colorListing as $hexValue) {
-        // Ensure the hex value starts with '#' if it doesn't
-        $hexValue = (strpos($hexValue, '#') !== 0) ? '#' . $hexValue : $hexValue;
-
-        // Validate the hex color format (supports 3 or 6 characters)
-        if (!preg_match('/^#([a-fA-F0-9]{3}){1,2}$/', $hexValue)) {
-            \Cake\Log\Log::warning("Invalid hex color: " . $hexValue);
-            continue;
-        }
-
-        // Get the contrast color (for better readability)
-        $contrastColor = $this->getContrastColor($hexValue);
-        $style = sprintf('background-color: %s; color: %s;', $hexValue, $contrastColor);
-
-        // Create the <option> HTML directly
-        $options[$hexValue] = sprintf('style="%s">%s', $hexValue, $style, $hexValue);
-    }
-
-    // If action is 'add' or 'edit', set up the select element
-    if (in_array($action, ['add', 'edit'])) {
-        $attr['type'] = 'select'; // Set input type to 'select'
-        $attr['options'] = $options; // Add the generated options to the select
-        $attr['empty'] = 'Select a Theme Color'; // Add an empty placeholder option
-    }
-
-    return $attr;
-}
-
-private function getContrastColor($hexColor)
-{
-    $hexColor = ltrim($hexColor, '#');
-
-    $r = hexdec(substr($hexColor, 0, 2));
-    $g = hexdec(substr($hexColor, 2, 2));
-    $b = hexdec(substr($hexColor, 4, 2));
-
-    $brightness = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
-
-    return $brightness > 128 ? '#000000' : '#FFFFFF';
-}
-
-
 
 }

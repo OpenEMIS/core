@@ -1,93 +1,111 @@
-<?php //echo $this->Form->control('Themes.value', $attr);
-
-?>
-<!--POCOR-8652 start-->
-<!-- <script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOMContentLoaded event fired');
-
-        // Get the current URL
-        const currentUrl = window.location.href;
-        console.log('Current URL:', currentUrl);
-
-        // Check if the URL contains "Configurations/Themes"
-        if (currentUrl.includes('Configurations/Themes')) {
-            console.log('"Configurations/Themes" found in URL.');
-
-            // Find the select element with name="Themes[value]"
-            let selectElement = document.querySelector('select[name="Themes[value]"]');
-            if (selectElement) {
-                console.log('Select element found:', selectElement);
-
-                let options = selectElement.options;
-                for (let i = 0; i < options.length; i++) {
-                    let hexValue = options[i].value;
-                    console.log(`Option ${i} - Original Value: ${hexValue}`);
-
-                    // Ensure hex value starts with '#' for valid color code
-                    if (!hexValue.startsWith('#')) {
-                        hexValue = '#' + hexValue;
-                        console.log(`Updated Hex Value: ${hexValue}`);
-                    }
-
-                    // Set the background color of the option
-                    try {
-                        options[i].style.backgroundColor = hexValue;
-
-                        // Set the text color based on the background brightness
-                        options[i].style.color = (parseInt(hexValue.replace('#', ''), 16) > 0xffffff / 2) ? 'black' : 'white';
-                        console.log(`Option ${i} - Background: ${options[i].style.backgroundColor}, Text Color: ${options[i].style.color}`);
-                    } catch (error) {
-                        console.error(`Error setting styles for option ${i}:`, error);
-                    }
-                }
-            } else {
-                console.error('Select element not found. Ensure the element exists in the DOM.');
-            }
-        } else {
-            console.log('"Configurations/Themes" not found in the URL.');
+<!--POCOR 8652 add theme dropdown in edit page-->
+<style>
+        .custom-dropdown {
+            position: relative;
+            width: 200px;
         }
-    });
-</script> -->
-<!--POCOR-8652 end-->
 
-<script type="text/javascript">
+        .custom-dropdown select {
+            display: none; 
+        }
+
+        .dropdown-selected {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 8px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+        }
+
+        .dropdown-item {
+            padding: 6px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .dropdown-item:hover {
+            background: #f1f1f1;
+        }
+
+        /* Footer styling */
+        .dropdown-footer {
+            border-top: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+
+        .dropdown-footer:hover {
+            background-color: #e9e9e9;
+        }
+    </style>
+<?php $colorListPath = WWW_ROOT . 'themecolor' . DS . 'color.php'; 
+$colorListing = include($colorListPath);
+?>
+<div class="input select required">
+    <label for="themes-value">Value</label>
+    <div class="input-select-wrapper custom-dropdown">
+        <div class="dropdown-selected">-- Select a Theme Color --</div>
+        <div class="dropdown-list" id="themes-value">
+            <?php
+            foreach ($colorListing as $hexValue) {
+            ?>
+             <div class="dropdown-item" style="background-color : <?= "#".$hexValue ?>; color: <?= "#fff" ?>;"><?= "#".$hexValue ?></div>
+            <?php } ?>
+        </div>
+        <select name="Themes[value]" id="themes-value">
+        <?php
+            foreach ($colorListing as $hexValue) {
+            ?>
+            <option value="<?= "#".$hexValue ?>"><?= "#".$hexValue ?></option>
+            <?php } ?>
+        </select>
+    </div>
+</div>
+
+<script>
+    // JavaScript for toggling the dropdown visibility
     document.addEventListener('DOMContentLoaded', function () {
-    const selectElement = document.getElementById('themes-value');
-    const options = selectElement.querySelectorAll('option');
+        const dropdown = document.querySelector('.custom-dropdown');
+        const selected = dropdown.querySelector('.dropdown-selected');
+        const list = dropdown.querySelector('.dropdown-list');
+        const items = dropdown.querySelectorAll('.dropdown-item');
+        const originalSelect = dropdown.querySelector('select');
+        selected.addEventListener('click', function () {
+            list.style.display = 'block';
+        });
 
-    // Loop through all options in the select element
-    options.forEach(option => {
-        // Skip the placeholder option (empty value)
-        if (option.value === "") return;
+        // Handle item selection
+        items.forEach(function (item) {
+            item.addEventListener('click', function () {
+                const value = item.textContent;
+                selected.textContent = value;
+                selected.style.backgroundColor = getComputedStyle(item).backgroundColor;
+                selected.style.color = getComputedStyle(item).color; // Set selected text color
+                originalSelect.value = value; // Update hidden select value
+                list.style.display = 'none'; // Close dropdown after selection
+            });
+        });
 
-        // Create the correct option structure with style
-        const hexValue = option.value;
-        const contrastColor = getContrastColor(hexValue); // Assuming this function exists to determine contrast color
-
-        // Set the correct styles and text for each option
-        option.style.backgroundColor = hexValue;
-        option.style.color = contrastColor;
-        option.textContent = hexValue; // Set text content to the hex value
+        // Close dropdown if clicking outside
+        document.addEventListener('click', function (event) {
+            if (!dropdown.contains(event.target)) {
+                list.style.display = 'none';
+            }
+        });
     });
-});
-
-// Function to calculate contrast color (for readability, use a simple light/dark contrast)
-function getContrastColor(hex) {
-    // Convert hex to RGB
-    let r = parseInt(hex.slice(1, 3), 16);
-    let g = parseInt(hex.slice(3, 5), 16);
-    let b = parseInt(hex.slice(5, 7), 16);
-    
-    // Calculate the luminance
-    let luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-    
-    // Return black or white based on luminance
-    return luminance > 0.5 ? '#000000' : '#FFFFFF';
-}
-
 </script>
-
-
-
-
