@@ -160,6 +160,7 @@ class ImportUsersTable extends AppTable
             // setting is_student = 1, or is_staff = 1, or is_guardian = 1
             $tempRow[$tempRow['account_type']] = 1;
         }
+        Log::debug(print_r($tempRow, true));
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
