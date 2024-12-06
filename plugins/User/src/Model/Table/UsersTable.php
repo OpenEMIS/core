@@ -424,7 +424,7 @@ class UsersTable extends AppTable
         }
 
         $tabElements = [
-            $this->alias => [
+            $this->getAlias() => [
                 'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $this->paramsEncode(['id' => $id])],
                 'text' => __('Details')
             ],
@@ -435,7 +435,7 @@ class UsersTable extends AppTable
         ];
 
         if (!in_array($this->controller->getName(), ['Students', 'Staff', 'Guardians'])) {
-            $tabElements[$this->alias] = [
+            $tabElements[$this->getAlias()] = [
                 'url' => ['plugin' => Inflector::singularize($this->controller->getName()), 'controller' => $this->controller->getName(), 'action' => $this->alias(), 'view', $this->paramsEncode(['id' => $id])],
                 'text' => __('Details')
             ];
@@ -488,7 +488,7 @@ class UsersTable extends AppTable
         if (isset($queryParams['sort']) && $queryParams['sort'] == 'default_identity_type') {
             $query->find('withDefaultIdentityType', ['direction' => $queryParams['direction']]);
             $query->order([$this->aliasField('default_identity_type') => $queryParams['direction']]);
-            $request->query['sort'] = 'Users.default_identity_type';
+            $request = $request->withQueryParams(['sort' => 'Users.default_identity_type']);
         }
     }
 
@@ -1151,7 +1151,7 @@ class UsersTable extends AppTable
                     $contactEntity = $ContactsTable->newEntity($userContactsData);
 
                     // Save into user_contacts if no errors
-                    if (!$contactEntity->errors()) {
+                    if (!$contactEntity->getErrors()) {
                         $ContactsTable->save($contactEntity);
                     }
                 }
@@ -1301,7 +1301,7 @@ class UsersTable extends AppTable
                             ])
                             ->order([$UserIdentities->aliasField('created') => 'desc'])
                             ->first();
-                            
+
                         if (empty($latestIdentity)) {
                             $this->updateAll(
                                 [
