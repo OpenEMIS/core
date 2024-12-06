@@ -128,11 +128,13 @@ class ThemesTable extends ControllerActionTable
      * @param Entity $entity The entity being processed
      */
     public function addEditAfterAction(Event $event, Entity $entity) {
-        $this->field('color_themes', [
-            'type' => 'element',
-            'element' => 'themecolor',
-            
-        ]); 
+        if($entity->id == 5){
+            $this->field('color_themes', [
+                'type' => 'element',
+                'element' => 'themecolor',
+                
+            ]); 
+        } 
     }
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
