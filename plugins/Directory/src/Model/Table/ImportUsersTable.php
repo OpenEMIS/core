@@ -129,8 +129,10 @@ class ImportUsersTable extends AppTable
             $tempRow['username'] = $tempRow['openemis_no'];
             return false;
         }
-
-        $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+        $user = null;
+        if ($openemisNo) {
+            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+        }
         if (!$user) {
             try{
                 $tempRow['entity'] = $this->Users->newEntity(['openemis_no' => $openemisNo]);
