@@ -434,7 +434,7 @@ class ImportUsersTable extends AppTable
         while ($notUnique) {
             $user = $this->Users->find()->select(['id'])->where([
                 $this->Users->aliasField('openemis_no') => $val,
-                $this->Users->aliasField('username') => $val
+//                $this->Users->aliasField('username') => $val
             ])->first();
             if ($user) {
                 $val = $this->Users->getUniqueOpenemisId();

@@ -36,7 +36,7 @@ class UserCascadeBehavior extends Behavior {
 	// excluding the one specified
 	private function cleanUserRecords($userId) {
 		$tables = ConnectionManager::get('default')->getSchemaCollection()->listTables();
-        Log::debug(__FUNCTION__ . '_1');
+//        Log::debug(__FUNCTION__ . '_1');
 		// will update this table to set value to 0 instead of deleting
 		$excludes = ['institution_classes'];
 		$fields = ['security_user_id', 'student_id', 'staff_id', 'guardian_id', 'trainee_id'];
