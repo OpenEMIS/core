@@ -66,7 +66,7 @@ class SSOComponent extends Component
                 ->where([
                     $SystemAuthenticationsTable->aliasField('code') => $code
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
             if (!empty($attribute) && $attribute['status']) {
                 $authAttribute = $attribute[Inflector::underscore($authenticationType)];

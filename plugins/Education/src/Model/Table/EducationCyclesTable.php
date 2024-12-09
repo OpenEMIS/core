@@ -16,7 +16,7 @@ class EducationCyclesTable extends ControllerActionTable
 	public function initialize(array $config): void
 	{
 		parent::initialize($config);
-		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels']);
+		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels','foreignKey' => 'education_level_id']);
         $this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
 
 		if ($this->behaviors()->has('Reorder')) {

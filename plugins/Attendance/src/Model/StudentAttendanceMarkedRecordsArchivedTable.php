@@ -66,7 +66,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('date') => $day,
                 $this->aliasField('period') => $period,
-                $this->aliasField('subject_id = ') => $subjectId
+                $this->aliasField('subject_id =') => $subjectId
             ]);
             
     }
