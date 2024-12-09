@@ -151,7 +151,7 @@ class StudentTransferTable extends ControllerActionTable
     {
 //        $this->log('addBeforeSave', 'debug');
 //        $this->log($requestData[$this->getAlias()], 'debug');
-        $requestDataArray = $requestData->getArrayCopy();
+        $requestData = $requestData->getArrayCopy(); //POCOR-8661
         if (array_key_exists($this->getAlias(), $requestData)) {
             $nextAcademicPeriodId = null;
             $currentAcademicPeriodId = null;

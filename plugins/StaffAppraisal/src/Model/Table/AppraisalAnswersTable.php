@@ -33,7 +33,7 @@ class AppraisalAnswersTable extends AppTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew() && $entity->answer === '') {
-            return $event->stopPropagation();
+          //  return $event->stopPropagation(); //POCOR-8688
         }
     }
 

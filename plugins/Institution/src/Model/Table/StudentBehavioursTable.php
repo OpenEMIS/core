@@ -171,18 +171,22 @@ class StudentBehavioursTable extends ControllerActionTable
         return $events;
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
-        ->notEmpty('assignee_id')
-            ->add('date_of_behaviour', [
+            ->notEmpty('student_id') //POCOR-8665
+            ->notEmpty('student_behaviour_category_id')
+            ->notEmpty('description')
+            ->notEmpty('action')
+            ->notEmpty('assignee_id');
+            /*->add('date_of_behaviour', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                     'provider' => 'table'// POCOR 6154
                 ]
-            ]);
-    }*/
+            ]);*/
+    }
 
     // Jeff: is this validation still necessary? perhaps it is already handled by onUpdateFieldAcademicPeriod date_options
     // public function validationDefault(Validator $validator) {
@@ -471,6 +475,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('class', ['entity' => $entity]);
         $this->field('date_of_behaviour', ['entity' => $entity]);
         $this->field('assignee_id', ['entity' => $entity]);//POCOR-5186
+        $this->field('student_behaviour_category_id', ['entity' => $entity, 'onChangeReload' => 'changeBehaviourCategory']); //POCOR-8665
         $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id','student_behaviour_classification_id','date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-7223
         // POCOR 6154
 
@@ -489,10 +494,12 @@ class StudentBehavioursTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity)
     {
+        $this->field('student_behaviour_category_id', ['entity' => $entity, 'onChangeReload' => 'changeBehaviourCategory']);  //POCOR-8665
+        $this->field('student_behaviour_classification_id', ['attr' => ['entity' => $entity]]);
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('date_of_behaviour', ['entity' => $entity]);
         $this->fields['student_id']['attr']['value'] = $entity->student->name_with_id;
-        $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-7223
+        $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id','student_behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-7223
 
         // PHPOE-1916
         // Not yet implemented due to possible performance issue
@@ -1210,6 +1217,38 @@ class StudentBehavioursTable extends ControllerActionTable
         return $ret;
     }
 
+    //POCOR-8665 Start
+    public function onUpdateFieldStudentBehaviourClassificationId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $behaviourClassificationOptions = [];
+            $behaviourCategoryId = 0;
+            if ($request->is(['post', 'put'])) {
+                $behaviourCategoryId = $request->getData($this->aliasField('student_behaviour_category_id'));
+            }
+            if( $action == 'edit') {
+                $behaviourCategoryId = $attr['attr']['entity']->student_behaviour_category_id;
+            }
+            if (! $behaviourCategoryId== 0 && ! empty($behaviourCategoryId)) {
+
+                $behaviourCategories = $this->StudentBehaviourCategories
+                    ->find()
+                    ->select('behaviour_classification_id')
+                    ->where([$this->StudentBehaviourCategories->aliasField('id') => $behaviourCategoryId])
+                    ->first()->behaviour_classification_id;
+
+                if(!empty($behaviourCategories)) {
+                    $behaviourClassificationOptions = $this->StudentBehaviourClassifications
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                    ->where([$this->StudentBehaviourClassifications->aliasField('id') => $behaviourCategories])
+                    ->toArray();
+                } 
+            }
+            $attr['options'] = $behaviourClassificationOptions;
+        }
+        return $attr;
+    }
+    //POCOR-8665 End
 }
 
 

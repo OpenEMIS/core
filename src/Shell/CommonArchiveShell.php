@@ -210,7 +210,7 @@ class CommonArchiveShell extends Shell
         ];
         $model = TableRegistry::get('Archive.TransferLogs');
         $eventName = '';
-        $processModel = $model->registryAlias();
+        $processModel = $model->getRegistryAlias();
         $param = json_encode($param);
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $systemProcessId = $SystemProcesses->addProcess($name, $mypid, $processModel, $eventName, $param);

@@ -205,12 +205,14 @@ class ProgrammesTable extends ControllerActionTable
         			$this->aliasField('student_id') => $studentId,
         			//$this->aliasField('institution_id') => $institutionId
         		]);
-		if(!empty($institutionId)) {
-			$query
-			->where([
-				$this->aliasField('institution_id') => $institutionId
-			]);
-		}
+		//POCOR-8704 -- Commenting code as it is fetching limited data		
+		// if(!empty($institutionId)) {
+		// 	$query
+		// 	->where([
+		// 		$this->aliasField('institution_id') => $institutionId
+		// 	]);
+		// }
+		//POCOR-8704 -- END
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 
 	}
