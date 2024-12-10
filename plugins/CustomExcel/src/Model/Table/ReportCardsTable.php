@@ -2547,15 +2547,15 @@ class ReportCardsTable extends AppTable
                             'student_id' => $StudentsGpa->aliasField('student_id'),
                     ])
                     ->LeftJoin(
-                            [$academicPeriod->alias() => $academicPeriod->table()], [
+                            [$academicPeriod->getAlias() => $academicPeriod->getTable()], [
                                 $academicPeriod->aliasField('id = ') . $StudentsGpa->aliasField('academic_period_id')
                             ])
                     ->LeftJoin(
-                            [$educationGrades->alias() => $educationGrades->table()], [
+                            [$educationGrades->getAlias() => $educationGrades->getTable()], [
                                 $educationGrades->aliasField('id = ') . $StudentsGpa->aliasField('education_grade_id')
                             ])
                     ->LeftJoin(
-                            [$GradesGpa->alias() => $GradesGpa->table()], [
+                            [$GradesGpa->getAlias() => $GradesGpa->getTable()], [
                                 $GradesGpa->aliasField('education_grade_id = ') . $StudentsGpa->aliasField('education_grade_id')
                             ])
                     ->where([
