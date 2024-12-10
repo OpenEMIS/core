@@ -525,10 +525,15 @@ Route::group(
         Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
         //POCOR-8519 end...
 
-
         //POCOR-8221 start...
         Route::get('institutions/{institutionId}/students/{studentId}/student-transfer', 'StudentController@getStudentTransferData');
         Route::post('institutions/{institutionId}/student-transfer', 'StudentController@addStudentTransferData');
         //POCOR-8221 end...
+
+        //POCOR-8616 starts...
+        Route::get('schedule/timetable-overview', 'TimetableOverviewController@timetableOverview');
+        Route::get('schedule/timetable-download', 'TimetableOverviewController@scheduleTimeTableExport');
+
+        //POCOR-8616 starts...
     }
 );
