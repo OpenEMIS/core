@@ -1212,10 +1212,10 @@ class StudentReportCardsTable extends AppTable
                     "education_subject_name" => 'EducationSubjects.name',
                     "education_subject_id" => $SubjectStudents->aliasField('education_subject_id'),
                     "total_mark" => $SubjectStudents->aliasField('total_mark'),
-                    "result_type" => $EducationGradeSubjects->aliasField('result_type'),
-                    "requirement" => $EducationGradeSubjects->aliasField('requirement'),
+                   // "result_type" => $EducationGradeSubjects->aliasField('result_type'),
+                    //"requirement" => $EducationGradeSubjects->aliasField('requirement'),
                     "start_date" => $InstitutionStudents->aliasField('start_date'),
-                    "outcome_result" => $SubjectStudents->aliasField('outcome_result'),
+                   // "outcome_result" => $SubjectStudents->aliasField('outcome_result'),
                 ])
                 ->join([
                     'EducationSubjects' => [
