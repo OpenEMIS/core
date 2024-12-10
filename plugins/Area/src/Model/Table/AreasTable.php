@@ -230,9 +230,14 @@ class AreasTable extends ControllerActionTable
                     'area_level_id' =>$entity->area_level_id
                 ];
                 $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                //POCOR-8308 start
+                if (isset($options['skip_callbacks']) && $options['skip_callbacks']) {}
+                else{
                 if ($this->Auth->user()) {
                     $Webhooks->triggerShell('area_education_create', ['username' => $username], $body);
                 }
+                }
+                //POCOR-8308 end
             }
             // Webhook Education Area create -- end
 
@@ -247,9 +252,14 @@ class AreasTable extends ControllerActionTable
                     'area_level_id' =>$entity->area_level_id
                 ];
                 $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                //POCOR-8308 start
+                if (isset($options['skip_callbacks']) && $options['skip_callbacks']) {}
+                else{
                 if ($this->Auth->user()) {
                     $Webhooks->triggerShell('area_education_update', ['username' => $username], $body);
                 }
+                }
+                //POCOR-8308 end
             }
             //webhook Education Area update -- end
         }
