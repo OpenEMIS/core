@@ -829,7 +829,7 @@ class StudentRepository extends Controller
                 $storeArr['date'] = $param['date'];
                 $storeArr['period'] = $param['period'];
                 $storeArr['subject_id'] = $param['subject_id'];
-                $storeArr['no_scheduled_class'] = 1;
+                $storeArr['no_scheduled_class'] = 0;//1 is for No Scheduled Class
 
                 $insert = StudentAttendanceMarkedRecords::insert($storeArr);
             }
