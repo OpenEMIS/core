@@ -164,9 +164,10 @@ class StudentCurricularsTable extends ControllerActionTable
 
     public function onGetCurricularCategory(Event $event, Entity $entity)
     {
-        return $entity['institution_curricular']['category'] ? __('Co-Curricular') : ( !empty($entity->category) ? __('Co-Curricular') : __('Extracurricular')); //POCOR-7751
 
+        return $entity['institution_curricular']['category'] ? __('Co-Curricular') : ( !empty($entity->category) ? __('Co-Curricular') : __('Extracurricular')); //POCOR-7751
     }
+
 
     public function onGetCategory(Event $event, Entity $entity)
     {

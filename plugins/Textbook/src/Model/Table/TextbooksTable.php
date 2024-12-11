@@ -361,12 +361,15 @@ class TextbooksTable extends ControllerActionTable {
         $request->getQuery['subject'] = -1;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $request->getData)) {
-                if (array_key_exists('education_level_id', $request->data[$this->getAlias()])) {
-                    $request->query['level'] = $request->data[$this->getAlias()]['education_level_id'];
+            $data = $request->getData();  // POCOR-8697
+            
+            if (is_array($data) && array_key_exists($this->getAlias(), $data)) {
+                if (array_key_exists('education_level_id', $data[$this->getAlias()])) {
+                    $request = $request->withQueryParams(['level' => $data[$this->getAlias()]['education_level_id']]);
                 }
             }
         }
+         
     }
 
     public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
@@ -507,6 +510,8 @@ class TextbooksTable extends ControllerActionTable {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
 
+        $lowestYear = $ConfigItems->value('lowest_year') ?? '1950';
+
         if ($action == 'add' || $action == 'edit') {
             $now = Time::now();
             for ($i = $now->year; $i >= $lowestYear; $i--) {
@@ -518,6 +523,7 @@ class TextbooksTable extends ControllerActionTable {
 
         return $attr;
     }
+    
 
     // POCOR-7362
 

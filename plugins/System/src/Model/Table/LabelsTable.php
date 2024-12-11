@@ -7,6 +7,8 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
+use Cake\ORM\Entity;
 
 class LabelsTable extends ControllerActionTable
 {
@@ -16,6 +18,7 @@ class LabelsTable extends ControllerActionTable
        parent::initialize($config);
        $this->toggle('view', true);
        $this->toggle('edit', true);
+       $this->toggle('add', false);
     }
 
     public function implementedEvents(): array
@@ -67,4 +70,40 @@ class LabelsTable extends ControllerActionTable
     {
         $this->setfieldOrder($this->fieldsOrder);
     }
+
+    //POCOR-8146 Start
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+
+        $validator
+            ->allowEmpty('code')
+            ->add('code', [
+                    'ruleUnique' => [
+                        'rule' => 'validateUnique',
+                        'provider' => 'table',
+                    ]
+                ])
+            ->requirePresence('module_name')
+            ->requirePresence('field_name');
+        return $validator;
+    }
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        //do not save empty strings
+        if ($entity->code == "") {
+            $entity->code = null;
+        }
+
+        if ($entity->name == "") {
+            $entity->name = null;
+        }
+    }
+
+    public function editBeforeAction(Event $event)
+    {
+        $this->field('module_name', ['type' => 'readonly']);
+        $this->field('field_name', ['type' => 'readonly']);
+    }
+    //POCOR-8146 End
 }

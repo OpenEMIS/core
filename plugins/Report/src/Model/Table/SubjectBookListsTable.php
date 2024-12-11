@@ -21,9 +21,9 @@ class SubjectBookListsTable extends AppTable
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
         $this->belongsTo('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
         $this->addBehavior('Report.ReportList');

@@ -184,7 +184,10 @@ class AppraisalBehavior extends Behavior
                 $appraisalPeriodEntity = $model->AppraisalPeriods->get($appraisalPeriodId, ['contain' => ['AppraisalForms']]);
                 $attr['value'] = $appraisalPeriodEntity->appraisal_form_id;
                 $attr['attr']['value'] = $appraisalPeriodEntity->appraisal_form->code_name;
-                $request->getData[$model->getAlias()]['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
+                $data = $this->_table->request->getData($model->getAlias()) ?? []; //POCOR-8688
+                $data['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
+                $this->_table->request = $this->_table->request->withData($model->getAlias(), $data);
+
             // This part ensures that the form belonging to the previously selected Appraisal Period will not populate at the bottom when user choose "Select" from the dropdown next. It should be empty.
             }else{
                    $request->getData[$model->getAlias()]['appraisal_form_id'] = "";

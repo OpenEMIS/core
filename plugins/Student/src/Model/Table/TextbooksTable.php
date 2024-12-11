@@ -54,7 +54,7 @@ class TextbooksTable extends ControllerActionTable {
     {
         $this->field('comment', ['visible' => false]);
         $this->fields['textbook_id']['sort'] = ['field' => 'MainTextbooks.title'];
-
+        $this->field('textbook_condition_id', ['visible' => false]);
         // Start POCOR-5188
 		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Textbooks','Students - Academic');       
@@ -145,7 +145,7 @@ class TextbooksTable extends ControllerActionTable {
         }
         // end POCOR-1893
 
-        $query->where([$this->aliasField('security_user_id') => $studentId]); //POCOR-7603
+        $query->where([$this->aliasField('security_user_id IS') => $studentId]); //POCOR-7603
 
         $searchKey = $this->getSearchKey();
         if (strlen($searchKey)) {
@@ -191,7 +191,7 @@ class TextbooksTable extends ControllerActionTable {
             $fullName = $result->first_name.' '.$result->last_name;
             try {
                 
-                $gettabName = 'Student Textbooks';
+                $gettabName = 'Textbooks';
                 $this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
                 //$this->controller->set('contentHeader', $plugin);
             } catch (RecordNotFoundException $e) {

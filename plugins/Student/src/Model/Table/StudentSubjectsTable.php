@@ -57,10 +57,14 @@ class StudentSubjectsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['student_status_id']['visible'] = false;
-
+        $this->fields['total_mark']['visible'] = false;//POCOR-8435
+        $this->fields['outcome_result']['visible'] = false;//POCOR-8435
         $this->field('academic_period_id', ['type' => 'integer', 'order' => 0]);
         $this->field('institution_id', ['type' => 'integer', 'after' => 'academic_period_id']);
-        $this->field('total_mark', ['after' => 'institution_subject_id']);
+        $this->field('total_mark', ['after' => 'institution_subject_id']);//POCOR-8435
+        $this->field('result_type', [  'after' => 'institution_subject_id']);//POCOR-8435
+        $this->field('final_result', [  'after' => 'result_type']);
+
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
@@ -297,14 +301,15 @@ class StudentSubjectsTable extends ControllerActionTable
      * @param Entity $entity
      * @return float
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    public function onGetTotalMark(Event $event, Entity $entity)
-    {
-        // POCOR-7896 start
-        $sum_results = $entity->total_mark;
-        return round($sum_results, 2);
-        // POCOR-7896 end
-    }
+     * This function is commented as not to show total mark (POCOR-8435)
+     */  
+    // public function onGetTotalMark(Event $event, Entity $entity)
+    // {
+    //     // POCOR-7896 start
+    //     $sum_results = $entity->total_mark;
+    //     return round($sum_results, 2);
+    //     // POCOR-7896 end
+    // }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
@@ -364,8 +369,8 @@ class StudentSubjectsTable extends ControllerActionTable
             return __('Academic Period');
         } elseif ($field == 'institution_id') {
             return __('Institution');
-        } elseif ($field == 'total_mark') {
-            return __('	Total Mark');
+        // } elseif ($field == 'total_mark') {POCOR-8435
+        //     return __('	Total Mark');
         } elseif ($field == 'modified_user_id') {
             return __('Modified By');
         } elseif ($field == 'modified') {
@@ -378,4 +383,89 @@ class StudentSubjectsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+        /**
+     * Retrieves the "result type" for the given entity based on its associated grade and subject.
+     * 
+     * This method queries the `EducationGradesSubjects` table to find the "result type" 
+     * corresponding to the provided `education_grade_id` and `education_subject_id` of the entity.
+     * The retrieved "result type" is then assigned to both the `$entity` and returned in the `$attr` array.
+     * 
+     * @param Event $event The event object that triggered this method.
+     * @param Entity $entity The entity whose "result type" needs to be fetched and updated.
+     * 
+     * @return void
+     */
+    public function onGetResultType(Event $event, Entity $entity)
+    {
+        $EducationGradeSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
+        $result = $EducationGradeSubjects
+            ->find()
+            ->where([
+                $EducationGradeSubjects->aliasField('education_grade_id') => $entity->education_grade_id,
+                $EducationGradeSubjects->aliasField('education_subject_id') => $entity->education_subject_id,
+            ])
+            ->first();
+
+        $attr['value'] = $result->result_type;
+        $entity->result_type = $result->result_type;
+    }
+
+    /**
+     * Determines and returns the final result for the given entity based on its "result type."
+     * 
+     * If the "result type" is "Outcomes," the method returns the `outcome_result` value of the entity.
+     * Otherwise, it calculates and returns the `total_mark` rounded to two decimal places.
+     * 
+     * @param Event $event The event object that triggered this method.
+     * @param Entity $entity The entity whose final result needs to be calculated and returned.
+     * 
+     * @return float|string The final result, either as a rounded total mark or the outcome result.
+     */
+    public function onGetFinalResult(Event $event, Entity $entity)
+    {
+        if ($entity->result_type == "Outcomes") {
+            return $entity->outcome_result;
+        } else {
+            return round($entity->total_mark, 2);
+        }
+    }
+     //POCOR-8435 start
+    /**
+     * Fetches or updates a student's subject outcome result based on the provided criteria.
+     * 
+     * This method searches for a record in the `InstitutionSubjectStudents` table based on the given 
+     * options (`student_id`, `academic_period_id`, `education_subject_id`, `institution_id`, and `education_grade_id`).
+     * If an `outcome_result` is provided in the options, the method updates the record's `outcome_result` field.
+     * Finally, it retrieves and returns the updated record.
+     * 
+     * @param Query $query The query object used to build and execute the database query.
+     * @param array $options An associative array containing the search criteria and optional outcome result:
+     *  - `student_id` (int): The student's ID.
+     *  - `academic_period_id` (int): The academic period's ID.
+     *  - `education_subject_id` (int): The education subject's ID.
+     *  - `institution_id` (int): The institution's ID.
+     *  - `education_grade_id` (int): The education grade's ID.
+     *  - `outcome_result` (mixed): (Optional) The new outcome result to update.
+     * 
+     * @return Query The query object containing the final fetched record.
+     */
+    public function findStudentSubjectOutcomeResult(Query $query, array $options)
+    {
+        $StudentSubjectData = $query->find('all')->where([
+            'student_id' => $options['student_id'],
+            'academic_period_id' => $options['academic_period_id'],
+            'education_subject_id' => $options['education_subject_id'],
+            'institution_id' => $options['institution_id'],
+            'education_grade_id' => $options['education_grade_id']
+        ])->first();
+
+        // Update the outcome result if provided in the options
+        if ($options['outcome_result']) {
+            $this->updateAll(['outcome_result' => $options['outcome_result']], ['id' => $StudentSubjectData->id]);
+        }
+
+        return $query->find('all')->where(['id' => $StudentSubjectData->id]);
+    }
+    //POCOR-8435 end
 }
