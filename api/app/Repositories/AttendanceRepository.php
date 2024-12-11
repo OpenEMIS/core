@@ -2350,7 +2350,7 @@ class AttendanceRepository extends Controller
                 //For POCOR-8628 End...
                 
                 if(is_numeric($row[0])){
-                    $row[0] = Date::excelToDateTimeObject($row[0])->format('d/m/Y');
+                    $row[0] = Date::excelToDateTimeObject($row[0])->format('m/d/Y');
                 }
                 
                 if (!$row[0]) { //Date
@@ -2390,7 +2390,7 @@ class AttendanceRepository extends Controller
                     $errors[$label] = 'Period is required.';
                 }
 
-                if (!$row[3]) { //Institution subject name
+                if (!$row[3] && ($row[1] == 'SUBJECT')) { //Institution subject name
                     $label = $results[0][1][3];
                     $errors[$label] = 'Institution subject name is required.';
                 }
@@ -2412,8 +2412,6 @@ class AttendanceRepository extends Controller
                     }
                 }
                 
-
-
                 $allRows = [
                     $results[0][1][0] => $row[0],
                     $results[0][1][1] => $row[1],
@@ -2450,8 +2448,6 @@ class AttendanceRepository extends Controller
                     $institutionClassGrade = InstitutionClassGrades::where('institution_class_id', $params['institution_class_id'])
                             ->first();
 
-                    
-
                     if(!$user){
                         $label = $results[0][1][4];
                         $errors[$label] = 'OpenEMIS ID does not exist.';
@@ -2482,7 +2478,7 @@ class AttendanceRepository extends Controller
                             ];
                     }
 
-                    if(!$institutionSubject){
+                    if(!$institutionSubject && ($attendanceType == 'SUBJECT')){
                         $label = $results[0][1][3];
                             $errors[$label] = 'Institution subject does not exist.';
                             $validation[] = [
@@ -2511,10 +2507,8 @@ class AttendanceRepository extends Controller
                                 'errors' => $errors
                             ];
                     }*/
-
-                    if($user && $institutionClassStudent && $institutionSubject && $absenceType){
-                        
-
+                    
+                    if($user && $institutionClassStudent && $absenceType){
                         $date = str_replace('/', '-', $row[0]);
                         $date = date('Y-m-d', strtotime($date));
 
@@ -2527,7 +2521,7 @@ class AttendanceRepository extends Controller
                             'period' => $row[2],
                             'subject_id' => $row[3]
                         ])->first();
-
+                    
                         $insert = [];
                         $updateArr = [];
                         $storeArr = [];
@@ -2537,22 +2531,22 @@ class AttendanceRepository extends Controller
                             $student_absence_reason_id = $row[6];
                         }
                         if(!$check){
-
-                            $insert['education_grade_id'] = (int)$institutionClassGrade->education_grade_id??0;
-                            $insert['academic_period_id'] = (int)$academicPeriodId;
-                            $insert['institution_id'] = (int)$params['institution_id'];
-                            $insert['institution_class_id'] = (int)$params['institution_class_id'];
-                            $insert['date'] = $date;
-                            $insert['period'] = $row[2];
-                            $insert['subject_id'] = $row[3];
-                            $insert['student_id'] = $user->id;
-                            $insert['absence_type_id'] = $absenceType->id;
-                            $insert['student_absence_reason_id'] = $student_absence_reason_id;
-                            $insert['comment'] = $row[7];
-                            $insert['created_user_id'] = JWTAuth::user()->id;
-                            $insert['created'] = Carbon::now()->toDateTimeString();
-
-                            $store = InstitutionStudentAbsenceDetails::insert($insert);
+                            
+                            $addArr['education_grade_id'] = (int)$institutionClassGrade->education_grade_id??0;
+                            $addArr['academic_period_id'] = (int)$academicPeriodId;
+                            $addArr['institution_id'] = (int)$params['institution_id'];
+                            $addArr['institution_class_id'] = (int)$params['institution_class_id'];
+                            $addArr['date'] = $date;
+                            $addArr['period'] = $row[2];
+                            $addArr['subject_id'] = ($attendanceType == 'DAY') ? 0 : $row[3];
+                            $addArr['student_id'] = $user->id;
+                            $addArr['absence_type_id'] = $absenceType->id;
+                            $addArr['student_absence_reason_id'] = $student_absence_reason_id;
+                            $addArr['comment'] = $row[7];
+                            $addArr['created_user_id'] = JWTAuth::user()->id;
+                            $addArr['created'] = Carbon::now()->toDateTimeString();
+                            
+                            $store = InstitutionStudentAbsenceDetails::insert($addArr);
                             
                             $add_data[] = [
                                 'row_number' => $i,
@@ -2614,12 +2608,8 @@ class AttendanceRepository extends Controller
 
                             $insert = StudentAttendanceMarkedRecords::insert($storeArr);
                         }
-
-                        
                     }
-
                 }
-
             }
 
             $importResponse = [
