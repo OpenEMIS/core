@@ -344,7 +344,7 @@ class ImportUsersTable extends AppTable
                 $academic_period_id = $tempRow['academic_period_id']  ?? null;
                 Log::debug(print_r(['$academic_period_id' => $tempRow], true));
                 if (!empty($academic_period_id)) {
-                    $education_grade_key = $keys['education_grade'];
+                    $education_grade_key = $keys['education_grade_id'];
                     $education_grade_code = $originalRow[$education_grade_key];
                     $tempRow['education_grade_code'] = $education_grade_code;
                     $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
@@ -359,6 +359,7 @@ class ImportUsersTable extends AppTable
                     }
                 }
             }
+            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
 
 //            if($institution_id){
 //                $user = $tempRow['entity'];
@@ -1141,10 +1142,10 @@ class ImportUsersTable extends AppTable
     private function checkEducationGrade( &$tempRow,  &$rowInvalidCodeCols): bool
     {
 
-        $education_grade = $tempRow['education_grade'] ?? '';
+        $education_grade = $tempRow['education_grade_id'] ?? '';
         if (trim($education_grade) === '') {
-            $this->addError($rowInvalidCodeCols, 'education_grade', __('No education grade specified'));
-            $tempRow['education_grade'] = null;
+            $this->addError($rowInvalidCodeCols, 'education_grade_id', __('No education grade specified'));
+            $tempRow['education_grade_id'] = null;
             return true;
         }
 
