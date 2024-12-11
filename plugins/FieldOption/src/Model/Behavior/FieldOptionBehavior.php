@@ -78,6 +78,10 @@ class FieldOptionBehavior extends Behavior
 
     public function buildValidator(Event $event, Validator $validator, $name)
     {
+        $model = $this->_table; // POCOR-8696
+        $validator = $model->validationDefault($validator); // POCOR-8696
+        //POCOR-8166 [Remove validation for contact types of unique name rule] STARTS
+        $tableAlias = $model->getAlias(); // POCOR-8696
         $addUniqueName = false;
         if ($validator->hasField('name')) {
             $set = $validator->field('name');
@@ -88,11 +92,10 @@ class FieldOptionBehavior extends Behavior
             $addUniqueName = true;
         }
 
-        //POCOR-8166 [Remove validation for contact types of unique name rule] STARTS
-        $tableAlias = $this->_table->getAlias();
-        
+
+
         if(isset($tableAlias) && $tableAlias != 'ContactTypes'){
-        
+
             if ($addUniqueName) {
                 $validator
                     ->add('name', [
@@ -106,21 +109,7 @@ class FieldOptionBehavior extends Behavior
         }
         //POCOR-8166 [Remove validation for contact types of unique name rule] END
 
-        
-        //POCOR-5668 add external validation starts
 
-        if(isset($tableAlias) && $tableAlias == 'Nationalities'){
-            $validator
-                ->requirePresence('external_validation')
-                ->add('external_validation', [
-                    'externalVal' => [
-                        'rule' => 'check_external_validation',
-                        //'provider' => 'table',
-                        'message' => __('Please configure External Data Source in System Configurations to enable External Validation.')
-                    ]
-                ]); 
-        }
-        //POCOR-5668 add external validation ends
         $validator
             ->requirePresence('visible')
             ->requirePresence('default');
@@ -150,6 +139,7 @@ class FieldOptionBehavior extends Behavior
                 $keyName = Inflector::humanize(Inflector::underscore($key));
             }
             $fieldOptions[$parent][$key] = __($keyName);
+            asort($fieldOptions[$parent]); // POCOR-8147
         }
         return $fieldOptions;
     }

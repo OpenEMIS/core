@@ -23,9 +23,9 @@ class GenerateReportCardsByIdsShell extends Shell
     }
 
     public function main()
-    {  
-         
-            
+    {
+
+
             $recordToProcesses = $this->ReportCardProcesses->find()
             ->select([
             $this->ReportCardProcesses->aliasField('report_card_id'),
@@ -42,7 +42,7 @@ class GenerateReportCardsByIdsShell extends Shell
                         $this->ReportCardProcesses->aliasField('created'),
                         $this->ReportCardProcesses->aliasField('student_id')
                     ])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->limit(3);  // for 3 institutions
 
             if (!empty($recordToProcesses)) {
@@ -58,7 +58,7 @@ class GenerateReportCardsByIdsShell extends Shell
                     }
                 }
             }
-        
+
     }
 
     private function generateCardById($institutionId = NULL)
@@ -88,7 +88,7 @@ class GenerateReportCardsByIdsShell extends Shell
                         $this->ReportCardProcesses->aliasField('created'),
                         $this->ReportCardProcesses->aliasField('student_id')
                     ])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->first();
 
                 if (!empty($recordToProcess)) {

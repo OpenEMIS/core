@@ -153,6 +153,11 @@ class InstitutionTabBehavior extends Behavior
         if (!$userID) {
             $userID = $model->getQueryString('user_id');
         }
+        //POCOR-8653 start
+        if (!$userID) {
+            $userID = $model->getQueryString('id');
+        }
+        // POCOR-8653 end
         if (!$userID) {
             return null;
         }
@@ -163,6 +168,41 @@ class InstitutionTabBehavior extends Behavior
     {
         $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
         $buttons = $this->fixActionButtons($entity, $buttons);
+        //POCOR-8561 -- Start
+        if($this->_table->alias == "Positions") {
+            $workflowStep = $this->_table->getWorkflowStep($entity);
+            $isEditable = false;
+            $isDeletable = false;
+            $isSuperAdmin = $this->_table->AccessControl->isAdmin();
+            $securityRoleAllowedEdit = $this->_table->AccessControl->isAdmin();
+            if(!$securityRoleAllowedEdit){
+                $institutionId = $this->getInstitutionID() ;
+                $userId = $this->_table->Auth->user('id');
+                $roles = $this->_table->Institutions->getInstitutionRoles($userId, $institutionId);
+                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $stepRoles = $WorkflowStepsRoles->getRolesByStep($workflowStep->id);
+                $securityRoleAllowedEdit=!empty(array_intersect($roles, $stepRoles));
+            }
+           
+            if (!empty($workflowStep)) {
+                $isEditable = $workflowStep->is_editable == 1 ? true : false;
+                $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+            }
+
+            
+            if (isset($buttons['edit'])) {
+                if (!$isEditable || !$securityRoleAllowedEdit) {
+                    unset($buttons['edit']);
+                }
+            }
+            if (isset($buttons['remove'])) {
+                if (!$isDeletable || !$securityRoleAllowedEdit) {
+                    unset($buttons['remove']);
+                }
+            }
+  
+        }
+        //POCOR-8561 -- End
         return $buttons;
     }
 

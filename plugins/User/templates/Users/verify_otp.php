@@ -63,13 +63,14 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 			echo $this->element('OpenEmis.alert');
 
 			echo $this->Form->create($users, [
-				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp',$encryptdata],
+				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp',$encryptdata, 'type' => 'otp'],
 				'class' => 'form-horizontal'
 			]);
 			if ($enableLocalLogin) {
 				echo $this->Form->input('otp', ['placeholder' => __('OTP'), 'label' => false, 'minLength' => 6, 'maxLength'=> 6, 'required'=>'required']);
 				echo $this->Form->hidden('username', ['placeholder' => __('Username'), 'label' => false, 'value' => $username]);
 				echo $this->Form->hidden('password', ['placeholder' => __('Password'), 'label' => false, 'value' => $password]);
+				echo $this->Form->hidden('id', ['placeholder' => __('id'), 'label' => false, 'value' => $id]); //POCOR-8589
 			}
 			?>
 			<div class="form-group">
@@ -83,5 +84,7 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 
 		<?= $this->element('OpenEmis.footer') ?>
 	</div>
+	<?php die(''); //need to find fix solution. not remove it, until not find the sol.
+	?>
 </body>
 </html>

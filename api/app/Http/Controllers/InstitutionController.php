@@ -5479,6 +5479,158 @@ class InstitutionController extends Controller
         }
     }
 
+    // POCOR-8711 starts
+    /**
+     * @OA\Get(
+     *     path="/api/v4/behaviours/categories/students",
+     *     summary="Get list of Student behaviour categories",
+     *     description="Returns a list of Student behaviour categories",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Classroom Conduct"),
+     *                     @OA\Property(property="order", type="integer", example=1),
+     *                     @OA\Property(property="visible", type="integer", example=1),
+     *                     @OA\Property(property="editable", type="integer", example=1),
+     *                     @OA\Property(property="default", type="integer", example=0),
+     *                     @OA\Property(property="international_code", type="integer", example=""),
+     *                     @OA\Property(property="national_code", type="integer", example=""),
+     *                     @OA\Property(property="behaviour_classification_id", type="integer", example=""),
+     *                     @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                     @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=1),
+     *                     @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
+    public function getStudentBehaviourCategories(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getStudentBehaviourCategories($request);
+            return $this->sendSuccessResponse("Student Behaviour Categories List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Student Behaviour Categories List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        
+            return $this->sendErrorResponse('Student Behaviour Categories List Not Found');
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/behaviours/categories/staff",
+     *     summary="Get list of Staff behaviour categories",
+     *     description="Returns a list of Staff behaviour categories",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Repeated Tardiness"),
+     *                     @OA\Property(property="order", type="integer", example=1),
+     *                     @OA\Property(property="visible", type="integer", example=1),
+     *                     @OA\Property(property="editable", type="integer", example=1),
+     *                     @OA\Property(property="default", type="integer", example=0),
+     *                     @OA\Property(property="international_code", type="integer", example=""),
+     *                     @OA\Property(property="national_code", type="integer", example=""),
+     *                     @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                     @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=1),
+     *                     @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                  )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
+    public function getStaffBehaviourCategories(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getStaffBehaviourCategories($request);
+            return $this->sendSuccessResponse("Staff Behaviour Categories List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Behaviour Categories List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        
+            return $this->sendErrorResponse('Staff Behaviour Categories List Not Found');
+        }
+    }//POCOR-8711
+
     /**
      * @OA\Get(
      *     path="/api/v4/institutions/{institutionId}/students/{studentId}/behaviours",
@@ -5633,7 +5785,7 @@ class InstitutionController extends Controller
     {
         try {
             //For POCOR-7772 Start
-            $checkPermission = checkPermission(['Institutions', 'Assessments', 'add'], ['institution_id' => $request['institution_id']]);
+            $checkPermission = checkPermission(['Institutions', 'Results', 'edit'], ['institution_id' => $request['institution_id']]);
 
             if(!$checkPermission){
                 return $this->sendAuthorizationErrorResponse();
@@ -5727,7 +5879,7 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addStudentBehaviour($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Student Behaviour is added/updated successfully..");
+                return $this->sendSuccessResponse("Student Behaviour is added/updated successfully..");
             } elseif($data == 2) {
                 return $this->sendErrorResponse("Invalid academic period.");
             } elseif($data == 3) {
@@ -5737,7 +5889,7 @@ class InstitutionController extends Controller
             } elseif($data == 5) {
                 return $this->sendErrorResponse("Invalid student behaviour category.");
             } else {
-                return $this->sendSuccessResponse("The update of student behaviour could not be completed successfully.");
+                return $this->sendErrorResponse("The update of student behaviour could not be completed successfully.");
             }
             
         } catch (\Exception $e) {
