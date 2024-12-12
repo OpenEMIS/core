@@ -1376,6 +1376,7 @@ class StaffTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+
         if (!$entity->isNew() && $entity->getDirty('FTE')) {
             if ($entity->staff_change_type_id == 1) { //POCOR-8760 add if condition
                 $newFTE = $entity->FTE;
@@ -1400,10 +1401,11 @@ class StaffTable extends ControllerActionTable
             }
         }
         $entity->start_year = $entity->getOriginal('start_year'); //POCOR-6749
+
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {  
+    {    
         $institutionPositionId = $entity->institution_position_id;
         $staffId = $entity->staff_id;
         $institutionId = $entity->institution_id;

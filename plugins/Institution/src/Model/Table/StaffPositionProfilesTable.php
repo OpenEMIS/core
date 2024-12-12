@@ -17,6 +17,7 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Text;
+use Cake\Datasource\ConnectionManager;
 class StaffPositionProfilesTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -358,7 +359,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
         //POCOR 7289 tables updation start for homeroom
-        if ($entity->staff_change_type_id == 6) {
+        /*if ($entity->staff_change_type_id == 6) {
             $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
             $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
@@ -421,11 +422,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
             } 
              //Both case
             $query=$InstitutionStaff->query();
-        $query->update()
+            $query->update()
                ->set(['is_homeroom' => $entity->homeroom_teacher])
                ->where(['id' => $entity->institution_staff_id])
                ->execute();
-                   //echo "<pre>"; print_r($params); die;
             $StaffChangeTypesData = $StaffChangeTypes->find()
                             ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
                             ->first();
@@ -442,7 +442,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             //echo "<pre>"; print_r($url);die;
             //return $this->controller->redirect($url);
             return false;
-        }
+        }*/
         //POCOR-7289 ends
     
         /* START POCOR-7216 */
@@ -1809,7 +1809,22 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $attr;
     }
     //Pocor 7289 homeroom teachers option end
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        if($entity->staff_change_type_id == 6){
+            $homeRoom =   $this->request->getData()['StaffPositionProfiles']['homeroom_teacher'];
 
+            $position = $this->request->getData()['StaffPositionProfiles']['institution_position_id'];
+            $staff = TableRegistry::get('Institution.Staff');
+            $staff->updateAll(
+                                ['is_homeroom' => $homeRoom,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
+                                [
+                                 'institution_position_id' => $position, //condition update
+                                ]
+                            );
+        }
+        
+    }
 
 }
 
