@@ -1,5 +1,6 @@
 <div class="input string required">
-    <label><?= __('OpenEMIS ID') ?></label>
+    <?php $dynamicOpenemisNoHeader = (isset($dynamicOpenemisNoHeader) && !empty($dynamicOpenemisNoHeader)) ? h($dynamicOpenemisNoHeader) : __('OpenEMIS ID'); ?>
+    <label><?= $dynamicOpenemisNoHeader ?></label>
     <input ng-model="selectedUserData.openemis_no" type="string" ng-disabled="selectedUserData.openemis_no">
 </div>
 <div class="input string required">
@@ -37,7 +38,7 @@
 </div>
 <div class="input date required">
     <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
-    <div class="input-group date " style="">
+    <div class="input-group date "  style="">
         <!-- POCOR-8613 -->
         <input type="text" class="form-control " name="User[date_of_birth]"
                ng-model="selectedUserData.date_of_birth"
