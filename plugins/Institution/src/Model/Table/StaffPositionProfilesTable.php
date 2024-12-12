@@ -504,12 +504,14 @@ class StaffPositionProfilesTable extends ControllerActionTable
         else if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE'){
             $entity->end_date = $entity->end_date;
         }
-        // else if($StaffChangeTypesDataForShift['code'] == 'HOMEROOM_TEACHER'){
-        //     $entity->end_date = $entity->end_date;
-        // }
-        else{
+         else if($StaffChangeTypesDataForShift['code'] == 'HOMEROOM_TEACHER'){ //POCOR-8760
+            if(!empty($entity->end_date)){
+                $entity->end_date = $entity->end_date;
+            }
+         }
+        /*else{
             $entity->end_date = $entity->start_date;
-        }
+        }*/
 
         /* END POCOR-7216 */
 
