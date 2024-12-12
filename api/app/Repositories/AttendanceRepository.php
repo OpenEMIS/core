@@ -2350,7 +2350,7 @@ class AttendanceRepository extends Controller
                 //For POCOR-8628 End...
                 
                 if(is_numeric($row[0])){
-                    $row[0] = Date::excelToDateTimeObject($row[0])->format('m/d/Y');
+                    $row[0] = Date::excelToDateTimeObject($row[0])->format('d/m/Y');
                 }
                 
                 if (!$row[0]) { //Date
