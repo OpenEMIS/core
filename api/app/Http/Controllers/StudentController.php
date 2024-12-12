@@ -966,7 +966,7 @@ class StudentController extends Controller
         try {
 
             //For POCOR-7772 Start
-            $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'add'], ['institution_id' => $request['institution_id']]);
+            $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'edit'], ['institution_id' => $request['institution_id']]);
             
             if(!$checkPermission){
                 return $this->sendAuthorizationErrorResponse();
