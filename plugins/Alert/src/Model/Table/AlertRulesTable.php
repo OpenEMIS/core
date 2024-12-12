@@ -282,6 +282,24 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
+    //POCOR-8690[START]
+    public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add'||$action == 'edit') {
+            $entity = $attr['entity'];
+            if($entity->feature)
+            {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $this->getMethod($entity->feature);;
+            $attr['attr']['value'] =$this->getMethod($entity->feature);;
+            }
+           
+        }
+
+        return $attr;
+    }
+    //POCOR-8690[END]
+
     public function addEditOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data)) {
@@ -386,7 +404,13 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('rule_setup', ['type' => 'section']);
         $this->field('feature', ['type' => 'select', 'entity' => $entity]);
         $this->field('enabled', ['type' => 'select']);
-        $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
+        //POCOR-8690[START]
+        // $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
+        $this->field('method', [
+            'after' => 'threshold',
+            'entity' => $entity,
+        ]);
+        //POCOR-8690[END]
         $this->field('security_roles', ['after' => 'method', 'entity' => $entity]);
         $this->field('threshold', ['after' => 'security_roles', 'entity' => $entity]);
 

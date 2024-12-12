@@ -3293,6 +3293,8 @@ class InstitutionsController extends AppController
                     $activeInstitution = $this->Institutions->get($institutionId);
                     $institutionName = $activeInstitution->name;
                     $header = $institutionName.''.$header;
+                } elseif (in_array($alias, ['InstitutionAttachments'])) { //POCOR-8695
+                    $exists = true;
                 } else {
                     $params = [];
                     $checkExists = function ($model, $params) {
