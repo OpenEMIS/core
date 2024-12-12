@@ -139,13 +139,13 @@ class POCOR8434 extends AbstractMigration
             DROP FOREIGN KEY insti_stude_admis_fk_stude_id;");
         //Not able to add FOREIGN KEY CONSTRAINT in `institution_student_enrolment` table because in this table in assignee_id column have 0 and -1 value 
         //ADD CONSTRAINT insti_stude_enrol_fk_ass_id FOREIGN KEY (assignee_id) REFERENCES security_users(id),
+        //ADD CONSTRAINT insti_stude_enrol_fk_ins_cla_id FOREIGN KEY (institution_class_id) REFERENCES institution_classes(id) in `institution_student_admission` table some records have null values in institution_class_id column
         $this->execute("ALTER TABLE `institution_student_enrolment`
             ADD CONSTRAINT insti_stude_enrol_fk_stude_id FOREIGN KEY (student_id) REFERENCES security_users(id),
             ADD CONSTRAINT insti_stude_enrol_fk_status_id FOREIGN KEY (status_id) REFERENCES workflow_steps(id),
             ADD CONSTRAINT insti_stude_enrol_fk_ins_id FOREIGN KEY (institution_id) REFERENCES institutions(id),
             ADD CONSTRAINT insti_stude_enrol_fk_aca_per_id FOREIGN KEY (academic_period_id) REFERENCES academic_periods(id),
-            ADD CONSTRAINT insti_stude_enrol_fk_edu_gra_id FOREIGN KEY (education_grade_id) REFERENCES education_grades(id),
-            ADD CONSTRAINT insti_stude_enrol_fk_ins_cla_id FOREIGN KEY (institution_class_id) REFERENCES institution_classes(id);");
+            ADD CONSTRAINT insti_stude_enrol_fk_edu_gra_id FOREIGN KEY (education_grade_id) REFERENCES education_grades(id);");
         
         //create new table `institution_student_admission`    
         $this->execute("CREATE TABLE IF NOT EXISTS `institution_student_admission` (
@@ -282,14 +282,15 @@ class POCOR8434 extends AbstractMigration
         //Restore `institution_student_admission` table 
         $this->execute('RENAME TABLE `z_8434_institution_student_admission` TO `institution_student_admission`');
         //Add FOREIGN KEY CONSTRAINT in `institution_student_admission`
+        //ADD CONSTRAINT insti_stude_admis_fk_ins_cla_id FOREIGN KEY (institution_class_id) REFERENCES institution_classes(id) in `institution_student_admission` table some records have null values in institution_class_id column
+        //ADD CONSTRAINT insti_stude_admis_fk_ass_id FOREIGN KEY (assignee_id) REFERENCES security_users(id),
         $this->execute("ALTER TABLE `institution_student_admission`
             ADD CONSTRAINT `insti_stude_admis_fk_stude_id` FOREIGN KEY (`student_id`) REFERENCES `security_users`(`id`),
             ADD CONSTRAINT `insti_stude_admis_fk_statu_id` FOREIGN KEY (`status_id`) REFERENCES `workflow_steps`(`id`),
             ADD CONSTRAINT `insti_stude_admis_fk_ass_id` FOREIGN KEY (`assignee_id`) REFERENCES `security_users`(`id`),
             ADD CONSTRAINT `insti_stude_admis_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`),
             ADD CONSTRAINT `insti_stude_admis_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`),
-            ADD CONSTRAINT `insti_stude_admis_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES `education_grades`(`id`),
-            ADD CONSTRAINT `insti_stude_admis_fk_ins_cla_id` FOREIGN KEY (`institution_class_id`) REFERENCES `institution_classes`(`id`);");
+            ADD CONSTRAINT `insti_stude_admis_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES `education_grades`(`id`);");
 
         //Restore custom_modules table 
         $this->execute('DROP TABLE IF EXISTS `custom_modules`');
