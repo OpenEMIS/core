@@ -1485,7 +1485,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             readfile($filepath);
             ob_clean();
             flush();
-            sleep(10);
+            // sleep(10);
 
             // delete file after download
             unlink($filepath);
