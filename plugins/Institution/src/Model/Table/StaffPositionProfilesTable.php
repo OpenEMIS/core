@@ -1808,7 +1808,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
         return $attr;
     }
-    //Pocor 7289 homeroom teachers option end
+    //POCOR-8760
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
     {
         if($entity->staff_change_type_id == 6){
@@ -1817,11 +1817,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $position = $this->request->getData()['StaffPositionProfiles']['institution_position_id'];
             $staff = TableRegistry::get('Institution.Staff');
             $staff->updateAll(
-                                ['is_homeroom' => $homeRoom,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
-                                [
-                                 'institution_position_id' => $position, //condition update
-                                ]
-                            );
+                    ['is_homeroom' => $homeRoom,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
+                    [
+                     'institution_position_id' => $position, //condition update
+                    ]
+                );
         }
         
     }
