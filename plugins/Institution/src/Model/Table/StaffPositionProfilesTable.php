@@ -357,10 +357,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
-        //POCOR-8447 Start This code write in editAfterAction function
         //POCOR 7289 tables updation start for homeroom
-        /*if ($entity->staff_change_type_id == 6) {
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        if ($entity->staff_change_type_id == 6) {
+            $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
             $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
             $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
@@ -421,12 +420,12 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 }
             } 
              //Both case
-            //$query=$InstitutionStaff->getQuery();
-            $query = $InstitutionStaff->find();//POCOR-8447
-            $query->update()
-                   ->set(['is_homeroom' => $entity->homeroom_teacher])
-                   ->where(['id' => $entity->institution_staff_id])
-                   ->execute();
+            $query=$InstitutionStaff->query();
+        $query->update()
+               ->set(['is_homeroom' => $entity->homeroom_teacher])
+               ->where(['id' => $entity->institution_staff_id])
+               ->execute();
+                   //echo "<pre>"; print_r($params); die;
             $StaffChangeTypesData = $StaffChangeTypes->find()
                             ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
                             ->first();
@@ -443,13 +442,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
             //echo "<pre>"; print_r($url);die;
             //return $this->controller->redirect($url);
             return false;
-        }*/
+        }
         //POCOR-7289 ends
-        //POCOR-8447 END
-
-        //POCOR-6979
-
-
+    
         /* START POCOR-7216 */
 
         // if($StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
@@ -532,8 +527,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
                 //POCOR-7006
-            //POCOR-8447 Start This code write in editAfterAction function
-            /*if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT'){
+            if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT'){
                 //End of POCOR-7006
                 $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -565,8 +559,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     //return $this->controller->redirect($url);
                 }
                 //POCOR-6979[START]
-            }*/
-            // Pocor-8447 End
+            }
         }
         /**POCOR-6928 ends*/    
     }

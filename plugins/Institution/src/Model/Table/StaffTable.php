@@ -1377,7 +1377,7 @@ class StaffTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew() && $entity->getDirty('FTE')) {
-            if ($entity->staff_change_type_id != 6 && empty($entity->end_date)) { //POCOR-8760 add if condition
+            if ($entity->staff_change_type_id == 1) { //POCOR-8760 add if condition
                 $newFTE = $entity->FTE;
                 $newEndDate = $entity->end_date;
                 $entity->FTE = $entity->getOriginal('FTE');
