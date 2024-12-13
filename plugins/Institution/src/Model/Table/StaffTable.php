@@ -1778,8 +1778,13 @@ class StaffTable extends ControllerActionTable
 
             $institutionStaffQuery = clone $this->dashboardQuery;
             // Get Number of staff in an institution
+            //POCOR-8687 Start
             $staffCount = $institutionStaffQuery->group($this->aliasField('staff_id'))->count();
-
+            $staffCount = $institutionStaffQuery
+                ->select(['staff_id' => $this->aliasField('staff_id')])
+                ->distinct(['staff_id'])
+                ->count();
+            //POCOR-8687 End
             unset($institutionStaffQuery);
             // Get Gender
             $InstitutionArray[__('Gender')] = $this->getDonutChart(
@@ -2439,7 +2444,7 @@ class StaffTable extends ControllerActionTable
 
         foreach ($dataSet as $key => $obj) {
             foreach ($positionTypes as $id => $name) {
-                $dataSet[$key]['data'][$id] = 0;
+                $c[$key]['data'][$id] = 0;
             }
         }
         foreach ($staffByPositions as $key => $staffByPosition) {
