@@ -31,8 +31,7 @@ class ScannedAttendanceRequest extends FormRequest
         return [
             'openemis_no' => 'required',
             'datetime' => 'required',
-            'latitude' => 'required',
-            'longitude' => 'required',
+            'scanner_code' => 'required',
         ];
     }
 
