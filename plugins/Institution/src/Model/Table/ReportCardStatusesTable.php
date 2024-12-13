@@ -1445,7 +1445,6 @@ class ReportCardStatusesTable extends ControllerActionTable
     //POCOR-7321 ends
     public function downloadAll(Event $event, ArrayObject $extra)
     {
-
         $params = $this->getQueryString();
 
         // only download report cards with generated or published status
@@ -1462,6 +1461,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->StudentsReportCards->aliasField('file_content IS NOT NULL')
             ])
             ->toArray();
+        ConnectionManager::get('default')->disconnect();
 
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
@@ -1471,10 +1471,13 @@ class ReportCardStatusesTable extends ControllerActionTable
             $zip = new ZipArchive;
             $zip->open($filepath, ZipArchive::CREATE);
             foreach ($files as $file) {
-                $zip->addFromString($file->file_name, $this->getFile($file->file_content));
-            }
+                $content = $this->getFile($file->file_content);
+                if ($content !== false) {
+                    $zip->addFromString($file->file_name, $content);
+                    unset($content); // Free up memory
+                }
+            }            
             $zip->close();
-
             header("Pragma: public", true);
             header("Expires: 0"); // set expiration time
             header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
@@ -1483,8 +1486,8 @@ class ReportCardStatusesTable extends ControllerActionTable
             header("Content-Length: " . filesize($filepath));
             header("Content-Disposition: attachment; filename=" . $zipName);
             readfile($filepath);
-            ob_clean();
-            flush();
+            // ob_clean();
+            // flush();
             // sleep(10);
 
             // delete file after download
