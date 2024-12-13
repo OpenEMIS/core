@@ -25,12 +25,14 @@ class ScannedRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
-
             $storeArr = [
                 'openemis_no' => $param['openemis_no'],
                 'datetime' => Carbon::parse($param['datetime']),
                 'latitude' => $param['latitude'],
                 'longitude' => $param['longitude'],
+                'scanner_code' => $param['scanner_code'],
+                'location' => $param['location'],
+                'access' => $param['access'],
                 'created_user_id' => JWTAuth::user()->id,
                 'created' => Carbon::now()->toDateTimeString()
             ];
@@ -50,42 +52,42 @@ class ScannedRepository extends Controller
         }
     }
 
-    public function updateScannedUserData($scannedId, ScannedAttendanceRequest $request)
+    public function updateScannedUserData($openemisNo, Request $request)
     {
-
         DB::beginTransaction();
         try {
             $param = $request->all();
-            echo "<pre>"; print_r($param); die;
             $storeArr = [
-                'openemis_no' => $param['openemis_no'],
-                'datetime' => $param['datetime'],
-                'latitude' => $param['latitude'],
-                'longitude' => $param['longitude'],
+                'openemis_no' => $openemisNo,
+                'datetime' => $param['datetime'] ,
+                'latitude' => $param['latitude'] ?? null,
+                'longitude' => $param['longitude'] ?? null,
+                'location' => $param['location'] ?? null,
+                'access' => $param['access'] ?? null,
                 'created_user_id' => JWTAuth::user()->id,
                 'created' => Carbon::now()->toDateTimeString()
             ];
-            $scannedAttendance = ScannedAttendance::find($scannedId);
-            // Check if the record exists
+            $scannedAttendance = ScannedAttendance::where('openemis_no', $openemisNo)->first();
             if (!$scannedAttendance) {
                 DB::rollback();
                 return $this->sendErrorResponse('Scanned attendance record not found.');
             }
             $scannedAttendance->fill($storeArr);
             $scannedAttendance->save();
-
             DB::commit();
             return 1;
+
         } catch (\Exception $e) {
             DB::rollback();
             Log::error(
                 'Failed to Update Scanned User data.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
             return $this->sendErrorResponse('Failed to Update Scanned User data.');
         }
     }
+
 
     public function scannedListing(Request $request)
     {
@@ -132,5 +134,42 @@ class ScannedRepository extends Controller
             return $this->sendErrorResponse('Scanned List Not Found');
         }
     }
+
+    /**
+     * POCOR-8666
+     * Fetch scanned attendance records based on OpenEMIS number and optional date range.
+     *
+     * @param mixed $params The OpenEMIS number used to filter attendance records.
+     * @param \Illuminate\Http\Request $request The incoming HTTP request containing additional parameters.
+     * @return array An array containing the attendance records or an error response.
+     */
+    public function scannedOpenemisNo($params, Request $request)
+    {
+        try {
+            $paramRequest = $request->all();
+            $openemisNo = $params;
+            $dateFrom = $paramRequest['datetime_start'] ?? null;
+            $dateTo = $paramRequest['datetime_end'] ?? null;
+            if ($dateFrom && $dateTo && $dateFrom > $dateTo) {
+                [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+            }
+            $query = ScannedAttendance::where('openemis_no', $openemisNo);
+            if (!empty($dateFrom) && !empty($dateTo)) {
+                $query = $query->whereBetween('datetime', [$dateFrom, $dateTo]);
+            }
+            $userListingRecord = $query->get()->toArray();
+
+            $resp['data'] = $userListingRecord;
+            return $resp;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch user from DB',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Scanned user Not Found');
+        }
+    }
+
    
 }

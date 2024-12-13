@@ -523,9 +523,11 @@ Route::group(
         //POCOR-8519 end...
 
         //POCOR-8666
+        Route::get('scanned/{openemis_no}', 'ScannedController@scannedUserOpenemisNo');
         Route::post('scanned', 'ScannedController@addScannedUserData');
         Route::post('update-scanned/{scannedId}', 'ScannedController@updateScannedUserData');
         Route::get('scannedlisting', 'ScannedController@scannedUserListing');
+        
         //POCOR-8666
     }
 );

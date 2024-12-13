@@ -39,10 +39,10 @@ class ScannedService extends Controller
         }
     }
 
-    public function updateScannedUser($scannedId, ScannedAttendanceRequest $request)
+    public function updateScannedUser($openemisNo, Request $request)
     {
         try {
-            $data = $this->scannedRepository->updateScannedUserData($scannedId, $request);
+            $data = $this->scannedRepository->updateScannedUserData($openemisNo, $request);
             return $data;
             
         } catch (\Exception $e) {
@@ -69,7 +69,21 @@ class ScannedService extends Controller
 
             return $this->sendErrorResponse('Failed to Update Scanned User data in db.');
         }
+    }
 
+    public function scannedOpenemisNo($params, Request $request)
+    {
+        try {
+            $data = $this->scannedRepository->scannedOpenemisNo($params, $request);
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Scanned User Data',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch Scanned User Data.');
+        }
     }
 
 
