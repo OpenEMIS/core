@@ -537,7 +537,7 @@ Route::group(
         //POCOR-8666 start
         Route::get('scanned/{openemis_no}', 'ScannedController@scannedUserOpenemisNo');
         Route::post('scanned', 'ScannedController@addScannedUserData');
-        Route::post('update-scanned/{scannedId}', 'ScannedController@updateScannedUserData');
+        Route::post('update-scanned/{openemis_no}', 'ScannedController@updateScannedUserData');
         Route::get('scannedlisting', 'ScannedController@scannedUserListing');
         //POCOR-8666 end
     }

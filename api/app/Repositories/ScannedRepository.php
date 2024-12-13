@@ -27,7 +27,7 @@ class ScannedRepository extends Controller
             $param = $request->all();
             $storeArr = [
                 'openemis_no' => $param['openemis_no'],
-                'datetime' => Carbon::parse($param['datetime']),
+                'datetime' => Carbon::parse($param['datetime'])->toDateTimeString(),
                 'latitude' => $param['latitude'],
                 'longitude' => $param['longitude'],
                 'scanner_code' => $param['scanner_code'],
@@ -59,13 +59,13 @@ class ScannedRepository extends Controller
             $param = $request->all();
             $storeArr = [
                 'openemis_no' => $openemisNo,
-                'datetime' => $param['datetime'] ,
+                'datetime' => Carbon::parse($param['datetime']) ,
                 'latitude' => $param['latitude'] ?? null,
                 'longitude' => $param['longitude'] ?? null,
                 'location' => $param['location'] ?? null,
                 'access' => $param['access'] ?? null,
-                'created_user_id' => JWTAuth::user()->id,
-                'created' => Carbon::now()->toDateTimeString()
+                'modified_user_id' => JWTAuth::user()->id,
+                'modified' => Carbon::now()->toDateTimeString()
             ];
             $scannedAttendance = ScannedAttendance::where('openemis_no', $openemisNo)->first();
             if (!$scannedAttendance) {

@@ -10,15 +10,19 @@ class ScannedAttendance extends Model
     use HasFactory;
     protected $fillable = [
         'openemis_no',
-        'date',
-        'time',
+        'scanner_code',
+        'datetime',
         'latitude',
         'longitude',
+        'location',
+        'access',
         'created_user_id',
-        'created'
+        'created',
+        'modified_user_id',
+        'modified'
     ];
 
-    protected $primaryKey = 'code';
+    protected $primaryKey = 'id';
     public $timestamps = false;
     protected $table = "scanned_attendances";
 
