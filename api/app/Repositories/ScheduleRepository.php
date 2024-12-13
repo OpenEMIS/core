@@ -56,7 +56,7 @@ class ScheduleRepository extends Controller
 
     public function getLessonsByTimeTableId($id, $params)
     {
-        $lessons =  InstitutionScheduleLessons::with('scheduleLessonDetails','timeslots.instituteInterval.shift')->where('institution_schedule_timetable_id', $id);
+        $lessons =  InstitutionScheduleLessons::with('scheduleLessonDetails.schedule_curriculum_lesson.institution_subject','scheduleLessonDetails.schedule_non_curriculum_lesson','scheduleLessonDetails.schedule_lesson_room.institution_room','timeslots.instituteInterval.shift')->where('institution_schedule_timetable_id', $id);
 
         if(isset($params['order'])){
             $orderBy = $params['order_by']??"ASC";

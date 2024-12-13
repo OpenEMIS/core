@@ -69,13 +69,13 @@ class UserTabBehavior extends Behavior
             $userId = $this->_table->Auth->user('id');
         }
         if ($model->hasField('security_user_id')) {
-            $query->where([$model->aliasField('security_user_id') => $userId]);
+            $query->where([$model->aliasField('security_user_id IS') => $userId]);
         } else if ($model->hasField('student_id')) {
-            $query->where([$model->aliasField('student_id') => $userId]);
+            $query->where([$model->aliasField('student_id IS') => $userId]);
         } else if ($model->hasField('staff_id')) {
-            $query->where([$model->aliasField('staff_id') => $userId]);
+            $query->where([$model->aliasField('staff_id IS') => $userId]);
         } else if ($model->hasField('user_id')) {
-            $query->where([$model->aliasField('user_id') => $userId]);
+            $query->where([$model->aliasField('user_id IS') => $userId]);
         }
         $count = $query->count();
         if($count == 0){
