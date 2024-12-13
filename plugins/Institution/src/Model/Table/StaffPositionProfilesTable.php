@@ -1808,7 +1808,15 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
         return $attr;
     }
-    //POCOR-8760
+    /**
+     * POCOR-8760
+     * This method is triggered after an entity is saved.
+     * It performs additional actions when the `staff_change_type_id` is 6.
+     *
+     * @param \Cake\Event\Event $event The afterSave event.
+     * @param \Cake\Datasource\EntityInterface $entity The saved entity.
+     * @param \ArrayObject $options Options passed from the save operation.
+     */
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
     {
         if($entity->staff_change_type_id == 6){
@@ -1819,11 +1827,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $staff->updateAll(
                     ['is_homeroom' => $homeRoom,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
                     [
-                     'institution_position_id' => $position, //condition update
+                     'institution_position_id IS' => $position, //condition update
                     ]
                 );
-        }
-        
+        } 
+
     }
 
 }
