@@ -7,6 +7,11 @@ use App\Services\ScannedService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\ScannedAttendanceRequest;
 
+/**
+ * POCOR-8666
+ * ScannedController handles the scanned data operations.
+ * It interacts with the ScannedService to manage scanned records.
+ */
 class ScannedController extends Controller
 {
     protected $scannedService;
@@ -122,7 +127,7 @@ class ScannedController extends Controller
             return $this->sendErrorResponse('Failed to save Scanned User Data in DB');
         }
     }
-    
+
     public function updateScannedUserData($openemisNo, Request $request)
     {
         try {
