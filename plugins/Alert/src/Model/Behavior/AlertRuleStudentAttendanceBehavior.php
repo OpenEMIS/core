@@ -57,7 +57,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                $validator = $model->getValidator();
                 $validator->add('threshold', [
                     'ruleRange' => [
                         'rule' => ['range', 1, 30]

@@ -1341,16 +1341,16 @@ class InstitutionsTable extends ControllerActionTable
             if ($this->webhookAction == 'add' && empty($event->getData()['entity']->security_group_id)) {
                 $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                 if ($this->Auth->user()) {
-                    $Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
+                    $Webhooks->triggerShell('institutions_create', ['username' => ''], $body);
                 }
             }
             // Webhook institution create -- end
 
             // Webhook institution update --start
             if ($this->webhookAction == 'edit') {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
+                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.WebhookEvents');
                 if ($this->Auth->user()) {
-                    $Webhooks->triggerShell('institutions_update', ['username' => $username], $body);
+                    $Webhooks->triggerShell('institutions_update', ['username' => ''], $body);
                 }
             }
             // webhook institution update --end

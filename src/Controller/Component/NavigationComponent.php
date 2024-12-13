@@ -1622,7 +1622,7 @@ class NavigationComponent extends Component
                     'Institutions.HistoricalStaffLeave',
                     'Staff.Behaviours',
                     'Institutions.Staff',
-                    'Institutions.StaffPositionProfiles.add',
+                    'Institutions.StaffPositionProfiles',
                     //'Institutions.StaffAppraisals', POCOR-7485 not use becuase now StaffAppraisals's controller change
                     'Staff.StaffAppraisals',
                     'Institutions.ImportStaffLeave',
@@ -2235,7 +2235,10 @@ class NavigationComponent extends Component
                 'title' => 'Scholarships',
                 'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.ScholarshipsDirectory']
+                'selected' => ['Profiles.ScholarshipApplications',
+                                'Profiles.ScholarshipsDirectory',
+                                'Profiles.ScholarshipApplicationInstitutionChoices',
+                                'Profiles.ScholarshipApplicationAttachments']
             ],
 
             // 'Scholarships.Scholarships' => [
@@ -2375,6 +2378,19 @@ class NavigationComponent extends Component
 
     public function getGuardianNavNavigation()
     {
+        // $request = $this->getController()->getRequest();
+        // $session = $this->getController()->getRequest()->getSession();
+        // $studentId = $session->read('Student.Students.id');
+        // if(empty($studentId) && $request->getParam('action') == 'StudentUser') {
+        //     $studentId = $this->controller->paramsDecode($request->getParam('pass')[1])['id'];
+        // }
+        // $queryString = $this->request->getQuery['queryString']; // comment cakephp4
+        // $queryString = '';
+        // if ($queryString != '') {
+        //     $session->write('queryString', $queryString);
+        // } else {
+        //     $queryString = $session->read('queryString');
+        // }
         // POCOR-8415 start
         $studentId = $this->getStudentID();
         if(!$studentId){
@@ -2394,6 +2410,7 @@ class NavigationComponent extends Component
                     '1' => $queryString], // POCOR-8415
                 'selected' => ['GuardianNavs.StudentUser']
             ],
+            
             'GuardianNavs.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
@@ -2412,7 +2429,25 @@ class NavigationComponent extends Component
                     'GuardianNavs.StudentTextbooks',
                     'GuardianNavs.StudentRisks',
                     'GuardianNavs.StudentAssociations']
+            ],
+            //POCOR-8293 start
+            'GuardianNavs.Healths.index' => [
+                'title' => 'Student Health',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'GuardianNav',
+                    '1' => $this->controller->paramsEncode(['id' => $studentId,'security_user_id'=> $studentId]), 'queryString' => $queryString],
+                'selected' => ['GuardianNavs.Healths',
+                        'GuardianNavs.HealthAllergies',
+                        'GuardianNavs.HealthConsultations',
+                        'GuardianNavs.HealthFamilies',
+                        'GuardianNavs.HealthHistories',
+                        'GuardianNavs.HealthImmunizations',
+                        'GuardianNavs.HealthMedications',
+                        'GuardianNavs.HealthTests',
+                        'GuardianNavs.HealthBodyMasses',
+                        'GuardianNavs.HealthInsurances']
             ]
+            //POCOR-8293 end
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
@@ -2686,6 +2721,8 @@ class NavigationComponent extends Component
                         'Configurations.add',
                         'Configurations.view',
                         'Configurations.edit',
+                        'Configurations.Authentication',
+                        'Configurations.AuthSystemAuthentications',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
@@ -3919,7 +3956,7 @@ class NavigationComponent extends Component
                         'title' => 'Applications',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],
-                        'selected' => ['Scholarships.Applications',
+                        'selected' => ['Scholarships.Applications.index',
                             'UsersDirectory.index',
                             'UsersDirectory.view',
                             'Scholarships.Identities.index',
@@ -3931,16 +3968,10 @@ class NavigationComponent extends Component
                             'Scholarships.Guardians.index',
                             'Scholarships.Guardians.view',
                             'Scholarships.Histories',
-                            'ScholarshipApplicationInstitutionChoices.index',
-                            'ScholarshipApplicationInstitutionChoices.view',
-                            'ScholarshipApplicationInstitutionChoices.add',
-                            'ScholarshipApplicationInstitutionChoices.edit',
-                            'ScholarshipApplicationInstitutionChoices.delete',
-                            'ScholarshipApplicationAttachments.index',
-                            'ScholarshipApplicationAttachments.view',
-                            'ScholarshipApplicationAttachments.add',
-                            'ScholarshipApplicationAttachments.edit',
-                            'ScholarshipApplicationAttachments.delete']
+                            'Scholarships.ScholarshipApplicationInstitutionChoices.index',
+                            'Scholarships.ScholarshipApplicationInstitutionChoices.add',
+                            'Scholarships.ScholarshipApplicationAttachments',
+                            ]
                     ],
                     // 'ScholarshipRecipients.index' => [
                     //     'title' => 'Recipients',
@@ -3994,7 +4025,7 @@ class NavigationComponent extends Component
                     'title' => 'Applications',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
-                    'selected' => ['Scholarships.Applications',
+                    'selected' => ['Scholarships.Applications.index',
                         'UsersDirectory.index',
                         'UsersDirectory.view',
                         'Scholarships.Identities.index',
@@ -4006,16 +4037,12 @@ class NavigationComponent extends Component
                         'Scholarships.Guardians.index',
                         'Scholarships.Guardians.view',
                         'Scholarships.Histories',
-                        'ScholarshipApplicationInstitutionChoices.index',
-                        'ScholarshipApplicationInstitutionChoices.view',
-                        'ScholarshipApplicationInstitutionChoices.add',
-                        'ScholarshipApplicationInstitutionChoices.edit',
-                        'ScholarshipApplicationInstitutionChoices.delete',
-                        'ScholarshipApplicationAttachments.index',
-                        'ScholarshipApplicationAttachments.view',
-                        'ScholarshipApplicationAttachments.add',
-                        'ScholarshipApplicationAttachments.edit',
-                        'ScholarshipApplicationAttachments.delete']
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.index',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.add',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.view',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.edit',
+                        'Scholarships.ScholarshipApplicationAttachments',
+                        ]
                 ],
                 // 'ScholarshipRecipients.index' => [
                 //     'title' => 'Recipients',

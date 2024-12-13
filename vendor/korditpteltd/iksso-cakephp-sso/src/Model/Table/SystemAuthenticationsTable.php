@@ -23,8 +23,8 @@ class SystemAuthenticationsTable extends Table
             ->innerJoinWith('AuthenticationTypes')
             ->where([$this->aliasField('status') => 1])
             ->select(['authentication_type' => 'AuthenticationTypes.name'])
-            /*->autoFields(true)
-            ->hydrate(false)*/
+            ->enableAutoFields(true)
+            ->enableHydration(false)
             ->toArray();
     }
 }

@@ -2,27 +2,35 @@
 namespace SSO\Auth;
 
 use Cake\Auth\BaseAuthenticate;
-use Cake\Network\Request;
-use Cake\Network\Response;
+use Cake\Http\ServerRequest;
+use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 use Google_Client;
 use Google_Service_Oauth2;
 
 class GoogleAuthenticate extends BaseAuthenticate
 {
-    public function authenticate(Request $request, Response $response)
+    public function authenticate(ServerRequest $request, Response $response)
     {
         $fields = $this->_config['fields'];
-        $session = $request->session();
+        $session = $request->getSession();
 
         if ($session->check('Google.accessToken')) {
-            $authAttribute = $this->config('authAttribute');
+            $authAttribute = $this->getConfig('authAttribute');
             $client = new Google_Client();
             $client->setClientId($authAttribute['client_id']);
             $client->setAccessToken($session->read('Google.accessToken'));
-            $tokenData = $client->verifyIdToken()->getAttributes();
-            $email = $tokenData['payload']['email'];
-            $emailArray = explode('@', $tokenData['payload']['email']);
+            //POCOR-8498 START
+            //$tokenData = $client->verifyIdToken()->getAttributes();
+            $tokenData = $client->verifyIdToken();
+        
+            if (is_object($tokenData) && method_exists($tokenData, 'getAttributes')) {
+                $tokenData = $tokenData->getAttributes();
+                $email = $tokenData['payload']['email'];
+            } else {
+                $email = $tokenData['email'];
+            }//POCOR-8498 End
+            $emailArray = explode('@', $email);
             $userName = $email;
             $hostedDomain = $emailArray[1];
             $configHD = $authAttribute['hd'];
@@ -35,8 +43,9 @@ class GoogleAuthenticate extends BaseAuthenticate
                 if ($isFound) {
                     return $isFound;
                 } else {
-                    if ($this->config('createUser')) {
-                        $ServiceOAuth2Object = new Google_Service_Oauth2($client);
+                    if ($this->getConfig('createUser')) {
+                        //POCOR-8498 Start
+                        /*$ServiceOAuth2Object = new Google_Service_Oauth2($client);
                         $me = $ServiceOAuth2Object->userinfo->get();
                         $userInfo = [
                             'id' => $me->getId(),
@@ -49,13 +58,26 @@ class GoogleAuthenticate extends BaseAuthenticate
                             'link' => $me->getLink(),
                             'picture' => $me->getPicture(),
                             'role' => ''
+                        ];*/
+                        $userInfo = [
+                            'id' => $tokenData['iat'],
+                            'firstName' => $tokenData['given_name'],
+                            'lastName' => $tokenData['family_name'],
+                            'gender' => '',
+                            'email' => $tokenData['email'],
+                            'verifiedEmail' => $tokenData['email_verified'],
+                            'locale' => '',
+                            'link' => '',
+                            'picture' =>  $tokenData['picture'],
+                            'role' => ''
                         ];
+                        //POCOR-8498 End
                         $User = TableRegistry::get($this->_config['userModel']);
                         $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
-                        if ($event->result === false) {
+                        if ($event->getResult() === false) {
                             return false;
                         } else {
-                            return $this->_findUser($event->result);
+                            return $this->_findUser($event->getResult());
                         }
                     } else {
                         return false;

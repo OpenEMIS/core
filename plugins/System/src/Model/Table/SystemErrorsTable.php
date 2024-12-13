@@ -46,6 +46,9 @@ class SystemErrorsTable extends AppTable
             $clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'];
         }
 
+        if($code == 0) { //POCOR-8676
+            $code = 404;
+        }
         $entity = $this->newEntity([
             'id' => Text::uuid(),
             'code' => $code,

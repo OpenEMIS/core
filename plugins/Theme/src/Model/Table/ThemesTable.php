@@ -210,4 +210,29 @@ class ThemesTable extends ControllerActionTable
             ->requirePresence('value');
 
     }
+    //POCOR-8716 START
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        switch ($data['id']) {
+            case self::LOGO:
+            case self::LOGINBGIMAGE:
+                $this->behaviors()->get('FileUpload')->setConfig([
+                    'allowable_file_types' => [
+                        'value' => ['jpeg', 'jpg', 'gif', 'png'],
+                        'default_value' => ['jpeg', 'jpg', 'gif', 'png']
+                    ]
+                ]);
+                $file = $data['content'];
+
+                // Get the filename from the uploaded file
+                $data['value'] = $file->getClientFilename();
+                break;
+        }
+        if ($data->offsetExists('default_content')) {
+            $data->offsetUnset('default_content');
+        }
+        if ($data->offsetExists('default_value')) {
+            $data->offsetUnset('default_value');
+        }
+    }
 }

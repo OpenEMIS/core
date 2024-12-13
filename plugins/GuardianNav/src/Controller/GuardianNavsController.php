@@ -58,6 +58,7 @@ class GuardianNavsController extends AppController
         ];
         $this->loadComponent('Training.Training');
         $this->loadComponent('User.Image');
+        $this->loadComponent('TabPermission');
         $this->attachAngularModules();
 
         $this->set('contentHeader', 'Guardian');
@@ -149,6 +150,17 @@ class GuardianNavsController extends AppController
             $this->Navigation->addCrumb($studentName);
 
             // header name
+            $header = $studentName;
+        } else if($this->request->getParam('action') == 'StudentUser') { // POCOR-8293
+            $request = $this->request;
+            $studentId = $this->paramsDecode($request->getParam('pass')[1])['id'];
+            $StudentsTable = TableRegistry::getTableLocator()->get('GuardianNav.StudentUser');
+            $Student = $StudentsTable
+                ->find('all')
+                ->where([$StudentsTable->aliasField('id') => $studentId])
+                ->first();
+            $studentName = $Student->name;
+            $this->Navigation->addCrumb($studentName);
             $header = $studentName;
         }
         $persona = false;
@@ -474,6 +486,57 @@ class GuardianNavsController extends AppController
     /**POCOR-6845 - modified _FUNCTION_ to __FUNCTION__ as PHP function name is case sesitive and ealier it was not recognition function */
     public function StudentReportCards()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
 
+    //POCOR-8293 Start
+    public function Healths()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']);
+    }
+
+    public function HealthAllergies()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Allergies']);
+    }
+
+    public function HealthConsultations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Consultations']);
+    }
+
+    public function HealthFamilies()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Families']);
+    }
+
+    public function HealthHistories()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Histories']);
+    }
+
+    public function HealthImmunizations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Immunizations']);
+    }
+
+    public function HealthMedications()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']);
+    }
+
+    public function HealthTests()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
+    }
+
+    public function HealthBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.BodyMasses']);
+    }
+
+    public function HealthInsurances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
+    }
+    //POCOR-8293 End Student Health tab in Guardian
     //POCOR-8596
     public
     function StudentBehaviours()
