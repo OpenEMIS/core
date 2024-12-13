@@ -13,11 +13,21 @@ use App\Repositories\ScannedRepository;
 use App\Http\Requests\ScannedAttendanceRequest;
 use Illuminate\Http\Request;
 
+/**
+ * POCOR-8666
+ * ScannedService is responsible for handling the business logic related to scanned data.
+ * It interacts with the repository layer to fetch, update, and manage scanned records.
+ */
 class ScannedService extends Controller
 {
 
     protected $scannedRepository;
 
+    /**
+     * ScannedService constructor.
+     *
+     * @param ScannedRepository $scannedRepository The repository responsible for scanning data operations.
+     */
     public function __construct(
     ScannedRepository $scannedRepository) {
         $this->scannedRepository = $scannedRepository;

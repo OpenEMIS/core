@@ -17,9 +17,21 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\ScannedAttendanceRequest;
 
+/**
+ * POCOR-8666
+ * ScannedRepository is responsible for interacting with the data storage (e.g., database)
+ * to perform CRUD operations related to scanned user data.
+ * It contains the logic to save and retrieve scanned attendance records.
+ */
 class ScannedRepository extends Controller
 {
-
+     /**
+     * Save scanned user data to the database.
+     * POCOR-8666
+     * This method takes the scanned data from the request, processes it, and stores it
+     * @param ScannedAttendanceRequest $request The request containing the scanned data to be saved.
+     * @return mixed The result of the save operation, typically the saved record or a success message.
+     */
     public function saveScannedUserData(ScannedAttendanceRequest $request)
     {
         DB::beginTransaction();
