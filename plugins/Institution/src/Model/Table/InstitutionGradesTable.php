@@ -973,7 +973,7 @@ public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action
     return $attr;
 }
 
-public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerRequest $request)
+public function onUpdateFieldLevelOld(Event $event, array $attr, $action, ServerRequest $request)
 {
     if ($action == 'add') {
         $academicPeriodId = $request->getData($this->aliasField('academic_period_id'));
@@ -992,6 +992,46 @@ public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerReq
         $attr['empty'] = true;
         $attr['options'] = $levelOptions;
         $attr['onChangeReload'] = 'changeLevel';
+    } else if ($action == 'edit') {
+        $attr['type'] = 'readonly';
+    }
+    return $attr;
+}
+
+public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerRequest $request)
+{
+    if ($action == 'add') {
+        $academicPeriodId = $request->getData($this->aliasField('academic_period_id'));
+        //POCOR-8735 -- Copy Education structure changes
+        if (!empty($academicPeriodId)) {
+            $condition = ['EducationSystems.academic_period_id' => $academicPeriodId];
+            $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
+            
+            // Check if there are matching records for EducationSystems
+            $educationSystemsCount = $EducationLevels->EducationSystems->find()
+                ->where($condition)
+                ->count();
+
+            if ($educationSystemsCount > 0) {
+                // Proceed with the original query
+                $levelOptions = $EducationLevels->find('list', ['valueField' => 'system_level_name'])
+                    ->find('visible')
+                    ->find('order')
+                    ->contain(['EducationSystems'])
+                    ->where($condition)
+                    ->toArray();
+                $attr['empty'] = true;
+                $attr['options'] = $levelOptions;
+                $attr['onChangeReload'] = 'changeLevel';
+            } else {
+                $attr['options'] = [];
+                $attr['empty'] = 'No records found';
+            }
+        } else {
+            // If academicPeriodId is empty, handle accordingly
+            $attr['options'] = [];
+            $attr['empty'] = 'Invalid academic period';
+        }
     } else if ($action == 'edit') {
         $attr['type'] = 'readonly';
     }
