@@ -282,7 +282,7 @@ class UserController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/save-student",
+     *     path="/api/v4/institutions/save-student",
      *     summary="Save student data",
      *     description="Save student data to the system.",
      *     tags={"Users"},
@@ -377,7 +377,7 @@ class UserController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/save-staff",
+     *     path="/api/v4/institutions/save-staff",
      *     summary="Save staff data",
      *     description="Save staff data to the system.",
      *     tags={"Users"},
@@ -547,7 +547,7 @@ class UserController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/save-guardian",
+     *     path="/api/v4/institutions/save-guardian",
      *     summary="Save guardian data",
      *     description="Save guardian data to the system.",
      *     tags={"Users"},
@@ -629,7 +629,7 @@ class UserController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v4/pocor-openemis-core/api/v4/users",
+     *     path="/api/v4/users",
      *     summary="Update user's data",
      *     description="Update user's data to the system.",
      *     tags={"Users"},
@@ -751,7 +751,7 @@ class UserController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v4/pocor-openemis-core/api/v4/permissions",
+     *     path="/api/v4/permissions",
      *     summary="Get permissions for a user",
      *     description="Returns permissions for a user based on the provided user ID",
      *     tags={"Users"},
