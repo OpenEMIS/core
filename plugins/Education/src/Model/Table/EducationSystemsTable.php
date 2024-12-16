@@ -206,10 +206,14 @@ class EducationSystemsTable extends ControllerActionTable
         unset($request->getQuery['education_system_id']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $request->getData())) {
-                if (array_key_exists('education_system_id', $request->getData[$this->getAlias()])) {
-                    //$request->getQuery['education_system_id'] = $request->getData($this->getAlias())['education_system_id'];
-                    $request = $this->request->withQueryParams(['education_system_id' => $request->getData($this->getAlias())['education_system_id']]);
+            //POCOR-8735 -- Start
+            $data = $request->getData();
+            if (is_array($data) && array_key_exists($this->getAlias(), $data)) {
+                // Check if 'education_system_id' exists within the alias data
+                if (array_key_exists('education_system_id', $data[$this->getAlias()])) {
+                    $educationSystemId = $data[$this->getAlias()]['education_system_id'];
+                    // Update query parameters safely
+                    $request = $this->request->withQueryParams(['education_system_id' => $educationSystemId]);
                 }
             }
         }
