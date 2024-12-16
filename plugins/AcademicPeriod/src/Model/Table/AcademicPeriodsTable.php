@@ -1962,6 +1962,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                     }
                 }
 
+                $schoolClosed = $this->isSchoolClosed($firstDayOfWeekDate, $institutionId); //POCOR-8745
                 $suffix = $schoolClosed ? __('School Closed') : '';
 
                 $data = [

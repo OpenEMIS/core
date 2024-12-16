@@ -29,6 +29,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         parent::initialize($config);
+        $this->setTable('institution_positions');
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
