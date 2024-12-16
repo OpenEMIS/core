@@ -5,7 +5,7 @@ class POCOR8666 extends AbstractMigration
 {
     public function up()
     {
-        $this->execute("CREATE TABLE IF NOT EXISTS `scanned_attendances` (
+        $this->execute("CREATE TABLE IF NOT EXISTS `institution_scanned` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             `datetime` datetime NOT NULL,
             `openemis_no` varchar(100) NOT NULL,
@@ -19,7 +19,9 @@ class POCOR8666 extends AbstractMigration
             `created_user_id` int(11) DEFAULT NULL,
             `created` datetime DEFAULT NULL,
             PRIMARY KEY (`id`),
-            FOREIGN KEY (`openemis_no`) REFERENCES `security_users` (`openemis_no`)
+            FOREIGN KEY (`openemis_no`) REFERENCES `security_users` (`openemis_no`),
+            FOREIGN KEY (`created_user_id`) REFERENCES `security_users` (`id`),
+            FOREIGN KEY (`modified_user_id`) REFERENCES `security_users` (`id`)
           ) ENGINE=InnoDB DEFAULT CHARSET=utf8"
         );
     }
@@ -28,7 +30,7 @@ class POCOR8666 extends AbstractMigration
     // rollback
     public function down()
     {
-        $this->execute('DROP TABLE IF EXISTS `scanned_attendances`');
-        $this->execute('RENAME TABLE `z_8666_scanned_attendances` TO `scanned_attendances`');
+        $this->execute('DROP TABLE IF EXISTS `institution_scanned`');
+        $this->execute('RENAME TABLE `z_8666_institution_scanned` TO `institution_scanned`');
     }
 }

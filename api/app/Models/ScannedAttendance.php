@@ -24,7 +24,7 @@ class ScannedAttendance extends Model
 
     protected $primaryKey = 'id';
     public $timestamps = false;
-    protected $table = "scanned_attendances";
+    protected $table = "institution_scanned";
 
     public function securityUser()
     {
