@@ -1,3 +1,13 @@
+### [4.4.1] - 2024-12-16
+- Bug Fixed: Institutions > Staff > Edit > Homeroom Teacher:When assigning homeroom teacher to a non-homeroom teacher, the system unassigned the staff
+- Bug Fixed: Directory > Import: When importing user in directory, the system does not allow due to the OpenEMIS ID uniqueness issue
+- Bug Fixed: Administration>System Setup>Education Systems>Copy: User is able to copy education structure
+- Bug Fixed: Reports > Institutions > Student Absence: When generating report for Student Absence, the status goes to Error
+- Bug Fixed: Swagger: Updating naming to the correct convention
+- Bug Fixed: Institutions > Attendance > Students: Able to mark attendance even though system shows that school is closed
+- Bug Fixed: Administration>System Configuration>Themes: User should be able to see the name of the colour
+- Bug Fixed: Administration > Scholarship > Recipients > View/Edit page: User should be able to view and edit
+
 ### [4.4.0] - 2024-12-05
 - Implemented: Develop Timetable APIs
 - Implemented: Develop changes to the education structure and student subjects page
