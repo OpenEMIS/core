@@ -29,11 +29,16 @@ class ScannedAttendanceRequest extends FormRequest
     public function rules()
     {
         return [
-            'openemis_no' => 'required',
-            'datetime' => 'required',
-            'scanner_code' => 'required',
+            '*.openemis_no' => 'required|string',
+            '*.datetime' => 'required|date',
+            '*.scanner_code' => 'required|string',
+            '*.latitude' => 'nullable|numeric',
+            '*.longitude' => 'nullable|numeric',
+            '*.location' => 'nullable|string',
+            '*.access' => 'nullable|string',
         ];
     }
+
 
     /**
      * @param Validator $validator

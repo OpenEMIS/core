@@ -128,40 +128,6 @@ class ScannedController extends Controller
         }
     }
 
-    public function updateScannedUserData($openemisNo, Request $request)
-    {
-        try {
-            $data = $this->scannedService->updateScannedUser($openemisNo, $request);
-            if($data == 1){
-                return $this->sendSuccessResponse("Scanned User Data Update successfully.");
-            } else {
-                return $this->sendErrorResponse("Scanned User Data not Update successfully.");
-            }
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to Update Scanned User Data in DB',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to Update Scanned User Data in DB');
-        }
-    }
-
-    public function scannedUserListing(Request $request)
-    {
-        try {
-            $listing = $this->scannedService->scannedUserListing($request);
-            return $listing;
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to Update Scanned User Data in DB',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to Update Scanned User Data in DB');
-        }
-    }
-
     /**
     * @OA\Get(
     *     path="/api/v4/scanned/{openemis_no}",

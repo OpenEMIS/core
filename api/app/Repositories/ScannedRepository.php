@@ -32,118 +32,49 @@ class ScannedRepository extends Controller
      * @param ScannedAttendanceRequest $request The request containing the scanned data to be saved.
      * @return mixed The result of the save operation, typically the saved record or a success message.
      */
+
     public function saveScannedUserData(ScannedAttendanceRequest $request)
     {
         DB::beginTransaction();
         try {
-            $param = $request->all();
-            $storeArr = [
-                'openemis_no' => $param['openemis_no'],
-                'datetime' => Carbon::parse($param['datetime'])->toDateTimeString(),
-                'latitude' => $param['latitude'],
-                'longitude' => $param['longitude'],
-                'scanner_code' => $param['scanner_code'],
-                'location' => $param['location'],
-                'access' => $param['access'],
-                'created_user_id' => JWTAuth::user()->id,
-                'created' => Carbon::now()->toDateTimeString()
-            ];
-            $scannedAttendance = new ScannedAttendance();
-            $scannedAttendance->fill($storeArr);
-            $scannedAttendance->save(); // Call save() on the instance
-            DB::commit();
-            return 1;
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error(
-                'Failed to store Scanned User data.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to store Scanned User data.');
-        }
-    }
-
-    public function updateScannedUserData($openemisNo, Request $request)
-    {
-        DB::beginTransaction();
-        try {
-            $param = $request->all();
-            $storeArr = [
-                'openemis_no' => $openemisNo,
-                'datetime' => Carbon::parse($param['datetime']) ,
-                'latitude' => $param['latitude'] ?? null,
-                'longitude' => $param['longitude'] ?? null,
-                'location' => $param['location'] ?? null,
-                'access' => $param['access'] ?? null,
-                'modified_user_id' => JWTAuth::user()->id,
-                'modified' => Carbon::now()->toDateTimeString()
-            ];
-            $scannedAttendance = ScannedAttendance::where('openemis_no', $openemisNo)->first();
-            if (!$scannedAttendance) {
-                DB::rollback();
-                return $this->sendErrorResponse('Scanned attendance record not found.');
-            }
-            $scannedAttendance->fill($storeArr);
-            $scannedAttendance->save();
-            DB::commit();
-            return 1;
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error(
-                'Failed to Update Scanned User data.',
-                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to Update Scanned User data.');
-        }
-    }
-
-
-    public function scannedListing(Request $request)
-    {
-        try {
             $params = $request->all();
-            $dateTo = $params['date_to'] ?? null;
-            $dateFrom = $params['date_from'] ?? null;
-            if ($dateFrom && $dateTo && $dateFrom > $dateTo) {
-                [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+           
+            $bulkInsertData = [];
+            $currentTimestamp = Carbon::now()->toDateTimeString();
+            $userId = JWTAuth::user()->id;
+
+            foreach ($params as $param) {
+                $bulkInsertData[] = [
+                    'openemis_no' => $param['openemis_no'],
+                    'datetime' => Carbon::parse($param['datetime'])->toDateTimeString(),
+                    'latitude' => $param['latitude'],
+                    'longitude' => $param['longitude'],
+                    'scanner_code' => $param['scanner_code'],
+                    'location' => $param['location'],
+                    'access' => $param['access'],
+                    'created_user_id' => $userId,
+                    'created' => $currentTimestamp,
+                ];
             }
 
-            // Initialize the query
-            $userListingRecord = ScannedAttendance::with('securityUser');
+            // Perform a bulk insert
+            ScannedAttendance::insert($bulkInsertData);
 
-            // Date filtering
-            if (!empty($dateFrom) && !empty($dateTo)) {
-                $userListingRecord = $userListingRecord->whereBetween('datetime', [$dateFrom, $dateTo]);
-            }
-
-            // Ordering
-            if (isset($params['order'])) {
-                $orderBy = $params['order_by'] ?? "ASC";
-                $col = $params['order'];
-                $userListingRecord = $userListingRecord->orderBy($col, $orderBy);
-            }
-
-            // Pagination or get all records
-            $resp = [];
-            if (isset($params['limit'])) {
-                $limit = $params['limit'];
-                $resp = $userListingRecord->paginate($limit)->toArray();
-            } else {
-                $userListingRecord = $userListingRecord->get()->toArray();
-                $resp['data'] = $userListingRecord;
-            }
-
-            return $resp;
+            DB::commit();
+            return 1;
         } catch (\Exception $e) {
-            Log::error(
-                'Failed to fetch list from DB',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
+            DB::rollback();
 
-            return $this->sendErrorResponse('Scanned List Not Found');
+            // Log error for debugging
+            Log::error('Failed to store Scanned User data.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to store Scanned User data.'
+            ], 500);
         }
     }
 
