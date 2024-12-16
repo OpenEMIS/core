@@ -99,6 +99,7 @@ class ImportBehavior extends Behavior
         'custom_text' => '',
         'row_heights' => [75,25],
     ];
+    protected $type = '';
     protected $rootFolder = 'import';
     protected $_fileTypesMap = [
         // 'csv'    => 'text/plain',
@@ -793,6 +794,7 @@ class ImportBehavior extends Behavior
 //        Log::debug($titleRange);
 //        Log::debug($subtitleRange);
         // Apply title if it exists
+        $type = $this->type;
         if (!empty($title) && !empty($titleRange)) {
             $this->applyCellStyle($activeSheet, $titleRange, $fontSize, true);
             if ($titleindex > 1) {
@@ -807,8 +809,12 @@ class ImportBehavior extends Behavior
             $subtitleCells = explode(':', $subtitleRange);
             $startColumn = $subtitleCells[0];
             $cell = $startColumn; // Subtitle row is after the title
-            $activeSheet->mergeCells($subtitleRange);
+            if (empty($type) || $type != 'failed' ) {
+                $activeSheet->mergeCells($subtitleRange);
+            }
             $activeSheet->setCellValue($cell, $subtitle);
+            Log::debug(print_r(['heading' => $heading], true));
+            Log::debug(print_r(['$titleindex' => $titleindex], true));
         }
     }
 
@@ -897,7 +903,9 @@ class ImportBehavior extends Behavior
 
             $activeSheet->setCellValue("A2", $this->customText);
         }
-
+        if($type == 'failed') { //if failed, then need to merge 4 columns instead of 3
+            $this->type = 'failed';
+        }
         $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) . ' ' . $dataSheetName);
 
         $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
