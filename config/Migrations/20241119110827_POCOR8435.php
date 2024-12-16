@@ -25,10 +25,10 @@ class POCOR8435 extends AbstractMigration
         //outcome_templates
         $this->execute('CREATE TABLE IF NOT EXISTS `z_8435_outcome_templates` LIKE `outcome_templates`');
         $this->execute('INSERT INTO `z_8435_outcome_templates` SELECT * FROM `outcome_templates`');
-        $this->execute("ALTER TABLE `outcome_templates` ADD `outcome_grading_type_id` INT NULL AFTER `education_grade_id`,
-        ADD CONSTRAINT `fk_outcome_grading_type_id` FOREIGN KEY (`outcome_grading_type_id`) REFERENCES `outcome_grading_types`(`id`)
+        $this->execute("ALTER TABLE `outcome_templates` ADD `outcome_grading_type_id` INT NULL AFTER `education_grade_id`, 
+        ADD CONSTRAINT `fk_outcome_grading_type_id` FOREIGN KEY (`outcome_grading_type_id`) REFERENCES `outcome_grading_types`(`id`) 
         ON DELETE SET NULL ON UPDATE CASCADE");
-
+        
         //institution_subject_students
         $this->execute('CREATE TABLE IF NOT EXISTS `z_8435_institution_subject_students` LIKE `institution_subject_students`');
         $this->execute('INSERT INTO `z_8435_institution_subject_students` SELECT * FROM `institution_subject_students`');

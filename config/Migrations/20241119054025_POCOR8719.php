@@ -16,26 +16,15 @@ class POCOR8719 extends AbstractMigration
      */
     public function up()
     {
-        //Backup `institution_student_absence_details` table
-        $this->execute('DROP TABLE IF EXISTS `z_8719_institution_student_absence_details`');
+        //Backup `institution_student_absence_details` table 
         $this->execute('CREATE TABLE `z_8719_institution_student_absence_details` LIKE `institution_student_absence_details`');
         $this->execute('INSERT INTO `z_8719_institution_student_absence_details` SELECT * FROM `institution_student_absence_details`');
 
-        try {
-            $result = $this->fetchRow("SELECT CONSTRAINT_NAME
-                               FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-                               WHERE TABLE_NAME = 'institution_student_absence_details'
-                               AND CONSTRAINT_NAME = 'insti_stude_absen_detai_fk_stude_absen_reaso_id'");
-            if ($result) {
-                $this->execute('ALTER TABLE `institution_student_absence_details` DROP FOREIGN KEY `insti_stude_absen_detai_fk_stude_absen_reaso_id`');
-            }
-        } catch (\Exception $e) {
-            // Handle exception if needed
-        }
+        $this->execute('ALTER TABLE `institution_student_absence_details` DROP FOREIGN KEY `insti_stude_absen_detai_fk_stude_absen_reaso_id`'); 
     }
 
     public function down() {
-        //Restore institution_student_absence_details table
+        //Restore institution_student_absence_details table 
         $this->execute('DROP TABLE IF EXISTS `institution_student_absence_details`');
         $this->execute('RENAME TABLE `z_8719_institution_student_absence_details` TO `institution_student_absence_details`');
     }
