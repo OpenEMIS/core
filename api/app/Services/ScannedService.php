@@ -49,38 +49,6 @@ class ScannedService extends Controller
         }
     }
 
-    public function updateScannedUser($openemisNo, Request $request)
-    {
-        try {
-            $data = $this->scannedRepository->updateScannedUserData($openemisNo, $request);
-            return $data;
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to Update Scanned User data in db',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to Update Scanned User data in db.');
-        }
-    }
-
-    public function scannedUserListing(Request $request)
-    {
-        try {
-            $data = $this->scannedRepository->scannedListing($request);
-            return $data;
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to Update Scanned User data in db',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to Update Scanned User data in db.');
-        }
-    }
-
     public function scannedOpenemisNo($params, Request $request)
     {
         try {
