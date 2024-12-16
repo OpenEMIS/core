@@ -357,6 +357,24 @@ class ImportUsersTable extends AppTable
                         $institution_class_id = $tempRow['institution_class_id']  ?? null;
                         $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
                         $start_date = $tempRow['start_date'];
+                        //TODO!
+                        if(!$have_error){
+                            $StudentAdmission = self::getDynamicTableInstance('Institution.StudentAdmission');
+                            $admission['entity'] = $this->StudentAdmission->newEntity([]);
+                            $tempRow['end_date'] = false;
+                            $tempRow['assignee_id'] = $this->Auth->user('id'); //POCOR-7282
+                            $tempRow['institution_id'] = $institution_id;
+                            // Optional fields which will be validated should be set with a default value on initialisation
+                            $tempRow['institution_class_id'] = null;
+
+                                // added for POCOR-4577 import staff leave for workflow related record to save the transition record
+                                $tempRow['action_type'] = 'imported';
+                                $tempRow['student_id'] = (int) $tempRow['student_id'];
+                                //$activeModel->patchEntity($tableEntity, $tempRow);
+                            }
+
+                            $errors = $tableEntity->getErrors();
+
                     }
                 }
             }
@@ -851,7 +869,7 @@ class ImportUsersTable extends AppTable
             $tempRow['contact_error'] = true;
             $have_error = true;
         }
-        if (!isset($contact)) {
+        if (isset($contact)) {
             //use contact_type_id to get contact_options id to save.
             $ContactTypesTable = self::getDynamicTableInstance('User.ContactTypes');
             $ContactTable = self::getDynamicTableInstance('User.Contacts');
@@ -865,11 +883,11 @@ class ImportUsersTable extends AppTable
                 $contactEntity = null; // POCOR-7973
                 $securityUserId = null;
                 $openemis_no = $tempRow['openemis_no'];
-                if($openemis_no){
-                $securityUserId = $this->Users->find()
-                    ->select([$this->Users->aliasField('id')])
-                    ->where([$this->Users->aliasField('openemis_no') => $openemis_no])
-                    ->first();
+                if ($openemis_no) {
+                    $securityUserId = $this->Users->find()
+                        ->select([$this->Users->aliasField('id')])
+                        ->where([$this->Users->aliasField('openemis_no') => $openemis_no])
+                        ->first();
                 }
                 $data = [
                     'contact_type_id' => $tempRow['contact_type'],
@@ -904,7 +922,6 @@ class ImportUsersTable extends AppTable
                 } elseif (!$contactEntity) {
                     $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
                     $tempRow['contact_error'] = true;
-
                     $have_error = true;
                 }
 
