@@ -182,6 +182,7 @@ class ImportUsersTable extends AppTable
             }
         } else {
             $tempRow['entity'] = $user;
+            $tempRow['security_user_id'] = $user->id;
         }
 
         if (!empty($tempRow['account_type'])) {
@@ -313,10 +314,12 @@ class ImportUsersTable extends AppTable
         $have_error = false;
         // identity number mandatory
         if ($isStaff) {
+            $tempRow['staff_id'] = $tempRow['security_user_id'] ?? null;
             $have_error = $have_error || $this->checkStaffIdentityNationality($tempRow, $rowInvalidCodeCols);
         }
 
         if ($isStudent) {
+            $tempRow['student_id'] = $tempRow['security_user_id'] ?? null;
             $have_error = $have_error || $this->checkStudentIdentityNationality($tempRow, $rowInvalidCodeCols);
 
         }
@@ -337,82 +340,38 @@ class ImportUsersTable extends AppTable
 //        Log::debug(print_r($originalRow, true));
 
         if ($isStudent) {
+
             $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
             $institution_id = $tempRow['institution_id'] ?? null;
             Log::debug(print_r(['$institution_id' => $tempRow], true));
-            if(!empty($institution_id)) {
+            if (!empty($institution_id)) {
                 $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
-                $academic_period_id = $tempRow['academic_period_id']  ?? null;
+                $academic_period_id = $tempRow['academic_period_id'] ?? null;
                 Log::debug(print_r(['$academic_period_id' => $tempRow], true));
                 if (!empty($academic_period_id)) {
                     $education_grade_key = $keys['education_grade_id'];
                     $education_grade_code = $originalRow[$education_grade_key];
                     $tempRow['education_grade_code'] = $education_grade_code;
                     $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
-                    $education_grade_id = $tempRow['education_grade_id']  ?? null;
+                    $education_grade_id = $tempRow['education_grade_id'] ?? null;
                     Log::debug(print_r(['$education_grade_id' => $tempRow], true));
 
                     if (!empty($education_grade_id)) {
                         $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
-                        $institution_class_id = $tempRow['institution_class_id']  ?? null;
+                        $institution_class_id = $tempRow['institution_class_id'] ?? null;
                         $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
                         $start_date = $tempRow['start_date'];
-                        //TODO!
-                        if(!$have_error){
-                            $StudentAdmission = self::getDynamicTableInstance('Institution.StudentAdmission');
-                            $admission['entity'] = $this->StudentAdmission->newEntity([]);
-                            $tempRow['end_date'] = false;
-                            $tempRow['assignee_id'] = $this->Auth->user('id'); //POCOR-7282
-                            $tempRow['institution_id'] = $institution_id;
-                            // Optional fields which will be validated should be set with a default value on initialisation
-                            $tempRow['institution_class_id'] = null;
-
-                                // added for POCOR-4577 import staff leave for workflow related record to save the transition record
-                                $tempRow['action_type'] = 'imported';
-                                $tempRow['student_id'] = (int) $tempRow['student_id'];
-                                //$activeModel->patchEntity($tableEntity, $tempRow);
-                            }
-
-                            $errors = $tableEntity->getErrors();
+                        $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
 
                     }
                 }
             }
+        }
+
+
             Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
 
-//            if($institution_id){
-//                $user = $tempRow['entity'];
-//                if($user){
-//                    $security_user_id = $user->id;
-//                }
-//                $currentUserId = $this->Auth->user('id');
-//                $admission = [
-//                    'institution_id' => $institution_id,
-//                    'assignee_id' => $currentUserId,
-//                ];
-//                if($security_user_id){
-//                  $admission['student_id'] = $security_user_id;
-//                }
-//                $admissionEntity = $StudentAdmissions->newEntity($admission);
-//                if ($admissionEntity && $admissionEntity->getErrors()) { // POCOR-7973
-//                    $errorMessages = array_reduce(
-//                        $admissionEntity->getErrors(),
-//                        function ($carry, $errors) {
-//                            return array_merge($carry, $errors);
-//                        },
-//                        []
-//                    );
-//
-//                    $rowInvalidCodeCols['institution_code'] = implode(',', $errorMessages);
-//                    $have_error = true;
-//                }
-//                $tempRow['admission_entity'] = $admissionEntity;
-//                $tempRow['end_date'] = false;
-//                $tempRow[] =; //POCOR-7282
-//                // Optional fields which will be validated should be set with a default value on initialisation
-//                $tempRow['institution_class_id'] = null;
-//            }
-        }
+
 
         // Nationalities Mandatory
 
@@ -931,6 +890,84 @@ class ImportUsersTable extends AppTable
                 $have_error = true;
             }
         }
+        return $have_error;
+    }
+
+   private function checkAdmission(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+
+        // Required fields for admission
+        $requiredFields = [
+            'institution_id',
+            'start_date',
+            'assignee_id',
+            'student_id',
+            'education_grade_id',
+            'institution_class_id'
+        ];
+
+        // Validate required fields
+        foreach ($requiredFields as $field) {
+            if (empty($tempRow[$field])) {
+                $rowInvalidCodeCols[$field] = $this->getExcelLabel('Import', "{$field}_required");
+                $tempRow["{$field}_error"] = true;
+                $have_error = true;
+            }
+        }
+
+        // If there are errors, stop further processing
+        if ($have_error) {
+            return true;
+        }
+
+        // Extract relevant fields for admission
+        $admissionData = array_intersect_key($tempRow, array_flip([
+            'institution_id',
+            'start_date',
+            'end_date',
+            'assignee_id',
+            'student_id',
+            'education_grade_id',
+            'institution_class_id'
+        ]));
+
+        // Add additional default values
+        $admissionData['action_type'] = 'imported';
+        $admissionData['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
+        $admissionData['institution_class_id'] = $tempRow['institution_class_id'] ?? null;
+        $admissionData['end_date'] = $tempRow['end_date'] ?? null;
+
+        // Create a new admission entity
+        $StudentAdmission = self::getDynamicTableInstance('Institution.StudentAdmission');
+        $newAdmission = $StudentAdmission->newEntity($admissionData);
+
+        // Validate the new entity and handle errors
+        if ($newAdmission && $newAdmission->getErrors()) {
+            $errorMessages = array_reduce(
+                $newAdmission->getErrors(),
+                function ($carry, $errors) {
+                    return array_merge($carry, $errors);
+                },
+                []
+            );
+
+            $rowInvalidCodeCols['admission'] = implode(',', $errorMessages);
+            $tempRow['admission_error'] = true;
+            $have_error = true;
+        } elseif (!$newAdmission) {
+            $rowInvalidCodeCols['admission'] = $this->getExcelLabel('Import', 'value_not_in_list');
+            $tempRow['admission_error'] = true;
+            $have_error = true;
+        } else {
+            // Save the admission
+            if (!$StudentAdmission->save($newAdmission)) {
+                $rowInvalidCodeCols['admission'] = $this->getExcelLabel('Import', 'save_failed');
+                $tempRow['admission_error'] = true;
+                $have_error = true;
+            }
+        }
+
         return $have_error;
     }
     private function addError(array|ArrayObject &$rowInvalidCodeCols, string|array $fields, string $message): void
