@@ -17,6 +17,7 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Text;
+use Cake\Datasource\ConnectionManager;
 class StaffPositionProfilesTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -357,10 +358,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
-        //POCOR-8447 Start This code write in editAfterAction function
         //POCOR 7289 tables updation start for homeroom
         /*if ($entity->staff_change_type_id == 6) {
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
             $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
             $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
@@ -421,12 +421,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 }
             } 
              //Both case
-            //$query=$InstitutionStaff->getQuery();
-            $query = $InstitutionStaff->find();//POCOR-8447
+            $query=$InstitutionStaff->query();
             $query->update()
-                   ->set(['is_homeroom' => $entity->homeroom_teacher])
-                   ->where(['id' => $entity->institution_staff_id])
-                   ->execute();
+               ->set(['is_homeroom' => $entity->homeroom_teacher])
+               ->where(['id' => $entity->institution_staff_id])
+               ->execute();
             $StaffChangeTypesData = $StaffChangeTypes->find()
                             ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
                             ->first();
@@ -445,11 +444,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             return false;
         }*/
         //POCOR-7289 ends
-        //POCOR-8447 END
-
-        //POCOR-6979
-
-
+    
         /* START POCOR-7216 */
 
         // if($StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
@@ -504,12 +499,14 @@ class StaffPositionProfilesTable extends ControllerActionTable
         else if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE'){
             $entity->end_date = $entity->end_date;
         }
-        // else if($StaffChangeTypesDataForShift['code'] == 'HOMEROOM_TEACHER'){
-        //     $entity->end_date = $entity->end_date;
-        // }
-        else{
+         else if($StaffChangeTypesDataForShift['code'] == 'HOMEROOM_TEACHER'){ //POCOR-8760
+            if(!empty($entity->end_date)){
+                $entity->end_date = $entity->end_date;
+            }
+         }
+        /*else{
             $entity->end_date = $entity->start_date;
-        }
+        }*/
 
         /* END POCOR-7216 */
 
@@ -530,8 +527,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
                 //POCOR-7006
-            //POCOR-8447 Start This code write in editAfterAction function
-            /*if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT'){
+            if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT'){
                 //End of POCOR-7006
                 $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -563,8 +559,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     //return $this->controller->redirect($url);
                 }
                 //POCOR-6979[START]
-            }*/
-            // Pocor-8447 End
+            }
         }
         /**POCOR-6928 ends*/    
     }
@@ -1813,8 +1808,31 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
         return $attr;
     }
-    //Pocor 7289 homeroom teachers option end
+    /**
+     * POCOR-8760
+     * This method is triggered after an entity is saved.
+     * It performs additional actions when the `staff_change_type_id` is 6.
+     *
+     * @param \Cake\Event\Event $event The afterSave event.
+     * @param \Cake\Datasource\EntityInterface $entity The saved entity.
+     * @param \ArrayObject $options Options passed from the save operation.
+     */
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        if($entity->staff_change_type_id == 6){
+            $homeRoom =   $this->request->getData()['StaffPositionProfiles']['homeroom_teacher'];
 
+            $position = $this->request->getData()['StaffPositionProfiles']['institution_position_id'];
+            $staff = TableRegistry::get('Institution.Staff');
+            $staff->updateAll(
+                    ['is_homeroom' => $homeRoom,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
+                    [
+                     'institution_position_id IS' => $position, //condition update
+                    ]
+                );
+        } 
+
+    }
 
 }
 
