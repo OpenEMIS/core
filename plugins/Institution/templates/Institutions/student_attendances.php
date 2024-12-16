@@ -19,15 +19,29 @@ $this->start('toolbar');
 </button>
 <?php endif; ?>
 
+<?php /******POCOR-8745--Start*********/ ?>
 <?php if ($_edit && $_isActive) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onEditClick()">
-        <i class="fa kd-edit"></i> 
+    <button class="btn btn-xs btn-default" 
+            data-toggle="tooltip" 
+            data-placement="bottom" 
+            data-container="body" 
+            title="<?= __('Edit');?>" 
+            ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && !$ctrl.closedPeriod && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" 
+            ng-click="$ctrl.onEditClick()">
+        <i class="fa kd-edit"></i>
     </button>
 
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
+    <button class="btn btn-xs btn-default" 
+            data-toggle="tooltip" 
+            data-placement="bottom" 
+            data-container="body" 
+            title="<?= __('Back');?>" 
+            ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" 
+            ng-click="$ctrl.onBackClick()">
         <i class="fa kd-back"></i>
     </button>
 <?php endif; ?>
+<?php /******POCOR-8745--End*********/ ?>
 <?php if ($_edit) : ?>
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('No Scheduled Class');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onNoScheduledClick()">
         <i class="kd-null"></i> 
