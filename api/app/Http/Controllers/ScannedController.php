@@ -78,12 +78,7 @@ class ScannedController extends Controller
     *                 description="Access level or type of scan",
     *                 example="employee"
     *             ),
-    *             @OA\Property(
-    *                 property="scanner_code",
-    *                 type="string",
-    *                 description="Code identifying the scanner device",
-    *                 example="SCN-001"
-    *             )
+    *          
     *         )
     *     ),
     *     @OA\Response(
@@ -116,7 +111,7 @@ class ScannedController extends Controller
             if($data == 1){
                 return $this->sendSuccessResponse("Scanned User Data Added successfully.");
             } else {
-                return $this->sendErrorResponse("Scanned User Data not Added successfully.");
+                return $this->sendErrorResponse("Scanned User Data not Added. kindly check Scanned OpenemisNo");
             }
         } catch (\Exception $e) {
             Log::error(
@@ -161,7 +156,7 @@ class ScannedController extends Controller
     *                 @OA\Property(property="longitude", type="number", format="float", example=55.296249),
     *                 @OA\Property(property="location", type="string", example="Main Building Entrance"),
     *                 @OA\Property(property="access", type="string", example="employee"),
-    *                 @OA\Property(property="scanner_code", type="string", example="SCN-001")
+    *                 
     *             )
     *         )
     *     ),
