@@ -31,7 +31,6 @@ class ScannedAttendanceRequest extends FormRequest
         return [
             '*.openemis_no' => 'required|string',
             '*.datetime' => 'required|date',
-            '*.scanner_code' => 'required|string',
             '*.latitude' => 'nullable|numeric',
             '*.longitude' => 'nullable|numeric',
             '*.location' => 'nullable|string',

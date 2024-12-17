@@ -7,9 +7,8 @@ class POCOR8666 extends AbstractMigration
     {
         $this->execute("CREATE TABLE IF NOT EXISTS `institution_scanned` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
-            `datetime` datetime NOT NULL,
             `openemis_no` varchar(100) NOT NULL,
-            `scanner_code` varchar(100) NOT NULL,
+            `datetime` datetime NOT NULL,
             `latitude` decimal(10, 8)  NULL,
             `longitude` decimal(11, 8)  NULL,
             `access` varchar(100)  NULL,

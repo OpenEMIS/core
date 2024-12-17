@@ -33,7 +33,7 @@ class ScannedRepository extends Controller
      * @return mixed The result of the save operation, typically the saved record or a success message.
      */
 
-    public function saveScannedUserData(ScannedAttendanceRequest $request)
+    /*public function saveScannedUserData(ScannedAttendanceRequest $request)
     {
         DB::beginTransaction();
         try {
@@ -44,17 +44,21 @@ class ScannedRepository extends Controller
             $userId = JWTAuth::user()->id;
 
             foreach ($params as $param) {
-                $bulkInsertData[] = [
-                    'openemis_no' => $param['openemis_no'],
-                    'datetime' => Carbon::parse($param['datetime'])->toDateTimeString(),
-                    'latitude' => $param['latitude'],
-                    'longitude' => $param['longitude'],
-                    'scanner_code' => $param['scanner_code'],
-                    'location' => $param['location'],
-                    'access' => $param['access'],
-                    'created_user_id' => $userId,
-                    'created' => $currentTimestamp,
-                ];
+                $openemisNo = SecurityUsers::where('openemis_no', $param['openemis_no'])->first();
+                if(!empty($openemisNo)){
+                        $bulkInsertData[] = [
+                        'openemis_no' => $param['openemis_no'],
+                        'datetime' => Carbon::parse($param['datetime'])->toDateTimeString(),
+                        'latitude' => $param['latitude'],
+                        'longitude' => $param['longitude'],
+                        'location' => $param['location'],
+                        'access' => $param['access'],
+                        'created_user_id' => $userId,
+                        'created' => $currentTimestamp,
+                    ];
+                }else{
+                    scan.error()
+                }
             }
 
             // Perform a bulk insert
@@ -76,8 +80,62 @@ class ScannedRepository extends Controller
                 'message' => 'Failed to store Scanned User data.'
             ], 500);
         }
-    }
+    }*/
+    public function saveScannedUserData(ScannedAttendanceRequest $request)
+    {
+        DB::beginTransaction();
+        try {
+            $params = $request->all();
+            
+            $bulkInsertData = [];
+            $notFoundUsers = []; // Track users not found
+            $currentTimestamp = Carbon::now()->toDateTimeString();
+            $userId = JWTAuth::user()->id;
 
+            foreach ($params as $param) {
+                $openemisNo = SecurityUsers::where('openemis_no', $param['openemis_no'])->first();
+                
+                if (!empty($openemisNo)) {
+                    $bulkInsertData[] = [
+                        'openemis_no' => $param['openemis_no'],
+                        'datetime' => Carbon::parse($param['datetime'])->toDateTimeString(),
+                        'latitude' => $param['latitude'],
+                        'longitude' => $param['longitude'],
+                        'location' => $param['location'],
+                        'access' => $param['access'],
+                        'created_user_id' => $userId,
+                        'created' => $currentTimestamp,
+                    ];
+                } else {
+                    // Log users not found to scan.log
+                    Log::channel('scan')->error('User not found in db', [
+                        'openemis_no' => $param['openemis_no'],
+                        'timestamp' => $currentTimestamp,
+                        'details' => $param
+                    ]);
+                    $notFoundUsers[] = $param['openemis_no'];
+                    return 2;
+                }
+            }
+
+            if (!empty($bulkInsertData)) {
+                ScannedAttendance::insert($bulkInsertData);
+            }
+
+            DB::commit();
+            return 1;
+        } catch (\Exception $e) {
+            DB::rollback();
+            // Log to scan.log channel with detailed error information
+            Log::channel('scan')->error('Failed to store Scanned User data', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+            return 2;
+            
+        }
+    }
     /**
      * POCOR-8666
      * Fetch scanned attendance records based on OpenEMIS number and optional date range.
