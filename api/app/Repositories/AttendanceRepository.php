@@ -2439,6 +2439,7 @@ class AttendanceRepository extends Controller
                             ->first();
 
                     $attendanceType = StudentAttendanceType::where('code', $row[1])->first();
+
                     $institutionSubject = InstitutionSubjects::where('id', $row[3])->where('institution_id', $params['institution_id'])->first();
 
                     $absenceType = AbsenceTypes::where('code', $row[5])->first();
@@ -2478,7 +2479,7 @@ class AttendanceRepository extends Controller
                             ];
                     }
 
-                    if(!$institutionSubject && ($attendanceType == 'SUBJECT')){
+                    if(!$institutionSubject && ($attendanceType->code == 'SUBJECT')){
                         $label = $results[0][1][3];
                             $errors[$label] = 'Institution subject does not exist.';
                             $validation[] = [
@@ -2530,23 +2531,37 @@ class AttendanceRepository extends Controller
                         if($row[5] == "EXCUSED"){
                             $student_absence_reason_id = $row[6];
                         }
+
                         if(!$check){
-                            
+                           
                             $addArr['education_grade_id'] = (int)$institutionClassGrade->education_grade_id??0;
                             $addArr['academic_period_id'] = (int)$academicPeriodId;
                             $addArr['institution_id'] = (int)$params['institution_id'];
                             $addArr['institution_class_id'] = (int)$params['institution_class_id'];
                             $addArr['date'] = $date;
                             $addArr['period'] = $row[2];
-                            $addArr['subject_id'] = ($attendanceType == 'DAY') ? 0 : $row[3];
+                            $addArr['subject_id'] = ($attendanceType->code == 'DAY') ? 0 : (int) ($row[3] ?? 0);
                             $addArr['student_id'] = $user->id;
                             $addArr['absence_type_id'] = $absenceType->id;
                             $addArr['student_absence_reason_id'] = $student_absence_reason_id;
                             $addArr['comment'] = $row[7];
                             $addArr['created_user_id'] = JWTAuth::user()->id;
                             $addArr['created'] = Carbon::now()->toDateTimeString();
-                            
-                            $store = InstitutionStudentAbsenceDetails::insert($addArr);
+
+                            // Force check for null values
+                            if (is_null($addArr['subject_id']) || $addArr['subject_id'] === '') {
+                                $addArr['subject_id'] = 0;
+                            }
+
+                            try {
+                                $store = InstitutionStudentAbsenceDetails::insert($addArr);
+                            } catch (\Exception $e) {
+                                // Log::error('Failed to insert attendance record.', [
+                                //     'error' => $e->getMessage(),
+                                //     'data' => $addArr
+                                // ]);
+                                dd($e); // Re-throw for further debugging if necessary
+                            }
                             
                             $add_data[] = [
                                 'row_number' => $i,
@@ -2560,7 +2575,7 @@ class AttendanceRepository extends Controller
                             $updateArr['institution_class_id'] = (int)$params['institution_class_id'];
                             $updateArr['date'] = $date;
                             $updateArr['period'] = $row[2];
-                            $updateArr['subject_id'] = $row[3];
+                            $updateArr['subject_id'] = ($attendanceType->code == 'DAY') ? 0 : (int) ($row[3] ?? 0);
                             $updateArr['student_id'] = $user->id;
                             $updateArr['absence_type_id'] = $absenceType->id;
                             $updateArr['student_absence_reason_id'] = $student_absence_reason_id;
@@ -2575,7 +2590,7 @@ class AttendanceRepository extends Controller
                                 'institution_class_id' => (int)$params['institution_class_id'],
                                 'date' => $date,
                                 'period' => $row[2],
-                                'subject_id' => $row[3]
+                                'subject_id' => ($attendanceType->code == 'DAY') ? 0 : (int) ($row[3] ?? 0)
                             ])->update($updateArr);
 
                             $updated_data[] = [
@@ -2593,7 +2608,7 @@ class AttendanceRepository extends Controller
                             'education_grade_id' => (int)$institutionClassGrade->education_grade_id??0,
                             'date' => $date,
                             'period' => $row[2],
-                            'subject_id' => $row[3]
+                            'subject_id' => ($attendanceType->code == 'DAY') ? 0 : (int) ($row[3] ?? 0)
                         ])
                         ->first();
 
@@ -2604,7 +2619,7 @@ class AttendanceRepository extends Controller
                             $storeArr['education_grade_id'] = (int)$institutionClassGrade->education_grade_id??0;
                             $storeArr['date'] = $date;
                             $storeArr['period'] = $row[2];
-                            $storeArr['subject_id'] = $row[3];
+                            $storeArr['subject_id'] = ($attendanceType->code == 'DAY') ? 0 : (int) ($row[3] ?? 0);
 
                             $insert = StudentAttendanceMarkedRecords::insert($storeArr);
                         }
