@@ -2840,4 +2840,19 @@ public function getIdentityTypeData($value_selection)
         return $result;
     }
 
+    //POCOR-8743 Start
+    public function onGetModifiedUserId(Event $event, Entity $entity)
+    {
+        $users = TableRegistry::get('Security.Users');
+        $user = $users->get($entity->modified_user_id);
+        return $user->name;
+    }
+
+    public function onGetCreatedUserId(Event $event, Entity $entity)
+    {
+        $users = TableRegistry::get('Security.Users');
+        $user = $users->get($entity->created_user_id);
+        return $user->name;
+    }
+    //POCOR-8743 End
 }
