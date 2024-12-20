@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
@@ -27,7 +27,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-        $this->SetTable('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -52,7 +52,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
             'Results'=> ['index']
         ]);
 
-
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
@@ -79,14 +79,14 @@ class ReportCardStatusProgressTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Academic Periods filter
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
 
-        $academicPeriodId = $this->request->query('academic_period_id');
-        $reportCardId = $this->request->query('report_card_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $reportCardId = $this->request->getQuery('report_card_id');
 
 
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $reportCardTable = TableRegistry::get('ReportCard.ReportCards');
         $reportCardOptions = $reportCardTable
                         ->find('list',[
@@ -98,11 +98,11 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                         ->toArray();
 
         $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
-        $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
+        $selectedReportCard = !is_null($this->request->getQuery('report_card_id')) ? $this->request->getQuery('report_card_id') : -1;
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'institutionId', 'reportCardOptions', 'selectedReportCard'));
 
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : 'all';
+        $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : 'all';
         $classOptions = [];
         $classLists = [];
         if ($selectedReportCard != -1) {
@@ -136,7 +136,9 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         if(!empty($classLists)){
             $classIds = array_keys($classLists);
         }
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Institution/report_status_progress', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         $query
                 ->select([
                     'id','name','institution_id',
@@ -188,9 +190,9 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $value = '';
         if ($entity->has('report_card_id')) {
             $reportCardId = $entity->report_card_id;
-        } else if (!is_null($this->request->query('report_card_id'))) {
+        } else if (!is_null($this->request->getQuery('report_card_id'))) {
             // used if student report card record has not been created yet
-            $reportCardId = $this->request->query('report_card_id');
+            $reportCardId = $this->request->getQuery('report_card_id');
         }
 
         if (!empty($reportCardId)) {
