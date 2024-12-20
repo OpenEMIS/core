@@ -594,7 +594,7 @@ class ScheduleController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/institutions/schedule-timetables",
+     *     path="/api/v4/institutions/schedule-timetables",
      *     summary="Get schedule timetables for institutions",
      *     tags={"Institution time table"},
      *     @OA\Parameter(
@@ -682,7 +682,7 @@ class ScheduleController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/institutions/{institutionId}/schedule-timetables",
+     *     path="/api/v4/institutions/{institutionId}/schedule-timetables",
      *     summary="Get schedule timetables for institutions",
      *     tags={"Institution time table"},
      *     @OA\Parameter(
@@ -777,7 +777,7 @@ class ScheduleController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/institutions/schedule-timetables/{scheduleTimeTableId}",
+     *     path="/api/v4/institutions/schedule-timetables/{scheduleTimeTableId}",
      *     summary="Get schedule timetables data for institutions",
      *     tags={"Institution time table"},
      *     @OA\Parameter(

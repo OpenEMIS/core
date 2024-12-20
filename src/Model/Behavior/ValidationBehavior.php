@@ -556,9 +556,25 @@ class ValidationBehavior extends Behavior
         return !preg_match('#[0-9]#', $check);
     }
 
-    public static function checkIfStringGotNoSpecialChar($check, array $globalData)
+    public function checkIfStringGotNoSpecialChar($check, array $globalData)
     {
-        return !preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $check);
+        //POCOR-8597 start
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $checkRecord  = $ConfigItems->find()
+            ->where(['code' => 'institution_validate_address'])
+            ->first();
+        if ($checkRecord && $checkRecord->value == 1) {
+            // If validation is enabled, return false if special characters are found
+            $specialCharPattern = '/[^a-zA-Z0-9\s]/';  
+            $containsSpecialChar = preg_match($specialCharPattern, $check);
+            if ($containsSpecialChar) {
+                return false; 
+            }
+            return true; 
+        } else {
+            // Validation is disabled, so allow any string
+            return true;
+        } //POCOR-8597 end
     }
 
     /**
@@ -815,8 +831,8 @@ class ValidationBehavior extends Behavior
                         'Genders.code', 'Genders.name'
                     ])
                     ->first();
-            $institutionGender = $query->Genders->name;
-            $institutionGenderCode = $query->Genders->code;
+            $institutionGender = $query->gender->name;//POCOR-8343
+            $institutionGenderCode = $query->gender->code;//POCOR-8343
 
             if ($institutionGenderCode == 'X') { //if mixed then always true
                 return true;
@@ -2076,7 +2092,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $StudentMinimumHeight = $ConfigItems->value($code);
-        if ($field < $StudentMinimumHeight) {
+        if (!empty($StudentMinimumHeight) && $field < $StudentMinimumHeight) {
             return $model->getMessage('general.validation_minimum_height');
         }
         return true;
@@ -2088,7 +2104,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $StudentMaximumHeight = $ConfigItems->value($code);
-        if($field > $StudentMaximumHeight){
+        if(!empty($StudentMaximumHeight) && $field > $StudentMaximumHeight){
             return $model->getMessage('general.validation_maximum_height');
         }
         return true;
@@ -2100,7 +2116,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $StudentMinimumWeight = $ConfigItems->value($code);
-        if ($field < $StudentMinimumWeight) {
+        if (!empty($StudentMinimumWeight) && $field < $StudentMinimumWeight) {
             return $model->getMessage('general.validation_minimum_weight');
         }
         return true;
@@ -2112,7 +2128,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $StudentMinimumWeight = $ConfigItems->value($code);
-        if ($field > $StudentMinimumWeight) {
+        if (!empty($StudentMinimumWeight) && $field > $StudentMinimumWeight) {
             return $model->getMessage('general.validation_maximum_weight');
         }
         return true;
@@ -2202,7 +2218,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $valuePattern =  $ConfigItems->value($code);
-        if($field > $valuePattern){
+        if(!empty($valuePattern) && $field > $valuePattern){ //POCOR-8523
             return $model->getMessage('general.custom_validation_land_size');
         }
 

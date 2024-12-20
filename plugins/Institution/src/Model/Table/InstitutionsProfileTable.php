@@ -9,7 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
@@ -159,7 +159,7 @@ class InstitutionsProfileTable extends ControllerActionTable
                 if (!empty($reportCard->generate_end_date)) {
                     $generateEndDate = $reportCard->generate_end_date->format('Y-m-d');
                 }
-                $date = Time::now()->format('Y-m-d');
+                $date = FrozenTime::now()->format('Y-m-d');
 
                 if ((!empty($generateStartDate) && !empty($generateEndDate))
                     && ($date >= $generateStartDate && $date <= $generateEndDate)) {
@@ -329,7 +329,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         $value = '';
 
         if ($entity->has('report_card_started_on')) {
-            $startedOnValue = new Time($entity->report_card_started_on);
+            $startedOnValue = new FrozenTime($entity->report_card_started_on);
             $value = $this->formatDateTime($startedOnValue);
         }
 
@@ -341,7 +341,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         $value = '';
 
         if ($entity->has('report_card_completed_on')) {
-            $completedOnValue = new Time($entity->report_card_completed_on);
+            $completedOnValue = new FrozenTime($entity->report_card_completed_on);
             $value = $this->formatDateTime($completedOnValue);
         }
 
@@ -709,7 +709,7 @@ class InstitutionsProfileTable extends ControllerActionTable
 
     private function addReportCardsToProcesses($academicPeriodId, $reportCardId, $institutionId = null)
     {
-        Log::write('debug', 'Initialize Add All Institution Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
+        Log::write('debug', 'Initialize Add All Institution Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.FrozenTime::now().')');
 
         $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.InstitutionReportCardProcesses');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
@@ -764,14 +764,14 @@ class InstitutionsProfileTable extends ControllerActionTable
                 $newEntity = $this->InstitutionReportCards->patchEntity($institutionsReportCardEntity, $newData);
 
                 if (!$this->InstitutionReportCards->save($newEntity)) {
-                    Log::write('debug', 'Error Add All institution profile Report Cards '.$reportCardId.' for Institution '.$institution->id.' to processes ('.Time::now().')');
+                    Log::write('debug', 'Error Add All institution profile Report Cards '.$reportCardId.' for Institution '.$institution->id.' to processes ('.FrozenTime::now().')');
                     Log::write('debug', $newEntity->errors());
                 }
             }
             // end
         }
 
-        Log::write('debug', 'End Add All institution profile Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
+        Log::write('debug', 'End Add All institution profile Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.FrozenTime::now().')');
     }
 
     private function triggerGenerateAllReportCardsShell($academicPeriodId, $reportCardId, $institutionId = null)
@@ -786,10 +786,10 @@ class InstitutionsProfileTable extends ControllerActionTable
 
             $expiryDate = clone($createdDate);
             $expiryDate->addMinutes(30);
-            $today = Time::now();
+            $today = FrozenTime::now();
 
             if ($expiryDate < $today) {
-                $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
+                $SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $SystemProcesses::COMPLETED);
                 $SystemProcesses->killProcess($pId);
             }
         }

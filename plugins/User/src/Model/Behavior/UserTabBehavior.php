@@ -42,12 +42,45 @@ class UserTabBehavior extends Behavior
             $toolbarButtons = $this->fixViewBackButton($toolbarButtons);
         }
 
+        if ($model->action == 'index') {
+            // POCOR-8527 add no records alert
+            $this->addNoRecordsAlert();
+
+        }
+
         if ($model->action == 'add' || $model->action == 'delete' || $model->action == 'remove') {
             $redirectURL = $this->fixAddDeleteRedirectURL();
         }
 
         $extra['toolbarButtons'] = $toolbarButtons;
         $extra['redirect'] = $redirectURL;
+    }
+
+    // POCOR-8527
+    public function addNoRecordsAlert()
+    {
+        $model = $this->_table;
+        $query = $model->find('all');
+        $userId = $this->getUserID();
+
+        $controller = $model->controller;
+        $controllerName = $controller->getName();
+        if(!$userId && $controllerName == 'Profiles'){
+            $userId = $this->_table->Auth->user('id');
+        }
+        if ($model->hasField('security_user_id')) {
+            $query->where([$model->aliasField('security_user_id IS') => $userId]);
+        } else if ($model->hasField('student_id')) {
+            $query->where([$model->aliasField('student_id IS') => $userId]);
+        } else if ($model->hasField('staff_id')) {
+            $query->where([$model->aliasField('staff_id IS') => $userId]);
+        } else if ($model->hasField('user_id')) {
+            $query->where([$model->aliasField('user_id IS') => $userId]);
+        }
+        $count = $query->count();
+        if($count == 0){
+            $model->controller->Alert->info('general.noData');
+        }
     }
 
     public function fixAddDeleteRedirectURL()
@@ -88,7 +121,7 @@ class UserTabBehavior extends Behavior
         }
         if (isset($toolbarButtons['list'])) {
             $toolbarButtons['list']['url'][0] = 'index';
-            $toolbarButtons['list']['url'][1] = $queryString; 
+            $toolbarButtons['list']['url'][1] = $queryString;
         }
 
         return $toolbarButtons;
@@ -114,7 +147,7 @@ class UserTabBehavior extends Behavior
             $url['0'] = 'index';
             $url['1'] = $queryString;
             $request = $this->_table->request;
-            
+
             if($controllerName == 'Directories') {
                 $actions = ['StaffPayslips','StaffBankAccounts','StaffSalaries','TrainingNeeds','TrainingResults','HealthConsultations',
                 'HealthFamilies','HealthHistories', 'HealthImmunizations', 'HealthMedications','HealthTests','HealthBodyMasses',
@@ -253,7 +286,7 @@ class UserTabBehavior extends Behavior
             //echo "An error occurred: " . $e->getMessage();
             die('<pre> An error occurred:' . print_r($e->getMessage(), true));
         }
-        
+
         //$action name and additional params to pass
         $appliedActions = [
             'Demographic' => [],
@@ -274,7 +307,7 @@ class UserTabBehavior extends Behavior
         $model = $this->_table;
         $userID = $this->getUserID();
         $actions = ['view', 'edit'];
-        
+
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
                 $url = $buttons[$action]['url'];
@@ -291,7 +324,7 @@ class UserTabBehavior extends Behavior
                         $queryString['user_id'] = $userID;
                         $queryString['security_user_id'] = $userID;
                     }
-                
+
                     foreach ($appliedActions[$url_action] as $additionalParam) {
                         $queryString[$additionalParam] = $entity->{$additionalParam};
                         if($additionalParam == 'staff_id') {
@@ -310,7 +343,7 @@ class UserTabBehavior extends Behavior
                     // $queryString['institution_id'] = $institutionID;
                     if(isset($institutionID)){
                         $queryString['institution_id'] = $institutionID;
-                    } 
+                    }
                     foreach ($appliedActions[$url_action] as $additionalParam) {
                         $queryString[$additionalParam] = $entity->{$additionalParam};
                     }
@@ -320,7 +353,7 @@ class UserTabBehavior extends Behavior
                 // Shikah's code[END]
             }
         }
-        
+
         //die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;

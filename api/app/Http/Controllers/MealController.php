@@ -1291,9 +1291,9 @@ class MealController extends Controller
 
             // Save the modified Excel file
             $writer = new Xlsx($spreadsheet);
-            $writer->save($filePath);
+            $writer->save($templateFile);
 
-            return response()->download($filePath);
+            return response()->download($templateFile);
             
         } catch (\Exception $e) {
             Log::error(

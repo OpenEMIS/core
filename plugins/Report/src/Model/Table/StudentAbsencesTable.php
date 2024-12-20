@@ -63,7 +63,10 @@ class StudentAbsencesTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
+        //POCOR-8753[START]
+        //Corrected the table alias for some tables
+        //EducationGrade, InstitutionSubject, Users
+        //POCOR-8753[END]
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
@@ -144,8 +147,8 @@ class StudentAbsencesTable extends AppTable
                 'identity_number'=> "(SELECT IFNULL(student_identities.identity_number, ''))",   
                 'address'=> "(SELECT IFNULL(Users.address, ''))",   
                 'contacts'=> "(SELECT IFNULL(contact_info.contacts, ''))",   
-                'period_name'=> "(SELECT IF(institution_subjects.name IS NOT NULL, '', IFNULL(period_info.period_name, '')))",   
-                'subject_name' =>"(SELECT IFNULL(institution_subjects.name, ''))",
+                'period_name' => "(SELECT IF(" . $InstitutionSubjects->aliasField('name') . " IS NOT NULL, '', IFNULL(period_info.period_name, '')))", //POCOR-8753
+                'subject_name' =>"(SELECT IFNULL(" . $InstitutionSubjects->aliasField('name') . ", ''))", //POCOR-8753
                 'education_grade_name'=> $grades->aliasField('name'),
                 'academic_period' => $academicPeriod->aliasField('name'),
                 'student_name' => $query->func()->concat([
@@ -221,10 +224,11 @@ class StudentAbsencesTable extends AppTable
                         ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
                         INNER JOIN student_attendance_per_day_periods
                         ON student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types.id)" ,
-                        'conditions' => ['period_info.education_grade_id = education_grades.id',
-                                        'period_info.academic_period_id = academic_periods.id',
-                                        'period_info.period = ' . $this->aliasField('period'),
-                                        ],  
+                        'conditions' => [
+                            "period_info.education_grade_id = " . $grades->aliasField('id'),
+                            "period_info.academic_period_id = " . $academicPeriod->aliasField('id'),
+                            "period_info.period = " . $this->aliasField('period'),
+                        ],
             ];
 
             $join['student_identities'] = [
@@ -237,7 +241,7 @@ class StudentAbsencesTable extends AppTable
                             ON identity_types.id = user_identities.identity_type_id
                             WHERE identity_types.default = 1
                             GROUP BY  user_identities.security_user_id)" ,
-                            'conditions' => ['student_identities.security_user_id = security_users.id']  
+                            'conditions' => ['student_identities.security_user_id = Users.id']  
             ];
 
             $join['contact_info'] = [
@@ -251,11 +255,11 @@ class StudentAbsencesTable extends AppTable
                             ON contact_options.id = contact_types.contact_option_id
                             WHERE user_contacts.preferred = 1
                             GROUP BY user_contacts.security_user_id)" ,
-                            'conditions' => ['contact_info.security_user_id = security_users.id']  
+                            'conditions' => ['contact_info.security_user_id = Users.id']  
             ];
             $query->where($conditions)
-            ->order(['Institutions.name','education_grades.name','InstitutionClasses.name']);
-            $query->join($join);      
+            ->order(['Institutions.name',$grades->aliasField('name'),'InstitutionClasses.name']);
+            $query->join($join);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)

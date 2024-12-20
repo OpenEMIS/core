@@ -262,6 +262,11 @@ class CalendarsTable extends ControllerActionTable
 
         $ShiftOptionTable = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
         $institutionID = $this->getInstitutionID();
+        if(empty($institutionId) && isset($this->request->getParam('pass')[1])) {
+            $params = $this->paramsDecode($this->request->getParam('pass')[1]);
+            $institutionId  = $params['institution_id'];
+        }
+        
         $this->field('name', ['attr' => ['label' => __('Name')]]);
 
         $this->fields['calendar_type_id']['type'] = 'select';
@@ -362,7 +367,7 @@ class CalendarsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // POCOR-6122 start
-        if (isset($extra['selectedAcademicPeriodOptions'])) {
+        if (isset($extra['selectedAcademicPeriodOptions']) && !empty($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
                         $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
                     ], [], true); //this parameter will remove all where before this and replace it with new where.
@@ -434,11 +439,6 @@ class CalendarsTable extends ControllerActionTable
             ->where(['id' => $entity->institution_shift_id])
             ->first()->name;
         return $shiftOptionsName;
-    }
-
-    public function beforeAction(Event $event)
-    {
-        $this->field('institution_id', ['visible' => false]);
     }
 
 }

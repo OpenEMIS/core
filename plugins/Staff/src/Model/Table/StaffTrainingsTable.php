@@ -69,7 +69,7 @@ class StaffTrainingsTable extends ControllerActionTable
         }elseif ($field == 'description') {
             return __('Description');
         }elseif ($field == 'credit_hours') {
-            return __('Credit Hours'); 
+            return __('Credit Hours');
         }elseif ($field == 'file_content') {
             return __('Attachment');
         }elseif ($field == 'modified_user_id') {
@@ -93,8 +93,8 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
 
         // Start POCOR-5188
-        if($this->request->getParam('controller') == 'Staff'){ 
-            $is_manual_exist = $this->getManualUrl('Institutions','Courses','Staff - Training');       
+        if($this->request->getParam('controller') == 'Staff'){
+            $is_manual_exist = $this->getManualUrl('Institutions','Courses','Staff - Training');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -111,8 +111,8 @@ class StaffTrainingsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Courses','Staff - Training');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Courses','Staff - Training');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -226,7 +226,7 @@ class StaffTrainingsTable extends ControllerActionTable
                 $Licenses->aliasField('expiry_date') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ;
 
         // get the records of staff training within licence period
@@ -287,8 +287,8 @@ class StaffTrainingsTable extends ControllerActionTable
         ]);
     }
 
-    
 
 
-    
+
+
 }
