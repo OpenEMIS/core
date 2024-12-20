@@ -51,6 +51,8 @@ class DirectoriesTable extends ControllerActionTable
         $dateOfBirth = $requestDataParams['date_of_birth'] ?? null;
         $identityTypeId = $requestDataParams['identity_type_id'] ?? null;
         $nationalityId = $requestDataParams['nationality_id'] ?? null;
+        $studentOpenemisNo = $requestDataParams['student_openemis_no'] ?? null; // POCOR-8063
+        $guardianTypeId = $requestDataParams['guardian_type_id'] ?? null; // POCOR-8063
         $limit = $requestDataParams['limit'] ?? 10;
         $page = $requestDataParams['page'] ?? 1;
         $userId = $requestDataParams['id'] ?? null;
@@ -64,6 +66,7 @@ class DirectoriesTable extends ControllerActionTable
         $nationalitiesTable = self::getDynamicTableInstance('FieldOption.Nationalities');
         $areaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
         $birthAreaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
+
         if($userId){
             $openemisNo = null;
             $identityNumber = null;
@@ -82,10 +85,17 @@ class DirectoriesTable extends ControllerActionTable
             $lastName = null;
             $dateOfBirth = null;
         }
-        $conditions = [];
-        if (!$identityNumber) {
-            $conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+        // POCOR-8063: start
+        $base_conditions = [];
+        if ($studentOpenemisNo && $guardianTypeId) {
+            $base_conditions = [$securityUsersTable->aliasField('openemis_no !=') => $studentOpenemisNo];
         }
+        if (!$identityNumber) {
+            $new_conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+            $conditions = array_merge($base_conditions, $new_conditions);
+//            Log::debug(print_r($conditions, true));
+        }
+        // POCOR-8063: end
         $usersSearchResult = [];
 
         if (!empty($conditions)) {
@@ -107,10 +117,14 @@ class DirectoriesTable extends ControllerActionTable
         $identityUsersResult = [];
 
         if ($identityNumber) {
-            $identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
+            // POCOR-8063: start
+            $new_identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
                 $identityNumber,
                 $nationalityId,
                 $userIdentitiesTable);
+            $identityCondition = array_merge($base_conditions, $new_identityCondition);
+//            Log::debug(print_r($conditions, true));
+            // POCOR-8063: end
             $identityUsersResult = self::getUsersSearchWithIdentityArr($securityUsersTable,
                 $gendersTable,
                 $identityTypesTable,
@@ -1075,6 +1089,7 @@ class DirectoriesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
+        // echo "<pre>";print_r($_REQUEST);die;
         $this->setTable('security_users');
         $this->setEntityClass('User.User');
         parent::initialize($config);
@@ -1281,12 +1296,14 @@ class DirectoriesTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.Image');
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Directory.Directories.id']);
-        $this->toggle('search', false);
+        $this->toggle('search', true);
         $this->setDeleteStrategy('restrict'); //POCOR-7083
     }
 
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
+        // echo "<pre>";
+        // print_r( $primary);die;
         if ($primary) {
             $schema = $this->getSchema();
             $fields = $schema->columns();
@@ -1484,14 +1501,20 @@ class DirectoriesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
     {
-        if (!$this->isAdvancedSearchEnabled()) {
-            $event->stopPropagation();
-            return [];
-        } else {
+        // POCOR-8558 start
+        $referer = $this->request->getEnv('HTTP_REFERER');
+        $parsedUrl = parse_url($referer);
+
+        // Check if 'page' is set in the query string or 'AdvanceSearch' is present
+        if (isset($_GET['page']) || isset($_REQUEST['AdvanceSearch'])) {
             $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
+        } else {
+            $event->stopPropagation();
+            return;
         }
+        // POCOR-8558 ends
 
         $conditions = [];
 
@@ -2057,7 +2080,9 @@ public function getIdentityTypeData($value_selection)
             ],
             'url' => '#',
             'label' => '<i class="fa fa-search-plus"></i>',
-        ];
+        ];    
+        if(isset($toolbarButtons['search']))//POCOr-8733
+           unset($toolbarButtons['search']);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -2185,6 +2210,14 @@ public function getIdentityTypeData($value_selection)
 
     public function indexAfterAction(Event $event)
     {
+        // echo "<pre>";print_r($_REQUEST);die;
+        // $data  = $event->getData();
+        // $datas = $data['2'];
+        // unset($datas['toolbarButtons']['view']['url']['?']);
+        // unset($datas['indexButtons']['view']['url']['?']);
+        // unset($datas['indexButtons']['view']['url']['page']);
+        // unset($datas['toolbarButtons']['view']['url']['page']);
+        // echo "<pre>";print_r($datas);exit;
         $this->fields = [];
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
@@ -2218,6 +2251,7 @@ public function getIdentityTypeData($value_selection)
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
+        // echo '<pre>';print_r($extra);die;
         if ($this->action == 'index') {
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             //POCOR-6248 starts

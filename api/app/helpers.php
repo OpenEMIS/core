@@ -178,7 +178,7 @@ use Illuminate\Database\Query\Builder;
 	}
 	
 	if(!function_exists('getRoleAccess')){
-		function getRoleAccess($controller, $accessType, $action = 0, $roleId, $accessArray)
+		function getRoleAccess($controller, $accessType, $roleId, $accessArray, $action = 0)
 		{
 			$accessArr = explode("|", $accessType);
 						
