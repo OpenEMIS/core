@@ -12,6 +12,7 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Cake\Utility\Text;
+use DateTime;
 
 class ImportUsersTable extends AppTable
 {
@@ -300,7 +301,7 @@ class ImportUsersTable extends AppTable
     {
         //            Log::debug(print_r($tempRow, true));
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-        Log::debug(print_r(['first' => $tempRow], true));
+//        Log::debug(print_r(['first' => $tempRow], true));
         $columns = $tempRow['columns'];
         $keys = array_flip($columns);
 
@@ -343,25 +344,25 @@ class ImportUsersTable extends AppTable
 
             $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
             $institution_id = $tempRow['institution_id'] ?? null;
-            Log::debug(print_r(['$institution_id' => $tempRow], true));
+//            Log::debug(print_r(['$institution_id' => $tempRow], true));
             if (!empty($institution_id)) {
                 $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
                 $academic_period_id = $tempRow['academic_period_id'] ?? null;
-                Log::debug(print_r(['$academic_period_id' => $tempRow], true));
+//                Log::debug(print_r(['$academic_period_id' => $tempRow], true));
                 if (!empty($academic_period_id)) {
                     $education_grade_key = $keys['education_grade_id'];
                     $education_grade_code = $originalRow[$education_grade_key];
                     $tempRow['education_grade_code'] = $education_grade_code;
                     $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
                     $education_grade_id = $tempRow['education_grade_id'] ?? null;
-                    Log::debug(print_r(['$education_grade_id' => $tempRow], true));
+//                    Log::debug(print_r(['$education_grade_id' => $tempRow], true));
 
                     if (!empty($education_grade_id)) {
                         $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
                         $institution_class_id = $tempRow['institution_class_id'] ?? null;
                         $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-                        $start_date = $tempRow['start_date'];
-                        $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
+//                        $have_error = $have_error || $this->checkEndDate($tempRow, $rowInvalidCodeCols);
+//                        $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
 
                     }
                 }
@@ -370,6 +371,7 @@ class ImportUsersTable extends AppTable
 
 
             Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
+            Log::debug(print_r(['$tempRow' => $tempRow], true));
 
 
 
@@ -935,8 +937,6 @@ class ImportUsersTable extends AppTable
         // Add additional default values
         $admissionData['action_type'] = 'imported';
         $admissionData['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
-        $admissionData['institution_class_id'] = $tempRow['institution_class_id'] ?? null;
-        $admissionData['end_date'] = $tempRow['end_date'] ?? null;
 
         // Create a new admission entity
         $StudentAdmission = self::getDynamicTableInstance('Institution.StudentAdmission');
@@ -1061,7 +1061,7 @@ class ImportUsersTable extends AppTable
             return true;
         }
 
-        $education_grades = $this->getAcademicPeriodAndGrades($institution_id, $academic_period_id);
+        $education_grades = $this->getAcademicPeriodGrades($institution_id, $academic_period_id);
         Log::debug(print_r( ['$education_grades' => $education_grades], true));
         if (empty($education_grades)) {
             $this->addError($rowInvalidCodeCols, 'education_grade_id', __('No education grades in this academic period'));
@@ -1072,7 +1072,7 @@ class ImportUsersTable extends AppTable
         return false;
     }
 
-    private function getAcademicPeriodAndGrades($institution_id, $academic_period_id): array
+    private function getAcademicPeriodGrades($institution_id, $academic_period_id): array
     {
         $InstitutionGrades = self::getDynamicTableInstance('institution_grades');
         $educationsGrades = $InstitutionGrades
@@ -1137,16 +1137,16 @@ class ImportUsersTable extends AppTable
 
     private function getInstitutionClass($class_name, $institution_id, $academic_period_id, $education_grade_id)
     {
-        if (!empty($tempRow['institution_class_id'])) {
+//        Log::debug(print_r([$class_name, $institution_id, $academic_period_id, $education_grade_id],true));
             $availableClasses = $this->getInstitutionClasses($institution_id,
                 $academic_period_id,
                 $education_grade_id);
+//            Log::debug(print_r($availableClasses,true));
             foreach ($availableClasses as $id => $name) {
                 if ($class_name == $name) {
                     return $id;
                 }
             }
-        }
         return 0;
     }
 
@@ -1155,12 +1155,15 @@ class ImportUsersTable extends AppTable
     {
         $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
         $institutionClassesList = $InstitutionClasses->getClassOptions($academic_period_id, $institution_id, $education_grade_id);
+//        Log::debug(print_r($institutionClassesList,true));
         $resultList = [];
         foreach ($institutionClassesList as $id => $className) {
             $InstitutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');
             $countStudent = $InstitutionClassStudents->getStudentCountByClass($id);
+            Log::debug(strval($countStudent));
             $classCapacity = $InstitutionClasses->get($id)->capacity;
-            if ($countStudent + 1 >= $classCapacity) {
+            Log::debug(strval($classCapacity));
+            if ($countStudent + 1 <= $classCapacity) {
                 $resultList[$id] = $className;
             }
         }
@@ -1170,7 +1173,7 @@ class ImportUsersTable extends AppTable
     private function checkStartDate( &$tempRow,  &$rowInvalidCodeCols): bool
     {
         $start_date = $tempRow['start_date'] ?? '';
-
+        $timeZone = $this->getTimeZone();
         if (trim($start_date) === '') {
             $this->addError($rowInvalidCodeCols, 'start_date', __('No start date specified'));
             $tempRow['start_date'] = null;
@@ -1183,8 +1186,37 @@ class ImportUsersTable extends AppTable
             $tempRow['start_date'] = null;
             return true;
         }
-
+        $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+//        Log::debug(strval($formattedDate));
+//        Log::debug(strval($start_date));
+        $academicPeriodId = $AcademicPeriods->getAcademicPeriodIdByDate($formattedDate);
+        if(!$academicPeriodId){
+            $this->addError($rowInvalidCodeCols, 'start_date', __('The Date is not within valid Academic Period'));
+            $tempRow['start_date'] = null;
+            return true;
+        }
+        $academic_period_id = $tempRow['academic_period_id'];
+        if($academic_period_id != $academicPeriodId){
+            $this->addError($rowInvalidCodeCols, 'start_date', __('The Date is not within given Academic Period'));
+            $tempRow['start_date'] = null;
+            return true;
+        }
         $tempRow['start_date'] = $formattedDate;
+        $period = $AcademicPeriods->get($academic_period_id);
+        if (!$period) {
+            $this->addError($rowInvalidCodeCols, 'start_date', __('The given Academic Period is Invalid'));
+            $tempRow['start_date'] = null;
+            return true;
+        }
+
+        //$periodStartDay = $period->start_date->format('d/m/Y');
+        // $periodStartDate = DateTime::createFromFormat('d/m/Y', $periodStartDay, $dateTimeZone);
+
+        $periodEndDay = $period->end_date->format('d/m/Y');
+        $dateTimeZone = new \DateTimeZone($timeZone);
+        $periodEndDate = DateTime::createFromFormat('d/m/Y', $periodEndDay, $dateTimeZone);
+
+        $tempRow['end_date'] = $periodEndDate;
         return false;
     }
 
@@ -1243,5 +1275,16 @@ class ImportUsersTable extends AppTable
         return $education_grade_id;
     }
 
+    /**
+     * @return string
+     */
+    private function getTimeZone()
+    {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $setTimeZone = $ConfigItems->value("time_zone");
+        $timeZone = !empty($setTimeZone) ? $setTimeZone : 'UTC'; //POCOR-6732
+        date_default_timezone_set($timeZone);
+        return $timeZone;
+    }
 
 }
