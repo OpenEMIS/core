@@ -813,8 +813,8 @@ class ImportBehavior extends Behavior
                 $activeSheet->mergeCells($subtitleRange);
             }
             $activeSheet->setCellValue($cell, $subtitle);
-            Log::debug(print_r(['heading' => $heading], true));
-            Log::debug(print_r(['$titleindex' => $titleindex], true));
+//            Log::debug(print_r(['heading' => $heading], true));
+//            Log::debug(print_r(['$titleindex' => $titleindex], true));
         }
     }
 
