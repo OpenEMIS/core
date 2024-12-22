@@ -356,7 +356,7 @@ class ImportUsersTable extends AppTable
         //add identifier that later will be used on User afterSave
         $tempRow['record_source'] = 'import_user';
 
-        return true; //todo replace to true to import to work
+        return false; //todo replace to true to import to work
     }
 
     public function onImportPopulateNationalitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
@@ -1309,6 +1309,7 @@ class ImportUsersTable extends AppTable
      */
     private function checkNewGuardian(bool $have_error, $tempRow, ArrayObject $rowInvalidCodeCols, ArrayObject $originalRow): array
     {
+        $have_error = $have_error || $this->checkGuardianRelationId($tempRow, $rowInvalidCodeCols);
         return array($tempRow, $rowInvalidCodeCols, $have_error);
     }
     /**
@@ -1348,4 +1349,31 @@ class ImportUsersTable extends AppTable
         return array($tempRow, $rowInvalidCodeCols, $have_error);
     }
 
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkGuardianRelationId($tempRow, $rowInvalidCodeCols): bool
+    {
+        $guardian_relation_id = $tempRow['guardian_relation_id'] ?? null;
+        if(!$guardian_relation_id){
+            $this->addError($rowInvalidCodeCols, 'guardian_relation_id', __('No Relation Type'));
+            return true;
+        }
+        $have_error = false;
+        $lookedUpTable = self::getDynamicTableInstance('Student.GuardianRelations');
+        $relations = $lookedUpTable->find('all')
+            ->select([
+                'id'
+            ])
+            ->where([$lookedUpTable->aliasField('id') => $guardian_relation_id])
+            ->disableHydration()
+            ->first();
+        if(empty($relations)){
+            $this->addError($rowInvalidCodeCols, 'guardian_relation_id', __('No Relation Types'));
+            return true;
+        }
+        return $have_error;
+    }
 }
