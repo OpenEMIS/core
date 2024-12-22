@@ -168,12 +168,12 @@ class ImportUsersTable extends AppTable
         if (!$user) {
             try{
                 $username = "";
-                $tempRow['entity'] = $this->Users->newEntity(['openemis_no' => $openemisNo]);
                 if(strlen($openemisNo) > 1){
                     $username = Text::slug($openemisNo);
                 }
                 if(strlen($username) < 6){
                     $username = $username . $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
+
                     $tempRow['openemis_no'] = $username;
                 }
                 $tempRow['username'] = $username;
@@ -339,9 +339,8 @@ class ImportUsersTable extends AppTable
         }
 //        Log::debug(print_r($tempRow, true));
 //        Log::debug(print_r($originalRow, true));
-
+        $tempRow['record_source'] = 'import_user';
         if ($isStudent) {
-
             $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
             $institution_id = $tempRow['institution_id'] ?? null;
 //            Log::debug(print_r(['$institution_id' => $tempRow], true));
@@ -361,8 +360,8 @@ class ImportUsersTable extends AppTable
                         $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
                         $institution_class_id = $tempRow['institution_class_id'] ?? null;
                         $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-//                        $have_error = $have_error || $this->checkEndDate($tempRow, $rowInvalidCodeCols);
-//                        $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
+                        $tempRow['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
+                        $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
 
                     }
                 }
@@ -384,7 +383,7 @@ class ImportUsersTable extends AppTable
         //add identifier that later will be used on User afterSave
         $tempRow['record_source'] = 'import_user';
 
-        return false; //todo replace to true to import to work
+        return true; //todo replace to true to import to work
     }
 
     public function onImportPopulateNationalitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
@@ -898,6 +897,23 @@ class ImportUsersTable extends AppTable
    private function checkAdmission(&$tempRow, &$rowInvalidCodeCols): bool
     {
         $have_error = false;
+        if (!$tempRow['student_id']) {
+            $tempRowArray = $tempRow->getArrayCopy();
+            try {
+                $newEntity = $this->Users->newEntity($tempRowArray);
+//                    Log::debug(print_r($newEntity, true));
+                if ($this->Users->save($newEntity)) {
+                    $newId = $newEntity->id;  // Get the ID after save
+                    $tempRow['student_id'] = $newId;
+                    $tempRow['security_user_id'] = $newId;
+                    $tempRow['entity'] = $newEntity;
+                }
+
+            } catch (\Exception $exception) {
+                $rowInvalidCodeCols['openemis_no'] = 'New Student Creation Error: ' . __($exception->getMessage());
+                return true;
+            }
+        }
 
         // Required fields for admission
         $requiredFields = [
@@ -922,10 +938,16 @@ class ImportUsersTable extends AppTable
         if ($have_error) {
             return true;
         }
+        if(!is_array($tempRow)) {
+            $tempRowArray = $tempRow->getArrayCopy();
+        }else{
+            $tempRowArray = $tempRow;
+        }
 
         // Extract relevant fields for admission
-        $admissionData = array_intersect_key($tempRow, array_flip([
+        $admissionData = array_intersect_key($tempRowArray, array_flip([
             'institution_id',
+            'academic_period_id',
             'start_date',
             'end_date',
             'assignee_id',
@@ -936,16 +958,17 @@ class ImportUsersTable extends AppTable
 
         // Add additional default values
         $admissionData['action_type'] = 'imported';
-        $admissionData['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
 
         // Create a new admission entity
         $StudentAdmission = self::getDynamicTableInstance('Institution.StudentAdmission');
         $newAdmission = $StudentAdmission->newEntity($admissionData);
 
         // Validate the new entity and handle errors
-        if ($newAdmission && $newAdmission->getErrors()) {
+        $newErrors = $newAdmission->getErrors();
+        if ($newAdmission && $newErrors) {
+            Log::debug('0001');
             $errorMessages = array_reduce(
-                $newAdmission->getErrors(),
+                $newErrors,
                 function ($carry, $errors) {
                     return array_merge($carry, $errors);
                 },
@@ -956,18 +979,21 @@ class ImportUsersTable extends AppTable
             $tempRow['admission_error'] = true;
             $have_error = true;
         } elseif (!$newAdmission) {
+            Log::debug('0002');
             $rowInvalidCodeCols['admission'] = $this->getExcelLabel('Import', 'value_not_in_list');
             $tempRow['admission_error'] = true;
             $have_error = true;
-        } else {
+        } elseif($newAdmission) {
+            Log::debug('0002');
             // Save the admission
-            if (!$StudentAdmission->save($newAdmission)) {
+            $newAdmission = $StudentAdmission->save($newAdmission);
+            if (!$newAdmission) {
                 $rowInvalidCodeCols['admission'] = $this->getExcelLabel('Import', 'save_failed');
                 $tempRow['admission_error'] = true;
                 $have_error = true;
             }
+            $tempRow['admission'] = $newAdmission;
         }
-
         return $have_error;
     }
     private function addError(array|ArrayObject &$rowInvalidCodeCols, string|array $fields, string $message): void
