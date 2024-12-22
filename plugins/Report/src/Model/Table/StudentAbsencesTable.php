@@ -137,7 +137,10 @@ class StudentAbsencesTable extends AppTable
                 $this->aliasField('institution_class_id'),
                 $this->aliasField('absence_type_id'),
                 $this->aliasField('student_absence_reason_id'),
-                'get_date'=>$this->aliasField('date'),
+                'get_date' => $query->func()->DATE_FORMAT([
+                    $this->aliasField('date') => 'identifier',
+                    "'%Y-%m-%d'" => 'literal'
+                ]),//POCOR-8772
                 'default_identity_type'=> "(SELECT IFNULL(student_identities.identity_type, ''))",   
                 'identity_number'=> "(SELECT IFNULL(student_identities.identity_number, ''))",   
                 'address'=> "(SELECT IFNULL(Users.address, ''))",   
@@ -253,7 +256,8 @@ class StudentAbsencesTable extends AppTable
             ];
             $query->where($conditions)
             ->order(['Institutions.name','EducationGrades.name','InstitutionClasses.name']);
-            $query->join($join);      
+
+            $query->join($join);     
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -352,8 +356,9 @@ class StudentAbsencesTable extends AppTable
         $newFields[] = [
             'key' => 'get_date',
             'field' => 'get_date',
-            'type' => 'date',
-            'label' => __('Date')
+            'type' => 'string',  // Changed from 'date' to 'string'POCOR-8772
+            'label' => __('Date'),
+            'format' => '#'     // Prevents Excel from auto-formatting the date
         ];
         $newFields[] = [
             'key' => 'period_name',
