@@ -302,8 +302,6 @@ class ImportUsersTable extends AppTable
         //            Log::debug(print_r($tempRow, true));
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
 //        Log::debug(print_r(['first' => $tempRow], true));
-        $columns = $tempRow['columns'];
-        $keys = array_flip($columns);
 
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
@@ -341,36 +339,13 @@ class ImportUsersTable extends AppTable
 //        Log::debug(print_r($originalRow, true));
         $tempRow['record_source'] = 'import_user';
         if ($isStudent) {
-            $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
-            $institution_id = $tempRow['institution_id'] ?? null;
-//            Log::debug(print_r(['$institution_id' => $tempRow], true));
-            if (!empty($institution_id)) {
-                $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
-                $academic_period_id = $tempRow['academic_period_id'] ?? null;
-//                Log::debug(print_r(['$academic_period_id' => $tempRow], true));
-                if (!empty($academic_period_id)) {
-                    $education_grade_key = $keys['education_grade_id'];
-                    $education_grade_code = $originalRow[$education_grade_key];
-                    $tempRow['education_grade_code'] = $education_grade_code;
-                    $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
-                    $education_grade_id = $tempRow['education_grade_id'] ?? null;
-//                    Log::debug(print_r(['$education_grade_id' => $tempRow], true));
-
-                    if (!empty($education_grade_id)) {
-                        $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
-                        $institution_class_id = $tempRow['institution_class_id'] ?? null;
-                        $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-                        $tempRow['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
-                        $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
-
-                    }
-                }
-            }
+            list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+            list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
         }
 
 
-            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
-            Log::debug(print_r(['$tempRow' => $tempRow], true));
+//            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
+//            Log::debug(print_r(['$tempRow' => $tempRow], true));
 
 
 
@@ -897,24 +872,10 @@ class ImportUsersTable extends AppTable
    private function checkAdmission(&$tempRow, &$rowInvalidCodeCols): bool
     {
         $have_error = false;
-        if (!$tempRow['student_id']) {
-            $tempRowArray = $tempRow->getArrayCopy();
-            try {
-                $newEntity = $this->Users->newEntity($tempRowArray);
-//                    Log::debug(print_r($newEntity, true));
-                if ($this->Users->save($newEntity)) {
-                    $newId = $newEntity->id;  // Get the ID after save
-                    $tempRow['student_id'] = $newId;
-                    $tempRow['security_user_id'] = $newId;
-                    $tempRow['entity'] = $newEntity;
-                }
-
-            } catch (\Exception $exception) {
-                $rowInvalidCodeCols['openemis_no'] = 'New Student Creation Error: ' . __($exception->getMessage());
-                return true;
-            }
+        list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkCreateNewStudent($tempRow, $rowInvalidCodeCols, $have_error);
+        if ($have_error) {
+            return true;
         }
-
         // Required fields for admission
         $requiredFields = [
             'institution_id',
@@ -966,7 +927,7 @@ class ImportUsersTable extends AppTable
         // Validate the new entity and handle errors
         $newErrors = $newAdmission->getErrors();
         if ($newAdmission && $newErrors) {
-            Log::debug('0001');
+//            Log::debug('0001');
             $errorMessages = array_reduce(
                 $newErrors,
                 function ($carry, $errors) {
@@ -979,12 +940,12 @@ class ImportUsersTable extends AppTable
             $tempRow['admission_error'] = true;
             $have_error = true;
         } elseif (!$newAdmission) {
-            Log::debug('0002');
+//            Log::debug('0002');
             $rowInvalidCodeCols['admission'] = $this->getExcelLabel('Import', 'value_not_in_list');
             $tempRow['admission_error'] = true;
             $have_error = true;
         } elseif($newAdmission) {
-            Log::debug('0002');
+//            Log::debug('0002');
             // Save the admission
             $newAdmission = $StudentAdmission->save($newAdmission);
             if (!$newAdmission) {
@@ -1088,7 +1049,7 @@ class ImportUsersTable extends AppTable
         }
 
         $education_grades = $this->getAcademicPeriodGrades($institution_id, $academic_period_id);
-        Log::debug(print_r( ['$education_grades' => $education_grades], true));
+//        Log::debug(print_r( ['$education_grades' => $education_grades], true));
         if (empty($education_grades)) {
             $this->addError($rowInvalidCodeCols, 'education_grade_id', __('No education grades in this academic period'));
             $tempRow['education_grade_id'] = $tempRow['academic_period_id'] = null;
@@ -1186,9 +1147,9 @@ class ImportUsersTable extends AppTable
         foreach ($institutionClassesList as $id => $className) {
             $InstitutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');
             $countStudent = $InstitutionClassStudents->getStudentCountByClass($id);
-            Log::debug(strval($countStudent));
+//            Log::debug(strval($countStudent));
             $classCapacity = $InstitutionClasses->get($id)->capacity;
-            Log::debug(strval($classCapacity));
+//            Log::debug(strval($classCapacity));
             if ($countStudent + 1 <= $classCapacity) {
                 $resultList[$id] = $className;
             }
@@ -1311,6 +1272,82 @@ class ImportUsersTable extends AppTable
         $timeZone = !empty($setTimeZone) ? $setTimeZone : 'UTC'; //POCOR-6732
         date_default_timezone_set($timeZone);
         return $timeZone;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @param $have_error
+     * @return array
+     */
+    private function checkCreateNewStudent($tempRow, $rowInvalidCodeCols, $have_error): array
+    {
+        if (!$tempRow['student_id']) {
+            $tempRowArray = $tempRow->getArrayCopy();
+            try {
+                $newEntity = $this->Users->newEntity($tempRowArray);
+//                    Log::debug(print_r($newEntity, true));
+                if ($this->Users->save($newEntity)) {
+                    $newId = $newEntity->id;  // Get the ID after save
+                    $tempRow['student_id'] = $newId;
+                    $tempRow['security_user_id'] = $newId;
+                    $tempRow['entity'] = $newEntity;
+                }
+
+            } catch (\Exception $exception) {
+                $rowInvalidCodeCols['openemis_no'] = 'New Student Creation Error: ' . __($exception->getMessage());
+                $have_error = true;
+            }
+        }
+        return array($tempRow, $rowInvalidCodeCols, $have_error);
+    }
+
+    /**
+     * @param bool $have_error
+     * @param $tempRow
+     * @param ArrayObject $rowInvalidCodeCols
+     * @param ArrayObject $originalRow
+     * @return array
+     */
+    private function checkNewGuardian(bool $have_error, $tempRow, ArrayObject $rowInvalidCodeCols, ArrayObject $originalRow): array
+    {
+        return array($tempRow, $rowInvalidCodeCols, $have_error);
+    }
+    /**
+     * @param bool $have_error
+     * @param $tempRow
+     * @param ArrayObject $rowInvalidCodeCols
+     * @param ArrayObject $originalRow
+     * @return array
+     */
+    private function checkNewAdmission(bool $have_error, $tempRow, ArrayObject $rowInvalidCodeCols, ArrayObject $originalRow): array
+    {
+        $columns = $tempRow['columns'];
+        $keys = array_flip($columns);
+        $education_grade_key = $keys['education_grade_id'];
+        $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
+        $institution_id = $tempRow['institution_id'] ?? null;
+//            Log::debug(print_r(['$institution_id' => $tempRow], true));
+        if (!empty($institution_id)) {
+            $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
+            $academic_period_id = $tempRow['academic_period_id'] ?? null;
+//                Log::debug(print_r(['$academic_period_id' => $tempRow], true));
+            if (!empty($academic_period_id)) {
+                $education_grade_code = $originalRow[$education_grade_key];
+                $tempRow['education_grade_code'] = $education_grade_code;
+                $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
+                $education_grade_id = $tempRow['education_grade_id'] ?? null;
+//                    Log::debug(print_r(['$education_grade_id' => $tempRow], true));
+
+                if (!empty($education_grade_id)) {
+                    $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
+                    $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
+                    $tempRow['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
+                    $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
+                }
+            }
+        }
+        return array($tempRow, $rowInvalidCodeCols, $have_error);
     }
 
 }
