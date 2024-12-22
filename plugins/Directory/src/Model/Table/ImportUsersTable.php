@@ -344,12 +344,10 @@ class ImportUsersTable extends AppTable
         }
 
 
-//            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
-//            Log::debug(print_r(['$tempRow' => $tempRow], true));
+            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
+            Log::debug(print_r(['$tempRow' => $tempRow], true));
 
 
-
-        // Nationalities Mandatory
 
         if($have_error){
             return false;
