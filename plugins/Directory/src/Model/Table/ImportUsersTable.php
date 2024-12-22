@@ -1310,6 +1310,7 @@ class ImportUsersTable extends AppTable
     private function checkNewGuardian(bool $have_error, $tempRow, ArrayObject $rowInvalidCodeCols, ArrayObject $originalRow): array
     {
         $have_error = $have_error || $this->checkGuardianRelationId($tempRow, $rowInvalidCodeCols);
+        $have_error = $have_error || $this->checkGuardianOpenemisID($tempRow, $rowInvalidCodeCols);
         return array($tempRow, $rowInvalidCodeCols, $have_error);
     }
     /**
@@ -1372,6 +1373,70 @@ class ImportUsersTable extends AppTable
             ->first();
         if(empty($relations)){
             $this->addError($rowInvalidCodeCols, 'guardian_relation_id', __('No Relation Types'));
+            return true;
+        }
+        return $have_error;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkGuardianOpenemisId($tempRow, $rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $something = $tempRow['something'];
+        if(empty($something)){
+            $this->addError($rowInvalidCodeCols, 'something', __('No Something'));
+            return true;
+        }
+        return $have_error;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkGuardianFirstLastName($tempRow, $rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $something = $tempRow['something'];
+        if(empty($something)){
+            $this->addError($rowInvalidCodeCols, 'something', __('No Something'));
+            return true;
+        }
+        return $have_error;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkGuardianGender($tempRow, $rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $something = $tempRow['something'];
+        if(empty($something)){
+            $this->addError($rowInvalidCodeCols, 'something', __('No Something'));
+            return true;
+        }
+        return $have_error;
+    }
+
+    /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @return bool
+     */
+    private function checkGuardianDOB($tempRow, $rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        $something = $tempRow['something'];
+        if(empty($something)){
+            $this->addError($rowInvalidCodeCols, 'something', __('No Something'));
             return true;
         }
         return $have_error;
