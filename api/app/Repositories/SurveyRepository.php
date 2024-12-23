@@ -1130,16 +1130,10 @@ class SurveyRepository extends Controller
 
                 $xml = new \SimpleXMLElement($xmlstr);
                 
-                $periodCode = $xml->{$formAlias}->AcademicPeriods->__toString();
+                $periodId = $xml->{$formAlias}->AcademicPeriods->__toString();
                 $formId = $xml->{$formAlias}->attributes()->id->__toString();
                 $institutionCode = $xml->{$formAlias}->Institutions->__toString();
                 
-                //checking academic periods id
-                $academicPeriodResult = AcademicPeriod::where('name', $periodCode)->first();
-                if (empty($academicPeriodResult)) {
-                    return 2; //Not found academic periods
-                }
-                $periodId = $academicPeriodResult->id;
                 // checking institutionId
                 $institutionResult = Institutions::where(DB::raw('lower(code)'), strtolower($institutionCode))->first();
                 
