@@ -50,6 +50,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator
             ->requirePresence('create_as', 'create')
             ->requirePresence('academic_period_id')
@@ -766,7 +767,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     if (!empty($requestData[$this->getAlias()]['academic_period_id'])) {
                         $academicPeriodId = $requestData[$model->getAlias()]['academic_period_id'];
                         $institutionTypeId = $requestData['ExaminationCentres']['institution_type'];
-                        $institutionTypeId = !empty($requestData[$model->getAlias()]['institution_type']) ? $requestData[$model->alias()]['institution_type'] : $institutionTypeId;
+                        $institutionTypeId = !empty($requestData[$model->getAlias()]['institution_type']) ? $requestData[$model->getAlias()]['institution_type'] : $institutionTypeId;
 
                         $specialNeedIds = [];
                         if (isset($requestData[$model->getAlias()]['examination_centre_special_needs'])) {
@@ -818,7 +819,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->ExaminationCentreSpecialNeeds->alias(), $this->ExaminationCentreRooms->alias()
+            $this->ExaminationCentreSpecialNeeds->getAlias(), $this->ExaminationCentreRooms->getAlias()
         ];
     }
 
