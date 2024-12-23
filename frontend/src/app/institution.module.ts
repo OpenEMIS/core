@@ -32,6 +32,8 @@ import { StudentMealImportComponent } from './student-meal-import/student-meal-i
 import { StudentMealResultComponent } from './student-meal-result/student-meal-result.component';
 import { StudentAttendanceImportResultComponent } from './student-attendance-import-result/student-attendance-import-result.component';
 import { StudentAttendanceArchiveComponent } from './student-attendance-archive/student-attendance-archive.component';
+import { ScannedStudentComponent } from './scanned/scanned-student/scanned-student.component';
+import { StudentListComponent } from './scanned/student-list/student-list.component';
 
 export const appRoutes: Routes = [
   { path: 'Dashboard', component: WorkbenchComponent },
@@ -56,7 +58,10 @@ export const appRoutes: Routes = [
   { path: `Institution/Institutions/${setEncodedId()}/InstitutionStaffAttendances/index`, component: StaffAttendanceComponent },
   { path: `Institution/Institutions/${setEncodedId()}/ImportStaffAttendances/add`, component: StaffAttendanceReportComponent },
   { path: 'Institution/Institutions/Classes', component: ClassesComponent },
-  { path: 'Institution/Institutions/Subjects', component: SubjectsComponent }
+  { path: 'Institution/Institutions/Subjects', component: SubjectsComponent },
+
+  { path: 'Institution/Institutions/Scanned/student', component: ScannedStudentComponent },
+  { path: 'Institution/Institutions/Scanned/student/list', component: StudentListComponent }
 ];
 
 function setEncodedId() {
@@ -125,7 +130,9 @@ function getBaseUrl() {
     StudentMealImportComponent,
     StudentMealResultComponent,
     StudentAttendanceImportResultComponent,
-    StudentAttendanceArchiveComponent
+    StudentAttendanceArchiveComponent,
+    ScannedStudentComponent,
+    StudentListComponent
   ],
   imports: [
     BrowserModule,
