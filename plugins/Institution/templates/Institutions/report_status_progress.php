@@ -18,13 +18,13 @@ $tableHeaders = [
 ];
 
 $params = $this->request->getAttribute('params');
+$encodedQueryString = $this->request->getAttribute('params')['pass'][1];
 $url = ['plugin' => $params['plugin'], 'controller' => $params['controller'],
     'action' => 'ajaxGetReportCardStatusProgress',
     'academic_period_id' => $this->request->getQuery('academic_period_id'),
     'report_card_id' => $this->request->getQuery('report_card_id'),
     '0' => 'index',
     '1' => $encodedQueryString,
-    'institution_id' => $institutionId,
 ];
 $url = $this->Url->build($url);
 $table = $ControllerAction['table'];
@@ -164,6 +164,8 @@ $table = $ControllerAction['table'];
                                 $viewUrl = ['plugin' => $params['plugin'],
                                     'controller' => $params['controller'],
                                     'action' => $params['action'],
+                                    '0' => 'index',
+                                    1 => $encodedQueryString,
                                     'class_id' => $obj->id,
                                     'academic_period_id' => $this->request->getQuery('academic_period_id'),
                                     'report_card_id' => $this->request->getQuery('report_card_id')
