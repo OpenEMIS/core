@@ -8992,7 +8992,7 @@ class InstitutionsController extends AppController
      */
     private static function assignStudentSubject( $institutionClassId,  $academicPeriodId, $user_record_id,  $educationGradeId,  $institutionId, $CURRENT,  $userId)
     {
-        Log::debug(print_r([$institutionClassId,  $academicPeriodId, $user_record_id,  $educationGradeId,  $institutionId, $CURRENT,  $userId], true));
+//        Log::debug(print_r([$institutionClassId,  $academicPeriodId, $user_record_id,  $educationGradeId,  $institutionId, $CURRENT,  $userId], true));
         $institutionClassSubjects = self::getDynamicTableInstance('institution_class_subjects');
         $institutionSubjects = self::getDynamicTableInstance('institution_subjects');
         $educationGradesSubjects = self::getDynamicTableInstance('education_grades_subjects');//POCOR-7197
@@ -9020,7 +9020,7 @@ class InstitutionsController extends AppController
                 $educationGradesSubjects->aliasField('auto_allocation !=') => 0//POCOR-7197
             ])
             ->toArray();
-        Log::debug(print_r($SubjectsResult, true));
+//        Log::debug(print_r($SubjectsResult, true));
 
         if (!empty($SubjectsResult)) {
             $count = 1;
