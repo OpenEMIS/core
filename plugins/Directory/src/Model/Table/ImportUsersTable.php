@@ -18,6 +18,8 @@ class ImportUsersTable extends AppTable
 {
     const IS_STAFF = "is_staff";
     const IS_STUDENT = "is_student";
+
+    const GUARDIAN = 3;
     private $Users;
     private $ConfigItems;
 //    private $Nationalities;
@@ -172,7 +174,7 @@ class ImportUsersTable extends AppTable
                     $username = Text::slug($openemisNo);
                 }
                 if(strlen($username) < 6){
-                    $username = $username . $this->getNewOpenEmisNo($importedUniqueCodes, $row, $tempRow['account_type']);
+                    $username = $username . $this->getNewOpenEmisNo();
 
                     $tempRow['openemis_no'] = $username;
                 }
@@ -388,7 +390,7 @@ class ImportUsersTable extends AppTable
         }
     }
 
-    protected function getNewOpenEmisNo(ArrayObject $importedUniqueCodes, $row, $accountType)
+    protected function getNewOpenEmisNo()
     {
         $notUnique = true;
         $val = $this->Users->getUniqueOpenemisId();
@@ -1386,11 +1388,35 @@ class ImportUsersTable extends AppTable
     private function checkGuardianOpenemisId($tempRow, $rowInvalidCodeCols): bool
     {
         $have_error = false;
-        $something = $tempRow['something'];
-        if(empty($something)){
-            $this->addError($rowInvalidCodeCols, 'something', __('No Something'));
-            return true;
+
+        $openemisNo = $tempRow['guardian_openemis_no'];
+        $tempRow['account_type'] = self::GUARDIAN;
+
+        $user = null;
+        if ($openemisNo) {
+            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
         }
+        if (!$user) {
+            try{
+                $username = "";
+                if(strlen($openemisNo) > 1){
+                    $username = Text::slug($openemisNo);
+                }
+                if(strlen($username) < 6){
+                    $username = $username . $this->getNewOpenEmisNo();
+
+                    $tempRow['guardian_openemis_no'] = $username;
+                }
+                $tempRow['username'] = $username;
+            } catch (\Exception $exception) {
+                $rowInvalidCodeCols['guardian_openemis_no'] = 'New User Creation Error: ' . __($exception->getMessage());
+                return false;
+            }
+        } else {
+            $tempRow['guardian_entity'] = $user;
+            $tempRow['guardian_id'] = $user->id;
+        }
+
         return $have_error;
     }
 
