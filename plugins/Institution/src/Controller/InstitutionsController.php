@@ -3132,8 +3132,8 @@ class InstitutionsController extends AppController
                 } elseif (in_array($alias, ['FeederOutgoingInstitutions'])) {
                     $params = [];
                     $params[$model->aliasField('feeder_institution_id')] = $institutionID;
-                    
-                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] == 'add') {//POCOR-8691 
+
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] == 'add') {//POCOR-8691
                         $exists = true;
                     } else {
                         $exists = $model->exists($params);
@@ -3173,7 +3173,7 @@ class InstitutionsController extends AppController
 
                 // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                 if (!$exists && !$isDownload) {
-                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] != 'add') {//POCOR-8691 
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] != 'add') {//POCOR-8691
                         $this->Alert->info('general.notExists');//POCOR-8691
                     }
                     //                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
@@ -6666,10 +6666,12 @@ class InstitutionsController extends AppController
                 Log::debug(__FUNCTION__);
                 Log::debug('Error: ' . $exception->getMessage());
             }
+            self::assignStudentSubject($institutionClassId, $academicPeriodId, $userRecordId, $educationGradeId, $institutionId, $statuses['CURRENT'], $userId); // POCOR-8779
         }
         if (!empty($institutionId)) {
             self::assignStudentRoleGroup($institutionId, $userRecordId);//POCOR-8559
         }
+
         return $saved_student;
     }
 
@@ -8977,6 +8979,101 @@ class InstitutionsController extends AppController
 
     }
     //POCOR-7971 end
+
+    /**
+     * POCOR-8779
+     * @param  $institutionClassId
+     * @param  $academicPeriodId
+     * @param $user_record_id
+     * @param  $educationGradeId
+     * @param  $institutionId
+     * @param $CURRENT
+     * @param  $userId
+     */
+    private static function assignStudentSubject( $institutionClassId,  $academicPeriodId, $user_record_id,  $educationGradeId,  $institutionId, $CURRENT,  $userId)
+    {
+        Log::debug(print_r([$institutionClassId,  $academicPeriodId, $user_record_id,  $educationGradeId,  $institutionId, $CURRENT,  $userId], true));
+        $institutionClassSubjects = self::getDynamicTableInstance('institution_class_subjects');
+        $institutionSubjects = self::getDynamicTableInstance('institution_subjects');
+        $educationGradesSubjects = self::getDynamicTableInstance('education_grades_subjects');//POCOR-7197
+        $SubjectsResult = $institutionClassSubjects
+            ->find()
+            ->select([
+                $institutionClassSubjects->aliasField('institution_class_id'),
+                $institutionClassSubjects->aliasField('institution_subject_id'),
+                'name' => $institutionSubjects->aliasField('name'),
+                'institution_id' => $institutionSubjects->aliasField('institution_id'),
+                'education_grade_id' => $institutionSubjects->aliasField('education_grade_id'),
+                'education_subject_id' => $institutionSubjects->aliasField('education_subject_id'),
+                'academic_period_id' => $institutionSubjects->aliasField('academic_period_id'),
+            ])
+            ->LeftJoin([$institutionSubjects->getAlias() => $institutionSubjects->getTable()], [
+                $institutionSubjects->aliasField('id =') . $institutionClassSubjects->aliasField('institution_subject_id')
+            ])//POCOR-7197 starts
+            ->InnerJoin([$educationGradesSubjects->getAlias() => $educationGradesSubjects->getTable()], [
+                $institutionSubjects->aliasField('education_grade_id =') . $educationGradesSubjects->aliasField('education_grade_id'),
+                $institutionSubjects->aliasField('education_subject_id =') . $educationGradesSubjects->aliasField('education_subject_id')
+            ])//POCOR-7197 ends
+            ->where([
+                $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId,
+                $institutionSubjects->aliasField('academic_period_id') => $academicPeriodId,//POCOR-7197
+                $educationGradesSubjects->aliasField('auto_allocation !=') => 0//POCOR-7197
+            ])
+            ->toArray();
+        Log::debug(print_r($SubjectsResult, true));
+
+        if (!empty($SubjectsResult)) {
+            $count = 1;
+            $institutionSubjectStudents = self::getDynamicTableInstance('institution_subject_students');
+            foreach ($SubjectsResult as $skey => $sval) {
+                $primaryKey = $institutionSubjectStudents->getPrimaryKey();
+                $hashString = [];
+                foreach ($primaryKey as $key) {
+                    if ($key == 'student_id') {
+                        $hashString[] = $user_record_id;
+                    }
+                    if ($key == 'institution_class_id') {
+                        $hashString[] = $institutionClassId;
+                    }
+                    if ($key == 'academic_period_id') {
+                        $hashString[] = $academicPeriodId;
+                    }
+                    if ($key == 'education_grade_id') {
+                        $hashString[] = $educationGradeId;
+                    }
+                    if ($key == 'institution_id') {
+                        $hashString[] = $institutionId;
+                    }
+                    if ($key == 'education_subject_id') {
+                        $hashString[] = $sval->education_subject_id;
+                    }
+                }
+
+                $entitySubjectsData = [
+                    'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                    'student_id' => $user_record_id,
+                    'institution_subject_id' => $sval->institution_subject_id,
+                    'institution_class_id' => $institutionClassId,
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_subject_id' => $sval->education_subject_id,
+                    'education_grade_id' => $educationGradeId,
+                    'student_status_id' => $CURRENT,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                //save in institution_subject_students table
+                $entitySubjectsData = $institutionSubjectStudents->newEntity($entitySubjectsData);
+                $institutionSubjectStudentsResult = $institutionSubjectStudents->save($entitySubjectsData);
+                $count++;
+                unset($entitySubjectsData);
+                unset($institutionSubjectStudentsResult);
+                unset($hashString);
+            }
+            return $count;
+        }
+        return null;
+    }
 
 }
 
