@@ -136,17 +136,14 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         if(!empty($classLists)){
             $classIds = array_keys($classLists);
         }
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
-        $extra['elements']['controls'] = ['name' => 'Institution/report_status_progress', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         $query
                 ->select([
                     'id','name','institution_id',
                     //POCOR-6692
                     'inProcess' => $reportCardProcesses->find()->where([
-                                'report_card_id' => $reportCardId,
-                                'academic_period_id' => $academicPeriodId,
-                                'institution_id' => $institutionId,
+                                'report_card_id IS' => $reportCardId,
+                                'academic_period_id IS' => $academicPeriodId,
+                                'institution_id IS' => $institutionId,
                             ])->count(),
                     /*'inCompleted' => $institutionStudentsReportCards->find()->where([
                                 'report_card_id' => $reportCardId,
@@ -156,7 +153,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                             ])->count()*/
                 ])
                 ->where([
-                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->aliasField('academic_period_id IS') => $academicPeriodId,
                     $this->aliasField('institution_id') => $institutionId,
                     $this->aliasField('id IN') => $classIds
                     ])
