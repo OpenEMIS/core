@@ -1,0 +1,15 @@
+@media only screen and (min-width: 1025px) {
+    ::ng-deep .kdx-table.full-grid .kdx-ag-grid-wrapper {
+        top: 102px !important;
+        margin: 15px;
+    }
+}
+
+/* ----------------- To display table ----------------- */
+@media only screen and (min-width: 1025px) {
+  .student-table-data {
+      position: unset !important;
+      height: 100vh !important;
+  }
+  
+}
