@@ -23,7 +23,7 @@ class StudentsTable extends AppTable {
         $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
         // POCOR-8330 end
-
+        $this->hasMany('Nationalities', ['className' => 'User.UserNationalities',    'foreignKey' => 'security_user_id', 'dependent' => true]); // POCOR-8224
 		$this->addBehavior('API.API');
 	}
     // POCOR-8578: end
