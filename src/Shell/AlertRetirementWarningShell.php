@@ -61,9 +61,11 @@ class AlertRetirementWarningShell extends AlertShell
 
                             $vars['age'] = $age;
                             // end of adding age to $vars
-
                             if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
-                                $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
+                                //POCOR-8341[START]
+                                // $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
+                                $emailList = $this->getRoleAssociatedEmailList($rule['security_roles']);
+                                //POCOR-8341[END]
 
                                 $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
 
