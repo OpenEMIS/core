@@ -8,7 +8,8 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-class SaveStudentDataRequest extends FormRequest
+
+class ScannedAttendanceRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,19 +29,15 @@ class SaveStudentDataRequest extends FormRequest
     public function rules()
     {
         return [
-            //'institution_id' => 'required',
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'gender_id' => 'required',
-            'date_of_birth' => 'required',
-            //'academic_period_id' => 'required',
-            //'education_grade_id' => 'required',
-            //'institution_class_id' => 'required',
-            //'start_date' => 'required',
-            //'end_date' => 'required',
-            'student_id' => ['required_if:is_diff_school,1'],
+            '*.openemis_no' => 'required|string',
+            '*.datetime' => 'required|date',
+            '*.latitude' => 'nullable|numeric',
+            '*.longitude' => 'nullable|numeric',
+            '*.location' => 'nullable|string',
+            '*.access' => 'nullable|string',
         ];
     }
+
 
     /**
      * @param Validator $validator
@@ -58,4 +55,5 @@ class SaveStudentDataRequest extends FormRequest
             )
         );
     }
+
 }
