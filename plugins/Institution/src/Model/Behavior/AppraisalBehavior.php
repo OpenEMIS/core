@@ -388,6 +388,50 @@ class AppraisalBehavior extends Behavior
     
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        // Logic for reorder field in report Start
+        //Desired field order
+        $desiredOrder = [
+            "Status",
+            "Assignee",
+            "Academic Period",
+            "Appraisal Type",
+            "Appraisal Period",
+            "Appraisal Form",
+            "Appraisal Period From",
+            "Appraisal Period To",
+            "Date Appraised",
+            "Comment"
+        ];
+
+        // Fields to remove
+        $removeField = [
+            "File Name",
+            "Institution",
+            "Staff"
+        ];
+
+        // Create an associative array for easier reordering
+        $fieldsArray = iterator_to_array($fields);
+
+        // Filter out fields that need to be removed
+        $fieldsArray = array_filter($fieldsArray, function ($field) use ($removeField) {
+            return !in_array($field['label'], $removeField, true);
+        });
+
+        // Sort the fields based on the desired order
+        $sortedFields = [];
+        foreach ($desiredOrder as $label) {
+            foreach ($fieldsArray as $field) {
+                if ($field['label'] === $label) {
+                    $sortedFields[] = $field;
+                    break;
+                }
+            }
+        }
+
+        // Update the original $fields ArrayObject
+        $fields->exchangeArray($sortedFields);
+        //End
         $recordId = $settings['id'];
         $appraisalFormId = $recordId ? $this->_table->get($recordId)->appraisal_form_id : json_decode($settings['process']['params'] ?? '{}')->appraisal_form_id;
         $staffAppraisalId = $recordId ? $this->_table->get($recordId)->id : -1;
