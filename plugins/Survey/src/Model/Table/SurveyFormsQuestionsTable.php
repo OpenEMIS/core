@@ -76,6 +76,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 				'show_options' => 'SurveyRules.show_options',
 			])
 			->enableAutoFields(true) // POCOR-8465
+			->order([$this->aliasField('order') => 'ASC'])// POCOR-8729
 			;
 		return $query;
 	}

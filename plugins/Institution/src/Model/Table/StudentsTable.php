@@ -878,17 +878,17 @@ class StudentsTable extends ControllerActionTable
         $student_id = !empty($entity->student_id) ? $entity->student_id : NULL;
         $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
         $result = $this->checkStudentRecords($entity);
-        if ($result) {
-            // POCOR-8411 start
-            try {
-                $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
-            } catch (\Exception $exception) {
-                Log::error(__FUNCTION__ . ':' . $exception->getMessage());
-            }
-            // POCOR-8411 end
-            $event->stopPropagation();
-            return $this->controller->redirect($this->url('remove'));
-        } else {
+        // if ($result) {
+        //     // POCOR-8411 start
+        //     try {
+        //         $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+        //     } catch (\Exception $exception) {
+        //         Log::error(__FUNCTION__ . ':' . $exception->getMessage());
+        //     }
+        //     // POCOR-8411 end
+        //     $event->stopPropagation();
+        //     return $this->controller->redirect($this->url('remove'));
+        // } else {
             $body = array();
             $institution_student_id = !empty($entity->id) ? $entity->id : NULL;
             $body = [
@@ -904,7 +904,7 @@ class StudentsTable extends ControllerActionTable
                     $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
                 }
             }
-        }
+        //}
     }
 
     /**
@@ -2294,53 +2294,29 @@ class StudentsTable extends ControllerActionTable
         return $params;
     }
 
-    // Function use by the mini dashboard (For Institution Students)
+    // Function use by the mini dashboard (For Institution Students)(POCOR-8721 start - for query optimization)
     public function getNumberOfStudentsByAge($params = [])
     {
-        $query = $params['query'];
-        $InstitutionRecords = $query->cleanCopy();
-        $ageQuery = $InstitutionRecords
-            ->select([
-                'age' => $InstitutionRecords->func()->dateDiff([
-                    $InstitutionRecords->func()->now(),
-                    'Users.date_of_birth' => 'literal'
-                ]),
-                'student' => $this->aliasField('student_id')
-            ])
-            ->distinct(['student'])
-            ->order('age');
-
-        $InstitutionStudentCount = $ageQuery->toArray();
-
-        $convertAge = [];
-
-        // (Logic to be reviewed)
-        // Calculate the age taking account to the average of leap years
-        foreach ($InstitutionStudentCount as $val) {
-            $convertAge[] = floor($val['age'] / 365.25);
-        }
-        // Count and sort the age
-        $result = [];
-        $prevValue = ['age' => -1, 'count' => null];
-        foreach ($convertAge as $val) {
-            if ($prevValue['age'] != $val) {
-                unset($prevValue);
-                $prevValue = ['age' => $val, 'count' => 0];
-                $result[] =& $prevValue;
-            }
-            $prevValue['count']++;
-        }
-
-        // Creating the data set
-        $dataSet = [];
-        foreach ($result as $value) {
-            //Compile the dataset
-            $dataSet[] = [__('Age') . ' ' . $value['age'], $value['count']];
-        }
+        $academicPeriod = $this->request->getQueryParams()['academic_period_id'];
+        $institutionId = $this->getInstitutionID();
+        $connection = ConnectionManager::get('default');
+        $sql = "SELECT FLOOR(DATEDIFF(CURRENT_DATE, u.date_of_birth) / 365.25) AS age,
+                    COUNT(DISTINCT s.student_id) AS student_count
+                    FROM security_users u
+                    INNER JOIN  institution_students s ON s.student_id = u.id
+                    WHERE  s.institution_id = ".$institutionId." AND academic_period_id = ".$academicPeriod." 
+                    GROUP BY  age ORDER BY age";
+            
+        $ageCounts = $connection->execute($sql)->fetchAll('assoc');
+        $dataSet = array_map(function($row) {
+            return [__('Age') . ' ' . $row['age'], $row['student_count']];
+        }, $ageCounts);
+    
         $params['dataSet'] = $dataSet;
-        unset($InstitutionRecords);
+        
         return $params;
     }
+    //POCOR-8721 end
 
     // Function use by the mini dashboard (For Institution Students)
     public function getNumberOfStudentsByGradeByInstitution($params = [])
