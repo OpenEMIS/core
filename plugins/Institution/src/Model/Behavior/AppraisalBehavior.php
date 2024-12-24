@@ -432,6 +432,30 @@ class AppraisalBehavior extends Behavior
                 'appraisal_criteria_id' => $formsCriteria->appraisal_criteria_id
             ];
         }
+        $fields[] = [
+            'key' => 'StaffAppraisals',
+            'field' => 'modified_user_id',
+            'type' => 'string',
+            'label' => 'Modified By',
+        ];
+        $fields[] = [
+            'key' => 'StaffAppraisals',
+            'field' => 'modified',
+            'type' => 'date',
+            'label' => 'Modified On',
+        ];
+        $fields[] = [
+            'key' => 'StaffAppraisals',
+            'field' => 'created_user_id',
+            'type' => 'string',
+            'label' => 'Created By',
+        ];
+        $fields[] = [
+            'key' => 'StaffAppraisals',
+            'field' => 'created',
+            'type' => 'date',
+            'label' => 'Created On',
+        ];
     }
 
 
