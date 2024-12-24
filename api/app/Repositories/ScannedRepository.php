@@ -32,98 +32,49 @@ class ScannedRepository extends Controller
      * @param ScannedAttendanceRequest $request The request containing the scanned data to be saved.
      * @return mixed The result of the save operation, typically the saved record or a success message.
      */
-
-    /*public function saveScannedUserData(ScannedAttendanceRequest $request)
-    {
-        DB::beginTransaction();
-        try {
-            $params = $request->all();
-           
-            $bulkInsertData = [];
-            $currentTimestamp = Carbon::now()->toDateTimeString();
-            $userId = JWTAuth::user()->id;
-
-            foreach ($params as $param) {
-                $openemisNo = SecurityUsers::where('openemis_no', $param['openemis_no'])->first();
-                if(!empty($openemisNo)){
-                        $bulkInsertData[] = [
-                        'openemis_no' => $param['openemis_no'],
-                        'datetime' => Carbon::parse($param['datetime'])->toDateTimeString(),
-                        'latitude' => $param['latitude'],
-                        'longitude' => $param['longitude'],
-                        'location' => $param['location'],
-                        'access' => $param['access'],
-                        'created_user_id' => $userId,
-                        'created' => $currentTimestamp,
-                    ];
-                }else{
-                    scan.error()
-                }
-            }
-
-            // Perform a bulk insert
-            ScannedAttendance::insert($bulkInsertData);
-
-            DB::commit();
-            return 1;
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            // Log error for debugging
-            Log::error('Failed to store Scanned User data.', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to store Scanned User data.'
-            ], 500);
-        }
-    }*/
     public function saveScannedUserData(ScannedAttendanceRequest $request)
     {
         DB::beginTransaction();
         try {
             $params = $request->all();
-            
             $bulkInsertData = [];
-            $notFoundUsers = []; // Track users not found
+            $notFoundUsers = []; 
             $currentTimestamp = Carbon::now()->toDateTimeString();
             $userId = JWTAuth::user()->id;
-
-            foreach ($params as $param) {
-                $openemisNo = SecurityUsers::where('openemis_no', $param['openemis_no'])->first();
-                
-                if (!empty($openemisNo)) {
-                    $bulkInsertData[] = [
-                        'openemis_no' => $param['openemis_no'],
-                        'datetime' => Carbon::parse($param['datetime'])->toDateTimeString(),
-                        'latitude' => $param['latitude'],
-                        'longitude' => $param['longitude'],
-                        'location' => $param['location'],
-                        'access' => $param['access'],
-                        'created_user_id' => $userId,
-                        'created' => $currentTimestamp,
-                    ];
-                } else {
-                    // Log users not found to scan.log
-                    Log::channel('scan')->error('User not found in db', [
-                        'openemis_no' => $param['openemis_no'],
-                        'timestamp' => $currentTimestamp,
-                        'details' => $param
-                    ]);
-                    $notFoundUsers[] = $param['openemis_no'];
-                    return 2;
+            if(!empty($params)){
+                foreach ($params as $param) {
+                    $openemisNo = SecurityUsers::where('openemis_no', $param['openemis_no'])->first();
+                    
+                    if (!empty($openemisNo)) {
+                        $bulkInsertData[] = [
+                            'openemis_no' => $param['openemis_no'],
+                            'datetime' => Carbon::parse($param['datetime'])->toDateTimeString(),
+                            'latitude' => $param['latitude'],
+                            'longitude' => $param['longitude'],
+                            'location' => $param['location'],
+                            'access' => $param['access'],
+                            'created_user_id' => $userId,
+                            'created' => $currentTimestamp,
+                        ];
+                    } else {
+                        // Log users not found to scan.log
+                        Log::channel('scan')->error('User not found in db', [
+                            'openemis_no' => $param['openemis_no'],
+                            'timestamp' => $currentTimestamp,
+                            'details' => $param
+                        ]);
+                        $notFoundUsers[] = $param['openemis_no'];
+                        return 2;
+                    }
                 }
+                if (!empty($bulkInsertData)) {
+                    ScannedAttendance::insert($bulkInsertData);
+                }
+
+                DB::commit();
+                return 1;
             }
 
-            if (!empty($bulkInsertData)) {
-                ScannedAttendance::insert($bulkInsertData);
-            }
-
-            DB::commit();
-            return 1;
         } catch (\Exception $e) {
             DB::rollback();
             // Log to scan.log channel with detailed error information
