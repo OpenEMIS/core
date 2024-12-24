@@ -253,7 +253,7 @@ class ExcelBehavior extends Behavior
             $pages = ceil($count / $this->getConfig('limit'));
 
             // Debugging
-            //$pages = 1; //POCOR-8755
+            //$pages = 1; //comment this in POCOR-8755
 
             if (isset($sheet['orientation'])) {
                 if ($sheet['orientation'] == 'landscape') {
