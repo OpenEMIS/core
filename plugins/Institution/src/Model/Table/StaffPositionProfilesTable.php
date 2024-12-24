@@ -419,7 +419,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $user->created = $entity->created;
                     $SecurityGroupUsers->save($user);
                 }
-
             }
 
             $InstitutionStaff->query()
@@ -433,29 +432,59 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if ($StaffChangeTypesDataForShift) {
             switch ($StaffChangeTypesDataForShift->code) {
                 case 'CHANGE_IN_STAFF_TYPE':
-                    $entity->end_date = $entity->end_date;
+                    $entity->end_date = $entity->end_date ?? null;
                     break;
                 case 'CHANGE_IN_FTE':
                     $entity->end_date = $entity->effective_date ?: $this->getDefaultEndDate($entity);
                     break;
                 case 'END_OF_ASSIGNMENT':
                 case 'CHANGE_OF_START_DATE':
-                    $entity->end_date = $entity->end_date;
+                    $entity->end_date = $entity->end_date ?? null;
                     break;
                 default:
-                    $entity->end_date = $entity->start_date;
                     break;
             }
         }
-        echo "<pre>"; print_r($entity); die('pkk');
-        if($StaffChangeTypesDataForShift['code'] == 'HOMEROOM_TEACHER'){ //POCOR-8760
-            if(!empty($entity->end_date)){
-                $entity->end_date = $entity->end_date;
+        if ($StaffChangeTypesDataForShift['code'] == 'HOMEROOM_TEACHER') { // POCOR-8760
+            if (!isset($entity->end_date)) {
+                unset($entity->end_date);
             }
-         }
+        }
 
-        return $entity; // Return the entity to allow saving to continue
+        $associatedData = $this->getAssociatedData($entity);
+
+        if (!empty($associatedData)) {
+            $message = __('The record is not updated due to associated data encountered.');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('add'));
+        } else {
+            $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+            $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
+                ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
+                ->first();
+
+            if ($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT') {
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+                $periodId = $AcademicPeriods->getCurrent();
+
+                if (!empty($entity->new_shift)) { // POCOR-7109
+                    $InstitutionPositions->updateAll(
+                        [
+                            'shift_id' => $entity->new_shift,
+                            'modified_user_id' => 1,
+                            'modified' => new Time('NOW')
+                        ],
+                        ['id' => $entity->institution_position_id]
+                    );
+                }
+            }
+        }
+
+        return $entity; 
     }
+
 
     private function getDefaultEndDate($entity)
     {
@@ -466,11 +495,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
             ])
             ->first();
 
-        return $staffPositionProfilesRecord->end_date->format('Y-m-d') ?? null;
+        return $staffPositionProfilesRecord->end_date ? $staffPositionProfilesRecord->end_date->format('Y-m-d') : null;
     }
-
-
-
 
     private function getAssociatedData($entity)
     {
@@ -1725,7 +1751,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
      * @param \Cake\Datasource\EntityInterface $entity The saved entity.
      * @param \ArrayObject $options Options passed from the save operation.
      */
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+    /*public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
     {
         if($entity->staff_change_type_id == 6){
 
@@ -1741,7 +1767,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 );
         } 
 
-    }
+    }*/
 
 }
 
