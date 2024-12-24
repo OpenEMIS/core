@@ -2143,8 +2143,9 @@ class AcademicPeriodsTable extends ControllerActionTable
             // ->find('editable', ['isEditable' => true]) V4
             ->where($where)
             ->order([$this->aliasField('order') => 'DESC'])
-            ->extract('id')
-            ->first();
+            ->all() // Execute the query and get a ResultSet
+            ->extract('id') // Extract the 'id' values
+            ->first(); // Get the first extracted value
 
         return $nextAcademicPeriodId;
     }

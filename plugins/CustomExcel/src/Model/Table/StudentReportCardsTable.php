@@ -61,6 +61,7 @@ class StudentReportCardsTable extends AppTable
                 'InstitutionSubjectStudentsWithName', //POCOR-7316
                 'AssessmentPeriods', //POCOR-7316
                 'AssessmentItemResults', //POCOR-7316
+                'InstitutionStudentGradeGpa', //POCOR-8222
             ]
         ]);
     }
@@ -97,6 +98,7 @@ class StudentReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'] = 'onExcelTemplateInitialiseInstitutionSubjectStudentsWithName'; //POCOR-7316
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods'; //POCOR-7316
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults'; //POCOR-7316
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentGradeGpa'] = 'onExcelTemplateInitialiseInstitutionStudentGradeGpa'; //POCOR-8222
         return $events;
     }
 
@@ -1210,10 +1212,10 @@ class StudentReportCardsTable extends AppTable
                     "education_subject_name" => 'EducationSubjects.name',
                     "education_subject_id" => $SubjectStudents->aliasField('education_subject_id'),
                     "total_mark" => $SubjectStudents->aliasField('total_mark'),
-                    "result_type" => $EducationGradeSubjects->aliasField('result_type'),
-                    "requirement" => $EducationGradeSubjects->aliasField('requirement'),
+                   // "result_type" => $EducationGradeSubjects->aliasField('result_type'),
+                    //"requirement" => $EducationGradeSubjects->aliasField('requirement'),
                     "start_date" => $InstitutionStudents->aliasField('start_date'),
-                    "outcome_result" => $SubjectStudents->aliasField('outcome_result'),
+                   // "outcome_result" => $SubjectStudents->aliasField('outcome_result'),
                 ])
                 ->join([
                     'EducationSubjects' => [
@@ -1401,5 +1403,69 @@ class StudentReportCardsTable extends AppTable
             return $entity;
         }
     }
-    //POCOR-7316 ends
+
+    /**
+     * POCOR-8222
+     * Initializes the Excel template for Institution Student Grade and GPA.
+     * This method is triggered when preparing the student grade and GPA data for the institution in the Excel template.
+     *
+     * @param Event $event The event that triggered the method.
+     * @param array $params Parameters passed to the event, potentially containing specific details about the institution or student.
+     * @param ArrayObject $extra Additional data or context passed with the event, which may be used for further customization of the template.
+    */
+   public function onExcelTemplateInitialiseInstitutionStudentGradeGpa(Event $event, array $params, ArrayObject $extra)
+    {
+        $entity = null;
+        if (!empty($params['student_id']) && !empty($params['institution_id']) && !empty($params['academic_period_id'])) 
+        {
+            $educationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $educationGrades = TableRegistry::get('Education.EducationGrades');
+            $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+            $GradesGpa = TableRegistry::get('Gpa.EducationGradesGpa');
+            $result = $StudentsGpa->find()
+                    ->select(['gpa' => $StudentsGpa->aliasField('gpa'),
+                            'cumulative_gpa' => $StudentsGpa->aliasField('cumulative_gpa'),
+                            'academic_period' => $academicPeriod->aliasField('name'),
+                            'education_grade' => $educationGrades->aliasField('name'),
+                            'start_date' => $GradesGpa->aliasField('start_date'),
+                            'end_date' => $GradesGpa->aliasField('end_date'),
+                            'student_id' => $StudentsGpa->aliasField('student_id'),
+                    ])
+                    ->LeftJoin(
+                            [$academicPeriod->getAlias() => $academicPeriod->getTable()], [
+                                $academicPeriod->aliasField('id = ') . $StudentsGpa->aliasField('academic_period_id')
+                            ])
+                    ->LeftJoin(
+                            [$educationGrades->getAlias() => $educationGrades->getTable()], [
+                                $educationGrades->aliasField('id = ') . $StudentsGpa->aliasField('education_grade_id')
+                            ])
+                    ->LeftJoin(
+                            [$GradesGpa->getAlias() => $GradesGpa->getTable()], [
+                                $GradesGpa->aliasField('education_grade_id = ') . $StudentsGpa->aliasField('education_grade_id')
+                            ])
+                    ->where([
+                        $StudentsGpa->aliasField('student_id') => $params['student_id'],
+                        $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
+                        $GradesGpa->aliasField('gpa_grading_type_id IS NOT') => NULL
+                    ])->group([$StudentsGpa->aliasField('education_grade_id')])
+                    ->toArray();
+                $entity = [];
+                $i = 1;
+                foreach ($result as $row) {
+                    $entity[] = [
+                        'id' => $i,
+                        'academic_period' => $row['academic_period'],
+                        'education_grade' => $row['education_grade'],
+                        'gpa' => $row['gpa'],
+                        'cumulative' => $row['cumulative_gpa'],
+                        'start_date' => $row['start_date'],  // Null if not a valid date
+                        'end_date' => $row['end_date'],      // Null if not a valid date
+                    ];
+                    $i++;
+                }
+        }
+        return $entity;
+    }
+    
 }

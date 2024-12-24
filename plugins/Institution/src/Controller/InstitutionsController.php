@@ -8977,6 +8977,37 @@ class InstitutionsController extends AppController
 
     }
     //POCOR-7971 end
+    public function getInstitutionGpaTab($action = null)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $tabElements = [
+            'ReportCardGpa' => [
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardGpa', 0 => 'index', 1 => $encodedQueryString],
+                'text' => __('GPA')
+            ],
+            'ReportCardCumulativeGpa' => [
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardCumulativeGpa', 0 => 'index', 1 => $encodedQueryString],
+                'text' => __('Cumulative GPA')
+            ],
+            
+        ];
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+        
+        $this->set('tabElements', $tabElements);
+        $action = !is_null($action) ? $action : $this->request->getParam('action');
+        $this->set('selectedAction', $action);
+    }
+
+    public function ReportCardGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardGpa']);
+    }
+
+    public function ReportCardCumulativeGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardCumulativeGpa']);
+    }
 
 }
 
