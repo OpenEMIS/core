@@ -474,6 +474,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 ->first();
 
             if ($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT') {
+                $entity->status_id = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'APPROVED');
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
                 $periodId = $AcademicPeriods->getCurrent();
@@ -1750,32 +1751,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
         return $attr;
     }
-    /**
-     * POCOR-8760
-     * This method is triggered after an entity is saved.
-     * It performs additional actions when the `staff_change_type_id` is 6.
-     *
-     * @param \Cake\Event\Event $event The afterSave event.
-     * @param \Cake\Datasource\EntityInterface $entity The saved entity.
-     * @param \ArrayObject $options Options passed from the save operation.
-     */
-    /*public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
-    {
-        if($entity->staff_change_type_id == 6){
-
-            $homeRoom =   $this->request->getData()['StaffPositionProfiles']['homeroom_teacher'];
-
-            $position = $this->request->getData()['StaffPositionProfiles']['institution_position_id'];
-            $staff = TableRegistry::get('Institution.Staff');
-            $staff->updateAll(
-                    ['is_homeroom' => $homeRoom,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
-                    [
-                     'institution_position_id IS' => $position, //condition update
-                    ]
-                );
-        } 
-
-    }*/
-
+    
 }
 
