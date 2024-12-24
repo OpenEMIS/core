@@ -11,6 +11,7 @@ use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -147,6 +148,16 @@ class CurrentAssessmentsTable extends ControllerActionTable
             !is_null($this->request->getQuery('academic_period_id'))
                 ? $this->request->getQuery('academic_period_id')
                 : $this->AcademicPeriods->getCurrent();
+        // POCOR-8224 start
+        $selectedAssessment =
+            !is_null($this->request->getQuery('assessment_id'))
+                ? $this->request->getQuery('assessment_id')
+                : -1;
+        $selectedAssessmentPeriod =
+            !is_null($this->request->getQuery('assessment_period_id'))
+                ? $this->request->getQuery('assessment_period_id')
+                : -1;
+        // POCOR-8224 end
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 //        $where[$this->aliasField('institution_id')] = $institutionId;  // POCOR-7201
@@ -211,8 +222,16 @@ class CurrentAssessmentsTable extends ControllerActionTable
             "education_subject_id" => $entity->education_subject_id,
             "assessment_period_id" => $entity->assessment_period_id,
             'assessment_id' => $entity->assessment_id];
-        $marks = $ItemResults::getLastMark($options);
-        return round($marks[0]['marks'], 2);
+        $exemptions = $ItemResults::getLastExemptions($options);
+        // POCOR-8224 start
+        if(!empty($exemptions)){
+            $mark = 'EXEMPT';
+        }else{
+            $marks = $ItemResults::getLastMark($options);
+            $mark = round($marks[0]['marks'], 2);
+        }
+        return $mark;
+        // POCOR-8224 start
     }
 
     /**
@@ -234,8 +253,35 @@ class CurrentAssessmentsTable extends ControllerActionTable
             "assessment_period_id" => -1,
             'assessment_id' => $entity->assessment_id];
         $marks = $ItemResults::getLastMark($options);
-        $last_results = array_column($marks, 'marks');
-        $sum_results = array_sum($last_results);
+
+        //POCOR-8224 start
+        // Fetch exemptions from getLastExemptions
+        $exemptions = $ItemResults::getLastExemptions($options);
+
+        // Extract relevant identifiers from exemptions: education_subject_id and assessment_period_id
+        $exempt_combination = array_map(function($exemption) {
+            return $exemption['education_subject_id'] . '-' . $exemption['assessment_period_id'];
+        }, $exemptions);
+
+        // Filter results to exclude the ones that match both education_subject_id and assessment_period_id in exemptions
+        $filtered_results = [];
+        foreach ($marks as $mark) {
+            // Create a key for the current mark for comparison
+            $mark_combination = $mark['education_subject_id'] . '-' . $mark['assessment_period_id'];
+
+            // If the combination is not in the exemptions, include the mark
+            if (!in_array($mark_combination, $exempt_combination)) {
+                $filtered_results[] = $mark['marks'];
+            }
+//            else{
+//                $filtered_results[] = 0;
+//            }
+        }
+
+        // Sum the filtered results
+        $sum_results = array_sum($filtered_results);
+        // Return the rounded sum of the results
+        //POCOR-8224 end
         return round($sum_results, 2);
     }
 
@@ -421,9 +467,9 @@ class CurrentAssessmentsTable extends ControllerActionTable
     }
 
     /**
-     * @param Query $selectedAcademicPeriod
-     * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param $selectedAcademicPeriod
+     * @param $selectedAssessment
+     * @return int|mixed|string|null
      */
     private function setAssessmentOptions($selectedAcademicPeriod, $selectedAssessment = -1)
     {
@@ -451,6 +497,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-8224 changes
      * @param int $selectedAssessment
      * @param int $selectedAssessmentPeriod
      * @return int|string|null
@@ -460,17 +507,17 @@ class CurrentAssessmentsTable extends ControllerActionTable
     {
         $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $assessment_periods_arr = $ItemResults->find()
-            ->select('assessment_id')
-            ->distinct('assessment_id')
+            ->select('assessment_period_id')
+            ->distinct('assessment_period_id')
             ->where(['student_id' => $this->studentId])
             ->toArray();
-        $assessment_periods_ids = array_column($assessment_periods_arr, 'assessment_id');
+        $assessment_periods_ids = array_column($assessment_periods_arr, 'assessment_period_id');
         if(sizeof($assessment_periods_ids) == 0){
             $assessment_periods_ids = [0];
         }
         $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
         $where = [$AssessmentPeriods->aliasField('id IN') => $assessment_periods_ids];
-        if ($selectedAssessment != '-1') {
+        if ($selectedAssessment > 0) {
             $where[$AssessmentPeriods->aliasField('assessment_id')] = $selectedAssessment;
         }
         $AssessmentPeriodsOptions = $AssessmentPeriods
