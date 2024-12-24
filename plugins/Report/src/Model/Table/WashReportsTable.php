@@ -581,14 +581,19 @@ class WashReportsTable extends AppTable
         $selectedArea = $requestData->area_education_id;//POCOR-8161
         //POCOR-8161 starts
         $areaIds = [];
-        $allgetArea = $this->getChildren($selectedArea, $areaIds);
-        $selectedArea1[]= $selectedArea;
-        if(!empty($allgetArea)){
-            $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+        $allgetArea = '';
+        $selectedArea1= [];
+        if ($selectedArea != -1) {
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }
         }else{
             $allselectedAreas = $selectedArea1;
-        }//POCOR-8161 ends
-
+        }        
+        //POCOR-8161 ends
+        
         $conditions = [];
         $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
         if (!empty($academicPeriodId)) {
@@ -604,7 +609,6 @@ class WashReportsTable extends AppTable
         $sheetData = $settings['sheet']['sheetData'];
         $infrastructureType = $sheetData['infrastructure_tabs_type'];
 
-        
         if ($infrastructureType == 'Water')
         {
             $query
@@ -1036,7 +1040,7 @@ class WashReportsTable extends AppTable
                 ->where($conditions);
         }
 
-        if($washType == 'Hygiene'){
+        if($washType == 'Sanitation'){
             $query
                 ->select([
                     $this->aliasField('id'),
