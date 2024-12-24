@@ -352,7 +352,16 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $searchableFields[] = 'openemis_no';
     }
 
-
+    /**
+     * POCOR-8774 
+     * This beforeSave method implements logic to handle various staff change scenarios, 
+     * such as homeroom teacher changes, shifts, and other staff-related modifications.
+     * Key functionalities:
+     * - Manages security group associations for homeroom teacher changes.
+     * - Updates `end_date` based on the type of staff change.
+     * - Validates and updates associated data to ensure consistency.
+     *
+     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $StaffChangeTypes = TableRegistry::getTableLocator()->get('Staff.StaffChangeTypes');
@@ -484,7 +493,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
         return $entity; 
     }
-
 
     private function getDefaultEndDate($entity)
     {
