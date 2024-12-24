@@ -105,6 +105,17 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             return Promise.resolve();
         }
 
+        if ((scope.isExternalSearchSelected || scope.isInternalSearchSelected) &&
+            scope.selectedUserData.openemis_no &&
+            scope.selectedUserData.openemis_no.toString() !== '')
+        {
+            // if UserName is absent
+            if (!scope.selectedUserData.username) {
+                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
+            }
+            return Promise.resolve();
+        }
+
         return getUniqueOpenEmisId()
             .then(response => {
                 scope.selectedUserData.openemis_no = response;
