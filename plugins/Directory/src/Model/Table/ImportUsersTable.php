@@ -342,12 +342,12 @@ class ImportUsersTable extends AppTable
         $tempRow['record_source'] = 'import_user';
         if ($isStudent) {
             list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
-            list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+//            list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
         }
 
 
-            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
-            Log::debug(print_r(['$tempRow' => $tempRow], true));
+//            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
+//            Log::debug(print_r(['$tempRow' => $tempRow], true));
 
 
 
@@ -358,7 +358,7 @@ class ImportUsersTable extends AppTable
         //add identifier that later will be used on User afterSave
         $tempRow['record_source'] = 'import_user';
 
-        return false; //todo replace to true to import to work
+        return true; //todo replace to true to import to work
     }
 
     public function onImportPopulateNationalitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
