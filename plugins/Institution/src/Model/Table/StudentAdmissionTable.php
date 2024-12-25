@@ -1021,12 +1021,12 @@ class StudentAdmissionTable extends ControllerActionTable
      **/
     private static function assignStudentRoleGroup($institution_id, $student_id)
     {
-        Log::write('debug', 'assignStudentRoleGroup');
+//        Log::write('debug', 'assignStudentRoleGroup');
         $student_role_id = self::getStudentSecurityRoleId();
         $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
-        Log::write('debug', $institution_id);
-        Log::write('debug', $student_id);
-        Log::write('debug', $security_group_id);
+//        Log::write('debug', $institution_id);
+//        Log::write('debug', $student_id);
+//        Log::write('debug', $security_group_id);
         //check student already exist
         $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
         //Log::write('debug', $student_security_groups);
