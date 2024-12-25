@@ -2304,16 +2304,16 @@ class StudentsTable extends ControllerActionTable
                     COUNT(DISTINCT s.student_id) AS student_count
                     FROM security_users u
                     INNER JOIN  institution_students s ON s.student_id = u.id
-                    WHERE  s.institution_id = ".$institutionId." AND academic_period_id = ".$academicPeriod." 
+                    WHERE  s.institution_id = ".$institutionId." AND academic_period_id = ".$academicPeriod."
                     GROUP BY  age ORDER BY age";
-            
+
         $ageCounts = $connection->execute($sql)->fetchAll('assoc');
         $dataSet = array_map(function($row) {
             return [__('Age') . ' ' . $row['age'], $row['student_count']];
         }, $ageCounts);
-    
+
         $params['dataSet'] = $dataSet;
-        
+
         return $params;
     }
     //POCOR-8721 end
@@ -3580,8 +3580,8 @@ class StudentsTable extends ControllerActionTable
             ]);
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch remove from table',
-                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+                print_r(['Failed to fetch remove from table' =>
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], true)
             );
         }
         return $affected;
