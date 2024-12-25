@@ -723,10 +723,11 @@ class UsersTable extends AppTable
             })
             ->add('account_type', 'custom', [
                 'rule' => function ($value, $context) {
+                    Log::debug($value . 'aaa');
                     $accountTypes = ['is_student', 'is_staff', 'is_guardian', 'others'];
                     return in_array($value, $accountTypes);
                 },
-                'message' => $this->getMessage('Import.value_not_in_list'),
+                'message' => 'z' . $this->getMessage('Import.value_not_in_list'),
                 'on' => function ($context) {
                     if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
                         return true;

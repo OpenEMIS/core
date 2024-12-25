@@ -19,7 +19,7 @@ class ImportUsersTable extends AppTable
     const IS_STAFF = "is_staff";
     const IS_STUDENT = "is_student";
 
-    const GUARDIAN = 3;
+    const IS_GUARDIAN = "is_guardian";
     private $Users;
     private $ConfigItems;
 //    private $Nationalities;
@@ -135,6 +135,7 @@ class ImportUsersTable extends AppTable
                                         ArrayObject $importedUniqueCodes,
                                         ArrayObject $rowInvalidCodeCols) //POCOR-8082
     {
+
         $tempRow['columns'] = $columns;
         $columns = new Collection($columns);
         $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
@@ -148,25 +149,16 @@ class ImportUsersTable extends AppTable
             $rowInvalidCodeCols['openemis_no'] = 'This OpenEMIS No is Already Present';//$this->getExcelLabel('Import', 'duplicate_unique_key');
             return false;
         }
-
+        $user = null;
+        if ($openemisNo) {
+            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+        }
         $accountType = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'account_type';
         });
         $accountTypeIndex = key($accountType->toArray()) + 1;
         $accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
         $accountTypeId = $this->getAccountTypeId($accountType);
-        $tempRow['account_type'] = $accountTypeId;
-        if (empty($tempRow['account_type'])) {
-            $tempRow['duplicates'] = __('Account type cannot be empty');
-            $rowInvalidCodeCols['account_type'] = $tempRow['duplicates'];
-//            $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, 'others');
-//            $tempRow['username'] = $tempRow['openemis_no'];
-            return false;
-        }
-        $user = null;
-        if ($openemisNo) {
-            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
-        }
         if (!$user) {
             try{
                 $username = "";
@@ -186,13 +178,37 @@ class ImportUsersTable extends AppTable
         } else {
             $tempRow['entity'] = $user;
             $tempRow['security_user_id'] = $user->id;
+            Log::debug('$accountTypeId' . strval($accountTypeId));
+            $tempRow['account_type'] = $accountTypeId;
+            if($accountTypeId == "" || !$accountTypeId){
+                $tempRow['account_type'] = self::IS_STUDENT;
+                $accountTypeId = self::IS_STUDENT;
+            }
+            $defaults = [
+                'username' => $user->username,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'gender_id' => $user->gender_id,
+                'date_of_birth' => $user->date_of_birth
+            ];
+            foreach ($defaults as $key => $value) {
+                self::setIfEmpty($tempRow, $key, $value);
+            }
+        }
+        $tempRow['account_type'] = $accountTypeId;
+
+        if (empty($tempRow['account_type'])) {
+            $tempRow['duplicates'] = __('Account type cannot be empty');
+            $rowInvalidCodeCols['account_type'] = $tempRow['duplicates'];
+//            $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, 'others');
+//            $tempRow['username'] = $tempRow['openemis_no'];
+            return false;
         }
 
         if (!empty($tempRow['account_type'])) {
             // setting is_student = 1, or is_staff = 1, or is_guardian = 1
             $tempRow[$tempRow['account_type']] = 1;
         }
-
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
@@ -204,7 +220,18 @@ class ImportUsersTable extends AppTable
     {
         return $this->getAccountTypeId($cellValue);
     }
-
+    /**
+     * Set default value for empty or unset array fields
+     *
+     * @param array  $targetArray  The array to check and update
+     * @param string $field        The key to check
+     * @param mixed  $defaultValue The default value to set if the field is empty
+     */
+    private static function setIfEmpty(&$targetArray, $field, $defaultValue) {
+        if (empty($targetArray[$field])) {
+            $targetArray[$field] = $defaultValue;
+        }
+    }
     public function onImportGetAccountTypesName(Event $event, $value)
     {
         $name = '';
@@ -301,7 +328,8 @@ class ImportUsersTable extends AppTable
      */
     public function onImportModelSpecificValidation(Event $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        //            Log::debug(print_r($tempRow, true));
+        Log::debug(print_r($tempRow, true));
+        Log::debug(print_r($rowInvalidCodeCols, true));
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
 //        Log::debug(print_r(['first' => $tempRow], true));
 
@@ -341,13 +369,17 @@ class ImportUsersTable extends AppTable
 //        Log::debug(print_r($originalRow, true));
         $tempRow['record_source'] = 'import_user';
         if ($isStudent) {
-            list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
-//            list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+            if (!empty($rowInvalidCodeCols)) {
+                list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+            }
+            if (!empty($rowInvalidCodeCols)) {
+                list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+            }
         }
 
 
-//            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
-//            Log::debug(print_r(['$tempRow' => $tempRow], true));
+            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
+            Log::debug(print_r(['$tempRow' => $tempRow], true));
 
 
 
@@ -1313,6 +1345,7 @@ class ImportUsersTable extends AppTable
     {
         $have_error = $have_error || $this->checkGuardianRelationId($tempRow, $rowInvalidCodeCols);
         $have_error = $have_error || $this->checkGuardianOpenemisID($tempRow, $rowInvalidCodeCols);
+        $have_error = $have_error || $this->checkNewRelationship($tempRow, $rowInvalidCodeCols);
         return array($tempRow, $rowInvalidCodeCols, $have_error);
     }
     /**
@@ -1320,15 +1353,35 @@ class ImportUsersTable extends AppTable
      * @param $tempRow
      * @param ArrayObject $rowInvalidCodeCols
      * @param ArrayObject $originalRow
-     * @return array
      */
     private function checkNewAdmission(bool $have_error, $tempRow, ArrayObject $rowInvalidCodeCols, ArrayObject $originalRow): array
     {
+        $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
+        $institution_id = $tempRow['institution_id'] ?? null;
+        if (!$institution_id) {
+            return array($tempRow, $rowInvalidCodeCols, $have_error);
+        }
         $columns = $tempRow['columns'];
         $keys = array_flip($columns);
         $education_grade_key = $keys['education_grade_id'];
-        $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
-        $institution_id = $tempRow['institution_id'] ?? null;
+        $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
+        $academic_period_id = $tempRow['academic_period_id'] ?? null;
+//                Log::debug(print_r(['$academic_period_id' => $tempRow], true));
+        if (!empty($academic_period_id)) {
+            $education_grade_code = $originalRow[$education_grade_key];
+            $tempRow['education_grade_code'] = $education_grade_code;
+            $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
+            $education_grade_id = $tempRow['education_grade_id'] ?? null;
+//                    Log::debug(print_r(['$education_grade_id' => $tempRow], true));
+
+            if (!empty($education_grade_id)) {
+                $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
+                $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
+                $tempRow['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
+                $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
+            }
+        }
+
 //            Log::debug(print_r(['$institution_id' => $tempRow], true));
         if (!empty($institution_id)) {
             $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
@@ -1357,7 +1410,7 @@ class ImportUsersTable extends AppTable
      * @param $rowInvalidCodeCols
      * @return bool
      */
-    private function checkGuardianRelationId($tempRow, $rowInvalidCodeCols): bool
+    private function checkGuardianRelationId(&$tempRow, &$rowInvalidCodeCols): bool
     {
         $guardian_relation_id = $tempRow['guardian_relation_id'] ?? null;
         if(!$guardian_relation_id){
@@ -1385,16 +1438,23 @@ class ImportUsersTable extends AppTable
      * @param $rowInvalidCodeCols
      * @return bool
      */
-    private function checkGuardianOpenemisId($tempRow, $rowInvalidCodeCols): bool
+    private function checkGuardianOpenemisId(&$tempRow, &$rowInvalidCodeCols): bool
     {
         $have_error = false;
 
-        $openemisNo = $tempRow['guardian_openemis_no'];
-        $tempRow['account_type'] = self::GUARDIAN;
-
+        $openemisNo = $tempRow['guardian_openemis_no'] ?? null;
         $user = null;
         if ($openemisNo) {
+            if(isset($tempRow['entity'])){
+                $userOpenemisNo = $tempRow['entity']->openemis_no;
+                if ($userOpenemisNo == $openemisNo) {
+                    $this->addError($rowInvalidCodeCols, 'guardian_openemis_no', __('Same student and guardian id'));
+                    return true;
+                }
+            }
+
             $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+
         }
         if (!$user) {
             try{
@@ -1407,16 +1467,93 @@ class ImportUsersTable extends AppTable
 
                     $tempRow['guardian_openemis_no'] = $username;
                 }
-                $tempRow['username'] = $username;
+                $tempRow['guardian_username'] = $username;
             } catch (\Exception $exception) {
                 $rowInvalidCodeCols['guardian_openemis_no'] = 'New User Creation Error: ' . __($exception->getMessage());
-                return false;
+                return true;
             }
         } else {
             $tempRow['guardian_entity'] = $user;
             $tempRow['guardian_id'] = $user->id;
         }
 
+        return $have_error;
+    }
+
+
+    private function checkNewRelationship(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $have_error = false;
+        list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkCreateNewStudent($tempRow, $rowInvalidCodeCols, $have_error);
+        if ($have_error) {
+            return true;
+        }
+        if (!$tempRow['student_id']) {
+            $rowInvalidCodeCols['guardian_openemis_id'] = __('No Present Student');
+            return true;
+        }
+        if (!$tempRow['guardian_id']) {
+            $rowInvalidCodeCols['guardian_openemis_id'] = __('No Present Guardian');
+            return true;
+        }
+        $student_id = $tempRow['student_id'];
+        $guardian_id = $tempRow['guardian_id'];
+        $guardian_relation_id = $tempRow['guardian_relation_id'];
+        $StudentGuardians = self::getDynamicTableInstance('student_guardians');
+        $existingEntity = $StudentGuardians->find()
+            ->where([$StudentGuardians->aliasField('student_id') => $student_id,
+                $StudentGuardians->aliasField('guardian_id') => $guardian_id,
+                $StudentGuardians->aliasField('guardian_relation_id') => $guardian_relation_id,])
+            ->first();
+        if ($existingEntity) {
+            return $have_error;
+        }
+        $entityGuardiansData = [
+            'id' => Text::uuid(),
+            'student_id' => $student_id,
+            'guardian_id' => $guardian_id,
+            'guardian_relation_id' => $guardian_relation_id,
+            'created_user_id' => $this->Auth->user('id'), // Assignee as current user,
+            'created' => date('Y-m-d H:i:s')
+        ];
+//            Log::debug(print_r($entityGuardiansData, true));
+// Check for an existing entity based on unique fields
+
+        $newRelationship = $StudentGuardians->newEntity($entityGuardiansData);
+        if ($newRelationship->getErrors()) { // POCOR-7973
+            $errorMessages = array_reduce(
+                $newRelationship->getErrors(),
+                function ($carry, $errors) {
+                    return array_merge($carry, $errors);
+                },
+                []
+            );
+
+            $rowInvalidCodeCols['guardian_openemis_id'] = implode(',', $errorMessages);
+            $tempRow['guardian_error'] = true;
+            $have_error = true;
+            return $have_error;
+        }
+        // If the entity does not exist, create a new one
+
+        try {
+            $newRelationship = $StudentGuardians->save($newRelationship);
+        } catch (\Exception $e) {
+            // Handle save error
+            $rowInvalidCodeCols['guardian_openemis_id'] = $e->getMessage();
+            $have_error = true;
+        }
+        try {
+            $guardian_entity = $tempRow['guardian_entity'];
+
+            $guardian_entity = $this->patchEntity($guardian_entity, ['is_guardian' => 1], ['validate' =>false]);
+
+            $this->Users->save($guardian_entity);
+        } catch (\Exception $e) {
+            // Handle save error
+            $rowInvalidCodeCols['guardian_openemis_id'] = $e->getMessage();
+            $have_error = true;
+        }
         return $have_error;
     }
 
