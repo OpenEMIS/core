@@ -66,7 +66,7 @@ class ImportUsersTable extends AppTable
         $this->IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
         $this->UserIdentities = self::getDynamicTableInstance('User.Identities');
 
-        $prefix = $this->ConfigItems->value('openemis_id_prefix');
+        $prefix = $this->ConfigItems->value('openemis_no_prefix');
         $prefix = explode(",", $prefix);
         $prefix = (isset($prefix[1]) && $prefix[1] > 0) ? $prefix[0] : '';
 
@@ -328,8 +328,8 @@ class ImportUsersTable extends AppTable
      */
     public function onImportModelSpecificValidation(Event $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        Log::debug(print_r($tempRow, true));
-        Log::debug(print_r($rowInvalidCodeCols, true));
+//        Log::debug(print_r($tempRow, true));
+//        Log::debug(print_r($rowInvalidCodeCols, true));
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
 //        Log::debug(print_r(['first' => $tempRow], true));
 
@@ -378,8 +378,8 @@ class ImportUsersTable extends AppTable
         }
 
 
-            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
-            Log::debug(print_r(['$tempRow' => $tempRow], true));
+//            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
+//            Log::debug(print_r(['$tempRow' => $tempRow], true));
 
 
 
@@ -457,6 +457,10 @@ class ImportUsersTable extends AppTable
         $flipped = array_flip($columns);
         $key = $flipped['openemis_no'];
         $tempPassedRecord['data'][$key] = $clonedEntity->openemis_no;
+        $key = $flipped['guardian_openemis_no'];
+        $tempPassedRecord['data'][$key] = $clonedEntity->guardian_openemis_no;
+//        Log::debug(print_r(['$clonedEntity' => $clonedEntity,
+//            '$tempPassedRecord' => $tempPassedRecord], true));
     }
 
     public function onImportCustomHeader(Event $event, $customDataSource, ArrayObject $customHeaderData)
@@ -1333,6 +1337,76 @@ class ImportUsersTable extends AppTable
         }
         return array($tempRow, $rowInvalidCodeCols, $have_error);
     }
+   /**
+     * @param $tempRow
+     * @param $rowInvalidCodeCols
+     * @param $have_error
+     * @return array
+     */
+    private function checkCreateNewGuardian($tempRow, $rowInvalidCodeCols, $have_error): array
+    {
+        if($have_error){
+            return [$tempRow, $rowInvalidCodeCols, $have_error];
+        }
+        if (!$tempRow['guardian_id']) {
+            $tempRowArray = $tempRow->getArrayCopy();
+            $guardianFields = [
+                'guardian_openemis_no',
+                'guardian_username',
+                'guardian_first_name',
+                'guardian_middle_name',
+                'guardian_third_name',
+                'guardian_last_name',
+                'guardian_preferred_name',
+                'guardian_gender_id',
+                'guardian_date_of_birth',
+                'guardian_address',
+                'guardian_postal',
+                'guardian_address_area_id',
+                'guardian_birthplace_area_id',
+                'guardian_nationality_id',
+                'guardian_identity_type',
+                'guardian_identity_number',
+                'guardian_contact_email',
+                'guardian_contact_cell_phone'
+            ];
+            foreach ($guardianFields as $field) {
+                $cleanField = str_replace('guardian_', '', $field);
+                $guardian[$cleanField] = !empty($tempRowArray[$field]) ? $tempRowArray[$field] : null;
+            }
+            $guardian['action_type'] = 'imported';
+            $guardian['is_guardian'] = 1;
+
+            try {
+                $newGuardian = $this->Users->newEntity($guardian);
+                    Log::debug(print_r(['$newGuardian' => $newGuardian], true));
+                if ($newGuardian->getErrors()) { // POCOR-7973
+
+                    $errorMessages = array_reduce(
+                        $newGuardian->getErrors(),
+                        function ($carry, $errors) {
+                            return array_merge($carry, $errors);
+                        },
+                        []
+                    );
+
+                    $rowInvalidCodeCols['guardian_openemis_no'] = implode(',', $errorMessages);
+                    $tempRow['guardian_error'] = true;
+                    $have_error = true;
+                }
+                if ($this->Users->save($newGuardian)) {
+                    $newId = $newGuardian->id;  // Get the ID after save
+                    $tempRow['guardian_id'] = $newId;
+                    $tempRow['guardian_entity'] = $newGuardian;
+                }
+
+            } catch (\Exception $exception) {
+                $rowInvalidCodeCols['guardian_openemis_no'] = 'New Guardian Creation Error: ' . __($exception->getMessage());
+                $have_error = true;
+            }
+        }
+        return array($tempRow, $rowInvalidCodeCols, $have_error);
+    }
 
     /**
      * @param bool $have_error
@@ -1485,15 +1559,16 @@ class ImportUsersTable extends AppTable
     {
         $have_error = false;
         list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkCreateNewStudent($tempRow, $rowInvalidCodeCols, $have_error);
+        list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkCreateNewGuardian($tempRow, $rowInvalidCodeCols, $have_error);
         if ($have_error) {
             return true;
         }
         if (!$tempRow['student_id']) {
-            $rowInvalidCodeCols['guardian_openemis_id'] = __('No Present Student');
+            $rowInvalidCodeCols['guardian_openemis_no'] = __('No Present Student');
             return true;
         }
         if (!$tempRow['guardian_id']) {
-            $rowInvalidCodeCols['guardian_openemis_id'] = __('No Present Guardian');
+            $rowInvalidCodeCols['guardian_openemis_no'] = __('No Present Guardian');
             return true;
         }
         $student_id = $tempRow['student_id'];
@@ -1529,7 +1604,7 @@ class ImportUsersTable extends AppTable
                 []
             );
 
-            $rowInvalidCodeCols['guardian_openemis_id'] = implode(',', $errorMessages);
+            $rowInvalidCodeCols['guardian_openemis_no'] = implode(',', $errorMessages);
             $tempRow['guardian_error'] = true;
             $have_error = true;
             return $have_error;
@@ -1540,7 +1615,7 @@ class ImportUsersTable extends AppTable
             $newRelationship = $StudentGuardians->save($newRelationship);
         } catch (\Exception $e) {
             // Handle save error
-            $rowInvalidCodeCols['guardian_openemis_id'] = $e->getMessage();
+            $rowInvalidCodeCols['guardian_openemis_no'] = $e->getMessage();
             $have_error = true;
         }
         try {
@@ -1551,7 +1626,7 @@ class ImportUsersTable extends AppTable
             $this->Users->save($guardian_entity);
         } catch (\Exception $e) {
             // Handle save error
-            $rowInvalidCodeCols['guardian_openemis_id'] = $e->getMessage();
+            $rowInvalidCodeCols['guardian_openemis_no'] = $e->getMessage();
             $have_error = true;
         }
         return $have_error;
