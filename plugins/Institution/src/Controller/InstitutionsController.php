@@ -245,10 +245,20 @@ class InstitutionsController extends AppController
 
         $this->attachAngularModulesForDirectory();
         $this->loadModel('Institution.StaffBodyMasses');
-        //POCOR-5672 it is used for removing csrf token mismatch condition in save student Api
-        if ($this->request->getParam('action') == 'saveStudentData' || $this->request->getParam('action') == 'saveStaffData' || $this->request->getParam('action') == 'saveGuardianData' || $this->request->getParam('action') == 'saveDirectoryData') {
+// POCOR-5672: Removing CSRF token mismatch condition for specific actions in the save APIs
+        $csrfExemptActions = [
+            'saveStudentData',
+            'saveStaffData',
+            'saveGuardianData',
+            'saveDirectoryData',
+            'saveAssessmentItemExemptions' // POCOR-8224
+        ];
+
+        $action = $this->request->getParam('action');
+        if (in_array($action, $csrfExemptActions, true)) {
             $this->getEventManager()->off($this->Csrf);
-        }//POCOR-5672 ends
+        }
+// End of POCOR-5672
     }
 
     private
@@ -301,6 +311,15 @@ class InstitutionsController extends AppController
                     'institutions.results.svc'
                 ]);
                 break;
+            // POCOR-8224 start
+            case 'AssessmentItemExemptions':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'assessment.item.exemptions.ctrl',
+                    'assessment.item.exemptions.svc'
+                ]);
+                break;
+            // POCOR-8224 end
             case 'AssessmentItemResultsArchived':
                 $this->Angular->addModules([
                     'alert.svc',
@@ -1650,6 +1669,22 @@ class InstitutionsController extends AppController
         $url['controller'] = 'Institutions';
         $url['action'] = 'resultsExport';
         $url['?'] = ['queryString' => $queryString];
+        // POCOR-8224  start
+        if ($isActive) {
+            $_exempt = $this->AccessControl->check(['Institutions', 'AssessmentItemExemptions', 'edit'], $roles);
+        } else {
+            $_exempt = false;
+        }
+        $this->set('_exempt', $_exempt);
+        if($_exempt){
+            $exemptUrl = $this->ControllerAction->url('edit');
+            unset($exemptUrl['?']);
+            $exemptUrl['action'] = 'AssessmentItemExemptions';
+            $exemptUrl['0'] = 'edit';
+            $exemptUrl['1'] = $queryString;
+            $this->set('exemptUrl', Router::url($exemptUrl));
+        }
+        // POCOR-8224 end
 
         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
@@ -1674,8 +1709,10 @@ class InstitutionsController extends AppController
             $this->set('exportPDF', Router::url($exportPDF_Url));
         }
         //POCOR-8146 Start
-        $labelsTable = TableRegistry::getTableLocator()->get('System.Labels');
-        $labelsData = $labelsTable->find()->where(['module_name' => 'Institutions > Performance > Assessments', 'field_name' => 'Total Mark'])->first();
+        $labelsTable = self::getDynamicTableInstance('labels');
+        $labelsData = $labelsTable->find()->where([
+            $labelsTable->aliasField('module') => 'Institution Assessments',
+            $labelsTable->aliasField('field') => 'total_mark'])->first();
         $dynamicTotalMarkHeader = $labelsData->name;
         if(empty($dynamicTotalMarkHeader)) {
             $dynamicTotalMarkHeader = $labelsData->code;
@@ -1684,8 +1721,105 @@ class InstitutionsController extends AppController
         //POCOR-8146 End
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
+        $this->render('results');
+
     }
 
+    // POCOR-8224 start
+    public function AssessmentItemExemptions($subaction = 'index', $institutionSubjectId = null)
+    {
+        $AssessmentItemExemptions = self::getDynamicTableInstance('Institution.AssessmentItemStudentExemptions');
+//        Log::debug('1');
+        if ($subaction == 'edit') {
+            $queryString = $this->getQueryString();
+
+            // Institution Class Details
+            $institution_class_id = $queryString['class_id'] ?? null;
+            $institution_id = $queryString['institution_id'] ?? null;
+            if (!is_numeric($institution_class_id) || $institution_class_id < 0) {
+                return;
+            }
+            $institution_class = $AssessmentItemExemptions::getInstitutionClassDetails($institution_class_id);
+            $this->set('institution_class_name', $institution_class->name);
+            $this->set('institution_class_id', $institution_class_id);
+            // Assessment Details
+            $assessment_id = $queryString['assessment_id'] ?? null;
+            if (!is_numeric($assessment_id) || $assessment_id < 0) {
+                return;
+            }
+            $assessment = $AssessmentItemExemptions::getAssessmentDetails($assessment_id);
+            $this->set('assessment_name', $assessment->name);
+            $this->set('assessment_id', $assessment_id);
+
+            // Education Grade Details
+            $education_grade_id = $assessment->education_grade_id;
+            $education_grade = $AssessmentItemExemptions::getEducationGradeDetails($education_grade_id);
+            $this->set('education_grade_name', $education_grade->name);
+            $this->set('education_grade_id', $education_grade_id);
+            // Academic Period Details
+            $academic_period_id = $queryString['academic_period_id'] ?? null;
+            if (!is_numeric($academic_period_id) || $academic_period_id < 0) {
+                return;
+            }
+            $academic_period = $AssessmentItemExemptions::getAcademicPeriodDetails($academic_period_id);
+            $this->set('academic_period_name', $academic_period->name);
+            $this->set('academic_period_id', $academic_period_id);
+
+            // Institution Details
+            $institution_id = $queryString['institution_id'] ?? null;
+            if (!is_numeric($institution_id) || $institution_id < 0) {
+                return;
+            }
+            $institution = $AssessmentItemExemptions::getInstitutionDetails($institution_id);
+            $this->set('institution_name', $institution->name);
+            $this->set('institution_id', $institution_id);
+
+            // Assessment Items
+            $assessment_items = $AssessmentItemExemptions::getAssessmentItems($assessment_id);
+            $this->set('assessment_items', $assessment_items);
+
+            // Assessment Periods
+            $assessment_periods = $AssessmentItemExemptions::getAssessmentPeriods($assessment_id);
+            $this->set('assessment_periods', $assessment_periods);
+
+            // View-related settings
+            $this->set('ngController', 'AssessmentItemExemptionsCtrl as AssessmentItemExemptionsController');
+            $backUrl = $this->referer();
+            $this->set('backUrl', $backUrl);
+            $this->Navigation->addCrumb(__('Assessments'), ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institution_id])]);
+            $this->Navigation->addCrumb(__('Results'), $backUrl);
+            $this->render('assessment_item_exemptions_edit');
+        } else {
+            // Handle other actions
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemStudentExemptions']);
+        }
+    }
+
+    public function saveAssessmentItemExemptions(){
+        $userId = $this->Auth->user('id');
+        $this->autoRender = false;
+        $Exemptions = self::getDynamicTableInstance('Institution.AssessmentItemStudentExemptions');
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        $requestDataParams = $requestData['params'];
+        $requestDataParams['created_user_id'] = $userId;
+//        Log::debug($requestDataParams);
+        $assessment_item_ids = empty($requestDataParams['assessment_item_ids']) ? [$requestDataParams['assessment_item_id']] : $requestDataParams['assessment_item_ids'];
+//        Log::debug($assessment_item_ids);
+        // If multiple assessment period IDs exist, loop through each one
+        foreach ($assessment_item_ids as $assessment_item_id) {
+//            Log::debug($assessment_item_id);
+            // Add exempt students for each assessment period
+            $requestDataParams['assessment_item_id'] = $assessment_item_id;
+            $Exemptions::saveExemptions($requestDataParams);
+            $Exemptions::removeExemptions($requestDataParams);
+
+        }
+        echo json_encode(['status' => 'success']);
+        die;
+
+    }
+    // POCOR-8224 end
     public function reportCardGenerate()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardGenerate']);
@@ -2140,12 +2274,16 @@ class InstitutionsController extends AppController
                 $externalDataSource = true;
             }
             //POCOR-8646 Start
-            $labelsTable = TableRegistry::getTableLocator()->get('System.Labels');
-            $labelsData = $labelsTable->find()->where(['module_name' => 'Institutions > Students > Add', 'field_name' => 'OpenEMIS ID'])->first();
+            $labelsTable = self::getDynamicTableInstance('labels');
+            $labelsData = $labelsTable->find()->where(
+                [$labelsTable->aliasField('module') => 'InstitutionStudentAdd',
+                    $labelsTable->aliasField('field') => 'openemis_no'])
+                ->first();
             $dynamicCol = $labelsData->name;
             if(empty($dynamicCol)) {
                 $dynamicCol = $labelsData->code;
             }
+
             $this->set('dynamicOpenemisNoHeader', $dynamicCol);
             //POCOR-8646 End
             $this->set('externalDataSource', $externalDataSource);
@@ -2178,9 +2316,11 @@ class InstitutionsController extends AppController
             $this->set('loginUserId', $userId);
             //POCOR-7485 ends
             //POCOR-8646 Start
-            $labelsTable = TableRegistry::getTableLocator()->get('System.Labels');
-            $labelsData = $labelsTable->find()->where(['module_name' => 'Institutions > Staff > Add', 'field_name' => 'OpenEMIS ID'])->first();
-            $dynamicCol = $labelsData->name;
+            $labelsTable = self::getDynamicTableInstance('labels');
+            $labelsData = $labelsTable->find()->where(
+                [$labelsTable->aliasField('module') => 'InstitutionStaffAdd',
+                    $labelsTable->aliasField('field') => 'openemis_no'])
+                ->first();$dynamicCol = $labelsData->name;
             if(empty($dynamicCol)) {
                 $dynamicCol = $labelsData->code;
             }
@@ -2575,7 +2715,14 @@ class InstitutionsController extends AppController
         if ($this->request->getParam('action') == 'getStudentAdmissionStatus') {//POCOR-7716
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStudentAdmissionStatus';
         }
+        // POCOR-8224 start
+        if ($this->request->getParam('action') == 'saveAssessmentItemExemptions') {
+            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveAssessmentItemExemptions';
+        }
+        // POCOR-8224 end
+
         //for api purpose POCOR-5672 ends
+
         return $events;
     }
 
@@ -2755,19 +2902,30 @@ class InstitutionsController extends AppController
 //            $plugin,
 //            $furtherAction],
 //            true));
-        if ($action == 'checkUserAlreadyExistByIdentity'
-           || $action == 'saveGuardianData'
-            || $action == 'saveStudentData'
-            || $action == 'saveStaffData'
-            || $action == 'saveDirectoryData'
-            || $action == 'checkConfigurationForExternalSearch'
-            || $action == 'studentCustomFields'
-            || $action == 'staffCustomFields'
-           || $furtherAction == 'removeReport'
-            || $furtherAction == 'downloadFailed' || $furtherAction == 'downloadPassed'
-        ) {
+// POCOR-8224 start
+        $primaryActions = [
+            'checkUserAlreadyExistByIdentity',
+            'saveGuardianData',
+            'saveStudentData',
+            'saveStaffData',
+            'saveDirectoryData',
+            'saveAssessmentItemExemptions',
+            'checkConfigurationForExternalSearch',
+            'studentCustomFields',
+            'staffCustomFields'
+        ];
+
+        $furtherActions = [
+            'removeReport',
+            'downloadFailed',
+            'downloadPassed'
+        ];
+
+        if (in_array($action, $primaryActions) || in_array($furtherAction, $furtherActions)) {
             return true;
         }
+        // POCOR-8224 end
+
         if (($furtherAction == 'index'
                 || $furtherAction == 'add'
                 || $furtherAction == 'import'
@@ -3154,12 +3312,19 @@ class InstitutionsController extends AppController
                 } elseif (in_array($alias, ['FeederOutgoingInstitutions'])) {
                     $params = [];
                     $params[$model->aliasField('feeder_institution_id')] = $institutionID;
-                    $exists = $model->exists($params);
+
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] == 'add') {//POCOR-8691
+                        $exists = true;
+                    } else {
+                        $exists = $model->exists($params);
+                    }
                 }elseif (in_array($alias, ['InstitutionAssociations'])) { //POCOR-8556
                     $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
                     $activeInstitution = $this->Institutions->get($institutionId);
                     $institutionName = $activeInstitution->name;
                     $header = $institutionName.''.$header;
+                } elseif (in_array($alias, ['InstitutionAttachments'])) { //POCOR-8695
+                    $exists = true;
                 } else {
                     $params = [];
                     $checkExists = function ($model, $params) {
@@ -3188,7 +3353,9 @@ class InstitutionsController extends AppController
 
                 // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                 if (!$exists && !$isDownload) {
-                    $this->Alert->warning('general.notExists');
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] != 'add') {//POCOR-8691
+                        $this->Alert->info('general.notExists');//POCOR-8691
+                    }
                     //                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
                     //                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                 }
@@ -6679,10 +6846,12 @@ class InstitutionsController extends AppController
                 Log::debug(__FUNCTION__);
                 Log::debug('Error: ' . $exception->getMessage());
             }
+            self::assignStudentSubject($institutionClassId, $academicPeriodId, $userRecordId, $educationGradeId, $institutionId, $statuses['CURRENT'], $userId); // POCOR-8779
         }
         if (!empty($institutionId)) {
             self::assignStudentRoleGroup($institutionId, $userRecordId);//POCOR-8559
         }
+
         return $saved_student;
     }
 
@@ -8990,6 +9159,132 @@ class InstitutionsController extends AppController
 
     }
     //POCOR-7971 end
+    public function getInstitutionGpaTab($action = null)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $tabElements = [
+            'ReportCardGpa' => [
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardGpa', 0 => 'index', 1 => $encodedQueryString],
+                'text' => __('GPA')
+            ],
+            'ReportCardCumulativeGpa' => [
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardCumulativeGpa', 0 => 'index', 1 => $encodedQueryString],
+                'text' => __('Cumulative GPA')
+            ],
+            
+        ];
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+        
+        $this->set('tabElements', $tabElements);
+        $action = !is_null($action) ? $action : $this->request->getParam('action');
+        $this->set('selectedAction', $action);
+    }
+
+    public function ReportCardGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardGpa']);
+    }
+
+    public function ReportCardCumulativeGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardCumulativeGpa']);
+    }
+
+    /**
+     * POCOR-8779
+     * @param  $institutionClassId
+     * @param  $academicPeriodId
+     * @param $user_record_id
+     * @param  $educationGradeId
+     * @param  $institutionId
+     * @param $CURRENT
+     * @param  $userId
+     */
+    private static function assignStudentSubject( $institutionClassId,  $academicPeriodId, $user_record_id,  $educationGradeId,  $institutionId, $CURRENT,  $userId)
+    {
+//        Log::debug(print_r([$institutionClassId,  $academicPeriodId, $user_record_id,  $educationGradeId,  $institutionId, $CURRENT,  $userId], true));
+        $institutionClassSubjects = self::getDynamicTableInstance('institution_class_subjects');
+        $institutionSubjects = self::getDynamicTableInstance('institution_subjects');
+        $educationGradesSubjects = self::getDynamicTableInstance('education_grades_subjects');//POCOR-7197
+        $SubjectsResult = $institutionClassSubjects
+            ->find()
+            ->select([
+                $institutionClassSubjects->aliasField('institution_class_id'),
+                $institutionClassSubjects->aliasField('institution_subject_id'),
+                'name' => $institutionSubjects->aliasField('name'),
+                'institution_id' => $institutionSubjects->aliasField('institution_id'),
+                'education_grade_id' => $institutionSubjects->aliasField('education_grade_id'),
+                'education_subject_id' => $institutionSubjects->aliasField('education_subject_id'),
+                'academic_period_id' => $institutionSubjects->aliasField('academic_period_id'),
+            ])
+            ->LeftJoin([$institutionSubjects->getAlias() => $institutionSubjects->getTable()], [
+                $institutionSubjects->aliasField('id =') . $institutionClassSubjects->aliasField('institution_subject_id')
+            ])//POCOR-7197 starts
+            ->InnerJoin([$educationGradesSubjects->getAlias() => $educationGradesSubjects->getTable()], [
+                $institutionSubjects->aliasField('education_grade_id =') . $educationGradesSubjects->aliasField('education_grade_id'),
+                $institutionSubjects->aliasField('education_subject_id =') . $educationGradesSubjects->aliasField('education_subject_id')
+            ])//POCOR-7197 ends
+            ->where([
+                $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId,
+                $institutionSubjects->aliasField('academic_period_id') => $academicPeriodId,//POCOR-7197
+                $educationGradesSubjects->aliasField('auto_allocation !=') => 0//POCOR-7197
+            ])
+            ->toArray();
+//        Log::debug(print_r($SubjectsResult, true));
+
+        if (!empty($SubjectsResult)) {
+            $count = 1;
+            $institutionSubjectStudents = self::getDynamicTableInstance('institution_subject_students');
+            foreach ($SubjectsResult as $skey => $sval) {
+                $primaryKey = $institutionSubjectStudents->getPrimaryKey();
+                $hashString = [];
+                foreach ($primaryKey as $key) {
+                    if ($key == 'student_id') {
+                        $hashString[] = $user_record_id;
+                    }
+                    if ($key == 'institution_class_id') {
+                        $hashString[] = $institutionClassId;
+                    }
+                    if ($key == 'academic_period_id') {
+                        $hashString[] = $academicPeriodId;
+                    }
+                    if ($key == 'education_grade_id') {
+                        $hashString[] = $educationGradeId;
+                    }
+                    if ($key == 'institution_id') {
+                        $hashString[] = $institutionId;
+                    }
+                    if ($key == 'education_subject_id') {
+                        $hashString[] = $sval->education_subject_id;
+                    }
+                }
+
+                $entitySubjectsData = [
+                    'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                    'student_id' => $user_record_id,
+                    'institution_subject_id' => $sval->institution_subject_id,
+                    'institution_class_id' => $institutionClassId,
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_subject_id' => $sval->education_subject_id,
+                    'education_grade_id' => $educationGradeId,
+                    'student_status_id' => $CURRENT,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                //save in institution_subject_students table
+                $entitySubjectsData = $institutionSubjectStudents->newEntity($entitySubjectsData);
+                $institutionSubjectStudentsResult = $institutionSubjectStudents->save($entitySubjectsData);
+                $count++;
+                unset($entitySubjectsData);
+                unset($institutionSubjectStudentsResult);
+                unset($hashString);
+            }
+            return $count;
+        }
+        return null;
+    }
 
 }
 

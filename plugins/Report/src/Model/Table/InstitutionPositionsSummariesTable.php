@@ -43,7 +43,7 @@ class InstitutionPositionsSummariesTable extends AppTable
         $academicperiodid = $requestData->academic_period_id;
         $area_level_id = $requestData->area_level_id;
         $statusFilter = $requestData->position_status;  //POCOR-7445
-        $AcademicPeriodsTable = TableRegistry::get('academic_periods');
+        $AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;

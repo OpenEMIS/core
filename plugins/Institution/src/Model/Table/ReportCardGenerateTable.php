@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Routing\Router;
 
 class ReportCardGenerateTable extends ControllerActionTable
 {
@@ -356,7 +357,12 @@ class ReportCardGenerateTable extends ControllerActionTable
             'students' => $data['students'],
             'list_of_students' => $data['list_of_students']
         ]);
+        $customUrl = self::secureUrl($customUrl);
         return $this->controller->redirect($customUrl);
+    }
+    private static function secureUrl($url, $fullBase = true) {
+        $fullUrl = Router::url($url, $fullBase);
+        return preg_replace("/^http:/i", "https:", $fullUrl);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)

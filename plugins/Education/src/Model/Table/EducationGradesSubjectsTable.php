@@ -71,6 +71,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->field('education_level_id', ['entity' => $entity]);
         $this->field('hours_required', ['type' => 'float', 'attr' => ['step' => 0.01]]);
         $this->field('auto_allocation');
+        $this->field('requirement');//POCOR-8435
+        $this->field('result_type');//POCOR-8435
         $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'education_level_id', 'hours_required']);
     }
 
@@ -133,6 +135,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->field('code');
         $this->field('education_subject_id', ['type' => 'integer']);
         $this->field('education_grade_id', ['type' => 'hidden']);
+        $this->field('requirement', ['visible' => 'false']);//POCOR-8435
+        $this->field('result_type', ['visible' => 'false']);//POCOR-8435
         $this->field('auto_allocation');
         $this->fields['code']['sort'] = ['field' => 'EducationSubjects.code'];
         $this->fields['education_subject_id']['sort'] = ['field' => 'EducationSubjects.name'];
@@ -298,7 +302,9 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->field('education_subject_id', ['selectedGrade' => $selectedGrade]);
         $this->field('hours_required', ['type' => 'float', 'attr'=>['step' => 0.01]]);
         $this->field('auto_allocation');
-        $this->setFieldOrder(['education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',  'hours_required', 'auto_allocation']);
+        $this->field('requirement');//POCOR-8435
+        $this->field('result_type');//POCOR-8435
+        $this->setFieldOrder(['education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id', 'requirement','result_type', 'hours_required', 'auto_allocation']);//POCOR-8435
     }
 
     public function onGetCode(Event $event, Entity $entity)
@@ -613,4 +619,54 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
+    //POCOR-8435 start
+     /**
+     * Handles the configuration of the "requirement" field for user interaction.
+     * 
+     * This method is triggered by an event and sets up the "requirement" field 
+     * as a dropdown (select) input. The options available in the dropdown are 
+     * defined as "Compulsory" and "Elective".
+     * 
+     * @param Event $event The event object that triggered this method.
+     * @param array $attr An array containing the attributes of the field being modified.
+     * @param string $action The action being performed (e.g., add, edit).
+     * @param ServerRequest $request The HTTP request object containing context for the action.
+     * 
+     * @return array The modified attributes array with dropdown type and options for the "requirement" field.
+     */
+    public function onUpdateFieldRequirement(Event $event, array $attr, $action, ServerRequest $request){
+       
+        $options = ['Compulsory','Elective']; 
+        $optionsAssoc = array_combine($options, $options);
+        $attr['type'] = 'select';
+        $attr['options'] =  $optionsAssoc;
+
+        return $attr;
+    }
+
+    /**
+     * Handles the configuration of the "result type" field for user interaction.
+     * 
+     * This method is triggered by an event and sets up the "result type" field 
+     * as a dropdown (select) input. The options available in the dropdown are 
+     * defined as "Assessments" and "Outcomes".
+     * 
+     * @param Event $event The event object that triggered this method.
+     * @param array $attr An array containing the attributes of the field being modified.
+     * @param string $action The action being performed (e.g., add, edit).
+     * @param ServerRequest $request The HTTP request object containing context for the action.
+     * 
+     * @return array The modified attributes array with dropdown type and options for the "result type" field.
+     */
+    public function onUpdateFieldResultType(Event $event, array $attr, $action, ServerRequest $request){
+
+        $options = ['Assessments','Outcomes']; 
+        $optionsAssoc = array_combine($options, $options);
+        $attr['type'] = 'select';
+        $attr['options'] = $optionsAssoc;
+
+        return $attr;
+    }
+    //POCOR-8435 end
 }
+

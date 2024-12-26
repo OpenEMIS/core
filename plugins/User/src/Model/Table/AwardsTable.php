@@ -15,11 +15,6 @@ class AwardsTable extends ControllerActionTable
         $this->setTable('user_awards');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-        // $this->addBehavior('User.UserTab', [
-        //     'appliedAction' => ['Awards' =>
-        //         ['id']
-        //     ]
-        // ]);
         $this->addBehavior('Staff.StaffTab');
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Awards' =>['id']
@@ -117,13 +112,6 @@ class AwardsTable extends ControllerActionTable
         }
         // End POCOR-5188
     }
-
-    // private function setupTabElements()
-    // {
-    //     $tabElements = $this->getProfessionalTabElements();
-    //     $this->controller->set('tabElements', $tabElements);
-    //     $this->controller->set('selectedAction', $this->getAlias());
-    // }
 
     private function setupTabElements()
     {

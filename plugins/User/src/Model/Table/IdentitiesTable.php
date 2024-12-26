@@ -12,12 +12,15 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\I18n\Time;
+use App\Model\Traits\OptionsTrait;
 
 use App\Model\Table\ControllerActionTable;
+use Cake\Log\Log;
 
 class IdentitiesTable extends ControllerActionTable
 {
     const ISPREFERRED = 1;
+    use OptionsTrait;
 
     public function initialize(array $config): void
     {
@@ -62,7 +65,9 @@ class IdentitiesTable extends ControllerActionTable
         $options['identity_number'] = $entity->number;
         if ($entity->isNew()) {
             $userID = $this->getUserID();
-            $entity['security_user_id'] = $userID;
+            if ($userID) {
+                $entity['security_user_id'] = $userID;
+            }
         }
         $message = $this->checkCustomIdentityNumber($options);
         if ($message != "") {
@@ -78,14 +83,23 @@ class IdentitiesTable extends ControllerActionTable
         //$this->log($entity, 'debug');
         //whichever identity type and number that came from import user, will be treat as new identity user record.
         $options = [];
-        $options['identity_type_id'] = $entity->identity_type_id;
-        $options['identity_number'] = $entity->identity_number;
+        $identity_type_id = $entity->identity_type_id;
+        $nationality_id = $entity->nationality_id;
+        $identity_number = $entity->identity_number;
+        if(!$identity_number || !$nationality_id || !$identity_type_id){
+            return;
+        }
+        $options['identity_type_id'] = $identity_type_id;
+        $options['identity_number'] = $identity_number;
 
         $message = $this->checkCustomIdentityNumber($options);
         if ($message == "") {
+
             $userIdentityEntity = $this->newEntity([
-                'identity_type_id' => $entity->identity_type_id,
-                'number' => $entity->identity_number,
+
+                'nationality_id' => $nationality_id,
+                'identity_type_id' => $identity_type_id,
+                'number' => $identity_number,
                 'security_user_id' => $entity->id,
                 'created_user_id' => 1,
                 'created' => new Time()
@@ -169,7 +183,11 @@ class IdentitiesTable extends ControllerActionTable
         $this->fields['identity_type_id']['type'] = 'select';
         $this->fields['nationality_id']['type'] = 'select';
         $this->fields['nationality_id']['options'] = (!empty($NationalityOptions)) ? $NationalityOptions : ['' => $this->getMessage('general.select.noOptions')]; //POCOR-6396
-        $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number', 'issue_date', 'expiry_date', 'issue_location', 'comments']);
+         // POCOR-8664 start
+         $this->fields['preferred']['type'] = 'select';
+         $this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
+         // POCOR-8664 end
+        $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number','preferred','issue_date', 'expiry_date', 'issue_location', 'comments']);
 
     }
 
@@ -322,6 +340,7 @@ class IdentitiesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
     {
+        Log::debug(__FUNCTION__ . '1');
         if (!empty($entity->nationality_id)) {
             $nationalitiesLookUp = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')->get($entity->nationality_id);
             // if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
@@ -333,6 +352,7 @@ class IdentitiesTable extends ControllerActionTable
                         'preferred' => self::ISPREFERRED
                     ])
                     ->first();
+                Log::debug(__FUNCTION__ . '2');
 
                 $userDetail = $user->get($entity->security_user_id);
                 if (!empty($preferredNationality)) {
@@ -340,6 +360,8 @@ class IdentitiesTable extends ControllerActionTable
                 }
                 $userDetail->identity_type_id = $entity->identity_type_id;
                 $userDetail->identity_number = $entity->number;
+                Log::debug(__FUNCTION__ . '3');
+
                 $user->save($userDetail);
             }
         }
@@ -353,17 +375,41 @@ class IdentitiesTable extends ControllerActionTable
                 ->first();
             if ((($result['identity_number'] == null || $result['identity_number'] == '') && ($result['identity_type_id'] == null || $result['identity_type_id'] == ''))) {
                 $Users->updateAll(
-                    ['identity_number' => $entity->number, 'identity_type_id' => $entity->identity_type_id],    //field
+                    ['identity_number' => $entity->number,
+                        'identity_type_id' => $entity->identity_type_id],    //field
                     ['id' => $entity->security_user_id] //condition
                 );
             }
+            Log::debug(__FUNCTION__ . '4');
+
         } catch (\Exception $e) {
         }
 
-        $listeners = [
-            TableRegistry::getTableLocator()->get('User.Users')
-        ];
-        $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+        // POCOR-8664 start
+        // $listeners = [
+        //     TableRegistry::getTableLocator()->get('User.Users')
+        // ];
+        // $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+
+        if (($entity->isDirty('preferred') && $entity->preferred == 1) || $entity->preferred == 1) {
+            $identity = $this->find()
+                ->where([
+                    $this->aliasField('id !=') => $entity->id,
+                    // $this->aliasField('nationality_id') => $entity->nationality_id,
+                    $this->aliasField('security_user_id') => $entity->security_user_id
+                ]);
+            if (!empty($identity->toArray())) {
+                foreach ($identity->toArray() as $key => $value) {
+                    $value->preferred = 0;
+                    $this->save($value);
+                }
+            }
+            $listeners = [
+                TableRegistry::getTableLocator()->get('User.Users')
+            ];
+            $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
+        }
+        //POCOR-8664 end
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)

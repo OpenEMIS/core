@@ -649,21 +649,55 @@ class UsersController extends AppController
                 $this->Alert->error('security.login.fail', ['reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
-            $userEntity = $this->Users
-                ->find()
+            
+            $username = $this->request->getData()['username'];
+            $SecurityUser = TableRegistry::getTableLocator()->get('User.Users');
+            
+            $userEntity = $SecurityUser->find()
                 ->select([
-                    $this->Users->aliasField('id'),
-                    $this->Users->aliasField('username'),
-                    $this->Users->aliasField('email'),
-                    $this->Users->aliasField('first_name'),
-                    $this->Users->aliasField('middle_name'),
-                    $this->Users->aliasField('third_name'),
-                    $this->Users->aliasField('last_name'),
-                    $this->Users->aliasField('preferred_name')
-                ])->where([
-                    $this->Users->aliasField('username') => $this->request->getData()['username']
-                ])->first();
-            if ($userEntity->email == "") {
+                    'id', 'username', 'email', 'first_name', 'middle_name', 
+                    'third_name', 'last_name', 'preferred_name', 'status'
+                ])
+                ->where(['username' => $username])
+                ->first();
+            //POCOR-8680 Start
+            if (!$userEntity) {
+                $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }
+            
+            if ($userEntity->status == 0) {
+                $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }
+            
+            // Attempt to identify user
+            $user = $this->Auth->identify();
+            $loginStatus = false;
+            
+            if ($user) {
+                $this->Auth->setUser($user);
+                $loginStatus = true;
+            }
+            
+            // Handle login attempts
+            $session = $this->request->getSession();
+            $noOfPendingAttempts = $session->read('login.attempts') - 1;
+            $session->write('login.attempts', $noOfPendingAttempts);
+            if (!$loginStatus) {
+                if ($noOfPendingAttempts <= 0) {
+                    // Lock account after failed attempts
+                    $SecurityUser->updateAll(['status' => 0], ['username' => $username]);
+                    $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                } else {
+                    $message = __("You have {$noOfPendingAttempts} more login attempts before your account will be locked.");
+                    $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
+                }
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }
+            //POCOR-8680 End
+            // Check if email is set
+            if (empty($userEntity->email)) {
                 $message = __('An email address is not registered for this account. Please contact your system administrator.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);

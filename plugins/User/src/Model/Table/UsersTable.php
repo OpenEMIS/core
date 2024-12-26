@@ -424,7 +424,7 @@ class UsersTable extends AppTable
         }
 
         $tabElements = [
-            $this->alias => [
+            $this->getAlias() => [
                 'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $this->paramsEncode(['id' => $id])],
                 'text' => __('Details')
             ],
@@ -435,7 +435,7 @@ class UsersTable extends AppTable
         ];
 
         if (!in_array($this->controller->getName(), ['Students', 'Staff', 'Guardians'])) {
-            $tabElements[$this->alias] = [
+            $tabElements[$this->getAlias()] = [
                 'url' => ['plugin' => Inflector::singularize($this->controller->getName()), 'controller' => $this->controller->getName(), 'action' => $this->alias(), 'view', $this->paramsEncode(['id' => $id])],
                 'text' => __('Details')
             ];
@@ -488,7 +488,7 @@ class UsersTable extends AppTable
         if (isset($queryParams['sort']) && $queryParams['sort'] == 'default_identity_type') {
             $query->find('withDefaultIdentityType', ['direction' => $queryParams['direction']]);
             $query->order([$this->aliasField('default_identity_type') => $queryParams['direction']]);
-            $request->query['sort'] = 'Users.default_identity_type';
+            $request = $request->withQueryParams(['sort' => 'Users.default_identity_type']);
         }
     }
 
@@ -1125,9 +1125,11 @@ class UsersTable extends AppTable
                 $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
                 $preferred = 1;
 
+                $contact_type = $entity->contact_type;
+                if($contact_type){
                 $contactOptionId = $ContactTypesTable->find()
                     ->select([$ContactTypesTable->aliasField('contact_option_id')])
-                    ->where([$ContactTypesTable->aliasField('id') => $entity->contact_type])
+                        ->where([$ContactTypesTable->aliasField('id') => $contact_type])
                     ->first();
 
                 if ($contactOptionId && $contactOptionId->has('contact_option_id')) {
@@ -1141,7 +1143,7 @@ class UsersTable extends AppTable
                     }
 
                     $userContactsData = [
-                        'contact_type_id' => $entity->contact_type,
+                            'contact_type_id' => $contact_type,
                         'value' => $entity->contact,
                         'security_user_id' => $entity->id,
                         'contact_option_id' => $contactOptionId->contact_option_id,
@@ -1151,20 +1153,30 @@ class UsersTable extends AppTable
                     $contactEntity = $ContactsTable->newEntity($userContactsData);
 
                     // Save into user_contacts if no errors
-                    if (!$contactEntity->errors()) {
+                    if (!$contactEntity->getErrors()) {
                         $ContactsTable->save($contactEntity);
                     }
                 }
             }
         }
+        }
 
         // This logic is meant for Import
         if ($entity->has('record_source')) {
             if ($entity->record_source == 'import_user') {
+                $identity_type_id = $entity->identity_type_id;
+                $nationality_id = $entity->nationality_id;
+                if($nationality_id){
                 $listeners = [
                     TableRegistry::getTableLocator()->get('User.UserNationalities'),
-                    TableRegistry::getTableLocator()->get('User.Identities')
                 ];
+                    if($identity_type_id){
+                $listeners = [
+                    TableRegistry::getTableLocator()->get('User.UserNationalities'),
+                            TableRegistry::getTableLocator()->get('User.Identities'),
+                ];
+                    }
+                }
                 $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
             }
         }
@@ -1220,6 +1232,26 @@ class UsersTable extends AppTable
     public function onChangeUserIdentities(Event $event, Entity $entity)
     {
         $UserNationalityTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
+        //POCOR-8664 start
+        $UserNationalityTable->updateAll(
+            [
+                'preferred' => 1,
+            ],
+            [
+                'security_user_id' => $entity->security_user_id,
+                'nationality_id' => $entity->nationality_id
+            ]
+        );
+        $UserNationalityTable->updateAll(
+            [
+                'preferred' => 0,
+            ],
+            [
+                'security_user_id' => $entity->security_user_id,
+                'nationality_id <>' => $entity->nationality_id
+            ]
+        );
+        //POCOR-8664 end
         //check whether identity number / type is tied to preferred nationality.
         $preferredNationality = $UserNationalityTable
             ->find()
@@ -1231,7 +1263,6 @@ class UsersTable extends AppTable
                 $UserNationalityTable->aliasField('preferred') => 1
             ])
             ->first();
-
         if (!empty($preferredNationality)) {
             // to get the identity record for the user based on the default identity type linked to this nationality
             $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');

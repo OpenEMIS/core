@@ -26712,6 +26712,103 @@
                 }
             }
         },
+        "/api/v4/scanned": {
+            "post": {
+                "tags": [
+                    "Scanned"
+                ],
+                "summary": "Submit scanned data",
+                "description": "Endpoint for submitting scanned data with location and timestamp.",
+                "operationId": "4c18b38a901ef25766ca4740f2778fd6",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "header",
+                        "description": "Authentication token",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "your_auth_token_here"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Scanned data payload",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "openemis_no",
+                                    "datetime",
+                                    "latitude",
+                                    "longitude"
+                                ],
+                                "properties": {
+                                    "openemis_no": {
+                                        "description": "OpenEMIS identification number",
+                                        "type": "string",
+                                        "example": "1234567890"
+                                    },
+                                    "datetime": {
+                                        "description": "Timestamp of the scan in ISO 8601 format",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-10-25T14:30:00Z"
+                                    },
+                                    "latitude": {
+                                        "description": "Latitude of the scanned location",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 25.276987
+                                    },
+                                    "longitude": {
+                                        "description": "Longitude of the scanned location",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 55.296249
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Scanned data submitted successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Scanned data submitted successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "success"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request. Required fields are missing or invalid."
+                    },
+                    "401": {
+                        "description": "Unauthorized. Invalid or missing token."
+                    }
+                }
+            }
+        },
         "/api/v4/institutions/{institutionId}/schedules/timetables/lessons/{id}": {
             "delete": {
                 "tags": [
@@ -40373,5 +40470,103 @@
                 }
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Examinations",
+            "description": "Examinations"
+        },
+        {
+            "name": "Assessment",
+            "description": "Assessment"
+        },
+        {
+            "name": "Attendance",
+            "description": "Attendance"
+        },
+        {
+            "name": "Student Attendance Archive",
+            "description": "Student Attendance Archive"
+        },
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Directory",
+            "description": "Directory"
+        },
+        {
+            "name": "Education Structure",
+            "description": "Education Structure"
+        },
+        {
+            "name": "Institutions",
+            "description": "Institutions"
+        },
+        {
+            "name": "Users",
+            "description": "Users"
+        },
+        {
+            "name": "Meals",
+            "description": "Meals"
+        },
+        {
+            "name": "Academic Period",
+            "description": "Academic Period"
+        },
+        {
+            "name": "Nationalities",
+            "description": "Nationalities"
+        },
+        {
+            "name": "Identity types",
+            "description": "Identity types"
+        },
+        {
+            "name": "Institution Grades",
+            "description": "Institution Grades"
+        },
+        {
+            "name": "Areas",
+            "description": "Areas"
+        },
+        {
+            "name": "Miscellaneous",
+            "description": "Miscellaneous"
+        },
+        {
+            "name": "Report card",
+            "description": "Report card"
+        },
+        {
+            "name": "Scanned",
+            "description": "Scanned"
+        },
+        {
+            "name": "Institution time table",
+            "description": "Institution time table"
+        },
+        {
+            "name": "System Configuration",
+            "description": "System Configuration"
+        },
+        {
+            "name": "Textbook",
+            "description": "Textbook"
+        },
+        {
+            "name": "Themes",
+            "description": "Themes"
+        },
+        {
+            "name": "Training",
+            "description": "Training"
+        },
+        {
+            "name": "Workbench",
+            "description": "Workbench"
+        }
+    ]
 }
