@@ -364,9 +364,10 @@ class ImportUsersTable extends AppTable
         }
         if (isset($contact_type)) {
             $have_error = $have_error ||  $this->checkContact($tempRow, $rowInvalidCodeCols);
-        }
-//        Log::debug(print_r($tempRow, true));
+            //        Log::debug(print_r($tempRow, true));
 //        Log::debug(print_r($originalRow, true));
+        }
+
         $tempRow['record_source'] = 'import_user';
         if ($isStudent) {
             if (!empty($rowInvalidCodeCols)) {
@@ -834,41 +835,41 @@ class ImportUsersTable extends AppTable
     {
         $have_error = false;
         $contact = $tempRow['contact'];
-        $contactType = $tempRow['contact_type'];
+        $contactTypeID = $tempRow['contact_type'];
         if (!isset($contact)) {
             $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'contact_required');
             $tempRow['contact_error'] = true;
             $have_error = true;
         }
+
         if (isset($contact)) {
             //use contact_type_id to get contact_options id to save.
             $ContactTypesTable = self::getDynamicTableInstance('User.ContactTypes');
             $ContactTable = self::getDynamicTableInstance('User.Contacts');
 
-            $contactOptionId = $ContactTypesTable->find()
-                ->select([$ContactTypesTable->aliasField('contact_option_id')])
-                ->where([$ContactTypesTable->aliasField('id') => $contactType])
+            $contactOption = $ContactTypesTable->find()
+                ->select(['contact_option_id' => $ContactTypesTable->aliasField('contact_option_id')])
+                ->where([$ContactTypesTable->aliasField('id') => $contactTypeID])
                 ->first();
-
-            if ($contactOptionId) {
-                $contactEntity = null; // POCOR-7973
-                $securityUserId = null;
-                $openemis_no = $tempRow['openemis_no'];
-                if ($openemis_no) {
-                    $securityUserId = $this->Users->find()
-                        ->select([$this->Users->aliasField('id')])
-                        ->where([$this->Users->aliasField('openemis_no') => $openemis_no])
-                        ->first();
-                }
+//            Log::debug(print_r(['$contactOption' => $contactTypeID], true));
+            if ($contactOption) {
+                $contact_option_id = $contactOption['contact_option_id'];
+                $securityUserId = $tempRow['security_user_id'] ?? null;
                 $data = [
-                    'contact_type_id' => $tempRow['contact_type'],
+                    'contact_type_id' => $contactTypeID,
                     'value' => $contact,
-                    'contact_option_id' => $contactOptionId['contact_option_id'],
+                    'contact_option_id' => $contact_option_id,
                 ];
 
                 if ($securityUserId) {  //if is existing user validation will be different
-                    $data['security_user_id'] = $securityUserId->id;
-                    $data['preferred'] = 0;
+                    $has_preferred = $ContactTable->find()
+                        ->where([
+                            'contact_type_id' => $contactTypeID,
+                            'preferred' => 1,
+                            'security_user_id' => $securityUserId,
+                        ])->count();
+                    $data['security_user_id'] = $securityUserId;
+                    $data['preferred'] = $has_preferred ? 0 : 1;
                     $contactEntity = $ContactTable->newEntity($data);
                 } else {
                     $contactEntity = $ContactTable->newEntity($data,
@@ -877,7 +878,7 @@ class ImportUsersTable extends AppTable
 
                 //Display all the error msgs
                 // Display all the error messages
-                if ($contactEntity && $contactEntity->getErrors()) { // POCOR-7973
+                if ($contactEntity->getErrors()) { // POCOR-7973
                     $errorMessages = array_reduce(
                         $contactEntity->getErrors(),
                         function ($carry, $errors) {
@@ -890,10 +891,8 @@ class ImportUsersTable extends AppTable
                     $tempRow['contact_error'] = true;
 
                     $have_error = true;
-                } elseif (!$contactEntity) {
-                    $rowInvalidCodeCols['contact'] = $this->getExcelLabel('Import', 'value_not_in_list');
-                    $tempRow['contact_error'] = true;
-                    $have_error = true;
+                } else {
+                    $tempRow['contact_entity'] = $contactEntity;
                 }
 
             } else {
@@ -902,6 +901,9 @@ class ImportUsersTable extends AppTable
                 $have_error = true;
             }
         }
+        Log::debug(print_r(['$tempRow' => $tempRow,
+            '$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
+
         return $have_error;
     }
 
@@ -1379,7 +1381,7 @@ class ImportUsersTable extends AppTable
 
             try {
                 $newGuardian = $this->Users->newEntity($guardian);
-                    Log::debug(print_r(['$newGuardian' => $newGuardian], true));
+//                    Log::debug(print_r(['$newGuardian' => $newGuardian], true));
                 if ($newGuardian->getErrors()) { // POCOR-7973
 
                     $errorMessages = array_reduce(

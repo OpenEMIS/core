@@ -723,11 +723,11 @@ class UsersTable extends AppTable
             })
             ->add('account_type', 'custom', [
                 'rule' => function ($value, $context) {
-                    Log::debug($value . 'aaa');
+
                     $accountTypes = ['is_student', 'is_staff', 'is_guardian', 'others'];
                     return in_array($value, $accountTypes);
                 },
-                'message' => 'z' . $this->getMessage('Import.value_not_in_list'),
+                'message' => $this->getMessage('Import.value_not_in_list'),
                 'on' => function ($context) {
                     if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
                         return true;
@@ -1119,69 +1119,76 @@ class UsersTable extends AppTable
 }
 */      //comment for ticket POCOR-6512
         // This is for import contact from Import User excel
+        $security_user_id = $entity->id;
         if ($entity->has('action_type') && $entity->action_type == 'imported') {
-            if (!$entity->has('contact_error')) {
-
-                //Save into user_contacts table if dont have errors
-                $ContactTypesTable = TableRegistry::getTableLocator()->get('User.ContactTypes');
-                $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
-                $preferred = 1;
-
-                $contact_type = $entity->contact_type;
-                if($contact_type){
-                    $contactOptionId = $ContactTypesTable->find()
-                        ->select([$ContactTypesTable->aliasField('contact_option_id')])
-                        ->where([$ContactTypesTable->aliasField('id') => $contact_type])
-                        ->first();
-
-                    if ($contactOptionId && $contactOptionId->has('contact_option_id')) {
-                        $conditions = [
-                            $ContactsTable->aliasField('security_user_id') => $entity->id
-                        ];
-
-                        //Check if there is any existing records
-                        if ($ContactsTable->exists($conditions)) {
-                            $preferred = 0;
-                        }
-
-                        $userContactsData = [
-                            'contact_type_id' => $contact_type,
-                            'value' => $entity->contact,
-                            'security_user_id' => $entity->id,
-                            'contact_option_id' => $contactOptionId->contact_option_id,
-                            'preferred' => $preferred
-                        ];
-
-                        $contactEntity = $ContactsTable->newEntity($userContactsData);
-
-                        // Save into user_contacts if no errors
-                        if (!$contactEntity->getErrors()) {
-                            $ContactsTable->save($contactEntity);
-                        }
-                    }
+            if ($entity->has('contact_entity')) {
+                $contact_entity = $entity->contact_entity;
+                if (!$contact_entity->has('security_user_id')) {
+                    $contact_entity->security_user_id = $security_user_id;
+                    $contact_entity->preferred = 1;
                 }
+                $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
+                $contact_entity = $ContactsTable->save($contact_entity);
+                Log::debug(print_r($contact_entity, true));
             }
+//            if (!$entity->has('contact_error')) {
+//
+//                //Save into user_contacts table if dont have errors
+//                $ContactTypesTable = TableRegistry::getTableLocator()->get('User.ContactTypes');
+//                $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
+//                $preferred = 1;
+//
+//                $contact_type = $entity->contact_type;
+//                if($contact_type){
+//                    $contactOptionId = $ContactTypesTable->find()
+//                        ->select([$ContactTypesTable->aliasField('contact_option_id')])
+//                        ->where([$ContactTypesTable->aliasField('id') => $contact_type])
+//                        ->first();
+//
+//                    if ($contactOptionId && $contactOptionId->has('contact_option_id')) {
+//                        $conditions = [
+//                            $ContactsTable->aliasField('security_user_id') => $entity->id
+//                        ];
+//
+//                        //Check if there is any existing records
+//                        if ($ContactsTable->exists($conditions)) {
+//                            $preferred = 0;
+//                        }
+//
+//                        $userContactsData = [
+//                            'contact_type_id' => $contact_type,
+//                            'value' => $entity->contact,
+//                            'security_user_id' => $entity->id,
+//                            'contact_option_id' => $contactOptionId->contact_option_id,
+//                            'preferred' => $preferred
+//                        ];
+//
+//                        $contactEntity = $ContactsTable->newEntity($userContactsData);
+//
+//                        // Save into user_contacts if no errors
+//                        if (!$contactEntity->getErrors()) {
+//                            $ContactsTable->save($contactEntity);
+//                        }
+//                    }
+//                }
+//            }
         }
 
-        // This logic is meant for Import
-        if ($entity->has('record_source')) {
-            if ($entity->record_source == 'import_user') {
-                $identity_type_id = $entity->identity_type_id;
-                $nationality_id = $entity->nationality_id;
-                if($nationality_id){
+        $identity_type_id = $entity->identity_type_id;
+        $nationality_id = $entity->nationality_id;
+        if ($nationality_id) {
+            $listeners = [
+                TableRegistry::getTableLocator()->get('User.UserNationalities'),
+            ];
+            if ($identity_type_id) {
                 $listeners = [
                     TableRegistry::getTableLocator()->get('User.UserNationalities'),
+                    TableRegistry::getTableLocator()->get('User.Identities'),
                 ];
-                    if($identity_type_id){
-                        $listeners = [
-                            TableRegistry::getTableLocator()->get('User.UserNationalities'),
-                            TableRegistry::getTableLocator()->get('User.Identities'),
-                        ];
-                    }
-                }
-                $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
             }
         }
+        $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
+
     }
 
     public function onChangeUserNationalities(Event $event, Entity $entity)
