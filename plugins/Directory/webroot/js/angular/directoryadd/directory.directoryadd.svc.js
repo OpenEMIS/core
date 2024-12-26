@@ -93,10 +93,22 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     // POCOR-8231 to set Openemis No
     function setUniqueOpenEmisId(scope) {
         // if OpenEmisNo is present
+        if (
+            (scope.isExternalSearchSelected || scope.isInternalSearchSelected) &&
+            scope.selectedUserData.openemis_no &&
+            scope.selectedUserData.openemis_no.toString().trim() !== ''
+        ) {
+            // if UserName is absent
+            if (!scope.selectedUserData.username) {
+                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
+            }
+            return Promise.resolve();
+        }
+
         if ((scope.isExternalSearchSelected || scope.isInternalSearchSelected) &&
             scope.selectedUserData.openemis_no &&
-            !isNaN(Number(scope.selectedUserData.openemis_no.toString()))
-        ) {
+            scope.selectedUserData.openemis_no.toString() !== '')
+        {
             // if UserName is absent
             if (!scope.selectedUserData.username) {
                 scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
