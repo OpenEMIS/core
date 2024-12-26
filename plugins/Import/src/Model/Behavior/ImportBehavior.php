@@ -33,7 +33,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as SpreadsheetDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing; // POCOR-8683
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use function PHPUnit\Framework\isEmpty;
 
@@ -96,10 +96,10 @@ class ImportBehavior extends Behavior
         'max_rows' => 2000,
         'max_size' => 524288,
         'backUrl' => [],
-        'custom_text' => '',
-        'row_heights' => [75,25],
+        'custom_text' => '', //POCOR-8683
+        'row_heights' => [75,25], //POCOR-8683
     ];
-    protected $type = '';
+    protected $type = ''; //POCOR-8683
     protected $rootFolder = 'import';
     protected $_fileTypesMap = [
         // 'csv'    => 'text/plain',
@@ -152,6 +152,7 @@ class ImportBehavior extends Behavior
 
     private function isCustomText()
     {
+        // POCOR-8683 start
         $headings = $this->getConfig('headings') ?? [];
 
         foreach ($headings as $heading) {
@@ -170,6 +171,7 @@ class ImportBehavior extends Behavior
         } else {
             return false;
         }
+        // POCOR-8683 end
     }
 
     /******************************************************************************************************************
@@ -481,7 +483,6 @@ class ImportBehavior extends Behavior
                 if ($extra['entityValidate'] == true) {
                     // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
                     try {
-//                        Log::debug(print_r($tableEntity, true));
                         $newEntity = $activeModel->save($tableEntity);
                     } catch (Exception $e) {
                         $newEntity = false;
@@ -697,7 +698,7 @@ class ImportBehavior extends Behavior
     /******************************************************************************************************************
      **
      ** Import Functions
-     **
+     ** POCOR-8683 refactured
      *****************************************************************************************************************
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      */
@@ -769,6 +770,7 @@ class ImportBehavior extends Behavior
     }
 
     /**
+     * POCOR-8683 refactured
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      */
     private function addLogo($activeSheet): void
@@ -785,14 +787,15 @@ class ImportBehavior extends Behavior
         }
     }
 
+    /*
+     * POCOR-8683 refactured
+     */
     private function applyHeadingToSheet($activeSheet, $heading, $titleindex, $fontSize): void
     {
         $title = $heading['title'] ?? '';
         $titleRange = $heading['title_range'] ?? '';
         $subtitle = $heading['subtitle'] ?? [];
         $subtitleRange = $heading['subtitle_range'] ?? '';
-//        Log::debug($titleRange);
-//        Log::debug($subtitleRange);
         // Apply title if it exists
         $type = $this->type;
         if (!empty($title) && !empty($titleRange)) {
@@ -813,11 +816,12 @@ class ImportBehavior extends Behavior
                 $activeSheet->mergeCells($subtitleRange);
             }
             $activeSheet->setCellValue($cell, $subtitle);
-//            Log::debug(print_r(['heading' => $heading], true));
-//            Log::debug(print_r(['$titleindex' => $titleindex], true));
         }
     }
 
+    /*
+     * POCOR-8683 refactured
+     */
     private function applyCellStyle($activeSheet, $range, $fontSize, $bold)
     {
         $style = [
@@ -834,6 +838,9 @@ class ImportBehavior extends Behavior
         $activeSheet->getStyle($range)->applyFromArray($style);
     }
 
+    /*
+     * POCOR-8683 refactured
+     */
     public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign = 2, $applyFillFontSetting = [], $applyCellBorder = [])
     {
         if (empty($applyFillFontSetting)) {
@@ -903,9 +910,11 @@ class ImportBehavior extends Behavior
 
             $activeSheet->setCellValue("A2", $this->customText);
         }
+        // POCOR-8683 start
         if($type == 'failed') { //if failed, then need to merge 4 columns instead of 3
             $this->type = 'failed';
         }
+        // POCOR-8683 end
         $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) . ' ' . $dataSheetName);
 
         $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
@@ -1189,9 +1198,8 @@ class ImportBehavior extends Behavior
 
     protected function getHeader($mapping = [])
     {
-        $model = $this->_table;
         if (empty($mapping)) {
-            $mapping = $this->getMapping($model);
+            $mapping = $this->getMapping(); // POCOR-8683
         }
 
         $header = [];
@@ -1247,9 +1255,10 @@ class ImportBehavior extends Behavior
 
     protected function getColumns($mapping = [])
     {
+
         $columns = [];
         if (empty($mapping)) {
-            $mapping = $this->getMapping($model);
+            $mapping = $this->getMapping(); // POCOR-8683
         }
 
         foreach ($mapping as $key => $value) {
@@ -1345,6 +1354,7 @@ class ImportBehavior extends Behavior
                     $emptyCodeRecords = $relatedModel;
                     $modelData = $relatedModel;
                 } else {
+                    // POCOR-8683 start
                     $relatedQuery = $relatedModel->find();
 
 // Check if the 'order' field exists in the model's schema
@@ -1353,6 +1363,7 @@ class ImportBehavior extends Behavior
                     }
 
                     $modelData = $relatedModel->getList($relatedQuery);
+                    // POCOR-8683 end
                     $emptyCodeRecords = $modelData;
                     $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
                         return !empty($record->national_code);

@@ -91,7 +91,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	public function beforeFind( Event $event, Query $query )
 	{
 		//if ($this->controller->getName() == 'Profiles' && $this->request->query['type'] == 'student') {
-        try {
+        try { // POCOR-8683
             $session = $this->request->getSession();
         }catch (\Exception $exception){
             return;

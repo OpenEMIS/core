@@ -527,17 +527,18 @@ class RemoveBehavior extends Behavior
         foreach ($model->associations() as $assoc) {
             if (in_array($assoc->getDependent(), $dependent)) {
                 if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
-
+                    // POCOR-8683-start
                     try{
                         $assocTable = self::getDynamicTableInstance($assoc->getAlias());
                     }catch (\Exception $exception){
                         continue;
                     }
+                    // POCOR-8683-end
                     if (!array_key_exists($assoc->getAlias(), $associations)) {
-//                        $count = 0;
+//                        $count = 0; // POCOR-8683-start
                         $assocTable =$assoc;
                         if ($assoc->type() == 'manyToMany') {
-                            $assocTable = $assoc->junction()->getAlias();
+                            $assocTable = $assoc->junction()->getAlias(); // POCOR-8683-start
                         }
 //                        Log::write('debug', $assoc);
                         $bindingKey = $assoc->getBindingKey();
@@ -551,7 +552,7 @@ class RemoveBehavior extends Behavior
                         } else {
                             $conditions[$assocTable->aliasField($foreignKey)] = $ids[$bindingKey];
                         }
-//                        Log::debug(print_r($conditions,true));
+//                        Log::write('debug', $conditions);
 
                         $query = $assocTable->find()->where($conditions);
                         $event = $model->dispatchEvent('ControllerAction.Model.getAssociatedRecordConditions', [$query, $assocTable, $extra], $this);
@@ -701,6 +702,9 @@ class RemoveBehavior extends Behavior
         return ((new DefaultPasswordHasher)->check($field, $Users->get($model->Auth->user('id'))->password));
     }
 
+    /*
+     * POCOR-8683
+     */
     private static function getDynamicTableInstance(string $tableName): Table
     {
         // Parse plugin and table names if dot notation is used

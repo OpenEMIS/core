@@ -2080,7 +2080,7 @@ public function getIdentityTypeData($value_selection)
             ],
             'url' => '#',
             'label' => '<i class="fa fa-search-plus"></i>',
-        ];
+        ];    
         if(isset($toolbarButtons['search']))//POCOr-8733
            unset($toolbarButtons['search']);
     }

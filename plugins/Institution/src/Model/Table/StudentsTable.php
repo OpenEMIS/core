@@ -3651,7 +3651,7 @@ class StudentsTable extends ControllerActionTable
                 $tableToClean->aliasField($field_name) => $student_id
             ]);
         } catch (\Exception $e) {
-            Log::error(
+            Log::error( // POCOR-8683
                 print_r(['Failed to fetch remove from table' =>
                 ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], true)
             );
