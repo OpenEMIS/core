@@ -111,7 +111,7 @@ class ScannedController extends Controller
             if($data == 1){
                 return $this->sendSuccessResponse("Scanned User Data Added successfully.");
             } else {
-                return $this->sendErrorResponse("Scanned User Data not Added. kindly check Scanned User Data ");
+                return $this->sendErrorResponse("Scanned User Data not Added. kindly check Scanned User Data. May be User not Exist in db ");
             }
         } catch (\Exception $e) {
             Log::error(
