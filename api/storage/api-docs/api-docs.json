@@ -939,26 +939,6 @@
                 "operationId": "a2626e42141a8f05f8358319013468ac",
                 "parameters": [
                     {
-                        "name": "academic_period_id",
-                        "in": "query",
-                        "description": "Academic Period Id",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": "id"
-                        }
-                    },
-                    {
-                        "name": "education_grade_id",
-                        "in": "query",
-                        "description": "Education Grade_id Id",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": "id"
-                        }
-                    },
-                    {
                         "name": "order",
                         "in": "query",
                         "description": "Order",
@@ -19809,252 +19789,6 @@
                 }
             }
         },
-        "/api/v4/behaviours/categories/students": {
-            "get": {
-                "tags": [
-                    "Institutions"
-                ],
-                "summary": "Get list of Student behaviour categories",
-                "description": "Returns a list of Student behaviour categories",
-                "operationId": "024ddb68c733027bb81b6090c8f77b07",
-                "parameters": [
-                    {
-                        "name": "order",
-                        "in": "query",
-                        "description": "Order",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": "id"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "description": "Number of items to return per page",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 10
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page number",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Successful."
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Classroom Conduct"
-                                                    },
-                                                    "order": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "visible": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "editable": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "default": {
-                                                        "type": "integer",
-                                                        "example": 0
-                                                    },
-                                                    "international_code": {
-                                                        "type": "integer",
-                                                        "example": ""
-                                                    },
-                                                    "national_code": {
-                                                        "type": "integer",
-                                                        "example": ""
-                                                    },
-                                                    "behaviour_classification_id": {
-                                                        "type": "integer",
-                                                        "example": ""
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "modified": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2022-01-01 10:32:20"
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2022-01-01 10:32:20"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Unsuccessful."
-                    }
-                }
-            }
-        },
-        "/api/v4/behaviours/categories/staff": {
-            "get": {
-                "tags": [
-                    "Institutions"
-                ],
-                "summary": "Get list of Staff behaviour categories",
-                "description": "Returns a list of Staff behaviour categories",
-                "operationId": "486eba6311f9cd3e1f2f6ff731f3c889",
-                "parameters": [
-                    {
-                        "name": "order",
-                        "in": "query",
-                        "description": "Order",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": "id"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "description": "Number of items to return per page",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 10
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page number",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Successful."
-                                        },
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Repeated Tardiness"
-                                                    },
-                                                    "order": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "visible": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "editable": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "default": {
-                                                        "type": "integer",
-                                                        "example": 0
-                                                    },
-                                                    "international_code": {
-                                                        "type": "integer",
-                                                        "example": ""
-                                                    },
-                                                    "national_code": {
-                                                        "type": "integer",
-                                                        "example": ""
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "modified": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2022-01-01 10:32:20"
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2022-01-01 10:32:20"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Unsuccessful."
-                    }
-                }
-            }
-        },
         "/api/v4/institutions/{institutionId}/students/{studentId}/behaviours": {
             "get": {
                 "tags": [
@@ -26974,6 +26708,103 @@
                     },
                     "404": {
                         "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/scanned": {
+            "post": {
+                "tags": [
+                    "Scanned"
+                ],
+                "summary": "Submit scanned data",
+                "description": "Endpoint for submitting scanned data with location and timestamp.",
+                "operationId": "4c18b38a901ef25766ca4740f2778fd6",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "header",
+                        "description": "Authentication token",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "your_auth_token_here"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Scanned data payload",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "openemis_no",
+                                    "datetime",
+                                    "latitude",
+                                    "longitude"
+                                ],
+                                "properties": {
+                                    "openemis_no": {
+                                        "description": "OpenEMIS identification number",
+                                        "type": "string",
+                                        "example": "1234567890"
+                                    },
+                                    "datetime": {
+                                        "description": "Timestamp of the scan in ISO 8601 format",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-10-25T14:30:00Z"
+                                    },
+                                    "latitude": {
+                                        "description": "Latitude of the scanned location",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 25.276987
+                                    },
+                                    "longitude": {
+                                        "description": "Longitude of the scanned location",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 55.296249
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Scanned data submitted successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Scanned data submitted successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "success"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request. Required fields are missing or invalid."
+                    },
+                    "401": {
+                        "description": "Unauthorized. Invalid or missing token."
                     }
                 }
             }
@@ -41103,6 +40934,10 @@
         {
             "name": "Report card",
             "description": "Report card"
+        },
+        {
+            "name": "Scanned",
+            "description": "Scanned"
         },
         {
             "name": "Institution time table",
