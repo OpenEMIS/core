@@ -232,6 +232,7 @@ class UsersTable extends AppTable
 
     public function afterAction(Event $event)
     {
+        // POCOR-8683 start
         $action = $this->action;
         if (isset($action) && in_array($action, ['view', 'edit'])) {
             $this->setTabElements();
@@ -240,6 +241,7 @@ class UsersTable extends AppTable
         if (isset($action) && strtolower($action) != 'index') {
             $this->Navigation->addCrumb($this->getHeader($action));
         }
+        // POCOR-8683 end
     }
 
     //POCOR-6454[START]
@@ -1119,6 +1121,7 @@ class UsersTable extends AppTable
 }
 */      //comment for ticket POCOR-6512
         // This is for import contact from Import User excel
+        // POCOR-8683 start
         $security_user_id = $entity->id;
         if ($entity->has('action_type') && $entity->action_type == 'imported') {
             if ($entity->has('contact_entity')) {
@@ -1136,47 +1139,6 @@ class UsersTable extends AppTable
                     Log::debug(print_r(['$contact_entity' => $contact_entity], true));
                 }
             }
-//            if (!$entity->has('contact_error')) {
-//
-//                //Save into user_contacts table if dont have errors
-//                $ContactTypesTable = TableRegistry::getTableLocator()->get('User.ContactTypes');
-//                $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
-//                $preferred = 1;
-//
-//                $contact_type = $entity->contact_type;
-//                if($contact_type){
-//                    $contactOptionId = $ContactTypesTable->find()
-//                        ->select([$ContactTypesTable->aliasField('contact_option_id')])
-//                        ->where([$ContactTypesTable->aliasField('id') => $contact_type])
-//                        ->first();
-//
-//                    if ($contactOptionId && $contactOptionId->has('contact_option_id')) {
-//                        $conditions = [
-//                            $ContactsTable->aliasField('security_user_id') => $entity->id
-//                        ];
-//
-//                        //Check if there is any existing records
-//                        if ($ContactsTable->exists($conditions)) {
-//                            $preferred = 0;
-//                        }
-//
-//                        $userContactsData = [
-//                            'contact_type_id' => $contact_type,
-//                            'value' => $entity->contact,
-//                            'security_user_id' => $entity->id,
-//                            'contact_option_id' => $contactOptionId->contact_option_id,
-//                            'preferred' => $preferred
-//                        ];
-//
-//                        $contactEntity = $ContactsTable->newEntity($userContactsData);
-//
-//                        // Save into user_contacts if no errors
-//                        if (!$contactEntity->getErrors()) {
-//                            $ContactsTable->save($contactEntity);
-//                        }
-//                    }
-//                }
-//            }
             $identity_type_id = $entity->identity_type_id;
             $nationality_id = $entity->nationality_id;
             if ($nationality_id) {
@@ -1193,7 +1155,7 @@ class UsersTable extends AppTable
             $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
 
         }
-
+    // POCOR-8683 end
 
     }
 

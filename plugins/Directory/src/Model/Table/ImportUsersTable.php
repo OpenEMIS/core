@@ -11,15 +11,13 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
-use Cake\Utility\Text;
-use DateTime;
+use Cake\Utility\Text; // POCOR-8683
+use DateTime; // POCOR-8683
 
 class ImportUsersTable extends AppTable
 {
     const IS_STAFF = "is_staff";
     const IS_STUDENT = "is_student";
-
-    const IS_GUARDIAN = "is_guardian";
     private $Users;
     private $ConfigItems;
 //    private $Nationalities;
@@ -30,7 +28,7 @@ class ImportUsersTable extends AppTable
     {
         $this->setTable('import_mapping');
         parent::initialize($config);
-
+        // POCOR-8683 start
         $this->addBehavior('Import.Import', [
                 'plugin' => 'User',
                 'model' => 'Users',
@@ -58,6 +56,7 @@ class ImportUsersTable extends AppTable
                 ]
             ]
         );
+        // POCOR-8683 end
 
         // register table once
         $this->Users = self::getDynamicTableInstance('User.Users');
@@ -66,7 +65,7 @@ class ImportUsersTable extends AppTable
         $this->IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
         $this->UserIdentities = self::getDynamicTableInstance('User.Identities');
 
-        $prefix = $this->ConfigItems->value('openemis_no_prefix');
+        $prefix = $this->ConfigItems->value('openemis_no_prefix'); // POCOR-8683 start
         $prefix = explode(",", $prefix);
         $prefix = (isset($prefix[1]) && $prefix[1] > 0) ? $prefix[0] : '';
 
@@ -115,9 +114,11 @@ class ImportUsersTable extends AppTable
             'Model.import.onImportPopulateAccountTypesData' => 'onImportPopulateAccountTypesData',
             'Model.import.onImportPopulateContactTypesData' => 'onImportPopulateContactTypesData',
             'Model.import.onImportGetAccountTypesId' => 'onImportGetAccountTypesId',
+            // POCOR-8683 start
             'Model.import.onImportPopulateAcademicPeriodsData' => 'onImportPopulateAcademicPeriodsData',
             'Model.import.onImportPopulateEducationGradesData' => 'onImportPopulateEducationGradesData',
             'Model.import.onImportPopulateGuardianRelationsData' => 'onImportPopulateGuardianRelationsData',
+            // POCOR-8683 end
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.import.onImportCustomHeader' => 'onImportCustomHeader',
             'Model.import.onImportCheckIdentityConfig' => 'onImportCheckIdentityConfig',
@@ -136,7 +137,7 @@ class ImportUsersTable extends AppTable
                                         ArrayObject $rowInvalidCodeCols) //POCOR-8082
     {
 
-        $tempRow['columns'] = $columns;
+        $tempRow['columns'] = $columns; // POCOR-8683 start
         $columns = new Collection($columns);
         $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'openemis_no';
@@ -149,10 +150,12 @@ class ImportUsersTable extends AppTable
             $rowInvalidCodeCols['openemis_no'] = 'This OpenEMIS No is Already Present';//$this->getExcelLabel('Import', 'duplicate_unique_key');
             return false;
         }
+        // POCOR-8683 start
         $user = null;
         if ($openemisNo) {
             $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
         }
+        // POCOR-8683 end
         $accountType = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'account_type';
         });
@@ -161,6 +164,7 @@ class ImportUsersTable extends AppTable
         $accountTypeId = $this->getAccountTypeId($accountType);
         if (!$user) {
             try{
+                // POCOR-8683 start
                 $username = "";
                 if(strlen($openemisNo) > 1){
                     $username = Text::slug($openemisNo);
@@ -171,12 +175,14 @@ class ImportUsersTable extends AppTable
                     $tempRow['openemis_no'] = $username;
                 }
                 $tempRow['username'] = $username;
+                // POCOR-8683 end
             } catch (\Exception $exception) {
                 $rowInvalidCodeCols['openemis_no'] = 'New User Creation Error: ' . __($exception->getMessage());
                 return false;
             }
         } else {
             $tempRow['entity'] = $user;
+            // POCOR-8683 start
             $tempRow['security_user_id'] = $user->id;
 //            Log::debug('$accountTypeId' . strval($accountTypeId));
             $tempRow['account_type'] = $accountTypeId;
@@ -200,9 +206,8 @@ class ImportUsersTable extends AppTable
         if (empty($tempRow['account_type'])) {
             $tempRow['duplicates'] = __('Account type cannot be empty');
             $rowInvalidCodeCols['account_type'] = $tempRow['duplicates'];
-//            $tempRow['openemis_no'] = $this->getNewOpenEmisNo($importedUniqueCodes, $row, 'others');
-//            $tempRow['username'] = $tempRow['openemis_no'];
             return false;
+            // POCOR-8683 end
         }
 
         if (!empty($tempRow['account_type'])) {
@@ -221,6 +226,7 @@ class ImportUsersTable extends AppTable
         return $this->getAccountTypeId($cellValue);
     }
     /**
+     * POCOR-8683
      * Set default value for empty or unset array fields
      *
      * @param array  $targetArray  The array to check and update
@@ -232,6 +238,7 @@ class ImportUsersTable extends AppTable
             $targetArray[$field] = $defaultValue;
         }
     }
+
     public function onImportGetAccountTypesName(Event $event, $value)
     {
         $name = '';
@@ -261,7 +268,7 @@ class ImportUsersTable extends AppTable
     public function onImportPopulateContactTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         //Join contact type and contact options for displaying the name of contact type and its contact option name at excel for user to see
-        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683 start
         $modelData = $lookedUpTable->find('all', [
             'contain' => ['ContactOptions']
         ])
@@ -283,7 +290,7 @@ class ImportUsersTable extends AppTable
 
     public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683 start
         $modelData = $lookedUpTable->find('all')
             ->select(['name', $lookupColumn])
                                 ->order($lookupModel.'.area_administrative_level_id', $lookupModel.'.order')
@@ -304,7 +311,7 @@ class ImportUsersTable extends AppTable
 
     public function onImportPopulateGendersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683 start
         $modelData = $lookedUpTable->find('all')
             ->select(['name', $lookupColumn])
                                 ->order([$lookupModel.'.order'])
@@ -324,19 +331,14 @@ class ImportUsersTable extends AppTable
     }
 
     /**
+     * POCOR-8683 refactured
      * @throws \Exception
      */
     public function onImportModelSpecificValidation(Event $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-//        Log::debug(print_r($tempRow, true));
-//        Log::debug(print_r($rowInvalidCodeCols, true));
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-//        Log::debug(print_r(['first' => $tempRow], true));
-
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
         $isStudent = ($tempRow['account_type'] == self::IS_STUDENT);
-//        Log::debug(print_r(['$isStaff' => $isStaff], true));
-//        Log::debug(print_r(['$isStudent' => $isStudent], true));
         $identity_type_id = $tempRow['identity_type_id'] ??  false;
         $identity_number = $tempRow['identity_number'] ?? false;
         $contact_type = $tempRow['contact_type'];
@@ -364,8 +366,6 @@ class ImportUsersTable extends AppTable
         }
         if (isset($contact_type)) {
             $have_error = $have_error ||  $this->checkContact($tempRow, $rowInvalidCodeCols);
-            //        Log::debug(print_r($tempRow, true));
-//        Log::debug(print_r($originalRow, true));
         }
 
         $tempRow['record_source'] = 'import_user';
@@ -378,12 +378,6 @@ class ImportUsersTable extends AppTable
             }
         }
 
-
-//            Log::debug(print_r(['$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
-//            Log::debug(print_r(['$tempRow' => $tempRow], true));
-
-
-
         if($have_error){
             return false;
         }
@@ -391,12 +385,12 @@ class ImportUsersTable extends AppTable
         //add identifier that later will be used on User afterSave
         $tempRow['record_source'] = 'import_user';
 
-        return true; //todo replace to true to import to work
+        return true;
     }
 
     public function onImportPopulateNationalitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683
 
         $modelData = $lookedUpTable->find()
             ->contain('IdentityTypes')
@@ -423,7 +417,7 @@ class ImportUsersTable extends AppTable
         }
     }
 
-    protected function getNewOpenEmisNo()
+    protected function getNewOpenEmisNo() // POCOR-8683
     {
         $notUnique = true;
         $val = $this->Users->getUniqueOpenemisId();
@@ -458,16 +452,14 @@ class ImportUsersTable extends AppTable
         $flipped = array_flip($columns);
         $key = $flipped['openemis_no'];
         $tempPassedRecord['data'][$key] = $clonedEntity->openemis_no;
-        $key = $flipped['guardian_openemis_no'];
-        $tempPassedRecord['data'][$key] = $clonedEntity->guardian_openemis_no;
-//        Log::debug(print_r(['$clonedEntity' => $clonedEntity,
-//            '$tempPassedRecord' => $tempPassedRecord], true));
+        $key = $flipped['guardian_openemis_no']; // POCOR-8683
+        $tempPassedRecord['data'][$key] = $clonedEntity->guardian_openemis_no; // POCOR-8683
     }
 
     public function onImportCustomHeader(Event $event, $customDataSource, ArrayObject $customHeaderData)
     {
 
-        $customTable = self::getDynamicTableInstance($customDataSource);
+        $customTable = self::getDynamicTableInstance($customDataSource); // POCOR-8683
 
         switch ($customDataSource) { //this is for specify column name based on the data
             case 'FieldOption.IdentityTypes':
@@ -590,6 +582,9 @@ class ImportUsersTable extends AppTable
         return $isValidIdentityNumber;
     }
     // POCOR-7973:end
+    /*
+     * POCOR-8683
+     */
     public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
@@ -614,6 +609,9 @@ class ImportUsersTable extends AppTable
         }
     }
 
+    /*
+     * POCOR-8683
+     */
     public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
@@ -639,6 +637,10 @@ class ImportUsersTable extends AppTable
             }
         }
     }
+
+    /*
+     * POCOR-8683
+     */
     public function onImportPopulateGuardianRelationsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
@@ -716,6 +718,7 @@ class ImportUsersTable extends AppTable
     }
 
     /**
+     *  POCOR-8683
      * @param $tempRow
      * @param $rowInvalidCodeCols
      * @return bool
@@ -851,7 +854,6 @@ class ImportUsersTable extends AppTable
                 ->select(['contact_option_id' => $ContactTypesTable->aliasField('contact_option_id')])
                 ->where([$ContactTypesTable->aliasField('id') => $contactTypeID])
                 ->first();
-//            Log::debug(print_r(['$contactOption' => $contactTypeID], true));
             if ($contactOption) {
                 $contact_option_id = $contactOption['contact_option_id'];
                 $securityUserId = $tempRow['security_user_id'] ?? null;
@@ -1040,7 +1042,6 @@ class ImportUsersTable extends AppTable
         // Validate the new entity and handle errors
         $newErrors = $newAdmission->getErrors();
         if ($newAdmission && $newErrors) {
-//            Log::debug('0001');
             $errorMessages = array_reduce(
                 $newErrors,
                 function ($carry, $errors) {
@@ -1053,12 +1054,10 @@ class ImportUsersTable extends AppTable
             $tempRow['admission_error'] = true;
             $have_error = true;
         } elseif (!$newAdmission) {
-//            Log::debug('0002');
             $rowInvalidCodeCols['admission'] = $this->getExcelLabel('Import', 'value_not_in_list');
             $tempRow['admission_error'] = true;
             $have_error = true;
         } elseif($newAdmission) {
-//            Log::debug('0002');
             // Save the admission
             $newAdmission = $StudentAdmission->save($newAdmission);
             if (!$newAdmission) {
@@ -1130,13 +1129,10 @@ class ImportUsersTable extends AppTable
         if(empty($query)){
             return [];
         }
-//        Log::debug(print_r($query, true));
         $institution_id = $query->id;
         $institution_gender = $query->gender_name;
         $institution_gender_id = $query->gender_id;
         $institution_gender_code = $query->gender_code;
-//        Log::debug(print_r(['$institution_gender_id' =>$institution_gender_id,
-//            '$gender_id' =>$gender_id],true));
         if ($institution_gender_code == 'X') { //if mixed then always true
             return ['id' => $institution_id];
         } else {
@@ -1162,7 +1158,6 @@ class ImportUsersTable extends AppTable
         }
 
         $education_grades = $this->getAcademicPeriodGrades($institution_id, $academic_period_id);
-//        Log::debug(print_r( ['$education_grades' => $education_grades], true));
         if (empty($education_grades)) {
             $this->addError($rowInvalidCodeCols, 'education_grade_id', __('No education grades in this academic period'));
             $tempRow['education_grade_id'] = $tempRow['academic_period_id'] = null;
@@ -1237,11 +1232,9 @@ class ImportUsersTable extends AppTable
 
     private function getInstitutionClass($class_name, $institution_id, $academic_period_id, $education_grade_id)
     {
-//        Log::debug(print_r([$class_name, $institution_id, $academic_period_id, $education_grade_id],true));
             $availableClasses = $this->getInstitutionClasses($institution_id,
                 $academic_period_id,
                 $education_grade_id);
-//            Log::debug(print_r($availableClasses,true));
             foreach ($availableClasses as $id => $name) {
                 if ($class_name == $name) {
                     return $id;
@@ -1255,14 +1248,11 @@ class ImportUsersTable extends AppTable
     {
         $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
         $institutionClassesList = $InstitutionClasses->getClassOptions($academic_period_id, $institution_id, $education_grade_id);
-//        Log::debug(print_r($institutionClassesList,true));
         $resultList = [];
         foreach ($institutionClassesList as $id => $className) {
             $InstitutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');
             $countStudent = $InstitutionClassStudents->getStudentCountByClass($id);
-//            Log::debug(strval($countStudent));
             $classCapacity = $InstitutionClasses->get($id)->capacity;
-//            Log::debug(strval($classCapacity));
             if ($countStudent + 1 <= $classCapacity) {
                 $resultList[$id] = $className;
             }
@@ -1287,8 +1277,6 @@ class ImportUsersTable extends AppTable
             return true;
         }
         $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
-//        Log::debug(strval($formattedDate));
-//        Log::debug(strval($start_date));
         $academicPeriodId = $AcademicPeriods->getAcademicPeriodIdByDate($formattedDate);
         if(!$academicPeriodId){
             $this->addError($rowInvalidCodeCols, 'start_date', __('The Date is not within valid Academic Period'));

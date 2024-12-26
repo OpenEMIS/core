@@ -16,7 +16,8 @@ class ImportUserBehavior extends Behavior {
 		'prefix' => ''
 	];
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void // POCOR-8683
+    {
 		$plugin = $this->config('plugin');
 		if (empty($plugin)) {
 			$exploded = explode('.', $this->_table->registryAlias());
