@@ -178,7 +178,7 @@ class ImportUsersTable extends AppTable
         } else {
             $tempRow['entity'] = $user;
             $tempRow['security_user_id'] = $user->id;
-            Log::debug('$accountTypeId' . strval($accountTypeId));
+//            Log::debug('$accountTypeId' . strval($accountTypeId));
             $tempRow['account_type'] = $accountTypeId;
             if($accountTypeId == "" || !$accountTypeId){
                 $tempRow['account_type'] = self::IS_STUDENT;
@@ -370,10 +370,10 @@ class ImportUsersTable extends AppTable
 
         $tempRow['record_source'] = 'import_user';
         if ($isStudent) {
-            if (!empty($rowInvalidCodeCols)) {
+            if (!$have_error) {
                 list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
             }
-            if (!empty($rowInvalidCodeCols)) {
+            if (!$have_error) {
                 list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
             }
         }
@@ -901,8 +901,83 @@ class ImportUsersTable extends AppTable
                 $have_error = true;
             }
         }
-        Log::debug(print_r(['$tempRow' => $tempRow,
-            '$rowInvalidCodeCols' => $rowInvalidCodeCols], true));
+
+
+        return $have_error;
+    }
+
+    private function checkGuardianContact(&$tempRow, &$rowInvalidCodeCols, &$guardian): bool
+    {
+        $have_error = false;
+        if (isset($guardian['mobile_number']) || isset($guardian['email'])) {
+            $ContactTypesTable = self::getDynamicTableInstance('User.ContactTypes');
+            $ContactOptionsTable = self::getDynamicTableInstance('User.ContactOptions');
+            $ContactTable = self::getDynamicTableInstance('User.Contacts');
+
+            $fields = ['mobile_number' => 'MOB', 'email' => 'EMA'];
+
+            foreach ($fields as $field => $code) {
+                if (!empty($guardian[$field])) {
+                    // Find contact_option_id by joining ContactTypes and ContactOptions
+                    $contactOption = $ContactTypesTable->find()
+                        ->select(['contact_option_id' => $ContactTypesTable->aliasField('contact_option_id'),
+                            'contact_type_id' => $ContactTypesTable->aliasField('id')])
+                        ->innerJoinWith('ContactOptions', function ($q) use ($code, $ContactOptionsTable) {
+                            return $q->where([$ContactOptionsTable->aliasField('code') => $code]);
+                        })
+                        ->first();
+
+                    if ($contactOption) {
+                        $contact_type_id = $contactOption->contact_type_id;
+                        $contact_option_id = $contactOption->contact_option_id;
+                        $securityUserId = $tempRow['guardian_id'] ?? null;
+
+                        $data = [
+                            'contact_type_id' => $contact_type_id,
+                            'value' => $guardian[$field],
+                            'contact_option_id' => $contact_option_id,
+                        ];
+
+                        if ($securityUserId) {
+                            $has_preferred = $ContactTable->find()
+                                ->where([
+                                    'contact_type_id' => $contact_type_id,
+                                    'preferred' => 1,
+                                    'security_user_id' => $securityUserId,
+                                ])
+                                ->count();
+
+                            $data['security_user_id'] = $securityUserId;
+                            $data['preferred'] = $has_preferred ? 0 : 1;
+                        }
+
+                        // Create new contact entity
+                        $contactEntity = $ContactTable->newEntity($data);
+                        // Error handling
+                        if ($contactEntity->getErrors()) {
+                            $errorMessages = array_reduce(
+                                $contactEntity->getErrors(),
+                                function ($carry, $errors) {
+                                    return array_merge($carry, $errors);
+                                },
+                                []
+                            );
+
+                            $rowInvalidCodeCols[$field] = implode(',', $errorMessages);
+                            $tempRow['contact_error'] = true;
+                            $have_error = true;
+                        } else {
+                            $guardian['contact_entity'][] = $contactEntity;
+                        }
+                    } else {
+                        // Error if no matching contact_option_id found
+                        $rowInvalidCodeCols[$field] = $this->getExcelLabel('Import', 'value_not_in_list');
+                        $tempRow['contact_error'] = true;
+                        $have_error = true;
+                    }
+                }
+            }
+        }
 
         return $have_error;
     }
@@ -1350,9 +1425,15 @@ class ImportUsersTable extends AppTable
         if($have_error){
             return [$tempRow, $rowInvalidCodeCols, $have_error];
         }
-        if (!$tempRow['guardian_id']) {
+
+//        if (!$tempRow['guardian_id']) {
             $tempRowArray = $tempRow->getArrayCopy();
+
+            $tempRowArray['guardian_mobile_number'] = $tempRowArray['guardian_contact_cell_phone'] ?? null;
+            $tempRowArray['guardian_email'] = $tempRowArray['guardian_contact_email'] ?? null;
+            $tempRowArray['guardian_identity_type_id'] = $tempRowArray['guardian_identity_type'] ?? null;
             $guardianFields = [
+                'guardian_id',
                 'guardian_openemis_no',
                 'guardian_username',
                 'guardian_first_name',
@@ -1368,9 +1449,12 @@ class ImportUsersTable extends AppTable
                 'guardian_birthplace_area_id',
                 'guardian_nationality_id',
                 'guardian_identity_type',
+                'guardian_identity_type_id',
                 'guardian_identity_number',
                 'guardian_contact_email',
-                'guardian_contact_cell_phone'
+                'guardian_contact_cell_phone',
+                'guardian_email',
+                'guardian_mobile_number'
             ];
             foreach ($guardianFields as $field) {
                 $cleanField = str_replace('guardian_', '', $field);
@@ -1378,9 +1462,16 @@ class ImportUsersTable extends AppTable
             }
             $guardian['action_type'] = 'imported';
             $guardian['is_guardian'] = 1;
-
+            $have_error = self::checkGuardianContact($tempRowArray, $rowInvalidCodeCols, $guardian);
+            if($have_error){
+                return array($tempRow, $rowInvalidCodeCols, $have_error);
+            }
             try {
-                $newGuardian = $this->Users->newEntity($guardian);
+                if ($tempRow['guardian_entity']) {
+                    $newGuardian = $this->Users->patchEntity($tempRow['guardian_entity'], $guardian);
+                } else {
+                    $newGuardian = $this->Users->newEntity($guardian);
+                }
 //                    Log::debug(print_r(['$newGuardian' => $newGuardian], true));
                 if ($newGuardian->getErrors()) { // POCOR-7973
 
@@ -1406,7 +1497,7 @@ class ImportUsersTable extends AppTable
                 $rowInvalidCodeCols['guardian_openemis_no'] = 'New Guardian Creation Error: ' . __($exception->getMessage());
                 $have_error = true;
             }
-        }
+//        }
         return array($tempRow, $rowInvalidCodeCols, $have_error);
     }
 
@@ -1420,7 +1511,13 @@ class ImportUsersTable extends AppTable
     private function checkNewGuardian(bool $have_error, $tempRow, ArrayObject $rowInvalidCodeCols, ArrayObject $originalRow): array
     {
         $have_error = $have_error || $this->checkGuardianRelationId($tempRow, $rowInvalidCodeCols);
+        if ($have_error) {
+            return array($tempRow, $rowInvalidCodeCols, $have_error);
+        }
         $have_error = $have_error || $this->checkGuardianOpenemisID($tempRow, $rowInvalidCodeCols);
+        if ($have_error) {
+            return array($tempRow, $rowInvalidCodeCols, $have_error);
+        }
         $have_error = $have_error || $this->checkNewRelationship($tempRow, $rowInvalidCodeCols);
         return array($tempRow, $rowInvalidCodeCols, $have_error);
     }
@@ -1561,6 +1658,9 @@ class ImportUsersTable extends AppTable
     {
         $have_error = false;
         list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkCreateNewStudent($tempRow, $rowInvalidCodeCols, $have_error);
+        if ($have_error) {
+            return true;
+        }
         list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkCreateNewGuardian($tempRow, $rowInvalidCodeCols, $have_error);
         if ($have_error) {
             return true;
