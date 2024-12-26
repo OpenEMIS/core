@@ -1122,14 +1122,19 @@ class UsersTable extends AppTable
         $security_user_id = $entity->id;
         if ($entity->has('action_type') && $entity->action_type == 'imported') {
             if ($entity->has('contact_entity')) {
-                $contact_entity = $entity->contact_entity;
-                if (!$contact_entity->has('security_user_id')) {
-                    $contact_entity->security_user_id = $security_user_id;
-                    $contact_entity->preferred = 1;
+                $contact_entities = $entity->contact_entity;
+                if(!is_array($contact_entities)){
+                    $contact_entities = [$contact_entities];
                 }
-                $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
-                $contact_entity = $ContactsTable->save($contact_entity);
-                Log::debug(print_r($contact_entity, true));
+                foreach ($contact_entities as $contact_entity) {
+                    if (!$contact_entity->has('security_user_id')) {
+                        $contact_entity->security_user_id = $security_user_id;
+                        $contact_entity->preferred = 1;
+                    }
+                    $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
+                    $contact_entity = $ContactsTable->save($contact_entity);
+                    Log::debug(print_r(['$contact_entity' => $contact_entity], true));
+                }
             }
 //            if (!$entity->has('contact_error')) {
 //
@@ -1172,22 +1177,23 @@ class UsersTable extends AppTable
 //                    }
 //                }
 //            }
-        }
-
-        $identity_type_id = $entity->identity_type_id;
-        $nationality_id = $entity->nationality_id;
-        if ($nationality_id) {
-            $listeners = [
-                TableRegistry::getTableLocator()->get('User.UserNationalities'),
-            ];
-            if ($identity_type_id) {
+            $identity_type_id = $entity->identity_type_id;
+            $nationality_id = $entity->nationality_id;
+            if ($nationality_id) {
                 $listeners = [
                     TableRegistry::getTableLocator()->get('User.UserNationalities'),
-                    TableRegistry::getTableLocator()->get('User.Identities'),
                 ];
+                if ($identity_type_id) {
+                    $listeners = [
+                        TableRegistry::getTableLocator()->get('User.UserNationalities'),
+                        TableRegistry::getTableLocator()->get('User.Identities'),
+                    ];
+                }
             }
+            $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
+
         }
-        $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
+
 
     }
 
