@@ -1376,33 +1376,36 @@ class StaffTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+
         if (!$entity->isNew() && $entity->getDirty('FTE')) {
-            $newFTE = $entity->FTE;
-            $newEndDate = $entity->end_date;
+            if ($entity->staff_change_type_id == 1) { //POCOR-8760 add if condition
+                $newFTE = $entity->FTE;
+                $newEndDate = $entity->end_date;
+                $entity->FTE = $entity->getOriginal('FTE');
+                $entity->start_year = $entity->getOriginal('start_year'); //POCOR-6749
+                $entity->newFTE = $newFTE;
+                $todayDate = new Date();
 
-            $entity->FTE = $entity->getOriginal('FTE');
-            $entity->start_year = $entity->getOriginal('start_year'); //POCOR-6749
-            $entity->newFTE = $newFTE;
-            $todayDate = new Date();
-
-            if (empty($newEndDate)) {
-                if ($entity->start_date < $todayDate) {
-                    $entity->end_date = $todayDate;
+                if (empty($newEndDate)) {
+                    if ($entity->start_date < $todayDate) {
+                        $entity->end_date = $todayDate;
+                    } else {
+                        $entity->end_date = $entity->start_date;
+                    }
                 } else {
-                    $entity->end_date = $entity->start_date;
-                }
-            } else {
-                // If end date is of a past date, set the user status to end of assignment
-                if ($entity->end_date < $todayDate) {
-                    $entity->staff_status_id = $this->endOfAssignment;
+                    // If end date is of a past date, set the user status to end of assignment
+                    if ($entity->end_date < $todayDate) {
+                        $entity->staff_status_id = $this->endOfAssignment;
+                    }
                 }
             }
         }
         $entity->start_year = $entity->getOriginal('start_year'); //POCOR-6749
+
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    {    
         $institutionPositionId = $entity->institution_position_id;
         $staffId = $entity->staff_id;
         $institutionId = $entity->institution_id;

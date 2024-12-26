@@ -74,7 +74,7 @@ class AppController extends Controller
      */
     public function initialize(): void
     {
-        if (!file_exists(CONFIG . 'datasource.php')) {
+        if (!file_exists(CONFIG . 'app_local.php')) {
             $url = Router::url(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index'], true);
             header('Location: ' . $url);
             die;
@@ -225,23 +225,29 @@ class AppController extends Controller
 
     private function darkenColour($rgb, $darker = 2)
     {
-        if (!empty($rgb)) {
-            $hash = (strpos($rgb, '#') !== false) ? '#' : '';
-            $rgb = (strlen($rgb) == 7) ? str_replace('#', '', $rgb) : ((strlen($rgb) == 6) ? $rgb : false);
-            if (strlen($rgb) != 6) {
-                return $hash . '000000';
-            }
-            $darker = ($darker > 1) ? $darker : 1;
-
-            list($R16, $G16, $B16) = str_split($rgb, 2);
-
-            $R = sprintf("%02X", floor(hexdec($R16) / $darker));
-            $G = sprintf("%02X", floor(hexdec($G16) / $darker));
-            $B = sprintf("%02X", floor(hexdec($B16) / $darker));
-
-            return $hash . $R . $G . $B;
+        // Ensure $rgb is a string and not null
+        if (!is_string($rgb) || empty($rgb)) {
+            return '#000000'; // Return a default color if $rgb is invalid
         }
+        
+        $hash = (strpos($rgb, '#') !== false) ? '#' : '';
+        $rgb = (strlen($rgb) == 7) ? str_replace('#', '', $rgb) : ((strlen($rgb) == 6) ? $rgb : false);
+        
+        if ($rgb === false || strlen($rgb) != 6) {
+            return $hash . '000000'; // Return black if the format is invalid
+        }
+
+        $darker = ($darker > 1) ? $darker : 1;
+
+        list($R16, $G16, $B16) = str_split($rgb, 2);
+
+        $R = sprintf("%02X", floor(hexdec($R16) / $darker));
+        $G = sprintf("%02X", floor(hexdec($G16) / $darker));
+        $B = sprintf("%02X", floor(hexdec($B16) / $darker));
+
+        return $hash . $R . $G . $B;
     }
+
 
     public function getTheme()
     {
@@ -884,6 +890,7 @@ class AppController extends Controller
                 'studentCustomFields',
                 'staffCustomFields',
                 'saveStudentData',
+                'saveAssessmentItemExemptions', // POCOR-8224
                 'saveStaffData',
                 'saveGuardianData',
                 'saveDirectoryData',

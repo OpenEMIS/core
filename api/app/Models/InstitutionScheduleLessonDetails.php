@@ -11,12 +11,14 @@ class InstitutionScheduleLessonDetails extends Model
 
     use \Awobaz\Compoships\Compoships;
 
+
     public function schedule_curriculum_lesson()
     {
         return $this->hasOne(InstitutionScheduleCurriculumLessons::class, 'institution_schedule_lesson_detail_id', 'id');
     }
 
     public function schedule_non_curriculum_lesson()
+
     {
         return $this->hasOne(InstitutionScheduleNonCurriculumLessons::class, 'institution_schedule_lesson_detail_id', 'id');
     }
