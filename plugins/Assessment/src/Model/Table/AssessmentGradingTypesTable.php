@@ -366,7 +366,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	    $associatedRecordsExist = 
 	        $this->GradingOptions->exists(['assessment_grading_type_id' => $entity->id]);
 
-	    if ($associatedRecordsExist || !empty($data)) {
+	    if ($associatedRecordsExist && !empty($data)) {
 	        $message = __('Delete operation is not allowed as there are other information linked to this record.');
 	        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
 	        
