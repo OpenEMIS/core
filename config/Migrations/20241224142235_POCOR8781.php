@@ -19,22 +19,7 @@ class POCOR8781 extends AbstractMigration
             $this->execute('INSERT INTO `z_8781_institution_staff` SELECT * FROM `institution_staff`');
 
             // Delete duplicates
-            $this->execute('
-            DELETE t1
-            FROM institution_staff t1
-            JOIN institution_staff t2
-                ON t1.staff_id = t2.staff_id
-                AND t1.FTE = t2.FTE
-                AND t1.start_date = t2.start_date
-                AND t1.start_year = t2.start_year
-                AND t1.institution_id = t2.institution_id
-                AND t1.staff_type_id = t2.staff_type_id
-                AND t1.staff_status_id = t2.staff_status_id
-                AND t1.institution_position_id = t2.institution_position_id
-                AND t1.is_homeroom = t2.is_homeroom
-                AND t1.staff_position_grade_id = t2.staff_position_grade_id
-                AND t1.security_group_user_id = t2.security_group_user_id
-                AND t1.id > t2.id;');
+
 
             $this->execute('ALTER TABLE institution_staff
     ADD UNIQUE KEY unique_staff (
