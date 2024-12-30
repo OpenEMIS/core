@@ -6399,7 +6399,7 @@ class InstitutionsController extends AppController
      */
     private function saveSecurityUser($userData)
     {
-        $securityUsers = self::getDynamicTableInstance('security_users');
+        $securityUsers = self::getDynamicTableInstance('User.Users');//POCOR-8706
         $checkStudentExist = $securityUsers->find()->where(['openemis_no' => $userData['openemis_no']])->first();
 //        self::debug($userData);
         if ($checkStudentExist) {
@@ -6409,7 +6409,9 @@ class InstitutionsController extends AppController
         } else {
             $entity = $securityUsers->newEntity($userData);
         }
-
+        //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
+        $securityUsers->addBehavior('User.MoodleCreateUser');
+        
         try {
             return $securityUsers->save($entity);
         } catch (\Exception $e) {
