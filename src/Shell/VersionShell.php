@@ -2,7 +2,8 @@
 namespace App\Shell;
 
 use Cake\Console\Shell;
-use Cake\i18n\Time;
+// use Cake\i18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\Cache\Cache;
 use Cake\Cache\Engine\FileEngine;
 
@@ -27,8 +28,8 @@ class VersionShell extends Shell
             if (!$this->SystemUpdates->exists(['version' => $version])) {
                 $data = [
                     'version' => $version,
-                    'date_released' => Time::now(),
-                    'date_approved' => Time::now(),
+                    'date_released' => FrozenTime::now(),
+                    'date_approved' => FrozenTime::now(),
                     'approved_by' => 1,
                     'status' => 2,
                     'created_user_id' => 1
