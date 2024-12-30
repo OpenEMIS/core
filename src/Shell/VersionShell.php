@@ -4,6 +4,7 @@ namespace App\Shell;
 use Cake\Console\Shell;
 use Cake\i18n\Time;
 use Cake\Cache\Cache;
+use Cake\Cache\Engine\FileEngine;
 
 class VersionShell extends Shell
 {
@@ -42,8 +43,19 @@ class VersionShell extends Shell
             } else {
                 echo "$version is already exists in the database.\n\n";
             }
-
-            Cache::clear(false, '_cake_model_');
+            //POCOR-8786[START]
+            $fileEngine = new FileEngine();
+            $fileEngine->init([
+                'className' => 'File',
+                'prefix' => 'myapp_cake_model_',
+                'path' => CACHE . 'models/',
+                'serialize' => true,
+                'duration' => '+2 minutes',
+                'url' => env('CACHE_CAKEMODEL_URL', null),
+            ]);
+            $fileEngine->clear(false);
+            // Cache::clear(false, '_cake_model_');
+            //POCOR-8786[END]
         }
     }
 }
