@@ -122,17 +122,18 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 .then(handleGetPermissions, handleError)
                 .then(checkAllMyHomeSecondaryPermissions, handleError)
                 .then(function (response) {
-                    console.log('getPermissions');
-                    console.log(response);
+                    // POCOR-8224 removed log output
+                    // console.log('getPermissions');
+                    // console.log(response);
                     var allSubjectsPermission = response[0];
                     var mySubjectsPermission = response[1];
                     var isHomeOrSecondary = response[2];
-                    console.log('allSubjectsPermission');
-                    console.log(allSubjectsPermission);
-                    console.log('mySubjectsPermission');
-                    console.log(mySubjectsPermission);
-                    console.log('isHomeOrSecondary');
-                    console.log(isHomeOrSecondary);
+                    // console.log('allSubjectsPermission');
+                    // console.log(allSubjectsPermission);
+                    // console.log('mySubjectsPermission');
+                    // console.log(mySubjectsPermission);
+                    // console.log('isHomeOrSecondary');
+                    // console.log(isHomeOrSecondary);
                     // Only get assessment items that are available for the class
                     var assessmentSubjects = AssessmentItemsTable
                         .select()
@@ -147,8 +148,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                     // For no subjects
                     var fail = function (response, deferred) {
-                        console.log(fail);
-                        console.log('allSubjectsPermission');
+                        console.error('allSubjectsPermission');
                         deferred.reject('You do not have access to subjects');
                     };
 
@@ -162,7 +162,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         angular.forEach(items, function(item_data) {
                             // Access the _fields property of each item
                             var fields = item_data['\u0000*\u0000_fields'];
-                            
+
                             // Do something with the fields object
                             // if (angular.isObject(fields) && fields.length > 0) {
                                 var educationSubject = null;
@@ -254,8 +254,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             };
 
             function handleError(error) {
-                console.log('error:');
-                console.log(error);
+                console.error(error);
                 deferred.reject(error);
             };
 
@@ -545,7 +544,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     if (!isNaN(parseFloat(value))) {
                         return $filter('number')(value, 2);
                     } else {
-                        return '';
+                        return value;
                     }
                 },
                 filterParams: filterParamsNumbers
@@ -577,11 +576,11 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 },
                 valueGetter: function (params) {
                     var value = params.data[params.colDef.field];
-
+                    // console.log(value);
                     if (!isNaN(parseFloat(value))) {
                         return $filter('number')(value, 2);
                     } else {
-                        return '';
+                        return value;
                     }
                 },
             });
@@ -590,6 +589,13 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 cols = angular.merge(cols, {
                     cellClassRules: {
                         'oe-cell-highlight': function (params) {
+                            var field = params.colDef.field;
+                            const exempt = params.node.data[field];
+                            console.log(field);
+                            //POCOR-7550 start
+                            if(exempt === 'EXEMPT'){
+                                return 0;
+                            }
                             var studentStatusId = params.data.student_status_id;
                             //POCOR-7550 start
                             if (period.editable_student_statuses == 0) {
@@ -605,9 +611,16 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         }
                     },
                     editable: function (params) {
+                        var field = params.colDef.field;
+                        // console.log(params);
                         // only enrolled student is editable
-                        studentStatusId = params.node.data.student_status_id;
+                        const exempt = params.node.data[field];
                         //POCOR-7550 start
+                        if(exempt === 'EXEMPT'){
+                            return 0;
+                        }
+                        studentStatusId = params.node.data.student_status_id;
+                                                //POCOR-7550 start
                         if (period.editable_student_statuses == 0) {
                             return studentStatusId == enrolledStatus
                         } else {
@@ -700,7 +713,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                             });
                                         }, function (error) {
                                             params.data.save_error[params.colDef.field] = true;
-                                            console.log(error);
+                                            console.error(error);
                                             AlertSvc.error(scope, 'There was an error when saving the result');
                                             params.api.refreshCells({
                                                 rowNodes: [params.node],
@@ -929,7 +942,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         });
                     }, function (error) {
                         params.data.save_error[params.colDef.field] = true;
-                        console.log(error);
+                        console.error(error);
                         AlertSvc.error(scope, 'There was an error when saving the result');
                         params.api.refreshCells({
                             rowNodes: [params.node],
@@ -1018,9 +1031,10 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                                 studentId = currentStudentId;
                             }
-
+                            studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.mark;
                             if (isMarksType) {
                                 var marks = parseFloat(subjectStudent.AssessmentItemResults.marks);
+                                studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.mark;
                                 if (!isNaN(marks)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
                                 }
@@ -1096,7 +1110,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                         angular.forEach(oneStudents, function (subjectStudent, key) {
                             currentStudentId = parseInt(subjectStudent.student_id);
-                            totalMarks = parseInt(subjectStudent.total_mark);
+                            totalMarks = parseInt(subjectStudent.total_weighted_marks);
                             assessmentPeriodId = subjectStudent.assessment_period_id;
                             if (assessmentPeriodId != null && angular.isDefined(gradingTypes[assessmentPeriodId])) {
                                 resultType = grading_types[assessmentPeriodId].assessment_grading_type.result_type;
@@ -1115,6 +1129,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                 studentResults = {
                                     openemis_id: subjectStudent.the_student_code,
                                     name: subjectStudent.the_student_name,
+                                    real_mark: subjectStudent.mark,
                                     student_id: currentStudentId,
                                     student_status_id: subjectStudent.student_status_id,
                                     student_status_name: subjectStudent.student_status_name,
@@ -1149,9 +1164,11 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                             if (isMarksType) {
                                 // console.log("isMarksType");
                                 var marks = parseFloat(subjectStudent.mark);
-                                studentResults['period_' + parseInt(assessmentPeriodId)] = '';
+                                // studentResults['period_' + parseInt(assessmentPeriodId)] = '';
                                 if (!isNaN(marks)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
+                                }else{
+                                    studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.mark;
                                 }
 
 
@@ -1219,24 +1236,37 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
         },
 
         calculateTotal: function (data) {
-            var returnValue = 0;
+            var totalMark = 0;
+            var sumMark = 0;
+            var totalWeight = 0;
+            var sumWeight = 0;
             var valueEnabled = false;
-            angular.forEach(data, function (value, key) {
+            var weight = 0;
+            angular.forEach(data, function (mark, key) {
                 if (key.indexOf('period_') >= 0) {
                     var periodId = parseInt(key.replace('period_', ''));
-                    if (!isNaN(parseFloat(value))) {
-                        var weightVar = 'weight_' + periodId;
-                        if (typeof data[weightVar] == 'number') {
-                            returnValue = returnValue + (value * data[weightVar]);
+                    var weightVar = 'weight_' + periodId;
+                    if (!isNaN(parseFloat(data[weightVar]))) {
+                        weight = data[weightVar];
+                        totalWeight = totalWeight + weight;
+                        if (mark !== 'EXEMPT') {
+                            if (isNaN(parseFloat(mark))){
+                                mark = 0;
+                            }
+                            sumMark = sumMark + (mark * weight);
+                            sumWeight = sumWeight + weight;
+                            // console.log(sumWeight);
                             valueEnabled = true;
                         }
                     }
                 }
             });
-            if (!isNaN(parseFloat(returnValue)) && valueEnabled) {
-                return $filter('number')(returnValue, 2);
+            // console.log(sumMark, sumWeight, totalWeight);
+            if (!isNaN(parseFloat(sumWeight)) && valueEnabled & sumWeight > 0) {
+                totalMark = (sumMark / sumWeight) * totalWeight;
+                return $filter('number')(totalMark, 2);
             } else {
-                return '';
+                return ""; // POCOR-8224-C3
             }
         },
 
