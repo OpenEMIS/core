@@ -3,5 +3,5 @@
 <kd-pageheader [config]='pageheader'></kd-pageheader>
 <kd-filter displayType='horizontal-form' [inputData]="dropdownWithoutLabel"
     (valueUpdate)="_changeEvent($event)"></kd-filter>
-<kd-table #changetable [row]="_row" [column]="_column" [config]="_config" [api]="_tableApi" class="student-table-data">
+<kd-table #changetable [row]="_row" [column]="_column" [config]="_config" [api]="_tableApi" class="student-table-data" *ngIf="showTable">
 </kd-table>
