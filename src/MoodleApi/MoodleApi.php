@@ -21,6 +21,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use App\MoodleApi\MoodleFunction\MoodleCreateUser;
 use MoodleApi\Model\Table\MoodleApiLogTable;
+use App\MoodleApi\MoodleFunction\MoodleCreateCourse;//POCOR-8706
 
 class MoodleApi
 {
@@ -111,6 +112,46 @@ class MoodleApi
             return null;
         }
     }
+  
+    /**
+     * Creates a course on Moodle and returns the response if successful.
+     *
+     * This method sends a request to the Moodle API to create a new course using
+     * the provided data. It utilizes the `MoodleCreateCourse` class to structure
+     * the request data and handles the API response.
+     *
+     * @param array $data An associative array containing the parameters for the course creation.
+     *                    Refer to the `MoodleCreateCourse` class for the list of available fields.
+     *
+     * @return \Psr\Http\Message\ResponseInterface|null The response object if the course creation is successful.
+     *                                                  Returns `null` if the API request fails.
+     *
+     * @author Megha Gupta <barkha@madvit.com>
+     * @since 2024-12-20
+     * @task  POCOR-8706 
+     */
+
+     public function createCourse($data)
+     {
+     
+         $moodleCourse = new MoodleCreateCourse($data);
+         $response = $this->post(MoodleCreateCourse::getFunctionParam(), $moodleCourse->getData());
+         $this->_apiLog(MoodleCreateCourse::getFunctionParam(), $moodleCourse->getData(), $response, __METHOD__, $data);
+         if ($response->isOk()) {
+             Log::info('Moodle course creation successful.', [
+                 'response' => $response->getJson()
+             ]);
+ 
+             $responseData = $response->getJson();
+             $data = $responseData[0] ?? null; 
+         } else {
+             Log::warning('Moodle course creation failed.', [
+                 'response_status' => $response->getStatusCode(),
+                 'response_body' => $response->getBody()->getContents()
+             ]);
+         }
+         return $response;
+     }
 
     /**
      * To construct Moodle API URL based on the function name you are calling.
