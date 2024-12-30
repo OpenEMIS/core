@@ -1,3 +1,26 @@
+### [4.5.0] - 2024-12-26
+- Implemented: Develop a field, configuration and placeholder for Cumulative GPA
+- Bug Fixed: Institutions > Performances > Report Cards > Download All : This process causes multiple sleep processes on the database
+- Implemented: Develop a function to flag specific students as exempt from specific assessments items
+- Bug Fixed: Institutions>Performance>Assessments: User cannot be found in the assessment page when added
+- Bug Fixed: Administration > Security > Users > Add: When creating users in Administration > Security > Users page, user is able to add user without entering first name, last name and gender as it is not a mandatory field:
+- Bug Fixed: Institutions > Dashboard: Attendance dashboard on core does not pick up absences and does not update dashboard
+- Bug Fixed: Api: Endpoints having issues
+- Bug Fixed: Institutions > Staff > Add: When adding an existing staff who have OpenEMIS ID to an institution, the system change the OpenEMIS ID upon adding
+- Implemented: Develop Scanned feature API
+- Bug Fixed: Administration>Performance>Assessments: Table does not show any associated records
+- Bug Fixed: Reports > Institutions > Classes: When generating Institutions Classes report, the status shows 'Error'
+
+### [4.4.1] - 2024-12-16
+- Bug Fixed: Institutions > Staff > Edit > Homeroom Teacher:When assigning homeroom teacher to a non-homeroom teacher, the system unassigned the staff
+- Bug Fixed: Directory > Import: When importing user in directory, the system does not allow due to the OpenEMIS ID uniqueness issue
+- Bug Fixed: Administration>System Setup>Education Systems>Copy: User is able to copy education structure
+- Bug Fixed: Reports > Institutions > Student Absence: When generating report for Student Absence, the status goes to Error
+- Bug Fixed: Swagger: Updating naming to the correct convention
+- Bug Fixed: Institutions > Attendance > Students: Able to mark attendance even though system shows that school is closed
+- Bug Fixed: Administration>System Configuration>Themes: User should be able to see the name of the colour
+- Bug Fixed: Administration > Scholarship > Recipients > View/Edit page: User should be able to view and edit
+
 ### [4.4.0] - 2024-12-05
 - Implemented: Develop Timetable APIs
 - Implemented: Develop changes to the education structure and student subjects page
