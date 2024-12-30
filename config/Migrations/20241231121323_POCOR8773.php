@@ -18,7 +18,7 @@ class POCOR8773 extends AbstractMigration
 
         $record = [
             [
-                'name' => 'Report Card Progress', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Report Cards', 'parent_id' => $parent_id,'_view' => 'ReportCardStatusProgress.index|ReportCardStatusProgress.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => 'ReportCardStatusProgress.index', 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => $createdAt,
+                'name' => 'Report Card Progress', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Report Cards', 'parent_id' => $parent_id,'_view' => 'ReportCardStatusProgress.index|ReportCardStatusProgress.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => $createdAt,
             ]
         ];
         $this->table('security_functions')->insert($record)->save();
