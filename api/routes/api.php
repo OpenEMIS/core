@@ -524,7 +524,6 @@ Route::group(
         //POCOR-8519 start...
         Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
         //POCOR-8519 end...
-
         //POCOR-8221 start...
         Route::get('institutions/{institutionId}/students/{studentId}/student-transfer', 'StudentController@getStudentTransferData');
         Route::post('institutions/{institutionId}/student-transfer', 'StudentController@addStudentTransferData');
@@ -533,7 +532,13 @@ Route::group(
         //POCOR-8616 starts...
         Route::get('schedule/timetable-overview', 'TimetableOverviewController@timetableOverview');
         Route::get('schedule/timetable-download', 'TimetableOverviewController@scheduleTimeTableExport');
-
-        //POCOR-8616 starts...
+        //POCOR-8616 end
+        
+        //POCOR-8666 start
+        Route::get('scanned/{openemis_no}', 'ScannedController@scannedUserOpenemisNo');
+        Route::post('scanned', 'ScannedController@addScannedUserData');
+        Route::post('update-scanned/{openemis_no}', 'ScannedController@updateScannedUserData');
+        Route::get('scannedlisting', 'ScannedController@scannedUserListing');
+        //POCOR-8666 end
     }
 );
