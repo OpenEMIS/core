@@ -16,7 +16,7 @@ export class ScannedStudentComponent implements OnInit {
   themeArray = DEFAULT_TEMPLATE_THEME;
   public pageheader: any = {
     leftBtn: [
-        {
+      {
         type: "export",
         callback: (): void => {
           // this.exportData();
@@ -76,7 +76,7 @@ export class ScannedStudentComponent implements OnInit {
       list: [
         {
           type: "view",
-          path: "",
+          path: "/Institution/Institutions/Scanned/student/list",
         },
       ],
     },
@@ -84,6 +84,7 @@ export class ScannedStudentComponent implements OnInit {
   }
   public _tableApi: ITableApi = {};
   public _row: Array<any> = [];
+  public showTable: boolean = false;
 
   constructor(private Rest: ApiService) { }
 
@@ -97,23 +98,13 @@ export class ScannedStudentComponent implements OnInit {
         TABLE_COLUMN_LIST.access,
         TABLE_COLUMN_LIST.location
       ];
-
-      this._row = [
-        { 'dateTime': 'October 28, 2024 - 08:00', 'openemis_no': 1522413076, 'name': 'Aaron Butler', 'access': 'In', 'location': 'School' },
-        { 'dateTime': 'October 28, 2024 - 08:00', 'openemis_no': 1522413076, 'name': 'Aaron Butler', 'access': 'In', 'location': 'School' },
-        { 'dateTime': 'October 28, 2024 - 08:00', 'openemis_no': 1522413076, 'name': 'Aaron Butler', 'access': 'In', 'location': 'School' },
-        { 'dateTime': 'October 28, 2024 - 08:00', 'openemis_no': 1522413076, 'name': 'Aaron Butler', 'access': 'In', 'location': 'School' },
-        { 'dateTime': 'October 28, 2024 - 08:00', 'openemis_no': 1522413076, 'name': 'Aaron Butler', 'access': 'In', 'location': 'School' },
-        { 'dateTime': 'October 28, 2024 - 08:00', 'openemis_no': 1522413076, 'name': 'Aaron Butler', 'access': 'In', 'location': 'School' },
-
-      ]
     });
     this.loginData();
   }
 
-  
+
   loginData() {
-    // this.Rest.setSession();
+    this.Rest.setSession();
     let token = localStorage.getItem("loginToken");
     if (!token) {
       let userName = sessionStorage.getItem('nbn');
@@ -133,7 +124,7 @@ export class ScannedStudentComponent implements OnInit {
         var decodedPassword = atob(password);
         // decodedPassword = decodedPassword.replace(/^"(.*)"$/, '$1');
         decodedPassword = decodedPassword.replace(/[\[\]"]/g, '');
-        console.log(decodedPassword,"decodedPassword");
+        console.log(decodedPassword, "decodedPassword");
         if (userName && decodedPassword) {
           this.loginApi(userName, decodedPassword);
         } else {
@@ -196,7 +187,34 @@ export class ScannedStudentComponent implements OnInit {
   }
 
   getAPIData() {
-
+    this.Rest.getWithToken('scanned/1611035684').subscribe({
+      next: (response: any) => {
+        if (response?.data) {
+          console.log(response, "response");
+          let responseData = [];
+          response?.data.forEach((element: any) => {
+            let obj = {
+              'dateTime': element.datetime,
+              'openemis_no': element.openemis_no,
+              'name': element?.name,
+              'access': element?.access,
+              'location': element?.location
+            }
+            responseData.push(obj);
+          });
+          this._row = responseData;
+          this.showTable = true;
+        }
+      },
+      error: (error) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
   }
 
   _changeEvent(event: any) {

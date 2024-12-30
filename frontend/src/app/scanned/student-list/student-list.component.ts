@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { IDynamicFormApi } from 'openemis-styleguide-lib';
 import { ApiService } from 'src/app/api.service';
 import { DEFAULT_TEMPLATE_THEME } from 'src/app/shared/config.default-val';
 
@@ -11,13 +12,12 @@ export class StudentListComponent implements OnInit {
   public displayLoading: boolean = false;
   public counter: number;
   themeArray = DEFAULT_TEMPLATE_THEME;
+  public api: IDynamicFormApi = {};
   public pageheader: any = {
     leftBtn: [
       {
         type: "back",
-        callback: (): void => {
-          // this.exportData();
-        }
+        path: "/Institution/Institutions/Scanned/student",
       },
     ],
     moreAction: [],
@@ -28,38 +28,52 @@ export class StudentListComponent implements OnInit {
   }
   public _viewQuestion: any = [
     {
-      'value': '1522413076',
+      'value': '',
       'key': 'openemis_no',
       'visible': true,
       'label': 'Openemis No.',
       'type': 'string'
     },
     {
-      'value': 'October 28, 2024 - 08:00',
-      'key': 'date_time',
+      'value': '',
+      'key': 'datetime',
       'visible': true,
       'label': 'Date Time',
       'type': 'date'
     },
     {
-      'value': 'Aaron Buttler',
-      'key': 'Name',
+      'value': '',
+      'key': 'name',
       'visible': true,
       'label': 'Name',
       'type': 'string'
     },
     {
-      'value': 'In',
+      'value': '',
       'key': 'access',
       'visible': true,
       'label': 'Access',
       'type': 'string'
     },
     {
-      'value': 'School',
+      'value': '',
       'key': 'location',
       'visible': true,
       'label': 'Location',
+      'type': 'string'
+    },
+    {
+      'value': '',
+      'key': 'latitude',
+      'visible': true,
+      'label': 'Latitude',
+      'type': 'string'
+    },
+    {
+      'value': '',
+      'key': 'longitude',
+      'visible': true,
+      'label': 'Longitude',
       'type': 'string'
     },
   ]
@@ -91,7 +105,7 @@ export class StudentListComponent implements OnInit {
         var decodedPassword = atob(password);
         // decodedPassword = decodedPassword.replace(/^"(.*)"$/, '$1');
         decodedPassword = decodedPassword.replace(/[\[\]"]/g, '');
-        console.log(decodedPassword,"decodedPassword");
+        console.log(decodedPassword, "decodedPassword");
         if (userName && decodedPassword) {
           this.loginApi(userName, decodedPassword);
         } else {
@@ -154,7 +168,25 @@ export class StudentListComponent implements OnInit {
   }
 
   getAPIData() {
-
+    this.Rest.getWithToken('scanned/1522415305').subscribe({
+      next: (response: any) => {
+        if (response) {
+          let responseData = response?.data[0];
+          console.log(responseData, "responseData");
+          for (let i = 0; i < this._viewQuestion.length; i++) {
+            this.api.setProperty(this._viewQuestion[i].key, 'value', responseData[this._viewQuestion[i].key] ? responseData[this._viewQuestion[i].key] : 'NA')
+          }
+        }
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
   }
 
 }
