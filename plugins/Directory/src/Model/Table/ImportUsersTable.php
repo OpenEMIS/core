@@ -1262,9 +1262,9 @@ class ImportUsersTable extends AppTable
 
     private function checkStartDate( &$tempRow,  &$rowInvalidCodeCols): bool
     {
-        $start_date = $tempRow['start_date'] ?? '';
-        $timeZone = $this->getTimeZone();
-        if (trim($start_date) === '') {
+        $start_date = $tempRow['start_date'] ?? null;
+
+        if (!$start_date) {
             $this->addError($rowInvalidCodeCols, 'start_date', __('No start date specified'));
             $tempRow['start_date'] = null;
             return true;
@@ -1301,6 +1301,7 @@ class ImportUsersTable extends AppTable
         // $periodStartDate = DateTime::createFromFormat('d/m/Y', $periodStartDay, $dateTimeZone);
 
         $periodEndDay = $period->end_date->format('d/m/Y');
+        $timeZone = $this->getTimeZone();
         $dateTimeZone = new \DateTimeZone($timeZone);
         $periodEndDate = DateTime::createFromFormat('d/m/Y', $periodEndDay, $dateTimeZone);
 
@@ -1308,10 +1309,22 @@ class ImportUsersTable extends AppTable
         return false;
     }
 
-    private function parseDate(string $date, string $format): ?DateTime
+    private function parseDate($date, string $format): ?DateTime
     {
         $dateTimeZone = new \DateTimeZone($this->getTimeZone());
-        return DateTime::createFromFormat($format, $date, $dateTimeZone) ?: null;
+
+        // If the input is already a DateTime object, return it
+        if ($date instanceof \DateTime) {
+            return $date;
+        }
+
+        // If the input is a string, try parsing it with the given format
+        if (is_string($date)) {
+            return DateTime::createFromFormat($format, $date, $dateTimeZone) ?: null;
+        }
+
+        // If it's neither a string nor a DateTime object, return null
+        return null;
     }
 
     private function checkEducationGrade( &$tempRow,  &$rowInvalidCodeCols): bool
@@ -1544,25 +1557,6 @@ class ImportUsersTable extends AppTable
         }
 
 //            Log::debug(print_r(['$institution_id' => $tempRow], true));
-        if (!empty($institution_id)) {
-            $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
-            $academic_period_id = $tempRow['academic_period_id'] ?? null;
-//                Log::debug(print_r(['$academic_period_id' => $tempRow], true));
-            if (!empty($academic_period_id)) {
-                $education_grade_code = $originalRow[$education_grade_key];
-                $tempRow['education_grade_code'] = $education_grade_code;
-                $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
-                $education_grade_id = $tempRow['education_grade_id'] ?? null;
-//                    Log::debug(print_r(['$education_grade_id' => $tempRow], true));
-
-                if (!empty($education_grade_id)) {
-                    $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
-                    $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-                    $tempRow['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
-                    $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
-                }
-            }
-        }
         return array($tempRow, $rowInvalidCodeCols, $have_error);
     }
 
