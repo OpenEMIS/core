@@ -110,7 +110,7 @@ class InstitutionsTable extends AppTable
 
 
         $feature = $this->request->getData($this->getAlias())['feature'];//POCOR-6333
-        if (in_array($feature, ['Report.Institutions', 'Report.StaffBehaviours', 'Report.StudentAbsencesPerDays'])) {
+        if (in_array($feature, ['Report.Institutions', 'Report.StaffBehaviours', 'Report.StudentAbsencesPerDays','Report.StudentBehaviours',])) {
             $validator = $validator
                 ->notEmpty('area_level_id')
                 ->notEmpty('area_education_id');
@@ -623,6 +623,12 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'attendance_type';
                     $fieldsOrder[] = 'format';
                     break;
+                case 'Report.StudentBehaviours': //POCOR-7517
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'format';
+                    break;
                 default:
                     break;
             }
@@ -1017,7 +1023,7 @@ class InstitutionsTable extends AppTable
 
 
                     ]
-                )) || (((in_array($feature, ['Report.Institutions']) || in_array($feature, ['Report.StaffBehaviours'])) && !empty($data['institution_filter']) && $data['institution_filter'] == self::NO_STUDENT))) {
+                )) || (((in_array($feature, ['Report.Institutions']) || in_array($feature, ['Report.StaffBehaviours']) ||  in_array($feature, ['Report.StudentBehaviours'])) && !empty($data['institution_filter']) && $data['institution_filter'] == self::NO_STUDENT))) {
 
                 $AcademicPeriodTable = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -1081,7 +1087,8 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionPositionsSummaries',
                 'Report.StudentAbsencesPerDays',
                 'Report.StaffBehaviours', //POCOR-7276
-                'Report.InstitutionInfrastructureSummaryReport'
+                'Report.InstitutionInfrastructureSummaryReport',
+                'Report.StudentBehaviours'//POCOR-7517
             ]))) {
                 $Areas = self::getDynamicTableInstance('Area.AreaLevels');
                 $entity = $attr['entity'];
@@ -1149,7 +1156,8 @@ class InstitutionsTable extends AppTable
                     'Report.InstitutionPositionsSummaries',
                     'Report.StudentAbsencesPerDays',
                     'Report.StaffBehaviours',//POCOR-7276
-                    'Report.InstitutionInfrastructureSummaryReport'
+                    'Report.InstitutionInfrastructureSummaryReport',
+                    'Report.StudentBehaviours'//POCOR-7517
                 ]))) {
                 $Areas = self::getDynamicTableInstance('Area.Areas');
                 $entity = $attr['entity'];
@@ -1547,7 +1555,8 @@ class InstitutionsTable extends AppTable
                 'Report.ClassAttendanceMarkedSummaryReport',
                 'Report.InstitutionPositionsSummaries',
                 'Report.StudentAbsencesPerDays', //POCOR-7276
-                'Report.InstitutionInfrastructureSummaryReport'
+                'Report.InstitutionInfrastructureSummaryReport',
+                'Report.StudentBehaviours' //POCOR-7517
             ];
 
 
