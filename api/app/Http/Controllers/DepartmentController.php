@@ -103,10 +103,11 @@ class DepartmentController extends Controller
     * )
     */
 
-    public function getDepartmentList($params,Request $request)
+    public function getDepartmentList(Request $request, $institutionId,)
     {
         try {
-            $data = $this->departmentService->getDepartmentListing($params,$request);
+            $params = $request->all();
+            $data = $this->departmentService->getDepartmentListing($params, $institutionId);
             if(!empty($data)){
                 return $this->sendSuccessResponse("Institutions Department List Found", $data);
             } else {
