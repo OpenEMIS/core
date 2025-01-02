@@ -6,6 +6,13 @@ use Illuminate\Http\Request;
 use App\Services\ScannedService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\ScannedAttendanceRequest;
+use App\Exports\InstitutionScannedExport;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * POCOR-8666
@@ -38,7 +45,7 @@ class ScannedController extends Controller
     *         required=true,
     *         description="Scanned data payload",
     *         @OA\JsonContent(
-    *             required={"openemis_no", "datetime", "scanner_code"},
+    *             required={"openemis_no", "datetime"},
     *             @OA\Property(
     *                 property="openemis_no",
     *                 type="string",
@@ -189,6 +196,67 @@ class ScannedController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/scanned/data/export",
+     *     summary="Export scanned data",
+     *     description="Endpoint to export scanned data for a specific OpenEMIS number.",
+     *     tags={"Scanned"},
+     *     @OA\Parameter(
+     *         name="openemis_no",
+     *         in="query",
+     *         required=true,
+     *         description="OpenEMIS identification number to filter scanned data.",
+     *         @OA\Schema(type="string", example="1022290909")
+     *     ),
+     *     @OA\Parameter(
+     *         name="token",
+     *         in="header",
+     *         required=true,
+     *         description="Authentication token",
+     *         @OA\Schema(type="string", example="your_auth_token_here")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Scanned data exported successfully.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Scanned data exported successfully."),
+     *             @OA\Property(property="data", type="object", 
+     *                 @OA\Property(property="file_url", type="string")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid request. Missing or invalid parameters."
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized. Invalid or missing token."
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error while processing the export."
+     *     )
+     * )
+     */
+    public function institutionScannedExport(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->scannedService->institutionScannedDataExport($params);
+            $str = time();
+            $fileName = 'InstitutionScanned'.$str.'.xlsx';
+            return Excel::download(new InstitutionScannedExport($data), $fileName);
 
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export Scanned User Data from DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to export Scanned User Data from DB.');
+        }
+    }
    
 }
