@@ -49,10 +49,24 @@ class DepartmentService extends Controller
         }
     }
 
-    public function getDepartmentListing($params,Request $request)
+    public function getDepartmentListing($params, $institutionId)
     {
         try {
-            $data = $this->departmentRepository->getDepartmentList($params,$request);
+            $data = $this->departmentRepository->getDepartmentList($params, $institutionId);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['Department Name'] = $d['name'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['manager_id'] = $d['manager_id'];
+                    $list[$k]['manager_name'] = $d['department_manager']['first_name'].' '. $d['department_manager']['last_name'];
+                    $list[$k]['institution_id'] = $d['institution_id'];
+                    $list[$k]['institution_name'] = $d['institution']['name'];
+                    $list[$k]['institution_code'] = $d['institution']['code'];
+                }
+            }
+            $data['data'] = $list;
             return $data;
         } catch (\Exception $e) {
             Log::error(

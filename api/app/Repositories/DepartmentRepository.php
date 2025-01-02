@@ -73,11 +73,9 @@ class DepartmentRepository extends Controller
         }
     }
     
-    public function getDepartmentList($params, Request $request)
+    public function getDepartmentList($params, $institutionId)
     {
         try {
-            $institutionId = $params;
-            $params = $request->all();
             $list = InstitutionDepartments::with(['securityUser','departmentManager','institution'])->where('institution_id', $institutionId);
            
             if(isset($params['order'])){
@@ -94,7 +92,6 @@ class DepartmentRepository extends Controller
                 $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
-            
             return $resp;
 
         } catch (\Exception $e) {
