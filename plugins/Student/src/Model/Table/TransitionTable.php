@@ -453,6 +453,12 @@ class TransitionTable extends ControllerActionTable
             $startDate =  date("Y-m-d", strtotime($requestData['Transition']['start_date']));
             $endDate = date("Y-m-d", strtotime($requestData['Transition']['end_date']));
             $previousYearId = $AcademicPeriod->find()->where(['id' => $AcademicPeriodsId-1])->first()->id;
+            //POCOR-8788 START
+            if(empty($previousYearId)) {
+                $startYear = $AcademicPeriod->find()->where(['id' => $AcademicPeriodsId])->first()->start_year;
+                $previousYearId = $AcademicPeriod->find()->where(['start_year' => $startYear-1])->first()->id;
+            }
+            //POCOR-8788 END
             //set student status "Transferred"                    
             $transferStatus = $InstitutionStudents->find()
                             ->select([
