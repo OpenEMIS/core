@@ -2591,6 +2591,7 @@ class NavigationComponent extends Component
         $TrainingNav = $this->getAdminstrationTrainingNav();
         $PerformanceNav = $this->getAdminstrationPerformanceNav();
         $ExaminationNav = $this->getAdminstrationExaminationNav();
+        $StaffNav = $this->getAdministrationStaffNav();
         $ScholarshipNav = $this->getAdminstrationScholarshipNav();
         $MoodleNav = $this->getAdminstrationMoodleNav();
         $dataMgtNav = $this->getAdminstrationdataMgtNav();
@@ -2648,8 +2649,19 @@ class NavigationComponent extends Component
 
         ];
 
-        $getallNavigation = array_merge($firstSubMenuAdmin, $SecurityNav, $ProfileNav, $SurveyNav,
-            $CommunicationsNav, $TrainingNav, $PerformanceNav, $ExaminationNav, $ScholarshipNav, $navigation, $MoodleNav, $dataMgtNav); //POCOR-7527
+        $getallNavigation = array_merge($firstSubMenuAdmin,
+            $SecurityNav,
+            $ProfileNav,
+            $SurveyNav,
+            $CommunicationsNav,
+            $TrainingNav,
+            $PerformanceNav,
+            $ExaminationNav,
+            $StaffNav,
+            $ScholarshipNav,
+            $navigation,
+            $MoodleNav,
+            $dataMgtNav); //POCOR-7527
         return $getallNavigation;
     }
 
@@ -3915,6 +3927,106 @@ class NavigationComponent extends Component
     }
 
     //POCOR-7527
+
+    private function getAdministrationStaffNav()
+    {
+        $session = $this->getController()->getRequest()->getSession();
+        $uId = $this->controller->paramsDecode(
+            $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')])
+        )['id'];
+
+        $usersTable = TableRegistry::getTableLocator()->get('User.Users');
+        $isSuperAdmin = $usersTable->exists([
+            $usersTable->aliasField('super_admin') => 1,
+            $usersTable->aliasField('id') => $uId
+        ]);
+
+        $groupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $securityFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+
+        $roleData = $groupUsersTable->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$groupUsersTable->aliasField('security_user_id') => $uId])
+            ->group([
+                $groupUsersTable->aliasField('security_group_id'),
+                $groupUsersTable->aliasField('security_role_id')
+            ])
+            ->select([
+                'id' => 'SecurityRoles.id',
+                'role_name' => 'SecurityRoles.name'
+            ])
+            ->toArray();
+
+        $roleIds = array_column($roleData, 'id');
+
+        $staffFunctions = [];
+        if (!empty($roleIds)) {
+            $staffFunctions = $securityRoleFunctionsTable->find()
+                ->leftJoinWith($securityFunctionsTable->getAlias(), function ($join) use ($securityFunctionsTable, $securityRoleFunctionsTable) {
+                    return $join->on([
+                        $securityFunctionsTable->aliasField('id') . ' = ' . $securityRoleFunctionsTable->aliasField('security_function_id'),
+                    ]);
+                })
+                ->where([
+                    $securityRoleFunctionsTable->aliasField('security_role_id IN') => $roleIds,
+                    $securityFunctionsTable->aliasField('module') => 'Administration',
+                    $securityFunctionsTable->aliasField('controller') => 'Staff',
+                    $securityRoleFunctionsTable->aliasField('_view') => 1
+                ])
+                ->toArray();
+        }
+
+        $nav = [
+            'Administration.Staff' => [
+                'title' => 'Staff',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+            'Staff.Leave' => [
+                'title' => 'Leaves',
+                'parent' => 'Administration.Staff',
+                'params' => ['plugin' => 'Staff'],
+                'selected' => [
+                    'Staff.Leave',
+                    'StaffLeaveTypes.index',
+                    'StaffLeaveTypes.view',
+                    'StaffLeaveTypes.add',
+                    'StaffLeaveTypes.edit',
+                    'StaffLeave Types.delete'
+                ],
+            ],
+            'Staff.Entitlement' => [
+                'title' => 'Entitlements',
+                'parent' => 'Administration.Staff',
+                'params' => ['plugin' => 'Staff'],
+                'selected' => [
+                    'Staff.Entitlements.index',
+                    'UsersDirectory.index',
+                    'UsersDirectory.view',
+                    'Staff.Identities.index',
+                    'Staff.Identities.view',
+                    'Staff.Nationalities.index',
+                    'Staff.Nationalities.view',
+                    'Staff.Contacts.index',
+                    'Staff.Contacts.view',
+                    'Staff.Guardians.index',
+                    'Staff.Guardians.view',
+                    'Staff.Histories',
+                    'Staff.StaffApplicationInstitutionChoices.index',
+                    'Staff.StaffApplicationInstitutionChoices.add',
+                    'Staff.StaffApplicationAttachments',
+                ],
+            ],
+        ];
+
+        if (!$isSuperAdmin && empty($staffFunctions)) {
+            return [];
+        }
+
+        return $nav;
+    }
 
     private function getAdminstrationScholarshipNav()
     {
