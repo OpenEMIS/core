@@ -540,5 +540,10 @@ Route::group(
         Route::post('update-scanned/{openemis_no}', 'ScannedController@updateScannedUserData');
         Route::get('scannedlisting', 'ScannedController@scannedUserListing');
         //POCOR-8666 end
+
+        //POCOR-8030 start
+        Route::get('institutions/{institutionId}/departments', 'DepartmentController@getDepartmentList');
+
+        //POCOR-8030 end
     }
 );
