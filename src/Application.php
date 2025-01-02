@@ -151,6 +151,7 @@ class Application extends BaseApplication
         $this->addPlugin('OAuth', ['routes' => true]);
 
         $this->addPlugin('Archive', ['bootstrap' => false, 'routes' => true]);
+        $this->addPlugin('Gpa', ['routes' => true, 'autoload' => true]);
 
         // Load more plugins here
     }

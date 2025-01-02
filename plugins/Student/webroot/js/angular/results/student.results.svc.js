@@ -356,22 +356,37 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     };
 
     function calculateTotal(data) {
-        var totalMark = '';
-        for (var key in data) {
-            if (/period_/.test(key)) {
-                var index = key.replace(/period_(\d+)/, '$1');
-                // add checking to skip adding to Total Mark if is GRADES type
-                if (!isNaN(parseFloat(data[key])) && !isNaN(parseFloat(data['weight_'+index]))) {
-                    totalMark = isNaN(parseFloat(totalMark)) ? 0 : totalMark;
-                    totalMark += data[key] * (data['weight_'+index]);
+        var totalMark = 0;
+        var sumMark = 0;
+        var totalWeight = 0;
+        var sumWeight = 0;
+        var valueEnabled = false;
+        var weight = 0;
+        angular.forEach(data, function (mark, key) {
+            if (key.indexOf('period_') >= 0) {
+                var periodId = parseInt(key.replace('period_', ''));
+                var weightVar = 'weight_' + periodId;
+                if (!isNaN(parseFloat(data[weightVar]))) {
+                    weight = data[weightVar];
+                    totalWeight = totalWeight + weight;
+                    if (mark !== 'EXEMPT') {
+                        if (isNaN(parseFloat(mark))){
+                            mark = 0;
+                        }
+                        sumMark = sumMark + (mark * weight);
+                        sumWeight = sumWeight + weight;
+                        // console.log(sumWeight);
+                        valueEnabled = true;
+                    }
                 }
             }
-        }
-
-        if (!isNaN(parseFloat(totalMark))) {
+        });
+        // console.log(sumMark, sumWeight, totalWeight);
+        if (!isNaN(parseFloat(sumWeight)) && valueEnabled & sumWeight > 0) {
+            totalMark = (sumMark / sumWeight) * totalWeight;
             return $filter('number')(totalMark, 2);
         } else {
-            return '';
+            return ""; // POCOR-8224-C3
         }
     };
 }
