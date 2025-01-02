@@ -3984,41 +3984,41 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'link' => false,
             ],
-            'Staff.Leave' => [
+            'Systems.StaffPolicies' => [
                 'title' => 'Leaves',
                 'parent' => 'Administration.Staff',
-                'params' => ['plugin' => 'Staff'],
-                'selected' => [
-                    'Staff.Leave',
-                    'StaffLeaveTypes.index',
-                    'StaffLeaveTypes.view',
-                    'StaffLeaveTypes.add',
-                    'StaffLeaveTypes.edit',
-                    'StaffLeave Types.delete'
-                ],
+//                'params' => ['plugin' => 'System'],
+//                'selected' => [
+//                    'LeavePolicies.index',
+//                    'LeavePolicies.view',
+//                    'LeavePolicies.add',
+//                    'LeavePolicies.edit',
+//                    'LeavePolicies.delete'
+//                ],
+                'link' => false,
             ],
-            'Staff.Entitlement' => [
-                'title' => 'Entitlements',
-                'parent' => 'Administration.Staff',
-                'params' => ['plugin' => 'Staff'],
-                'selected' => [
-                    'Staff.Entitlements.index',
-                    'UsersDirectory.index',
-                    'UsersDirectory.view',
-                    'Staff.Identities.index',
-                    'Staff.Identities.view',
-                    'Staff.Nationalities.index',
-                    'Staff.Nationalities.view',
-                    'Staff.Contacts.index',
-                    'Staff.Contacts.view',
-                    'Staff.Guardians.index',
-                    'Staff.Guardians.view',
-                    'Staff.Histories',
-                    'Staff.StaffApplicationInstitutionChoices.index',
-                    'Staff.StaffApplicationInstitutionChoices.add',
-                    'Staff.StaffApplicationAttachments',
-                ],
-            ],
+//            'Staff.Entitlement' => [
+//                'title' => 'Entitlements',
+//                'parent' => 'Administration.Staff',
+//                'params' => ['plugin' => 'Staff'],
+//                'selected' => [
+//                    'Staff.Entitlements.index',
+//                    'UsersDirectory.index',
+//                    'UsersDirectory.view',
+//                    'Staff.Identities.index',
+//                    'Staff.Identities.view',
+//                    'Staff.Nationalities.index',
+//                    'Staff.Nationalities.view',
+//                    'Staff.Contacts.index',
+//                    'Staff.Contacts.view',
+//                    'Staff.Guardians.index',
+//                    'Staff.Guardians.view',
+//                    'Staff.Histories',
+//                    'Staff.StaffApplicationInstitutionChoices.index',
+//                    'Staff.StaffApplicationInstitutionChoices.add',
+//                    'Staff.StaffApplicationAttachments',
+//                ],
+//            ],
         ];
 
         if (!$isSuperAdmin && empty($staffFunctions)) {

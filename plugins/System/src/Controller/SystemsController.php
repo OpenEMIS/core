@@ -34,4 +34,5 @@ class SystemsController extends AppController
 	}
 
     public function Updates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.SystemUpdates']); }
+    public function StaffPolicies() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.LeavePolicies']); }
 }
