@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Workflows extends Model
+class SurveyForms extends Model
 {
     use HasFactory;
 
     public $timestamps = false;
-    protected $table = "workflows";
+    protected $table = "survey_forms";
 
 
-    public function WorkflowSteps()
+    public function customModule()
     {
-        return $this->hasMany(WorkflowSteps::class, 'workflow_id', 'id');
+        return $this->belongsTo(CustomModules::class, 'custom_module_id', 'id');
     }
 }
