@@ -523,11 +523,11 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
 
                 $success = $this->connection()->transactional(function() use ($obj, $entity, $patchOptions) {
                     $examCentreStudentEntity = $this->newEntity($obj, $patchOptions);
-                    if ($examCentreStudentEntity->errors('student_id')) {
-                        $entity->errors('student_id', $examCentreStudentEntity->errors('student_id'));
+                    if ($examCentreStudentEntity->getErrors('student_id')) {
+                        $entity->getErrors('student_id', $examCentreStudentEntity->getErrors('student_id'));
                     }
-                    if ($examCentreStudentEntity->errors('registration_number')) {
-                        $entity->errors('registration_number', $examCentreStudentEntity->errors('registration_number'));
+                    if ($examCentreStudentEntity->getErrors('registration_number')) {
+                        $entity->getErrors('registration_number', $examCentreStudentEntity->getErrors('registration_number'));
                     }
                     if (!$this->save($examCentreStudentEntity)) {
                         return false;
