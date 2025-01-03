@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use JWTAuth;
 use Illuminate\Support\Facades\Log;
 use App\Repositories\DepartmentRepository;
-use App\Http\Requests\ScannedAttendanceRequest;
+use App\Http\Requests\InstitutionDepartmentRequest;
 use Illuminate\Http\Request;
 
 /**
@@ -31,22 +31,6 @@ class DepartmentService extends Controller
     public function __construct(
     DepartmentRepository $departmentRepository) {
         $this->departmentRepository = $departmentRepository;
-    }
-
-    public function addScannedUser(ScannedAttendanceRequest $request)
-    {
-        try {
-            $data = $this->scannedRepository->saveScannedUserData($request);
-            return $data;
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to save Scanned User data in db',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to save Scanned User data in db.');
-        }
     }
 
     public function getDepartmentListing($params, $institutionId)
@@ -78,5 +62,63 @@ class DepartmentService extends Controller
         }
     }
 
+    public function institutionDepartmentDetails($institutionId,$departmentId,Request $request)
+    {
+        try {
+            $data = $this->departmentRepository->institutionDepartmentViewDetails($institutionId,$departmentId,$request);
+            $list = [];
+            if(!empty($data)){
+                foreach($data as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['Department Name'] = $d['name'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['manager_id'] = $d['manager_id'];
+                    $list[$k]['manager_name'] = isset($d['departmentManager']) && $d['departmentManager'] ? $d['departmentManager']['first_name'] . ' ' . $d['departmentManager']['last_name']
+                                : 'N/A'; 
+                    $list[$k]['staff_id'] = $d['staff_id'];
+                    $list[$k]['staff_name'] = isset($d['securityUser']) && $d['securityUser'] ? $d['securityUser']['first_name'] . ' ' . $d['securityUser']['last_name']: 'N/A'; 
+                    $list[$k]['institution_id'] = $d['institution_id'];
+                    $list[$k]['institution_name'] = $d['institution']['name'];
+                    $list[$k]['institution_code'] = $d['institution']['code'];
+                }
+            }
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Scanned User Data',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch Scanned User Data.');
+        }
+    }
+
+    public function addInstitutionDepartment($request)
+    {
+        try {
+            $data = $this->departmentRepository->saveInstitutionDepartment($request);
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to save Department data in db',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to save Department data in db.');
+        }
+    }
+
+    public function updateInstitutionDepartment($departmentId,$request)
+    {
+        try {
+            $data = $this->departmentRepository->institutionDepartmentUpdate($departmentId, $request);
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to save Department data in db',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to save Department data in db.');
+        }
+    }
 
 }
