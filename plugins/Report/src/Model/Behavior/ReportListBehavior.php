@@ -12,7 +12,7 @@ use Cake\Http\ServerRequest;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
 use Cake\Http\Session;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\FileSystem\File;
 use DateTime;
 use Cake\Http\Response;
@@ -256,7 +256,7 @@ class ReportListBehavior extends Behavior {
 		date_default_timezone_set($timeZone);
 		$currentTimeZone = date("Y-m-d H:i:s");
 		$process = $settings['process'];
-		$expiryDate = new Time();
+		$expiryDate = new FrozenTime(); //POCOR-8627
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
 			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => $currentTimeZone],
