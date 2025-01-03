@@ -443,9 +443,6 @@ class StaffTable extends ControllerActionTable
      */
     private function addStaffStatusField(Query $query)
     {
-        //POCOR-8790 Start
-        
-        //POCOR-8790 End
         $statuses = self::getRelatedOptions('Institution.StaffStatuses', '`id`');
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
         use ($statuses) {
