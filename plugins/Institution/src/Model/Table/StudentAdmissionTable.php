@@ -72,8 +72,18 @@ class StudentAdmissionTable extends ControllerActionTable
             'Students' => ['index', 'add']
         ]);
 
-        $this->hasMany('StudentCustomFieldValues', ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_student_admission_id']);
-        $this->hasMany('CustomFieldValues', ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'foreignKey' => 'institution_student_admission_id']);
+        //$this->hasMany('StudentCustomFieldValues', ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_student_admission_id']);
+        $this->hasMany('AdmissionCustomFieldValues', [
+            'className' => 'StudentCustomField.StudentAdmissionCustomFieldValues',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+            'foreignKey' => 'institution_student_admission_id'
+        ]);
+        //$this->hasMany('CustomFieldValues', ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'foreignKey' => 'institution_student_admission_id']);
+        $this->hasMany('AdmissionCustomFieldValues', [
+            'className' => 'StudentCustomField.StudentAdmissionCustomFieldValues',
+            'foreignKey' => 'institution_student_admission_id'
+        ]);
         //$this->hasMany('StudentCustomFields', ['className' => 'StudentCustomField.StudentCustomFields', 'foreignKey' => 'student_id']);
 
         //POCOR-8434 add custome fileds record in pending admission starts
