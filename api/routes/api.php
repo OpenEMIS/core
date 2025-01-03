@@ -543,6 +543,9 @@ Route::group(
 
         //POCOR-8030 start
         Route::get('institutions/{institutionId}/departments', 'DepartmentController@getDepartmentList');
+        Route::get('institutions/{institutionId}/departments/{departmentId}', 'DepartmentController@institutionDepartmentDetails');
+        Route::post('institutions/{institutionId}/departments', 'DepartmentController@institutionDepartmentSave');
+        Route::post('institutions/{departmentId}/updatedepartments', 'DepartmentController@updateInstitutionDepartment');
 
         //POCOR-8030 end
     }

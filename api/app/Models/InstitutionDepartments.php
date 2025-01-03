@@ -8,6 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class InstitutionDepartments extends Model
 {
     use HasFactory;
+    protected $fillable = [
+        'code',
+        'name',
+        'institution_id',
+        'staff_id',
+        'manager_id',
+        'created_user_id',
+        'created',
+        'modified_user_id',
+        'modified'
+    ];
 
     protected $primaryKey = 'id';
     public $timestamps = false;

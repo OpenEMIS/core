@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\DepartmentService;
 use Illuminate\Support\Facades\Log;
-use App\Http\Requests\ScannedAttendanceRequest;
+use App\Http\Requests\InstitutionDepartmentRequest;
 
 /**
- * POCOR-8666
- * ScannedController handles the scanned data operations.
- * It interacts with the ScannedService to manage scanned records.
+ * POCOR-8030
+ * DepartmentController handles the data operations.
+ * It interacts with the DepartmentService to manage records.
  */
 class DepartmentController extends Controller
 {
@@ -174,11 +174,15 @@ class DepartmentController extends Controller
     *     )
     * )
     */
-    public function scannedUserOpenemisNo($params, Request $request)
+    public function institutionDepartmentDetails($institutionId,$departmentId, Request $request)
     {
         try {
-            $scannedUserData = $this->scannedService->scannedOpenemisNo($params,$request);
-            return $scannedUserData;
+            $institutionDetails = $this->departmentService->institutionDepartmentDetails($institutionId,$departmentId,$request);
+            if(!empty($institutionDetails)){
+                return $this->sendSuccessResponse("Institutions Department details", $institutionDetails);
+            } else {
+                return $this->sendErrorResponse("Institutions Department view data not Found" , $data);
+            }
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Scanned User Data',
@@ -189,6 +193,49 @@ class DepartmentController extends Controller
         }
     }
 
+    public function institutionDepartmentSave(InstitutionDepartmentRequest $request)
+    {
+        try {
+            if(empty($request->all())){
+                return $this->sendErrorResponse("Institutions Department not added. Data is empty");
+            }
+            $institutionDetails = $this->departmentService->addInstitutionDepartment($request);
+            if($institutionDetails == 1){
+                return $this->sendSuccessResponse("Institutions Department save Successfully");
+            } else {
+                return $this->sendErrorResponse("Institutions Department not added");
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to save Department  Data',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to save Department  Data');
+        }
+    }
+
+    public function updateInstitutionDepartment($departmentId, InstitutionDepartmentRequest $request)
+    {
+        try {
+            if(empty($request->all())){
+                return $this->sendErrorResponse("Institutions Department not added. Data is empty");
+            }
+            $institutionDetails = $this->departmentService->updateInstitutionDepartment($departmentId,$request);
+            if($institutionDetails == 1){
+                return $this->sendSuccessResponse("Institutions Department save Successfully");
+            } else {
+                return $this->sendErrorResponse("Institutions Department not added");
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to save Department  Data',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to save Department  Data');
+        }
+    }
 
    
 }
