@@ -352,7 +352,15 @@ class StaffTable extends ControllerActionTable
         $query = $this->addStaffNationalityField($query);
 
         $query = $this->addStaffCustomFields($query);
+        // POCOR-8790 Start
+        $query = $this->setStaffStatusID($query);
 
+        if(!empty($this->request->getQuery('position'))) {
+            $query = $this->setPoitionID($query); 
+        }
+
+        $query = $query->distinct(['staff_id']); // remove duplicate staff record
+        //POCOR-8790 End 
         return $query;
 
     }
@@ -435,6 +443,9 @@ class StaffTable extends ControllerActionTable
      */
     private function addStaffStatusField(Query $query)
     {
+        //POCOR-8790 Start
+        
+        //POCOR-8790 End
         $statuses = self::getRelatedOptions('Institution.StaffStatuses', '`id`');
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
         use ($statuses) {
@@ -4642,5 +4653,36 @@ class StaffTable extends ControllerActionTable
         }
         return $value;
     }
+
+    //POCOR-8790 Start
+    /**
+     * @param Query $query
+     * @return Query
+    */
+    private function setStaffStatusID(Query $query) 
+    {
+        $staff_status_id = $this->request->getQuery('staff_status_id');
+        if (!$staff_status_id) {
+            $this->StaffStatuses = new StaffStatusesTable();
+            $statuses = $this->StaffStatuses->findCodeList();
+            $staff_status_id = $statuses['ASSIGNED'];
+        }
+        $query->where([$this->aliasField('staff_status_id') => $staff_status_id]);
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+    */
+    private function setPoitionID(Query $query) 
+    {
+        $selectedPosition = $this->request->getQuery('position');
+        $query->matching('Positions', function ($q) use ($selectedPosition) {
+            return $q->where(['Positions.staff_position_title_id' => $selectedPosition]);
+        });
+        return $query;
+    }
+    //POCOR-8790 End
 
 }
