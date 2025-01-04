@@ -114,10 +114,10 @@ class DepartmentService extends Controller
             return $data;
         } catch (\Exception $e) {
             Log::error(
-                'Failed to save Department data in db',
+                'Failed to update Department data in db',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('Failed to save Department data in db.');
+            return $this->sendErrorResponse('Failed to update Department data in db.');
         }
     }
 
