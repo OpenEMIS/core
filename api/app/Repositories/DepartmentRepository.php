@@ -22,7 +22,18 @@ class DepartmentRepository extends Controller
     public function getDepartmentList($params, $institutionId)
     {
         try {
+            $permissions = checkAccess();
+            if(isset($permissions)){
+                if($permissions['super_admin'] != 1){
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                }
+            }
             $list = InstitutionDepartments::with(['securityUser','departmentManager','institution'])->where('institution_id', $institutionId);
+            if(isset($institution_Ids)){
+                $list = $list->whereIn('institution_id', $institution_Ids);
+            }
            
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
