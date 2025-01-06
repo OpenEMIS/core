@@ -229,42 +229,42 @@ class POCOR8434 extends AbstractMigration
     }
 
     public function down() {
-        //Restore workflow_models table 
-        $this->execute('DROP TABLE IF EXISTS `workflow_models`');
-        $this->execute('RENAME TABLE `z_8434_workflow_models` TO `workflow_models`');
-
-        ////////////////// workflows /////////////////////
-        //DROP workflows table   
-        $this->execute('DROP TABLE IF EXISTS `workflows`');
-        //DROP FOREIGN KEY CONSTRAINT from `z_8434_workflows` table
-        $this->execute("ALTER TABLE `z_8434_workflows` DROP CONSTRAINT z_workf_fk_workf_model_id FOREIGN KEY (workflow_model_id) REFERENCES workflow_models(id);");
-        //Restore workflows table 
-        $this->execute('RENAME TABLE `z_8434_workflows` TO `workflows`');
-        //Add FOREIGN KEY CONSTRAINT in `workflows` table
-        $this->execute("ALTER TABLE `workflows` ADD CONSTRAINT workf_fk_workf_model_id FOREIGN KEY (workflow_model_id) REFERENCES workflow_models(id);");
+        
+        $this->execute('SET FOREIGN_KEY_CHECKS = 0;');
+        ////////////////// workflow_actions /////////////////////
+        //Drop `workflow_actions` table
+        $this->execute('DROP TABLE IF EXISTS `workflow_actions`');
+        //Drop FOREIGN KEY CONSTRAINT from `z_8434_workflow_actions` table
+        $this->execute("ALTER TABLE `z_8434_workflow_actions` DROP FOREIGN KEY z_workf_actio_fk_workf_step_id;");
+        //Restore workflow_actions table 
+        $this->execute('RENAME TABLE `z_8434_workflow_actions` TO `workflow_actions`');
+        //ADD FOREIGN KEY CONSTRAINT in `workflow_actions` table
+        $this->execute("ALTER TABLE `workflow_actions` ADD CONSTRAINT workf_actio_fk_workf_step_id FOREIGN KEY (workflow_step_id) REFERENCES workflow_steps(id);");
         
         ////////////////// workflow_steps /////////////////////
         //DROP workflow_steps table 
         $this->execute('DROP TABLE IF EXISTS `workflow_steps`');
         //DROP FOREIGN KEY CONSTRAINT from `z_8434_workflow_steps` table
-        $this->execute("ALTER TABLE `z_8434_workflow_steps` DROP CONSTRAINT z_workf_steps_fk_workf_id FOREIGN KEY (workflow_id) REFERENCES workflows(id);");
+        $this->execute("ALTER TABLE `z_8434_workflow_steps` DROP FOREIGN KEY z_workf_steps_fk_workf_id;");
         //Restore workflow_steps table 
         $this->execute('RENAME TABLE `z_8434_workflow_steps` TO `workflow_steps`');
         //ADD FOREIGN KEY CONSTRAINT in `workflow_steps` table
         $this->execute("ALTER TABLE `workflow_steps` ADD CONSTRAINT workf_steps_fk_workf_id FOREIGN KEY (workflow_id) REFERENCES workflows(id);");
         
-
-        ////////////////// workflow_actions /////////////////////
-        //Drop `workflow_actions` table
-        $this->execute('DROP TABLE IF EXISTS `workflow_actions`');
-        //Drop FOREIGN KEY CONSTRAINT from `z_8434_workflow_actions` table
-        $this->execute("ALTER TABLE `z_8434_workflow_actions` DROP CONSTRAINT z_workf_actio_fk_workf_step_id FOREIGN KEY (workflow_step_id) REFERENCES workflow_steps(id);");
-        //Restore workflow_actions table 
-        $this->execute('RENAME TABLE `z_8434_workflow_actions` TO `workflow_actions`');
-        //ADD FOREIGN KEY CONSTRAINT in `workflow_actions` table
-        $this->execute("ALTER TABLE `workflow_actions` ADD CONSTRAINT workf_actio_fk_workf_step_id FOREIGN KEY (workflow_step_id) REFERENCES workflow_steps(id);");
-
+        ////////////////// workflows /////////////////////
+        //DROP workflows table   
+        $this->execute('DROP TABLE IF EXISTS `workflows`');
+        //DROP FOREIGN KEY CONSTRAINT from `z_8434_workflows` table
+        $this->execute("ALTER TABLE `z_8434_workflows` DROP FOREIGN KEY z_workf_fk_workf_model_id;");
+        //Restore workflows table 
+        $this->execute('RENAME TABLE `z_8434_workflows` TO `workflows`');
+        //Add FOREIGN KEY CONSTRAINT in `workflows` table
+        $this->execute("ALTER TABLE `workflows` ADD CONSTRAINT workf_fk_workf_model_id FOREIGN KEY (workflow_model_id) REFERENCES workflow_models(id);");
         
+        //Restore workflow_models table 
+        $this->execute('DROP TABLE IF EXISTS `workflow_models`');
+        $this->execute('RENAME TABLE `z_8434_workflow_models` TO `workflow_models`');
+
         //Drop institution_student_enrolment table 
         $this->execute('DROP TABLE IF EXISTS `institution_student_enrolment`');
         
@@ -273,7 +273,6 @@ class POCOR8434 extends AbstractMigration
         //Drop FOREIGN KEY CONSTRAINT from `z_8434_institution_student_admission` table
         $this->execute("ALTER TABLE `z_8434_institution_student_admission`
             DROP FOREIGN KEY z_insti_stude_admis_fk_aca_per_id,
-            DROP FOREIGN KEY z_insti_stude_admis_fk_ass_id,
             DROP FOREIGN KEY z_insti_stude_admis_fk_edu_gra_id,
             DROP FOREIGN KEY z_insti_stude_admis_fk_ins_cla_id,
             DROP FOREIGN KEY z_insti_stude_admis_fk_ins_id,
@@ -287,7 +286,6 @@ class POCOR8434 extends AbstractMigration
         $this->execute("ALTER TABLE `institution_student_admission`
             ADD CONSTRAINT `insti_stude_admis_fk_stude_id` FOREIGN KEY (`student_id`) REFERENCES `security_users`(`id`),
             ADD CONSTRAINT `insti_stude_admis_fk_statu_id` FOREIGN KEY (`status_id`) REFERENCES `workflow_steps`(`id`),
-            ADD CONSTRAINT `insti_stude_admis_fk_ass_id` FOREIGN KEY (`assignee_id`) REFERENCES `security_users`(`id`),
             ADD CONSTRAINT `insti_stude_admis_fk_ins_id` FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`),
             ADD CONSTRAINT `insti_stude_admis_fk_aca_per_id` FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods`(`id`),
             ADD CONSTRAINT `insti_stude_admis_fk_edu_gra_id` FOREIGN KEY (`education_grade_id`) REFERENCES `education_grades`(`id`);");
@@ -297,5 +295,6 @@ class POCOR8434 extends AbstractMigration
         $this->execute('RENAME TABLE `z_8434_custom_modules` TO `custom_modules`');        
         //Drop student_admission_custom_field_values table 
         $this->execute('DROP TABLE IF EXISTS `student_admission_custom_field_values`');
+        $this->execute('SET foreign_key_checks = 1;');
     }
 }
