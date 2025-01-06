@@ -351,8 +351,8 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('institution_shift_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
 
-        $this->field('institution_unit_id', ['type' => 'select', 'visible' => ['index' => false, 'add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('institution_course_id', ['type' => 'select', 'visible' => ['index' => false, 'add' => true,'view' => true, 'edit' => true]]);
+        $this->field('institution_unit_id', ['type' => 'select', 'visible' => ['index' => false, 'add' => false, 'view' => false, 'edit' => false]]);//POCOR-8671
+        $this->field('institution_course_id', ['type' => 'select', 'visible' => ['index' => false, 'add' => false,'view' => false, 'edit' => false]]);//POCOR-8671
 
         $this->field('total_students', ['type' => 'integer', 'visible' => ['index' => true]]);
         $this->field('subjects', ['override' => true, 'type' => 'integer', 'visible' => ['index' => true]]);
@@ -856,7 +856,7 @@ class InstitutionClassesTable extends ControllerActionTable
         ];
 
         $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $configItemsData = $configItems->find()->where(['type'=>'Columns for Institutions Classes List Page'])->toArray();
+        $configItemsData = $configItems->find()->where(['type'=>'Columns for Institutions Classes List Page','visible'=>1])->toArray();//POCOR-8671
         //echo "<pre>";print_r($configItemsData);die;
         foreach($configItemsData as $configItemsData1){
             if(($configItemsData1['code'] == 'class_name') && ($configItemsData1['value'] == 0)){
@@ -1086,7 +1086,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('total_students', ['visible' => true]);
 
         $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page','visible'=>1])->toArray();//POCOR-8671
         foreach($configItemsData as $configItemsData1){
             if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
                 $this->fields['institution_unit_id']['visible'] = false;
@@ -1443,7 +1443,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         //POCOR-7803 :: start
         $configItems = TableRegistry::get('Configuration.ConfigItems');
-        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page','visible'=>1])->toArray();//POCOR-8671
         foreach($configItemsData as $configItemsData1){
             if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
                 $unitEnable = 0;

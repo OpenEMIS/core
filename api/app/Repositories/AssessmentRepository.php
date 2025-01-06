@@ -54,8 +54,21 @@ class AssessmentRepository extends Controller
         try {
 
             $params = $request->all();
+            //POCOR-8705 starts
+            $education_grade_id = $params['education_grade_id']??0;
+            $academic_period_id = $params['academic_period_id']??0;
 
             $assessmentItem = AssessmentItem::with('educationSubjects');
+            if(!empty($education_grade_id) && !empty($academic_period_id)){
+                $assessmentsData = Assessments::where('education_grade_id', $education_grade_id)
+                        ->where('academic_period_id', $academic_period_id)
+                        ->first();
+               
+                if ($assessmentsData) {
+                    $assessmentItem->where('assessment_id', $assessmentsData->id);
+                }
+            }//POCOR-8705 ends
+            
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];

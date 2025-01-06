@@ -51,6 +51,8 @@ class DirectoriesTable extends ControllerActionTable
         $dateOfBirth = $requestDataParams['date_of_birth'] ?? null;
         $identityTypeId = $requestDataParams['identity_type_id'] ?? null;
         $nationalityId = $requestDataParams['nationality_id'] ?? null;
+        $studentOpenemisNo = $requestDataParams['student_openemis_no'] ?? null; // POCOR-8063
+        $guardianTypeId = $requestDataParams['guardian_type_id'] ?? null; // POCOR-8063
         $limit = $requestDataParams['limit'] ?? 10;
         $page = $requestDataParams['page'] ?? 1;
         $userId = $requestDataParams['id'] ?? null;
@@ -64,6 +66,7 @@ class DirectoriesTable extends ControllerActionTable
         $nationalitiesTable = self::getDynamicTableInstance('FieldOption.Nationalities');
         $areaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
         $birthAreaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
+
         if($userId){
             $openemisNo = null;
             $identityNumber = null;
@@ -82,10 +85,17 @@ class DirectoriesTable extends ControllerActionTable
             $lastName = null;
             $dateOfBirth = null;
         }
-        $conditions = [];
-        if (!$identityNumber) {
-            $conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+        // POCOR-8063: start
+        $base_conditions = [];
+        if ($studentOpenemisNo && $guardianTypeId) {
+            $base_conditions = [$securityUsersTable->aliasField('openemis_no !=') => $studentOpenemisNo];
         }
+        if (!$identityNumber) {
+            $new_conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+            $conditions = array_merge($base_conditions, $new_conditions);
+//            Log::debug(print_r($conditions, true));
+        }
+        // POCOR-8063: end
         $usersSearchResult = [];
 
         if (!empty($conditions)) {
@@ -107,10 +117,14 @@ class DirectoriesTable extends ControllerActionTable
         $identityUsersResult = [];
 
         if ($identityNumber) {
-            $identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
+            // POCOR-8063: start
+            $new_identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
                 $identityNumber,
                 $nationalityId,
                 $userIdentitiesTable);
+            $identityCondition = array_merge($base_conditions, $new_identityCondition);
+//            Log::debug(print_r($conditions, true));
+            // POCOR-8063: end
             $identityUsersResult = self::getUsersSearchWithIdentityArr($securityUsersTable,
                 $gendersTable,
                 $identityTypesTable,
@@ -1487,17 +1501,20 @@ class DirectoriesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
     {
-        //POCOR-8558 start
-        if(!isset($_GET['page']) ){
-            $this->behaviors()->get('AdvanceSearch')->setConfig([
-                'showOnLoad' => 1,
-            ]);
-        }else{
+        // POCOR-8558 start
+        $referer = $this->request->getEnv('HTTP_REFERER');
+        $parsedUrl = parse_url($referer);
+
+        // Check if 'page' is set in the query string or 'AdvanceSearch' is present
+        if (isset($_GET['page']) || isset($_REQUEST['AdvanceSearch'])) {
             $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
+        } else {
+            $event->stopPropagation();
+            return;
         }
-        //POCOR-8558 ends
+        // POCOR-8558 ends
 
         $conditions = [];
 
@@ -2063,7 +2080,9 @@ public function getIdentityTypeData($value_selection)
             ],
             'url' => '#',
             'label' => '<i class="fa fa-search-plus"></i>',
-        ];
+        ];    
+        if(isset($toolbarButtons['search']))//POCOr-8733
+           unset($toolbarButtons['search']);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)

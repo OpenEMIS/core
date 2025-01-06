@@ -14,6 +14,7 @@ class AppraisalSlidersTable extends AppTable
 
     public function validationDefault(Validator $validator): Validator
     {
+        $validator->setProvider('custom', $this);
         return $validator
             ->notEmpty('min')
             ->notEmpty('max')

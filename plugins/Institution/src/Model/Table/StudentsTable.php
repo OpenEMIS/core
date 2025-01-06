@@ -18,6 +18,7 @@ use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Core\Configure;
 use Cake\Log\Log;
+use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -462,6 +463,14 @@ class StudentsTable extends ControllerActionTable
             'label' => __('Student Name')
         ];
 
+        //POCOR-8656 start
+         $extraField[] = [
+            'key' => 'student_email',
+            'field' => 'student_email',
+            'type' => 'string',
+            'label' => __('Student Email')
+        ];
+        //POCOR-8656 end
 
         $extraField[] = [
             'key' => 'education_grade_id',
@@ -869,11 +878,17 @@ class StudentsTable extends ControllerActionTable
         $student_id = !empty($entity->student_id) ? $entity->student_id : NULL;
         $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
         $result = $this->checkStudentRecords($entity);
-        if ($result) {
-            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
-            $event->stopPropagation();
-            return $this->controller->redirect($this->url('remove'));
-        } else {
+        // if ($result) {
+        //     // POCOR-8411 start
+        //     try {
+        //         $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+        //     } catch (\Exception $exception) {
+        //         Log::error(__FUNCTION__ . ':' . $exception->getMessage());
+        //     }
+        //     // POCOR-8411 end
+        //     $event->stopPropagation();
+        //     return $this->controller->redirect($this->url('remove'));
+        // } else {
             $body = array();
             $institution_student_id = !empty($entity->id) ? $entity->id : NULL;
             $body = [
@@ -889,7 +904,7 @@ class StudentsTable extends ControllerActionTable
                     $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
                 }
             }
-        }
+        //}
     }
 
     /**
@@ -1305,7 +1320,11 @@ class StudentsTable extends ControllerActionTable
         if (!empty($request->getQuery('academic_period_id'))) {
             $selectedAcademicPeriod = $request->getQuery('academic_period_id');
         }else{
-            $existCurrentAcademicStudent = $this->find('all', ['conditions'=>[ 'academic_period_id' => $this->AcademicPeriods->getCurrent(), 'institution_id' => $institutionId]])->toArray();
+            $existCurrentAcademicStudent = $this->find('all',
+                ['conditions'=>[
+                    'academic_period_id' => $this->AcademicPeriods->getCurrent(),
+                    'institution_id' => $institutionId]
+                ])->toArray();
             if($existCurrentAcademicStudent){
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }else{
@@ -2275,53 +2294,29 @@ class StudentsTable extends ControllerActionTable
         return $params;
     }
 
-    // Function use by the mini dashboard (For Institution Students)
+    // Function use by the mini dashboard (For Institution Students)(POCOR-8721 start - for query optimization)
     public function getNumberOfStudentsByAge($params = [])
     {
-        $query = $params['query'];
-        $InstitutionRecords = $query->cleanCopy();
-        $ageQuery = $InstitutionRecords
-            ->select([
-                'age' => $InstitutionRecords->func()->dateDiff([
-                    $InstitutionRecords->func()->now(),
-                    'Users.date_of_birth' => 'literal'
-                ]),
-                'student' => $this->aliasField('student_id')
-            ])
-            ->distinct(['student'])
-            ->order('age');
-
-        $InstitutionStudentCount = $ageQuery->toArray();
-
-        $convertAge = [];
-
-        // (Logic to be reviewed)
-        // Calculate the age taking account to the average of leap years
-        foreach ($InstitutionStudentCount as $val) {
-            $convertAge[] = floor($val['age'] / 365.25);
-        }
-        // Count and sort the age
-        $result = [];
-        $prevValue = ['age' => -1, 'count' => null];
-        foreach ($convertAge as $val) {
-            if ($prevValue['age'] != $val) {
-                unset($prevValue);
-                $prevValue = ['age' => $val, 'count' => 0];
-                $result[] =& $prevValue;
-            }
-            $prevValue['count']++;
-        }
-
-        // Creating the data set
-        $dataSet = [];
-        foreach ($result as $value) {
-            //Compile the dataset
-            $dataSet[] = [__('Age') . ' ' . $value['age'], $value['count']];
-        }
+        $academicPeriod = $this->request->getQueryParams()['academic_period_id'];
+        $institutionId = $this->getInstitutionID();
+        $connection = ConnectionManager::get('default');
+        $sql = "SELECT FLOOR(DATEDIFF(CURRENT_DATE, u.date_of_birth) / 365.25) AS age,
+                    COUNT(DISTINCT s.student_id) AS student_count
+                    FROM security_users u
+                    INNER JOIN  institution_students s ON s.student_id = u.id
+                    WHERE  s.institution_id = ".$institutionId." AND academic_period_id = ".$academicPeriod." 
+                    GROUP BY  age ORDER BY age";
+            
+        $ageCounts = $connection->execute($sql)->fetchAll('assoc');
+        $dataSet = array_map(function($row) {
+            return [__('Age') . ' ' . $row['age'], $row['student_count']];
+        }, $ageCounts);
+    
         $params['dataSet'] = $dataSet;
-        unset($InstitutionRecords);
+        
         return $params;
     }
+    //POCOR-8721 end
 
     // Function use by the mini dashboard (For Institution Students)
     public function getNumberOfStudentsByGradeByInstitution($params = [])
@@ -2709,22 +2704,59 @@ class StudentsTable extends ControllerActionTable
             $configData = $configVal->find()->select(['val' => $configVal->aliasField('value')])->where([$configVal->aliasField('code') => 'calculate_daily_attendance'])->first();
             $configOption = $configData['val'];
             if ($configOption == 2) {
-                $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
-                    ->select([
-                        'student_id' => 'institution_student_absence_details.student_id',
-                        'period' => 'institution_student_absence_details.period',
-                        'class_id' => 'institution_student_absence_details.institution_class_id',
-                        'present' => '(IF(institution_student_absence_details.absence_type_id IS NULL OR institution_student_absence_details.absence_type_id = 3,1,0))',
-                        'absent' => '(IF(institution_student_absence_details.absence_type_id IN (1,2),1,0))',
-                        'late' => '(IF(institution_student_absence_details.absence_type_id = 3, 1,0))',
-                    ])->innerJoin(["(SELECT value from config_items WHERE code = 'calculate_daily_attendance') attendance_config"])
-                    ->where([
-                        'institution_student_absence_details.date' => date('Y-m-d'),
-                        //'institution_student_absence_details.period' => $record->period,
-                        'institution_student_absence_details.student_id' => $record->student_id,
-                        $InstitutionStudentAbsenceDetails->aliasField('period IN') => $periodId,
-                    ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id'), $InstitutionStudentAbsenceDetails->aliasField('absence_type_id')])
-                    ->toArray();
+                // $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
+                //     ->select([
+                //         'student_id' => 'institution_student_absence_details.student_id',
+                //         'period' => 'institution_student_absence_details.period',
+                //         'class_id' => 'institution_student_absence_details.institution_class_id',
+                //         'present' => '(IF(institution_student_absence_details.absence_type_id IS NULL OR institution_student_absence_details.absence_type_id = 3,1,0))',
+                //         'absent' => '(IF(institution_student_absence_details.absence_type_id IN (1,2),1,0))',
+                //         'late' => '(IF(institution_student_absence_details.absence_type_id = 3, 1,0))',
+                //     ])->innerJoin(["(SELECT value from config_items WHERE code = 'calculate_daily_attendance') attendance_config"])
+                //     ->where([
+                //         'institution_student_absence_details.date' => date('Y-m-d'),
+                //         //'institution_student_absence_details.period' => $record->period,
+                //         'institution_student_absence_details.student_id' => $record->student_id,
+                //         $InstitutionStudentAbsenceDetails->aliasField('period IN') => $periodId,
+                //     ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id'), $InstitutionStudentAbsenceDetails->aliasField('absence_type_id')])
+                //     ->toArray();
+                //POCOR-8763[START]
+                $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find()
+                ->select([
+                    'student_id' => $InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                    'period' => $InstitutionStudentAbsenceDetails->aliasField('period'),
+                    'class_id' => $InstitutionStudentAbsenceDetails->aliasField('institution_class_id'),
+                    'present' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id IS NULL OR absence_type_id = 3, 1, 0)'
+                    ),
+                    'absent' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id IN (1, 2), 1, 0)'
+                    ),
+                    'late' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id = 3, 1, 0)'
+                    ),
+                ])
+                ->join([
+                    'attendance_config' => [
+                        'table' => new \Cake\Database\Expression\QueryExpression(
+                            "(SELECT value FROM config_items WHERE code = 'calculate_daily_attendance')"
+                        ),
+                        'type' => 'INNER',
+                        'conditions' => []
+                    ],
+                ])
+                ->where([
+                    $InstitutionStudentAbsenceDetails->aliasField('date') => date('Y-m-d'),
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id') => $record->student_id,
+                    $InstitutionStudentAbsenceDetails->aliasField('period IN') => $periodId,
+                ])
+                ->group([
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                    $InstitutionStudentAbsenceDetails->aliasField('absence_type_id')
+                ])
+                ->toArray();
+                //POCOR-8763[END]
+
             } else {
                 // $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
                 //     ->select([
@@ -2740,6 +2772,41 @@ class StudentsTable extends ControllerActionTable
                 //         // 'institution_student_absence_details.period' => $record->period,
                 //         'institution_student_absence_details.student_id' => $record->student_id,
                 //     ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id')])->toArray();
+
+                //POCOR-8763[START]
+                $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find()
+                ->select([
+                    'student_id' => $InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                    'class_id' => $InstitutionStudentAbsenceDetails->aliasField('institution_class_id'),
+                    'present' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id IS NULL OR absence_type_id = 3, 1, 0)'
+                    ),
+                    'absent' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id IN (1, 2), 1, 0)'
+                    ),
+                    'late' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id = 3, 1, 0)'
+                    ),
+                ])
+                ->join([
+                    'attendance_config' => [
+                        'table' => new \Cake\Database\Expression\QueryExpression(
+                            "(SELECT value FROM config_items WHERE code = 'calculate_daily_attendance')"
+                        ),
+                        'type' => 'INNER',
+                        'conditions' => []
+                    ],
+                ])
+                ->where([
+                    $InstitutionStudentAbsenceDetails->aliasField('date') => date('Y-m-d'),
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id') => $record->student_id,
+                ])
+                ->group([
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id')
+                ])
+                ->toArray();
+                //POCOR-8763[END]
+
 
             }
             //POCOR-7050 end
@@ -3545,14 +3612,16 @@ class StudentsTable extends ControllerActionTable
      */
     private function addUserBasicFields(Query $query)
     {
-
         $query = $query->select([
-            'student_name' => 'CONCAT(`Users`.`first_name`, " ", `Users`.`last_name`)',
+            'student_name' => 'CONCAT_WS(" ", `Users`.`first_name`, `Users`.`middle_name`, `Users`.`third_name`, `Users`.`last_name`)',//POCOR-8582
             'student_openemis_no' => 'Users.openemis_no',
             'student_username' => 'Users.username',
             'student_date_of_birth' => 'Users.date_of_birth',
             'student_address' => 'Users.address',
             'student_identity_number' => 'Users.identity_number',
+            //POCOR-8656 start
+            'student_email' => 'Users.email',
+            //POCOR-8656 end
         ]);
         return $query;
     }
@@ -3697,6 +3766,11 @@ class StudentsTable extends ControllerActionTable
     private function setInstitutionID()
     {
         $institutionId = $this->getInstitutionID();
+        //POCOR-8411 -- Start - avoid null in where
+        if (empty($institutionId)) {
+            $institutionId = -1; // Use -1 to return zero records; behaves similarly to null in CakePHP 3, ensuring compatibility.
+        }
+        //POCOR-8411 -- End
         $this->institution_id = $institutionId;
     }
 
@@ -3706,15 +3780,48 @@ class StudentsTable extends ControllerActionTable
      * @return string|null
      */
 
+    //POCOR-8643 -- To resolve Enrolled(Repeater) issue
+    public function getOldRecords($previous_institution_student_id)
+    {
+        $connection = ConnectionManager::get('default');
+        $sql = "SELECT is3.id, is3.student_id, is3.student_status_id, is3.start_date, is3.end_date FROM institution_students is1 JOIN institution_students is2 ON is1.student_id = is2.student_id AND is1.start_date > is2.start_date JOIN institution_students is3 ON is2.student_id = is3.student_id AND is2.start_date > is3.start_date WHERE is1.student_status_id = 1 AND is2.student_status_id = 3 AND is3.student_status_id = 8 AND is3.start_date < is2.start_date AND is2.start_date < is1.start_date AND is1.previous_institution_student_id IS NOT NULL;";
+
+        $result = $connection->execute($sql)->fetchAll('assoc');
+        return $result;
+    }
+
     private function getStudentStatus($student_status_id, $previous_institution_student_id)
     {
-
         $statusOptions = $this->student_status_names_array;
         $value = $statusOptions[$student_status_id];
         $previousStudents = $this->previousStudents;
         if (isset($previous_institution_student_id)) {
-            if (isset($previousStudents[$previous_institution_student_id]))
+            if (array_key_exists($previous_institution_student_id, $previousStudents)) {
                 $value = __("Enrolled (Repeater)");
+            }
+            else { //POCOR-8643 -- To resolve Enrolled(Repeater) issue
+                $result = $this->getOldRecords($previous_institution_student_id);
+                $oldStatus = $result;
+                if(isset($previous_institution_student_id) && $previous_institution_student_id !== null) {
+                    $studentID = $this->find('all', [
+                        'conditions' => ['previous_institution_student_id' => $previous_institution_student_id],
+                        'fields' => ['student_id']
+                    ])->first();
+                    $studentId = $studentID->student_id;
+                    if(isset($studentId)) {
+                        $found = false;
+                        foreach ($oldStatus as $status) {
+                            if ($status['student_id'] == $studentId) {
+                                $found = true;
+                                break;
+                            }
+                        }
+                        if ($found) {
+                            $value = __("Enrolled (Repeater)");
+                        }
+                    }
+                }
+            }
         }
         return $value;
     }

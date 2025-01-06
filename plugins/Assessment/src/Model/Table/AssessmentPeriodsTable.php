@@ -844,7 +844,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 ];
                 $entity = $AssessmentItemsGradingTypes->newEntity($data);
                 $save = $AssessmentItemsGradingTypes->save($entity);
-                
+
             }
         }
     }
@@ -956,7 +956,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             if ($this->{$model}->exists(['assessment_period_id' => $entity->id])) {
                 $message = __('Delete operation is not allowed as there are other information linked to this record.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                
+
                 $url = $this->request->referer();
                 $event->stopPropagation();
                 return $this->controller->redirect($url);
@@ -965,5 +965,5 @@ class AssessmentPeriodsTable extends ControllerActionTable
     }
 
 
-    
+
 }

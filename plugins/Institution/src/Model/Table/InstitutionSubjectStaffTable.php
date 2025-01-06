@@ -130,7 +130,7 @@ class InstitutionSubjectStaffTable extends AppTable
         $StaffStatusesTable = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
         $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
-        // if ($staff->dirty('end_date')) {
+         if ($staff->getDirty('end_date')) {
             $selectConditions = [];
             if ($staff->isNew()) {
                 $selectConditions = [
@@ -232,7 +232,7 @@ class InstitutionSubjectStaffTable extends AppTable
                     $updateConditions
                 );
             }
-        // }
+         }
     }
 
     public function findSubjectEditPermission(Query $query, array $options)
@@ -535,7 +535,7 @@ class InstitutionSubjectStaffTable extends AppTable
                         $this->aliasField('institution_id') => $institutionId,
                        'AcademicPeriods.id' => $academicPeriodId,//POCOR-7087
                     ])
-                       ->hydrate(false)
+                       ->disableHydration() // POCOR-8533
                         ->formatResults(function (ResultSetInterface $results) {
                         return $results->map(function ($row) {
                             $classSubject = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
@@ -547,7 +547,8 @@ class InstitutionSubjectStaffTable extends AppTable
                                     ->where([
                                         $classSubject->aliasField('institution_subject_id') => $row['institution_subjects_id']
                                     ])
-                                    ->hydrate(false);
+                                    ->disableHydration() // POCOR-8533
+                            ;
                             if(!empty($classObj)) {
                                 foreach ($classObj as $class) {
                                     $classes['name'] = $class['InstitutionClasses']['name'];
@@ -561,7 +562,8 @@ class InstitutionSubjectStaffTable extends AppTable
                                     ->where([
                                         $subjectStudents->aliasField('institution_subject_id') => $row['institution_subjects_id']
                                     ])
-                                    ->hydrate(false);
+                                    ->disableHydration() // POCOR-8533
+                            ;
                             if(!empty($studentObj)) {
                                 foreach ($studentObj as $student) {
                                     $students[] = $student['Users']['openemis_no'];

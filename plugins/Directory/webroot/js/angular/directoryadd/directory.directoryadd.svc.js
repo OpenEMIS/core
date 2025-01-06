@@ -93,10 +93,22 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     // POCOR-8231 to set Openemis No
     function setUniqueOpenEmisId(scope) {
         // if OpenEmisNo is present
+        if (
+            (scope.isExternalSearchSelected || scope.isInternalSearchSelected) &&
+            scope.selectedUserData.openemis_no &&
+            scope.selectedUserData.openemis_no.toString().trim() !== ''
+        ) {
+            // if UserName is absent
+            if (!scope.selectedUserData.username) {
+                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
+            }
+            return Promise.resolve();
+        }
+
         if ((scope.isExternalSearchSelected || scope.isInternalSearchSelected) &&
             scope.selectedUserData.openemis_no &&
-            !isNaN(Number(scope.selectedUserData.openemis_no.toString()))
-        ) {
+            scope.selectedUserData.openemis_no.toString() !== '')
+        {
             // if UserName is absent
             if (!scope.selectedUserData.username) {
                 scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
@@ -660,7 +672,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 scope.internalGridOptions = {
                     columnDefs: [
                         {
-                            headerName: scope.translateFields.openemis_no,
+                            headerName: angular.isDefined(scope.dynamicOpenemisNoHeader) ? scope.dynamicOpenemisNoHeader : scope.translateFields.openemis_no,
                             field: "openemis_no",
                             suppressMenu: true,
                             suppressSorting: true
@@ -875,7 +887,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     async function checkUserAlreadyExistByIdentity(scope) {
         const userData = scope.selectedUserData;
-        console.log(scope);
+        // console.log(scope);
         const result = await checkUserExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
@@ -970,7 +982,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         nationality_name = scope.selectedUserData.nationality_name;
         identity_type_name = scope.selectedUserData.identity_type_name;
         identity_type_id = scope.selectedUserData.identity_type_id;
-        institution_id = scope.selectedUserData.institution_id; // POCOR-8532
+        let user_type_id =  scope.selectedUserData.user_type_id ?? null; // POCOR-8063
+        let guardian_type_id = scope.selectedUserData.relation_type_id ?? null; // POCOR-8063
+        let student_openemis_no = scope.studentOpenEmisId ?? null; // POCOR-8063
+        let institution_id = scope.institutionId ?? null; // POCOR-8063
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -983,13 +998,16 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     openemis_no: openemis_no,
                     date_of_birth: date_of_birth,
                     identity_number: identity_number,
-                    institution_id: institution_id, // POCOR-8532
-                    user_type_id: scope.selectedUserData.user_type_id,
+                    institution_id: institution_id,
+                    user_type_id: user_type_id,
+                    guardian_type_id: guardian_type_id,
                     nationality_id: nationality_id,
                     nationality_name: nationality_name,
                     identity_type_name: identity_type_name,
-                    identity_type_id: identity_type_id
+                    identity_type_id: identity_type_id,
+                    student_openemis_no: student_openemis_no
     };
+
                 // console.log(param);
                 getInternalSearchData(param)
                     .then(function (response) {
@@ -1141,7 +1159,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         function filterBySection(item, section) {
             return section === item.section;
         }
-        console.log(scope.customFields);
+        // console.log(scope.customFields);
         if(scope.customFields && scope.customFields.length > 0) {
             var selectedCustomField = scope.customFields;
             var filteredSections = Array.from(new Set(scope.customFields.map((item) => mapBySection(item))));

@@ -45,7 +45,9 @@ class SurveyQuestionsTable extends CustomFieldsTable
                     'provider' => 'table',
                     'message' => 'This code already exists in the system'
                 ]
-            ]);
+            ])
+            ->notEmpty('name') //POCOR-8635
+            ->notEmpty('field_type');//POCOR-8635
 
         return $validator;
     }
@@ -55,18 +57,29 @@ class SurveyQuestionsTable extends CustomFieldsTable
         $this->setFieldOrder(['code', 'name', 'description', 'field_type', 'is_mandatory', 'is_unique']);
     }
 
+    //POCOR-7742 start
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('code');
+        $this->field('params', ['attr' => ['style' => 'display:none;']]);
     }
 
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('code');
+        $this->field('params', ['attr' => ['disabled' => 'disabled']]);
+    }
+    //POCOR-7742 end
+    
     public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
     {
+    //    echo "<pre>";print_r($event);die;
         if ($action == 'add') {
             if (!$request->is('post')) {
                 $textValue = substr(Text::uuid(), 0, 8);
                 $attr['attr']['value'] = $textValue;
             }
+            
             return $attr;
         }
     }
@@ -127,19 +140,20 @@ class SurveyQuestionsTable extends CustomFieldsTable
 		}
         if($this->action == 'edit' && isset($this->request->getParam('pass')[1])) {
             $surveyQuestionId = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
-            $this->field('id', ['value' => $surveyQuestionId]);
+            $this->field('id', ['value' => $surveyQuestionId]);        
         }
     }
     // End POCOR-5188
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'question') {
-            return __('Question');
+        $a = $this->request->getParam('pass')[0];
+        if ($field == 'name') { //POCOR-8635
+            return __('Question'); //POCOR-8635
         } elseif ($field == 'code') {
             return __('Code');
-        } elseif ($field == 'name') {
-            return __('Name');
+        // } elseif ($field == 'name') {
+        //     return __('Name');
         } elseif ($field == 'field_type') {
             return __('field Type');
         }  elseif ($field == 'is_mandatory') {
@@ -159,7 +173,15 @@ class SurveyQuestionsTable extends CustomFieldsTable
         }elseif ($field == 'description') {
             return __('Description');
         }elseif ($field == 'params') {
-            return __('Params');
+            //POCOR-7742 start
+            if($a == 'add' && $module == "SurveyQuestions"){
+                $this->field('params', ['attr' => ['class'=>'surveryform']]);
+                return '';
+
+            }else{
+                return __('Params');
+            }
+            //POCOR-7742 end
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

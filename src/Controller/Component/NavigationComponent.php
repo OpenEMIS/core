@@ -32,10 +32,15 @@ class NavigationComponent extends Component
 
     public function addCrumb($title, $options = [])
     {
+        if (!is_countable($options)) {
+            $size_of_options = 0;
+        } else {
+            $size_of_options = sizeof($options);
+        }
         $item = array(
             'title' => __((string)$title),
             'link' => ['url' => $options],
-            'selected' => sizeof($options) == 0
+            'selected' => $size_of_options == 0
         );
         $this->breadcrumbs[] = $item;
         $this->controller->set('_breadcrumbs', $this->breadcrumbs);
@@ -926,6 +931,7 @@ class NavigationComponent extends Component
                     'Institutions.ImportAssessmentItemResults.add',
                     'Institutions.ImportAssessmentItemResults.results',
                     'Institutions.AssessmentItemResultsArchived',
+                    'Institutions.AssessmentItemExemptions', //POCOR-8224
                     'Institutions.reportCardGenerate'],
             ],
 
@@ -935,6 +941,12 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.ReportCardStatuses',
                     'Institutions.ReportCardStatusProgress'],
             ],
+            'Institutions.ReportCardGpa.index' => [
+                'title' => 'GPA',
+                'parent' => 'Institution.Performance',
+                'selected' => ['Institutions.ReportCardGpa',
+                    'Institutions.ReportCardCumulativeGpa'],
+            ], //POCOR-8222
             //POCOR-7458 start
             'Institutions.Messaging.index' => [
                 'title' => 'Messaging',
@@ -1324,11 +1336,11 @@ class NavigationComponent extends Component
                     $InstitutionStudentsTable->aliasField('institution_id') => $institutionID,
                 ])
                 ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC']);
-            
+
             $results = $query->all()->extract('id')->toArray();
             $institutionStudentId = !empty($results) ? $results[0] : null;
         }
-        
+
 
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
@@ -1389,6 +1401,7 @@ class NavigationComponent extends Component
                     'Students.Behaviours.index',
                     //POCOR-7474-HINDOL TYPO FIX
                     'Students.Assessments.index',
+                    'Students.StudentGpa.index',
                     'Students.AssessmentsArchived.index',
                     'Students.ExaminationResults.index',
                     'Students.ReportCards.index',
@@ -1622,7 +1635,7 @@ class NavigationComponent extends Component
                     'Institutions.HistoricalStaffLeave',
                     'Staff.Behaviours',
                     'Institutions.Staff',
-                    'Institutions.StaffPositionProfiles.add',
+                    'Institutions.StaffPositionProfiles',
                     //'Institutions.StaffAppraisals', POCOR-7485 not use becuase now StaffAppraisals's controller change
                     'Staff.StaffAppraisals',
                     'Institutions.ImportStaffLeave',
@@ -2235,7 +2248,10 @@ class NavigationComponent extends Component
                 'title' => 'Scholarships',
                 'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.ScholarshipsDirectory']
+                'selected' => ['Profiles.ScholarshipApplications',
+                                'Profiles.ScholarshipsDirectory',
+                                'Profiles.ScholarshipApplicationInstitutionChoices',
+                                'Profiles.ScholarshipApplicationAttachments']
             ],
 
             // 'Scholarships.Scholarships' => [
@@ -2346,7 +2362,8 @@ class NavigationComponent extends Component
                     'Profiles.StudentRisks',
                     'Profiles.StudentAssociations',
                     'Profiles.Absences',
-                    'Profiles.StudentCurriculars']
+                    'Profiles.StudentCurriculars',
+                    'Profiles.StudentGpa']
             ],//POCOR-6701 added Profiles.Absences becasue navigation was collapsing //POCOR-6699 adding studentAssessment
             'Profiles.StudentScheduleTimetable' => [
                 'title' => 'Timetables',
@@ -2375,23 +2392,39 @@ class NavigationComponent extends Component
 
     public function getGuardianNavNavigation()
     {
-        $session = $this->getController()->getRequest()->getSession();
-        $studentId = $session->read('Student.Students.id');
-        $queryString = $this->request->getQuery['queryString']; // comment cakephp4
-        $queryString = '';
-        if ($queryString != '') {
-            $session->write('queryString', $queryString);
-        } else {
-            $queryString = $session->read('queryString');
+        // $request = $this->getController()->getRequest();
+        // $session = $this->getController()->getRequest()->getSession();
+        // $studentId = $session->read('Student.Students.id');
+        // if(empty($studentId) && $request->getParam('action') == 'StudentUser') {
+        //     $studentId = $this->controller->paramsDecode($request->getParam('pass')[1])['id'];
+        // }
+        // $queryString = $this->request->getQuery['queryString']; // comment cakephp4
+        // $queryString = '';
+        // if ($queryString != '') {
+        //     $session->write('queryString', $queryString);
+        // } else {
+        //     $queryString = $session->read('queryString');
+        // }
+        // POCOR-8415 start
+        $studentId = $this->getStudentID();
+        if(!$studentId){
+            $session = $this->getController()->getRequest()->getSession();
+            $studentId = $session->read('Student.Students.id');
         }
+        $decodedQueryString = $this->controller->getQueryString();
+        $decodedQueryString['id'] = $studentId;
+        $decodedQueryString['student_id'] = $studentId;
+        $queryString = $this->controller->paramsEncode($decodedQueryString);
+        // POCOR-8415 end
         $navigation = [
             'GuardianNavs.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
                 'params' => ['plugin' => 'GuardianNav',
-                    '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
+                    '1' => $queryString], // POCOR-8415
                 'selected' => ['GuardianNavs.StudentUser']
             ],
+
             'GuardianNavs.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
@@ -2410,11 +2443,29 @@ class NavigationComponent extends Component
                     'GuardianNavs.StudentTextbooks',
                     'GuardianNavs.StudentRisks',
                     'GuardianNavs.StudentAssociations']
+            ],
+            //POCOR-8293 start
+            'GuardianNavs.Healths.index' => [
+                'title' => 'Student Health',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'GuardianNav',
+                    '1' => $this->controller->paramsEncode(['id' => $studentId,'security_user_id'=> $studentId]), 'queryString' => $queryString],
+                'selected' => ['GuardianNavs.Healths',
+                        'GuardianNavs.HealthAllergies',
+                        'GuardianNavs.HealthConsultations',
+                        'GuardianNavs.HealthFamilies',
+                        'GuardianNavs.HealthHistories',
+                        'GuardianNavs.HealthImmunizations',
+                        'GuardianNavs.HealthMedications',
+                        'GuardianNavs.HealthTests',
+                        'GuardianNavs.HealthBodyMasses',
+                        'GuardianNavs.HealthInsurances']
             ]
+            //POCOR-8293 end
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
-                $n['params']['studentId'] = $this->controller->paramsEncode($studentId);
+                $n['params']['1'] = $queryString; // POCOR-8415
             }
         }
         return $navigation;
@@ -2680,9 +2731,12 @@ class NavigationComponent extends Component
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
                     'selected' => ['Configurations.Themes',
+                        'Configurations.Webhooks',
                         'Configurations.add',
                         'Configurations.view',
                         'Configurations.edit',
+                        'Configurations.Authentication',
+                        'Configurations.AuthSystemAuthentications',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
@@ -3710,6 +3764,14 @@ class NavigationComponent extends Component
                     'ReportCards.ReportCardEmail',
                     'ReportCards.Processes']
             ],
+            'Gpa.GpaSystem' => [
+                'title' => 'GPA',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Gpa'],
+                'selected' => ['Gpa.GpaSystem',
+                                'Gpa.Cumulative',
+                                'Gpa.GpaGradingType']
+            ], //POCOR-8222
 
         ];
         return $fullPerformanceNavigation;
@@ -3916,7 +3978,7 @@ class NavigationComponent extends Component
                         'title' => 'Applications',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],
-                        'selected' => ['Scholarships.Applications',
+                        'selected' => ['Scholarships.Applications.index',
                             'UsersDirectory.index',
                             'UsersDirectory.view',
                             'Scholarships.Identities.index',
@@ -3928,16 +3990,10 @@ class NavigationComponent extends Component
                             'Scholarships.Guardians.index',
                             'Scholarships.Guardians.view',
                             'Scholarships.Histories',
-                            'ScholarshipApplicationInstitutionChoices.index',
-                            'ScholarshipApplicationInstitutionChoices.view',
-                            'ScholarshipApplicationInstitutionChoices.add',
-                            'ScholarshipApplicationInstitutionChoices.edit',
-                            'ScholarshipApplicationInstitutionChoices.delete',
-                            'ScholarshipApplicationAttachments.index',
-                            'ScholarshipApplicationAttachments.view',
-                            'ScholarshipApplicationAttachments.add',
-                            'ScholarshipApplicationAttachments.edit',
-                            'ScholarshipApplicationAttachments.delete']
+                            'Scholarships.ScholarshipApplicationInstitutionChoices.index',
+                            'Scholarships.ScholarshipApplicationInstitutionChoices.add',
+                            'Scholarships.ScholarshipApplicationAttachments',
+                            ]
                     ],
                     // 'ScholarshipRecipients.index' => [
                     //     'title' => 'Recipients',
@@ -3991,7 +4047,7 @@ class NavigationComponent extends Component
                     'title' => 'Applications',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
-                    'selected' => ['Scholarships.Applications',
+                    'selected' => ['Scholarships.Applications.index',
                         'UsersDirectory.index',
                         'UsersDirectory.view',
                         'Scholarships.Identities.index',
@@ -4003,16 +4059,12 @@ class NavigationComponent extends Component
                         'Scholarships.Guardians.index',
                         'Scholarships.Guardians.view',
                         'Scholarships.Histories',
-                        'ScholarshipApplicationInstitutionChoices.index',
-                        'ScholarshipApplicationInstitutionChoices.view',
-                        'ScholarshipApplicationInstitutionChoices.add',
-                        'ScholarshipApplicationInstitutionChoices.edit',
-                        'ScholarshipApplicationInstitutionChoices.delete',
-                        'ScholarshipApplicationAttachments.index',
-                        'ScholarshipApplicationAttachments.view',
-                        'ScholarshipApplicationAttachments.add',
-                        'ScholarshipApplicationAttachments.edit',
-                        'ScholarshipApplicationAttachments.delete']
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.index',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.add',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.view',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.edit',
+                        'Scholarships.ScholarshipApplicationAttachments',
+                        ]
                 ],
                 // 'ScholarshipRecipients.index' => [
                 //     'title' => 'Recipients',

@@ -18,7 +18,7 @@
 				'data-named-key' => 'type'
 			));
 			//POCOR-7156 Starts add if condition
-			if(!empty($authenticationTypeOptions) && $field_type != 'two_factor_authentication'){
+			//if(!empty($authenticationTypeOptions) && $field_type != 'two_factor_authentication'){
 				echo $this->Form->input('authentication_type', array(
 					'class' => 'form-control',
 					'label' => false,
@@ -27,7 +27,7 @@
 					'data-named-key' => 'authentication_type',
 					'data-named-group' => 'type'
 				));
-			}//POCOR-7156 ends
+			//}//POCOR-7156 ends
 		?>
 	</div>
 </div>

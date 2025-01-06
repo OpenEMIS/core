@@ -246,11 +246,13 @@ class InstitutionClassesTable extends AppTable
                 }
                 $row['total_students'] = $maleCountByClass + $femaleCountByClass;
 
-                $areas1 = TableRegistry::get('Area.Areas');
+               //POCOR-8739 start
+                $areas1 = TableRegistry::getTableLocator()->get('Area.Areas');
                 $areasData = $areas1
                     ->find()
-                    ->where([$areas1->getAlias('code') => $row->area_code])
+                    ->where(['Areas.code' => $row->area_code])
                     ->first();
+                //POCOR-8739 end
                 $row['region_code'] = '';
                 $row['region_name'] = '';
                 if (!empty($areasData)) {
