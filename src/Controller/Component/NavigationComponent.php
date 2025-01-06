@@ -1005,10 +1005,10 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Positions',
                     'Institutions.ImportInstitutionPositions'],
             ],
-            'Institutions.Departments.index' => [ //POCOR-8030
+            'Institutions.InstitutionDepartments.index' => [ //POCOR-8030
                 'title' => 'Departments',
                 'parent' => 'Institutions.Appointment',
-                'selected' => ['Institutions.Departments'],
+                'selected' => ['Institutions.InstitutionDepartments'],
             ],
             'Institutions.StaffDuties.index' => [
                 'title' => 'Duties',
