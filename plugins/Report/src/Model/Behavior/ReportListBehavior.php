@@ -12,7 +12,7 @@ use Cake\Http\ServerRequest;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
 use Cake\Http\Session;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\FileSystem\File;
 use DateTime;
 use Cake\Http\Response;
@@ -256,7 +256,7 @@ class ReportListBehavior extends Behavior {
 		date_default_timezone_set($timeZone);
 		$currentTimeZone = date("Y-m-d H:i:s");
 		$process = $settings['process'];
-		$expiryDate = new Time();
+		$expiryDate = new FrozenTime(); //POCOR-8627
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
 			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => $currentTimeZone],
@@ -421,45 +421,81 @@ class ReportListBehavior extends Behavior {
 		}
 	}
 
-	public function download($id) {
-		$this->_table->controller->autoRender = false;
-
-		$entity = $this->ReportProgress->get($id);
-		$path = $entity->file_path;
-
-		if (!empty($path) && file_exists($path)) {
-			$pathInfo = pathinfo($path);
-			$ext = $pathInfo['extension'];
-			$filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
-
-			// Set correct Content-Type header based on file extension
-			$contentType = mime_content_type($path);
-			header('Content-Type: ' . $contentType);
-
-			// Set other necessary headers
-			header('Content-Description: File Transfer');
-			header("Content-Disposition: attachment; filename=\"" . basename($filename) . "\";");
-			header('Content-Transfer-Encoding: binary');
-			header('Expires: 0');
-			header('Cache-Control: must-revalidate');
-			header('Pragma: public');
-			header('Content-Length: ' . filesize($path));
-
-			// Output the file
-			readfile($path);
-
-			// No need to call ob_clean() and flush() in this context
-			exit;
-		} else {
-			$this->ReportProgress->delete($entity);
-			$controller = $this->_table->controller->getName();
-			$table = $this->_table->getAlias();
-			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
-			$url = ['controller' => $controller, 'action' => $table, 'index'];
-			return $this->_table->controller->redirect($url);
-		}
+	/**
+	 * Handles the download of a file associated with a given entity ID.
+	 * POCOR-8755
+	 * This method retrieves a file path from the entity, validates its existence 
+	 * and readability, and serves the file as a downloadable attachment. 
+	 * 
+	 * @param int $id The ID of the entity whose file is to be downloaded.
+	 * @return \Cake\Http\Response|null Redirects on error, otherwise outputs the file.
+	 * */
+	public function download($id) 
+	{
+	    $this->_table->controller->autoRender = false;
+	    // Clear any existing output
+	    if (ob_get_level()) {
+	        ob_end_clean();
+	    }
+	    
+	    try {
+	        $entity = $this->ReportProgress->get($id);
+	        $path = $entity->file_path;
+	        
+	        if (empty($path) || !file_exists($path) || !is_readable($path)) {
+	            throw new Exception('File not found or not readable');
+	        }
+	        
+	        $pathInfo = pathinfo($path);
+	        $ext = $pathInfo['extension'];
+	        $filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
+	        
+	        // Get file size
+	        $fileSize = filesize($path);
+	        if ($fileSize === false) {
+	            throw new Exception('Unable to determine file size');
+	        }
+	        
+	        // Get MIME type
+	        $contentType = mime_content_type($path);
+	        if ($contentType === false) {
+	            $contentType = 'application/octet-stream'; // fallback
+	        }
+	        
+	        // Set headers
+	        header('Content-Type: ' . $contentType);
+	        header('Content-Description: File Transfer');
+	        header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
+	        header('Content-Transfer-Encoding: binary');
+	        header('Expires: 0');
+	        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	        header('Pragma: public');
+	        header('Content-Length: ' . $fileSize);
+	        
+	        // Output file in chunks to handle large files
+	        $handle = fopen($path, 'rb');
+	        if ($handle === false) {
+	            throw new Exception('Unable to open file');
+	        }
+	        
+	        while (!feof($handle)) {
+	            echo fread($handle, 8192);
+	            flush();
+	        }
+	        
+	        fclose($handle);
+	        exit;
+	        
+	    } catch (Exception $e) {
+	        error_log('Download error: ' . $e->getMessage());
+	        $this->ReportProgress->delete($entity);
+	        $controller = $this->_table->controller->getName();
+	        $table = $this->_table->getAlias();
+	        $this->_table->Alert->error('general.noFile', ['reset'=>true]);
+	        $url = ['controller' => $controller, 'action' => $table, 'index'];
+	        return $this->_table->controller->redirect($url);
+	    }
 	}
-
 
 	private function getFile($phpResourceFile) {
         $file = '';
