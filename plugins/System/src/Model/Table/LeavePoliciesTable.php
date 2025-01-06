@@ -14,6 +14,7 @@ class LeavePoliciesTable extends ControllerActionTable
     private $fieldsOrder = ['created', 'name'];
     public function initialize(array $config): void
     {
+        $this->setTable('staff_leave_policies');
         parent::initialize($config);
 //        $this->toggle('view', false);
 //        $this->toggle('add', false);
