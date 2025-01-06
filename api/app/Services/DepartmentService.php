@@ -120,5 +120,24 @@ class DepartmentService extends Controller
             return $this->sendErrorResponse('Failed to update Department data in db.');
         }
     }
+    public function departmentEditMessage()
+    {
+        try {
+            $data = $this->departmentRepository->institutionDepartmentEditMessage();
+           if($data->value == 'Enable'){
+                $status = $data->value;
+                return ['Status' => $status, 'message' => ''];
+           }else{
+                $status = $data->value;
+                return ['Status' => $status, 'message' => 'Staff is already assigned to another department'];
+           }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to update Department data in db',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to update Department data in db.');
+        }
+    }
 
 }

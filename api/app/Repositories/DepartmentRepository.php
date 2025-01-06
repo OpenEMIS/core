@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\InstitutionDepartments;
+use App\Models\ConfigItem;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\InstitutionDepartmentRequest;
@@ -56,7 +57,7 @@ class DepartmentRepository extends Controller
                 'Failed to fetch user from DB',
                 ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('User Not Found');
+            return $this->sendErrorResponse('list Not Found');
         }
     }
 
@@ -100,13 +101,11 @@ class DepartmentRepository extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::channel('scan')->error('Failed to store department data', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
-            ]);
+            Log::error(
+                'Failed to save user ',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
             return 2;
-            
         }
     }
 
@@ -136,12 +135,27 @@ class DepartmentRepository extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::channel('scan')->error('Failed to update department data', [
+            Log::error(
+                'Failed to save user into DB',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse("Failed to update Institution Department.");
+        }
+    }
+
+    public function institutionDepartmentEditMessage()
+    {
+        
+        try {
+            $listedRecord = ConfigItem::where('type', 'Departments')->where('option_type','department_type')->first();
+            return $listedRecord;
+        } catch (\Exception $e) {
+            Log::channel('scan')->error('Failed to fetch  department configuration', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
             ]);
-            return $this->sendErrorResponse("Failed to update Institution Department.");
+            return $this->sendErrorResponse("Failed to fetch  department configuration");
         }
     }
     

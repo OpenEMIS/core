@@ -237,5 +237,24 @@ class DepartmentController extends Controller
         }
     }
 
+    public function institutionDepartmentEditMessage()
+    {
+        try {
+            $data = $this->departmentService->departmentEditMessage();
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Institutions Department configuration", $data);
+            }else {
+                return $this->sendErrorResponse("Institutions Department configuration not Available");
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to save Department  Data',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to save Department  Data');
+        }
+    }
+
    
 }
