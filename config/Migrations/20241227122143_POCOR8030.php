@@ -22,7 +22,7 @@ class POCOR8030 extends AbstractMigration
 
         $record = [
             [
-                'name' => 'Departments', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Appointment', 'parent_id' => $parent_id,'_view' => 'Departments.add|Departments.view', '_edit' => 'Departments.edit', '_add' => 'Departments.add', '_delete' => NULL, '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => $createdAt,
+                'name' => 'Departments', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Appointment', 'parent_id' => $parent_id,'_view' => 'InstitutionDepartments.index|InstitutionDepartments.view', '_edit' => 'InstitutionDepartments.edit', '_add' => 'InstitutionDepartments.add', '_delete' => 'InstitutionDepartments.remove', '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => $createdAt,
             ]
         ];
         $this->table('security_functions')->insert($record)->save();
