@@ -115,8 +115,7 @@ class ScannedController extends Controller
                 return $this->sendSuccessResponse("Scanned User Data added successfully.");
             } else {
                 return $this->sendErrorResponse(
-                    "Scanned User Data not added. Kindly check scanned user data. The user may not exist in the database."
-                );
+                    "OpenEMIS ID does not exist. Kindly check OpenEMIS ID.");
             }
         } catch (\Exception $e) {
             Log::error(
