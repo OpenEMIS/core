@@ -44,10 +44,10 @@ return [
              */
             //'port' => 'non_standard_port_number',
 
-            'username' => '',
+            'username' => 'root',
             'password' => '',
             // 'database' => 'core_version_4',
-            'database' => '',
+            'database' => 'openemis',
             /*
              * If not using the default 'public' schema with the PostgreSQL driver
              * set it here.

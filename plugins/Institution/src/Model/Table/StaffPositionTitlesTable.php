@@ -111,12 +111,16 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
-		if (array_key_exists($this->getAlias(), $requestData)) {
-			if (isset($requestData[$this->getAlias()]['position_grades']['_ids']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
-				$requestData[$this->alias()]['position_grades'] = []; 
+		// POCOR-8777 
+		$requestDataArray = $requestData->getArrayCopy();
+
+		if (array_key_exists($this->getAlias(), $requestDataArray)) {
+			if (isset($requestDataArray[$this->getAlias()]['position_grades']['_ids']) && empty($requestDataArray[$this->getAlias()]['position_grades']['_ids'])) {
+				$requestDataArray[$this->getAlias()]['position_grades'] = [];
 			}
 		}
 	}
+
 
 	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) 
 	{
@@ -203,20 +207,24 @@ class StaffPositionTitlesTable extends ControllerActionTable
     {
 		$type = $this->request->getData('StaffPositionTitles')['type'];
 		$StaffPositionCategories = TableRegistry::get('Staff.StaffPositionCategories');
+		
+		// POCOR-8777
+		$whereCondition = is_null($type) ? [$StaffPositionCategories->aliasField('type') . ' IS NULL'] : [$StaffPositionCategories->aliasField('type') => $type];
+
         //POCOR-7292 starts
         if($action == 'edit'){
     		$StaffPositionTitlesPass= $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
     		$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
     		$Options = $StaffPositionTitles
-				            ->find()
-				            ->where([$StaffPositionTitles->aliasField('id') => $StaffPositionTitlesPass['id']])
-				            ->first();
+				->find()
+				->where([$StaffPositionTitles->aliasField('id') => $StaffPositionTitlesPass['id']])
+				->first();
 			$type = !empty($Options) ? $Options->type : '';         
 		}//POCOR-7292 ends
 		$levelOptions = $StaffPositionCategories
-            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-            ->where([ $StaffPositionCategories->aliasField('type') => $type ])
-            ->toArray();
+			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->where($whereCondition)  // POCOR-8777
+			->toArray();
            
          $selectedLevel = !is_null($this->request->getQuery('level')) ? $this->request->getQuery('level') : key($levelOptions);
          return compact('levelOptions', 'selectedLevel');

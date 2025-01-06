@@ -428,12 +428,12 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if (isset($data[$this->alias()]['examination_centre_room_id']) && !empty($data[$this->alias()]['examination_centre_room_id'])) {
-            $data[$this->alias()]['examination_centre_rooms_examinations_students'][] = [
-                'examination_centre_id' => $data[$this->alias()]['examination_centre_id'],
-                'student_id' => $data[$this->alias()]['student_id'],
-                'examination_id' => $data[$this->alias()]['examination_id'],
-                'examination_centre_room_id' => $data[$this->alias()]['examination_centre_room_id']
+        if (isset($data[$this->getAlias()]['examination_centre_room_id']) && !empty($data[$this->getAlias()]['examination_centre_room_id'])) {
+            $data[$this->getAlias()]['examination_centre_rooms_examinations_students'][] = [
+                'examination_centre_id' => $data[$this->getAlias()]['examination_centre_id'],
+                'student_id' => $data[$this->getAlias()]['student_id'],
+                'examination_id' => $data[$this->getAlias()]['examination_id'],
+                'examination_centre_room_id' => $data[$this->getAlias()]['examination_centre_room_id']
             ];
         }
     }
@@ -442,11 +442,11 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     {
         // manually delete hasMany roomStudents data
         $fieldKey = 'examination_centre_rooms_examinations_students';
-        if (!array_key_exists($fieldKey, $data[$this->alias()])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (!array_key_exists($fieldKey, $data[$this->getAlias()])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
-        $currentRoomIds = array_column($data[$this->alias()][$fieldKey], 'examination_centre_room_id');
+        $currentRoomIds = array_column($data[$this->getAlias()][$fieldKey], 'examination_centre_room_id');
         $originalRooms = $entity->extractOriginal([$fieldKey])[$fieldKey];
 
         foreach ($originalRooms as $key => $room) {

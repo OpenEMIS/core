@@ -1140,24 +1140,20 @@ class WorkflowBehavior extends Behavior
                     return $buttons;
                 }
             }else{
-                if (!$model->AccessControl->isAdmin()) {
+                if ($model->AccessControl->isAdmin()) {
+               
+
                     $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
 
                     $workflowStep = $this->getWorkflowStep($entity);
                     $isEditable = false;
                     $isDeletable = false;
                     if (!empty($workflowStep)) {
-                        $isEditable = $workflowStep->is_editable == 1 ? true : false;
-                        $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+                        $isEditable = $workflowStep->is_editable == 1 ? true : true;
+                        $isDeletable = $workflowStep->is_removable == 1 ? true : true;
                     }
 
-                    if (isset($buttons['edit']) && !$isEditable) {
-                        unset($buttons['edit']);
-                    }
-
-                    if (isset($buttons['remove']) && !$isDeletable) {
-                        unset($buttons['remove']);
-                    }
+                    
 
                     return $buttons;
                 }
@@ -1519,7 +1515,16 @@ class WorkflowBehavior extends Behavior
     public function getWorkflowStep($entity = null)
     {
         if (!is_null($entity)) {
-            $workflowStepId = $entity->has('status_id') ? $entity->status_id : $entity->status_id;
+            // $workflowStepId = $entity->has('status_id') ? $entity->status_id : $entity->status_id;
+            //POCOR-8561 -- Start
+            $workflowStep = $entity->status;
+            $workflowStepId = $workflowStep ? $workflowStep->id : null;
+            //POCOR-8561 -- End
+            //POCOR-8411 -- Start
+            if(empty($workflowStepId)){
+                $workflowStepId = $entity->has('status_id') ? $entity->status_id : -1;
+            }
+            //POCOR-8411 -- End
             $model = $this->_table;
             $userId = $model->Auth->user('id');
             $assigneeId = $entity->assignee_id;

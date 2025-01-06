@@ -239,6 +239,8 @@ Route::group(
         Route::get('assessments/grading-options', 'AssessmentController@getAssessmentGradingOptionList');
 
         Route::get('behaviours/categories', 'InstitutionController@getBehaviourCategories');
+        Route::get('behaviours/categories/students', 'InstitutionController@getStudentBehaviourCategories');//POCOR-8711
+        Route::get('behaviours/categories/staff', 'InstitutionController@getStaffBehaviourCategories');//POCOR-8711
         Route::get('institutions/{institutionId}/students/{studentId}/behaviours', 'InstitutionController@getInstitutionStudentBehaviour');
 
 
@@ -350,6 +352,7 @@ Route::group(
         Route::post('schedules/timetables/lessons', 'ScheduleController@addLesson');
         Route::delete('institutions/{institutionId}/schedules/timetables/lessons/{id}', 'ScheduleController@deleteTimeTableLessonById');
         Route::get('schedules/timetables/statuses', 'ScheduleController@getTimeTableStatus');
+        Route::get('schedules/timetables/{id}', 'ScheduleController@getTimeTableById');
         Route::get('schedules/timetables/{id}/lessons', 'ScheduleController@getLessonsByTimeTableId');
         Route::get('schedules/lessons/types', 'ScheduleController@getLessonType');
         Route::get('schedules/timeslots/{intervalId}', 'ScheduleController@getTimeSlotsByIntervalId');
@@ -511,21 +514,44 @@ Route::group(
         //POCOR-8363 end...
 
 
+        //POCOR-7429 start...
+        Route::get('surveys', 'SurveyController@getSurveys');
+        Route::get('survey/download/xform/{surveyFormId}', 'SurveyController@downloadXform');
+        Route::get('survey/checkins/xform/{surveyFormId}/{insCode}/{academicPeriodCode}', 'SurveyController@checkInsXform');
+        Route::get('survey/studentlist/xform/{surveyFormId}/{insCode}/{academicPeriodCode}', 'SurveyController@getStudentListForSurvey');
+        Route::post('survey/upload', 'SurveyController@uploadXform');
+        //POCOR-7429 end...
         //POCOR-8397 start...
         Route::get('/academic-period/archive', 'AttendanceController@getArchiveAcademicPeriods');
         Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked/archive', 'AttendanceController@getStudentAttendanceMarkedRecordArchiveList');
         Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance/archive', 'AttendanceController@getStudentAttendanceArchiveList');
         Route::get('/institutions/students/attendances/export/archive', 'AttendanceController@getStudentAttendanceArchiveExport');
         //POCOR-8397 end...
-        
-        //POCOR-8519 start...
-        Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
-        //POCOR-8519 end...
 
 
         //POCOR-8617 start...
         Route::get('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf', 'ReportCardController@studentReportCardPdfDownload');
         Route::get('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls', 'ReportCardController@studentReportCardExcelDownload');
         //POCOR-8617 end...
+        
+        //POCOR-8519 start...
+        Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
+        //POCOR-8519 end...
+        //POCOR-8221 start...
+        Route::get('institutions/{institutionId}/students/{studentId}/student-transfer', 'StudentController@getStudentTransferData');
+        Route::post('institutions/{institutionId}/student-transfer', 'StudentController@addStudentTransferData');
+        //POCOR-8221 end...
+
+        //POCOR-8616 starts...
+        Route::get('schedule/timetable-overview', 'TimetableOverviewController@timetableOverview');
+        Route::get('schedule/timetable-download', 'TimetableOverviewController@scheduleTimeTableExport');
+        //POCOR-8616 end
+        
+        //POCOR-8666 start
+        Route::get('scanned/{openemis_no}', 'ScannedController@scannedUserOpenemisNo');
+        Route::post('scanned', 'ScannedController@addScannedUserData');
+        Route::post('update-scanned/{openemis_no}', 'ScannedController@updateScannedUserData');
+        Route::get('scannedlisting', 'ScannedController@scannedUserListing');
+        //POCOR-8666 end
     }
 );

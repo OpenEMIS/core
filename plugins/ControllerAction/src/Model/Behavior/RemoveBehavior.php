@@ -260,7 +260,9 @@ class RemoveBehavior extends Behavior
                 $controller->set('data', $entity);
             }
             return $entity;
-        } else if ($request->is('delete') || $forceDeleteRecord) {
+            
+        } else if ($request->is('delete') || $forceDeleteRecord ) {
+            
             $ids = [];
 
             if ($model->actions('remove') == 'restrict') {
@@ -283,6 +285,7 @@ class RemoveBehavior extends Behavior
             } else {
                 $modalPrimaryKeys = array_key_exists('primaryKey', $request->getData()) ? $model->paramsDecode($request->getData('primaryKey')) : [];
                 if (is_array($primaryKey)) {
+
                     foreach ($primaryKey as $key) {
                         if (!empty($modalPrimaryKeys[$key])) {
                             $ids[$model->aliasField($key)] = $modalPrimaryKeys[$key];
@@ -299,16 +302,32 @@ class RemoveBehavior extends Behavior
                     }
                 }
             }
+           // echo "<pre>"; print_r($ids); die;
             if (!empty($ids)) {
                 try {
-                    $entity = $model->get($ids);
+
+                    //POCOR-8072 add conditon if else
+                    if($request->getParam('plugin') == 'Scholarship' && $request->getParam('action') == 'ScholarshipApplicationInstitutionChoices'){
+                        $array = $ids;
+                        $ids = reset($array); 
+                        $entity = $model->get($ids); 
+                    }elseif($request->getParam('plugin') == 'Scholarship' && $request->getParam('action') == 'ScholarshipApplicationAttachments'){
+                        $array = $ids;
+                        $ids = reset($array); 
+                        $entity = $model->get($ids); 
+                    }else{
+                     $entity = $model->get($ids);   
+                    }
+                    
                 } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
                     $mainEvent->stopPropagation();
                     return $model->controller->redirect($extra['redirect']);
                 }
                 $result = $this->doDelete($entity, $extra);
             }
+            
         }
+        
         $extra['result'] = $result;
         $extra['forceDeleteRecord'] = $forceDeleteRecord;
 
