@@ -37,8 +37,6 @@ class LeavePoliciesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('created', ['visible' => true, 'sort' => true]);
-        $this->field('message', ['sort' => true]);
 
     }
 
