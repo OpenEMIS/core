@@ -275,10 +275,10 @@ class ReportListBehavior extends Behavior {
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
 	{
 		$process = $extra['process'];
-		$expiryDate = new Time();
+		$expiryDate = new FrozenTime();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
-			['status' => Process::COMPLETED, 'file_path' => $extra['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
+			['status' => Process::COMPLETED, 'file_path' => $extra['file_path'], 'expiry_date' => $expiryDate, 'modified' => new FrozenTime()],
 			['id' => $process->id]
 		);
 	}
@@ -286,10 +286,10 @@ class ReportListBehavior extends Behavior {
 	public function onCsvGenerateComplete(Event $event, ArrayObject $settings)
 	{
 		$process = $settings['process'];
-		$expiryDate = new Time();
+		$expiryDate = new FrozenTime();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
-			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
+			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => new FrozenTime()],
 			['id' => $process->id]
 		);
 	}
