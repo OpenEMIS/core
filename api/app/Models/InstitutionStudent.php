@@ -48,4 +48,12 @@ class InstitutionStudent extends Model
     {
         return $this->belongsTo(AcademicPeriod::class, 'academic_period_id', 'id');
     }
+
+
+    //For POCOR-8491 Start...
+    public function studentCustomFieldValue()
+    {
+        return $this->hasMany(StudentCustomFieldValues::class, 'student_id', 'student_id');
+    }
+    //For POCOR-8491 End...
 }

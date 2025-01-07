@@ -66,7 +66,7 @@ class SSOComponent extends Component
                 ->where([
                     $SystemAuthenticationsTable->aliasField('code') => $code
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
             if (!empty($attribute) && $attribute['status']) {
                 $authAttribute = $attribute[Inflector::underscore($authenticationType)];
@@ -96,7 +96,7 @@ class SSOComponent extends Component
 
     public function afterAuthenticate(Event $event, ArrayObject $extra)
     {
-        $request = new ServerRequest();
+        $request = $this->getController()->getRequest();
         $user = $this->Auth->user();
         if ($user) {
             $request->trustProxy = true;

@@ -14,7 +14,7 @@ class AssessmentItemsGradingTypesTable extends AppTable {
     public function initialize(array $config): void {
         parent::initialize($config);
         $this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes', 'dependent' => true]);
-        $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments', 'dependent' => true]);
+        $this->belongsTo('AssessmentsAlt', ['className' => 'Assessment.Assessments', 'dependent' => true]); //POCOR-8507 association names are unique
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects', 'dependent' => true]);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true]);
 

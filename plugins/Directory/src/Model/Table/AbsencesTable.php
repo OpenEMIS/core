@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 
 class AbsencesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absences');
+        $this->setTable('institution_student_absences');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -29,7 +29,7 @@ class AbsencesTable extends AppTable
 
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [

@@ -57,8 +57,8 @@ class HistoriesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $queryString = $this->request->getQuery('queryString');
-        $scholarshipId = $this->paramsDecode($queryString)['scholarship_id'];
+        $queryString  = $this->getQueryString('scholarship_id');
+        $scholarshipId = $queryString;
 
         $query
             ->contain(['Scholarships.AcademicPeriods'])
@@ -68,7 +68,7 @@ class HistoriesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+        $applicantId = $this->getQueryString('applicant_id');
         $applicantName = $this->Applicants->get($applicantId)->name;
         $this->controller->set('contentHeader', $applicantName. ' - ' .__('Scholarship History'));
 
@@ -94,5 +94,20 @@ class HistoriesTable extends ControllerActionTable
     public function onGetAcademicPeriodId(Event $event, Entity $entity)
     {
         return $entity->scholarship->academic_period->name;
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        if (isset($extra['toolbarButtons']['back']['url'])) {
+            $extra['toolbarButtons']['back']['url'] = [
+                'plugin' => 'Scholarship',
+                'controller' => 'Scholarships',
+                'action' => 'Histories',
+                0 => 'index',
+                1 => $encodedQueryString
+            ];
+        }
     }
 }

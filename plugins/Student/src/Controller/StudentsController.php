@@ -67,7 +67,7 @@ class StudentsController extends AppController
             'Accounts' => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
             'Nationalities' => ['className' => 'User.Nationalities'],
             // 'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
-            'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+           // 'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'Extracurriculars' => ['className' => 'Student.Extracurriculars', 'actions' => ['index', 'add', 'edit', 'remove', 'view']],//POCOR-6700
 //            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']], //POCOR-7485 cakephp4 use as a function
             'ImportStudents' => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
@@ -587,6 +587,7 @@ class StudentsController extends AppController
                 }
             }
             if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $id])) {
+
                 $entity = $this->StudentUser->get($id);
                 $queryString = $this->getQueryString();
                 $name = $entity->name;
@@ -812,9 +813,19 @@ class StudentsController extends AppController
             if ($model->getHeader($alias) == 'HealthImmunizations') {
                 $alias = __('Vaccinations');
             }
-            //POCOR-5890 ends
-            $this->Navigation->addCrumb($model->getHeader($alias));
-            $header = $header . ' - ' . $model->getHeader($alias);
+            
+            if($alias == 'StudentGpa' || $alias == 'Gpa'){
+                $alias = 'Student GPA';
+                $alias = $model->getHeader($alias);
+                $alias = preg_replace('/G\s*P\s*A/', 'GPA', $alias);
+                $this->Navigation->addCrumb($alias);
+                $header = $header . ' - ' . $alias;
+
+            }else{
+                $this->Navigation->addCrumb($model->getHeader($alias));
+                $header = $header . ' - ' . $model->getHeader($alias);
+            }
+            
 
             // $params = $this->request->params;
             $this->set('contentHeader', $header);
@@ -1103,10 +1114,16 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
     }
 
-    // public
-    // function StudentBehaviours()
-    // {
-    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
-    // }
+    //POCOR-8596
+    public
+    function Behaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
+    }
+
+    public function StudentGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
+    }
 
 }

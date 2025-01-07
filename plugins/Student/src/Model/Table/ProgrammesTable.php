@@ -205,12 +205,14 @@ class ProgrammesTable extends ControllerActionTable
         			$this->aliasField('student_id') => $studentId,
         			//$this->aliasField('institution_id') => $institutionId
         		]);
-		if(!empty($institutionId)) {
-			$query
-			->where([
-				$this->aliasField('institution_id') => $institutionId
-			]);
-		}
+		//POCOR-8704 -- Commenting code as it is fetching limited data		
+		// if(!empty($institutionId)) {
+		// 	$query
+		// 	->where([
+		// 		$this->aliasField('institution_id') => $institutionId
+		// 	]);
+		// }
+		//POCOR-8704 -- END
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 
 	}
@@ -396,15 +398,21 @@ class ProgrammesTable extends ControllerActionTable
         $plugin = __($this->controller->getPlugin());
 		if($plugin != 'Profile' && $plugin != 'GuardianNav'){
 			$id = $this->request->getAttribute('params')['pass'][1];
-			$DecodedQueryString = $this->paramsDecode($id);
-			$userId = $DecodedQueryString['user_id'];
+			//POCOR-8489 --Start
+			if(isset($id)) {
+				$DecodedQueryString = $this->paramsDecode($id);
+				$userId = $DecodedQueryString['user_id'] ?? $DecodedQueryString['student_id'];
+			}else {
+				$queryString = $this->getQueryString();
+				$userId = $queryString['student_id'];
+			}
+			//POCOR-8489 --End
 			$Users = TableRegistry::get('User.Users');
 			$result = $Users
 				->find()
 				->select(['first_name','last_name'])
 				->where(['id' =>  $userId])
 				->first();
-
 			$fullName = $result->first_name.' '.$result->last_name;
 			try {
 

@@ -91,8 +91,35 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     }
 
 
+    public function specialNeed()
+    {
+        return $this->hasOne(UserSpecialNeedsAssessment::class, 'security_user_id', 'id');
+
+    }
+
     public function institutionStaff()
     {
         return $this->belongsTo(InstitutionStaff::class, 'id', 'staff_id');
+
+    }
+
+
+    //For POCOR-8536 Start...
+    public function institutionStudents()
+    {
+        return $this->hasMany(InstitutionStudent::class, 'student_id', 'id')->orderBy('created', 'DESC');
+    }
+
+    public function institutionStaffs()
+    {
+        return $this->hasMany(InstitutionStaff::class, 'staff_id', 'id');
+    }
+    //For POCOR-8536 End...
+
+
+    //POCOR-8639
+    public function userContacts()
+    {
+        return $this->hasMany(UserContacts::class, 'security_user_id'); // Use 'security_user_id' as the foreign key
     }
 }

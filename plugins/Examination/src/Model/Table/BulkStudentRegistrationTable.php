@@ -294,7 +294,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                     ->where([$InstitutionGradesTable->aliasField('education_grade_id') => $educationGradeId])
                     ->select(['institution_id' => 'Institutions.id', 'institution_name' => 'Institutions.name', 'institution_code' => 'Institutions.code'])
                     ->group('institution_id')
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->toArray();
                 foreach ($institutionsData as $data) {
                     $institutions[$data['institution_id']] = $data['institution_code']. ' - ' . $data['institution_name'];
@@ -351,19 +351,19 @@ class BulkStudentRegistrationTable extends ControllerActionTable
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'RegisteredStudents', 'index'];
-        $requestData[$this->alias()]['student_id'] = 0;
+        $requestData[$this->getAlias()]['student_id'] = 0;
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
             $listOfSelectedStudents=[];//POCOR-7512
-            if (!empty($requestData[$this->alias()]['examination_students']) && !empty($requestData[$this->alias()]['examination_centre_id'])) {
-                $students = $requestData[$this->alias()]['examination_students'];
+            if (!empty($requestData[$this->getAlias()]['examination_students']) && !empty($requestData[$this->getAlias()]['examination_centre_id'])) {
+                $students = $requestData[$this->getAlias()]['examination_students'];
                 $newEntities = [];
 
-                $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
-                $selectedExamination = $requestData[$this->alias()]['examination_id'];
+                $selectedExaminationCentre = $requestData[$this->getAlias()]['examination_centre_id'];
+                $selectedExamination = $requestData[$this->getAlias()]['examination_id'];
                 $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentresExaminationsSubjects');
                 $examCentreSubjects = $ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre, $selectedExamination);
 
@@ -374,10 +374,10 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                     if ($student['selected'] == 1) {
                         $obj['student_id'] = $student['student_id'];
                         $obj['registration_number'] = $student['registration_number'];
-                        $obj['institution_id'] = $requestData[$this->alias()]['institution_id'];
-                        $obj['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
-                        $obj['examination_id'] = $requestData[$this->alias()]['examination_id'];
-                        $obj['examination_centre_id'] = $requestData[$this->alias()]['examination_centre_id'];
+                        $obj['institution_id'] = $requestData[$this->getAlias()]['institution_id'];
+                        $obj['academic_period_id'] = $requestData[$this->getAlias()]['academic_period_id'];
+                        $obj['examination_id'] = $requestData[$this->getAlias()]['examination_id'];
+                        $obj['examination_centre_id'] = $requestData[$this->getAlias()]['examination_centre_id'];
                         $obj['auto_assign_to_rooms'] = $entity->auto_assign_to_rooms;
                         $obj['counterNo'] = $key;
                         $roomStudents[] = $obj;
@@ -403,7 +403,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                 }
                 if (empty($newEntities)) {
                     $model->Alert->warning($this->aliasField('noStudentSelected'));
-                    $entity->errors('student_id', __('There are no students selected'));
+                    $entity->getErrors('student_id', __('There are no students selected'));
                     return false;
                 }
 
@@ -413,9 +413,9 @@ class BulkStudentRegistrationTable extends ControllerActionTable
 
                     foreach ($newEntities as $key => $newEntity) {
                         $examCentreStudentEntity = $this->newEntity($newEntity, $patchOptions);
-                        if ($examCentreStudentEntity->errors('registration_number')) {
+                        if ($examCentreStudentEntity->getErrors('registration_number')) {
                             $counterNo = $newEntity['counterNo'];
-                            $entity->errors("examination_students.$counterNo", ['registration_number' => $examCentreStudentEntity->errors('registration_number')]);
+                            $entity->getErrors("examination_students.$counterNo", ['registration_number' => $examCentreStudentEntity->getErrors('registration_number')]);
                         }
                         if (!$this->save($examCentreStudentEntity)) {
                             $return = false;
@@ -445,7 +445,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                             foreach ($entities as $entity) {
                                 $examinationStudentSubjects->save($entity);
                             }
-                       } 
+                       }
                     }
                      //POCOR-7512 end
                     $studentCount = $this->find()
@@ -504,7 +504,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                 }
             } else {
                 $model->Alert->warning($this->aliasField('noStudentSelected'));
-                $entity->errors('student_id', __('There are no students selected'));
+                $entity->getErrors('student_id', __('There are no students selected'));
                 return false;
             }
         };
@@ -519,7 +519,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                 $ExaminationSubjects=TableRegistry::get('Examination.ExaminationSubjects');
                 $subjects=$ExaminationSubjects->find()
                                                ->where([
-                                                 $ExaminationSubjects->aliasField('examination_id')=>$request->getData[$this->getAlias()]['examination_id']   
+                                                 $ExaminationSubjects->aliasField('examination_id')=>$request->getData[$this->getAlias()]['examination_id']
                                                ])->toArray();
             }
         $attr['label']="Education Subjects";

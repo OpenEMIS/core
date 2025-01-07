@@ -128,9 +128,20 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
+            ->allowEmpty('area') //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
-                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_room_size'],
-                'provider' => 'table'
+                'rule' => function ($value, $context) {
+                    // Check if datatype is 'copy'
+                    if (isset($context['data']['datatype']) && $context['data']['datatype'] == 'copy') {
+                        // Skip validation when datatype is 'copy'
+                        return true;
+                    }
+            
+                    // Proceed with validation when datatype is not 'copy'
+                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_room_size', $context);
+                },
+                'provider' => 'table',
+                'last' => true
             ])
             ->requirePresence('new_start_date', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
@@ -774,8 +785,13 @@ class InstitutionRoomsTable extends ControllerActionTable
             $attr['date_options']['endDate'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-
-            $attr['type'] = 'readonly';
+            //POCOR-8655 Start
+            $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
+            $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
+            $attr['date_options']['startDate'] = $startDate;
+            $attr['date_options']['endDate'] = $endDate;
+            //$attr['type'] = 'readonly';
+            //POCOR-8655 End
             $attr['value'] = $entity->start_date->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($entity->start_date);
         }

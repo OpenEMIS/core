@@ -75,7 +75,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
     {
         if (is_null($this->examCentreId)) {
             $event->stopPropagation();
-            $this->Alert->error('general.notExists', ['reset' => 'override']);
+            $this->Alert->getError('general.notExists', ['reset' => 'override']);
             $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
         }
     }
@@ -215,9 +215,9 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
                     'valueField' => 'code_name'
                 ]);
 
-            if (!empty($request->data[$this->alias()]['examination_id'])) {
+            if (!empty($request->getData()[$this->getAlias()]['examination_id'])) {
                 $Institutions = TableRegistry::get('Institution.Institutions');
-                $examinationId = $request->data[$this->alias()]['examination_id'];
+                $examinationId = $request->getData()[$this->getAlias()]['examination_id'];
                 $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
 
                 $institutionOptions
@@ -235,26 +235,26 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
 
             $attr['options'] = $institutionOptions->toArray();
             $attr['type'] = 'chosenSelect';
-            $attr['fieldName'] = $this->alias().'.institutions';
+            $attr['fieldName'] = $this->getAlias().'.institutions';
             return $attr;
         }
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $requestData[$this->alias()]['institution_id'] = 0;
-        $requestData[$this->alias()]['examination_centre_id'] = $this->examCentreId;
+        $requestData[$this->getAlias()]['institution_id'] = 0;
+        $requestData[$this->getAlias()]['examination_centre_id'] = $this->examCentreId;
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
-            if (isset($requestData[$model->alias()]['institutions']) && !empty($requestData[$model->alias()]['institutions'])) {
-                $institutions = $requestData[$model->alias()]['institutions'];
+            if (isset($requestData[$model->getAlias()]['institutions']) && !empty($requestData[$model->getAlias()]['institutions'])) {
+                $institutions = $requestData[$model->getAlias()]['institutions'];
                 $newEntities = [];
                 if (is_array($institutions)) {
                     foreach ($institutions as $institutionId) {
-                        $requestData[$model->alias()]['institution_id'] = $institutionId;
+                        $requestData[$model->getAlias()]['institution_id'] = $institutionId;
                         $newEntities[] = $model->newEntity($requestData->getArrayCopy());
                     }
                 }

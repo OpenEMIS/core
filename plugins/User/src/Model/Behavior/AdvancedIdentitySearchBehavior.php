@@ -16,7 +16,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 	public function initialize(array $getConfig): void {
 		$associatedKey = $this->getConfig('associatedKey');
 		if (empty($associatedKey)) {
-			$this->getConfig('associatedKey', $this->_table->aliasField('id'));
+			$this->setConfig('associatedKey', $this->_table->aliasField('id')); // POCOR-8779
 		}
 	}
 

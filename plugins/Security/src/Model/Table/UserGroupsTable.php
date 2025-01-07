@@ -341,9 +341,9 @@ class UserGroupsTable extends ControllerActionTable
      */
      public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $areaList = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : null;
+        $areaList = !is_null($request->getData()) ? $request->getData()['UserGroups']['area_id']['_ids'] : null;
         if ($action == 'edit') {
-            $institutionsValuesList = isset($request->data) ? $request->data['UserGroups']['institution_id']['_ids'] : 0;
+            $institutionsValuesList = !is_null($request->getData()) ? $request->getData()['UserGroups']['institution_id']['_ids'] : 0;
             if ($action == 'edit') {
                 $entity = $attr['entity'];
                 if ($entity) {

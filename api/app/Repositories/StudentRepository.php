@@ -15,6 +15,8 @@ use App\Models\StudentAttendanceMarkedRecords;
 use App\Models\InstitutionStaffAttendances;
 use App\Models\SecurityUsers;
 use App\Models\InstitutionClassStudents;
+use App\Models\InstitutionStudentTransfers;
+use App\Models\WorkflowSteps;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -41,8 +43,11 @@ class StudentRepository extends Controller
             //For POCOR-7772 End
 
             $params = $request->all();
-
-            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name');
+            //For POCOR-8491 Start...
+            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name',
+                'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
+                'studentCustomFieldValue.studentCustomField:id,name');
+            //For POCOR-8491 End...
 
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
@@ -70,7 +75,7 @@ class StudentRepository extends Controller
                 $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
-
+            
             return $resp;
 
         } catch (\Exception $e) {
@@ -105,8 +110,12 @@ class StudentRepository extends Controller
 
             $params = $request->all();
 
-            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name')->where('institution_id', $institutionId);
-
+            //For POCOR-8491 Start...
+            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name',
+                'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
+                'studentCustomFieldValue.studentCustomField:id,name')->where('institution_id', $institutionId);
+            //For POCOR-8491 End...
+            
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
 
@@ -164,16 +173,21 @@ class StudentRepository extends Controller
             }
             //For POCOR-7772 End
 
+
+            //For POCOR-8491 Start...
             $data = InstitutionStudent::with(
                     'institution:id,code,name', 
                     'educationGrade:id,name', 
                     'securityUser', 
                     'securityUser.gender:id,name', 
                     'studentStatus', 
-                    'academicPeriod:id,name'
+                    'academicPeriod:id,name',
+                    'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
+                    'studentCustomFieldValue.studentCustomField:id,name'
                 )
                 ->where('institution_id', $institutionId)
                 ->where('student_id', $studentId);
+            //For POCOR-8491 End...
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -724,13 +738,20 @@ class StudentRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
-
             $isLinked = $this->checkIfStudentLinked($param);
             
             if(!$isLinked){
                 return 3;
             }
 
+            //Removing Student Absence Record when absence_type_id = 0...
+
+            if($param['absence_type_id'] == 0){
+                $this->deleteStudentAbsenceRecord($param);
+
+                DB::commit();
+                return 2;
+            }
 
             $check = InstitutionStudentAbsenceDetails::where([
                 'student_id' => $param['student_id'],
@@ -741,8 +762,6 @@ class StudentRepository extends Controller
                 'period' => $param['period'],
                 'subject_id' => $param['subject_id']
             ])->first();
-
-
 
             if($check){
                 $updateArr['academic_period_id'] = $param['academic_period_id'];
@@ -810,6 +829,7 @@ class StudentRepository extends Controller
                 $storeArr['date'] = $param['date'];
                 $storeArr['period'] = $param['period'];
                 $storeArr['subject_id'] = $param['subject_id'];
+                $storeArr['no_scheduled_class'] = 0;//1 is for No Scheduled Class
 
                 $insert = StudentAttendanceMarkedRecords::insert($storeArr);
             }
@@ -822,7 +842,6 @@ class StudentRepository extends Controller
                 'Failed to add data in DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Student absences Not Added');
         }
     }
@@ -937,4 +956,199 @@ class StudentRepository extends Controller
             return false;
         }
     }
+
+
+    //For POCOR-8505 Start...
+    public function deleteStudentAbsenceRecord($param)
+    {
+        try {
+            $delete = InstitutionStudentAbsenceDetails::where([
+                    'student_id' => $param['student_id'],
+                    'institution_id' => $param['institution_id'],
+                    'academic_period_id' => $param['academic_period_id'],
+                    'institution_class_id' => $param['institution_class_id'],
+                    'date' => $param['date'],
+                    'period' => $param['period'],
+                    'subject_id' => $param['subject_id']
+                ])->delete();
+            return true;
+        } catch (\Exception $e) {
+
+        }
+    }
+    //For POCOR-8505 End...
+
+    
+    //For POCOR-8491 Start...
+    public function getStudentClasses($institutionId, $studentId)
+    {
+        try {
+            $studentClasses = InstitutionClassStudents::with('institutionClass', 'institutionClass.subjects.institutionSubject')
+                    ->where('institution_id', $institutionId)
+                    ->where('student_id', $studentId)
+                    ->get()
+                    ->toArray();
+
+            $list = [];
+
+            foreach ($studentClasses as $key => $studentClass) {
+                $list[$key]['id'] = $studentClass['institution_class']['id'];
+                $list[$key]['name'] = $studentClass['institution_class']['name'];
+                $subjects = [];
+                foreach ($studentClass['institution_class']['subjects'] as $s => $subject) {
+                    $subjects[$s]['id'] = $subject['institution_subject']['id'];
+                    $subjects[$s]['name'] = $subject['institution_subject']['name'];
+                }
+                $list[$key]['subjects'] = $subjects;
+                
+            }
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getStudentClasses method.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
+    }
+    //For POCOR-8491 End...
+
+
+    //POCOR-8221 Starts...
+    public function getStudentTransferData($params, $institutionId, $studentId)
+    {
+        try {
+            $list = InstitutionStudentTransfers::with('status')
+                        ->where('student_id', $studentId)
+                        ->where('institution_id', $institutionId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+            
+            return $resp;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Transfer List Not Found');
+        }
+    }
+
+
+    public function addStudentTransferData($params, $institutionId)
+    {
+        try {
+            $requested_date = date('Y-m-d');
+
+            $isExists = InstitutionStudentTransfers::where([
+                            'student_id' => $params['student_id'],
+                            'academic_period_id' => $params['academic_period_id'],
+                            'education_grade_id' => $params['education_grade_id'],
+                            'previous_academic_period_id' => $params['previous_academic_period_id'],
+                            'previous_education_grade_id' => $params['previous_education_grade_id'],
+                            'institution_id' => $params['institution_id'],
+                            'previous_institution_id' => $params['previous_institution_id'],
+                        ])
+                        ->first();
+
+            if($institutionId == $params['institution_id']){
+                //Transfer In
+                $workflow = WorkflowSteps::select("workflow_steps.id as status_id")
+                            ->join('workflows', 'workflows.id', '=', 'workflow_steps.workflow_id')
+                                ->where('workflows.code', 'STUDENT-TRANSFER-1001')
+                                ->where('workflow_steps.name', 'Open')
+                                ->first();
+
+            } elseif($institutionId == $params['previous_institution_id']){
+                //Transfer Out
+                $workflow = WorkflowSteps::select("workflow_steps.id as status_id")
+                            ->join('workflows', 'workflows.id', '=', 'workflow_steps.workflow_id')
+                                ->where('workflows.code', 'STUDENT-TRANSFER-2001')
+                                ->where('workflow_steps.name', 'Open')
+                                ->first();
+                
+            } else {
+                return 0;
+            }
+
+            if(!empty($isExists)){
+                $updateArr['student_id'] = $params['student_id'];
+                $updateArr['start_date'] = $params['enrolment_start_date']??NULL;
+                $updateArr['end_date'] = $params['enrolment_end_date ']??Null;
+                $updateArr['institution_id'] = $params['institution_id'];
+                $updateArr['academic_period_id'] = $params['academic_period_id'];
+                $updateArr['education_grade_id'] = $params['education_grade_id'];
+                $updateArr['institution_class_id'] = $params['institution_class_id']??Null;
+                $updateArr['previous_institution_id'] = $params['previous_institution_id'];
+                $updateArr['previous_academic_period_id'] = $params['previous_academic_period_id'];
+                $updateArr['previous_education_grade_id'] = $params['previous_education_grade_id'];
+                $updateArr['student_transfer_reason_id'] = $params['student_transfer_reason_id'];
+                $updateArr['comment'] = $params['comment']??"";
+                $updateArr['all_visible'] = $params['all_visible'];
+                $updateArr['status_id'] = $workflow->status_id??0;
+                $updateArr['requested_date'] = $requested_date;
+                $updateArr['assignee_id'] = JWTAuth::user()->id;
+                $updateArr['modified_user_id'] = JWTAuth::user()->id;
+                $updateArr['modified'] = Carbon::now()->toDateTimeString();
+
+                $update = InstitutionStudentTransfers::where([
+                            'student_id' => $params['student_id'],
+                            'institution_id' => $params['institution_id'],
+                            'academic_period_id' => $params['academic_period_id'],
+                            'education_grade_id' => $params['education_grade_id'],
+                            'previous_academic_period_id' => $params['previous_academic_period_id'],
+                            'previous_education_grade_id' => $params['previous_education_grade_id'],
+                        ])
+                        ->update($updateArr);
+
+            } else {
+                $insertArr['student_id'] = $params['student_id'];
+                $insertArr['start_date'] = $params['enrolment_start_date']??NULL;
+                $insertArr['end_date'] = $params['enrolment_end_date ']??Null;
+                $insertArr['institution_id'] = $params['institution_id'];
+                $insertArr['academic_period_id'] = $params['academic_period_id'];
+                $insertArr['education_grade_id'] = $params['education_grade_id'];
+                $insertArr['institution_class_id'] = $params['institution_class_id']??Null;
+                $insertArr['previous_institution_id'] = $params['previous_institution_id'];
+                $insertArr['previous_academic_period_id'] = $params['previous_academic_period_id'];
+                $insertArr['previous_education_grade_id'] = $params['previous_education_grade_id'];
+                $insertArr['student_transfer_reason_id'] = $params['student_transfer_reason_id'];
+                $insertArr['comment'] = $params['comment']??"";
+                $insertArr['all_visible'] = $params['all_visible'];
+                $insertArr['status_id'] = $workflow->status_id??0;
+                $insertArr['requested_date'] = $requested_date;
+                $insertArr['assignee_id'] = JWTAuth::user()->id;
+                $insertArr['created_user_id'] = JWTAuth::user()->id;
+                $insertArr['created'] = Carbon::now()->toDateTimeString();
+                
+                $insert = InstitutionStudentTransfers::insert($insertArr); 
+            }
+            
+            return 1;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add student tranfer data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to add student tranfer data.');
+        }
+    }
+    //POCOR-8221 Ends...
 }

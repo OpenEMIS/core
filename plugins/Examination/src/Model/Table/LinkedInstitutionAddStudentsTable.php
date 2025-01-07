@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
@@ -20,8 +20,8 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
 
     private $examCentreId = null;
 
-    public function initialize(array $config) {
-        $this->table('examination_centre_students');
+    public function initialize(array $config): void {
+        $this->setTable('examination_centre_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -113,7 +113,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                 ->where([$InstitutionGradesTable->aliasField('education_grade_id') => $educationGradeId])
                 ->select(['institution_id' => 'Institutions.id', 'institution_name' => 'Institutions.name', 'institution_code' => 'Institutions.code'])
                 ->group('institution_id')
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray();
             foreach ($institutionsData as $data) {
                 $institutions[$data['institution_id']] = $data['institution_code']. ' - ' . $data['institution_name'];
@@ -128,13 +128,13 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $students = [];
 
         if ($action == 'add') {
-            if (!empty($request->data[$this->alias()]['examination_id']) && !empty($request->data[$this->alias()]['institution_id'])) {
-                $institutionId = $request->data[$this->alias()]['institution_id'];
-                $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
-                $examinationId = $request->data[$this->alias()]['examination_id'];
-                $educationGradeId = $request->data[$this->alias()]['education_grade_id'];
+            if (!empty($request->getData()[$this->getAlias()]['examination_id']) && !empty($request->getData()[$this->getAlias()]['institution_id'])) {
+                $institutionId = $request->getData()[$this->getAlias()]['institution_id'];
+                $academicPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
+                $examinationId = $request->getData()[$this->getAlias()]['examination_id'];
+                $educationGradeId = $request->getData()[$this->getAlias()]['education_grade_id'];
                 $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
-                $examinationCentreId = $request->data[$this->alias()]['examination_centre_id'];
+                $examinationCentreId = $request->getData()[$this->getAlias()]['examination_centre_id'];
 
                 $InstitutionStudents = $this->Institutions->Students;
                 $students = $InstitutionStudents->find()
@@ -168,19 +168,19 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreStudents', 'queryString' => $this->request->query('queryString')];
-        $requestData[$this->alias()]['student_id'] = 0;
-        $requestData[$this->alias()]['education_subject_id'] = 0;
-        $requestData[$this->alias()]['examination_subject_id'] = 0;
+        $requestData[$this->getAlias()]['student_id'] = 0;
+        $requestData[$this->getAlias()]['education_subject_id'] = 0;
+        $requestData[$this->getAlias()]['examination_subject_id'] = 0;
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
-            if (!empty($requestData[$this->alias()]['examination_students']) && !empty($requestData[$this->alias()]['examination_centre_id'])) {
-                $students = $requestData[$this->alias()]['examination_students'];
+            if (!empty($requestData[$this->getAlias()]['examination_students']) && !empty($requestData[$this->getAlias()]['examination_centre_id'])) {
+                $students = $requestData[$this->getAlias()]['examination_students'];
                 $newEntities = [];
 
-                $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
+                $selectedExaminationCentre = $requestData[$this->getAlias()]['examination_centre_id'];
                 $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
                 $examCentreSubjects = $ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $autoAssignToRooms = $entity->auto_assign_to_rooms;
@@ -191,11 +191,11 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                     if ($student['selected'] == 1) {
                         $obj['student_id'] = $student['student_id'];
                         $obj['registration_number'] = $student['registration_number'];
-                        $obj['institution_id'] = $requestData[$this->alias()]['institution_id'];
-                        $obj['education_grade_id'] = $requestData[$this->alias()]['education_grade_id'];
-                        $obj['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
-                        $obj['examination_id'] = $requestData[$this->alias()]['examination_id'];
-                        $obj['examination_centre_id'] = $requestData[$this->alias()]['examination_centre_id'];
+                        $obj['institution_id'] = $requestData[$this->getAlias()]['institution_id'];
+                        $obj['education_grade_id'] = $requestData[$this->getAlias()]['education_grade_id'];
+                        $obj['academic_period_id'] = $requestData[$this->getAlias()]['academic_period_id'];
+                        $obj['examination_id'] = $requestData[$this->getAlias()]['examination_id'];
+                        $obj['examination_centre_id'] = $requestData[$this->getAlias()]['examination_centre_id'];
                         $obj['auto_assign_to_rooms'] = $autoAssignToRooms;
                         $obj['counterNo'] = $key;
                         $roomStudents[] = $obj;
@@ -209,7 +209,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                 }
                 if (empty($newEntities)) {
                     $model->Alert->warning($this->aliasField('noStudentSelected'));
-                    $entity->errors('student_id', __('There are no students selected'));
+                    $entity->getErrors('student_id', __('There are no students selected'));
                     return false;
                 }
 
@@ -217,9 +217,9 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                     $return = true;
                     foreach ($newEntities as $key => $newEntity) {
                         $examCentreStudentEntity = $this->newEntity($newEntity);
-                        if ($examCentreStudentEntity->errors('registration_number')) {
+                        if ($examCentreStudentEntity->getErrors('registration_number')) {
                             $counterNo = $newEntity['counterNo'];
-                            $entity->errors("examination_students.$counterNo", ['registration_number' => $examCentreStudentEntity->errors('registration_number')]);
+                            $entity->getErrors("examination_students.$counterNo", ['registration_number' => $examCentreStudentEntity->getErrors('registration_number')]);
                         }
                         if (!$this->save($examCentreStudentEntity)) {
                             $return = false;
@@ -284,7 +284,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                 }
             } else {
                 $model->Alert->warning($this->aliasField('noStudentSelected'));
-                $entity->errors('student_id', __('There are no students selected'));
+                $entity->getErrors('student_id', __('There are no students selected'));
                 return false;
             }
         };

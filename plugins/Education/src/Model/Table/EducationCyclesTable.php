@@ -16,13 +16,17 @@ class EducationCyclesTable extends ControllerActionTable
 	public function initialize(array $config): void
 	{
 		parent::initialize($config);
-		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels']);
+		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels','foreignKey' => 'education_level_id']);
         $this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
 
 		if ($this->behaviors()->has('Reorder')) {
 			$reorderBehavior = $this->behaviors()->get('Reorder');
 			$reorderBehavior->setConfig('filter', 'education_level_id');
 		}
+		if ($this->behaviors()->has('ControllerAction')) {
+            $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
+            $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
+        }
 
 		$this->setDeleteStrategy('restrict');
 	}
