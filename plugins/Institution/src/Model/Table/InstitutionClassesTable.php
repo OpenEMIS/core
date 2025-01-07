@@ -125,7 +125,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ControllerAction.Model.addEdit.beforePatch'    => [],
                 'ControllerAction.Model.addEdit.afterAction'    => [],
                 'ControllerAction.Model.add.beforeSave'         => ['callable' => 'addBeforeSave', 'priority' => 500]
-                  
+
         ],]);
     //POCOR-8538 end
 // POCOR-8391 remove annoing log
@@ -342,7 +342,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $this->addBehavior('Institution.SingleGrade');
             } else {
                 $this->addBehavior('Institution.MultiGrade');
-            }  
+            }
             $extra['selectedGradeType'] = $selectedGradeType;
         }
         if (array_key_exists($this->getAlias(), $this->request->getData())) {
@@ -497,8 +497,28 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        Log::debug(print_r(['Saving New Class Custom Fields:' => $entity], true));
+        try {
+
+
+        // POCOR-8538 start
+        if ($entity->has('custom') && !empty($entity->custom)) {
+            $createdUserId = $entity->created_user_id;
+            $classId = $entity->id;
+            if (!empty($entity->modified_user_id)) {
+                $createdUserId = $entity->modified_user_id;
+            }
+            $customFields = $entity->custom;
+            $cv = self::saveCustomFields($customFields, $classId, $createdUserId);
+                Log::debug(print_r($cv, true));
+        }
+        }catch (\Exception $exception){
+            Log::debug(print_r(['Error Saving Class Custom Fields:' => $exception->getMessage()], true));
+        }
+        // POCOR-8538 end
+
         if ($entity->isNew()) {
-       
+
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
 
              if(!empty($this->controllerAction) && ($this->controllerAction == 'Classes')) {
@@ -594,18 +614,6 @@ class InstitutionClassesTable extends ControllerActionTable
                 // POCOR-5435 ->Webhook Feature class (create) -- end
             }
         } else {
-            // POCOR-8538 start
-            if ($entity->has('custom') && !empty($entity->custom)) {
-                $createdUserId = $entity->created_user_id;
-                $classId = $entity->id;
-                if (!empty($entity->modified_user_id)) {
-                    $createdUserId = $entity->modified_user_id;
-                }
-                $customFields = $entity->custom;
-                $cv = self::saveCustomFields($customFields, $classId, $createdUserId);
-                Log::debug(print_r($cv, true));
-            }
-            // POCOR-8538 end
             $editAction  = json_decode(json_encode($options), true);
             $webhook_action = $editAction['extra']['action'];
 
@@ -758,7 +766,7 @@ class InstitutionClassesTable extends ControllerActionTable
     }
 
     // POCOR-8538 start
-    private static function saveCustomFields($customFields, $classId, $createdUserId)
+    private static function saveCustomFields($customFields, $classId, $createdUserId): array
     {
         $cv = [];
         if (!empty($customFields)) {
@@ -787,11 +795,11 @@ class InstitutionClassesTable extends ControllerActionTable
                     'created' => date('Y-m-d H:i:s')
                 ];
 
-                // Relevant fields to check     
+                // Relevant fields to check
 
                 $hasValue = false;
 
-                foreach ($field as $key => $value) {                  
+                foreach ($field as $key => $value) {
                     // Check if the current key is in the relevant fields and has a value
                     if (in_array($key, $relevantFields) && (!empty($value) || $value !== null || $value != '')) {
                         $fieldData[$key] = $value;
