@@ -127,7 +127,7 @@ class InstitutionRepository extends Controller
             }*/
             
             //$institutions = new Institutions();
-            $institutions = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender');
+            $institutions = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender','areaEducation','areaAdministratives');
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
