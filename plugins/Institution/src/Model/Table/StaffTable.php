@@ -3204,7 +3204,7 @@ class StaffTable extends ControllerActionTable
             ])->count();
         if (($SecurityGroupIns > 0) || ($superAdmin == 1)) {
             if ($superAdmin == 1) { // Super Role/Admin
-                $homeroomTeacherPermissionArr = ['result' => 1];
+                $homeroomTeacherPermissionArr = ['result' => 1, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
             } else {
                 //to find records for homeroom teacher staff
                 $institutionClassesTbl = TableRegistry::get('Institution.InstitutionClasses');
@@ -3224,7 +3224,7 @@ class StaffTable extends ControllerActionTable
                         $institutionClassesTbl->aliasField('academic_period_id') => $academicPeriodId
                     ])->count();
                 if ($institutionClasses > 0) {
-                    $homeroomTeacherPermissionArr = ['result' => 2];
+                    $homeroomTeacherPermissionArr = ['result' => 2, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
                 } else {
                     $securityGroupId = $Institution->get($institutionId)->security_group_id;
                     //to find records for secondar staff
@@ -3249,7 +3249,7 @@ class StaffTable extends ControllerActionTable
                         ])->count();
                     $InstitutionClassesSecondary = 0;
                     if ($InstitutionClassesSecondary > 0) {
-                        $homeroomTeacherPermissionArr = ['result' => 3];
+                        $homeroomTeacherPermissionArr = ['result' => 3, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
                     }else{
                         $InstitutionClassesSecondary = $InstitutionClassesSecondaryStaff
                         ->find()
@@ -3266,7 +3266,7 @@ class StaffTable extends ControllerActionTable
                             $InstitutionClasses->aliasField('institution_id') => $institutionId
                         ])->count();
                         if($InstitutionClassesSecondary > 0){
-                            $homeroomTeacherPermissionArr = ['result' => 4];
+                            $homeroomTeacherPermissionArr = ['result' => 4, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
                         }else{
                             $InstitutionSubjectStaffData = $InstitutionSubjectStaff
                                                             ->find()
@@ -3289,7 +3289,7 @@ class StaffTable extends ControllerActionTable
             echo json_encode($data, true);
             die;
         } else {
-            $data = ['result' => 0, 'viewCount' => 0, 'editCount' => 0];
+            $data = ['result' => 0, 'viewCount' => 0, 'editCount' => 0, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
             echo json_encode($data, true);
             die;
         }
