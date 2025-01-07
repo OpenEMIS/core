@@ -23,12 +23,12 @@ class OAuthController extends AbstractOAuthController
     protected function getApiCredential($payload)
     {
         $issuer = $payload->iss;
-        
+
         $credential = $this->ApiCredentials
             ->find()
             ->contain(['ApiScopes'])
             ->where([$this->ApiCredentials->aliasField('client_id') => $issuer])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ->first();
 
         if (!is_null($credential)) {

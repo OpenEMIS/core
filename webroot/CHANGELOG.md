@@ -1,3 +1,295 @@
+### [4.6.0] - 2025-01-06
+- Implemented: Develop changes to the Staff Appraisal feature
+- Bug Fixed: Administration>System Configuration>Themes: Removes add button
+- Bug Fixed: Institutions > Staff > General > Account: The homeroom teacher role is not displaying under the Accounts tab page even though the staff was assigned as a homeroom teacher successfully
+- Bug Fixed: Reports > Institutions > Student Absence: Date of Birth column has no data showing
+- Bug Fixed: Administration>Field Options>Position Titles>Add: User is getting 404 error
+- Bug Fixed: API: Pagination is not working and adds extra response
+- Bug Fixed: Administration>System Setup>Education Structure>Grade Subjects: Migration script to update default value of result types to assessments
+- Bug Fixed: Develop survey feature in v4 APIs
+- Bug Fixed: Administration>Examinations>Centres:Adding as existing institutions
+- Bug Fixed: System Setup > System Configuration > Themes: It is not working properly
+- Bug Fixed: Reports > Institutions > Students: When downloading the Institution Students report, the page gives an error message
+- Bug Fixed: Institutions > Staff: The count of staff in Institutions > Staff page is incorrect
+- Bug Fixed: Administration > Updates: When clicking on the update button, the page gives a 404 error.
+- Implemented: Update the Attendance Summary Report to use new summary table
+
+### [4.5.0] - 2024-12-26
+- Implemented: Develop a field, configuration and placeholder for Cumulative GPA
+- Bug Fixed: Institutions > Performances > Report Cards > Download All : This process causes multiple sleep processes on the database
+- Implemented: Develop a function to flag specific students as exempt from specific assessments items
+- Bug Fixed: Institutions>Performance>Assessments: User cannot be found in the assessment page when added
+- Bug Fixed: Administration > Security > Users > Add: When creating users in Administration > Security > Users page, user is able to add user without entering first name, last name and gender as it is not a mandatory field:
+- Bug Fixed: Institutions > Dashboard: Attendance dashboard on core does not pick up absences and does not update dashboard
+- Bug Fixed: Api: Endpoints having issues
+- Bug Fixed: Institutions > Staff > Add: When adding an existing staff who have OpenEMIS ID to an institution, the system change the OpenEMIS ID upon adding
+- Implemented: Develop Scanned feature API
+- Bug Fixed: Administration>Performance>Assessments: Table does not show any associated records
+- Bug Fixed: Reports > Institutions > Classes: When generating Institutions Classes report, the status shows 'Error'
+
+### [4.4.1] - 2024-12-16
+- Bug Fixed: Institutions > Staff > Edit > Homeroom Teacher:When assigning homeroom teacher to a non-homeroom teacher, the system unassigned the staff
+- Bug Fixed: Directory > Import: When importing user in directory, the system does not allow due to the OpenEMIS ID uniqueness issue
+- Bug Fixed: Administration>System Setup>Education Systems>Copy: User is able to copy education structure
+- Bug Fixed: Reports > Institutions > Student Absence: When generating report for Student Absence, the status goes to Error
+- Bug Fixed: Swagger: Updating naming to the correct convention
+- Bug Fixed: Institutions > Attendance > Students: Able to mark attendance even though system shows that school is closed
+- Bug Fixed: Administration>System Configuration>Themes: User should be able to see the name of the colour
+- Bug Fixed: Administration > Scholarship > Recipients > View/Edit page: User should be able to view and edit
+
+### [4.4.0] - 2024-12-05
+- Implemented: Develop Timetable APIs
+- Implemented: Develop changes to the education structure and student subjects page
+- Implemented: Develop changes to remove the api4.yaml file
+- Bug Fixed: Institutions>Attendance>Students: Attendance is controlled by add permission instead of edit permission
+- Bug Fixed: Institutions > Performance > Assessments: Other education grades assessments are showing eventhough the institution did not offer that education grades
+- Bug Fixed: Institutions>Attachments: The record does not exist
+- Bug Fixed: Administrations > System Setup > Manuals: Institution and Report tab has missing permissions
+- Bug Fixed: Students > Academic > Programmes: The student academic history is not updated even though student have transferred and enrolled status
+- Bug Fixed: OpenEMIS Classroom App: Permissions related api is not working for Assessments
+- Bug Fixed: Directory: Duplicate advanced search button
+- Bug Fixed: Administrations > System Setup > System Configurations > Themes > Login Page Image: When changing the login page image, the system gives an error 
+- Bug Fixed: Unable to install v4
+- Bug Fixed: Institutions > Students > Academic > Programmes > Transition: When clicking on the transition button, the page gives 404 error
+- Bug Fixed: Institutions > Students > Add: The provided student (1528907855) is added to school provided (Christ Church Foundation) however the confirm button cannot be click
+- Bug Fixed: Administrations > Survey > Forms > Rules: The questions listed in rules page is not according to the questions ordered in forms page
+- Bug Fixed: Administration > Communication > Alerts Rules: After successfully adding alerts, the method is not showing any data
+- Bug Fixed: Swagger: Incorrect API naming standards
+- Bug Fixed: Institutions > Reports > Students: When generating student reports for all areas, all institutions and all programmes, the report got stuck in progress
+- Bug Fixed: Institutions > Students > Undo > Promoted: 404 error when undoing student promotion
+
+### [4.3.8] - 2024-11-22
+- Bug Fixed: Institutions>Attendance>Students: Unable to update absences when using other roles
+- Bug Fixed: Institutions>Attendance>Students: Unable to edit attendance due to wrong permissions
+- Bug Fixed: Institutions>Attendance>Students: Superrole cannot see classes
+- Bug Fixed: Institutions>Academic>Textbooks: Getting 404 when adding
+
+### [4.3.7] - 2024-11-15
+- Bug Fixed: API : Student assessment POST API does not insert a new record in the table
+- Bug Fixed: API : Develop Student Behaviour API as the existing Behaviour API fetches Staff Behaviour API
+
+### [4.3.6] - 2024-11-14
+- Bug Fixed: Administration>System Setup>Field Options: Getting 404 when adding
+- Bug Fixed: Institutions>Staff>Career>Appraisal: Unable to add new appraisals
+- Bug Fixed: Student Behaviour POST/GET API is not working
+- Bug Fixed: Student Attendance POST API should insert a record in student_attendance_marked_records table
+- Bug Fixed: Administration>System Setup>Label: Label is not showing for all add student and add staff page for OpenEMIS ID
+- Bug Fixed: System errors are not logged
+- Bug Fixed: Directory/Institutions > Students > Guardian > Add: When adding guardian to student account, user is able to add ownself(eg. student) as a guardian.
+- Bug Fixed: Institutions > Academic > Feeders > Outgoing: "The record does not exist" should be BLUE
+- Bug Fixed: Login Page: When entering incorrect username/password for 2FA login, the page navigate to OTP page
+- Bug Fixed: Institutions>Students/Staff>Identities: Develop a preferred identity type
+- Bug Fixed: Institutions > Students: When doing transfer for enrolled (repeater) student, the status enrolled (repeater) does not follow to the next institution
+- Bug Fixed: Institutions > Student > Student1 > Academic > Subject: Total marks not updated correctly
+
+### [4.3.5] - 2024-11-07
+- Bug Fixed: Administrations > Data Management > Archive : Archive is not working in version 4
+- Bug Fixed: Institutions>Staff>Add: When adding new positions to Appointment>Positions, user is unable to add staff to new positions
+- Bug Fixed: Institutions>Surveys>Forms: User is not able to view any survey
+- Bug Fixed: Administrations > Field Options > Student Behaviour Categories: Remove Student Behaviour Classification
+- Bug Fixed: Administration>Surveys>Forms: Unable to edit forms
+- Bug Fixed: Survey > Form > Questions: When adding survey questions without selecting the question field type, the system allow to save the question
+- Bug Fixed: Survey > Form > Questions: When selecting the option on validation rule, the 'Is Mandatory' and 'Is Unique' field disappear
+- Bug Fixed: Institutions > Staff > Edit: Change of Start Date: There is 404 error when approving staff start date
+- Bug Fixed: Infrastructure > Overview: If user key in the same size as building when adding floor, they are not able to proceed
+- Bug Fixed: Administration>Communications>Alert Rules: Update email message format
+- Bug Fixed: Student/Staff Transfer In/Out : Upon saving the workflow, Auto-assign does not update the assignee based on the Security Roles configured in the workflow.
+- Bug Fixed: API: /api/v4/users include user contacts data
+- Bug Fixed: Institutions>Surveys>Forms: When user updates the same question on different repeaters, both are updated
+- Bug Fixed: Reports>Surveys: User should be able to generate report when student list and staff list are used
+- Bug Fixed: Administration>Survey>Forms:When selecting the number of records to be displayed on the current page, the page does not update to the selected number of records
+
+### [4.3.4] - 2024-10-30
+- Bug Fixed: Administrations > System Setup > System Configurations : Pagination and Displaying rows should be at the bottom of the list page
+- Bug Fixed: Institutions>Academic>Classes: User is unable to view and edit
+- Bug Fixed: Administration>Appraisals:Unable to add slider
+- Bug Fixed: Institutions > Academic > Schedules > Timetables: when accessing timetable module, the page navigate to the home page even when permission is given
+- Bug Fixed: Institutions>Students>Bulk Transfer: Getting 404 error 
+- Bug Fixed: Students/Staff: Removes the failed login and email from overview page
+- Bug Fixed: Reports > Audits > Last Login: When generating Last Login report, the page navigates to 'Page not working'
+- Bug Fixed: Institutions > Students > Export: There is no email data (email column) showing in the export file
+- Bug Fixed: Institutions>Infrastructure>Overview>Edit:User should be able to edit start date
+- Bug Fixed: Guardian>Student Health: Getting 404 error when opening module
+- Bug Fixed: Administration > Communications > Alert Rules: When alert for student attendance - absent is already configured and email is already input in the user information, there is no email alert received
+- Bug Fixed: Administration>System Setup>Label: OpenEMIS ID is not showing for add staff and add student
+- Bug Fixed: Administration>System Setup>Academic Period: If child period is current, parent period should be current 
+- Bug Fixed: Guardian>Academic>Classes/Behaviours/Competencies/Textbooks/Houses: Getting 404 error
+- Bug Fixed: Institutions>Staff>Career>Appraisals: Increase character length
+- Bug Fixed: Institutions > Staff > Transfer: Whenever user go through different workflow for staff transfer a 404 error will show but changes is changed successfully
+- Bug Fixed: Institutions>Students>Add: Does not go summary page
+- Bug Fixed: Login Page > Login via Google SSO: When login in via google sso, the page gives an error message
+- Bug Fixed: Institutions>Students>Health:When inputting student height and weight, the system gives error message "Height is more then maximum height." or "Height is more then maximum weight." eventhough there is no configuration.
+- Bug Fixed: Administration>System Configuration>Student Report Card: Config should be moved to Attendance instead
+- Bug Fixed: Institutions > Staff > Career > View : Staff position title is not showing the correct data
+- Bug Fixed: Administration > System Setup > Labels: No labels to allow user to configure the naming of "Total Marks" in the assessments page (Institutions > Performance > Assessments
+- Bug Fixed: Administration > Survey > Forms > Status Tab: When the date of the status is no longer the current date, the edit button is still showing
+- Bug Fixed: Update Google Analytics Code in OpenEMIS core
+- Bug Fixed: Institutions > Academic > Programmes: Subjects are showing eventhough no subject is configured under Education Structure in Administration > System Setup > Education Structure page
+
+### [4.3.3] - 2024-10-21
+- Bug Fixed:  Summary: The page isn't redirecting properly
+- Bug Fixed: Institutions > Performances > Report Cards : System should retain the GPA and the Report card in the new Class
+- Implemented: Develop an API for student transfer initiation and status
+- Bug Fixed: Administration > Security > Users: Moodle log should show correct response and moodle should show the users that are created
+- Bug Fixed: Administration>System Setup>Education Structure: menus should be in a logical order
+- Bug Fixed: Institutions>Transport>Trips: It is showing other Institution trips
+- Bug Fixed: Administration > Survey > Forms: When the number of displayed records is selected on current page, the records does not follow when navigating to another page
+- Bug Fixed: API: Timetable component /schedules/timetables/1/lessons (API name) need to add few keys in API
+- Bug Fixed: Personal > Scholarship: Student is able to successfully apply scholarship
+- Bug Fixed: Institutions>Overview>Export:Bugs related to V4 deployment
+- Bug Fixed: Institutions>Students>Add: User should be able to save when transferring
+- Bug Fixed: Administration > Security > Roles > Guardian tab: There is no permission to view Students Health under Guardian tab
+- Bug Fixed: Administration > Workflows > Actions:When saving a workflow action, the page gives 404 error
+- Bug Fixed: Institutions > Appointments > Positions > Import: Update template to remove position grade and homeroom teacher
+- Bug Fixed: Institutions > Appointments > Positions > Add: When adding Institutions Positions, the position number generation is not in order
+
+### [4.3.2] - 2024-10-02
+- Bug Fixed: Errors and Warnings showing up when running migrations 
+- Bug Fixed: Institutions > Students > Pending Transfer Out > Bulk Student Transfer Out: When doing bulk transfer student, the page gives a 404 error 
+- Bug Fixed: Administration>Appraisals: 404 error occurs
+- Bug Fixed: Institutions > General > Overview > Edit: Allow user to turn on and turn off this validation on address
+- Bug Fixed: Administration>Communication>Alerts: Adds "Never" to stop notifications
+- Bug Fixed: Institutions > Performance > Report Card > View PDF/Download PDF: When downloading pdf, the report card is showing hidden columns and rows even when there is excel formula input to not show hidden columns or rows
+- Bug Fixed: Institutions>Students>Academic>Textbook: Textbox is showing
+- Implemented: Develop an option to allow multiple external data source: Learning Management System - including "Moodle"
+- Bug Fixed: Institutions>Academic>Feeders>Outgoing>Edit: Page not showing correctly
+- Bug Fixed: Institutions > Staff > Career > Positions: The staff position grade name for staff position is showing ID instead of the staff position grade name
+- Bug Fixed: Institutions > Academic > Subjects: Table is missing when adding same subject name
+
+### [4.3.1] - 2024-09-30
+- Bug Fixed: Forget password should be working
+- Bug Fixed: Institutions > General > Overview > Edit: When editing institution overview information, the system shows an error message but not indicating where is the error
+- Implemented: Develop solutions to update composer components
+- Bug Fixed: Login Page:The screen did not change to OTP when 2FA login authentication is enabled
+- Bug Fixed: Directory: Unable to search for users and pagination is not working
+- Bug Fixed: Guardian>General>Overview: Remove Guardian tab and add edit button back
+- Bug Fixed: Administration > Security > Groups: No associated records are displayed when the user wants to delete Institutions
+- Bug Fixed: Institutions > Staff: User can delete position that is still active though it is not deletable Part Two
+- Bug Fixed: Institutions > Students > Export: When exporting students report, the name of students is only showing first and last name
+- Bug Fixed: Administration > System Setup > Education Structure: When using the copy feature (administration > data management > copy) to copy education structure, the data is not showing even when there is a record and successful message that data was copied
+- Bug Fixed: Directory  > Professional > Qualification: When editing staff qualification under Directory module, the page gives an error without indicating what is the error
+- Bug Fixed: Institutions>Attendance>Students: No scheduled class button should only filter the period that it is in
+- Bug Fixed: Administration>Field Options>Student Behaviour Categories: Order is placed wrongly
+- Bug Fixed: Administration>System Setup>System Configuration>Webhooks: Staff create and Institution create are not triggering the webhook
+- Bug Fixed: Administrations > Survey > Questions tab : Params field in Add and Edit page
+
+### [4.3.0] - 2024-09-24
+- Bug Fixed: System should be fetching SMTP details from config/app_local.php
+- Bug Fixed: Survey App: Code is missing in latest master part 3
+- Implemented: Develop Institutions Classes/Subjects v4 APIs Part 2
+- Implemented: Develop changes to the theme feature convert the color textbox to a dropdown
+- Bug Fixed: Institutions>Overview>Edit: Dropdown is showing as unique
+- Bug Fixed: Guardian>Academic>Behaviour: Getting 404 error and getting multiple no records when going to Overview page
+- Bug Fixed: Institutions>Performance>Report Cards: User is unable to generate report cards
+- Bug Fixed: Institutions>Students>List>Import: Import button not working
+- Bug Fixed: Institutions: List page display 200 records per page is not working
+- Bug Fixed: Institutions>Profiles>Institutions: User is unable to generate
+- Bug Fixed: Directory>Students>Academic>Behaviours: Page is not loading
+- Bug Fixed: Institutions > Staff: When using the arabic interface, staff list is not showing despite there is staff in the institution 
+- Bug Fixed: Reports > Institutions > Institution Positions: When generating Institution Positions report, the report goes to error status
+- Bug Fixed: Administrations > System Setup > Field Options : There should not be a validation on Contact Type name
+- Bug Fixed: Update column name "repeat" to "trip_repeat" to avoid using mysql reserved keyword
+
+
+### [4.2.1] - 2024-09-11
+- Bug Fixed: Administration>Security>Roles: Permission is loading very long
+- Bug Fixed: Administrations > System Setup : Functions that breaks Part 2
+- Bug Fixed: Personal>General: No record is not found is missing
+- Bug Fixed: When system session has ended, user should go back to login page
+- Bug Fixed: Administration>Data Management>Copy: 404 error when clicking save when copying the infrastructure data
+- Bug Fixed: Institutions > Academic > Subjects: When assigning student to a subject, the system shows a successful message but upon editing back, the student is showing as unassigned
+- Bug Fixed: Institutions>General>Calendar: Page is unable to load
+- Bug Fixed: Administration>Profile>Classes: Report queue is missing from Administration>Profile>Classes
+- Bug Fixed: Institutions>Academic>Houses: Export giving 404 error
+- Bug Fixed: Institutions>Messaging: Send should be sent instead
+
+### [4.2.0] - 2024-09-06
+- Implemented: Develop APIs for student attendance archive
+- Implemented: Develop a default Laravel page for OpenEMIS Core
+- Bug Fixed: Administration>Performance>Report Cards(Bahamas): Delete should check against associated records
+- Bug Fixed: Institutions > Performance > Assessments > Reports:Assessment Report generation did take awhile however, report did got generated v4
+
+### [4.1.7] - 2024-09-04
+- Bug Fixed: Survey App: Code is missing in latest master
+
+### [4.1.6] - 2024-09-04
+- Implemented: Develop Workbench feature v4 APIs - Part 2
+- Bug Fixed: Administration>Calendar: Institution Shift id should not appear
+- Bug Fixed: Develop system validations for v4
+- Bug Fixed: Reports > Surveys > Surveys Report: User should be able to generate report when repeater is used
+- Bug Fixed: Institutions > Staff > Transfer: Whenever user go through different workflow for staff transfer a 404 error will show but changes is changed successfully
+- Bug Fixed: Administration>Performance>Assessment(Bahamas): User should be only able to delete records if there are no associated records
+- Bug Fixed: API: Need full file name with the URL to let us download the file
+
+### [4.1.5] - 2024-09-02
+- Implemented: Develop changes to add Education Subject column to the existing Institution Subjects report
+- Bug Fixed: Personal > Cases > View page : Missing Add comment button
+- Bug Fixed: Administration>Survey>Forms>Rules: Rule page should be showing and can create rules and sections
+- Bug Fixed: Administration>Performance>Report Cards(Bahamas): Getting 404 error when adding, viewing, editing and deleting
+- Bug Fixed: Reports>Survey>Institution: Survey should not include repeater, student list and staff list
+- Bug Fixed: Institutions>Students>Add(Automation): Unable to detect element in automation
+- Bug Fixed: Institutions>Performance>Assessments(Bahamas): PDF and Report getting 404 error
+
+### [4.1.4] - 2024-08-28
+- Implemented: Changes to the Administration > System Setup > APIs > Credentials page
+- Implemented: Develop additional advanced search filters
+- Implemented: Develop changes to all new v4 APIs to include Swagger annotations in API file headers
+- Bug Fixed: Institutions>Staff>General>Comments: Unable to load page
+- Bug Fixed: Institutions>Performance>Assessments(Bahamas): Page is not loading
+- Bug Fixed: Administration>Security>Roles: Confirmed that user do not have edit permission for both roles
+- Bug Fixed: Institutions>Performance>Outcomes: Page kept loading
+- Bug Fixed: Institutions>Report Card>Comments: Getting error and comments are not loaded
+
+### [4.1.3] - 2024-08-23
+- Bug Fixed: Institutions>Students/Staff>Add: Confirmation should validate credentials
+- Bug Fixed: Administration>System Setup>Academic Periods: Academic period code and name can be a duplicate
+- Bug Fixed: Institutions>Academic>Houses(Automation): Page is not loading
+- Bug Fixed: Directory>Students>Academic: Page is not loading
+- Bug Fixed: Institutions > Staff: The gender filter on the staff page dashboard is displaying incorrect numbers
+- Bug Fixed: Administration>Performance>Assessment(Bahamas): Getting 404 error when adding, viewing, editing and deleting
+- Bug Fixed: Institutions>Performance>Report Cards(Bahamas): Getting 404 error and gpa not generated
+- Bug Fixed: Administration > Workflow > Action Tab > Selecting workflow route filters: There is an issue when selecting filters for workflow actions
+- Bug Fixed: API showing invalid date format
+- Bug Fixed: Institutions>Students>Edit: User is unable to edit
+
+### [4.1.2] - 2024-08-16
+- Bug Fixed: Institutions > Statistics > Standard > Student Attendance Summary Report: When generating report for Student Attendance Summary Report under Institutions Statistics, the report is showing other institutions
+- Bug Fixed: Administration>Training>Session>Evaluators: Evaluators not appearing when added
+- Bug Fixed: Administration>System Setup>Field options: Page is unable to load
+- Bug Fixed: Institutions>Appointment>Positions: Position is not arranged in order desc(based on position no)
+- Bug Fixed: Institutions>Students>List>Promote Button: Unable to save
+- Bug Fixed: Administrations > System Setup : Functions that breaks in Education Structure
+- Bug Fixed: API : Issues on student attendance page
+- Bug Fixed: Administrations > System Setup : Functions that breaks in Risks
+- Bug Fixed: API Changes from Jordan
+- Bug Fixed: Administrations > Security > Role: 404 error when Accessing Administrations > Security > Role page under his account
+- Bug Fixed: API-Changes to users api
+- Bug Fixed: Implement API Security by Role Part Two
+- Bug Fixed: Administrations > Survey > Forms > Edit: When adding section, it does not show the section even when system gives a successful message
+- Bug Fixed: Administrations > Security > Roles: When adding security roles, system shows successful message but newly added record is not showing
+- Bug Fixed: Administrations > Security > Roles> User Roles: User roles are showing the roles as system roles when logging in as non superadmin
+
+### [4.1.1] - 2024-08-07
+- Bug Fixed: Guardian>Student>Academic(Automation): User is getting 404 error
+- Bug Fixed: Guardian>Student>Academic(Automation): Behaviour showing internal server error
+- Bug Fixed: API : Issue in Themes API
+- Bug Fixed: Institutions>Staff>General: Tab should be showing and able to view,edit and delete and export
+- Bug Fixed: Reports(Automation): Page is unable to load
+- Bug Fixed: Administration>Attendance>Status(Automation): Page is not loading
+- Bug Fixed: Institutions>Academic>Classes(Automation): Page is not loading
+- Bug Fixed: Institutions>Academic>Subject(Automation): Page is not loading
+- Bug Fixed: Institutions>Examinations>Results(Automation): Page is not loading
+- Bug Fixed: Institutions>Statistics>Standard(Automation): Page is not loading
+- Bug Fixed: Institutions>Students>Academic>Behaviours(Automation): Page is not loading
+- Bug Fixed: Personal>Student>Academic>Tabs(Automation): Tabs all not showing
+- Bug Fixed: API: Jordan changes
+- Bug Fixed: Survey App: Unable to login to dmo tst core v4
+- Bug Fixed: Reports>Surveys: Report is getting error status
+- Bug Fixed: Survey App: Unable to download and upload survey
+- Bug Fixed: Institutions>Students>Academic>Absences(Automation): Page is not loading
+- Bug Fixed: Survey App: Unable to create survey
+- Bug Fixed: Reports>Surveys: Area name should be filtered by area level and report should work when generated by region,district and country
+
 ### [4.1.0] - 2024-07-24
 - Implemented: Develop Meals feature in Angular v11
 - Implemented: Develop authentication function from Angular v11 to v4 APIs
@@ -153,6 +445,96 @@
 - Bug Fixed: Institutions>Students>Account>Edit: User should be able to edit and success message should return
 - Bug Fixed: Institutions>Students>Academic: Academic module is not working and giving blank page
 - Bug Fixed: Institutions>Staff>General>Nationalities: User is unable to add Nationalities
+
+### [3.111.2] - 2024-11-21
+- Bug Fixed: Administrations > Performances > GPA/ Cumulative GPA : Issues when viewing GPA/Cumulative GPA
+- Bug Fixed: Institutions > Students > Academic > GPA: Duplicate christmas terms
+- Bug Fixed: Institutions>Performance>Assessments: Updates to Exemptions
+
+### [3.111.1] - 2024-11-12
+- Bug Fixed: Institutions>Performance>Assessments: When marks are not entered, it should considered as 0
+- Bug Fixed: Develop a field, configuration and placeholder for Cumulative GPA Part 2
+
+### [3.111.0] - 2024-10-25
+- Implemented: Develop a field, configuration and placeholder for Cumulative GPA
+- Implemented: Develop a function to flag specific students as exempt from specific assessments items - part 2 (reports)
+- Bug Fixed: Institutions > Staff > Transfer: When user initiate a transfer, the staff did not show on the new institution even after transfer is successful
+- Bug Fixed: Institutions > Performances > Assessments: Total marks are not showing correctly
+- Bug Fixed: Institutions > Academic > Schedules > Timetables: when accessing timetable module, the page navigate to the home page even when permission is given
+- Bug Fixed: Institutions>Students/Staff>Identities: Develop a preferred identity type
+
+### [3.110.0] - 2024-10-17
+- Implemented: Develop changes to the Add Student Wizard for Refugee Identity Type
+- Bug Fixed: Institutions > Students > Export: There is no email data (email column) showing in the export file
+- Bug Fixed: Institutions>Infrastructure>Overview>Edit:User should be able to edit start date
+- Bug Fixed: Directory>General>Identities: It redirects to the wrong student when trying to edit identities
+- Bug Fixed: Update Google Analytics Code in OpenEMIS core
+- Bug Fixed: Administration > APIs > Credentials: when using a superrole user to create API credentials, the page gives a message that "You are not authorized to access this page"
+
+### [3.109.0] - 2024-09-26
+- Implemented: Develop a function to flag specific students as exempt from specific assessments items
+
+### [3.108.0] - 2024-09-26
+- Implemented: Develop an OpenEMIS Core Download Student Report Cards v4 API
+- Bug Fixed: Institutions>Staff>Career>Appraisals: Increase character length
+- Bug Fixed: Institutions>Students/Staff>Add: Confirmation should validate credentials for v3
+- Bug Fixed: Institutions > Students > Pending Transfer Out > Bulk Student Transfer Out: When doing bulk transfer student, the page gives a 404 error 
+- Bug Fixed: Institutions > General > Overview > Edit: Allow user to turn on and turn off this validation on address
+- Bug Fixed: Institutions>Students>Promote: Getting 404 error when promoting students in this school
+- Bug Fixed: Institutions > Meals > Students > Export: When exporting student meals, the page gives a 404 error
+
+### [3.107.9] - 2024-09-18
+- Bug Fixed: Login Page:The screen did not change to OTP when 2FA login authentication is enabled
+- Bug Fixed: Institutions > Meals > Students: When only given permission to only view student meals, the export button is showing
+- Bug Fixed: Institutions > General > Overview > Edit: When editing institution overview information, the system shows an error message but not indicating where is the error
+- Bug Fixed: Institutions > Students > Export: When exporting students report, the name of students is only showing first and last name
+- Bug Fixed: Directory  > Professional > Qualification: When editing staff qualification under Directory module, the page gives an error without indicating what is the error
+- Bug Fixed: Login Page : Optimize query upon login
+- Bug Fixed: Administration > System Setup > Education Structure: When security roles users are given permission to view, edit, add and delete education structure functions, they are still getting 404 error
+- Bug Fixed: Institutions > Staff: User can delete position that is still active though it is not deletable Part Two
+- Bug Fixed: Institutions > Performances > Report Cards : System should retain the GPA and the Report card in the new Class
+
+### [3.107.8] - 2024-08-29
+- Implemented: Develop changes to add Education Subject column to the existing Institution Subjects report
+- Bug Fixed: Institutions > Report Cards > Comment: When viewing/editing report cards comment, students are not appearing
+- Bug Fixed: Institutions > Students > Undo > Graduated: When undoing graduation, the system gives an error message
+- Bug Fixed: API: Need full file name with the URL to let us download the file
+
+### [3.107.7] - 2024-08-19
+- Implemented: Develop a default Laravel page for OpenEMIS Core
+- Bug Fixed: Administration>Security>Roles: Confirmed that user do not have edit permission for both roles
+- Bug Fixed: Implement API Security by Role Part Two
+- Bug Fixed: Institutions > Staff > Edit: Change in Staff Type: There is 404 error when approving staff start date
+- Bug Fixed: Institutions > Performance > Assessments > Reports:Assessment Report generation did take awhile however, report did got generated
+
+### [3.107.6] - 2024-08-13
+- Bug Fixed: Administration > Data Management > Copy: Performance Competencies: When using the copying feature to copy Competency, the Competency Period is not copied over
+- Bug Fixed: API Changes from Jordan
+- Bug Fixed: Administration>Communication>Alerts: Adds "Never" to stop notifications
+- Bug Fixed: API-Changes to users api
+
+### [3.107.5] - 2024-07-25
+- Bug Fixed: Administration>Training>Session>Evaluators: Evaluators not appearing when added
+- Bug Fixed: Institutions > Academic > Subjects: When assigning student to a subject, the system shows a successful message but upon editing back, the student is showing as unassigned
+- Bug Fixed: Institutions > Performances > Report Cards: When there is a huge query running on institution_student_report_cards table, and user tries to generate a report card, system will redirect back to Report Cards list page with a yellow notice message
+- Bug Fixed: API: Jordan changes
+
+### [3.107.4] - 2024-07-22
+- Bug Fixed: Administration > Data Management > Copy: When user use the copy function to copy features, the record does not get copied over
+
+### [3.107.3] - 2024-07-04
+- Bug Fixed: API : Institution Positions endpoint are missing required data
+- Bug Fixed: API: Apis are not working properly
+
+### [3.107.2] - 2024-06-25
+- Bug Fixed: Institutions>Attendance>Students: No scheduled class button is taking very long to load and the query takes a long time to run.
+
+### [3.107.1] - 2024-06-14
+- Bug Fixed: OpenEMIS Core Training v4 APIs is not working due to changes in table structure
+- Bug Fixed: Institutions > Infrastructure > Overview > Floor > Add: When adding buildings, they face a 404 error.
+- Bug Fixed: Institutions > Performance > Report Cards: The GPA for Student 1602270826 is not showing despite regenerating
+- Bug Fixed: API: When retrieving the institution schedule timetable using API v4, it gives a 404 error status
+- Bug Fixed: Institutions > Performance > Report Cards > Merge and Download PDF: When merging and downloading PDF for students report card, the page gives a 404 error.
 
 ### [3.107.0] - 2024-05-20
 - Implemented: Develop changes to OpenEMIS Core Training feature

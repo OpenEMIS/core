@@ -144,6 +144,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
             'type' => 'select'
         ]);
         $this->field('no_of_students');
+        $this->field('academic_period_id', ['visible' => 'false']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

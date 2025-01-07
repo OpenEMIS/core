@@ -40,6 +40,20 @@ class AssessmentController extends Controller
      *     description="Returns a list of assessment items",
      *     tags={"Assessment"},
      *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic Period Id",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="education_grade_id",
+     *         in="query",
+     *         required=false,
+     *         description="Education Grade Id",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="order",
      *         in="query",
      *         required=false,
@@ -739,6 +753,88 @@ class AssessmentController extends Controller
 
 
     //POCOR-8292 start...
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/assessments/{assessment_id}/periods",
+     *     summary="Get assessment periods",
+     *     description="Retrieve the assessment periods for a specific assessment.",
+     *     tags={"Assessment"},
+     *     @OA\Parameter(
+     *         name="assessment_id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         example="34"
+     *     ),
+     *     @OA\Parameter(
+     *         name="academic_term",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="string"),
+     *         example="Term 1"
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="integer"),
+     *         example="5"
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="integer"),
+     *         example="1"
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="string"),
+     *         example="id"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="data",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=37),
+     *                         @OA\Property(property="code", type="string", example="Period 1"),
+     *                         @OA\Property(property="name", type="string", example="Assessment Period 1"),
+     *                         @OA\Property(property="start_date", type="string", format="date", example="2024-01-01"),
+     *                         @OA\Property(property="end_date", type="string", format="date", example="2024-12-31"),
+     *                         @OA\Property(property="date_enabled", type="string", format="date", example="2024-01-01"),
+     *                         @OA\Property(property="date_disabled", type="string", format="date", example="2024-12-31"),
+     *                         @OA\Property(property="weight", type="number", format="float", example="0.30"),
+     *                         @OA\Property(property="academic_term", type="string", example="Term 1"),
+     *                         @OA\Property(property="assessment_id", type="integer", example=34),
+     *                         @OA\Property(property="editable_student_statuses", type="integer", example=0),
+     *                         @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                         @OA\Property(property="modified", type="string", format="date-time", example="2024-01-04 12:36:14"),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", format="date-time", example="2023-01-03 16:12:00")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getAssessmentViaAcademicTerm(Request $request, $assessmentId)
     {
         try {

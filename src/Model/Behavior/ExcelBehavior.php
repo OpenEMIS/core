@@ -210,14 +210,36 @@ class ExcelBehavior extends Behavior
             $baseSheetName = $sheetName;
 
             // if the primary key of the record is given, only generate that record
-            if (isset($settings['id'])) {
-                $id = $settings['id'];
-                if ($id != 0) {
+            //POCOR-8484 starts
+            if(isset($this->_table->action) && !empty($this->_table->action)){
+                $action = $this->_table->action;
+                if($action != 'excel') {
+                    if (isset($settings['id'])) {
+                        $id = $settings['id'];
+                        if ($id != 0) {
+                            $primaryKey = $table->getPrimaryKey();
+                            $query->where([$table->aliasField($primaryKey) => $id]);
+                        }
+                    }
+                }//POCOR-8484 ends
+                //POCOR-8627 Start
+                if($settings['sheet']['name'] == 'StaffAppraisals' && $action == 'excel' && isset($settings['id']) && !empty(isset($settings['id']))) {
+                    $id = $settings['id'];
                     $primaryKey = $table->getPrimaryKey();
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
-            }
-
+                //POCOR-8627 End
+            //POCOR-8515 starts    
+            }else{
+                if (isset($settings['id'])) {
+                    $id = $settings['id'];
+                    if ($id != 0) {
+                        $primaryKey = $table->getPrimaryKey();
+                        $query->where([$table->aliasField($primaryKey) => $id]);
+                    }
+                }
+            }//POCOR-8515 ends
+            
             if ($this->getConfig('auto_contain')) {
                 $this->contain($query, $fields, $table);
             }
@@ -238,7 +260,7 @@ class ExcelBehavior extends Behavior
             $pages = ceil($count / $this->getConfig('limit'));
 
             // Debugging
-            $pages = 1;
+            //$pages = 1; //comment this in POCOR-8755
 
             if (isset($sheet['orientation'])) {
                 if ($sheet['orientation'] == 'landscape') {
@@ -530,13 +552,15 @@ class ExcelBehavior extends Behavior
         }
 
         $specialCharacters = ['=', '@'];
-        $firstCharacter = substr($value, 0, 1);
-        if (in_array($firstCharacter, $specialCharacters)) {
-            // append single quote to escape special characters
-            $value = "'" . $value;
-        }
+        //POCOR-8515 commented this code because of getting error to generate report starts 
+        //$firstCharacter = substr($value, 0, 1);
+        // if (in_array($firstCharacter, $specialCharacters)) {
+        //     // append single quote to escape special characters
+        //     $value = "'" . $value;
+        // }//POCOR-8515 ends
 
-        return ['rowData' => __($value), 'style' => $style];
+        //return ['rowData' => __($value), 'style' => $style];
+        return ['rowData' => $value, 'style' => $style];//POCOR-8515 
     }
 
     private function isForeignKey($table, $field)

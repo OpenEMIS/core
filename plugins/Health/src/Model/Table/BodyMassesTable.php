@@ -90,6 +90,14 @@ class BodyMassesTable extends ControllerActionTable
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
                 ],
+                'validateMinHeight' => [
+                    'rule' => ['validateMinHeightValue', 'StudentMinimumHeight'],
+                    'provider' => 'table'
+                ],
+                'validateMaxHeight' => [
+                    'rule' => ['validateMaxHeightValue', 'StudentMaximumHeight'],
+                    'provider' => 'table'
+                ],
             ])
             ->add('weight', [
                 'notZero' => [
@@ -97,11 +105,19 @@ class BodyMassesTable extends ControllerActionTable
                     'last' => true
                 ],
                 'validWeight' => [
-                    'rule' => ['range', 0, 500],
+                    'rule' => ['range', 0, 700],//POCOR-8227
                     'last' => true
                 ],
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                ],
+                'validateMinWeight' => [
+                    'rule' => ['validateMinWeightValue', 'StudentMinimumWeight'],
+                    'provider' => 'table'
+                ],
+                'validateMaxWeight' => [
+                    'rule' => ['validateMaxWeightValue', 'StudentMaximumWeight'],
+                    'provider' => 'table'
                 ],
             ])
             ->add('date', [
@@ -288,14 +304,17 @@ class BodyMassesTable extends ControllerActionTable
     }
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-        $weight =  $entity['weight'];
-        //convert height centimeter to meter
-        $height =  ($entity['height'] / 100);
-        //get power of the height
-        $height = pow($height, self::POWER);
-
-        $body_mass_index = ($weight / $height);
-        $entity['body_mass_index'] = $body_mass_index;
+        if(empty($entity->getErrors())) {
+            $weight =  $entity['weight'];
+            //convert height centimeter to meter
+            $height =  ($entity['height'] / 100);
+            //get power of the height
+            $height = pow($height, self::POWER);
+    
+            $body_mass_index = ($weight / $height);
+            $entity['body_mass_index'] = $body_mass_index;
+        }
+        
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)

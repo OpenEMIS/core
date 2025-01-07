@@ -15,13 +15,13 @@ class OAuthAuthenticationBehavior extends Behavior
 {
     private $model;
 
-    public function initialize(array $config)
+    public function initialize(array $config) :void
     {
         parent::initialize($config);
         $this->model = $this->_table;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = [
             'ControllerAction.Model.beforeAction' => 'beforeAction',
@@ -34,7 +34,7 @@ class OAuthAuthenticationBehavior extends Behavior
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $entity->errors($entity->errors('o_auth'), null, true);
+        $entity->getErrors($entity->getErrors('o_auth'), null, true);
         $this->model->field('client_id', ['attr' => ['required' => true, 'label' => __('Client ID')]]);
         $this->model->field('client_secret', ['attr' => ['required' => true]]);
         $this->model->field('redirect_uri', ['attr' => ['required' => true], 'type' => 'readonly']);
@@ -44,13 +44,13 @@ class OAuthAuthenticationBehavior extends Behavior
         $this->model->field('userinfo_endpoint', ['attr' => ['required' => true, 'label' => __('User Information Endpoint')]]);
         $this->model->field('issuer', ['attr' => ['required' => true]]);
         $this->model->field('jwks_uri', ['attr' => ['required' => true, 'label' => __('JSON Web Token Keys Uri')]]);
-        if ($entity->errors('code')) {
+        if ($entity->getErrors('code')) {
             $code = uniqid('IDP');
-            $this->model->request->data[$this->alias()]['code'] = $code;
-            $entity->invalid('code', $code, true);
-            $entity->errors('redirect_uri', $entity->errors('code'), true);
+            $this->model->request->getData()[$this->model->getAlias()]['code'] = $code;
+            //$entity->invalid('code', $code, true);
+            $entity->getErrors('redirect_uri', $entity->getErrors('code'), true);
         }
-        $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'OAuth', $this->model->request->data[$this->model->alias()]['code']], true);
+        $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'OAuth', $this->model->request->getData()[$this->model->getAlias()]['code']], true);
         $this->model->fields['redirect_uri']['value'] = $url;
         $this->model->fields['redirect_uri']['attr']['value'] = $url;
 
@@ -144,5 +144,10 @@ class OAuthAuthenticationBehavior extends Behavior
     public function onGetWellKnownUri(Event $event, Entity $entity)
     {
         return $entity->o_auth->well_known_uri;
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra = null)
+    {
+
     }
 }

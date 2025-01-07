@@ -94,7 +94,12 @@ class ExcelReportBehavior extends Behavior
         $this->renderExcelTemplate($extra, $event);
     }
 
-    public function renderExcelTemplate(ArrayObject $extra, Event $event)
+    //POCOR-8568[Here added  Event $event]
+
+    /**
+     * @throws \Exception
+     */
+    public function renderExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
     {
         $model = $this->_table;
         $format = $this->getConfig('format');
@@ -115,7 +120,7 @@ class ExcelReportBehavior extends Behavior
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this); // POCOR-7443
         $extra['vars'] = $this->getVars($params, $extra);
 
-        
+
         $extra['file'] = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
         $extra['path'] = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
 
@@ -134,7 +139,7 @@ class ExcelReportBehavior extends Behavior
             Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
             $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id'],$params['report_card_id']);
         }
-        
+
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
             $this->deleteFile($extra['temp_logo']);
@@ -154,17 +159,17 @@ class ExcelReportBehavior extends Behavior
         if (!empty($params['student_id'])) {
             $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
-            
+
             $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
             // save Pdf file
             $StudentsReportCards->updateAll([
                 'file_content_pdf' => $pdfFileContent,
                 'status'=>3//POCOR-7530
             ], $params);
-            
+
             $this->deleteFile($pdfFilePath);
         }
-        
+
         if ($this->getConfig('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
@@ -182,7 +187,8 @@ class ExcelReportBehavior extends Behavior
         gc_collect_cycles();
     }
 
-    public function loadExcelTemplate(ArrayObject $extra, Event $event)
+    //POCOR-8568[Here added  Event $event]
+    public function loadExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
     {
         $model = $this->_table;
         if (isset($extra['requestQuery']) && isset($extra['requestQuery'][$this->getConfig('templateTableKey')])) {
@@ -206,21 +212,24 @@ class ExcelReportBehavior extends Behavior
 
             if ($entity->has('excel_template_name')) {
                 $file = $this->getFile($entity->excel_template);
-                // Create a temporary file
-                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_');
+                if ($file === false || empty($file)) {
+                    throw new \Exception('Invalid file content.');
+                }
+
+                // Create a temporary file with the correct extension
+                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_') . '.xlsx';
                 $extra['tmp_file_path'] = $filepath;
 
                 $excelTemplate = new File($filepath, true, 0777);
                 $excelTemplate->write($file);
                 $excelTemplate->close();
-                // End create a temporary file
+
                 try {
-                    // Read back from same temporary file
+                    // Read back from the same temporary file
                     $inputFileType = IOFactory::identify($filepath);
                     $objReader = IOFactory::createReader($inputFileType);
                     $objSpreadsheet = $objReader->load($filepath);
-                    // End read back from same temporary file
-                } catch(Exception $e) {
+                } catch (\Exception $e) {
                     Log::write('debug', $e->getMessage());
                 }
             }
@@ -409,7 +418,7 @@ class ExcelReportBehavior extends Behavior
 
     }
     /**
-    * POCOR-6908 
+    * POCOR-6908
     */
     public function saveFileAssessment($objSpreadsheet, $filepath, $format, $student_id,$paramVal)
     {
@@ -724,6 +733,9 @@ class ExcelReportBehavior extends Behavior
                 $value = $this->getAdvancedTypeKeyword($keyword);
                 $pos = strpos($cellValue, $value);
                 if ($pos !== false) {
+                    if($function == 'table') {
+                        $function = 'tableData';//POCOR-8529
+                    }
                     if (method_exists($this, $function)) {
                         $jsonArray = $this->convertPlaceHolderToArray($cellValue);
                         if (!empty($jsonArray)) {
@@ -1051,7 +1063,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
+    public function tableData($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];

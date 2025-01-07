@@ -44,24 +44,34 @@ trait SecurityTrait
             $request = null;
             if (!property_exists($this, 'request')) {
                 try {
+                    // POCOR-8157 start: for different type of objects with requests
+                    $request = null;
+
                     if (property_exists($this, '_table')) {
-                        $request = $this->_table->request;
+                        if (method_exists($this->_table, 'getRequest')) {
+                            if (!property_exists($this->_table, 'request')) {
+                                $request = $this->_table->getRequest();
+                            } else {
+                                $request = $this->_table->request;
+                            }
+                        } else {
+                            $request = $this->_table->request;
+                        }
                     } else {
-                        // echo "<pre>";print_r($this->request);die;
-                        // $request = $this->getController()->getRequest();
-                        $request = $this->request;
+                        try {
+                            $controller = $this->getController();
+                                if($controller){
+                                    $request = $controller->getRequest();
+                                }
+                        } catch (\Exception $exception) {
+
+                        }
                     }
                 } catch (\Exception $exception) {
-                    $class = __CLASS__;
-                    $line = __LINE__;
-                    if ($queryString == null) {
-                        $queryString = "";
-                    }
-                    Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
-                    Log::debug($exception->getMessage());
                 }
             }
-            if (property_exists($this, 'request')) {
+            if (!$request && property_exists($this, 'request')) {
+                // POCOR-8157 end
                 $request = $this->request;
             }
             if ($request) {
@@ -85,12 +95,12 @@ trait SecurityTrait
                     }
                 }
             } else {
-                $class = __CLASS__;
-                $line = __LINE__;
-                if ($queryString == null) {
-                    $queryString = "";
-                }
-                Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
+//                $class = __CLASS__;
+//                $line = __LINE__;
+//                if ($queryString == null) {
+//                    $queryString = "";
+//                }
+//                Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
                 return null;
             }
         }
@@ -165,7 +175,8 @@ trait SecurityTrait
 
     public function paramsEncode($params = [])
     {
-        if(empty($params)){
+        // Ensure $params is an array
+        if (!is_array($params)) {
             $params = [];
         }
         $sessionId = Security::hash('session_id', 'sha256');

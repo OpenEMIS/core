@@ -27,11 +27,12 @@ class SecurityRolesTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 
-        $this->belongsToMany('SecurityFunctions', [
-            'className' => 'Security.SecurityFunctions',
-            'through' => 'Security.SecurityRoleFunctions',
-            'saveStrategy' => 'append'
-        ]);
+        // POCOR-8464 when we edit permission and save then its loading very long
+        // $this->belongsToMany('SecurityFunctions', [
+        //     'className' => 'Security.SecurityFunctions',
+        //     'through' => 'Security.SecurityRoleFunctions',
+        //     'saveStrategy' => 'append'
+        // ]);
 
         $this->belongsToMany('GroupUsers', [
             'className' => 'Security.UserGroups',
@@ -65,7 +66,33 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
+        //POCOR-8464 start
+        $securityFunctionData = $entity['security_functions'];
+        $securityRoleId = $entity['id'];
+        $securityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $values = [];
+        
+        foreach ($securityFunctionData as $function) {
+            $data = [
+                'security_role_id' => $securityRoleId,
+                'security_function_id' => $function['id'],
+                '_view' => $function['_joinData']['_view'],
+                '_add' => $function['_joinData']['_add'],
+                '_edit' => $function['_joinData']['_edit'],
+                '_delete' =>$function['_joinData']['_delete'],
+                '_execute' => $function['_joinData']['_execute'],
+            ];
+        
+            // Create a new entity and add it to the list
+            $newEntity = $securityRoleFunctionsTable->newEntity($data);
+            $entitiesToSave[] = $newEntity;
+        }
 
+        // Save all new entities at once
+        if (!empty($entitiesToSave)) {
+            $securityRoleFunctionsTable->saveMany($entitiesToSave);
+        }
+        //POCOR-8464 end
         // webhook create role starts
          if($entity->isNew()) {
 
@@ -100,9 +127,6 @@ class SecurityRolesTable extends ControllerActionTable
         }
 
         // webhook update role ends
-
-
-
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
@@ -156,6 +180,7 @@ class SecurityRolesTable extends ControllerActionTable
             }
         }
     }
+    
 
     public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
@@ -310,50 +335,45 @@ class SecurityRolesTable extends ControllerActionTable
         switch ($selectedAction) {
             case 'user':
                 $selectedGroup = $extra['selectedGroup'];
-                if (!empty($selectedGroup)) {
-                    if (!empty($selectedGroup)) {
-                        $conditions = [$this->aliasField('security_group_id') => $selectedGroup];
 
-                        if (!$isSuperAdmin) {
-                            $userRole = $GroupRoles
-                                ->find()
-                                ->contain('SecurityRoles')
-                                ->order(['SecurityRoles.order'])
-                                ->where([
-                                    $GroupRoles->aliasField('security_user_id') => $userId,
-                                    'SecurityRoles.security_group_id' => $selectedGroup
-                                ])
-                                ->first();
+                $conditions = [$this->aliasField('security_group_id IS') => $selectedGroup];
 
-                            $conditions = [
-                                'OR' => [
-                                    // show roles that are lower privileges than current user role in selected group
-                                    [
-                                        $this->aliasField('security_group_id') => $selectedGroup,
-                                        $this->aliasField('order').' > ' => $userRole['security_role']['order'],
-                                    ],
-                                    // also show roles that are created by current user
-                                    [
-                                        $this->aliasField('security_group_id') => $selectedGroup,
-                                        $this->aliasField('created_user_id') => $userId
-                                    ]
-                                ]
-                            ];
-                        }
-                    }
-                    }
+                if (!$isSuperAdmin) {
+                    $userRole = $GroupRoles
+                        ->find()
+                        ->contain('SecurityRoles')
+                        ->order(['SecurityRoles.order'])
+                        ->where([
+                            $GroupRoles->aliasField('security_user_id') => $userId,
+                            'SecurityRoles.security_group_id IS' => $selectedGroup
+                        ])
+                        ->first();
+
+                    $conditions = [
+                        'OR' => [
+                            // Show roles that are lower privileges than the current user's role in the selected group
+                            //POCOR-8548 starts
+                            function (QueryExpression $exp, $query) use ($selectedGroup, $userRole) {
+                                return $exp
+                                    ->eq($this->aliasField('security_group_id'), $selectedGroup)
+                                    ->gt($this->aliasField('order'), $userRole['security_role']['order']);
+                            },//POCOR-8548 ends
+                            // also show roles that are created by current user
+                            [
+                                $this->aliasField('security_group_id IS') => $selectedGroup,
+                                $this->aliasField('created_user_id') => $userId
+                            ]
+                        ]
+                    ];
+                }
 
                 $query->where($conditions);
                 break;
 
             case 'system':
-                    $query
-                        ->where(function ($exp, $q) {
-                            return $exp->or_([
-                                $this->aliasField('security_group_id') => self::CUSTOM_SYSTEM_GROUP_ID,
-                                $this->aliasField('security_group_id') => self::FIXED_SYSTEM_GROUP_ID
-                            ]);
-                        });
+                $query->where([
+                    $this->aliasField('security_group_id') . ' IN' => [self::CUSTOM_SYSTEM_GROUP_ID, self::FIXED_SYSTEM_GROUP_ID]
+                ]); //POCOR-8544
 
                 if (!$isSuperAdmin) {
                     $userRole = $GroupRoles
@@ -816,7 +836,9 @@ class SecurityRolesTable extends ControllerActionTable
     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-
+        set_time_limit(0);
+        ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', '9600');
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
         if ($entity->isNew()) {

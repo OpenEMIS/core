@@ -13,8 +13,8 @@ use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use XLSXWriter;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
-use Cake\Network\Session;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
 // public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
@@ -92,7 +92,7 @@ class AssociationExcelBehavior extends Behavior
         $break = false;
         $action = $this->_table->action;
         $pass = $this->_table->request->pass;
-        if (in_array($action, $pass)) {
+        if (in_array($action, (array)$pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
         }
@@ -179,8 +179,10 @@ class AssociationExcelBehavior extends Behavior
         $paramsDecodedArray = $this->_table->paramsDecode($params);
         $institution_id = !empty($paramsDecodedArray) ? $paramsDecodedArray['institution_id'] : 0;
         $condition = [];
-        if(!is_null($this->_table->request->getQuery('academic_period_id'))){
-            $academic_period_id = $this->_table->request->getQuery('academic_period_id');
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');//POCOR-8556
+        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        $academic_period_id = !is_null($this->_table->request->getQuery('academic_period_id')) ? $this->_table->request->getQuery('academic_period_id') : $currentAcademicPeriod;
+        if(!is_null($academic_period_id)){
             $InstitutionAssociations = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociations');
                 //option for all grades
                 $conditions = [
