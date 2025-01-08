@@ -307,11 +307,11 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $educationCondition;
 
         if ($institution_id != 0) {
-            $institutionCondition [] = 'AND report_student_attendance_summary.institution_id = '.$institution_id.'';   
+            $institutionCondition [] = 'AND summary_student_attendances.institution_id = '.$institution_id.'';   
         }
 
         if ($education_grade_id != -1) {
-            $educationCondition [] = 'report_student_attendance_summary.education_grade_id = '.$education_grade_id.' AND';
+            $educationCondition [] = 'summary_student_attendances.education_grade_id = '.$education_grade_id.' AND';
         }
 
 
@@ -464,21 +464,21 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
             ->join([
                 'subq' => [
                         'type' => 'INNER',
-                        'table' => '( SELECT report_student_attendance_summary.academic_period_name,
-                        report_student_attendance_summary.institution_id,
-                        report_student_attendance_summary.institution_code,
-                        report_student_attendance_summary.institution_name,
-                        report_student_attendance_summary.education_grade_code,
-                        report_student_attendance_summary.education_grade_name,
-                        report_student_attendance_summary.class_id,
-                        report_student_attendance_summary.class_name,
-                        report_student_attendance_summary.period_id,
-                        report_student_attendance_summary.period_name,
-                        report_student_attendance_summary.subject_id,
-                        report_student_attendance_summary.subject_name,
-                        SUM(report_student_attendance_summary.marked_attendance) marked_attendance,
-                        SUM(report_student_attendance_summary.unmarked_attendance) unmarked_attendance
-                        FROM report_student_attendance_summary  WHERE '.$educationCondition[0].' report_student_attendance_summary.attendance_date BETWEEN '."'$this->reportStartDate '".' AND '."'$this->reportEndDate '".' '.$institutionCondition[0].' GROUP BY report_student_attendance_summary.class_id,report_student_attendance_summary.period_id,report_student_attendance_summary.subject_id)',
+                        'table' => '( SELECT summary_student_attendances.academic_period_name,
+                        summary_student_attendances.institution_id,
+                        summary_student_attendances.institution_code,
+                        summary_student_attendances.institution_name,
+                        summary_student_attendances.education_grade_code,
+                        summary_student_attendances.education_grade_name,
+                        summary_student_attendances.class_id,
+                        summary_student_attendances.class_name,
+                        summary_student_attendances.period_id,
+                        summary_student_attendances.period_name,
+                        summary_student_attendances.subject_id,
+                        summary_student_attendances.subject_name,
+                        SUM(summary_student_attendances.marked_attendance) marked_attendance,
+                        SUM(summary_student_attendances.unmarked_attendance) unmarked_attendance
+                        FROM summary_student_attendances  WHERE '.$educationCondition[0].' summary_student_attendances.attendance_date BETWEEN '."'$this->reportStartDate '".' AND '."'$this->reportEndDate '".' '.$institutionCondition[0].' GROUP BY summary_student_attendances.class_id,summary_student_attendances.period_id,summary_student_attendances.subject_id)',
                         'conditions' => [
                            'subq.class_id = ' . $this->aliasField('id'),
                         ]
