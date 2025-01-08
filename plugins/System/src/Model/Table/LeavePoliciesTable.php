@@ -98,9 +98,11 @@ class LeavePoliciesTable extends ControllerActionTable
     public function getStaffLeaveTypesElement($entity, $action) {
 
         $staffLeaveTypesTable = self::getDynamicTableInstance('staff_leave_types');
+        $staffLeavePolicyTypesTable = self::getDynamicTableInstance('staff_leave_policy_types');
         if($entity->isNew()){
             $staffLeaveTypes = $staffLeaveTypesTable->find('all')
                 ->where(['visible' => 1])
+                ->orderAsc($staffLeaveTypesTable->aliasField('order'))
                 ->toArray();
             if (empty($staffLeaveTypes)) {
                 return [];
@@ -108,8 +110,9 @@ class LeavePoliciesTable extends ControllerActionTable
 
             foreach ($staffLeaveTypes as $staffLeaveType){
                 $value[] =
-                    ['staff_leave_type_id' => $staffLeaveType->id,
-                    'code' => $staffLeaveType->national_code,
+                    [   'enable' => 0,
+                        'staff_leave_type_id' => $staffLeaveType->id,
+                        'code' => $staffLeaveType->national_code,
                         'name' => $staffLeaveType->name,
                         'days' => null,
                         'rollover' => 0];
@@ -118,7 +121,30 @@ class LeavePoliciesTable extends ControllerActionTable
         }
         $staffPolicyLeaveTypesTable = self::getDynamicTableInstance('staff_policy_leave_types');
         if($action == 'view'){
-            return [];
+            $id = $entity->id;
+            $staffLeaveTypes = $staffLeaveTypesTable->find('all')
+                ->innerJoin([$staffLeavePolicyTypesTable->getAlias() => $staffLeavePolicyTypesTable->getTable()],
+                [$staffLeavePolicyTypesTable->aliasField('staff_leave_type_id = ')
+                    . $staffLeaveTypesTable->aliasField('id'),
+                    $staffLeavePolicyTypesTable->aliasField('staff_leave_policy_id = ') . $id ])
+                ->where(['visible' => 1])
+                ->orderAsc($staffLeaveTypesTable->aliasField('order'))
+                ->toArray();
+            if (empty($staffLeaveTypes)) {
+                return [];
+            }
+//            dd($staffLeaveTypes);
+
+            foreach ($staffLeaveTypes as $staffLeaveType){
+                $value[] =
+                    [
+                        'staff_leave_type_id' => $staffLeaveType->id,
+                        'code' => $staffLeaveType->national_code,
+                        'name' => $staffLeaveType->name,
+                        'days' => null,
+                        'rollover' => 0];
+            }
+            return $value;
         }
 
         $value = [

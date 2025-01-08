@@ -16,10 +16,6 @@ $this->Form->unlockField("$alias.staff_leave_types");
                     <th><?= __('Name'); ?></th>
                     <th><?= __('Days'); ?></th>
                     <th><?= __('Rollover'); ?></th>
-                    <th><?= __('Modified By'); ?></th>
-                    <th><?= __('Modified On'); ?></th>
-                    <th><?= __('Created By'); ?></th>
-                    <th><?= __('Created On'); ?></th>
                 </tr>
                 </thead>
                 <?php if (!empty($data->staff_leave_types)) : ?>
@@ -31,10 +27,6 @@ $this->Form->unlockField("$alias.staff_leave_types");
                             <td><?= h($type['name']); ?></td>
                             <td><?= h($type['days']); ?></td>
                             <td><?= $type->rollover ? __('Yes') : __('No'); ?></td>
-                            <td><?= h($type['modified_user_id']); ?></td>
-                            <td><?= h($type['modified']); ?></td>
-                            <td><?= h($type['created_user_id']); ?></td>
-                            <td><?= h($type['created']); ?></td>
                         </tr>
                     <?php endforeach ?>
                     </tbody>
@@ -64,7 +56,7 @@ $this->Form->unlockField("$alias.staff_leave_types");
                             <?php foreach ($data->staff_leave_types as $key => $type) : ?>
                                 <tr>
                                     <td class="checkbox-column">
-                                        <?= $this->Form->checkbox("$alias.staff_leave_types.$key.visible", ['checked' => $type->visible, 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']) ?>
+                                        <?= $this->Form->checkbox("$alias.staff_leave_types.$key.enable", ['checked' => $type['enable'], 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']) ?>
                                     </td>
                                     <td>
                                         <?php
