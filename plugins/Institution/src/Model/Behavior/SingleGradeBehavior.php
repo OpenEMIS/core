@@ -45,7 +45,7 @@ class SingleGradeBehavior extends Behavior
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         $selectedEducationGradeId = $extra['selectedEducationGradeId'];
         $institutionShiftId = $extra['institution_shift_id'];
-        
+
         $numberOfClasses = 1;
 
         if ($request->is(['post']) && array_key_exists($model->getAlias(), $request->getData())) {
@@ -108,7 +108,7 @@ class SingleGradeBehavior extends Behavior
             'onChangeReload' => true,
             'select' => false
         ]);
-        
+
 
         $model->field('number_of_classes', [
             'type' => 'select',
@@ -133,7 +133,7 @@ class SingleGradeBehavior extends Behavior
 
         $unitOptions = $model->getUnitId($institutionId =null,  $selectedAcademicPeriodId=null);
         $courseOptions = $model->getCourseId($institutionId =null,  $selectedAcademicPeriodId=null);
-       
+
         $unitOptions = [0 => '-- '.__('Select').' --'] + $unitOptions;//POCOR-7336
         $courseOptions = [0 => '-- '.__('Select').' --'] + $courseOptions; //POCOR-7336
         //POCOR-7680 start
@@ -164,7 +164,7 @@ class SingleGradeBehavior extends Behavior
         if($unitname != null){
            $unit =  $unitname->name;
         }
-    
+
         $CourseName = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field_name' =>'Course'])->first();
         if($CourseName != null){
            $Courses =  $CourseName->name;
@@ -201,7 +201,7 @@ class SingleGradeBehavior extends Behavior
         $model->fields['total_male_students']['visible'] = false;
         $model->fields['institution_unit_id']['type'] = 'hidden';
         $model->fields['institution_course_id']['visible'] = false;
-        $model->fields['total_female_students']['visible'] = false;   
+        $model->fields['total_female_students']['visible'] = false;
         $model->setFieldOrder([
             'academic_period_id', 'education_grade', 'institution_shift_id', 'class_number', 'number_of_classes', 'capacity', 'single_grade_field'
         ]);
@@ -209,7 +209,7 @@ class SingleGradeBehavior extends Behavior
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        
+
         $process = function ($model, $entity) use ($requestData, $extra) {
             $commonData = $requestData['InstitutionClasses'];
             /**
@@ -290,7 +290,7 @@ class SingleGradeBehavior extends Behavior
                 return false;
             }
         };
-        
+
         return $process;
     }
 
@@ -326,10 +326,10 @@ class SingleGradeBehavior extends Behavior
         return $options;
     }
     //POCOR-8538 start
-    public static function saveCustomFieldsForSingleGrade($customFields, $classId, $createdUserId)
+    public static function saveCustomFieldsForSingleGrade($customFields, $classId, $createdUserId): array
     {
         $cv = [];
-       
+
         if (!empty($customFields)) {
             $customFieldValuesTable =
                 TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionClassesCustomFieldValues');
@@ -339,13 +339,15 @@ class SingleGradeBehavior extends Behavior
             $relevantFields = [
                     "text" => "text_value",
                     "number" => "number_value",
+                    "dropdown" => "number_value",
+                    "checkbox" => "number_value",
                     "decimal" => "decimal_value",
                     "textarea" => "textarea_value",
                     "time" => "time_value",
                     "date" => "date_value",
                     "file" => "file"
             ];
-                
+
             // Save new custom fields
             foreach ($customFields as $field) {
                 $fieldData = [
@@ -358,9 +360,9 @@ class SingleGradeBehavior extends Behavior
                 $hasValue = false;
                 // Relevant fields to check
                 $key=strtolower($field->field_type);
-                
+
                 if(array_key_exists($key, $relevantFields)){
-                 
+
                     if(!empty($field[$relevantFields[$key]])){
                         $fieldname=$relevantFields[$key];
                         $value=$field[$relevantFields[$key]];
@@ -368,10 +370,10 @@ class SingleGradeBehavior extends Behavior
                         $hasValue = true;
                     }
                 }
-                
+
                 // Only create and save the entity if at least one relevant field has a value
                 if ($hasValue) {
-                        $fieldData['institution_custom_field_id'] =$field['institution_custom_field_id'];
+                    $fieldData['institution_custom_field_id'] =$field['institution_custom_field_id'];
                     $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
                     try {
                         $cv[] = $customFieldValuesTable->save($fieldEntity);

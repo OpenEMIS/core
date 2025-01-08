@@ -68,7 +68,21 @@ class CustomModule extends Entity
          'Institution.InstitutionClasses' => [
             'filter'=>null,
             'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','STAFF_LIST','FILE','COORDINATES','REPEATER','NOTE']
+            'supported_field_types' => ['TEXT',
+                'NUMBER',
+                'DECIMAL',
+                'TEXTAREA',
+                'DROPDOWN',
+                'CHECKBOX',
+                'TABLE',
+                'DATE',
+                'TIME',
+                'STUDENT_LIST',
+                'STAFF_LIST',
+                'FILE',
+                'COORDINATES',
+                'REPEATER',
+                'NOTE']
         ],
         //POCOR-8538 end
     ];
