@@ -95,80 +95,131 @@ class LeavePoliciesTable extends ControllerActionTable
         $entity->staff_leave_types = $this->getStaffLeaveTypesElement($entity, $action);
     }
 
-    public function getStaffLeaveTypesElement($entity, $action) {
-
+    public function getStaffLeaveTypesElement($entity, $action)
+    {
+        $value = [];
         $staffLeaveTypesTable = self::getDynamicTableInstance('staff_leave_types');
         $staffLeavePolicyTypesTable = self::getDynamicTableInstance('staff_leave_policy_types');
-        if($entity->isNew()){
-            $staffLeaveTypes = $staffLeaveTypesTable->find('all')
-                ->where(['visible' => 1])
-                ->orderAsc($staffLeaveTypesTable->aliasField('order'))
-                ->toArray();
+
+        // Fetch all visible leave types
+        $baseQuery = $staffLeaveTypesTable->find('all')
+            ->where(['visible' => 1])
+            ->orderAsc($staffLeaveTypesTable->aliasField('order'));
+
+        // Action: New entity
+        if ($entity->isNew()) {
+            $staffLeaveTypes = $baseQuery->toArray();
             if (empty($staffLeaveTypes)) {
                 return [];
             }
 
-            foreach ($staffLeaveTypes as $staffLeaveType){
-                $value[] =
-                    [   'enable' => 0,
-                        'staff_leave_type_id' => $staffLeaveType->id,
-                        'code' => $staffLeaveType->national_code,
-                        'name' => $staffLeaveType->name,
-                        'days' => null,
-                        'rollover' => 0];
+            foreach ($staffLeaveTypes as $staffLeaveType) {
+                $value[] = [
+                    'enable' => null,
+                    'staff_leave_type_id' => $staffLeaveType->id,
+                    'code' => $staffLeaveType->national_code,
+                    'name' => $staffLeaveType->name,
+                    'days' => null,
+                    'rollover' => 0
+                ];
             }
             return $value;
         }
-        $staffPolicyLeaveTypesTable = self::getDynamicTableInstance('staff_policy_leave_types');
-        if($action == 'view'){
-            $id = $entity->id;
-            $staffLeaveTypes = $staffLeaveTypesTable->find('all')
-                ->innerJoin([$staffLeavePolicyTypesTable->getAlias() => $staffLeavePolicyTypesTable->getTable()],
-                [$staffLeavePolicyTypesTable->aliasField('staff_leave_type_id = ')
-                    . $staffLeaveTypesTable->aliasField('id'),
-                    $staffLeavePolicyTypesTable->aliasField('staff_leave_policy_id = ') . $id ])
-                ->where(['visible' => 1])
-                ->orderAsc($staffLeaveTypesTable->aliasField('order'))
-                ->toArray();
-            if (empty($staffLeaveTypes)) {
-                return [];
-            }
-//            dd($staffLeaveTypes);
 
-            foreach ($staffLeaveTypes as $staffLeaveType){
-                $value[] =
+        // Ensure we have a valid ID
+        $id = $entity->id ?? null;
+        if (!$id) {
+            return [];
+        }
+
+        // Action: View
+        if ($action === 'view') {
+            $staffLeaveTypes = $baseQuery
+                ->select([
+                    'id' => $staffLeavePolicyTypesTable->aliasField('id'),
+                    'enable' => $staffLeavePolicyTypesTable->aliasField('id'),
+                    'staff_leave_type_id' => $staffLeaveTypesTable->aliasField('id'),
+                    'code' => $staffLeaveTypesTable->aliasField('national_code'),
+                    'name' => $staffLeaveTypesTable->aliasField('name'),
+                    'days' => $staffLeavePolicyTypesTable->aliasField('days'),
+                    'rollover' => $staffLeavePolicyTypesTable->aliasField('rollover')
+                ])
+                ->innerJoin(
+                    [$staffLeavePolicyTypesTable->getAlias() => $staffLeavePolicyTypesTable->getTable()],
                     [
-                        'staff_leave_type_id' => $staffLeaveType->id,
-                        'code' => $staffLeaveType->national_code,
-                        'name' => $staffLeaveType->name,
-                        'days' => null,
-                        'rollover' => 0];
+                        $staffLeavePolicyTypesTable->aliasField('staff_leave_type_id') . ' = ' . $staffLeaveTypesTable->aliasField('id'),
+                        $staffLeavePolicyTypesTable->aliasField('staff_leave_policy_id') . ' = ' . $id
+                    ]
+                )
+                ->toArray();
+
+            if (empty($staffLeaveTypes)) {
+                return [];
+            }
+
+            foreach ($staffLeaveTypes as $staffLeaveType) {
+                $value[] = [
+                    'staff_leave_type_id' => $staffLeaveType->staff_leave_type_id,
+                    'code' => $staffLeaveType->code,
+                    'name' => $staffLeaveType->name,
+                    'days' => $staffLeaveType->days,
+                    'rollover' => $staffLeaveType->rollover
+                ];
             }
             return $value;
         }
 
-        $value = [
-            [
-                'id' => 1,
-                'code' => 'AL',
-                'name' => 'Annual Leave',
-                'days' => 20,
-                'rollover' => 0,  // 0: No, 1: Yes
-                'visible' => 1,  // 1: visible, 0: hidden
-            ],
-            [
-                'id' => 2,
-                'code' => 'SL',
-                'name' => 'Sick Leave',
-                'days' => 10,
-                'rollover' => 1,
-                'visible' => 1,
-            ],
-        ];;
+        // Action: Edit
+        if ($action === 'edit') {
+            $staffLeaveTypes = $baseQuery
+                ->select([
+                    'id' => $staffLeavePolicyTypesTable->aliasField('id'),
+                    'enable' => $staffLeavePolicyTypesTable->aliasField('id'),
+                    'staff_leave_type_id' => $staffLeaveTypesTable->aliasField('id'),
+                    'code' => $staffLeaveTypesTable->aliasField('national_code'),
+                    'name' => $staffLeaveTypesTable->aliasField('name'),
+                    'days' => $staffLeavePolicyTypesTable->aliasField('days'),
+                    'rollover' => $staffLeavePolicyTypesTable->aliasField('rollover')
+                ])
+                ->leftJoin(
+                    [$staffLeavePolicyTypesTable->getAlias() => $staffLeavePolicyTypesTable->getTable()],
+                    [
+                        $staffLeavePolicyTypesTable->aliasField('staff_leave_type_id') . ' = ' . $staffLeaveTypesTable->aliasField('id'),
+                        $staffLeavePolicyTypesTable->aliasField('staff_leave_policy_id') . ' = ' . $id
+                    ]
+                )
+                ->orderAsc($staffLeaveTypesTable->aliasField('order'))
+                ->toArray();
 
+            if (empty($staffLeaveTypes)) {
+                return [];
+            }
+            $enabled = [];
+            $disabled = [];
+            foreach ($staffLeaveTypes as $staffLeaveType) {
+                $record = [
+                    'id' => $staffLeaveType->id,
+                    'enable' => $staffLeaveType->enable ? 1 : 0,
+                    'staff_leave_type_id' => $staffLeaveType->staff_leave_type_id,
+                    'code' => $staffLeaveType->code,
+                    'name' => $staffLeaveType->name,
+                    'days' => $staffLeaveType->days,
+                    'rollover' => $staffLeaveType->rollover
+                ];
+                if ($staffLeaveType->enable) {
+                    $enabled[] = $record;
+                } else {
+                    $disabled[] = $record;
+                }
+
+            }
+            $value = array_merge($enabled, $disabled);
+            return $value;
+        }
 
         return $value;
     }
+
 
 
     /**
