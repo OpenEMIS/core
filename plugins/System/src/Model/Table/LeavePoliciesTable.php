@@ -73,11 +73,17 @@ class LeavePoliciesTable extends ControllerActionTable
     }
     private function setupFields(Entity $entity)
     {
+        $this->field('id', [
+            'type' => 'hidden',
+        ]);
+        $this->field('name');
+        $this->field('code');
+        $this->field('description');
         $this->field('staff_leave_types', [
             'type' => 'element',
             'element' => 'System.staff_leave_types',
             'attr' => [
-                'label' => 'hello, darling'
+                'label' => __('Leave Types')
             ]
         ]);
     }
@@ -270,5 +276,104 @@ class LeavePoliciesTable extends ControllerActionTable
         // Return the table instance
         return $locator->get($tableFullAlias);
     }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+//        Log::debug(print_r($entity, true));
+//        Log::debug(print_r($options, true));
+//        Log::debug(print_r($event, true));
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+//        Log::debug(print_r($entity, true));
+//        Log::debug(print_r($options, true));
+//        Log::debug(print_r($event, true));
+        $this->saveStaffLeavePolicy($entity);
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $staffLeavePolicyTypesTable = self::getDynamicTableInstance('staff_leave_policy_types');
+
+        // Remove linked records in `staff_leave_policy_types` by `staff_leave_policy_id`
+        $affectedRows = $staffLeavePolicyTypesTable->deleteAll([
+            'staff_leave_policy_id' => $entity->id
+        ]);
+
+        Log::debug("Deleted $affectedRows linked staff_leave_policy_types records for policy ID: {$entity->id}");
+    }
+    public function saveStaffLeavePolicy($entity)
+    {
+        // Load the `staff_leave_policy_types` table
+        $staffLeavePolicyTypesTable = self::getDynamicTableInstance('staff_leave_policy_types');
+
+        $policyId = $entity->id;  // Ensure we have the policy ID
+        if (!$policyId) {
+            return;
+        }
+
+        $leaveTypeIdsToKeep = [];  // Track IDs to keep for later deletion
+        $linkedIdsForDeletion = []; // Track IDs that are candidates for deletion
+
+        // Loop through the submitted `staff_leave_types` array
+        foreach ($entity->staff_leave_types as $type) {
+            if ((int)$type['enable'] === 0 && isset($type['id'])) {
+                // If disabled and has an ID, mark for deletion
+                $linkedIdsForDeletion[] = $type['id'];
+                continue;
+            }
+
+            $data = [
+                'id' => $type['id'] ?? Text::uuid(),  // Generate UUID if new record
+                'staff_leave_policy_id' => $policyId,
+                'staff_leave_type_id' => $type['staff_leave_type_id'],
+                'days' => $type['days'],
+                'rollover' => $type['rollover']
+            ];
+
+            // Keep track of IDs that should remain in the database
+            $leaveTypeIdsToKeep[] = $data['id'];
+
+            // Find existing or create a new entity
+            $policyType = $staffLeavePolicyTypesTable->find()
+                ->where([
+                    'staff_leave_policy_id' => $policyId,
+                    'staff_leave_type_id' => $type['staff_leave_type_id']
+                ])
+                ->first() ?? $staffLeavePolicyTypesTable->newEntity([]);
+
+            Log::debug(print_r(['beforePatch' => $policyType], true));
+            $policyType = $staffLeavePolicyTypesTable->patchEntity($policyType, $data);
+            Log::debug(print_r(['afterPatch' => $policyType], true));
+
+            if (!$staffLeavePolicyTypesTable->save($policyType)) {
+                throw new \Exception("Could not save leave policy type for {$type['name']}");
+            }
+
+            Log::debug(print_r(['afterSave' => $policyType], true));
+        }
+
+        // Delete any records that are linked to this policy but not in the "keep" list
+        $staffLeavePolicyTypesTable->deleteAll([
+            'staff_leave_policy_id' => $policyId,
+            'id NOT IN' => $leaveTypeIdsToKeep
+        ]);
+
+        Log::debug('Deleted records for disabled leave types for policy ID: ' . $policyId);
+
+        return true;
+    }
+
 
 }

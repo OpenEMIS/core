@@ -35,6 +35,7 @@ $this->Form->unlockField("$alias.staff_leave_types");
         </div>
     </div>
 <?php elseif ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
+
     <div class="input">
         <label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
         <div class="input-form-wrapper">
@@ -60,10 +61,13 @@ $this->Form->unlockField("$alias.staff_leave_types");
                                     </td>
                                     <td>
                                         <?php
-                                        if (isset($type->id)) {
+                                        if (isset($type['id'])) {
                                             echo $this->Form->hidden("$alias.staff_leave_types.$key.id", ['value' => $type['id'], 'label' => false]);
                                         }
-                                        if (isset($type->staff_leave_type_id)) {
+                                        if (!isset($type['id'])) {
+                                            echo $this->Form->hidden("$alias.staff_leave_types.$key.id", ['value' => null, 'label' => false]);
+                                        }
+                                        if (isset($type['staff_leave_type_id'])) {
                                             echo $this->Form->hidden("$alias.staff_leave_types.$key.staff_leave_type_id", ['value' => $type['staff_leave_type_id'], 'label' => false]);
                                         }
                                         echo $this->Form->input("$alias.staff_leave_types.$key.code", ['value' => $type['code'], 'label' => false, 'readonly' => true]);
