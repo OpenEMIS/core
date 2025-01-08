@@ -1,3 +1,19 @@
+### [4.6.0] - 2025-01-06
+- Implemented: Develop changes to the Staff Appraisal feature
+- Bug Fixed: Administration>System Configuration>Themes: Removes add button
+- Bug Fixed: Institutions > Staff > General > Account: The homeroom teacher role is not displaying under the Accounts tab page even though the staff was assigned as a homeroom teacher successfully
+- Bug Fixed: Reports > Institutions > Student Absence: Date of Birth column has no data showing
+- Bug Fixed: Administration>Field Options>Position Titles>Add: User is getting 404 error
+- Bug Fixed: API: Pagination is not working and adds extra response
+- Bug Fixed: Administration>System Setup>Education Structure>Grade Subjects: Migration script to update default value of result types to assessments
+- Bug Fixed: Develop survey feature in v4 APIs
+- Bug Fixed: Administration>Examinations>Centres:Adding as existing institutions
+- Bug Fixed: System Setup > System Configuration > Themes: It is not working properly
+- Bug Fixed: Reports > Institutions > Students: When downloading the Institution Students report, the page gives an error message
+- Bug Fixed: Institutions > Staff: The count of staff in Institutions > Staff page is incorrect
+- Bug Fixed: Administration > Updates: When clicking on the update button, the page gives a 404 error.
+- Implemented: Update the Attendance Summary Report to use new summary table
+
 ### [4.5.0] - 2024-12-26
 - Implemented: Develop a field, configuration and placeholder for Cumulative GPA
 - Bug Fixed: Institutions > Performances > Report Cards > Download All : This process causes multiple sleep processes on the database

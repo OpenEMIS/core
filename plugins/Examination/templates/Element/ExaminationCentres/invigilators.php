@@ -16,7 +16,7 @@
 		    'queryString' => $attr['queryString'],
 		    $this->ControllerAction->paramsEncode(['examination_id' => $attr['examination_id']])
 		]);
-		$alias = $ControllerAction['table']->alias();
+		$alias = $ControllerAction['table']->getAlias();
 
 		echo $this->Form->input("$alias.invigilator_search", [
 			'label' => __('Add Invigilator'),
