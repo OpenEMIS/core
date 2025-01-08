@@ -12,6 +12,7 @@ use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Text;
 
 class LeavePoliciesTable extends ControllerActionTable
 {
@@ -179,7 +180,7 @@ class LeavePoliciesTable extends ControllerActionTable
         if ($action === 'edit') {
             $staffLeaveTypes = $baseQuery
                 ->select([
-                    'id' => $staffLeavePolicyTypesTable->aliasField('id'),
+                    'staff_policy_leave_type_id' => $staffLeavePolicyTypesTable->aliasField('id'),
                     'enable' => $staffLeavePolicyTypesTable->aliasField('id'),
                     'staff_leave_type_id' => $staffLeaveTypesTable->aliasField('id'),
                     'code' => $staffLeaveTypesTable->aliasField('national_code'),
@@ -204,13 +205,13 @@ class LeavePoliciesTable extends ControllerActionTable
             $disabled = [];
             foreach ($staffLeaveTypes as $staffLeaveType) {
                 $record = [
-                    'id' => $staffLeaveType->id,
+                    'staff_policy_leave_type_id' => $staffLeaveType->staff_policy_leave_type_id,
                     'enable' => $staffLeaveType->enable ? 1 : 0,
                     'staff_leave_type_id' => $staffLeaveType->staff_leave_type_id,
                     'code' => $staffLeaveType->code,
                     'name' => $staffLeaveType->name,
                     'days' => $staffLeaveType->days,
-                    'rollover' => $staffLeaveType->rollover
+                    'rollover' => $staffLeaveType->rollover == 1 ? 1 : 0
                 ];
                 if ($staffLeaveType->enable) {
                     $enabled[] = $record;
@@ -313,6 +314,14 @@ class LeavePoliciesTable extends ControllerActionTable
 
         Log::debug("Deleted $affectedRows linked staff_leave_policy_types records for policy ID: {$entity->id}");
     }
+
+
+    /**
+     * Saves the staff leave policy and its associated leave types.
+     *
+     * @param \Cake\Datasource\EntityInterface $entity The entity containing staff leave policy data.
+     * @return bool True on success, false otherwise.
+     */
     public function saveStaffLeavePolicy($entity)
     {
         // Load the `staff_leave_policy_types` table
@@ -320,60 +329,90 @@ class LeavePoliciesTable extends ControllerActionTable
 
         $policyId = $entity->id;  // Ensure we have the policy ID
         if (!$policyId) {
-            return;
+            return false;  // Return false if no policy ID is present
         }
 
-        $leaveTypeIdsToKeep = [];  // Track IDs to keep for later deletion
-        $linkedIdsForDeletion = []; // Track IDs that are candidates for deletion
+        // Arrays to track changes and new records
+        $changedLeaveTypes = [];  // Leave types that need updating
+        $changedLeaveTypeEntities = [];  // Entities that were updated
+        $newLeaveTypeEntities = [];  // Entities for newly created leave types
+        $newLeaveTypes = [];  // Leave types to be created
+        $linkedIdsForDeletion = [];  // IDs of leave types to be deleted
+
+        // Extract submitted leave types from the entity
+        $staffLeaveTypes = $entity->staff_leave_types ?? [];
 
         // Loop through the submitted `staff_leave_types` array
-        foreach ($entity->staff_leave_types as $type) {
-            if ((int)$type['enable'] === 0 && isset($type['id'])) {
-                // If disabled and has an ID, mark for deletion
-                $linkedIdsForDeletion[] = $type['id'];
+        foreach ($staffLeaveTypes as $staffLeaveType) {
+            $isEnabled = (int)$staffLeaveType['enable'] === 1;
+            $hasExistingId = !empty($staffLeaveType['staff_policy_leave_type_id']);
+
+            if (!$isEnabled && $hasExistingId) {
+                // Mark for deletion if the leave type is disabled and has an existing ID
+                $linkedIdsForDeletion[] = $staffLeaveType['staff_policy_leave_type_id'];
                 continue;
             }
 
-            $data = [
-                'id' => $type['id'] ?? Text::uuid(),  // Generate UUID if new record
-                'staff_leave_policy_id' => $policyId,
-                'staff_leave_type_id' => $type['staff_leave_type_id'],
-                'days' => $type['days'],
-                'rollover' => $type['rollover']
-            ];
-
-            // Keep track of IDs that should remain in the database
-            $leaveTypeIdsToKeep[] = $data['id'];
-
-            // Find existing or create a new entity
-            $policyType = $staffLeavePolicyTypesTable->find()
-                ->where([
+            if ($isEnabled && $hasExistingId) {
+                // Track changes if the leave type is enabled and has an existing ID
+                $changedLeaveTypes[] = [
+                    'id' => $staffLeaveType['staff_policy_leave_type_id'],
                     'staff_leave_policy_id' => $policyId,
-                    'staff_leave_type_id' => $type['staff_leave_type_id']
-                ])
-                ->first() ?? $staffLeavePolicyTypesTable->newEntity([]);
-
-            Log::debug(print_r(['beforePatch' => $policyType], true));
-            $policyType = $staffLeavePolicyTypesTable->patchEntity($policyType, $data);
-            Log::debug(print_r(['afterPatch' => $policyType], true));
-
-            if (!$staffLeavePolicyTypesTable->save($policyType)) {
-                throw new \Exception("Could not save leave policy type for {$type['name']}");
+                    'staff_leave_type_id' => $staffLeaveType['staff_leave_type_id'],
+                    'days' => $staffLeaveType['days'],
+                    'rollover' => $staffLeaveType['rollover']
+                ];
             }
 
-            Log::debug(print_r(['afterSave' => $policyType], true));
+            if ($isEnabled && !$hasExistingId) {
+                // Track new leave types if the leave type is enabled and has no existing ID
+                $newLeaveTypes[] = [
+                    'id' => Text::uuid(),  // Generate UUID for new record
+                    'staff_leave_policy_id' => $policyId,
+                    'staff_leave_type_id' => $staffLeaveType['staff_leave_type_id'],
+                    'days' => $staffLeaveType['days'],
+                    'rollover' => $staffLeaveType['rollover']
+                ];
+            }
         }
 
-        // Delete any records that are linked to this policy but not in the "keep" list
-        $staffLeavePolicyTypesTable->deleteAll([
-            'staff_leave_policy_id' => $policyId,
-            'id NOT IN' => $leaveTypeIdsToKeep
-        ]);
+        // Delete disabled leave types linked to this policy
+        if (!empty($linkedIdsForDeletion)) {
+            $staffLeavePolicyTypesTable->deleteAll([
+                'staff_leave_policy_id' => $policyId,
+                'id IN' => $linkedIdsForDeletion
+            ]);
+            Log::debug('Deleted records for disabled leave types for policy ID: ' . $policyId);
+        }
 
-        Log::debug('Deleted records for disabled leave types for policy ID: ' . $policyId);
+        // Save updated leave types
+        foreach ($changedLeaveTypes as $changedLeaveType) {
+            try {
+                $changedLeaveTypeEntity = $staffLeavePolicyTypesTable->get($changedLeaveType['id']);
+                $staffLeavePolicyTypesTable->patchEntity($changedLeaveTypeEntity, $changedLeaveType);
+                if ($staffLeavePolicyTypesTable->save($changedLeaveTypeEntity)) {
+                    $changedLeaveTypeEntities[] = $changedLeaveTypeEntity;
+                } else {
+                    Log::error("Failed to save updated leave type ID: {$changedLeaveType['id']}");
+                }
+            } catch (\Exception $e) {
+                Log::error("Error fetching leave type ID: {$changedLeaveType['id']} - " . $e->getMessage());
+            }
+        }
+
+        // Save new leave types
+        foreach ($newLeaveTypes as $newLeaveType) {
+            $newLeaveTypeEntity = $staffLeavePolicyTypesTable->newEntity($newLeaveType);
+            if ($staffLeavePolicyTypesTable->save($newLeaveTypeEntity)) {
+                $newLeaveTypeEntities[] = $newLeaveTypeEntity;
+            } else {
+                Log::error("Failed to save new leave type for policy ID: $policyId");
+            }
+        }
 
         return true;
     }
+
 
 
 }
