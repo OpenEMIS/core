@@ -1067,7 +1067,9 @@ class RecordBehavior extends Behavior
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
 
-                            if (!empty($sectionName)&&$model->request->getParam('action')!="Surveys" && $model->request->getParam('action')!="Classes") {//POCOR-8538
+                            if (!empty($sectionName)
+                                &&$model->request->getParam('action')!="Surveys"
+                                && $model->request->getParam('action')!="Classes") {//POCOR-8538
                                 $ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName[$key]]);
                                 $fieldOrder[++$order] = $fieldName;
                                // echo "<pre>";print_r($customFields);die;

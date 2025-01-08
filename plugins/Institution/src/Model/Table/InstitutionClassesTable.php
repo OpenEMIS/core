@@ -497,7 +497,6 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        Log::debug(print_r(['Saving New Class Custom Fields:' => $entity], true));
         try {
 
 
@@ -510,7 +509,6 @@ class InstitutionClassesTable extends ControllerActionTable
             }
             $customFields = $entity->custom;
             $cv = self::saveCustomFields($customFields, $classId, $createdUserId);
-                Log::debug(print_r($cv, true));
         }
         }catch (\Exception $exception){
             Log::debug(print_r(['Error Saving Class Custom Fields:' => $exception->getMessage()], true));
