@@ -31,7 +31,6 @@ class InstitutionService extends Controller
         try {
             $list = $this->institutionRepository->getInstitutions($request);
             $resp = [];
-
             foreach($list['data'] as $k => $data){
                 $resp[$k]['id'] = $data['id'];
                 $resp[$k]['name'] = $data['name'];
@@ -64,7 +63,11 @@ class InstitutionService extends Controller
                 $resp[$k]['shift_type'] = $data['shift_type'];
                 $resp[$k]['classification'] = $data['classification'];
                 $resp[$k]['area_id'] = $data['area_id'];
+                $resp[$k]['area_name'] = $data['area_education']['name'];
+                $resp[$k]['area_code'] = $data['area_education']['code'];
                 $resp[$k]['area_administrative_id'] = $data['area_administrative_id'];
+                $resp[$k]['area_administrative_name'] = $data['area_administratives']['name'];
+                $resp[$k]['area_administrative_code'] = $data['area_administratives']['code'];
 
                 $resp[$k]['institution_locality_id'] = $data['institution_locality_id'];
                 $resp[$k]['institution_locality_name'] = $data['institution_localities']['name']??"";
@@ -1974,6 +1977,39 @@ class InstitutionService extends Controller
             return $this->sendErrorResponse('Failed to get Behaviour Categories List.');
         }
     }
+
+    //POCOR-8711 starts
+    public function getStudentBehaviourCategories($request)
+    {
+        try {
+            $data = $this->institutionRepository->getStudentBehaviourCategories($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Student Behaviour Categories Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Student Behaviour Categories List.');
+        }
+    }
+
+    public function getStaffBehaviourCategories($request)
+    {
+        try {
+            $data = $this->institutionRepository->getStaffBehaviourCategories($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Staff Behaviour Categories Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Staff Behaviour Categories List.');
+        }
+    }//POCOR-8711 Ends
 
     public function getInstitutionStudentBehaviour($params, $institutionId, $studentId)
     {
