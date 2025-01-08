@@ -13,6 +13,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
+use Cake\ORM\Exception\PersistenceFailedException;
 
 class LeavePoliciesTable extends ControllerActionTable
 {
@@ -299,6 +300,18 @@ class LeavePoliciesTable extends ControllerActionTable
 
     public function beforeDelete(Event $event, Entity $entity)
     {
+        $staffPositionTitlesTable = self::getDynamicTableInstance('staff_position_titles');
+
+        $linkedRecordsCount = $staffPositionTitlesTable->find()
+            ->where(['staff_leave_policy_id' => $entity->id])
+            ->count();
+
+        if ($linkedRecordsCount > 0) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation');
+            $event->stopPropagation();  // Stop the delete event
+//            throw new PersistenceFailedException($entity, "Cannot delete this leave policy because it is linked to $linkedRecordsCount position titles.");
+            return false;
+        }
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
