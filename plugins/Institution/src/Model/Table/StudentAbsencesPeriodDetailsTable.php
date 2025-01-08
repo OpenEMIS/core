@@ -173,7 +173,6 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $institutionId = $entity->institution_id;
         $studentId = $entity->student_id;
         $absenceTypeId = $entity->absence_type_id;
-
         $optionList = $StudentAttendanceMarkTypes->getAttendancePerDayOptionsByClass($classId, $academicPeriodId, $date, $educationGradeId);
         if (!is_null($optionList)) {
             $periodCount = count($optionList);
@@ -189,7 +188,6 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                     // $this->aliasField('absence_type_id') => $absenceTypeId //POCOR-7205
                 ])
                 ->count();
-
             //POCOR-6584 :: START
             $shellName = "AlertAttendance";
             if ($this->isShellStopExist($shellName)) {
@@ -215,7 +213,6 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                 foreach ($alertRolesData as $alertRole) {
                                     $securityRoleIds[] = $alertRole->security_role_id;
                                 }
-
                                 $securityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
                                 $securityGroupUsersData = $securityGroupUsersTable->find()
                                     ->where(['security_group_id' => $institutionSecurityGroupId, 'security_role_id in' => $securityRoleIds])
@@ -447,27 +444,27 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                         //     $alertRuleMessage = str_replace($searchKeyWebsite, $InsWebsite, $alertRuleMessage);
                                         // }
                                         // Need to cross verfiy for php version 8[END]
-
                                         //Comment for V4[START]
                                         //POCOR-7266::End
-                                        // if (($alertRuleData1->threshold) == $absenceCount) { //POCOR-7398 just changed <= to == also removed -1 after threshold
-                                        //     $absenceCount = $absenceCount + 1;
-                                        //     if (!empty($userData->email)) {
-                                        //         $email = new Email('openemis');
-                                        //         $emailSubject = 'OpenEMIS Attendance Alert for ' . $insCode . " - " . $insName;
-                                        //         $emailMessage = $alertRuleMessage; //POCOR-7266
-                                        //         // POCOR-8039 start
-                                        //         try {
-                                        //             $email
-                                        //                 ->to($userData->email)
-                                        //                 ->subject($emailSubject)
-                                        //                 ->send($emailMessage);
-                                        //         } catch (\Exception $exception) {
-                                        //             $this->log($exception->getMessage(), 'error');
-                                        //         }
-                                        //         // POCOR-8039 end
-                                        //     }
-                                        // }
+                                         //POCOR-8650::START
+                                        if (($alertRuleData1->threshold) == $absenceCount) { //POCOR-7398 just changed <= to == also removed -1 after threshold
+                                            $absenceCount = $absenceCount + 1;
+                                            if (!empty($userData->email)) {
+                                                $email = new Email('openemis');
+                                                $emailSubject = 'OpenEMIS Attendance Alert for ' . $insCode . " - " . $insName;
+                                                $emailMessage = $alertRuleMessage; //POCOR-7266
+                                                // POCOR-8039 start
+                                                try {
+                                                    $email
+                                                        ->setTo($userData->email)
+                                                        ->setSubject($emailSubject)
+                                                        ->send($emailMessage);
+                                                } catch (\Exception $exception) {
+                                                    $this->log($exception->getMessage(), 'error');
+                                                }
+                                                // POCOR-8039 end
+                                            }
+                                        }
                                     }
                                 }
                             }

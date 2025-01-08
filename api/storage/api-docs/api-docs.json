@@ -26712,6 +26712,103 @@
                 }
             }
         },
+        "/api/v4/scanned": {
+            "post": {
+                "tags": [
+                    "Scanned"
+                ],
+                "summary": "Submit scanned data",
+                "description": "Endpoint for submitting scanned data with location and timestamp.",
+                "operationId": "4c18b38a901ef25766ca4740f2778fd6",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "header",
+                        "description": "Authentication token",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "your_auth_token_here"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Scanned data payload",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "openemis_no",
+                                    "datetime",
+                                    "latitude",
+                                    "longitude"
+                                ],
+                                "properties": {
+                                    "openemis_no": {
+                                        "description": "OpenEMIS identification number",
+                                        "type": "string",
+                                        "example": "1234567890"
+                                    },
+                                    "datetime": {
+                                        "description": "Timestamp of the scan in ISO 8601 format",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-10-25T14:30:00Z"
+                                    },
+                                    "latitude": {
+                                        "description": "Latitude of the scanned location",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 25.276987
+                                    },
+                                    "longitude": {
+                                        "description": "Longitude of the scanned location",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 55.296249
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Scanned data submitted successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Scanned data submitted successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "success"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request. Required fields are missing or invalid."
+                    },
+                    "401": {
+                        "description": "Unauthorized. Invalid or missing token."
+                    }
+                }
+            }
+        },
         "/api/v4/institutions/{institutionId}/schedules/timetables/lessons/{id}": {
             "delete": {
                 "tags": [
@@ -29817,6 +29914,401 @@
                                     }
                                 },
                                 "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/surveys": {
+            "get": {
+                "tags": [
+                    "Surveys"
+                ],
+                "summary": "Get surveys list.",
+                "description": "Returns a list of surveys.",
+                "operationId": "e1468037708779a0b1ef3ffc1a31a2a3",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "17"
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "38ba70ef"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Staff List Test"
+                                                            },
+                                                            "description": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "custom_module_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "custom_module": {
+                                                                "type": "string",
+                                                                "example": "Institution > Overview"
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2018-05-30 07:29:11"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/survey/download/xform/{surveyFormId}": {
+            "get": {
+                "tags": [
+                    "Surveys"
+                ],
+                "summary": "Get surveys list.",
+                "description": "Returns a xml content of survey form.",
+                "operationId": "9dad9ae7d45c7b1541eab13bdfec7f92",
+                "parameters": [
+                    {
+                        "name": "surveyFormId",
+                        "in": "path",
+                        "description": "Survey Form Id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "11"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "properties": {
+                                        "html": {
+                                            "properties": {
+                                                "head": {
+                                                    "properties": {
+                                                        "title": {
+                                                            "type": "string",
+                                                            "example": "Staff List Test"
+                                                        },
+                                                        "meta": {
+                                                            "properties": {
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "description"
+                                                                },
+                                                                "content": {
+                                                                    "type": "string",
+                                                                    "example": ""
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "xf:model": {
+                                                            "properties": {
+                                                                "xf:instance": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "string",
+                                                                            "example": "xform"
+                                                                        },
+                                                                        "oe:SurveyForms": {
+                                                                            "properties": {
+                                                                                "id": {
+                                                                                    "type": "integer",
+                                                                                    "example": 17
+                                                                                },
+                                                                                "oe:Institutions": {
+                                                                                    "type": "string",
+                                                                                    "example": ""
+                                                                                },
+                                                                                "oe:AcademicPeriods": {
+                                                                                    "type": "integer",
+                                                                                    "example": ""
+                                                                                },
+                                                                                "oe:SurveyQuestions": {
+                                                                                    "properties": {
+                                                                                        "id": {
+                                                                                            "type": "integer",
+                                                                                            "example": 111
+                                                                                        }
+                                                                                    },
+                                                                                    "type": "object"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "xf:bind": {
+                                                                    "properties": {
+                                                                        "ref": {
+                                                                            "type": "string",
+                                                                            "example": "instance('xform')/SurveyForms/Institutions"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string",
+                                                                            "example": "string"
+                                                                        },
+                                                                        "required": {
+                                                                            "type": "boolean",
+                                                                            "example": "true()"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "xsd:schema": {
+                                                                    "type": "object"
+                                                                },
+                                                                "xf:bind[2]": {
+                                                                    "properties": {
+                                                                        "ref": {
+                                                                            "type": "string",
+                                                                            "example": "instance('xform')/SurveyForms/AcademicPeriods"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string",
+                                                                            "example": "integer"
+                                                                        },
+                                                                        "required": {
+                                                                            "type": "boolean",
+                                                                            "example": "true()"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "xf:bind[3]": {
+                                                                    "properties": {
+                                                                        "ref": {
+                                                                            "type": "string",
+                                                                            "example": "instance('xform')/SurveyForms/SurveyQuestions[1]"
+                                                                        },
+                                                                        "type": {
+                                                                            "type": "string",
+                                                                            "example": "string"
+                                                                        },
+                                                                        "required": {
+                                                                            "type": "boolean",
+                                                                            "example": "false()"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "body": {
+                                                    "properties": {
+                                                        "xf:input": {
+                                                            "properties": {
+                                                                "ref": {
+                                                                    "type": "string",
+                                                                    "example": "instance('xform')/SurveyForms/Institutions"
+                                                                },
+                                                                "oe-type": {
+                                                                    "type": "string",
+                                                                    "example": "string"
+                                                                },
+                                                                "xf:label": {
+                                                                    "type": "string",
+                                                                    "example": "Institution Code"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "xf:select1": {
+                                                            "properties": {
+                                                                "ref": {
+                                                                    "type": "string",
+                                                                    "example": "instance('xform')/SurveyForms/AcademicPeriods"
+                                                                },
+                                                                "oe-type": {
+                                                                    "type": "string",
+                                                                    "example": "integer"
+                                                                },
+                                                                "oe-dependency": {
+                                                                    "type": "string",
+                                                                    "example": "instance('xform')/SurveyForms/Institutions"
+                                                                },
+                                                                "xf:label": {
+                                                                    "type": "string",
+                                                                    "example": "Academic Period"
+                                                                },
+                                                                "xf:item": {
+                                                                    "properties": {
+                                                                        "xf:label": {
+                                                                            "type": "string",
+                                                                            "example": "2024"
+                                                                        },
+                                                                        "xf:value": {
+                                                                            "type": "integer",
+                                                                            "example": 33
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "xf:staff_list": {
+                                                            "properties": {
+                                                                "ref": {
+                                                                    "type": "string",
+                                                                    "example": "instance('xform')/SurveyForms/SurveyQuestions[1]"
+                                                                },
+                                                                "xf:label": {
+                                                                    "type": "string",
+                                                                    "example": "Staff List"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/survey/upload": {
+            "post": {
+                "tags": [
+                    "Surveys"
+                ],
+                "summary": "Get surveys list.",
+                "description": "Returns a list of surveys.",
+                "operationId": "5c648e61cf96f81feef018daeacd8418",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/xml": {
+                            "schema": {
+                                "type": "object",
+                                "example": "<xf:instance id='xform'>\r\n     *                              <oe:SurveyForms id='19'>\r\n     *                                  <oe:Institutions>P1002</oe:Institutions>\r\n     *                                  <oe:AcademicPeriods>33</oe:AcademicPeriods>\r\n     *                                  <oe:SurveyQuestions id='107' />\r\n     *                                  <oe:SurveyQuestions id='106'>-122.083922 37.4220936</oe:SurveyQuestions>\r\n     *                                  <oe:SurveyQuestions id='7'>10</oe:SurveyQuestions>\r\n     *                                  <oe:SurveyQuestions id='14'>3</oe:SurveyQuestions>\r\n     *                                  <oe:SurveyQuestions id='9'>\r\n     *                                      <oe:SurveyTableRows id='95'>\r\n     *                                          <oe:SurveyTableColumns0 id='0'>test row</oe:SurveyTableColumns0>\r\n     *                                      </oe:SurveyTableRows>\r\n     *                                  </oe:SurveyQuestions>\r\n     *                                  <oe:SurveyQuestions id='103'>0.2</oe:SurveyQuestions>\r\n     *                                  <oe:SurveyQuestions id='112'>\r\n     *                                      <oe:RepeatBlock>\r\n     *                                          <oe:SurveyQuestions1 id='7'>5</oe:SurveyQuestions1>\r\n     *                                          <oe:SurveyQuestions2 id='10'>2024-07-27</oe:SurveyQuestions2>\r\n     *                                          <oe:SurveyQuestions3 id='17'>description</oe:SurveyQuestions3>\r\n     *                                          <oe:SurveyQuestions4 id='22'>15</oe:SurveyQuestions4>\r\n     *                                          <oe:SurveyQuestions5 id='109'>upload test</oe:SurveyQuestions5>\r\n     *                                      </oe:RepeatBlock>\r\n     *                                  </oe:SurveyQuestions>\r\n     *                                  <oe:SurveyQuestions id='110'>96 97</oe:SurveyQuestions>\r\n     *                                  <oe:SurveyQuestions id='109'>upload test text</oe:SurveyQuestions>\r\n     *                                  <oe:SurveyQuestions id='104'>upload test description</oe:SurveyQuestions>\r\n     *                              </oe:SurveyForms>\r\n     *                          </xf:instance>"
                             }
                         }
                     }
@@ -40373,5 +40865,103 @@
                 }
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Examinations",
+            "description": "Examinations"
+        },
+        {
+            "name": "Assessment",
+            "description": "Assessment"
+        },
+        {
+            "name": "Attendance",
+            "description": "Attendance"
+        },
+        {
+            "name": "Student Attendance Archive",
+            "description": "Student Attendance Archive"
+        },
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Directory",
+            "description": "Directory"
+        },
+        {
+            "name": "Education Structure",
+            "description": "Education Structure"
+        },
+        {
+            "name": "Institutions",
+            "description": "Institutions"
+        },
+        {
+            "name": "Users",
+            "description": "Users"
+        },
+        {
+            "name": "Meals",
+            "description": "Meals"
+        },
+        {
+            "name": "Academic Period",
+            "description": "Academic Period"
+        },
+        {
+            "name": "Nationalities",
+            "description": "Nationalities"
+        },
+        {
+            "name": "Identity types",
+            "description": "Identity types"
+        },
+        {
+            "name": "Institution Grades",
+            "description": "Institution Grades"
+        },
+        {
+            "name": "Areas",
+            "description": "Areas"
+        },
+        {
+            "name": "Miscellaneous",
+            "description": "Miscellaneous"
+        },
+        {
+            "name": "Report card",
+            "description": "Report card"
+        },
+        {
+            "name": "Scanned",
+            "description": "Scanned"
+        },
+        {
+            "name": "Institution time table",
+            "description": "Institution time table"
+        },
+        {
+            "name": "System Configuration",
+            "description": "System Configuration"
+        },
+        {
+            "name": "Textbook",
+            "description": "Textbook"
+        },
+        {
+            "name": "Themes",
+            "description": "Themes"
+        },
+        {
+            "name": "Training",
+            "description": "Training"
+        },
+        {
+            "name": "Workbench",
+            "description": "Workbench"
+        }
+    ]
 }

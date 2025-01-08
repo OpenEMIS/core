@@ -127,7 +127,7 @@ class InstitutionRepository extends Controller
             }*/
             
             //$institutions = new Institutions();
-            $institutions = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender');
+            $institutions = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender','areaEducation','areaAdministratives');
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -535,12 +535,12 @@ class InstitutionRepository extends Controller
 
 
             //For POCOR-8540 Start
-            if($loggedInUser->is_student == 1 && $loggedInUser->super_admin == 0){
+            if($loggedInUser->is_student == 1 && $loggedInUser->is_staff == 0 && $loggedInUser->super_admin == 0){
                 $institutionClasses = $institutionClasses->join('institution_class_students', 'institution_class_students.institution_class_id', '=', 'institution_classes.id')
                     ->where('institution_class_students.student_id', $loggedInUser->id);
             } 
 
-            if($loggedInUser->is_staff == 1 && $loggedInUser->super_admin == 0){
+            if($loggedInUser->is_staff == 1 && $loggedInUser->is_student == 0 && $loggedInUser->super_admin == 0){
                 $institutionClasses = $institutionClasses->where('staff_id', $loggedInUser->id);
             } 
             //For POCOR-8540 End
@@ -3849,6 +3849,69 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Room Type Summaries List Not Found');
         }
     }
+
+    //POCOR-8711 starts
+    public function getStudentBehaviourCategories($request)
+    {
+        try {
+            $params = $request->all();
+
+            $behaviourCategoryQuery = new StudentBehaviourCategory();
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $behaviourCategoryQuery = $behaviourCategoryQuery->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $behaviourCategoryQuery->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $behaviourCategoryQuery->get()->toArray();
+            }
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Room Type Summaries List Not Found');
+        }
+    }
+
+    public function getStaffBehaviourCategories($request)
+    {
+        try {
+            $params = $request->all();
+
+            $behaviourCategoryQuery = new StaffBehaviourCategories();
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $behaviourCategoryQuery = $behaviourCategoryQuery->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $behaviourCategoryQuery->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $behaviourCategoryQuery->get()->toArray();
+            }
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Room Type Summaries List Not Found');
+        }
+    }//POCOR-8711 Ends
 
     public function getInstitutionStudentBehaviour($params, $institutionId, $studentId)
     {

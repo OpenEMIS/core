@@ -13,4 +13,9 @@ class InstitutionScheduleLessonRooms extends Model
     {
         return $this->belongsTo(InstitutionScheduleLessonDetails::class, 'institution_schedule_lesson_detail_id', 'id');
     }
+
+    public function institution_room()
+    {
+        return $this->belongsTo(InstitutionRooms::class, 'institution_room_id', 'id');
+    }
 }

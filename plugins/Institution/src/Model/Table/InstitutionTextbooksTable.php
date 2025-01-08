@@ -818,31 +818,32 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $queryParams['grade'] = '-1';
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $request->getData())) {
-                if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
-                    //$requestPeriod = $request->getData($this->getAlias())['academic_period_id'];
-                    $queryParams['period'] = $request->getData($this->getAlias())['academic_period_id'];
+            $dataAlias = $request->getData($this->getAlias()); //POCOR-8697
+            
+            if (is_array($dataAlias)) {
+                if (array_key_exists('academic_period_id', $dataAlias)) {
+                    $queryParams['period'] = $dataAlias['academic_period_id'];
                 }
-
-                if (array_key_exists('education_grade_id', $request->getData[$this->getAlias()])) {
-                    //$requestGrade = $request->getData($this->getAlias())['education_grade_id'];
-                    $queryParams['grade'] = $request->getData($this->getAlias())['education_grade_id'];
+        
+                if (array_key_exists('education_grade_id', $dataAlias)) {
+                    $queryParams['grade'] = $dataAlias['education_grade_id'];
                 }
-                if (array_key_exists('institution_class_id', $request->getData($this->getAlias()))) {
-                    //$requestClass = $request->getData($this->getAlias())['institution_class_id'];
-                    $queryParams['class'] = $request->getData($this->getAlias())['institution_class_id'];
+        
+                if (array_key_exists('institution_class_id', $dataAlias)) {
+                    $queryParams['class'] = $dataAlias['institution_class_id'];
                 }
-                if (array_key_exists('education_subject_id', $request->getData($this->getAlias()))) {
-                    //$requestSubject = $request->getData($this->getAlias())['education_subject_id'];
-                    $queryParams['subject'] = $request->getData($this->getAlias())['education_subject_id'];
+        
+                if (array_key_exists('education_subject_id', $dataAlias)) {
+                    $queryParams['subject'] = $dataAlias['education_subject_id'];
                 }
-
-                if (isset($data[$this->getAlias()]['textbooks_students'])) {
-                    unset($data[$this->getAlias()]['textbooks_students']);
+        
+                if (isset($dataAlias['textbooks_students'])) {
+                    unset($dataAlias['textbooks_students']);
                 }
             }
             $this->request = $request->withQueryParams($queryParams);
         }
+        
     }
 
     public function onUpdateFieldTextbookId(Event $event, array $attr, $action, ServerRequest $request)

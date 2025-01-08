@@ -567,13 +567,14 @@ class UsersTable extends ControllerActionTable
         }
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         $BaseUsers = TableRegistry::get('User.Users');
+        $validator->requirePresence('gender_id', 'create'); //POCOR-8752 name,gender and dob should be mandatory
         return $BaseUsers->setUserValidation($validator, $this);
-    }*/
+    }
 
     public function isAdmin($userId)
     {
