@@ -26,7 +26,7 @@ $this->Form->unlockField("$alias.staff_leave_types");
                             <td><?= h($type['code']); ?></td>
                             <td><?= h($type['name']); ?></td>
                             <td><?= h($type['days']); ?></td>
-                            <td><?= $type->rollover ? __('Yes') : __('No'); ?></td>
+                            <td><?= $type['rollover'] == 1 ? __('Yes') : __('No'); ?></td>
                         </tr>
                     <?php endforeach ?>
                     </tbody>
@@ -61,11 +61,11 @@ $this->Form->unlockField("$alias.staff_leave_types");
                                     </td>
                                     <td>
                                         <?php
-                                        if (isset($type['id'])) {
-                                            echo $this->Form->hidden("$alias.staff_leave_types.$key.id", ['value' => $type['id'], 'label' => false]);
+                                        if (isset($type['staff_policy_leave_type_id'])) {
+                                            echo $this->Form->hidden("$alias.staff_leave_types.$key.staff_policy_leave_type_id", ['value' => $type['staff_policy_leave_type_id'], 'label' => false]);
                                         }
-                                        if (!isset($type['id'])) {
-                                            echo $this->Form->hidden("$alias.staff_leave_types.$key.id", ['value' => null, 'label' => false]);
+                                        if (!isset($type['staff_policy_leave_type_id'])) {
+                                            echo $this->Form->hidden("$alias.staff_leave_types.$key.staff_policy_leave_type_id", ['value' => null, 'label' => false]);
                                         }
                                         if (isset($type['staff_leave_type_id'])) {
                                             echo $this->Form->hidden("$alias.staff_leave_types.$key.staff_leave_type_id", ['value' => $type['staff_leave_type_id'], 'label' => false]);
@@ -80,7 +80,7 @@ $this->Form->unlockField("$alias.staff_leave_types");
                                         <?= $this->Form->input("$alias.staff_leave_types.$key.days", ['value' => $type['days'], 'label' => false, 'type' => 'number']); ?>
                                     </td>
                                     <td>
-                                        <?= $this->Form->select("$alias.staff_leave_types.$key.rollover", ['1' => __('Yes'), '0' => __('No')], ['default' => $type['rollover']]); ?>
+                                        <?= $this->Form->select("$alias.staff_leave_types.$key.rollover", ['1' => __('Yes'), '0' => __('No')], ['value' => $type['rollover']]); ?>
                                     </td>
                                 </tr>
                             <?php endforeach ?>

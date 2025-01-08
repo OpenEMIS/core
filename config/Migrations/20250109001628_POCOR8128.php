@@ -26,17 +26,18 @@ class POCOR8128 extends AbstractMigration
 
         // Create staff_leave_policy_types table
         $this->execute('
-            CREATE TABLE IF NOT EXISTS `staff_leave_policy_types` (
-                `id` CHAR(36) NOT NULL,
-                `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_policies.id",
-                `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_types.id",
-                `days` INT NULL COMMENT "Days allocated (nullable)",
-                `rollover` TINYINT(1) NOT NULL DEFAULT 1 COMMENT "1: Yes Can rollover unused days, 0: No",
-                PRIMARY KEY (`id`),
-                KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`),
-                KEY `idx_staff_leave_type_id` (`staff_leave_type_id`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-        ');
+    CREATE TABLE IF NOT EXISTS `staff_leave_policy_types` (
+        `id` CHAR(36) NOT NULL,
+        `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_policies.id",
+        `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_types.id",
+        `days` INT NULL COMMENT "Days allocated (nullable)",
+        `rollover` TINYINT(1) NOT NULL DEFAULT 1 COMMENT "1: Yes Can rollover unused days, 0: No",
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `uq_policy_type` (`staff_leave_policy_id`, `staff_leave_type_id`),  -- Unique constraint
+        KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`),
+        KEY `idx_staff_leave_type_id` (`staff_leave_type_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+');
 
         // Create general leave policy and add national codes
         $this->createGeneralLeavePolicy();
