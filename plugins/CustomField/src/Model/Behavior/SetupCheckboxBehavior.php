@@ -24,7 +24,10 @@ class SetupCheckboxBehavior extends SetupBehavior
             'visible' => true,
             'valueClass' => 'table-full-width'
         ]);
-        $this->sortFieldOrder('options');
+        $this->_table->field('id', [
+            'type' => 'hidden'
+        ]);
+        $this->sortFieldOrder('id','options');
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
