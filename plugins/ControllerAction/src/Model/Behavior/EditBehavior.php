@@ -134,6 +134,8 @@ class EditBehavior extends Behavior
                             return $event->getResult();
                         }
                     }
+                    Log::debug(print_r(['model' => $model], true));
+                    Log::debug(print_r(['entity' => $entity], true));
                     $process = function ($model, $entity) {
                         return $model->save($entity);
                     };
