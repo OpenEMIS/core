@@ -52,12 +52,14 @@ class SetupCheckboxBehavior extends SetupBehavior
     public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
+
         if ($data[$model->getAlias()]['field_type'] == $this->fieldTypeCode) {
             $fieldOptions = [
                 'name' => '',
                 'visible' => 1
             ];
             $data[$model->getAlias()]['custom_field_options'][] = $fieldOptions;
+            $data[$model->getAlias()]['id'] = $entity->id;
 
             //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
             $options['associated'] = [
