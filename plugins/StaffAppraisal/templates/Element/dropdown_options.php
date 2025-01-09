@@ -37,7 +37,7 @@
     </div>
 <?php elseif ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
     <div class="input">
-        <label for="<?= $a§ttr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
+        <label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
         <div class="input-form-wrapper">
             <div class="table-toolbar">
                 <button onclick="$('#reload').val('addOption').click();return false;" class="btn btn-default btn-xs">
