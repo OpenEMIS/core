@@ -33,6 +33,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
         parent::initialize($config);
         $this->hasMany('TrainingCoursesTargetPopulations', ['className' => 'Training.TrainingCoursesTargetPopulations', 'foreignKey' => 'target_population_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
+        $this->belongsTo('LeavePolicies', ['className' => 'System.LeavePolicies', 'foreignKey' => 'staff_leave_policy_id']);
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('PositionGrades', [

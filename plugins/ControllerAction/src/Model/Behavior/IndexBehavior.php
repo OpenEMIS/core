@@ -9,7 +9,7 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Log\Log;
 use Cake\Core\Configure;
-use Cake\Network\Exception\NotFoundException;
+use Cake\Http\Exception\NotFoundException;
 use Cake\ORM\TableRegistry;   //POCOR-5301
 use Cake\Http\Session;
 use Cake\Http\ServerRequest;
@@ -157,9 +157,14 @@ class IndexBehavior extends Behavior
                 } catch (NotFoundException $e) {
                     Log::write('debug', $e->getMessage());
                     $action = $model->url('index', 'QUERY');
+
                     if (isset($action['page'])) {
-                        unset($action['page']);
+                        $action['page'] = 1;
                     }
+                    if (isset($action['?']['page'])) {
+                        $action['?']['page'] = 1;
+                    }
+//                    dd($action);
                     $mainEvent->stopPropagation();
                     return $model->controller->redirect($action);
                 }
