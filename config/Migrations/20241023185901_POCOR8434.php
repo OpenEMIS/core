@@ -125,7 +125,7 @@ class POCOR8434 extends AbstractMigration
         }
 
         //create new record for `Student > Registrations` in `custom_modules` table   
-        $this->execute("INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `visible`, `parent_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, 'Student', 'Student > Registrations', 'Student.Students', '1', '0', NULL, NULL, '1', NOW());");
+        $this->execute("INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `visible`, `parent_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, 'Student > Registrations', 'Student > Registrations', 'Institution.StudentAdmission', '1', '0', NULL, NULL, '1', NOW());");
         //Rename `institution_student_admission` INTO `institution_student_enrolment` table
         $this->execute("RENAME TABLE `institution_student_admission` TO `institution_student_enrolment`");
         //Drop FOREIGN KEY CONSTRAINT from `institution_student_enrolment` table
@@ -229,7 +229,7 @@ class POCOR8434 extends AbstractMigration
     }
 
     public function down() {
-        
+
         $this->execute('SET FOREIGN_KEY_CHECKS = 0;');
         ////////////////// workflow_actions /////////////////////
         //Drop `workflow_actions` table
@@ -295,6 +295,7 @@ class POCOR8434 extends AbstractMigration
         $this->execute('RENAME TABLE `z_8434_custom_modules` TO `custom_modules`');        
         //Drop student_admission_custom_field_values table 
         $this->execute('DROP TABLE IF EXISTS `student_admission_custom_field_values`');
+        $this->execute('DROP TABLE IF EXISTS `student_custom_filters`');
         $this->execute('SET foreign_key_checks = 1;');
     }
 }

@@ -842,7 +842,9 @@ class RecordBehavior extends Behavior
                 ->toArray();
 
             foreach ($customFields as $key => $obj) {
+                //$obj->custom_field['student_custom_form_id'] = $obj->student_custom_form_id;   
                 $customField = $obj->custom_field;
+                //$customField['student_custom_form_id'] = $obj->student_custom_form_id;
                 $fieldTypeCode = $customField->field_type;
                 $section = $obj->section ?? "section";
                 $slug = Text::slug($section);
@@ -851,10 +853,12 @@ class RecordBehavior extends Behavior
                 if (in_array($fieldTypeCode, $this->fieldValueArray)) {
 					if(empty($tabSection) || ($slug == $tabSection)) {
 						$fieldId = $customField->id;
+                        //$formId = $customField->student_custom_form_id;//not useable
                         //POCOR-8434 starts
                         $recordKey = $entity->id;
                         $fieldValue = $values[$fieldId] ?? null;
                         if ($fieldValue) {
+                            //$fieldValues['student_custom_form_id'] = $formId;//not useable
                             $fieldValues[] = $fieldValue;
                         } else {
                             $valueData = [
@@ -1094,7 +1098,7 @@ class RecordBehavior extends Behavior
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
 
-                            if (!empty($sectionName)&&$model->request->getParam('action')!="Surveys") {
+                            if (!empty($sectionName) && $model->request->getParam('action')!="Surveys") {
                                 $ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName[$key]]);
                                 $fieldOrder[++$order] = $fieldName;
                                // echo "<pre>";print_r($customFields);die;

@@ -149,6 +149,7 @@ class WorkflowBehavior extends Behavior
         }
         $events['ControllerAction.Model.index.afterAction']     = ['callable' => 'indexAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.view.afterAction']      = ['callable' => 'viewAfterAction', 'priority' => 1000];
+        $events['ControllerAction.Model.view.beforeAction']      = ['callable' => 'viewBeforeAction', 'priority' => 1000];//POCOR-8434
         $events['ControllerAction.Model.addEdit.afterAction']   = ['callable' => 'addEditAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.addEdit.beforeAction']  = ['callable' => 'addEditBeforeAction', 'priority' => 1];
         $events['ControllerAction.Model.edit.beforePatch']      = ['callable' => 'editBeforePatch', 'priority' => 1];
@@ -986,6 +987,23 @@ class WorkflowBehavior extends Behavior
             }
         }
     }
+    //POCOR-8434 starts
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $ControllerAction = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $model = $this->_table;
+        if($model->getAlias() == 'StudentAdmission'){
+            $tableHeaders1[] = __('Shortlisting');
+            $ControllerAction->field('shortlist', [
+                'type' => 'element',
+                'element' => 'Workflow.shortlist',
+                'override' => true,
+                'rowClass' => 'section-header',
+                'tableHeaders' => $tableHeaders1
+            ]);
+        } 
+         
+    }//POCOR-8434 ends
 
     public function addEditBeforeAction(Event $event)
     {

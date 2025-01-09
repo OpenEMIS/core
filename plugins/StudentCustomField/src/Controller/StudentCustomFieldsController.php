@@ -62,7 +62,7 @@ class StudentCustomFieldsController extends AppController
         $header = __('Custom Field (Student)');
 
         $header .= ' - ' . $model->getHeader($model->getAlias());
-        $this->Navigation->addCrumb('Custom Field (Student)', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Custom Field (Student)', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->getAlias()]);
         $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
 
         $this->set('contentHeader', $header);
