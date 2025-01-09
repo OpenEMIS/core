@@ -73,7 +73,7 @@ class StudentAdmissionTable extends ControllerActionTable
         ]);
 
         //$this->hasMany('StudentCustomFieldValues', ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_student_admission_id']);
-        $this->hasMany('AdmissionCustomFieldValues', [
+        $this->hasMany('AdmissionStudentCustomFieldValues', [
             'className' => 'StudentCustomField.StudentAdmissionCustomFieldValues',
             'dependent' => true,
             'cascadeCallbacks' => true,
@@ -410,7 +410,7 @@ class StudentAdmissionTable extends ControllerActionTable
                                 $WorkflowsTbl->aliasField('code') => 'STUDENT-Enrolment-1001',
                                 $WorkflowStepsTbl->aliasField('name') => 'Open'
                             ])->first();
-
+                                
         $StudentEnrolments = TableRegistry::get('Institution.StudentEnrolment');
         
         $enrolmentArr = [
@@ -428,7 +428,10 @@ class StudentAdmissionTable extends ControllerActionTable
         ];
         if (!empty($entity->institution_class_id)) {
             $enrolmentArr['institution_class_id'] = $entity->institution_class_id;
+        }else{
+            $enrolmentArr['institution_class_id'] = 'NULL';
         }
+        
         $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
         $StudentEnrolments->save($newEntity);
     }
