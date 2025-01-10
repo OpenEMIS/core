@@ -25,7 +25,7 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function initialize(array $config): void
     {
-        $this->setTable('report_student_attendance_summary');
+        $this->setTable('summary_student_attendances');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);

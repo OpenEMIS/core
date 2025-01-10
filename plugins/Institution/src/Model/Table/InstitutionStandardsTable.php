@@ -119,6 +119,8 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('birthplace_area_id', ['type' => 'hidden']);
         $this->ControllerAction->field('photo_content', ['type' => 'hidden']);
         $this->ControllerAction->field('failed_logins', ['type' => 'hidden']);
+        $this->ControllerAction->field('mobile_number', ['type' => 'hidden']); //POCOR-8627
+        $this->ControllerAction->field('appraisal_form_id', ['select' => false, 'type' => 'hidden']);
         $session = $this->request->getSession();
         $params = $this->getQueryString();
         $institution_id = $params['institution_id'];
@@ -921,7 +923,31 @@ class InstitutionStandardsTable extends AppTable
                     ->notEmpty('assessment_id')
                     ->notEmpty('assessment_period_id');
         }
+        if (in_array($feature, ['StaffAppraisal.Appraisals'])) {
+            $validator = $validator
+                    ->notEmpty('appraisal_form_id');
+        }
         return $validator;
+    }
+
+    public function onUpdateFieldAppraisalFormId(Event $event, array $attr, $action, $request)
+    {
+        $alias = $this->getAlias();
+        $data = $this->request->getData($alias);
+        if (( $data['feature']) == 'StaffAppraisal.Appraisals')
+        {
+            $appraisalFormsOption = TableRegistry::get('StaffAppraisal.AppraisalForms')
+            ->find('list')
+                    ->select([
+                                'id' => 'id',
+                                'name' => 'name',
+                            ])->toArray();
+            $attr['options']  = $appraisalFormsOption;
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['onChangeReload'] = true;
+            return $attr;
+       }
     }
 
     /**
