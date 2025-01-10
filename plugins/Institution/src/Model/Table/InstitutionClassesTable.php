@@ -499,6 +499,8 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         try {
 
+            Log::debug(print_r(['beforeSave' => $entity], true));
+            Log::debug(print_r(['beforeSave' => $options], true));
 
         // POCOR-8538 start
         if ($entity->has('custom') && !empty($entity->custom)) {
@@ -508,6 +510,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $createdUserId = $entity->modified_user_id;
             }
             $customFields = $entity->custom;
+
             $cv = self::saveCustomFields($customFields, $classId, $createdUserId);
         }
         }catch (\Exception $exception){
@@ -766,6 +769,7 @@ class InstitutionClassesTable extends ControllerActionTable
     // POCOR-8538 start
     private static function saveCustomFields($customFields, $classId, $createdUserId): array
     {
+        Log::debug(print_r(['beforeSave' => $customFields], true));
         $cv = [];
         if (!empty($customFields)) {
             $customFieldValuesTable =
