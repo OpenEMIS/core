@@ -1338,6 +1338,10 @@ class InstitutionsController extends AppController
 
     public function ScheduleTimetable($action = 'view')
     {
+        $url = $_SERVER['REQUEST_URI'];
+        $startPos = strpos($url, '/Institution/Institutions/ScheduleTimetable/view/') + strlen('/Institution/Institutions/ScheduleTimetable/view/');
+        $encodedPart = substr($url, $startPos);
+
         $timetableId = $this->getQueryString('timetable_id');
         $params = $this->getQueryString();
         if(empty($timetableId)) {
@@ -1360,9 +1364,19 @@ class InstitutionsController extends AppController
         $this->set('_action', $action);
         $this->set('_back', Router::url($backUrl));
 
+        $user = $this->getRequest()->getSession()->read('sbn');
+        $pass = $this->getRequest()->getSession()->read('nbn');
+        // $pass = $this->paramsEncode($pass);
+        $institutionName = $this->Institutions->get($institutionId)->name;
+
+        $this->set('encodedPart', $encodedPart);
         $this->set('timetable_id', $timetableId);
         $this->set('institutionDefaultId', $institutionId);
         $this->set('academicPeriodId', $academicPeriodId);
+        $this->set('institutionName', $institutionName);
+
+        $this->set('user', $user);
+        $this->set('pass', $pass);
         $this->set('ngController', 'TimetableCtrl as $ctrl');
         $this->render('timetable');
     }

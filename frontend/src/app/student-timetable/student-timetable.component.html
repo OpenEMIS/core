@@ -1,8 +1,8 @@
 <kd-progressloader *ngIf="displayLoading" configtype="small-spinner" [configvalue]="null"></kd-progressloader>
+<kd-alert></kd-alert>
 <kd-pageheader [config]='pageheader'></kd-pageheader>
 
-
-<kd-splitter style="margin-top: 50px;" class="has-page-header has-breadcrumb" floatbtn="true" collapsible="true">
+<kd-splitter style="margin-top: 72px;" class="has-page-header has-breadcrumb" floatbtn="true" collapsible="true">
     <kd-pane [ngClass]="showFullWidth == true ? 'full-width' : ''">
         <div class="main-wrapper">
             <div class="content-wrapper">
@@ -48,7 +48,7 @@
                                                             </div>
                                                             <span style="font-size: 12px; cursor: pointer;"
                                                                 [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == inedxOfData ? 'color: red' : 'color: #FFFFFF'"
-                                                                (click)="onRemoveClick(indexOfElement, inedxOfData, ind); closeDialog();">
+                                                                (click)="onRemoveClick($event, indexOfElement, inedxOfData, ind, curriculumData)">
                                                                 <i class="fa fa-trash" aria-hidden="true"></i>
                                                             </span>
                                                         </div>
@@ -66,7 +66,7 @@
                                                             </div>
                                                             <span style="font-size: 12px; cursor: pointer;"
                                                                 [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == inedxOfData ? 'color: red' : 'color: #FFFFFF'"
-                                                                (click)="onRemoveClick(indexOfElement, inedxOfData, ind); closeDialog();">
+                                                                (click)="onRemoveClick($event, indexOfElement, inedxOfData, ind, curriculumData)">
                                                                 <i class="fa fa-trash" aria-hidden="true"></i>
                                                             </span>
                                                         </div>
@@ -207,19 +207,19 @@
                             </div>
 
                             <kd-view displayType="stacked-form" [inputData]="academicPeriod" [button]="filterButtons"
-                                (change)="_submitEvent($event)"></kd-view>
+                                [api]="academicPeriodApi" (change)="_submitEvent($event)"></kd-view>
                             <kd-view displayType="stacked-form" [inputData]="term" [button]="filterButtons"
-                                (change)="_submitEvent($event)"></kd-view>
+                                [api]="termApi" (change)="_submitEvent($event)"></kd-view>
                             <kd-view displayType="stacked-form" [inputData]="status" [button]="filterButtons"
                                 (change)="_submitEvent($event)"></kd-view>
                             <kd-view displayType="stacked-form" [inputData]="name" [button]="filterButtons"
-                                (change)="_submitEvent($event)"></kd-view>
+                                [api]="nameApi" (change)="_submitEvent($event)"></kd-view>
                             <kd-view displayType="stacked-form" [inputData]="grade" [button]="filterButtons"
-                                (change)="_submitEvent($event)"></kd-view>
+                                [api]="gradeApi" (change)="_submitEvent($event)"></kd-view>
                             <kd-view displayType="stacked-form" [inputData]="class" [button]="filterButtons"
-                                (change)="_submitEvent($event)"></kd-view>
+                                [api]="classApi" (change)="_submitEvent($event)"></kd-view>
                             <kd-view displayType="stacked-form" [inputData]="interval" [button]="filterButtons"
-                                (change)="_submitEvent($event)"></kd-view>
+                                [api]="intervalApi"(change)="_submitEvent($event)"></kd-view>
 
                         </div>
                     </div>

@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ApiService } from '../api.service';
-import { KdSplitterEvent } from 'openemis-styleguide-lib';
+import { IDynamicFormApi, KdAlertEvent, KdSplitterEvent } from 'openemis-styleguide-lib';
+import { DEFAULT_TEMPLATE_THEME } from '../shared/config.default-val';
 
 @Component({
     selector: 'app-student-timetable',
@@ -32,13 +33,13 @@ export class StudentTimetableComponent implements OnInit {
             icon: 'fa fa-download',
             tooltip: 'Download',
             callback: () => {
-                this.overViewData();
+                this.downloadData();
             }
         }
         ],
         moreAction: [],
         moreBtn: false,
-        pageheaderText: "Avory Primary School - Schedule Timetable",
+        pageheaderText: "",
         searchBtn: false,
         searchEvent: ['change', 'keyup']
     }
@@ -47,98 +48,7 @@ export class StudentTimetableComponent implements OnInit {
     currentRowIndex: number | null = null;
     currentCellIndex: number | null = null;
     public days = [];
-    public timetableData: Array<any> = [
-        // {
-        //   time: "07:00 AM - 07:30 AM",
-        //   data: [
-        //     {
-        //       day: this.days[0],
-        //       subject: "Spanish",
-        //       room: "Room 3",
-        //     },
-        //     {
-        //       day: this.days[1],
-        //       subject: "Science",
-        //       room: "Room 1",
-        //     },
-        //     {
-        //       day: this.days[2],
-        //       subject: null,
-        //       room: null,
-        //     },
-        //     {
-        //       day: this.days[3],
-        //       subject: null,
-        //       room: null,
-        //     },
-        //     {
-        //       day: this.days[4],
-        //       subject: null,
-        //       room: null,
-        //     },
-        //   ]
-        // },
-        // {
-        //   time: "07:30 AM - 08:00 AM",
-        //   data: [
-        //     {
-        //       day: this.days[0],
-        //       subject: "Science",
-        //       room: "Room 1",
-        //     },
-        //     {
-        //       day: this.days[1],
-        //       subject: "Spanish",
-        //       room: "Room 3",
-        //     },
-        //     {
-        //       day: this.days[2],
-        //       subject: null,
-        //       room: null,
-        //     },
-        //     {
-        //       day: this.days[3],
-        //       subject: null,
-        //       room: null,
-        //     },
-        //     {
-        //       day: this.days[4],
-        //       subject: null,
-        //       room: null,
-        //     },
-        //   ]
-        // },
-        // {
-        //   time: "08:00 AM - 08:30 AM",
-        //   data: [
-        //     {
-        //       day: this.days[0],
-        //       subject: "Physics",
-        //       room: "Room 9",
-        //     },
-        //     {
-        //       day: this.days[1],
-        //       subject: "English",
-        //       room: "Room 10",
-        //     },
-        //     {
-        //       day: this.days[2],
-        //       subject: null,
-        //       room: null,
-        //     },
-        //     {
-        //       day: this.days[3],
-        //       subject: null,
-        //       room: null,
-        //     },
-        //     {
-        //       day: this.days[4],
-        //       subject: null,
-        //       room: null,
-        //     },
-        //   ]
-        // },
-    ]
+    public timetableData: Array<any> = []
     counter: number = 0;
     displayTable: boolean = false;
     timeTableStatus: any;
@@ -153,6 +63,13 @@ export class StudentTimetableComponent implements OnInit {
     indexOfDay: any;
     displayLessons: boolean = false;
     education_grade_name: any;
+    academicPeriodApi: IDynamicFormApi = {};
+    termApi: IDynamicFormApi = {};
+    nameApi: IDynamicFormApi = {};
+    gradeApi: IDynamicFormApi = {};
+    classApi: IDynamicFormApi = {};
+    intervalApi: IDynamicFormApi = {};
+    themeArray = DEFAULT_TEMPLATE_THEME;
 
     public filterButtons: Array<any> = [
         {
@@ -167,28 +84,28 @@ export class StudentTimetableComponent implements OnInit {
 
     public academicPeriod: Array<any> = [
         {
-            'key': 'text',
+            'key': 'academic_period',
             'label': 'Academic Period:',
             'visible': true,
             'required': false,
             'controlType': 'text',
             'type': 'text',
             'placeholder': 'Text input',
-            'value': '2020',
+            'value': '',
             'readonly': true
         }
     ]
 
     public term: Array<any> = [
         {
-            'key': 'text',
+            'key': 'term',
             'label': 'Term:',
             'visible': true,
             'required': false,
             'controlType': 'text',
             'type': 'text',
             'placeholder': 'Text input',
-            'value': 'Semester 1',
+            'value': '',
             'readonly': true
         }
     ]
@@ -206,64 +123,70 @@ export class StudentTimetableComponent implements OnInit {
 
     public name: Array<any> = [
         {
-            'key': 'text',
+            'key': 'name',
             'label': 'Name:',
             'visible': true,
             'required': false,
             'controlType': 'text',
             'type': 'text',
             'placeholder': 'Text input',
-            'value': 'P1A',
+            'value': '',
             'readonly': false
         },
     ]
 
     public grade: Array<any> = [
         {
-            'key': 'text',
+            'key': 'grade',
             'label': 'Grade:',
             'visible': true,
             'required': false,
             'controlType': 'text',
             'type': 'text',
             'placeholder': 'Text input',
-            'value': 'Primary 1',
+            'value': '',
             'readonly': true
         },
     ]
 
     public class: Array<any> = [
         {
-            'key': 'text',
+            'key': 'class',
             'label': 'Class:',
             'visible': true,
             'required': false,
             'controlType': 'text',
             'type': 'text',
             'placeholder': 'Text input',
-            'value': 'Primary 1-A',
+            'value': '',
             'readonly': true
         }
     ]
 
     public interval: Array<any> = [
         {
-            'key': 'text',
+            'key': 'interval',
             'label': 'Interval:',
             'visible': true,
             'required': false,
             'controlType': 'text',
             'type': 'text',
             'placeholder': 'Text input',
-            'value': 'APS Morning Shift',
+            'value': '',
             'readonly': true
         }
     ]
+    academic_period_id: any;
+    institution_class_id: any;
+    institution_id: any;
+    timetable_id: any;
+    institution_name: any = '';
 
     constructor(
         public dialog: MatDialog,
         private Rest: ApiService,
-        private _kdSplitterEvent: KdSplitterEvent
+        private _kdSplitterEvent: KdSplitterEvent,
+        private _kdAlertEvent: KdAlertEvent
     ) { }
 
     ngOnInit(): void {
@@ -271,22 +194,23 @@ export class StudentTimetableComponent implements OnInit {
             this._kdSplitterEvent.toggleSubPane(false);
         }, 0);
         this.counter = 0;
+        this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
+        // this.institution_id = 6;
+        this.timetable_id = JSON.parse(localStorage.getItem("timetable_id"));
+        // this.timetable_id = 1;
+        this.institution_name = localStorage.getItem("institutionName");
+        this.pageheader.pageheaderText = `${this.institution_name} - Schedule Timetable`
         this.loginData();
-
-        // responseData.forEach((element: any, index: any) => {
-        //         this.timetableData[element.institution_schedule_timeslot_id - 1].data[element.day_of_week - 1].subject = element?.schedule_lesson_details;
-
-        //   });
-        //   console.log(this.timetableData,"this.timetableData 11");
     }
 
     loginData() {
         this.Rest.setSession();
         let token = localStorage.getItem("loginToken");
         if (!token) {
-            let userName = sessionStorage.getItem('username');
-            let password = sessionStorage.getItem('password');
-
+            let userName = sessionStorage.getItem('nbn');
+            let password = sessionStorage.getItem('pbn');
+            const chars = password.split('.');
+            password = chars[0];
             if (userName == null && password == null) {
                 setTimeout(() => {
                     this.counter = this.counter + 1;
@@ -298,15 +222,43 @@ export class StudentTimetableComponent implements OnInit {
                 }, 1500);
             } else {
                 var decodedPassword = atob(password);
-                if (userName && decodedPassword) {
-                    this.loginApi(userName, decodedPassword);
+                decodedPassword = decodedPassword.replace(/^"(.*)"$/, '$1');
+                let cleanedStr = decodedPassword.replace(/[\[\]"]/g, '');
+                console.log(cleanedStr, "cleanedStr");
+                if (userName && cleanedStr) {
+                    this.loginApi(userName, cleanedStr);
                 } else {
                     this.removeSession();
                 }
             }
         } else {
+            this.setTheme();
             this.getAPIData();
         }
+    }
+
+    setTheme() {
+        this.Rest.getWithToken('themes').subscribe({
+            next: (response: any) => {
+                console.log(response?.data[3].default_value, "response");
+                let selectedThemeData = '';
+                if (response?.data[3].value) {
+                    selectedThemeData = response?.data[3].value;
+                    selectedThemeData = `#${selectedThemeData}`;
+                } else {
+                    selectedThemeData = response?.data[3].default_value;
+                    selectedThemeData = `#${selectedThemeData}`;
+                }
+                this.themeArray.btnGroup[0].dropdownContent.forEach((element: any) => {
+                    if (element.text == selectedThemeData) {
+                        document.body.className = element.theme + ' fuelux';
+                    }
+                });
+            },
+            error: (error: any) => {
+
+            }
+        })
     }
 
     loginApi(userName: string, password: string) {
@@ -339,8 +291,7 @@ export class StudentTimetableComponent implements OnInit {
             next: (response: any) => {
                 if (response) {
                     this.days = response?.data;
-                    // this.timeTableById();
-                    this.timeSlotById(); //just for testing after that remove this
+                    this.timeTableById();
                     this.getLessonType();
                 }
 
@@ -382,12 +333,15 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     timeTableById() {
-        this.Rest.getWithToken('schedules/timetables/3').subscribe({
+        this.Rest.getWithToken(`schedules/timetables/${this.timetable_id}`).subscribe({
             next: (response: any) => {
                 if (response) {
                     console.log(response, "response");
-
-                    this.timeSlotById();
+                    if (response) {
+                        this.academic_period_id = response?.data?.academic_period_id;
+                        this.institution_class_id = response?.data?.institution_class_id;
+                        this.timeSlotById();
+                    }
                 }
 
             },
@@ -403,7 +357,7 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     timeSlotById() {
-        this.Rest.getWithToken('schedules/timeslots/1').subscribe({
+        this.Rest.getWithToken(`schedules/timeslots/${this.timetable_id}`).subscribe({
             next: (response: any) => {
                 if (response) {
                     response?.data.forEach((element: any) => {
@@ -450,7 +404,7 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     getClassGrade() {
-        this.Rest.getWithToken('institutions/classes/496/grades').subscribe({
+        this.Rest.getWithToken(`institutions/classes/${this.institution_class_id}/grades`).subscribe({
             next: (response: any) => {
                 if (response) {
                     console.log(response, "response class grades");
@@ -504,17 +458,10 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     getTimeTableLesson() {
-        this.Rest.getWithToken('schedules/timetables/1/lessons').subscribe({
+        this.Rest.getWithToken(`schedules/timetables/${this.timetable_id}/lessons`).subscribe({
             next: (response: any) => {
                 response?.data.forEach((element: any, index: any) => {
-                    // if(element.institution_schedule_timeslot_id == )
-                    //   this.timetableData[element.institution_schedule_timeslot_id - 1].data[element.day_of_week-1].subject.push({subject: `Subject ${index}`});
-                    // console.log(this.timetableData[element.institution_schedule_timeslot_id - 1].data[element.institution_schedule_timetable_id],"09");
                     this.timetableData[element.institution_schedule_timeslot_id - 1].data[element.day_of_week - 1].subject = element?.schedule_lesson_details;
-
-                    // let newData = this.timetableData[element.institution_schedule_timetable_id - 1].subject[element.institution_schedule_timeslot_id - 1];
-                    // console.log(newData,"newData");
-
                 });
 
                 this.displayTable = true;
@@ -537,74 +484,79 @@ export class StudentTimetableComponent implements OnInit {
         this._kdSplitterEvent.toggleSubPane(true);
         this.showFullWidth = false;
         this.displayLessons = false;
+        this.Rest.getWithToken(`schedule/timetable-overview?limit=10&page=1&academic_period_id=${this.academic_period_id}&institution_id=${this.institution_id}&institution_class_id=${this.institution_class_id}&institution_schedule_term_id=${this.timetable_id}`).subscribe({
+            next: (response: any) => {
+                console.log(response.data.data[0], "response");
+                if (response.data.data[0]) {
+                    let responseData = response.data.data[0];
+                    this.academicPeriodApi.setProperty('academic_period', 'value', responseData.academic_period_name ? responseData.academic_period_name : 'NA');
+                    this.termApi.setProperty('term', 'value', responseData.schedule_term ? responseData.schedule_term : 'NA')
+                    this.nameApi.setProperty('name', 'value', responseData.name ? responseData.name : 'NA');
+                    this.gradeApi.setProperty('grade', 'value', responseData.institution_grade_name ? responseData.institution_grade_name : 'NA');
+                    this.classApi.setProperty('class', 'value', responseData.institution_class_name ? responseData.institution_class_name : 'NA');
+                    this.intervalApi.setProperty('interval', 'value', responseData.institution_schedule_interval_name ? responseData.institution_schedule_interval_name : 'NA');
+                }
+            },
+            error: (error) => {
+                console.log(error, "error");
+
+            }
+        })
     }
 
-    downloadClick() { }
-    // openDialog(indexOfRow: number, indexOfDay: number, schedule: any) {
-    //     console.log(indexOfRow, indexOfDay, "index of day", schedule);
+    downloadData() {
+        this.Rest.getItemExport(`schedule/timetable-download?timetable_id=${this.timetable_id}`).subscribe({
+            next: (response: any) => {
+                if (response) {
+                    let url = window.URL.createObjectURL(response);
+                    let a = document.createElement('a');
+                    document.body.appendChild(a);
+                    a.setAttribute('style', 'display: none');
+                    a.href = url;
+                    a.download = response.filename || 'Timetable';
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                }
+            },
+            error: (error) => {
+                console.log(error, "error");
+            }
+        })
+    }
 
-    //     const dialogRef = this.dialog.open(DialogOpenComponent, {
-    //         disableClose: true,
-    //         width: '30%'
-    //     }).afterClosed().subscribe((res) => {
-    //         console.log(res, "res Data");
-    //         if (res) {
-    //             console.log(res, "dialog res");
-    //             this.timetableData[indexOfRow].data[indexOfDay].subject.push(res);
-    //         }
-    //     });
-    // }
+    onRemoveClick(event: any, indexOfRow: number, indexOfDay: number, rowIndex: number, curriculumData: any) {
+        event.stopPropagation();
+        console.log(curriculumData, "curriculumData");
+        let dataId;
+        if (curriculumData?.schedule_curriculum_lesson) {
+            dataId = curriculumData?.schedule_curriculum_lesson?.institution_schedule_lesson_detail_id;
+        } else {
+            dataId = curriculumData?.schedule_non_curriculum_lesson?.institution_schedule_lesson_detail_id;
+        }
+        this.Rest.deleteWithToken(`institutions/${this.institution_id}/schedules/timetables/lessons/${dataId}`).subscribe({
+            next: (res: any) => {
+                console.log(res, "delete res");
+                this.timetableData[indexOfRow].data[indexOfDay].subject.splice(rowIndex, 1);
+                if (res.message == 'Successful.') {
+                    let toasterConfig: any = {
+                        title: 'Record deleted successfully!',
+                        showCloseButton: true,
+                        tapToDismiss: true,
+                    };
 
-    // addLesson(data: any) {
-    //     let obj = {
-    //         "day_of_week": 1,
-    //         "institution_schedule_timeslot_id": 31,
-    //         "institution_schedule_timetable_id": 3,
-    //         "lesson_type": 2,
-    //         "schedule_non_curriculum_lesson": {
-    //             "name": "dfg"
-    //         },
-    //         "schedule_lesson_room": {
-    //             "institution_schedule_lesson_detail_id": "1",
-    //             "institution_room_id": JSON.stringify(data?.roomId)
-    //         },
-    //         "action_type": "default",
-    //         "institution_id": 6
-    //     }
-
-    //     this.Rest.postWithToken('schedules/timetables/lessons', obj).subscribe({
-    //         next: (res: any) => {
-    //             console.log(res, "res");
-    //         },
-    //         error: (error: any) => {
-    //             if (error) {
-    //                 if (error.message == "Token has expired") {
-    //                     localStorage.removeItem("loginToken");
-    //                     this.loginData();
-    //                 }
-    //             }
-    //         }
-    //     })
-    // }
-
-    onRemoveClick(indexOfRow: number, indexOfDay: number, rowIndex: number) {
-        this.timetableData[indexOfRow].data[indexOfDay].subject.splice(rowIndex, 1);
-        // this.Rest.deleteWithToken(`institutions/6/schedules/timetables/lessons/95`).subscribe({
-        //   next: (res: any) => {
-        //     console.log(res, "delete res");
-        //     if (res.message == 'Successful.') {
-        //       alert();
-        //     }
-        //   },
-        //   error: (error: any) => {
-        //     if (error) {
-        //       if (error.message == "Token has expired") {
-        //         localStorage.removeItem("loginToken");
-        //         this.loginData();
-        //       }
-        //     }
-        //   }
-        // })
+                    this._kdAlertEvent.info(toasterConfig);
+                }
+            },
+            error: (error: any) => {
+                if (error) {
+                    if (error.message == "Token has expired") {
+                        localStorage.removeItem("loginToken");
+                        this.loginData();
+                    }
+                }
+            }
+        })
         console.log(this.timetableData)
     }
 
@@ -659,7 +611,7 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     getInstitutionRooms() {
-        this.Rest.getWithToken('institutions/6/academicperiods/32/rooms').subscribe({
+        this.Rest.getWithToken(`institutions/${this.institution_id}/academicperiods/${this.academic_period_id}/rooms`).subscribe({
             next: (response: any) => {
                 if (response) {
                     this.institutionRoomData = [];
@@ -685,7 +637,7 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     getInstitutionSubject() {
-        this.Rest.getWithToken(`institutions/classes/496/subjects`).subscribe({
+        this.Rest.getWithToken(`institutions/classes/${this.institution_class_id}/subjects`).subscribe({
             next: (response: any) => {
                 if (response) {
                     response?.data.forEach((element: any) => {
@@ -744,34 +696,34 @@ export class StudentTimetableComponent implements OnInit {
                 obj = {
                     "day_of_week": this.indexOfDay + 1,
                     "institution_schedule_timeslot_id": this.indexOfRow + 1,
-                    "institution_schedule_timetable_id": 1,
+                    "institution_schedule_timetable_id": this.timetable_id,
                     "lesson_type": 1,
                     "schedule_curriculum_lesson": {
                         "code_only": null,
                         "institution_subject_id": this.addNewLesson[index].subject
                     },
                     "schedule_lesson_room": {
-                        "institution_schedule_lesson_detail_id": 1,
+                        "institution_schedule_lesson_detail_id": this.timetable_id,
                         "institution_room_id": this.addNewLesson[index].room
                     },
                     "action_type": "default",
-                    "institution_id": 6
+                    "institution_id": this.institution_id
                 }
             } else {
                 obj = {
                     "day_of_week": this.indexOfDay + 1,
                     "institution_schedule_timeslot_id": this.indexOfRow + 1,
-                    "institution_schedule_timetable_id": 1,
+                    "institution_schedule_timetable_id": this.timetable_id,
                     "lesson_type": 2,
                     "schedule_non_curriculum_lesson": {
                         "name": this.addNewLesson[index]?.subject
                     },
                     "schedule_lesson_room": {
-                        "institution_schedule_lesson_detail_id": 1,
+                        "institution_schedule_lesson_detail_id": this.timetable_id,
                         "institution_room_id": this.addNewLesson[index]?.room
                     },
                     "action_type": "default",
-                    "institution_id": 6
+                    "institution_id": this.institution_id
                 }
             }
 
