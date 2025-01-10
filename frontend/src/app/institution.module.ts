@@ -51,7 +51,7 @@ export const appRoutes: Routes = [
   { path: `Institution/Institutions/${setEncodedId()}/ImportStaffAttendances/add`, component: StaffAttendanceReportComponent },
   { path: 'Institution/Institutions/Classes', component: ClassesComponent },
   { path: 'Institution/Institutions/Subjects', component: SubjectsComponent },
-  { path: 'Institution/Institutions/ScheduleTimetable/view', component: StudentTimetableComponent }
+  { path: `Institution/Institutions/ScheduleTimetable/view/${setEncodedId()}`, component: StudentTimetableComponent }
 ];
 
 function setEncodedId() {

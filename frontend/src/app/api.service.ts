@@ -50,8 +50,8 @@ export class ApiService {
   }
 
   setSession(){
-    sessionStorage.setItem("username", 'admin');
-    sessionStorage.setItem("password", 'ZGVtbw==');
+    sessionStorage.setItem("nbn", 'admin');
+    sessionStorage.setItem("pbn", 'WyJkZW1vIl0.MTBhZTAzM2FkNjc2YjRmZjAwZWMxYmFkMzM5YzE2OGNlMDIwNDJmMmU5Y2VlY2EzZWUyNTUyZmYyMDEyZGYxNA');
 
     // sessionStorage.setItem("username", 'teacher');
     // sessionStorage.setItem("password", 'cGFzc3dvcmQ=');
@@ -87,6 +87,14 @@ export class ApiService {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
     return this.http.get(`${environment.baseUrl}${url}`, {
+      headers: headers
+    }).pipe(catchError(this.handleError));
+  }
+
+  deleteWithToken(url: any) {
+    let token = localStorage.getItem("loginToken");
+    const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
+    return this.http.delete(`${environment.baseUrl}${url}`, {
       headers: headers
     }).pipe(catchError(this.handleError));
   }
