@@ -81,7 +81,7 @@ class ExaminationGradingOptionsTable extends ExaminationsAppTable {
     }
 
     public static function checkNotMoreThanGradingTypeMax($maxValue, $ExaminationGradingTypes, array $globalData) {
-        $formData = $ExaminationGradingTypes->request->data[$ExaminationGradingTypes->alias()];
+        $formData = $ExaminationGradingTypes->request->data[$ExaminationGradingTypes->getAlias()];
         return intVal($maxValue) <= intVal($formData['max']);
     }
 }
