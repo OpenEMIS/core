@@ -132,9 +132,9 @@ class ImportUsersTable extends AppTable
                                         $sheet,
                                         $row,
                                         $columns,
-                                        ArrayObject $tempRow,
-                                        ArrayObject $importedUniqueCodes,
-                                        ArrayObject $rowInvalidCodeCols) //POCOR-8082
+                                        $tempRow,
+                                        $importedUniqueCodes,
+                                        $rowInvalidCodeCols) //POCOR-8082
     {
 
         $tempRow['columns'] = $columns; // POCOR-8683 start
@@ -146,10 +146,7 @@ class ImportUsersTable extends AppTable
         $openemisNoIndex = key($extractedOpenemisNo->toArray()) + 1;
         $openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
 
-        if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
-            $rowInvalidCodeCols['openemis_no'] = 'This OpenEMIS No is Already Present';//$this->getExcelLabel('Import', 'duplicate_unique_key');
-            return false;
-        }
+
         // POCOR-8683 start
         $user = null;
         if ($openemisNo) {
@@ -163,6 +160,10 @@ class ImportUsersTable extends AppTable
         $accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
         $accountTypeId = $this->getAccountTypeId($accountType);
         if (!$user) {
+            if ($openemisNo) {
+                $rowInvalidCodeCols['openemis_no'] = __('No Such User');
+                return false;
+            }
             try{
                 // POCOR-8683 start
                 $username = "";
@@ -214,6 +215,12 @@ class ImportUsersTable extends AppTable
             // setting is_student = 1, or is_staff = 1, or is_guardian = 1
             $tempRow[$tempRow['account_type']] = 1;
         }
+        if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
+            $rowInvalidCodeCols['openemis_no'] = __('This OpenEMIS No is Already Present');//$this->getExcelLabel('Import', 'duplicate_unique_key');
+            $tempRow['duplicates'] = $rowInvalidCodeCols['openemis_no'] ;
+            return false;
+        }
+
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
@@ -369,15 +376,16 @@ class ImportUsersTable extends AppTable
         }
 
         $tempRow['record_source'] = 'import_user';
-        if ($isStudent) {
-            if (!$have_error) {
-                list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
-            }
-            if (!$have_error) {
-                list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+        if (0 == $rowInvalidCodeCols->count()) {
+            if ($isStudent) {
+                if (!$have_error) {
+                    list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+                }
+                if (!$have_error) {
+                    list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+                }
             }
         }
-
         if($have_error){
             return false;
         }
@@ -1427,7 +1435,7 @@ class ImportUsersTable extends AppTable
             return [$tempRow, $rowInvalidCodeCols, $have_error];
         }
 
-//        if (!$tempRow['guardian_id']) {
+        if (!$tempRow['guardian_id']) {
             $tempRowArray = $tempRow->getArrayCopy();
 
             $tempRowArray['guardian_mobile_number'] = $tempRowArray['guardian_contact_cell_phone'] ?? null;
@@ -1498,7 +1506,7 @@ class ImportUsersTable extends AppTable
                 $rowInvalidCodeCols['guardian_openemis_no'] = 'New Guardian Creation Error: ' . __($exception->getMessage());
                 $have_error = true;
             }
-//        }
+        }
         return array($tempRow, $rowInvalidCodeCols, $have_error);
     }
 
@@ -1511,6 +1519,36 @@ class ImportUsersTable extends AppTable
      */
     private function checkNewGuardian(bool $have_error, $tempRow, ArrayObject $rowInvalidCodeCols, ArrayObject $originalRow): array
     {
+        $hasGuardianData = false;
+
+        foreach ($tempRow as $key => $value) {
+
+            foreach ($tempRow as $key => $value) {
+                if (strpos($key, 'guardian_') === 0) {  // Check if the key starts with 'guardian_'
+                    // Handle different data types:
+                    if (is_null($value)) {
+                        continue; // Null is considered invalid
+                    }
+
+                    if (is_string($value) && trim($value) === '') {
+                        continue; // Empty or whitespace-only string is invalid
+                    }
+
+                    if (is_numeric($value) && (int)$value === 0) {
+                        continue; // Numeric zero (0) is invalid
+                    }
+
+                    // If we reach here, the value is valid
+                    $hasGuardianData = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$hasGuardianData) {
+            // No valid guardian data at all, return false (no error added)
+            return array($tempRow, $rowInvalidCodeCols, $have_error);
+        }
         $have_error = $have_error || $this->checkGuardianRelationId($tempRow, $rowInvalidCodeCols);
         if ($have_error) {
             return array($tempRow, $rowInvalidCodeCols, $have_error);
@@ -1567,8 +1605,11 @@ class ImportUsersTable extends AppTable
      */
     private function checkGuardianRelationId(&$tempRow, &$rowInvalidCodeCols): bool
     {
+
+
+// Check individual guardian_relation_id field for specific error handling
         $guardian_relation_id = $tempRow['guardian_relation_id'] ?? null;
-        if(!$guardian_relation_id){
+        if (!$guardian_relation_id) {
             $this->addError($rowInvalidCodeCols, 'guardian_relation_id', __('No Relation Type'));
             return true;
         }
@@ -1596,7 +1637,6 @@ class ImportUsersTable extends AppTable
     private function checkGuardianOpenemisId(&$tempRow, &$rowInvalidCodeCols): bool
     {
         $have_error = false;
-
         $openemisNo = $tempRow['guardian_openemis_no'] ?? null;
         $user = null;
         if ($openemisNo) {
@@ -1612,6 +1652,10 @@ class ImportUsersTable extends AppTable
 
         }
         if (!$user) {
+            if ($openemisNo) {
+                $rowInvalidCodeCols['openemis_no'] = __('No Such User');
+                return false;
+            }
             try{
                 $username = "";
                 if(strlen($openemisNo) > 1){
@@ -1631,7 +1675,6 @@ class ImportUsersTable extends AppTable
             $tempRow['guardian_entity'] = $user;
             $tempRow['guardian_id'] = $user->id;
         }
-
         return $have_error;
     }
 

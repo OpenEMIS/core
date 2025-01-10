@@ -51,7 +51,7 @@ class ImportResultBehavior extends ImportBehavior
 **
 ** Actions
 **
-******************************************************************************************************************/    
+******************************************************************************************************************/
 
     public function results()
     {
@@ -91,7 +91,7 @@ class ImportResultBehavior extends ImportBehavior
 ** Import Functions
 **
 ******************************************************************************************************************/
-    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = '')
+    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = ''): void
     {
         //set the image
         $activeSheet = $objPHPExcel->getActiveSheet();
@@ -197,11 +197,11 @@ class ImportResultBehavior extends ImportBehavior
                 }
                 $activeSheet->getRowDimension(($index + $rowData))->setRowHeight(15);
                 foreach ($values as $key => $value) {
-                    $alpha = $this->getExcelColumnAlpha($key + 1); 
+                    $alpha = $this->getExcelColumnAlpha($key + 1);
                     $activeSheet->setCellValue($alpha . ($index + $rowData), $value);
                     $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
 
-                    if ($key == (count($values)) && $type == 'failed') { 
+                    if ($key == (count($values)) && $type == 'failed') {
                         $suggestedRowHeight = $this->suggestRowHeight(strlen($value), 15);
                         $activeSheet->getRowDimension(($index + $rowData))->setRowHeight($suggestedRowHeight);
                         $activeSheet->getStyle($alpha . ($index + $rowData))->getAlignment()->setWrapText(true);
@@ -236,7 +236,7 @@ class ImportResultBehavior extends ImportBehavior
         }
 
         return $header == $cellsValue;
-    }     
+    }
 
-       
+
 }
