@@ -2843,9 +2843,11 @@ public function getIdentityTypeData($value_selection)
     //POCOR-8743 Start
     public function onGetModifiedUserId(Event $event, Entity $entity)
     {
-        $users = TableRegistry::get('Security.Users');
-        $user = $users->get($entity->modified_user_id);
-        return $user->name;
+        if(!empty($entity->modified_user_id)) {
+            $users = TableRegistry::get('Security.Users');
+            $user = $users->get($entity->modified_user_id);
+            return $user->name;
+        }
     }
 
     public function onGetCreatedUserId(Event $event, Entity $entity)
