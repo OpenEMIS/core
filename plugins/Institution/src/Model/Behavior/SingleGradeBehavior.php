@@ -209,7 +209,15 @@ class SingleGradeBehavior extends Behavior
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-
+//        echo "<pre>";
+//        print_r(__FUNCTION__);
+//        print_r($entity);
+//        echo "</pre>";
+//        echo "<pre>";
+//        print_r(__FILE__);
+//        print_r($requestData);
+//        echo "</pre>";
+        //POCOR-8538 start
         $process = function ($model, $entity) use ($requestData, $extra) {
             $commonData = $requestData['InstitutionClasses'];
             /**
@@ -298,17 +306,17 @@ class SingleGradeBehavior extends Behavior
     {
         $model = $this->_table;
         $errors = $entity->getErrors();
-        echo "<pre>";
-        print_r($entity);
-        echo "</pre>";
-        echo "<pre>";
-        print_r($requestData);
-        echo "</pre>";
-        //POCOR-8538 start
+        $alias = $model->getAlias();
+        $data = $requestData[$alias];
         $classData=$this->_table->find('all', [
             'order' => ['InstitutionClasses.id' => 'DESC']
         ])->first();
-        $cv = self::saveCustomFieldsForSingleGrade($entity->custom_field_values, $classData->id, $classData->created_user_id);
+//        echo "<pre>";
+//        echo __FUNCTION__;
+//
+//        print_r($requestData);
+//        echo "</pre>";
+        $cv = self::saveCustomFieldsForSingleGrade($data['custom_field_values'], $classData->id, $classData->created_user_id);
         $requestData['errorMessage']=[];//removed for staff id
         //POCOR-8538 end
         if (isset($requestData['errorMessage'])) {
@@ -337,58 +345,80 @@ class SingleGradeBehavior extends Behavior
         $cv = [];
 
         if (!empty($customFields)) {
-            echo "<pre>";
-            print_r($customFields);
-            echo "</pre>";
             $customFieldValuesTable =
                 TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionClassesCustomFieldValues');
-            // Delete existing custom fields
+
+            // Delete existing custom fields for this class
             $customFieldValuesTable->deleteAll(
-                [$customFieldValuesTable->aliasField('institution_class_id') => $classId]);
+                [$customFieldValuesTable->aliasField('institution_class_id') => $classId]
+            );
+
             $relevantFields = [
-                    "text" => "text_value",
-                    "number" => "number_value",
-                    "dropdown" => "number_value",
-                    "checkbox" => "number_value",
-                    "decimal" => "decimal_value",
-                    "textarea" => "textarea_value",
-                    "time" => "time_value",
-                    "date" => "date_value",
-                    "file" => "file"
+                "text" => "text_value",
+                "number" => "number_value",
+                "dropdown" => "number_value",
+                "checkbox" => "number_value",
+                "decimal" => "decimal_value",
+                "textarea" => "textarea_value",
+                "time" => "time_value",
+                "date" => "date_value",
+                "file" => "file"
             ];
 
-            // Save new custom fields
+            // Iterate over each custom field
             foreach ($customFields as $field) {
-                $fieldData = [
-                    'id' => Text::uuid(),
-                    'institution_class_id' => $classId,
-                    'created_user_id' => $createdUserId,
-                    'created' => date('Y-m-d H:i:s')
-                ];
+                $key = strtolower($field['field_type']);
 
-                $hasValue = false;
-                // Relevant fields to check
-                $key=strtolower($field->field_type);
+                // Special handling for CHECKBOX fields
+                if ($key === 'checkbox' && !empty($field['number_value']) && is_array($field['number_value'])) {
+                    foreach ($field['number_value'] as $optionId => $isChecked) {
+                        if ($isChecked) {  // Save only selected (checked) options
+                            $fieldData = [
+                                'id' => Text::uuid(),
+                                'institution_class_id' => $classId,
+                                'created_user_id' => $createdUserId,
+                                'created' => date('Y-m-d H:i:s'),
+                                'institution_custom_field_id' => $field['institution_custom_field_id'],
+                                'number_value' => $optionId  // Store each selected option as a separate entry
+                            ];
 
-                if(array_key_exists($key, $relevantFields)){
-
-                    if(!empty($field[$relevantFields[$key]])){
-                        $fieldname=$relevantFields[$key];
-                        $value=$field[$relevantFields[$key]];
-                        $fieldData[$fieldname]=$value;
-                        $hasValue = true;
+                            $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
+                            try {
+                                $cv[] = $customFieldValuesTable->saveOrFail($fieldEntity);
+                            } catch (\Exception $e) {
+                                Log::error('Error saving checkbox field: ' . $e->getMessage());
+                            }
+                        }
                     }
-                }
+                } else {
+                    // General handling for other field types (TEXT, NUMBER, DROPDOWN, etc.)
+                    $fieldData = [
+                        'id' => Text::uuid(),
+                        'institution_class_id' => $classId,
+                        'created_user_id' => $createdUserId,
+                        'created' => date('Y-m-d H:i:s'),
+                        'institution_custom_field_id' => $field['institution_custom_field_id']
+                    ];
 
-                // Only create and save the entity if at least one relevant field has a value
-                if ($hasValue) {
-                    $fieldData['institution_custom_field_id'] =$field['institution_custom_field_id'];
-                    $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
-                    try {
-                        $cv[] = $customFieldValuesTable->save($fieldEntity);
-                    } catch (\Exception $e) {
-                        Log::debug(__FUNCTION__);
-                        Log::debug('Error: ' . $e->getMessage());
+                    $hasValue = false;
+
+                    if (array_key_exists($key, $relevantFields)) {
+                        $fieldname = $relevantFields[$key];
+                        $value = $field[$fieldname] ?? null;
+
+                        if (!empty($value)) {
+                            $fieldData[$fieldname] = $value;
+                            $hasValue = true;
+                        }
+                    }
+
+                    if ($hasValue) {
+                        $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
+                        try {
+                            $cv[] = $customFieldValuesTable->saveOrFail($fieldEntity);
+                        } catch (\Exception $e) {
+                            Log::error('Error saving custom field: ' . $e->getMessage());
+                        }
                     }
                 }
             }

@@ -68,7 +68,7 @@ class RenderCheckboxBehavior extends RenderBehavior
                 $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
                 $unlockFields[] = "$fieldPrefix.number_value.$key";
                 $html .= '<label class="selection-label" style="padding:0 20px 0 0!important;">'. $value .'</label>';//POCOR-7950
-                
+
                 $html .= '</div>';
             }
             $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
