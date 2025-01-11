@@ -67,6 +67,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
 
     // Function mapping
     Controller.setTop = setTop;
+    Controller.selectOption = selectOption;
     Controller.setBottom = setBottom;
     Controller.postForm = postForm;
     Controller.updateQueryStringParameter = updateQueryStringParameter;
@@ -278,6 +279,14 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         Controller.gridOptionsBottom.primaryKey = Controller.bottomKey;
     }
 
+    function selectOption(field) {
+        field.answer = [];
+        field.option.forEach((option) => {
+            if (option.selected) {
+                field.answer.push(option.option_id);
+            }
+        })
+    }
     function postForm() {
         Controller.postError = [];
         var classStudents = [];
