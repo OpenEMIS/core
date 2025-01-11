@@ -298,6 +298,12 @@ class SingleGradeBehavior extends Behavior
     {
         $model = $this->_table;
         $errors = $entity->getErrors();
+        echo "<pre>";
+        print_r($entity);
+        echo "</pre>";
+        echo "<pre>";
+        print_r($requestData);
+        echo "</pre>";
         //POCOR-8538 start
         $classData=$this->_table->find('all', [
             'order' => ['InstitutionClasses.id' => 'DESC']
@@ -331,6 +337,9 @@ class SingleGradeBehavior extends Behavior
         $cv = [];
 
         if (!empty($customFields)) {
+            echo "<pre>";
+            print_r($customFields);
+            echo "</pre>";
             $customFieldValuesTable =
                 TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionClassesCustomFieldValues');
             // Delete existing custom fields

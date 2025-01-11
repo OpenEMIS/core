@@ -159,7 +159,7 @@ $this->start('panelBody');
             <div class="input select" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DROPDOWN'">
                 <label>{{field.name}}</label>
                 <div class="input-select-wrapper">
-                    <select name="Student[option_id]" id={{field.student_custom_field_id}}
+                    <select name="Student[option_id]" id={{field.institution_custom_field_id}}
                             ng-options="option.option_id as option.option_name for option in field.option"
                             ng-model="field.answer"
                             ng-change="changeOption(field,field.answer)" ng-required="field.is_mandatory !== 0">
@@ -171,8 +171,8 @@ $this->start('panelBody');
                 </div>
             </div>
             <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DATE'">
-                <label for={{field.student_custom_field_id}}>{{field.name}}</label>
-                <div class="input-group date" id={{field.student_custom_field_id}} datepicker="" ng-model="field.answer" ng-click="[field.isDatepickerOpen = !field.isDatepickerOpen]" ng-init="field.isDatepickerOpen = false">
+                <label for={{field.institution_custom_field_id}}>{{field.name}}</label>
+                <div class="input-group date" id={{field.institution_custom_field_id}} datepicker="" ng-model="field.answer" ng-click="[field.isDatepickerOpen = !field.isDatepickerOpen]" ng-init="field.isDatepickerOpen = false">
                     <input type="text" class="form-control" ng-model="field.answer" uib-datepicker-popup="dd-MM-yyyy" is-open="field.isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" ng-change="field.isDatepickerOpen = false" ng-required="field.is_mandatory !== 0">
                     <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                 </div>
@@ -181,17 +181,21 @@ $this->start('panelBody');
                 </div>
             </div>
             <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'TIME'">
-                <label for={{field.student_custom_field_id}}>{{field.name}}</label>
+                <label for={{field.institution_custom_field_id}}>{{field.name}}</label>
                 <div class="input-group time" uib-timepicker ng-model="field.answer" hour-step="field.hourStep" minute-step="field.minuteStep" show-meridian="field.isMeridian"></div>
                 <div ng-if="field.errorMessage" class="error-message" style="margin-left: 150px;">
                     <p>{{ field.errorMessage }}</p>
                 </div>
             </div>
             <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'CHECKBOX'">
-                <label for={{field.student_custom_field_id}}>{{field.name}}</label>
+                <label for={{field.institution_custom_field_id}}>{{field.name}}</label>
                 <div class="input-group check_box">
                     <div ng-repeat="option in field.option">
-                        <input type="checkbox" id={{option.option_id}} name={{option.option_name}} value={{option.option_id}} ng-model="option.selected" ng-change="selectOption(field)" ng-required="field.is_mandatory !== 0">
+                        <input type="checkbox" id={{option.option_id}}
+                               name={{option.option_name}}
+                               value={{option.option_id}}
+                               ng-model="option.selected"
+                               ng-change="InstitutionClassStudentsController.selectOption(field)" ng-required="field.is_mandatory !== 0">
                         <label for={{option.option_id}}> {{option.option_name}}</label>
                     </div>
                     <div ng-if="field.errorMessage" class="error-message">

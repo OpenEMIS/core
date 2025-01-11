@@ -106,7 +106,8 @@ class InstitutionClassesTable extends ControllerActionTable
             'foreignKey' => 'institution_class_id'
         ]);
         $this->hasMany('CustomFieldValues',
-        ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', 'foreignKey' => 'institution_class_id']);
+        ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues',
+            'foreignKey' => 'institution_class_id']);
         $this->addBehavior('CustomField.Record', [
             'model' => 'Institution.InstitutionClasses',
             'fieldKey' => 'institution_custom_field_id',
@@ -499,8 +500,8 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         try {
 
-            Log::debug(print_r(['beforeSave' => $entity], true));
-            Log::debug(print_r(['beforeSave' => $options], true));
+//            Log::debug(print_r(['beforeSave' => $entity], true));
+//            Log::debug(print_r(['beforeSave' => $options], true));
 
         // POCOR-8538 start
         if ($entity->has('custom') && !empty($entity->custom)) {
