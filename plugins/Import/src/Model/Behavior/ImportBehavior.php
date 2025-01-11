@@ -420,7 +420,7 @@ class ImportBehavior extends Behavior
                 }
 //                if ($row == $highestRow) { // check if the row cells are really empty, if yes then end the loop
                     if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
-                        break;
+                        continue;
                     }
 //                }
 
@@ -428,6 +428,7 @@ class ImportBehavior extends Behavior
                 $tempRow = new ArrayObject;
                 $rowInvalidCodeCols = new ArrayObject;
                 $params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes, $rowInvalidCodeCols];
+
                 $this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
 
                 // for each columns
