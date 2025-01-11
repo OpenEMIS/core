@@ -204,7 +204,7 @@ class ImportUsersTable extends AppTable
             }
         }
         $tempRow['account_type'] = $accountTypeId;
-        Log::debug(print_r($tempRow, true));
+
         if (empty($tempRow['account_type'])) {
             $tempRow['duplicates'] = __('Account type cannot be empty');
             $rowInvalidCodeCols['account_type'] = $tempRow['duplicates'];
@@ -380,9 +380,9 @@ class ImportUsersTable extends AppTable
         if (0 == $rowInvalidCodeCols->count()) {
             if ($isStudent) {
                 if (!$have_error) {
-                    Log::debug(print_r(['pre' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
                     list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
-                    Log::debug(print_r(['post' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
                 }
                 if (!$have_error) {
                     list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
@@ -998,9 +998,9 @@ class ImportUsersTable extends AppTable
    private function checkAdmission(&$tempRow, &$rowInvalidCodeCols): bool
     {
         $have_error = false;
-        Log::debug(print_r(['pre8' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
         list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkCreateNewStudent($tempRow, $rowInvalidCodeCols, $have_error);
-        Log::debug(print_r(['pre12' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
         if ($have_error) {
             return true;
         }
@@ -1604,15 +1604,15 @@ class ImportUsersTable extends AppTable
 
             if (!empty($education_grade_id)) {
                 $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
-                Log::debug(print_r(['pre5' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
 
                 $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-                Log::debug(print_r(['pre6' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
 
                 $tempRow['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
-                Log::debug(print_r(['pre7' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
                 $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
-                Log::debug(print_r(['pre13' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
 
             }
         }
