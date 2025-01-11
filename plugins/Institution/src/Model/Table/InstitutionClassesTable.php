@@ -770,7 +770,7 @@ class InstitutionClassesTable extends ControllerActionTable
     // POCOR-8538 start
     private static function saveCustomFields($customFields, $classId, $createdUserId): array
     {
-        Log::debug(print_r(['beforeSave' => $customFields], true));
+//        Log::debug(print_r(['beforeSave' => $customFields], true));
         $cv = [];
         if (!empty($customFields)) {
             $customFieldValuesTable =
