@@ -159,6 +159,7 @@ class ImportUsersTable extends AppTable
         $accountTypeIndex = key($accountType->toArray()) + 1;
         $accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
         $accountTypeId = $this->getAccountTypeId($accountType);
+
         if (!$user) {
             if ($openemisNo) {
                 $rowInvalidCodeCols['openemis_no'] = __('No Such User');
@@ -186,7 +187,7 @@ class ImportUsersTable extends AppTable
             // POCOR-8683 start
             $tempRow['security_user_id'] = $user->id;
 //            Log::debug('$accountTypeId' . strval($accountTypeId));
-            $tempRow['account_type'] = $accountTypeId;
+
             if($accountTypeId == "" || !$accountTypeId){
                 $tempRow['account_type'] = self::IS_STUDENT;
                 $accountTypeId = self::IS_STUDENT;
@@ -203,7 +204,7 @@ class ImportUsersTable extends AppTable
             }
         }
         $tempRow['account_type'] = $accountTypeId;
-
+        Log::debug(print_r($tempRow, true));
         if (empty($tempRow['account_type'])) {
             $tempRow['duplicates'] = __('Account type cannot be empty');
             $rowInvalidCodeCols['account_type'] = $tempRow['duplicates'];
@@ -379,7 +380,9 @@ class ImportUsersTable extends AppTable
         if (0 == $rowInvalidCodeCols->count()) {
             if ($isStudent) {
                 if (!$have_error) {
+                    Log::debug(print_r(['pre' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
                     list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+                    Log::debug(print_r(['post' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
                 }
                 if (!$have_error) {
                     list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
@@ -995,7 +998,9 @@ class ImportUsersTable extends AppTable
    private function checkAdmission(&$tempRow, &$rowInvalidCodeCols): bool
     {
         $have_error = false;
+        Log::debug(print_r(['pre8' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
         list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkCreateNewStudent($tempRow, $rowInvalidCodeCols, $have_error);
+        Log::debug(print_r(['pre12' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
         if ($have_error) {
             return true;
         }
@@ -1012,7 +1017,7 @@ class ImportUsersTable extends AppTable
         // Validate required fields
         foreach ($requiredFields as $field) {
             if (empty($tempRow[$field])) {
-                $rowInvalidCodeCols[$field] = $this->getExcelLabel('Import', "{$field}_required");
+                $rowInvalidCodeCols[$field] = $field . $this->getExcelLabel('Import', "{$field}_required") . ":" . $field;
                 $tempRow["{$field}_error"] = true;
                 $have_error = true;
             }
@@ -1407,13 +1412,17 @@ class ImportUsersTable extends AppTable
         if (!$tempRow['student_id']) {
             $tempRowArray = $tempRow->getArrayCopy();
             try {
+                $this->Users->setImportValidationPassed();
                 $newEntity = $this->Users->newEntity($tempRowArray);
-//                    Log::debug(print_r($newEntity, true));
+
                 if ($this->Users->save($newEntity)) {
                     $newId = $newEntity->id;  // Get the ID after save
                     $tempRow['student_id'] = $newId;
                     $tempRow['security_user_id'] = $newId;
                     $tempRow['entity'] = $newEntity;
+                }else{
+                    $rowInvalidCodeCols['openemis_no'] = 'New Student Creation Error';
+                    $have_error = true;
                 }
 
             } catch (\Exception $exception) {
@@ -1568,7 +1577,10 @@ class ImportUsersTable extends AppTable
      */
     private function checkNewAdmission(bool $have_error, $tempRow, ArrayObject $rowInvalidCodeCols, ArrayObject $originalRow): array
     {
+
         $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
+
+
         $institution_id = $tempRow['institution_id'] ?? null;
         if (!$institution_id) {
             return array($tempRow, $rowInvalidCodeCols, $have_error);
@@ -1577,20 +1589,31 @@ class ImportUsersTable extends AppTable
         $keys = array_flip($columns);
         $education_grade_key = $keys['education_grade_id'];
         $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
+
+
         $academic_period_id = $tempRow['academic_period_id'] ?? null;
 //                Log::debug(print_r(['$academic_period_id' => $tempRow], true));
         if (!empty($academic_period_id)) {
             $education_grade_code = $originalRow[$education_grade_key];
             $tempRow['education_grade_code'] = $education_grade_code;
             $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
+
+
             $education_grade_id = $tempRow['education_grade_id'] ?? null;
 //                    Log::debug(print_r(['$education_grade_id' => $tempRow], true));
 
             if (!empty($education_grade_id)) {
                 $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
+                Log::debug(print_r(['pre5' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
                 $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
+                Log::debug(print_r(['pre6' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
                 $tempRow['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
+                Log::debug(print_r(['pre7' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
                 $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
+                Log::debug(print_r(['pre13' => $tempRow, 'errors' => $rowInvalidCodeCols], true ));
+
             }
         }
 

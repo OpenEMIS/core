@@ -1090,10 +1090,16 @@ class UsersTable extends AppTable
         if ($entity->has('contact_error')) {
             return false;
         }
+        Log::debug(__FUNCTION__);
+        Log::debug(print_r(['errors' => $entity->getErrors(),
+            'options' => $options,
+            'event' => $event],true));
+        return true;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
+//        Log::debug(__FUNCTION__);
         // This logic is meant for Import
         //comment for ticket POCOR-6512
         /*if ($entity->has('customColumns')) {
@@ -1136,7 +1142,7 @@ class UsersTable extends AppTable
                     }
                     $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
                     $contact_entity = $ContactsTable->save($contact_entity);
-                    Log::debug(print_r(['$contact_entity' => $contact_entity], true));
+//                    Log::debug(print_r(['$contact_entity' => $contact_entity], true));
                 }
             }
             $identity_type_id = $entity->identity_type_id;
@@ -1155,6 +1161,7 @@ class UsersTable extends AppTable
             $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
 
         }
+        Log::debug(__FUNCTION__);
     // POCOR-8683 end
 
     }
