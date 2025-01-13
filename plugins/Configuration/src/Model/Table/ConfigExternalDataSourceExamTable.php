@@ -184,22 +184,25 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
             //$newAttributes['password'] = str_repeat('*',strlen($this->decrypt($attributes['password'],Security::salt())));//POCOR-7531
             // $newAttributes['public_key'] = $attributes['public_key']; //POCOR-7531 
             $encryptionKey = $attributes['public_key'];
-
+            //POCOR-7510 start
             if ($attributes['password'] !== null) {
-    // Decrypting the password attribute using the provided encryption key
-    $decryptedPassword = Security::decrypt($attributes['password'], $encryptionKey);
+                // Decrypting the password attribute using the provided encryption key
+                // $decryptedPassword = Security::decrypt($attributes['password'], $encryptionKey);
 
-    // Masking the decrypted password with asterisks
-    $newAttributes['password'] = str_repeat('*', strlen($decryptedPassword));
-} else {
-    // Handle the case where the password attribute is null
-    // For example, you might set a default value for $newAttributes['password']
-    $newAttributes['password'] = ''; // Or any other appropriate default value
-}
+                // Masking the decrypted password with asterisks
+                // $newAttributes['password'] = str_repeat('*', strlen($decryptedPassword));
+                $newAttributes['password'] = str_repeat('*',strlen($this->decrypt($attributes['password'],
+                                             Security::getSalt())));
+            //POCOR-7510 end
+            } else {
+                // Handle the case where the password attribute is null
+                // For example, you might set a default value for $newAttributes['password']
+                $newAttributes['password'] = ''; // Or any other appropriate default value
+            }
         }
 
         if ($action == 'view') {
-            foreach ($attributes as $key => $obj) {
+            foreach ($newAttributes as $key => $obj) {//POCOR-7509
                 $rowData = [];
                 $rowData[] = __(Inflector::humanize($key));
                 $rowData[] = nl2br($obj);
@@ -235,7 +238,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 foreach ($attributes as $key => $value) {
                      //POCOR-7531 start
                     if ($key == 'password') {
-                        $value = $this->decrypt($value,Security::salt());
+                        $value = $this->decrypt($value,Security::getSalt());//POCOR-7510
                     }
                      //POCOR-7531 end
                     if ($key == 'private_key') {
@@ -294,7 +297,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
             $patchOption['validate'] = 'OpenEMISIdentity';
              //POCOR-7531 start
             if (!empty($requestData[$this->getAlias()]['password'])){
-                $requestData[$this->getAlias()]['password']=$this->encrypt($requestData[$this->getAlias()]['password'], Security::salt());
+                $requestData[$this->getAlias()]['password']=$this->encrypt($requestData[$this->getAlias()]['password'], Security::getSalt());//POCOR-7510
             }
              //POCOR-7531 end
         } elseif ($requestData[$this->getAlias()]['value'] == 'None') {
