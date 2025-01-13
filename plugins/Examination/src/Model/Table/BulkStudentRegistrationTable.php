@@ -344,7 +344,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
             $attr['element'] = 'Examination.students';
             $attr['data'] = $students;
             //$request->getData[$this->getAlias()]['studentList'] =  $students;//POCOR-7512
-            $request->withData($this->getAlias() . '.studentList', $students);
+            $this->request = $this->request->withData($this->getAlias() . '.studentList', $students);
         }
         return $attr;
     }
@@ -518,7 +518,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
     public function onUpdateFieldSubjectId(Event $event, array $attr, $action, $request){
         $subjects = [];
         if ($action == 'add') {
-            if (!empty($request->getData()[$this->getAlias()]['examination_id']) && !empty($request->getData()[$this->getAlias()]['institution_id'])) {
+            if (!empty($request->getData()[$this->getAlias()]['examination_id']) && !empty($request->getData()[$this->getAlias()]['studentList'])) {
                 $ExaminationSubjects=TableRegistry::get('Examination.ExaminationSubjects');
                 $subjects=$ExaminationSubjects->find()
                                                ->where([

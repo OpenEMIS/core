@@ -549,7 +549,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 ->toArray();
 
             $educationGrade = $Examinations['education_grade']['name'];
-            $request->withdata()[$this->getAlias()]['education_grade_id'] = $Examinations['education_grade']['id'];
+            //$request->withdata()[$this->getAlias()]['education_grade_id'] = $Examinations['education_grade']['id'];
+            $request = $request->withData($this->getAlias() . '.education_grade_id', $Examinations['education_grade']['id']);
             $attr['attr']['value'] = $educationGrade;
         }
         return $attr;
@@ -668,14 +669,15 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             $attr['type'] = 'element';
             $attr['element'] = 'Examination.students';
             $attr['data'] = $students;
-            $request->getData($this->getAlias())['studentList'] = $students;
+            //$request->getData($this->getAlias())['studentList'] = $students;
+            $this->request = $this->request->withData($this->getAlias() . '.studentList', $students);
         }
         return $attr;
     }
     public function onUpdateFieldSubjectId(Event $event, array $attr, $action, ServerRequest $request){
         $subjects = [];
         if ($action == 'add') {
-            if (!empty($request->getData()[$this->getAlias()]['examination_id']) && !empty($request->getData()[$this->getAlias()]['institution_class_id'])) {
+            if (!empty($request->getData()[$this->getAlias()]['examination_id']) && !empty($request->getData()[$this->getAlias()]['studentList'])) {
                 $ExaminationSubjects=TableRegistry::getTableLocator()->get('Examination.ExaminationSubjects');
                 $subjects=$ExaminationSubjects->find()->where([
                                  $ExaminationSubjects->aliasField('examination_id')=>$request->getData()[$this->getAlias()]['examination_id']
