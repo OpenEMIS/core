@@ -61,7 +61,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'orientation' => 'landscape'
         ]);
         $this->addBehavior('CompositeKey');
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', //POCOR-8813
+        ['appliedAction' => ['ExaminationStudents'=> ['examination_centre_id', 'examination_id', 'student_id'] ]]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -526,7 +527,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
     public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
+        if ($data->offsetExists($this->getAlias())) {
             if (array_key_exists('examination_centre_id', $data[$this->getAlias()])) {
                 unset($data[$this->getAlias()]['examination_centre_id']);
             }
@@ -548,7 +549,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 ->toArray();
 
             $educationGrade = $Examinations['education_grade']['name'];
-            $request->data[$this->getAlias()]['education_grade_id'] = $Examinations['education_grade']['id'];
+            $request->withdata()[$this->getAlias()]['education_grade_id'] = $Examinations['education_grade']['id'];
             $attr['attr']['value'] = $educationGrade;
         }
         return $attr;
@@ -576,7 +577,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                     ->toArray();
 
                 if (empty($examCentreOptions)) {
-                    $this->Alert->warning($this->getAliasField('noLinkedExamCentres'));
+                    $this->Alert->warning($this->aliasField('noLinkedExamCentres'));
                 }
             }
             $attr['options'] = $examCentreOptions;
@@ -674,7 +675,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     public function onUpdateFieldSubjectId(Event $event, array $attr, $action, ServerRequest $request){
         $subjects = [];
         if ($action == 'add') {
-            if (!empty($request->getData()[$this->getAlias()]['examination_id']) &&!empty($request->getData()[$this->getAlias()]['studentList'])) {
+            if (!empty($request->getData()[$this->getAlias()]['examination_id']) && !empty($request->getData()[$this->getAlias()]['institution_class_id'])) {
                 $ExaminationSubjects=TableRegistry::getTableLocator()->get('Examination.ExaminationSubjects');
                 $subjects=$ExaminationSubjects->find()->where([
                                  $ExaminationSubjects->aliasField('examination_id')=>$request->getData()[$this->getAlias()]['examination_id']
@@ -763,12 +764,12 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 }
 
                 if (empty($newEntities)) {
-                    $model->Alert->warning($this->getAliasField('noStudentSelected'));
+                    $model->Alert->warning($this->aliasField('noStudentSelected'));
                     $entity->getErrors('student_id', __('There are no students selected'));
                     return false;
                 }
 
-                $success = $this->connection()->transactional(function() use ($newEntities, $entity) {
+                $success = $this->getConnection()->transactional(function() use ($newEntities, $entity) {
                     $patchOptions['associated'] = ['ExaminationCentresExaminationsSubjects' => ['validate' => false]];
                     $return = true;
 
@@ -788,15 +789,15 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 if ($success) {
                     $studentCount = $this->find()
                         ->where([
-                            $this->getAliasField('examination_centre_id') => $entity->examination_centre_id,
-                            $this->getAliasField('examination_id') => $entity->examination_id
+                            $this->aliasField('examination_centre_id') => $entity->examination_centre_id,
+                            $this->aliasField('examination_id') => $entity->examination_id
                         ])
-                        ->group([$this->getAliasField('student_id')])
+                        ->group([$this->aliasField('student_id')])
                         ->count();
                     $this->ExaminationCentresExaminations->updateAll(['total_registered' => $studentCount],['examination_centre_id' => $entity->examination_centre_id, 'examination_id' => $entity->examination_id]);
                     //POCOR-7511 start
                     if($entity->examination_subjects){
-                        $examinationStudentSubjects=TableRegistry::get('examination_student_subjects');
+                        $examinationStudentSubjects=TableRegistry::get('Examination.ExaminationStudentSubjects');
                         if(!empty($listOfSelectedStudents)){
                             $entities=[];
                             foreach($listOfSelectedStudents as $stu ){
@@ -811,8 +812,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                                 }
                             }
                             $entities = $examinationStudentSubjects->newEntities($entitiesData);
-                            foreach ($entities as $entity) {
-                                $examinationStudentSubjects->save($entity);
+                            foreach ($entities as $new_entity) {
+                                $examinationStudentSubjects->save($new_entity);
                             }
                         }
                     } //POCOR-7511 end
@@ -863,7 +864,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                     return $success;
                 }
             } else {
-                $model->Alert->warning($this->getAliasField('noStudentSelected'));
+                $model->Alert->warning($this->aliasField('noStudentSelected'));
                 $entity->getErrors('student_id', __('There are no students selected'));
                 return false;
             }
