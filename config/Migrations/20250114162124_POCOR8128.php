@@ -42,7 +42,7 @@ class POCOR8128 extends AbstractMigration
             $this->execute('CREATE TABLE IF NOT EXISTS `staff_leave_entitlements` (
             `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
             `staff_id` INT UNSIGNED NOT NULL COMMENT "links to staff.id",
-            `leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
+            `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
             `adjustment` INT SIGNED NOT NULL COMMENT "Leave days adjustment (positive or negative)",
             `modified_user_id` INT UNSIGNED NULL,
             `modified` DATETIME NULL,
