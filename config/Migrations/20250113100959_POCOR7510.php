@@ -49,7 +49,7 @@ class POCOR7510 extends AbstractMigration
                     '_edit' => NULL,
                     '_add' => NULL,
                     '_delete' => NULL,
-                    '_execute' => 'Exam.sync',
+                    '_execute' => 'syncResultFromExam.execute',
                     'order' => $order,
                     'visible' => 1,
                     'description' => NULL,

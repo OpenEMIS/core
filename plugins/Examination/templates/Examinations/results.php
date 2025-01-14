@@ -15,6 +15,24 @@ $this->start('toolbar');
         ];
         echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
     ?>
+    <!-- POCOR-7510 start -->
+    <?php if($_sync) : ?>
+        <?php
+            $param = ['academic_period_id' =>$this->request->getParam('academic_period_id'),
+                'examination_id' => $this->request->getParam('examination_id'),
+                'examination_centre_id' => $this->request->getParam('examination_centre_id')];
+            $syncUrl = [
+                'plugin' => 'Examination',
+                'controller' => 'Examinations',
+                'action' => 'syncResultsExam',
+                'academic_period_id' => $this->request->getQuery('academic_period_id'),
+                'examination_id' => $this->request->getQuery('examination_id'),
+                'examination_centre_id' => $this->request->getQuery('examination_centre_id')
+            ];
+         echo $this->Html->link('<i class="fa fa-refresh"></i>', $syncUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Sync'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
+        ?>
+    <?php endif; ?>
+    <!-- POCOR-7510 end -->
     <?php if ($_edit) : ?>
         <!-- Show buttons when action is view: -->
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="ExaminationsResultsController.onEditClick()">
