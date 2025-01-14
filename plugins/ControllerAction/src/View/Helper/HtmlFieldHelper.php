@@ -977,7 +977,7 @@ class HtmlFieldHelper extends Helper
                 $options['placeholder'] = $attr['placeholder'];
             }
             if (isset($attr['url'])) {
-                $options['url'] = $this->Url->build($attr['url'], true);
+                $options['url'] = $this->Url->build($attr['url']); //, true);
             }
             $fieldName = $attr['model'] . '.' . $attr['field'];
             if (isset($attr['fieldName'])) {
