@@ -509,5 +509,41 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         );
         return $decrypted;
     }
-    //POCOR-7531 end
+
+    //POCOR-7510 start
+    /**
+     * Retrieves the configuration for OpenEMIS Exams from the external data source.
+     *
+     * This method fetches the attributes associated with 'OpenEMIS Exams' from the 
+     * 'ExternalDataSourceAttributes' table, then constructs an array with necessary 
+     * configuration details like URL, username, password, and token URI.
+     * The password is decrypted using the configured salt.
+     *
+     * @return array Configuration data containing 'url', 'username', 'password', and optionally 'token_uri'.
+     */
+    public function getOpenemisExamConfiguration()
+    {
+        $ExternalAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+
+        $attributes = $ExternalAttributes->find('list', [
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+            ->where([$ExternalAttributes->aliasField('external_data_source_type') => 'OpenEMIS Exams'])
+            ->toArray();
+
+        $data = [];
+        if (
+            isset($attributes['url'], $attributes['username'], $attributes['password'])
+        ) {
+            $data = [
+                'url' => $attributes['url'],
+                'username' => $attributes['username'],
+                'password' => $this->decrypt($attributes['password'], Security::getSalt()),
+                'token_uri' => $attributes['token_uri'] ?? null
+            ];
+        }
+        return $data;
+    }
+    //POCOR-7510 end
 }
