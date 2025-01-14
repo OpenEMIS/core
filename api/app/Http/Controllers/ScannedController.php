@@ -112,23 +112,28 @@ class ScannedController extends Controller
 
     public function addScannedUserData(ScannedAttendanceRequest $request)
     {
-
         try {
+            if (empty($request->all())) {
+                return $this->sendErrorResponse("Missing data. Please provide scanned user data.");
+            }
+            
             $data = $this->scannedService->addScannedUser($request);
-            if($data == 1){
-                return $this->sendSuccessResponse("Scanned User Data Added successfully.");
+            if ($data == 1) {
+                return $this->sendSuccessResponse("Scanned User Data added successfully.");
             } else {
-                return $this->sendErrorResponse("Scanned User Data not Added. kindly check Scanned User Data ");
+                return $this->sendErrorResponse(
+                    "OpenEMIS ID does not exist. Kindly check OpenEMIS ID.");
             }
         } catch (\Exception $e) {
             Log::error(
                 'Failed to save Scanned User Data in DB',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
             return $this->sendErrorResponse('Failed to save Scanned User Data in DB');
         }
     }
+
 
     /**
     * @OA\Get(
