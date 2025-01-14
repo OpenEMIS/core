@@ -97,7 +97,7 @@ class POCOR8128 extends AbstractMigration
         // Add `staff_leave_policy_id` column
         $this->execute('
             ALTER TABLE `staff_position_titles`
-            ADD COLUMN `staff_leave_policy_id` INT UNSIGNED NULL COMMENT "links to staff_leave_policies.id"
+            ADD COLUMN `staff_leave_policy_id` INT UNSIGNED NULL DEFAULT NULL COMMENT "links to staff_leave_policies.id"
             AFTER `security_role_id`;
         ');
 
