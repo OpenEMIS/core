@@ -791,6 +791,8 @@ class AppController extends Controller
                 'postForgotUsername',
                 'forgotPassword',
                 'postForgotPassword',
+                'resetPassword', //POCOR-8806
+                'postResetPassword',
                 'verifyOtp'
             ])
         ) {

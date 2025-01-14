@@ -646,7 +646,7 @@ class InstitutionsTable extends AppTable
         $filter = $requestData->institution_filter;
         if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
             $sheets[] = [
-                'name' => $this->alias(),
+                'name' => $this->getAlias(), //POCOR-8794
                 'table' => $this,
                 'query' => $this->find(),
             ];
@@ -2148,22 +2148,22 @@ class InstitutionsTable extends AppTable
             ->select(['area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code', 'institution_status' => 'Statuses.name'])
             ->where([$where]);
         switch ($filter) {
-            case self::NO_STUDENT:
-                $StudentsTable = self::getDynamicTableInstance('Institution.Students');
-                $academicPeriodId = $requestData->academic_period_id;
-
-                $query
-                    ->leftJoin(
-                        [$StudentsTable->alias() => $StudentsTable->table()],
-                        [
-                            $StudentsTable->aliasField('institution_id') . ' = ' . $this->aliasField('id'),
-                            $StudentsTable->aliasField('academic_period_id') => $academicPeriodId
-                        ]
-                    )
-                    ->select(['student_count' => $query->func()->count('Students.id')])
-                    ->group([$this->aliasField('id')])
-                    ->having(['student_count' => 0]);
-                break;
+            case self::NO_STUDENT: //POCOR-8794
+                    $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
+                    $academicPeriodId = $requestData->academic_period_id;
+    
+                    $query
+                        ->leftJoin(
+                            [$StudentsTable->getAlias() => $StudentsTable->getTable()],
+                            [
+                                $StudentsTable->aliasField('institution_id') . ' = '. $this->aliasField('id'),
+                                $StudentsTable->aliasField('academic_period_id') => $academicPeriodId
+                            ]
+                        )
+                        ->select(['student_count' => $query->func()->count('Students.id')])
+                        ->group([$this->aliasField('id')])
+                        ->having(['student_count' => 0]);
+                    break;
 
             case self::NO_STAFF:
                 $query

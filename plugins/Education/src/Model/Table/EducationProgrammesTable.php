@@ -486,7 +486,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 
 
                 $educationProgrammesTable = clone $this;
-                $educationProgrammesTable->getAlias('EducationProgrammesClone');
+                $educationProgrammesTable->setAlias('EducationProgrammesClone');
 
                 $excludedProgrammes = $educationProgrammesTable->find()
                         ->innerJoin(['EducationCycles' => 'education_cycles'], [
