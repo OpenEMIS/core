@@ -50,7 +50,30 @@ class POCOR8128 extends AbstractMigration
             `created` DATETIME NOT NULL,
             PRIMARY KEY (`id`),
             KEY `idx_staff_id` (`staff_id`),
-            KEY `idx_staff_leave_type_id` (`leave_type_id`)
+            KEY `idx_staff_leave_type_id` (`staff_leave_type_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
+
+            // Create institution_staff_leave_entitlement table
+            $this->execute('CREATE TABLE IF NOT EXISTS `institution_staff_leave_entitlements` (
+            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            `year` INT(4) NULL DEFAULT NULL COMMENT "Year",
+            `staff_id` INT UNSIGNED NOT NULL COMMENT "links to staff.id",
+            `institution_position_id` INT NOT NULL COMMENT "links to institution_positions.id",
+            `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to leave_policies.id",
+            `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
+            `days_total` INT SIGNED NULL DEFAULT NULL COMMENT "Total leave days",
+            `days_taken` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days taken",
+            `days_balance` INT SIGNED NULL DEFAULT NULL COMMENT "Remaining leave days",
+            `adjustment` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days adjustment (positive or negative)",
+            `modified_user_id` INT UNSIGNED NULL,
+            `modified` DATETIME NULL,
+            `created_user_id` INT UNSIGNED NOT NULL,
+            `created` DATETIME NOT NULL,
+            PRIMARY KEY (`id`),
+            KEY `idx_staff_id` (`staff_id`),
+            KEY `idx_institution_position_id` (`institution_position_id`),
+            KEY `idx_leave_type_id` (`staff_leave_type_id`),
+            KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
 
             // Create general leave policy and add national codes
@@ -181,6 +204,7 @@ class POCOR8128 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `staff_leave_types`;');
         $this->execute('RENAME TABLE `z_8128_staff_leave_types` TO `staff_leave_types`;');
 
+        $this->execute('DROP TABLE IF EXISTS `institution_staff_leave_entitlements`;');
         $this->execute('DROP TABLE IF EXISTS `staff_leave_entitlements`;');
         $this->execute('DROP TABLE IF EXISTS `staff_leave_policy_types`;');
         $this->execute('DROP TABLE IF EXISTS `staff_leave_policies`;');
