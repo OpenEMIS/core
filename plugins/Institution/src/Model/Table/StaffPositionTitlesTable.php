@@ -111,7 +111,8 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 		$this->field('type', ['after' => 'name']);
 		$this->field('security_role_id', ['after' => 'type']);
-		$this->field('file_content', ['after' => 'position_grades', 'attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true, 'index' => false]]);//POCOR-7758
+		$this->field('file_content', ['after' => 'security_role_id',
+            'attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true, 'index' => false]]);//POCOR-7758
         $this->field('file_name',['visible'=>false]);//POCOR-7758
 	}
 
@@ -299,7 +300,8 @@ class StaffPositionTitlesTable extends ControllerActionTable
 			'entity' => $entity,
 			'after' => 'position_grade_selection'
 		]);
-		$this->field('file_content', ['after' => 'position_grades', 'attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true,'index'=>false]]);//POCOR-7758
+		$this->field('file_content', ['after' => 'position_grades',
+            'attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true,'index'=>false]]);//POCOR-7758
 
 	}
 
