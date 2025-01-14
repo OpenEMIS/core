@@ -1172,7 +1172,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->hasMany('InstitutionStudentsReportCardsCommentsStaff', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionStudentsReportCardsCommentsStudent', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'student_id', 'dependent' => true]);
        // not found
-        $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
+        // $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);POCOR-8795
         $this->hasMany('InstitutionSubjectStaff', ['className' => 'Staff.StaffSubjects', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Student.StudentSubjects', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionTripPassengers', ['className' => 'Student.StudentTransport', 'foreignKey' => 'student_id', 'dependent' => true]);
@@ -2846,4 +2846,21 @@ public function getIdentityTypeData($value_selection)
         return $result;
     }
 
+    //POCOR-8743 Start
+    public function onGetModifiedUserId(Event $event, Entity $entity)
+    {
+        if(!empty($entity->modified_user_id)) {
+            $users = TableRegistry::get('Security.Users');
+            $user = $users->get($entity->modified_user_id);
+            return $user->name;
+        }
+    }
+
+    public function onGetCreatedUserId(Event $event, Entity $entity)
+    {
+        $users = TableRegistry::get('Security.Users');
+        $user = $users->get($entity->created_user_id);
+        return $user->name;
+    }
+    //POCOR-8743 End
 }

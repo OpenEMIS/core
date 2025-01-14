@@ -382,8 +382,10 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             $this->controller->set(compact('assessmentOptions', 'selectedAssessment'));
             // End
 
-            if ($selectedAssessment != '-1') {
-                $query->where([$Assessments->aliasField('id') => $selectedAssessment]);
+            if(isset($selectedAssessment)){
+                if ($selectedAssessment != '-1') {
+                    $query->where([$Assessments->aliasField('id') => $selectedAssessment]);
+                }
             }
         }
 

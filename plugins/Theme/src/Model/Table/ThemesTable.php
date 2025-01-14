@@ -26,6 +26,7 @@ class ThemesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
+      
         parent::initialize($config);
         $this->addBehavior('ControllerAction.FileUpload', [
             // 'name' => 'file_name',
@@ -42,6 +43,11 @@ class ThemesTable extends ControllerActionTable
     {
         $this->field('content', ['visible' => false]);
         $this->field('default_content', ['visible' => false]);
+        //POCOR-8741 start(remove add button)
+        if(isset($extra['toolbarButtons']['add'])){
+            unset($extra['toolbarButtons']['add']);
+        }
+        //POCOR-8741 end
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
