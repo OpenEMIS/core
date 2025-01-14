@@ -254,7 +254,11 @@ class AssessmentPeriodsTable extends ControllerActionTable
                             }
                         }
                     }
-
+                    //POCOR-8814[START]
+                    if(!isset($entity->id)){
+                        $entity->id = $assessmentId;
+                    }
+                    //POCOR-8814[END]
                     $process = function ($model, $entity) {
                         return $model->save($entity);
                     };
@@ -263,7 +267,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
 
                     if (!$result) {
-                        Log::write('debug', $entity->getErrors());
+                        Log::write('debug', (string)$entity->getErrors());
                     }
 
                     $errors = $entity->getErrors();
