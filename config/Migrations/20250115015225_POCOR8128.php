@@ -57,7 +57,8 @@ class POCOR8128 extends AbstractMigration
             $this->execute('CREATE TABLE IF NOT EXISTS `institution_staff_leave_entitlements` (
             `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
             `year` INT(4) NULL DEFAULT NULL COMMENT "Year",
-            `staff_id` INT UNSIGNED NOT NULL COMMENT "links to staff.id",
+            `staff_id` INT UNSIGNED NOT NULL COMMENT "links to security_users.id",
+            `institution_id` INT NOT NULL COMMENT "links to institutions.id",
             `institution_position_id` INT NOT NULL COMMENT "links to institution_positions.id",
             `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to leave_policies.id",
             `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
@@ -71,6 +72,7 @@ class POCOR8128 extends AbstractMigration
             `created` DATETIME NOT NULL,
             PRIMARY KEY (`id`),
             KEY `idx_staff_id` (`staff_id`),
+            KEY `idx_institution_id` (`institution_id`),
             KEY `idx_institution_position_id` (`institution_position_id`),
             KEY `idx_leave_type_id` (`staff_leave_type_id`),
             KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`)
