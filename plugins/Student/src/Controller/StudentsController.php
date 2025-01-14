@@ -1078,11 +1078,41 @@ class StudentsController extends AppController
 
     }
 
-    public
-    function Extracurriculars()
+    public function Extracurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']);
+    
+        //POCOR-8795 start
+        $session = $this->request->getSession();
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $studentId = $session->read('Student.Students.id');
+        $isGuardian = $session->read('Auth.User.is_guardian');
+        $userData = $this->Session->read();
+        $id = null;
+        if (isset($this->request->getAttribute('params')['pass'][1])) {
+            $id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+        }
+        if ($this->controller->getName() == 'Profiles') {
+            if ($isGuardian) {
+                $sId = $session->read('Student.ExaminationResults.student_id');
+                $studentId = (is_int($sId) && $sId) 
+                ? $sId 
+                : ($sId ? $this->ControllerAction->paramsDecode($sId)['id'] : ($studentId ?: $userData['Auth']['User']['id']));
+            } else {
+                $studentId = $session->read('Auth.User.id');
+            }
+        }
+    
+        $options = [
+            'academic_period_id' => $academicPeriodId,
+            'student_id' => $studentId,
+            'id' => $id
+        ];
+    
+        $this->set('extracurricularOptions', $options);
+         //POCOR-8795 end 
     }
+    
 
     public
     function StudentCurriculars()
