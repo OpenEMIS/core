@@ -23,6 +23,7 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $this->setTable('staff_leave_entitlements');
         parent::initialize($config);
         $this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
 
         $this->addBehavior('User.AdvancedNameSearch');
 //        $this->toggle('view', false);
@@ -82,7 +83,7 @@ class LeaveEntitlementsTable extends ControllerActionTable
             'type' => 'hidden',
         ]);
         $this->field('staff_id', ['entity' => $entity]);
-        $this->field('leave_type_id', ['entity' => $entity]);
+        $this->field('staff_leave_type_id', ['entity' => $entity]);
         $this->field('adjustment');
     }
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -95,16 +96,34 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
+    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'select';
+        }
+
+        return $attr;
+    }
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
 
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'edit'){
+            $attr['type'] = 'readonly';
+            $entity = $attr['entity'];
+            $staff_id = $entity->staff_id;
+            $staff = $this->Staff->get($staff_id);
+            $attr['value'] = $staff_id;
+            $attr['attr']['value'] = $staff->name;
+        }
+        if ($action == 'add' ) {
             $dataKey = 'staff_id';
 
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => $dataKey, 'name' => $this->aliasField($dataKey)];
-            $attr['noResults'] = __('No User found.');
+            $attr['noResults'] = __('No Staff found.');
+            $attr['onNoResultsBlockSave'] = true;
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
+            $attr['attr']['onNoResultsBlockSave'] = true;
             // $attr['onSelect'] = "$('#reload').click();";
 
             $url = $event->getSubject()->url('ajaxUserAutocomplete');
