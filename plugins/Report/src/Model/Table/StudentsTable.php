@@ -485,7 +485,7 @@ class StudentsTable extends AppTable
         $institutionId = $requestData->institution_id;
         $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
-
+        $selectedArea = $requestData->area_education_id;//POCOR-8768
         //Start:POCOR-6818 Modified this for POCOR-6859
         $AreaT = TableRegistry::getTableLocator()->get('areas');                    
         //Level-1
@@ -543,7 +543,7 @@ class StudentsTable extends AppTable
             }else{
                 $allselectedAreas = $selectedArea1;
             }//POCOR-6944 code ends
-                $conditions['Institutions.area_id IN'] = $allselectedAreas;
+                $conditions['Institution.area_id IN'] = $allselectedAreas;//POCOR-8768
         } //POCOR-8598 end
         /*if ($areaId != -1) {
             $conditions['Institution.area_id IN'] = $finalIds;
