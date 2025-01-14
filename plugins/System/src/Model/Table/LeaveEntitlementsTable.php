@@ -12,6 +12,8 @@ use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
+use Cake\Http\ServerRequest;
+use Cake\View\Helper\UrlHelper;
 
 class LeaveEntitlementsTable extends ControllerActionTable
 {
@@ -20,6 +22,9 @@ class LeaveEntitlementsTable extends ControllerActionTable
     {
         $this->setTable('staff_leave_entitlements');
         parent::initialize($config);
+        $this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
+
+        $this->addBehavior('User.AdvancedNameSearch');
 //        $this->toggle('view', false);
 //        $this->toggle('add', false);
 //        $this->toggle('edit', false);
@@ -29,9 +34,9 @@ class LeaveEntitlementsTable extends ControllerActionTable
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         return $events;
     }
-
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
@@ -76,158 +81,102 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $this->field('id', [
             'type' => 'hidden',
         ]);
-        $this->field('name');
-        $this->field('code');
-        $this->field('description');
-        $this->field('staff_leave_types', [
-            'type' => 'element',
-            'element' => 'System.staff_leave_types',
-            'attr' => [
-                'label' => __('Leave Types')
-            ]
-        ]);
+        $this->field('staff_id', ['entity' => $entity]);
+        $this->field('leave_type_id', ['entity' => $entity]);
+        $this->field('adjustment');
     }
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
-        $action = 'edit';
-        $entity->staff_leave_types = $this->getStaffLeaveTypesElement($entity, $action);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
-        $action = 'view';
-        $entity->staff_leave_types = $this->getStaffLeaveTypesElement($entity, $action);
     }
 
-    public function getStaffLeaveTypesElement($entity, $action)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $value = [];
-        $staffLeaveTypesTable = self::getDynamicTableInstance('staff_leave_types');
-        $staffLeavePolicyTypesTable = self::getDynamicTableInstance('staff_leave_policy_types');
 
-        // Fetch all visible leave types
-        $baseQuery = $staffLeaveTypesTable->find('all')
-            ->where(['visible' => 1])
-            ->orderAsc($staffLeaveTypesTable->aliasField('order'));
+        if ($action == 'add' || $action == 'edit') {
+            $dataKey = 'staff_id';
 
-        // Action: New entity
-        if ($entity->isNew()) {
-            $staffLeaveTypes = $baseQuery->toArray();
-            if (empty($staffLeaveTypes)) {
-                return [];
+            $attr['type'] = 'autocomplete';
+            $attr['target'] = ['key' => $dataKey, 'name' => $this->aliasField($dataKey)];
+            $attr['noResults'] = __('No User found.');
+            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
+            // $attr['onSelect'] = "$('#reload').click();";
+
+            $url = $event->getSubject()->url('ajaxUserAutocomplete');
+            $attr['url'] = $url;
+
+            $requestData = $this->request->getData();
+            if (isset($requestData) && !empty($requestData[$this->getAlias()][$dataKey])) {
+                $referrerId = $requestData[$this->getAlias()][$dataKey];
+                $referrerName = $this->Staff->get($referrerId)->name_with_id;
+                $attr['attr']['value'] = $referrerName;
             }
 
-            foreach ($staffLeaveTypes as $staffLeaveType) {
-                $value[] = [
-                    'enable' => null,
-                    'staff_leave_type_id' => $staffLeaveType->id,
-                    'code' => $staffLeaveType->national_code,
-                    'name' => $staffLeaveType->name,
-                    'days' => null,
-                    'rollover' => 0
-                ];
+            $entity = $attr['entity'];
+            if ($entity->has($dataKey) && !is_null($entity->{$dataKey})) {
+                $referrerId = $entity->{$dataKey};
+                $referrerName = $this->Staff->get($referrerId)->name_with_id;
+                $attr['attr']['value'] = $referrerName;
             }
-            return $value;
         }
+            return $attr;
 
-        // Ensure we have a valid ID
-        $id = $entity->id ?? null;
-        if (!$id) {
-            return [];
-        }
+    }
 
-        // Action: View
-        if ($action === 'view') {
-            $staffLeaveTypes = $baseQuery
+    public function ajaxUserAutocomplete()
+    {
+        $this->controller->autoRender = false;
+        $this->ControllerAction->autoRender = false;
+
+        if ($this->request->is(['ajax'])) {
+            $term = $this->request->getQuery('term');
+
+            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+
+            $query = $this->Staff
+                ->find()
                 ->select([
-                    'id' => $staffLeavePolicyTypesTable->aliasField('id'),
-                    'enable' => $staffLeavePolicyTypesTable->aliasField('id'),
-                    'staff_leave_type_id' => $staffLeaveTypesTable->aliasField('id'),
-                    'code' => $staffLeaveTypesTable->aliasField('national_code'),
-                    'name' => $staffLeaveTypesTable->aliasField('name'),
-                    'days' => $staffLeavePolicyTypesTable->aliasField('days'),
-                    'rollover' => $staffLeavePolicyTypesTable->aliasField('rollover')
-                ])
-                ->innerJoin(
-                    [$staffLeavePolicyTypesTable->getAlias() => $staffLeavePolicyTypesTable->getTable()],
-                    [
-                        $staffLeavePolicyTypesTable->aliasField('staff_leave_type_id') . ' = ' . $staffLeaveTypesTable->aliasField('id'),
-                        $staffLeavePolicyTypesTable->aliasField('staff_leave_policy_id') . ' = ' . $id
-                    ]
-                )
-                ->toArray();
-
-            if (empty($staffLeaveTypes)) {
-                return [];
-            }
-
-            foreach ($staffLeaveTypes as $staffLeaveType) {
-                $value[] = [
-                    'staff_leave_type_id' => $staffLeaveType->staff_leave_type_id,
-                    'code' => $staffLeaveType->code,
-                    'name' => $staffLeaveType->name,
-                    'days' => $staffLeaveType->days,
-                    'rollover' => $staffLeaveType->rollover
-                ];
-            }
-            return $value;
-        }
-
-        // Action: Edit
-        if ($action === 'edit') {
-            $staffLeaveTypes = $baseQuery
-                ->select([
-                    'staff_policy_leave_type_id' => $staffLeavePolicyTypesTable->aliasField('id'),
-                    'enable' => $staffLeavePolicyTypesTable->aliasField('id'),
-                    'staff_leave_type_id' => $staffLeaveTypesTable->aliasField('id'),
-                    'code' => $staffLeaveTypesTable->aliasField('national_code'),
-                    'name' => $staffLeaveTypesTable->aliasField('name'),
-                    'days' => $staffLeavePolicyTypesTable->aliasField('days'),
-                    'rollover' => $staffLeavePolicyTypesTable->aliasField('rollover')
+                    $this->Staff->aliasField('openemis_no'),
+                    $this->Staff->aliasField('first_name'),
+                    $this->Staff->aliasField('middle_name'),
+                    $this->Staff->aliasField('third_name'),
+                    $this->Staff->aliasField('last_name'),
+                    $this->Staff->aliasField('preferred_name'),
+                    $this->Staff->aliasField('id')
                 ])
                 ->leftJoin(
-                    [$staffLeavePolicyTypesTable->getAlias() => $staffLeavePolicyTypesTable->getTable()],
+                    [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
                     [
-                        $staffLeavePolicyTypesTable->aliasField('staff_leave_type_id') . ' = ' . $staffLeaveTypesTable->aliasField('id'),
-                        $staffLeavePolicyTypesTable->aliasField('staff_leave_policy_id') . ' = ' . $id
+                        $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Staff->aliasField('id')
                     ]
                 )
-                ->orderAsc($staffLeaveTypesTable->aliasField('order'))
-                ->toArray();
+                ->group([
+                    $this->Staff->aliasField('id')
+                ])
+                ->limit(100);
 
-            if (empty($staffLeaveTypes)) {
-                return [];
+            $term = trim($term);
+            if (!empty($term)) {
+                $query = $this->addSearchConditions($query, ['alias' => 'Staff', 'searchTerm' => $term, 'OR' => ['`Identities`.number LIKE ' => $term . '%']]);
             }
-            $enabled = [];
-            $disabled = [];
-            foreach ($staffLeaveTypes as $staffLeaveType) {
-                $record = [
-                    'staff_policy_leave_type_id' => $staffLeaveType->staff_policy_leave_type_id,
-                    'enable' => $staffLeaveType->enable ? 1 : 0,
-                    'staff_leave_type_id' => $staffLeaveType->staff_leave_type_id,
-                    'code' => $staffLeaveType->code,
-                    'name' => $staffLeaveType->name,
-                    'days' => $staffLeaveType->days,
-                    'rollover' => $staffLeaveType->rollover == 1 ? 1 : 0
-                ];
-                if ($staffLeaveType->enable) {
-                    $enabled[] = $record;
-                } else {
-                    $disabled[] = $record;
-                }
 
+            $list = $query->all();
+
+            $data = [];
+            foreach ($list as $obj) {
+                $label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
+                $data[] = ['label' => $label, 'value' => $obj->id];
             }
-            $value = array_merge($enabled, $disabled);
-            return $value;
+
+            echo json_encode($data);
+            die;
         }
-
-        return $value;
     }
-
-
-
     /**
      * POCOR-8391 added
      * Get a dynamic table instance with all associations.
@@ -291,139 +240,8 @@ class LeaveEntitlementsTable extends ControllerActionTable
 //        Log::debug(print_r($entity, true));
 //        Log::debug(print_r($options, true));
 //        Log::debug(print_r($event, true));
-        $this->saveStaffLeavePolicy($entity);
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
-
-    public function beforeDelete(Event $event, Entity $entity)
-    {
-        $staffPositionTitlesTable = self::getDynamicTableInstance('staff_position_titles');
-
-        $linkedRecordsCount = $staffPositionTitlesTable->find()
-            ->where(['staff_leave_policy_id' => $entity->id])
-            ->count();
-
-        if ($linkedRecordsCount > 0) {
-            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation');
-            $event->stopPropagation();  // Stop the delete event
-//            throw new PersistenceFailedException($entity, "Cannot delete this leave policy because it is linked to $linkedRecordsCount position titles.");
-            return false;
-        }
-        $connection = $this->getConnection();
-        $connection->getDriver()->enableAutoQuoting();
-    }
-
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $staffLeavePolicyTypesTable = self::getDynamicTableInstance('staff_leave_policy_types');
-
-        // Remove linked records in `staff_leave_policy_types` by `staff_leave_policy_id`
-        $affectedRows = $staffLeavePolicyTypesTable->deleteAll([
-            'staff_leave_policy_id' => $entity->id
-        ]);
-
-        Log::debug("Deleted $affectedRows linked staff_leave_policy_types records for policy ID: {$entity->id}");
-    }
-
-
-    /**
-     * Saves the staff leave policy and its associated leave types.
-     *
-     * @param \Cake\Datasource\EntityInterface $entity The entity containing staff leave policy data.
-     * @return bool True on success, false otherwise.
-     */
-    public function saveStaffLeavePolicy($entity)
-    {
-        // Load the `staff_leave_policy_types` table
-        $staffLeavePolicyTypesTable = self::getDynamicTableInstance('staff_leave_policy_types');
-
-        $policyId = $entity->id;  // Ensure we have the policy ID
-        if (!$policyId) {
-            return false;  // Return false if no policy ID is present
-        }
-
-        // Arrays to track changes and new records
-        $changedLeaveTypes = [];  // Leave types that need updating
-        $changedLeaveTypeEntities = [];  // Entities that were updated
-        $newLeaveTypeEntities = [];  // Entities for newly created leave types
-        $newLeaveTypes = [];  // Leave types to be created
-        $linkedIdsForDeletion = [];  // IDs of leave types to be deleted
-
-        // Extract submitted leave types from the entity
-        $staffLeaveTypes = $entity->staff_leave_types ?? [];
-
-        // Loop through the submitted `staff_leave_types` array
-        foreach ($staffLeaveTypes as $staffLeaveType) {
-            $isEnabled = (int)$staffLeaveType['enable'] === 1;
-            $hasExistingId = !empty($staffLeaveType['staff_policy_leave_type_id']);
-
-            if (!$isEnabled && $hasExistingId) {
-                // Mark for deletion if the leave type is disabled and has an existing ID
-                $linkedIdsForDeletion[] = $staffLeaveType['staff_policy_leave_type_id'];
-                continue;
-            }
-
-            if ($isEnabled && $hasExistingId) {
-                // Track changes if the leave type is enabled and has an existing ID
-                $changedLeaveTypes[] = [
-                    'id' => $staffLeaveType['staff_policy_leave_type_id'],
-                    'staff_leave_policy_id' => $policyId,
-                    'staff_leave_type_id' => $staffLeaveType['staff_leave_type_id'],
-                    'days' => $staffLeaveType['days'],
-                    'rollover' => $staffLeaveType['rollover']
-                ];
-            }
-
-            if ($isEnabled && !$hasExistingId) {
-                // Track new leave types if the leave type is enabled and has no existing ID
-                $newLeaveTypes[] = [
-                    'id' => Text::uuid(),  // Generate UUID for new record
-                    'staff_leave_policy_id' => $policyId,
-                    'staff_leave_type_id' => $staffLeaveType['staff_leave_type_id'],
-                    'days' => $staffLeaveType['days'],
-                    'rollover' => $staffLeaveType['rollover']
-                ];
-            }
-        }
-
-        // Delete disabled leave types linked to this policy
-        if (!empty($linkedIdsForDeletion)) {
-            $staffLeavePolicyTypesTable->deleteAll([
-                'staff_leave_policy_id' => $policyId,
-                'id IN' => $linkedIdsForDeletion
-            ]);
-            Log::debug('Deleted records for disabled leave types for policy ID: ' . $policyId);
-        }
-
-        // Save updated leave types
-        foreach ($changedLeaveTypes as $changedLeaveType) {
-            try {
-                $changedLeaveTypeEntity = $staffLeavePolicyTypesTable->get($changedLeaveType['id']);
-                $staffLeavePolicyTypesTable->patchEntity($changedLeaveTypeEntity, $changedLeaveType);
-                if ($staffLeavePolicyTypesTable->save($changedLeaveTypeEntity)) {
-                    $changedLeaveTypeEntities[] = $changedLeaveTypeEntity;
-                } else {
-                    Log::error("Failed to save updated leave type ID: {$changedLeaveType['id']}");
-                }
-            } catch (\Exception $e) {
-                Log::error("Error fetching leave type ID: {$changedLeaveType['id']} - " . $e->getMessage());
-            }
-        }
-
-        // Save new leave types
-        foreach ($newLeaveTypes as $newLeaveType) {
-            $newLeaveTypeEntity = $staffLeavePolicyTypesTable->newEntity($newLeaveType);
-            if ($staffLeavePolicyTypesTable->save($newLeaveTypeEntity)) {
-                $newLeaveTypeEntities[] = $newLeaveTypeEntity;
-            } else {
-                Log::error("Failed to save new leave type for policy ID: $policyId");
-            }
-        }
-
-        return true;
-    }
-
-
 
 }
