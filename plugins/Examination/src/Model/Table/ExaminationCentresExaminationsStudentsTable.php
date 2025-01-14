@@ -314,7 +314,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
 
     public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
+        if ($data->offsetExists($this->getAlias())) {
             if (array_key_exists('examination_id', $data[$this->getAlias()])) {
                 unset($data[$this->getAlias()]['examination_id']);
             }
@@ -360,7 +360,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
 
     public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
+        if ($data->offsetExists($this->getAlias())) {
             if (array_key_exists('examination_centre_id', $data[$this->getAlias()])) {
                 unset($data[$this->getAlias()]['examination_centre_id']);
             }
@@ -521,7 +521,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                     'ExaminationCentresExaminationsSubjects' => ['validate' => false]
                 ];
 
-                $success = $this->connection()->transactional(function() use ($obj, $entity, $patchOptions) {
+                $success = $this->getConnection()->transactional(function() use ($obj, $entity, $patchOptions) {
                     $examCentreStudentEntity = $this->newEntity($obj, $patchOptions);
                     if ($examCentreStudentEntity->getErrors('student_id')) {
                         $entity->getErrors('student_id', $examCentreStudentEntity->getErrors('student_id'));
@@ -635,7 +635,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
    
-      $subjectTable=TableRegistry::get('examination_subjects');
+      $subjectTable=TableRegistry::get('Examination.ExaminationSubjects');
       $subjectData=$subjectTable->find('all')->
                                   select([
                                   'id'=> $subjectTable->aliasField('id'),
@@ -676,7 +676,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                         'student_id'=>$entity->student_id,
                         'examination_subject_id'=>$value['subject_id']
                     );
-                    $new = $examinationStudentSubjects->newEntity();
+                    $new = $examinationStudentSubjects->newEntity($studSubArr);
                     $new=  $examinationStudentSubjects->patchEntity($new, $studSubArr);
                    
                     $examinationStudentSubjects->save($new);

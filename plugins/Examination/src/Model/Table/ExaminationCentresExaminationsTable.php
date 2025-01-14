@@ -320,7 +320,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
 
     public function addOnChangeLinkAllExaminationCentres(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
+        if ($data->offsetExists($this->getAlias())) {
             if (array_key_exists('examination_centres', $data[$this->getAlias()])) {
                 $data[$this->getAlias()]['examination_centres'] = '';
             }
