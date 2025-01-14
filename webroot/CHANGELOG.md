@@ -17,6 +17,7 @@
 - Bug Fixed: Reports>Custom: Reports are stuck in progress
 - Bug Fixed: Reports > Students > Students: There is missing data (Date of Birth) when student list is exported (see attachment) from institutions
 - Bug Fixed: Develop Institutions Classes/Subjects v4 APIs Part 3
+- Bug Fixed: Administrations > Updates : System does not reflect the latest version
 
 ### [4.6.0] - 2025-01-06
 - Implemented: Develop changes to the Staff Appraisal feature
