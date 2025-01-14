@@ -39,6 +39,20 @@ class POCOR8128 extends AbstractMigration
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
             ');
 
+            $this->execute('CREATE TABLE IF NOT EXISTS `staff_leave_entitlements` (
+            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            `staff_id` INT UNSIGNED NOT NULL COMMENT "links to staff.id",
+            `leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
+            `adjustment` INT SIGNED NOT NULL COMMENT "Leave days adjustment (positive or negative)",
+            `modified_user_id` INT UNSIGNED NULL,
+            `modified` DATETIME NULL,
+            `created_user_id` INT UNSIGNED NOT NULL,
+            `created` DATETIME NOT NULL,
+            PRIMARY KEY (`id`),
+            KEY `idx_staff_id` (`staff_id`),
+            KEY `idx_staff_leave_type_id` (`leave_type_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
+
             // Create general leave policy and add national codes
             $this->createGeneralLeavePolicy();
             $this->changeStaffPositionTitles();
@@ -167,6 +181,7 @@ class POCOR8128 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `staff_leave_types`;');
         $this->execute('RENAME TABLE `z_8128_staff_leave_types` TO `staff_leave_types`;');
 
+        $this->execute('DROP TABLE IF EXISTS `staff_leave_entitlements`;');
         $this->execute('DROP TABLE IF EXISTS `staff_leave_policy_types`;');
         $this->execute('DROP TABLE IF EXISTS `staff_leave_policies`;');
 

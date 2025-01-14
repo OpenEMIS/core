@@ -3987,38 +3987,13 @@ class NavigationComponent extends Component
             'Systems.StaffPolicies' => [
                 'title' => 'Leaves',
                 'parent' => 'Administration.Staff',
-//                'params' => ['plugin' => 'System'],
-//                'selected' => [
-//                    'LeavePolicies.index',
-//                    'LeavePolicies.view',
-//                    'LeavePolicies.add',
-//                    'LeavePolicies.edit',
-//                    'LeavePolicies.delete'
-//                ],
                 'link' => false,
             ],
-//            'Staff.Entitlement' => [
-//                'title' => 'Entitlements',
-//                'parent' => 'Administration.Staff',
-//                'params' => ['plugin' => 'Staff'],
-//                'selected' => [
-//                    'Staff.Entitlements.index',
-//                    'UsersDirectory.index',
-//                    'UsersDirectory.view',
-//                    'Staff.Identities.index',
-//                    'Staff.Identities.view',
-//                    'Staff.Nationalities.index',
-//                    'Staff.Nationalities.view',
-//                    'Staff.Contacts.index',
-//                    'Staff.Contacts.view',
-//                    'Staff.Guardians.index',
-//                    'Staff.Guardians.view',
-//                    'Staff.Histories',
-//                    'Staff.StaffApplicationInstitutionChoices.index',
-//                    'Staff.StaffApplicationInstitutionChoices.add',
-//                    'Staff.StaffApplicationAttachments',
-//                ],
-//            ],
+            'Systems.StaffEntitlements' => [
+                'title' => 'Entitlements',
+                'parent' => 'Administration.Staff',
+                'link' => false,
+            ],
         ];
 
         if (!$isSuperAdmin && empty($staffFunctions)) {
