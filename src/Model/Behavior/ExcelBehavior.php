@@ -222,6 +222,13 @@ class ExcelBehavior extends Behavior
                         }
                     }
                 }//POCOR-8484 ends
+                //POCOR-8627 Start
+                if($settings['sheet']['name'] == 'StaffAppraisals' && $action == 'excel' && isset($settings['id']) && !empty(isset($settings['id']))) {
+                    $id = $settings['id'];
+                    $primaryKey = $table->getPrimaryKey();
+                    $query->where([$table->aliasField($primaryKey) => $id]);
+                }
+                //POCOR-8627 End
             //POCOR-8515 starts    
             }else{
                 if (isset($settings['id'])) {
@@ -253,7 +260,7 @@ class ExcelBehavior extends Behavior
             $pages = ceil($count / $this->getConfig('limit'));
 
             // Debugging
-            $pages = 1;
+            //$pages = 1; //comment this in POCOR-8755
 
             if (isset($sheet['orientation'])) {
                 if ($sheet['orientation'] == 'landscape') {
