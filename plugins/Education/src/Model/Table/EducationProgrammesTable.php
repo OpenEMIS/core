@@ -273,19 +273,26 @@ class EducationProgrammesTable extends ControllerActionTable {
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
-        //Return all required options and their key
         $levelOptions = $this->EducationCycles->EducationLevels->getLevelOptions($selectedAcademicPeriod);
-        //POCOR-5973 starts
-        $selectedLevel = !is_null($this->request->getQuery('level')) ? $this->request->getQuery('level') : implode(',',array_keys($levelOptions));
-        $cycleOptions = $this->EducationCycles
+    
+        // POCOR-5973 starts
+        $selectedLevel = !is_null($this->request->getQuery('level')) ? (array)$this->request->getQuery('level') : array_keys($levelOptions);
+    
+        // POCOR-8735 -- Check Conditions for where
+        if (!empty($selectedLevel)) {
+            $cycleOptions = $this->EducationCycles
                 ->find('list')
                 ->find('visible')
                 ->find('order')
-                ->where([$this->EducationCycles->aliasField('education_level_id') . ' IN (' .  $selectedLevel . ')'])
+                ->where([$this->EducationCycles->aliasField('education_level_id') . ' IN' => $selectedLevel])
                 ->toArray();
-        //POCOR-5973 ends
+        } else {
+            $cycleOptions = [];
+        }
+        // POCOR-5973 ends
+    
         $selectedCycle = !is_null($this->request->getQuery('cycle')) ? $this->request->getQuery('cycle') : key($cycleOptions);
-
+    
         return compact('academicPeriodOptions', 'selectedAcademicPeriod', 'levelOptions', 'selectedLevel', 'cycleOptions', 'selectedCycle');
     }
 

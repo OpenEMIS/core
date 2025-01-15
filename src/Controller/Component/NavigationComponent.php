@@ -32,10 +32,15 @@ class NavigationComponent extends Component
 
     public function addCrumb($title, $options = [])
     {
+        if (!is_countable($options)) {
+            $size_of_options = 0;
+        } else {
+            $size_of_options = sizeof($options);
+        }
         $item = array(
             'title' => __((string)$title),
             'link' => ['url' => $options],
-            'selected' => sizeof($options) == 0
+            'selected' => $size_of_options == 0
         );
         $this->breadcrumbs[] = $item;
         $this->controller->set('_breadcrumbs', $this->breadcrumbs);
@@ -928,6 +933,7 @@ class NavigationComponent extends Component
                     'Institutions.ImportAssessmentItemResults.add',
                     'Institutions.ImportAssessmentItemResults.results',
                     'Institutions.AssessmentItemResultsArchived',
+                    'Institutions.AssessmentItemExemptions', //POCOR-8224
                     'Institutions.reportCardGenerate'],
             ],
 
@@ -937,6 +943,12 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.ReportCardStatuses',
                     'Institutions.ReportCardStatusProgress'],
             ],
+            'Institutions.ReportCardGpa.index' => [
+                'title' => 'GPA',
+                'parent' => 'Institution.Performance',
+                'selected' => ['Institutions.ReportCardGpa',
+                    'Institutions.ReportCardCumulativeGpa'],
+            ], //POCOR-8222
             //POCOR-7458 start
             'Institutions.Messaging.index' => [
                 'title' => 'Messaging',
@@ -1326,11 +1338,11 @@ class NavigationComponent extends Component
                     $InstitutionStudentsTable->aliasField('institution_id') => $institutionID,
                 ])
                 ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC']);
-            
+
             $results = $query->all()->extract('id')->toArray();
             $institutionStudentId = !empty($results) ? $results[0] : null;
         }
-        
+
 
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
@@ -1391,6 +1403,7 @@ class NavigationComponent extends Component
                     'Students.Behaviours.index',
                     //POCOR-7474-HINDOL TYPO FIX
                     'Students.Assessments.index',
+                    'Students.StudentGpa.index',
                     'Students.AssessmentsArchived.index',
                     'Students.ExaminationResults.index',
                     'Students.ReportCards.index',
@@ -2351,7 +2364,8 @@ class NavigationComponent extends Component
                     'Profiles.StudentRisks',
                     'Profiles.StudentAssociations',
                     'Profiles.Absences',
-                    'Profiles.StudentCurriculars']
+                    'Profiles.StudentCurriculars',
+                    'Profiles.StudentGpa']
             ],//POCOR-6701 added Profiles.Absences becasue navigation was collapsing //POCOR-6699 adding studentAssessment
             'Profiles.StudentScheduleTimetable' => [
                 'title' => 'Timetables',
@@ -2412,7 +2426,7 @@ class NavigationComponent extends Component
                     '1' => $queryString], // POCOR-8415
                 'selected' => ['GuardianNavs.StudentUser']
             ],
-            
+
             'GuardianNavs.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
@@ -3752,6 +3766,14 @@ class NavigationComponent extends Component
                     'ReportCards.ReportCardEmail',
                     'ReportCards.Processes']
             ],
+            'Gpa.GpaSystem' => [
+                'title' => 'GPA',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Gpa'],
+                'selected' => ['Gpa.GpaSystem',
+                                'Gpa.Cumulative',
+                                'Gpa.GpaGradingType']
+            ], //POCOR-8222
 
         ];
         return $fullPerformanceNavigation;
