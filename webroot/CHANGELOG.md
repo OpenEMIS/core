@@ -1,3 +1,24 @@
+### [4.6.1] - 2025-01-14
+- Bug Fixed: Institutions > Staff > Career > Appraisal > Save: A 404 error is showing when saving appraisal
+- Bug Fixed: Administration > Examinations > Students > Single Register/Bulk Register: When registering students for examination, there is a 404 error
+- Bug Fixed: Administration>Education Structure>Programmes: Unable to add next programme
+- Bug Fixed: Forget Password: When you click on the link you back you to the login page.
+- Bug Fixed: Directory > Delete: when deleting user in directory page, the page gives a 404 error
+- Bug Fixed: Scanned API should allow non OpenEMIS number
+- Bug Fixed: Institutions > Students: 404 error when viewing some Institutions students page
+- Bug Fixed: Institutions > Performance > Assessments: When clicking on Institutions > Performance > Assessments page, the page gives a 404 error
+- Bug Fixed: Scanned feature API : require additional API
+- Bug Fixed: Institutions > Staff>Export: The count of staff in Institutions > Staff page is incorrect
+- Bug Fixed: Institutions>Students>Add: Special character for the institution name causes the page
+- Bug Fixed: Directory: Modified by and created by are showing id instead of name
+- Bug Fixed: Reports > Institutions: Class Marked Attendance: Class Marked Attendance report is stuck in progress
+- Bug Fixed: Reports > Institutions: When generating institution report for no staff or students, the status goes to error status
+- Bug Fixed: Administration>Data Management>Copy: Unable to copy assessments
+- Bug Fixed: Reports>Custom: Reports are stuck in progress
+- Bug Fixed: Reports > Students > Students: There is missing data (Date of Birth) when student list is exported (see attachment) from institutions
+- Bug Fixed: Develop Institutions Classes/Subjects v4 APIs Part 3
+- Bug Fixed: Administrations > Updates : System does not reflect the latest version
+
 ### [4.6.0] - 2025-01-06
 - Implemented: Develop changes to the Staff Appraisal feature
 - Bug Fixed: Administration>System Configuration>Themes: Removes add button

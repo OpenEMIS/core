@@ -127,7 +127,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             ])
             ->group($this->aliasField('id'))
             ->having(['count =' => count($selectedSpecialNeeds)])
-            ->autoFields(true);
+            ->enableAutoFields(true);
         return $query;
     }
 
