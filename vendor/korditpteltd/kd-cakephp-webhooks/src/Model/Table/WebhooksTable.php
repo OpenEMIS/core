@@ -68,15 +68,14 @@ class WebhooksTable extends Table
     public function triggerShell($eventKey, $params = [], $body = [])
     { 
         $webhooks = $this->find()
-            ->innerJoinWith('Webhook.WebhookEvents')
+            ->innerJoinWith('WebhookEvents')
             ->where([
-                'WebhookEvents.event_key' => $eventKey,
+                'WebhookEvents.event_key' => trim($eventKey),
                 $this->aliasField('status') => self::ACTIVE
             ])
             ->toArray();
-		
 		if(!empty($body)) { 
-            $body = "'".json_encode($body)."'";
+            $body = json_encode($body);
         }
 	
         $username = isset($params['username']) ? $params['username'] : null;

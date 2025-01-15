@@ -26,6 +26,7 @@ class ThemesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
+      
         parent::initialize($config);
         $this->addBehavior('ControllerAction.FileUpload', [
             // 'name' => 'file_name',
@@ -35,12 +36,18 @@ class ThemesTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+        $this->toggle('add', false);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('content', ['visible' => false]);
         $this->field('default_content', ['visible' => false]);
+        //POCOR-8741 start(remove add button)
+        if(isset($extra['toolbarButtons']['add'])){
+            unset($extra['toolbarButtons']['add']);
+        }
+        //POCOR-8741 end
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -98,7 +105,7 @@ class ThemesTable extends ControllerActionTable
                 'visible' => 'false'
             ]);
             $this->field('value', [ //POCOR-8268
-                'type' => 'select'
+                'visible' => 'false'
             ]);
         }else{
             $this->field('name', [
@@ -114,6 +121,26 @@ class ThemesTable extends ControllerActionTable
                 'visible' => 'false'
             ]);
         }
+        
+    }
+
+    /**
+     * POCOR-8652
+     * This function handles the action to add or edit after performing some operations.
+     * It modifies the 'color_themes' field by setting its type to 'element' 
+     * and associates it with a custom element named 'themecolor'.
+     *
+     * @param Event $event The event that triggered the action
+     * @param Entity $entity The entity being processed
+     */
+    public function addEditAfterAction(Event $event, Entity $entity) {
+        if($entity->id == 5){
+            $this->field('color_themes', [
+                'type' => 'element',
+                'element' => 'themecolor',
+                
+            ]); 
+        } 
     }
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -149,8 +176,7 @@ class ThemesTable extends ControllerActionTable
         }
         if($entity->id == 5){ //POCOR-8268
             $colorValue = $this->request->getData($this->aliasField('value'));
-            //$entity->default_value = '';
-            $entity->value = $colorValue;
+            $entity->value = ltrim($colorValue, '#');
         }
     }
 
@@ -180,34 +206,37 @@ class ThemesTable extends ControllerActionTable
         $configItems->save($themeConfigItemRecord);
     }
 
-    //POCOR-8268
-    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request) 
-    {
-        $colorListPath = WWW_ROOT . 'themecolor' . DS . 'color.php';
-        if (file_exists($colorListPath)) {
-            $colorList = include($colorListPath);
-        } else {
-            throw new \Exception("Color file not found at " . $colorListPath);
-        }
-        if ($action == 'add') {
-            $attr['type'] = 'select';
-            $attr['options'] = $colorList;
-            $attr['onChangeReload'] = true;
-        } else if ($action == 'edit') {
-            $entity = $attr['entity'];
-            $attr['type'] = 'select';
-            $attr['options'] = $colorList;
-            $attr['onChangeReload'] = true;
-        }
-        return $attr;
-
-    }
-     public function validationDefault(Validator $validator): Validator 
+    public function validationDefault(Validator $validator): Validator 
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
          return $validator
             ->requirePresence('value');
 
+    }
+    //POCOR-8716 START
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        switch ($data['id']) {
+            case self::LOGO:
+            case self::LOGINBGIMAGE:
+                $this->behaviors()->get('FileUpload')->setConfig([
+                    'allowable_file_types' => [
+                        'value' => ['jpeg', 'jpg', 'gif', 'png'],
+                        'default_value' => ['jpeg', 'jpg', 'gif', 'png']
+                    ]
+                ]);
+                $file = $data['content'];
+
+                // Get the filename from the uploaded file
+                $data['value'] = $file->getClientFilename();
+                break;
+        }
+        if ($data->offsetExists('default_content')) {
+            $data->offsetUnset('default_content');
+        }
+        if ($data->offsetExists('default_value')) {
+            $data->offsetUnset('default_value');
+        }
     }
 }

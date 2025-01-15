@@ -101,8 +101,8 @@
             "Archive\\": "plugins/Archive/src/",
             "Manuals\\": "./plugins/Manuals/src",
             "Report\\": "./plugins/Report/src",
-            "KORDITPTELTD\\IKSSO-CAKEPHP-SSO\\": "./vendor/korditpteltd/iksso-cakephp-sso/src"
-
+            "KORDITPTELTD\\IKSSO-CAKEPHP-SSO\\": "./vendor/korditpteltd/iksso-cakephp-sso/src",
+            "Gpa\\": "./plugins/Gpa/src"
         }
     },
     "autoload-dev": {

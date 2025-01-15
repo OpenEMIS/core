@@ -144,7 +144,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->hasMany('StudentAttendances', ['className' => 'Institution.StudentAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentClasses', ['className' => 'Student.StudentClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentExtracurriculars', ['className' => 'Report.StaffExtracurriculars', 'dependent' => true, 'cascadeCallbacks' => false]);//POCOR-6762
+        $this->hasMany('StudentExtracurriculars', ['className' => 'Report.StaffExtracurriculars', 'dependent' => true, 'cascadeCallbacks' => false]); //POCOR-6762
         $this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentMarkTypeStatuses', ['className' => 'Attendance.StudentMarkTypeStatuses', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentMealMarkedRecords', ['className' => 'Meal.StudentMealMarkedRecords', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -200,10 +200,11 @@ class AcademicPeriodsTable extends ControllerActionTable
             ->add('end_date', [
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', false]
-                ]])
+                ]
+            ])
             ->add('current', 'ruleValidateNeeded', [
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
-            ])//POCOR-8284 -- start
+            ]) //POCOR-8284 -- start
             ->add('name', [
                 'ruleUnique' => [
                     'rule' => 'validateUnique',
@@ -216,7 +217,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                     'rule' => 'validateUnique',
                     'provider' => 'table',
                     'message' => __('This field has to be unique')
-                ]//POCOR-8284 -- ends
+                ] //POCOR-8284 -- ends
             ]);
     }
 
@@ -244,7 +245,34 @@ class AcademicPeriodsTable extends ControllerActionTable
             }
             $this->updateAll(['current' => 0], $where);
 
+            //POCOR-8645 start
+            $query = $this->query();
+            $updateResult = $query->update()
+                ->set(['current' => $entity->current])
+                ->where(['id' => $entity->parent_id])
+                ->execute();
+            //POCOR-8645 end
         }
+        //POCOR-8645 start
+        else {
+            $condition = [
+                'parent_id' => $entity->parent_id,
+                'current' => 1
+            ];
+            if (!$entity->isNew()) {
+                $condition['id != '] = $entity->id;
+            }
+            $academicPeriodChildData = $this->find()->where($condition)->first();
+            if (empty($academicPeriodChildData)) {
+                $query = $this->query();
+                $updateResult = $query->update()
+                    ->set(['current' => $entity->current])
+                    ->where(['id' => $entity->parent_id])
+                    ->execute();
+            }
+        }
+        //POCOR-8645 end
+
     }
 
 
@@ -266,7 +294,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-//        $entity = $this->find()->select(['current'])->where($ids)->first();
+        //        $entity = $this->find()->select(['current'])->where($ids)->first();
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
         // die silently when a non super_admin wants to delete
@@ -286,8 +314,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
-        } 
-
+        }
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -427,7 +454,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-//        $this->log('before', 'debug');
+        //        $this->log('before', 'debug');
         $this->field('academic_period_level_id');
         $this->fields['start_year']['visible'] = false;
         $this->fields['end_year']['visible'] = false;
@@ -438,13 +465,13 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-//        $this->log('after', 'debug');
+        //        $this->log('after', 'debug');
         $this->field('current');
-//        $this->field('copy_data_from', [
-//            'type' => 'hidden',
-//            'value' => 0,
-//            'after' => 'current'
-//        ]);
+        //        $this->field('copy_data_from', [
+        //            'type' => 'hidden',
+        //            'value' => 0,
+        //            'after' => 'current'
+        //        ]);
         $this->field('editable');
         foreach ($this->_fieldOrder as $key => $value) {
             if (!in_array($value, array_keys($this->fields))) {
@@ -578,7 +605,8 @@ class AcademicPeriodsTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    {
         $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : 0;
         $results = $this
             ->find()
@@ -612,7 +640,8 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCurrent(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldCurrent(Event $event, array $attr, $action, ServerRequest $request)
+    {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         $attr['onChangeReload'] = 'changeCurrent';
 
@@ -731,7 +760,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $withLevels = isset($params['withLevels']) ? $params['withLevels'] : false;
         $isEditable = isset($params['isEditable']) ? $params['isEditable'] : null;
         // POCOR-7895: start
-        if(empty($academicPeriod)){
+        if (empty($academicPeriod)) {
             $academicPeriod = [-1];
         }
         // POCOR-7895: end
@@ -807,23 +836,28 @@ class AcademicPeriodsTable extends ControllerActionTable
      */
     public function findAcademicPeriodStaffAttendanceArchived(Query $query, array $options)
     {
-//        $this->log('findAcademicPeriodStaffAttendanceArchived', 'debug');
-//        $this->log($options, 'debug');
+        //        $this->log('findAcademicPeriodStaffAttendanceArchived', 'debug');
+        //        $this->log($options, 'debug');
         $academicPeriodStaffAttendanceArrayId = [0];
-        $academicPeriodStaffAttendanceArray = ArchiveConnections::getArchiveYears('institution_staff_attendances',
-            ['institution_id' => $options['institution_id']]);
-        $academicPeriodStaffLeaveArray = ArchiveConnections::getArchiveYears('institution_staff_leave',
-            ['institution_id' => $options['institution_id']]);
+        $academicPeriodStaffAttendanceArray = ArchiveConnections::getArchiveYears(
+            'institution_staff_attendances',
+            ['institution_id' => $options['institution_id']]
+        );
+        $academicPeriodStaffLeaveArray = ArchiveConnections::getArchiveYears(
+            'institution_staff_leave',
+            ['institution_id' => $options['institution_id']]
+        );
         $academicPeriodStaffAttendanceArray = array_unique(
             array_merge(
-                $academicPeriodStaffAttendanceArray, $academicPeriodStaffLeaveArray
+                $academicPeriodStaffAttendanceArray,
+                $academicPeriodStaffLeaveArray
             )
         );
         if (sizeof($academicPeriodStaffAttendanceArray) > 0) {
             $academicPeriodStaffAttendanceArrayId = $academicPeriodStaffAttendanceArray;
         }
-//        $this->log('$academicPeriodStaffAttendanceArchived', 'debug');
-//        $this->log("$academicPeriodStaffAttendanceArray", 'debug');
+        //        $this->log('$academicPeriodStaffAttendanceArchived', 'debug');
+        //        $this->log("$academicPeriodStaffAttendanceArray", 'debug');
         $where = [
             $this->aliasField('current !=') => 1,
             $this->aliasField('id IN') => $academicPeriodStaffAttendanceArrayId
@@ -836,7 +870,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         //POCOR-8480 starts
         if (!is_array($params)) {
             $params = [];
-        }//POCOR-8480 ends
+        } //POCOR-8480 ends
         $withLevels = isset($params['withLevels']) ? $params['withLevels'] : true;
         $withSelect = isset($params['withSelect']) ? $params['withSelect'] : false;
         $isEditable = isset($params['isEditable']) ? $params['isEditable'] : null;
@@ -982,7 +1016,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $daysPerWeek = $ConfigItems->value('days_per_week');
 
         // If last day index is '0'-valued-sunday it will change the value to '7' so it will be displayed.
-        $lastDayIndex = ($firstDayOfWeek - 1);// last day index always 1 day before the starting date.
+        $lastDayIndex = ($firstDayOfWeek - 1); // last day index always 1 day before the starting date.
         if ($lastDayIndex == 0) {
             $lastDayIndex = 7;
         }
@@ -1019,7 +1053,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $daysPerWeek = $ConfigItems->value('days_per_week');
 
         // If last day index is '0'-valued-sunday it will change the value to '7' so it will be displayed.
-        $lastDayIndex = ($firstDayOfWeek - 1);// last day index always 1 day before the starting date.
+        $lastDayIndex = ($firstDayOfWeek - 1); // last day index always 1 day before the starting date.
         if ($lastDayIndex == 0) {
             $lastDayIndex = 7;
         }
@@ -1100,7 +1134,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         } else {
             return false;
         }
-    }//POCOR-6347 ends
+    } //POCOR-6347 ends
 
     public function getCurrent()
     {
@@ -1381,7 +1415,6 @@ class AcademicPeriodsTable extends ControllerActionTable
 
 
         return $weekOptions;
-
     }
 
     public function findWeeksForPeriod(Query $query, array $options)
@@ -1498,27 +1531,33 @@ class AcademicPeriodsTable extends ControllerActionTable
         $academicPeriodId = $options['academic_period_id'];
         $institutionId = $options['institution_id'];
         $model = $this;
-        $distinctDateValues = ArchiveConnections::getArchiveDays('institution_staff_attendances',
-            ['institution_id' => $institutionId,
+        $distinctDateValues = ArchiveConnections::getArchiveDays(
+            'institution_staff_attendances',
+            [
+                'institution_id' => $institutionId,
                 'academic_period_id' => $academicPeriodId
-            ]);
-        $distinctLeaveDateValues = ArchiveConnections::getArchiveLeaveDays('institution_staff_leave',
-            ['institution_id' => $institutionId,
+            ]
+        );
+        $distinctLeaveDateValues = ArchiveConnections::getArchiveLeaveDays(
+            'institution_staff_leave',
+            [
+                'institution_id' => $institutionId,
                 'academic_period_id' => $academicPeriodId
-            ]);
-//        $this->log('$distinctDateValues', 'debug');
-//        $this->log($distinctDateValues, 'debug');
-//        $this->log('$distinctLeaveDateValues', 'debug');
-//        $this->log($distinctLeaveDateValues, 'debug');
+            ]
+        );
+        //        $this->log('$distinctDateValues', 'debug');
+        //        $this->log($distinctDateValues, 'debug');
+        //        $this->log('$distinctLeaveDateValues', 'debug');
+        //        $this->log($distinctLeaveDateValues, 'debug');
         $mergedArray = array_unique(
             array_merge(
                 $distinctDateValues,
                 $distinctLeaveDateValues
             )
         );
-//        $this->log('$mergedArray', 'debug');
-//        $this->log($mergedArray, 'debug');
-// Convert the strings back to DateTime objects
+        //        $this->log('$mergedArray', 'debug');
+        //        $this->log($mergedArray, 'debug');
+        // Convert the strings back to DateTime objects
         $finalArray = array_map(function ($dateString) {
             return new Date($dateString);
         }, $mergedArray);
@@ -1570,9 +1609,9 @@ class AcademicPeriodsTable extends ControllerActionTable
                         }
 
 
-//                        $this->log('$uniqueWeekOptions', 'debug');
-//
-//                        $this->log($uniqueWeekOptions, 'debug');
+                        //                        $this->log('$uniqueWeekOptions', 'debug');
+                        //
+                        //                        $this->log($uniqueWeekOptions, 'debug');
 
                         if ($todayDate >= $startDay && $todayDate <= $endDay) {
                             end($uniqueWeekOptions);
@@ -1623,30 +1662,40 @@ class AcademicPeriodsTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $institutionClassIds = $this->getInstitutionClasses($institutionId);
         $academicPeriodArrayOne =
-            ArchiveConnections::getArchiveYears('institution_class_attendance_records',
-                ['institution_class_id IN' => $institutionClassIds]);
+            ArchiveConnections::getArchiveYears(
+                'institution_class_attendance_records',
+                ['institution_class_id IN' => $institutionClassIds]
+            );
         $academicPeriodArrayTwo =
-            ArchiveConnections::getArchiveYears('institution_student_absences',
-                ['institution_id' => $institutionId]);
+            ArchiveConnections::getArchiveYears(
+                'institution_student_absences',
+                ['institution_id' => $institutionId]
+            );
         $academicPeriodArrayThree =
-            ArchiveConnections::getArchiveYears('institution_student_absence_details',
-                ['institution_id' => $institutionId]);
+            ArchiveConnections::getArchiveYears(
+                'institution_student_absence_details',
+                ['institution_id' => $institutionId]
+            );
         $academicPeriodArrayFour =
-            ArchiveConnections::getArchiveYears('student_attendance_marked_records',
-                ['institution_id' => $institutionId]);
+            ArchiveConnections::getArchiveYears(
+                'student_attendance_marked_records',
+                ['institution_id' => $institutionId]
+            );
 
         $academicPeriodWithArchiveArrayId = [0];
         $academicPeriodWithArchiveArray = array_unique(
-            array_merge($academicPeriodArrayOne,
+            array_merge(
+                $academicPeriodArrayOne,
                 $academicPeriodArrayTwo,
                 $academicPeriodArrayThree,
-                $academicPeriodArrayFour)
+                $academicPeriodArrayFour
+            )
         );
         if (sizeof($academicPeriodWithArchiveArray) > 0) {
             $academicPeriodWithArchiveArrayId = $academicPeriodWithArchiveArray;
         }
-//        $this->log('$academicPeriodWithArchiveArrayId', 'debug');
-//        $this->log($academicPeriodWithArchiveArrayId, 'debug');
+        //        $this->log('$academicPeriodWithArchiveArrayId', 'debug');
+        //        $this->log($academicPeriodWithArchiveArrayId, 'debug');
         $where = [
             $this->aliasField('current !=') => 1,
             $this->aliasField('id IN') => $academicPeriodWithArchiveArrayId
@@ -1660,7 +1709,7 @@ class AcademicPeriodsTable extends ControllerActionTable
      */
     private function getInstitutionClasses($institutionId)
     {
-        $tableClasses = TableRegistry::get('institution_classes');
+        $tableClasses = TableRegistry::get('Institution.InstitutionClasses');
         $distinctClasses = $tableClasses->find('all')
             ->where(['institution_id' => $institutionId])
             ->select(['id'])
@@ -1822,7 +1871,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
                 if ($schoolClosed) {
                     $data['closed'] = true;
-                    $data['periods'] = $closedPeriods;//POCOR-7787
+                    $data['periods'] = $closedPeriods; //POCOR-7787
                 }
 
                 $dayOptions[] = $data;
@@ -1837,7 +1886,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                 $i++;
             }
             $firstDayOfWeek->addDay();
-        } while ($firstDayOfWeek<= $week[1]);
+        } while ($firstDayOfWeek <= $week[1]);
 
         if (!is_null($today)) {
             $dayOptions[$today]['selected'] = true;
@@ -1875,7 +1924,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             ]
         ];
 
-        $schooldays = array_map(function($i) use ($firstDayOfWeek) {
+        $schooldays = array_map(function ($i) use ($firstDayOfWeek) {
             return 1 + ($firstDayOfWeek + 6 + $i) % 7;
         }, range(0, $daysPerWeek - 1));
 
@@ -1913,6 +1962,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                     }
                 }
 
+                $schoolClosed = $this->isSchoolClosed($firstDayOfWeekDate, $institutionId); //POCOR-8745
                 $suffix = $schoolClosed ? __('School Closed') : '';
 
                 $data = [
@@ -1979,8 +2029,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         }
         $todayDate = new Date();
         do {
-            if (in_array($firstDay->dayOfWeek, $schooldays)) {
-                {
+            if (in_array($firstDay->dayOfWeek, $schooldays)) { {
                     $schoolClosed = $this->isSchoolClosed($firstDay, $institutionId);
                 }
                 $suffix = $schoolClosed ? __('School Closed') : '';
@@ -2007,7 +2056,6 @@ class AcademicPeriodsTable extends ControllerActionTable
                 } else {
                     $dayOptions[] = $data;
                 }
-
             }
             $firstDay->addDay();
         } while ($firstDay->lte($lastDay));
@@ -2023,7 +2071,6 @@ class AcademicPeriodsTable extends ControllerActionTable
             ->formatResults(function (ResultSetInterface $results) use ($dayOptions) {
                 return $dayOptions;
             });
-
     }
 
     public function findDaysForPeriodWeekArchive(Query $query, array $options)
@@ -2042,8 +2089,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             $schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
         }
         do {
-            if (in_array($firstDay->dayOfWeek, $schooldays)) {
-                {
+            if (in_array($firstDay->dayOfWeek, $schooldays)) { {
                     // echo "<pre>";print_r($this->isSchoolClosed($firstDay, $institutionId));die;
                     // $schoolClosed = $this->isSchoolClosed($firstDay, $institutionId);
                     $schoolClosed = false;
@@ -2078,7 +2124,6 @@ class AcademicPeriodsTable extends ControllerActionTable
             ->formatResults(function (ResultSetInterface $results) use ($dayOptions) {
                 return $dayOptions;
             });
-
     }
 
     public function getNextAcademicPeriodId($id)
@@ -2098,8 +2143,9 @@ class AcademicPeriodsTable extends ControllerActionTable
             // ->find('editable', ['isEditable' => true]) V4
             ->where($where)
             ->order([$this->aliasField('order') => 'DESC'])
-            ->extract('id')
-            ->first();
+            ->all() // Execute the query and get a ResultSet
+            ->extract('id') // Extract the 'id' values
+            ->first(); // Get the first extracted value
 
         return $nextAcademicPeriodId;
     }
