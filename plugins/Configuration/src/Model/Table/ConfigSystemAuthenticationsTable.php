@@ -23,9 +23,8 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
 
     private $authenticationTypeOptions;
 
-    public function initialize(array $config): void
+    public function initialize(array $config) : void
     {
-        //print_r('hi'); die;
         $this->setTable('system_authentications');
         parent::initialize($config);
         $this->hasOne('Google', ['className' => 'SSO.IdpGoogle', 'foreignKey' => 'system_authentication_id', 'dependent' => true]);
@@ -43,8 +42,9 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         $this->fields['mapped_last_name']['length'] = 100;
     }
 
-    public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator) : Validator
     {
+        $validator->setProvider('custom', $this);
         return $validator
             ->requirePresence('name')
             ->notEmpty('name')
@@ -162,18 +162,27 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
     {
         $query
             ->contain(['Google', 'Saml', 'OAuth']);
-            $this->request->getAttribute('data')[$this->getAlias()]['authentication_type_id'] = $query->first()->authentication_type_id;
+       // $this->request->getdata()[$this->getAlias()]['authentication_type_id'] = $query->first()->authentication_type_id;
+        $data = $this->request->getData();
+
+        // Modify the data as needed
+        $data[$this->getAlias()]['authentication_type_id'] = $query->first()->authentication_type_id;
+        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]);
         $this->field('authentication_type_id');
     }
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-       $this->request->getAttribute('data')[$this->getAlias()]['code'] = uniqid('IDP');
+        $data = $this->request->getData();
+        $data[$this->getAlias()]['code'] = uniqid('IDP');
+        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-       $this->request->getAttribute('data')[$this->getAlias()]['code'] = $entity->code;
+        $data = $this->request->getData(); 
+        $data[$this->getAlias()]['code'] = $entity->code;
+        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -196,9 +205,10 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
 
     public function onUpdateFieldAuthenticationTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $request = $this->request;
         $attr['onChangeReload'] = true;
-        if (isset($request->data[$this->getAlias()]['authentication_type_id'])) {
-            $authenticationTypeId = $request->data[$this->getAlias()]['authentication_type_id'];
+        if (isset($request->getData()[$this->getAlias()]['authentication_type_id'])) {
+            $authenticationTypeId = $request->getData()[$this->getAlias()]['authentication_type_id'];
             $idpType = isset($this->authenticationTypeOptions[$authenticationTypeId]) ? $this->authenticationTypeOptions[$authenticationTypeId] : '';
             switch ($idpType) {
                 case 'google':

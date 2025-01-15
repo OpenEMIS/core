@@ -30,7 +30,8 @@ class CsvBehavior extends Behavior
 
         if (!file_exists($folder)) {
             umask(0);
-            mkdir($folder, 0777);
+            mkdir($folder, 0777, true);  // POCOR-8787
+            Log::write('debug', 'Created folder: ' . $folder);
         }
     }
 
@@ -59,7 +60,7 @@ class CsvBehavior extends Behavior
         $processId = $process->id;
 
         $sqlFilename = $this->getConfig('filename') . '_' . $processId . '.sql';
-        $sqlFilepath = $_settings['path'] . $sqlFilename;-
+        $sqlFilepath = $_settings['path'] . $sqlFilename;
         $_settings['file_path_sql'] = $sqlFilepath;
         // End: sql filepath
 
@@ -83,7 +84,7 @@ class CsvBehavior extends Behavior
         }
 
         // Escape SQL query
-        $sql = $this->escapeSql($sql);
+        //$sql = $this->escapeSql($sql); //POCOR-8787 
 
         $ReportProgress = TableRegistry::get('Report.ReportProgress');
         $ReportProgress->updateAll(

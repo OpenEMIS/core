@@ -78,6 +78,7 @@ class ScholarshipsController extends AppController
     public function ScholarshipRecipients()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.ScholarshipRecipients']);
+    
     }
 
     // end
@@ -85,22 +86,50 @@ class ScholarshipsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $this->Navigation->addCrumb('Scholarships', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Scholarships', 'index']);
-
         $header = __('Scholarships');
+
+        $pass = $this->request->getParam('pass');
+        if (isset($pass[0]) && $pass[0] == 'download') {
+            return true;
+        }
+    
         $alias = $model->getAlias();
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
-            $excludedModel = ['Scholarships', 'Applications', 'RecipientPaymentStructures', 'RecipientPayments'];
-
+            $excludedModel = ['Scholarships','ScholarshipRecipients', 'Applications', 'RecipientPaymentStructures', 'RecipientPayments'];
+            
             if (!in_array($alias, $excludedModel)) {
+
                 $model->toggle('add', false);
                 $model->toggle('edit', false);
                 $model->toggle('remove', false);
 
                 /*$queryString = $this->request->getQuery('queryString');
-                echo "<pre>"; print_r($queryString);
-die;*/
-                if(isset($applicantId)){
-                    $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+                echo "<pre>"; print_r($queryString);die;*/
+                $queryString = $this->getQueryString();
+           //     echo "<pre>"; print_r($queryString); die;
+                if(isset($queryString)){
+                    $applicantId = $this->getQueryString('applicant_id');
+                    $header = $this->Users->get($applicantId)->name;
+
+                    $this->Navigation->addCrumb('Applications', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Applications', 'index']);
+                    $this->Navigation->addCrumb($header);
+                    $this->Navigation->addCrumb($model->getHeader($alias));
+                }
+            }
+        }
+        if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
+            $includedModel = ['Applications', 'InstitutionChoices', 'InstitutionApplicationAttachment'];
+
+            if (in_array($alias, $includedModel)) {
+                $model->toggle('add', true);
+                $model->toggle('edit', true);
+                $model->toggle('remove', true);
+
+                /*$queryString = $this->request->getQuery('queryString');
+                echo "<pre>"; print_r($queryString);die;*/
+                $queryString = $this->getQueryString();
+                if(isset($queryString)){
+                    $applicantId = $this->getQueryString('applicant_id');
                     $header = $this->Users->get($applicantId)->name;
 
                     $this->Navigation->addCrumb('Applications', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Applications', 'index']);
@@ -110,19 +139,20 @@ die;*/
             }
         }
 
+
         $header .= ' - ' . $model->getHeader($alias);
         $this->set('contentHeader', $header);
 
-        $persona = false;
+        $persona = true;
         $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
         $event = $model->getEventManager()->dispatch($event);
     }
 
     public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
     {
-        $request = $this->request;
-        if (array_key_exists('queryString', $request->getQuery())) {
-            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+        $request = $this->getQueryString();
+        if (!is_null($request)) {
+            $applicantId = $this->getQueryString('applicant_id');
 
             if ($model->hasField('security_user_id')) {
                 $query->where([$model->aliasField('security_user_id') => $applicantId]);
@@ -139,5 +169,15 @@ die;*/
         if ($this->getPlugin() == 'Scholarship') {
             $this->Security->setConfig('validatePost', false);
         }
+    }
+
+    public function ScholarshipApplicationInstitutionChoices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.InstitutionChoices']);
+    }
+
+    public function ScholarshipApplicationAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.InstitutionApplicationAttachment']);
     }
 }

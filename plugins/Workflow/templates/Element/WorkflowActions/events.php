@@ -13,6 +13,21 @@
 	</div>
 <?php elseif ($action == 'add' || $action == 'edit') : ?>
 	<?php
+		//POCOR-8605[START]
+		if(($entity->event_method_key == 0 && $data->post_events[0]['event_key'] == 0)){
+			unset($data->post_events);
+		}
+		else{
+			if(empty($data->post_events)){
+				$data->post_events = [['event_key' => $entity->event_key]];
+			}
+			else if(empty($entity->event_method_key)){
+				$data->post_events = [['event_key' => $entity->event_key]];
+			}else{
+				$data->post_events = [['event_key' => $entity->event_method_key]];
+			}
+		}
+		//POCOR-8605[END]
 		$model = $ControllerAction['table'];
 		$alias = $model->getAlias();
 		$eventOptions = isset($attr['attr']['eventOptions']) ? $attr['attr']['eventOptions'] : [];

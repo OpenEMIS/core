@@ -62,7 +62,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
 
-        $query->where([$this->aliasField('security_user_id') => $studentId]);
+        $query->where([$this->aliasField('security_user_id IS') => $studentId]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
