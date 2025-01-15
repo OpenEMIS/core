@@ -270,6 +270,8 @@ class InstitutionTabBehavior extends Behavior
                             }//PCOOR-8324 ends
                             else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
                                 $queryString['academic_period_id'] = $entity->academic_period->id;
+                            } else if ($url_action == 'ExaminationStudents' && $additionalParam == 'student_id') { //POCOR-8813
+                                $queryString['student_id'] = $entity->getOriginal('student_id');
                             }
                             else{
                                 $queryString[$additionalParam] = $entity->{$additionalParam};

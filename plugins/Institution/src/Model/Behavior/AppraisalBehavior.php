@@ -8,13 +8,13 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Request;
-use Cake\Utility\Inflector;
 use Cake\Utility\Hash;
 use Cake\Chronos\Date;
 use Cake\Chronos\Chronos;
 use Cake\Http\ServerRequest;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
+use Cake\Utility\Text;
 
 class AppraisalBehavior extends Behavior
 {
@@ -266,9 +266,13 @@ class AppraisalBehavior extends Behavior
             foreach ($formsCriterias as $key => $formCritieria) {
                 if ($section != $formCritieria->section) {
                     $section = $formCritieria->section;
-                    $tabName = Inflector::slug($section);
+                    $tabName = Text::slug($section);
                     if (empty($tabElements)) {
                         $selectedAction = $tabName;
+                    } else { //POCOR-8802
+                        if(isset($url['?']) && $url['?'] != $tabName) {
+                            unset($url['?']);
+                        }
                     }
                     $url['tab_section'] = $tabName;
                     $tabElements[$tabName] = [
