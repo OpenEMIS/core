@@ -22,7 +22,7 @@ var sessionData = {
 	sessionStorage.setItem('password', sessionData.password);
 	localStorage.setItem('encoded_url', '<?php echo $meal_url;?>');
     localStorage.setItem('institutionName', '<?php echo $institutionName;?>');
-    localStorage.setItem('institution_id', '<?php echo $institution_id;?>');
+    localStorage.setItem('institution_id', '<?php echo h($institution_id);?>');
     localStorage.setItem('institutionIndexUrl', '<?php echo $institutionIndexUrl;?>');
     localStorage.setItem('baseUrl', '<?php echo $baseUrl;?>');
 </script>

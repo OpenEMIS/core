@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -454,7 +454,15 @@ class InstitutionStudentsTable extends AppTable  {
         }
         return $age;
     }
-
+    //POCOR-8768 starts
+    public function onExcelRenderDateOfBirth(Event $event, Entity $entity, $attr) {
+        $dateOfBirth= '';
+        if ($entity->has('date_of_birth') && !empty($entity->date_of_birth)) {
+          $dateOfBirth = $entity->date_of_birth->format('d/m/Y');
+        }
+        return $dateOfBirth;
+    }
+    //POCOR-8768 ends
     public function onExcelRenderOpenemisNo(Event $event, Entity $entity, $attr) {
         $student_id = $entity->student_id;
         $StudentGuardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
@@ -807,7 +815,7 @@ class InstitutionStudentsTable extends AppTable  {
         $extraField[] = [
             'key' => 'Users.date_of_birth',
             'field' => 'date_of_birth',
-            'type' => 'date',
+            'type' => 'date_of_birth',
             'label' => __('Date Of Birth')
         ]; 
 
