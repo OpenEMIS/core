@@ -49,6 +49,23 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $events;
     }
 
+    /**
+     * POCOR-8812
+     * Add validation rules for the examination entity.
+     * Ensures that 'examination_id' and 'rooms' fields are not empty.
+     *
+     * @param \Cake\Validation\Validator $validator The validator instance.
+     * @return \Cake\Validation\Validator Updated validator instance.
+     */
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+          $validator
+            ->notEmpty('examination_id')
+            ->notEmpty('rooms');
+        return $validator;
+    }
     public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $this->queryString = $this->request->getQuery['queryString'];
@@ -401,7 +418,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $attr['queryString'] = $this->queryString;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
-
+        
         return $event->getSubject()->renderElement('Examination.ExaminationCentres/' . $fieldKey, ['attr' => $attr]);
     }
 
