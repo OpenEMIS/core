@@ -340,7 +340,7 @@ class AppraisalBehavior extends Behavior
                 $name = $criteria->field_type->name ?? null;
                 $action = $model->action;
                 if($name == 'Note' && $action == 'edit') {
-                    $attr['type'] = 'readonly';
+                    $attr['attr']['disabled'] = true;
                 }
                 break;
             case 'DROPDOWN':
