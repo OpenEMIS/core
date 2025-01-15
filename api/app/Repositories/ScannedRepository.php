@@ -37,56 +37,55 @@ class ScannedRepository extends Controller
         DB::beginTransaction();
         try {
             $params = $request->all();
-            $bulkInsertData = [];
-            $notFoundUsers = []; 
             $currentTimestamp = Carbon::now()->toDateTimeString();
             $userId = JWTAuth::user()->id;
-            if(!empty($params)){
-                foreach ($params as $param) {
-                    $openemisNo = SecurityUsers::where('openemis_no', $param['openemis_no'])->first();
-                    
-                    if (!empty($openemisNo)) {
-                        $bulkInsertData[] = [
-                            'openemis_no' => $param['openemis_no'],
-                            'datetime' => Carbon::parse($param['datetime'])->toDateTimeString(),
-                            'latitude' => $param['latitude'],
-                            'longitude' => $param['longitude'],
-                            'location' => $param['location'],
-                            'access' => $param['access'],
-                            'created_user_id' => $userId,
-                            'created' => $currentTimestamp,
-                        ];
-                    } else {
-                        // Log users not found to scan.log
-                        Log::channel('scan')->error('User not found in db', [
-                            'openemis_no' => $param['openemis_no'],
-                            'timestamp' => $currentTimestamp,
-                            'details' => $param
-                        ]);
-                        $notFoundUsers[] = $param['openemis_no'];
-                        return 2;
-                    }
-                }
-                if (!empty($bulkInsertData)) {
-                    ScannedAttendance::insert($bulkInsertData);
-                }
+
+            // Validate required fields
+            if (empty($params['openemis_no']) || empty($params['datetime'])) {
+                return response()->json(['error' => 'Missing required fields'], 400);
+            }
+            $openemisNo = SecurityUsers::where('openemis_no', $params['openemis_no'])->first();
+            if ($openemisNo) {
+                $data = [
+                    'openemis_no' => $params['openemis_no'],
+                    'datetime' => Carbon::parse($params['datetime'])->toDateTimeString(),
+                    'latitude' => $params['latitude'] ?? NULL,
+                    'longitude' => $params['longitude'] ?? NULL,
+                    'location' => $params['location'] ?? NULL,
+                    'access' => $params['access'] ?? NULL,
+                    'created_user_id' => $userId,
+                    'created' => $currentTimestamp,
+                ];
+
+                // Insert the data
+                ScannedAttendance::create($data);
 
                 DB::commit();
                 return 1;
-            }
+            } else {
+                // Log not found user
+                Log::channel('scan')->error('User not found in db', [
+                    'openemis_no' => $params['openemis_no'],
+                    'timestamp' => $currentTimestamp,
+                    'details' => $params
+                ]);
 
+                return 2;
+            }
         } catch (\Exception $e) {
             DB::rollback();
-            // Log to scan.log channel with detailed error information
+
+            // Log the exception
             Log::channel('scan')->error('Failed to store Scanned User data', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all()
             ]);
-            return 2;
-            
+
+            return response()->json(['error' => 'An error occurred while saving data'], 500);
         }
     }
+
     /**
      * POCOR-8666
      * Fetch scanned attendance records based on OpenEMIS number and optional date range.
