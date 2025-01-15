@@ -226,7 +226,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
             if ($this->request->is(['post', 'put'])) {
                 $submit = $this->request->getData('submit') !== null ? $this->request->getData('submit') : 'save';
                 $patchOptions = new ArrayObject(['validate' => false, 'associated' => ['AssessmentPeriods' => ['validate' => false]]]);
-
                 if ($submit == 'save') {
 
                     //logic to check if all empty / filled based on the 1st field.
@@ -255,7 +254,11 @@ class AssessmentPeriodsTable extends ControllerActionTable
                             }
                         }
                     }
-
+                    //POCOR-8814[START]
+                    if(!isset($entity->id)){
+                        $entity->id = $assessmentId;
+                    }
+                    //POCOR-8814[END]
                     $process = function ($model, $entity) {
                         return $model->save($entity);
                     };
@@ -264,7 +267,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
 
                     if (!$result) {
-                        Log::write('debug', $entity->getErrors());
+                        Log::write('debug', (string)$entity->getErrors());
                     }
 
                     $errors = $entity->getErrors();
@@ -411,9 +414,11 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         //disable edit academic term if no period
-        // if (isset($extra['toolbarButtons']['editAcademicTerm']) && $data->count() < 1) {
+        //POCOR-8814[START]
+        if (isset($extra['toolbarButtons']['editAcademicTerm']) && $data->count() < 1) {
             unset($extra['toolbarButtons']['editAcademicTerm']);
-        // }
+        }
+        //POCOR-8814[END]
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
