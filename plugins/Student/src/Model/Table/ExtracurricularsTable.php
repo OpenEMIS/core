@@ -87,62 +87,83 @@ class ExtracurricularsTable extends ControllerActionTable {
 		$this->setupTabElements();
 	}
 
+	//POCOR-8795  refactored code
 	/*POCOR-6474 - commenting function because this function was enabling users to edit and view correct record*/
-	public function beforeFind( Event $event, Query $query )
-	{   
-		//if ($this->controller->getName() == 'Profiles' && $this->request->query['type'] == 'student') {
-		$session = $this->request->getSession();
-		$userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
-		$studentId = $session->read('Student.Students.id');
+	// public function beforeFind( Event $event, Query $query )
+	// {   
+	// 	//if ($this->controller->getName() == 'Profiles' && $this->request->query['type'] == 'student') {
+	// 	$session = $this->request->getSession();
+	// 	$userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
+	// 	$studentId = $session->read('Student.Students.id');
+	// 	if ($this->getAlias() == 'Extracurriculars') {
+	// 		/*POCOR-6700 starts - added academic period condition into index query*/
+	// 		$periodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+	// 		$conditions[$this->aliasField('academic_period_id')] = $periodId;
+	// 		/*POCOR-6700 ends*/
+	// 		if ($this->controller->getName() == 'Profiles') {
+	// 			if ($this->Session->read('Auth.User.is_guardian') == 1) {
+	// 				$sId = $this->Session->read('Student.ExaminationResults.student_id');
+	// 				/**
+	// 				 * Need to add current login id as param when no data found in existing variable
+	// 				 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+	// 				 * @ticket POCOR-6548
+	// 				 */
+	// 				//# START: [POCOR-6548] Check if user data not found then add current login user data
+	// 				if ( is_int($sId) ) {
+	// 					$studentId = $sId;
+	// 				} else if ($sId == null || empty($sId) || $sId == '') {
+	// 					if ($studentId == null || $studentId == '' || empty($studentId)) {
+	// 						$studentId = $userData['Auth']['User']['id'];
+	// 					} else {
+	// 						$studentId = $studentId;
+	// 					}
+	// 				} else {
+	// 				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+	// 				}
+	// 				//# END: [POCOR-6548] Check if user data not found then add current login user data
+	// 			} else {
+	// 				$studentId = $this->Session->read('Auth.User.id');
+	// 			}
+	// 		} 
+	// 		/*POCOR-6267 starts*/
+	// 		if ($this->controller->getName() == 'GuardianNavs') {
+	// 			$session = $this->request->getSession();//POCOR-6267
+	// 			$studentId = $session->read('Student.Students.id');
+	// 		}
+	// 		/*POCOR-6267 ends*/
+	// 		$conditions[$this->aliasField('security_user_id')] = $studentId;
+	// 		/*POCOR-6474 starts*/	
+	// 		if ($this->action == 'view' || $this->action == 'edit') {
+	// 			$id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+    // 			$conditions[$this->aliasField('id')] = $id;
+	// 			$query->where($conditions, [], true);
+	// 		} else {
+	// 		    $query->where($conditions, [], true);
+	// 		}
+	// 		/*POCOR-6474 ends*/	
+	// 	}
+	// }
+
+	public function beforeFind(Event $event, Query $query, \ArrayObject $options, $primary)
+	{
 		if ($this->getAlias() == 'Extracurriculars') {
-			/*POCOR-6700 starts - added academic period condition into index query*/
-			$periodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
-			$conditions[$this->aliasField('academic_period_id')] = $periodId;
-			/*POCOR-6700 ends*/
-			if ($this->controller->getName() == 'Profiles') {
-				if ($this->Session->read('Auth.User.is_guardian') == 1) {
-					$sId = $this->Session->read('Student.ExaminationResults.student_id');
-					/**
-					 * Need to add current login id as param when no data found in existing variable
-					 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
-					 * @ticket POCOR-6548
-					 */
-					//# START: [POCOR-6548] Check if user data not found then add current login user data
-					if ( is_int($sId) ) {
-						$studentId = $sId;
-					} else if ($sId == null || empty($sId) || $sId == '') {
-						if ($studentId == null || $studentId == '' || empty($studentId)) {
-							$studentId = $userData['Auth']['User']['id'];
-						} else {
-							$studentId = $studentId;
-						}
-					} else {
-					$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
-					}
-					//# END: [POCOR-6548] Check if user data not found then add current login user data
-				} else {
-					$studentId = $this->Session->read('Auth.User.id');
-				}
-			} 
-			/*POCOR-6267 starts*/
-			if ($this->controller->getName() == 'GuardianNavs') {
-				$session = $this->request->getSession();//POCOR-6267
-				$studentId = $session->read('Student.Students.id');
+			$conditions = [];
+			
+			$academicPeriodId = !empty($options['academic_period_id']) ? $options['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+			$conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+
+			if (!empty($options['student_id'])) {
+				$conditions[$this->aliasField('security_user_id')] = $options['student_id'];
 			}
-			/*POCOR-6267 ends*/
-			$conditions[$this->aliasField('security_user_id')] = $studentId;
-			/*POCOR-6474 starts*/	
-			if ($this->action == 'view' || $this->action == 'edit') {
-				$id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
-    			$conditions[$this->aliasField('id')] = $id;
-				$query->where($conditions, [], true);
-			} else {
-			    $query->where($conditions, [], true);
+
+			if (in_array($this->action, ['view', 'edit']) && !empty($options['id'])) {
+				$conditions[$this->aliasField('id')] = $options['id'];
 			}
-			/*POCOR-6474 ends*/	
+
+			$query->where($conditions, [], true);
 		}
 	}
-
+    //POCOR-8795 end
 	/**
      * Added academic period filter into extracurricular index page 
      * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>

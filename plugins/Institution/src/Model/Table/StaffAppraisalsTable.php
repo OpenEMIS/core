@@ -14,6 +14,8 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate;
 
 class StaffAppraisalsTable extends ControllerActionTable
 {    
@@ -93,6 +95,12 @@ class StaffAppraisalsTable extends ControllerActionTable
             ]
         ]);
         $this->addBehavior('Staff.StaffTab');
+        //POCOR-8627 Start
+        $this->addBehavior('Excel',[
+            'excludes' => ['security_user_id'],
+            'pages' => ['view'],
+        ]);
+        //POCOR-8627 END
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -451,4 +459,45 @@ class StaffAppraisalsTable extends ControllerActionTable
         }
     }
 
+    //POCOR-8627 Start
+    public function onExcelRenderDate(Event $event, Entity $entity, $attr)
+    {
+        $field = $entity->{$attr['field']};
+        
+        if (!empty($field)) {
+            if ($field instanceof FrozenTime || $field instanceof FrozenDate) {
+                return $this->formatDate($field);
+            } else {
+                $date = new FrozenTime($field);
+                return $this->formatDate($date);
+            }
+        } else {
+            return $field;
+        }
+        
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    {
+        $query->contain([
+            'AppraisalPeriods.AcademicPeriods', 'AppraisalForms',
+            'AppraisalTypes'
+        ]); 
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $fields[] = [
+            'key' => 'AppraisalPeriods.AcademicPeriods.AcademicPeriods',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => 'Academic Period',
+        ];
+    }
+
+    public function onExcelGetCode(Event $event, Entity $entity)
+    {
+       return $entity->appraisal_period->academic_period->name;
+    }
+    //POCOR-8627 End
 }
