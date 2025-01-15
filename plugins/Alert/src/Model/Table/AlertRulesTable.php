@@ -577,20 +577,20 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
     ////POCOR-8341 start
-    public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        if ($action == 'add'||$action == 'edit') {
-            $entity = $attr['entity'];
-            if($entity->feature)
-            {
-            $attr['type'] = 'readonly';
-            $attr['value'] = $this->getMethod($entity->feature);;
-            $attr['attr']['value'] =$this->getMethod($entity->feature);;
-            }
+    // public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
+    // {
+    //     if ($action == 'add'||$action == 'edit') {
+    //         $entity = $attr['entity'];
+    //         if($entity->feature)
+    //         {
+    //         $attr['type'] = 'readonly';
+    //         $attr['value'] = $this->getMethod($entity->feature);;
+    //         $attr['attr']['value'] =$this->getMethod($entity->feature);;
+    //         }
            
-        }
+    //     }
 
-        return $attr;
-    }
+    //     return $attr;
+    // }
     //POCOR-8341 end 
 }
