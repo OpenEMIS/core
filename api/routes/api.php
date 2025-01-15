@@ -514,6 +514,13 @@ Route::group(
         //POCOR-8363 end...
 
 
+        //POCOR-7429 start...
+        Route::get('surveys', 'SurveyController@getSurveys');
+        Route::get('survey/download/xform/{surveyFormId}', 'SurveyController@downloadXform');
+        Route::get('survey/checkins/xform/{surveyFormId}/{insCode}/{academicPeriodCode}', 'SurveyController@checkInsXform');
+        Route::get('survey/studentlist/xform/{surveyFormId}/{insCode}/{academicPeriodCode}', 'SurveyController@getStudentListForSurvey');
+        Route::post('survey/upload', 'SurveyController@uploadXform');
+        //POCOR-7429 end...
         //POCOR-8397 start...
         Route::get('/academic-period/archive', 'AttendanceController@getArchiveAcademicPeriods');
         Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked/archive', 'AttendanceController@getStudentAttendanceMarkedRecordArchiveList');
@@ -537,10 +544,7 @@ Route::group(
         //POCOR-8666 start
         Route::get('scanned/{openemis_no}', 'ScannedController@scannedUserOpenemisNo');
         Route::post('scanned', 'ScannedController@addScannedUserData');
-        Route::post('update-scanned/{openemis_no}', 'ScannedController@updateScannedUserData');
-        Route::get('scannedlisting', 'ScannedController@scannedUserListing');
         //POCOR-8666 end
-
         //POCOR-8030 start
         Route::get('institutions/{institutionId}/departments', 'DepartmentController@getDepartmentList');
         Route::get('institutions/{institutionId}/departments/{departmentId}', 'DepartmentController@institutionDepartmentDetails');
@@ -548,5 +552,6 @@ Route::group(
         Route::post('institutions/{departmentId}/updatedepartments', 'DepartmentController@updateInstitutionDepartment');
         Route::get('institutions/department/edit', 'DepartmentController@institutionDepartmentEditMessage');
         //POCOR-8030 end
+        Route::get('scanned/data/export', 'ScannedController@institutionScannedExport');//POCOR-8793
     }
 );

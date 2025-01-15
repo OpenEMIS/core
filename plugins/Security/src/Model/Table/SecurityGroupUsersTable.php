@@ -245,10 +245,14 @@ class SecurityGroupUsersTable extends AppTable {
         $where = isset($options['where']) ? $options['where'] : [];
         $area = isset($options['area']) ? $options['area'] : null;
 
-        $query->find('list', ['keyField' => function ($query) {
+        $query->find('all') //POCOR-8808
+        ->matching('Users', function ($q) {
+            return $q; //Ensures only rows with matching Users are included
+        })
+        ->find('list', ['keyField' => function ($query) {
                                 return $query->user->id;
                             }, 'valueField' => function ($query) {
-                                return $query->user->get('name_with_id_role');
+                                return $query->user ? $query->user->get('name_with_id_role') : '';
                             }])
                 /*->select([
                     $this->Users->aliasField('id'),
