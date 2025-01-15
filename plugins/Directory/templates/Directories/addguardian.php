@@ -78,7 +78,7 @@
         localStorage.removeItem("institution_id");
     }
     localStorage.setItem('institution_id', '<?php echo $institutionId;?>');
-    localStorage.setItem('institution_name', '<?php echo $institutionName;?>');
+    localStorage.setItem('institution_name', '<?php echo h($institutionName);?>');
     localStorage.setItem('login_user_id', '<?php echo $loginUserId;?>');
     localStorage.setItem('student_id', '<?php echo $studentId;?>');
 </script>
@@ -212,7 +212,7 @@
     </div>
 </div>
 
-<script>
+<!-- <script POCOR-8613>
     $(function () {
         var datepicker0 = $('#User_date_of_birth').datepicker({
             "format": "dd-mm-yyyy",
@@ -230,7 +230,7 @@
     });
 
     //]]>
-</script>
+</script> -->
 
 <style>
     .pd-10 {

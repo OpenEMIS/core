@@ -51,6 +51,8 @@ class DirectoriesTable extends ControllerActionTable
         $dateOfBirth = $requestDataParams['date_of_birth'] ?? null;
         $identityTypeId = $requestDataParams['identity_type_id'] ?? null;
         $nationalityId = $requestDataParams['nationality_id'] ?? null;
+        $studentOpenemisNo = $requestDataParams['student_openemis_no'] ?? null; // POCOR-8063
+        $guardianTypeId = $requestDataParams['guardian_type_id'] ?? null; // POCOR-8063
         $limit = $requestDataParams['limit'] ?? 10;
         $page = $requestDataParams['page'] ?? 1;
         $userId = $requestDataParams['id'] ?? null;
@@ -64,6 +66,7 @@ class DirectoriesTable extends ControllerActionTable
         $nationalitiesTable = self::getDynamicTableInstance('FieldOption.Nationalities');
         $areaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
         $birthAreaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
+
         if($userId){
             $openemisNo = null;
             $identityNumber = null;
@@ -82,10 +85,17 @@ class DirectoriesTable extends ControllerActionTable
             $lastName = null;
             $dateOfBirth = null;
         }
-        $conditions = [];
-        if (!$identityNumber) {
-            $conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+        // POCOR-8063: start
+        $base_conditions = [];
+        if ($studentOpenemisNo && $guardianTypeId) {
+            $base_conditions = [$securityUsersTable->aliasField('openemis_no !=') => $studentOpenemisNo];
         }
+        if (!$identityNumber) {
+            $new_conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+            $conditions = array_merge($base_conditions, $new_conditions);
+//            Log::debug(print_r($conditions, true));
+        }
+        // POCOR-8063: end
         $usersSearchResult = [];
 
         if (!empty($conditions)) {
@@ -107,10 +117,14 @@ class DirectoriesTable extends ControllerActionTable
         $identityUsersResult = [];
 
         if ($identityNumber) {
-            $identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
+            // POCOR-8063: start
+            $new_identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
                 $identityNumber,
                 $nationalityId,
                 $userIdentitiesTable);
+            $identityCondition = array_merge($base_conditions, $new_identityCondition);
+//            Log::debug(print_r($conditions, true));
+            // POCOR-8063: end
             $identityUsersResult = self::getUsersSearchWithIdentityArr($securityUsersTable,
                 $gendersTable,
                 $identityTypesTable,
@@ -1152,7 +1166,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->hasMany('InstitutionStudentsReportCardsCommentsStaff', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionStudentsReportCardsCommentsStudent', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'student_id', 'dependent' => true]);
        // not found
-        $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
+        // $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);POCOR-8795
         $this->hasMany('InstitutionSubjectStaff', ['className' => 'Staff.StaffSubjects', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Student.StudentSubjects', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionTripPassengers', ['className' => 'Student.StudentTransport', 'foreignKey' => 'student_id', 'dependent' => true]);
@@ -2067,6 +2081,8 @@ public function getIdentityTypeData($value_selection)
             'url' => '#',
             'label' => '<i class="fa fa-search-plus"></i>',
         ];    
+        if(isset($toolbarButtons['search']))//POCOr-8733
+           unset($toolbarButtons['search']);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -2824,4 +2840,21 @@ public function getIdentityTypeData($value_selection)
         return $result;
     }
 
+    //POCOR-8743 Start
+    public function onGetModifiedUserId(Event $event, Entity $entity)
+    {
+        if(!empty($entity->modified_user_id)) {
+            $users = TableRegistry::get('Security.Users');
+            $user = $users->get($entity->modified_user_id);
+            return $user->name;
+        }
+    }
+
+    public function onGetCreatedUserId(Event $event, Entity $entity)
+    {
+        $users = TableRegistry::get('Security.Users');
+        $user = $users->get($entity->created_user_id);
+        return $user->name;
+    }
+    //POCOR-8743 End
 }

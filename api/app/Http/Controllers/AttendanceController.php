@@ -260,7 +260,7 @@ class AttendanceController extends Controller
      *                         @OA\Property(property="created_user_id", type="integer", example="2"),
      *                         @OA\Property(property="created", type="string", format="date-time", example="2018-04-05 18:57:20"),
      *                         @OA\Property(property="date", type="string", format="date", example="2024-01-08"),
-     *                         @OA\Property(property="historyUrl", type="string", example="/pocor-openemis-core/Staff/InstitutionStaffAttendanceActivities/index?user_id=8815"),
+     *                         @OA\Property(property="historyUrl", type="string", example="/api/v4/Staff/InstitutionStaffAttendanceActivities/index?user_id=8815"),
      *                         @OA\Property(property="_matchingData", type="object",
      *                              @OA\Property(property="User", type="object",
      *                                  @OA\Property(property="id", type="string", example=8815),
@@ -300,7 +300,7 @@ class AttendanceController extends Controller
      *                                 @OA\Property(property="absence_type_id", type="integer", example=Null),
      *                                 @OA\Property(property="isNew", type="boolean", example=True),
      *                                 @OA\Property(property="leave", type="object"),
-     *                                 @OA\Property(property="url", type="string", example="/pocor-openemis-core/Institution/Institutions/StaffLeave/index?user_id=8815")
+     *                                 @OA\Property(property="url", type="string", example="/api/v4/Institution/Institutions/StaffLeave/index?user_id=8815")
      *                             )
      *                         )
      *                     )
@@ -1934,7 +1934,7 @@ class AttendanceController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance/archive",
+     *     path="/api/v4/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance/archive",
      *     summary="Get archived student attendance",
      *     description="Retrieve archived attendance records for students in a specific class, grade, and institution.",
      *     tags={"Student Attendance Archive"},

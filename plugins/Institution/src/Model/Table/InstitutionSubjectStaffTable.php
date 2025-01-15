@@ -130,7 +130,7 @@ class InstitutionSubjectStaffTable extends AppTable
         $StaffStatusesTable = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
         $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
-        // if ($staff->dirty('end_date')) {
+         if ($staff->getDirty('end_date')) {
             $selectConditions = [];
             if ($staff->isNew()) {
                 $selectConditions = [
@@ -232,7 +232,7 @@ class InstitutionSubjectStaffTable extends AppTable
                     $updateConditions
                 );
             }
-        // }
+         }
     }
 
     public function findSubjectEditPermission(Query $query, array $options)

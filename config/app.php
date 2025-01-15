@@ -234,7 +234,8 @@ return [
             'plugins/Angular/config/routes.php',
             'plugins/ControllerAction/config/routes.php',
             'plugins/OpenEmis/config/routes.php',
-            'vendor/cakephp/cakephp/src/Routing/Router.php'
+            'vendor/cakephp/cakephp/src/Routing/Router.php',
+            'plugins/Gpa/config/routes.php'
         ],
     ],
 
@@ -377,7 +378,7 @@ return [
             'className' => 'Cake\Log\Engine\FileLog',
             'path' => LOGS,
             'file' => 'error',
-            'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
+            'levels' => ['error', 'critical', 'alert', 'emergency'],
             'url' => env('LOG_ERROR_URL', null),
         ],
     ],
@@ -439,10 +440,10 @@ return [
 
     'Application' => [
         'public' => [
-            'key' => file_exists(CONFIG . 'public.key') ? file_get_contents(CONFIG . 'public.key') : null //POCOR-8626
+            'key' => @file_get_contents(CONFIG . 'public.key')
         ],
         'private' => [
-            'key' => file_exists(CONFIG . 'private.key') ? file_get_contents(CONFIG . 'private.key') : null //POCOR-8626
+            'key' => @file_get_contents(CONFIG . 'private.key')
         ],
     ],
 ];
