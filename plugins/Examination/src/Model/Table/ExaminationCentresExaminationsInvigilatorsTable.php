@@ -401,7 +401,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $attr['queryString'] = $this->queryString;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
-        
+
         return $event->getSubject()->renderElement('Examination.ExaminationCentres/' . $fieldKey, ['attr' => $attr]);
     }
 
