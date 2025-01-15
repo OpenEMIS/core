@@ -407,7 +407,14 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                     ->distinct(['institution_id']);
 
         $institutionList =  $institutionListData->all()->toList();
-
+        //POCOR-8803 start
+        if($institutionList)
+        {
+            $institutionList = array_map(function($entity) {
+                return $entity->institution_id;
+            }, $institutionList);
+        }  
+        //POCOR-8803 end
         return $this->getInstitutionClosedDates($startDate, $endDate, $institutionList);
     }
 
