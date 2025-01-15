@@ -100,26 +100,53 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->getQuery('report_card_id')) ? $this->request->getQuery('report_card_id') : -1;
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'institutionId', 'reportCardOptions', 'selectedReportCard'));
-
+        $isSuperAdmin = $this->Auth->user('super_admin');
+        $loggedInUserId = $this->Auth->user('id');
+        $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+        $userRole = $GroupRoles
+                        ->find()
+                        ->contain('SecurityRoles')
+                        ->where([
+                            $GroupRoles->aliasField('security_user_id') => $loggedInUserId,
+                        ])
+                        ->first();
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : 'all';
         $classOptions = [];
         $classLists = [];
         if ($selectedReportCard != -1) {
             $reportCardEntity = $reportCardTable->find()->where(['id' => $selectedReportCard])->first();
-            if (!empty($reportCardEntity)) {
-                $classOptions = $classLists = $Classes->find('list')
-                    ->matching('ClassGrades')
-                    ->where([
-                        $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                        $Classes->aliasField('institution_id') => $institutionId,
-                        'ClassGrades.education_grade_id' => $reportCardEntity->education_grade_id
-                    ])
-                    ->order([$Classes->aliasField('name')])
-                    ->toArray();
-            } else {
-                // if selected report card is not valid, do not show any students
-                $selectedClass = 'all';
+           if (($isSuperAdmin) || $userRole['security_role']['name'] == 'Superrole') { //POCOR-8773
+                if (!empty($reportCardEntity)) {
+                    $classOptions = $classLists = $Classes->find('list')
+                        ->matching('ClassGrades')
+                        ->where([
+                            $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                            $Classes->aliasField('institution_id') => $institutionId,
+                            'ClassGrades.education_grade_id' => $reportCardEntity->education_grade_id
+                        ])
+                        ->order([$Classes->aliasField('name')])
+                        ->toArray();
+                } else {
+                    // if selected report card is not valid, do not show any students
+                    $selectedClass = 'all';
+                }
+            }else{
+                if (!empty($reportCardEntity)) {
+                    $classOptions = $classLists = $Classes->find('list')
+                        ->matching('ClassGrades')
+                        ->where([
+                            $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                            $Classes->aliasField('institution_id') => $institutionId,
+                             $Classes->aliasField('staff_id') => $loggedInUserId,
+                            'ClassGrades.education_grade_id' => $reportCardEntity->education_grade_id
+                        ])
+                        ->order([$Classes->aliasField('name')])
+                        ->toArray();
+                } else {
+                    // if selected report card is not valid, do not show any students
+                    $selectedClass = 'all';
+                }
             }
         }
 
