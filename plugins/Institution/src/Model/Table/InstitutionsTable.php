@@ -173,8 +173,9 @@ class InstitutionsTable extends ControllerActionTable
             'dependent' => true
         ]);
         //POCOR-6520 starts: add isset condition only
-        $request = Router::getRequest();
-        if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel') {//POCOR-6520 ends
+        
+        if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel'&& $request->getParam('action') != "Classes") {//POCOR-8538
+            
             $this->addBehavior('CustomField.Record', [
                 'fieldKey' => 'institution_custom_field_id',
                 'tableColumnKey' => 'institution_custom_table_column_id',
@@ -1694,7 +1695,9 @@ class InstitutionsTable extends ControllerActionTable
             }
             //POCOR-7191::End
             //POCOR-6866[END]
-            if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');//POCOR-8751
+            $mode = $ConfigItems->value("edition"); //POCOR-8751
+            if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode') || $mode == 'School')) {//POCOR-8751
                 $entity = $data->first();
                 $event->stopPropagation();
                 $action = ['plugin' => $this->controller->getPlugin(),
@@ -1703,7 +1706,7 @@ class InstitutionsTable extends ControllerActionTable
                     $this->paramsEncode(['id' => $entity->id,
                         'institution_id' => $entity->id])];
                 return $this->controller->redirect($action);
-            } elseif ($data->count() == 0 && Configure::read('schoolMode')) {
+            } elseif ($data->count() == 0 && Configure::read('schoolMode') && $mode == 'School') { //POCOR-8751
                 $event->stopPropagation();
                 $this->Alert->info('Institutions.noInstitution', ['reset' => true]);
                 $action = ['plugin' => $this->controller->getPlugin(),
