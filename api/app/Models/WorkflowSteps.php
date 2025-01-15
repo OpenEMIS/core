@@ -28,4 +28,9 @@ class WorkflowSteps extends Model
     {
         return $this->belongsTo(WorkflowStepParam::class, 'id', 'workflow_step_id');
     }
+
+    public function WorkflowActions()
+    {
+        return $this->hasMany(WorkflowActions::class, 'workflow_step_id', 'id');
+    }
 }

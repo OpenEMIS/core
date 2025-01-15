@@ -123,5 +123,29 @@ class ScannedRepository extends Controller
         }
     }
 
+    /**
+     * POCOR-8793
+     * export institution scan data xlsx
+     * * This method fetches the scanned attendance data for a specific OpenEMIS number, including related user information (created by and modified by users).
+     * The data is retrieved from the `ScannedAttendance` model with relationships to the 'createdUser' and 'modifiedUser'.
+     * 
+     * @param array $params An associative array containing the `openemis_no` (OpenEMIS number) to filter the scanned data.
+     * 
+     */
+    public function institutionScannedDataExport($params)
+    {
+        try {
+            $openemisNo = $params['openemis_no'];
+            $scanUser =  ScannedAttendance::with(['createdUser', 'modifiedUser'])->where('openemis_no', $openemisNo)->get();
+            return $scanUser; 
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export Scanned User Data',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to export Scanned User Data.');
+        }
+    }
    
 }
