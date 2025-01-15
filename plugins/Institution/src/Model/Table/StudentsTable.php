@@ -280,6 +280,11 @@ class StudentsTable extends ControllerActionTable
         if($tableName = 'institution'){
             $tableName = 'Institution.Institutions';
         }
+        //POCOR-8818 -- Start
+        if($tableName = 'academic_periods'){
+            $tableName = 'AcademicPeriod.AcademicPeriods';
+        }
+        //POCOR-8818 -- End
         $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
