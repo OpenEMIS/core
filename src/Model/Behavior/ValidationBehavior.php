@@ -1796,12 +1796,12 @@ class ValidationBehavior extends Behavior
         $count = 0;
         $modelAssociation = null;
         foreach ($parentModel->associations() as $assoc) {
-            if ($assoc->name()==$model->getAlias()) {
+            if ($assoc->getName()==$model->getAlias()) {
                 $modelAssociation = $assoc;
                 break;
             }
         }
-        foreach ($parentModel->request->data[$parentModel->getAlias()][$modelAssociation->property()] as $key => $value) {
+        foreach ($parentModel->request->getData()[$parentModel->getAlias()][$modelAssociation->getProperty()] as $key => $value) {
             if ($value['code']==$code) {
                 $count++;
             }

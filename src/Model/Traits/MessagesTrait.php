@@ -848,7 +848,9 @@ trait MessagesTrait
             'emailAll' => 'All Report Cards will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
 			'date_closed' => 'Generate date for report card has been closed',
-            'timezone'=>'Timezone is not configured. Please contact the administrator for assistance.'
+            'timezone'=>'Timezone is not configured. Please contact the administrator for assistance.',
+            'gpa' => 'GPA is Generated Successfully for the Report Card',
+            'gpa_closed' => 'Generate date for Student GPA has been closed',
         ],
         'StaffProfiles' => [
             'noProgrammes' => 'There is no programme set for this institution',
@@ -2658,6 +2660,40 @@ trait MessagesTrait
         ],
         'Messaging'=>[//POCOR-7458
             'email'=>'Message has been send successfully'
+        ],
+        //POCOR-8222
+        'Gpa' => [
+            'GpaGradingTypes' => [
+                    'code' => [
+                        'ruleUniqueCode' => 'Code must be unique',
+                    ],
+                    'pass_mark' => [
+                        'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+                        'ruleIsDecimal' => 'Value is not a valid decimal',
+                        'ruleRange' => 'Mark entered exceeds system limit'
+                    ],
+                    'max' => [
+                        'ruleIsDecimal' => 'Value is not a valid decimal',
+                        'ruleRange' => 'Mark entered exceeds system limit'
+                    ],
+            ], 
+
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                ],
+                'min' => [
+                    'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ],
+                'max' => [
+                    'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ],
+            ],
         ]
 
     ];

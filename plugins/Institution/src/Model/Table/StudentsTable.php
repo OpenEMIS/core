@@ -2706,22 +2706,59 @@ class StudentsTable extends ControllerActionTable
             $configData = $configVal->find()->select(['val' => $configVal->aliasField('value')])->where([$configVal->aliasField('code') => 'calculate_daily_attendance'])->first();
             $configOption = $configData['val'];
             if ($configOption == 2) {
-                $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
-                    ->select([
-                        'student_id' => 'institution_student_absence_details.student_id',
-                        'period' => 'institution_student_absence_details.period',
-                        'class_id' => 'institution_student_absence_details.institution_class_id',
-                        'present' => '(IF(institution_student_absence_details.absence_type_id IS NULL OR institution_student_absence_details.absence_type_id = 3,1,0))',
-                        'absent' => '(IF(institution_student_absence_details.absence_type_id IN (1,2),1,0))',
-                        'late' => '(IF(institution_student_absence_details.absence_type_id = 3, 1,0))',
-                    ])->innerJoin(["(SELECT value from config_items WHERE code = 'calculate_daily_attendance') attendance_config"])
-                    ->where([
-                        'institution_student_absence_details.date' => date('Y-m-d'),
-                        //'institution_student_absence_details.period' => $record->period,
-                        'institution_student_absence_details.student_id' => $record->student_id,
-                        $InstitutionStudentAbsenceDetails->aliasField('period IN') => $periodId,
-                    ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id'), $InstitutionStudentAbsenceDetails->aliasField('absence_type_id')])
-                    ->toArray();
+                // $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
+                //     ->select([
+                //         'student_id' => 'institution_student_absence_details.student_id',
+                //         'period' => 'institution_student_absence_details.period',
+                //         'class_id' => 'institution_student_absence_details.institution_class_id',
+                //         'present' => '(IF(institution_student_absence_details.absence_type_id IS NULL OR institution_student_absence_details.absence_type_id = 3,1,0))',
+                //         'absent' => '(IF(institution_student_absence_details.absence_type_id IN (1,2),1,0))',
+                //         'late' => '(IF(institution_student_absence_details.absence_type_id = 3, 1,0))',
+                //     ])->innerJoin(["(SELECT value from config_items WHERE code = 'calculate_daily_attendance') attendance_config"])
+                //     ->where([
+                //         'institution_student_absence_details.date' => date('Y-m-d'),
+                //         //'institution_student_absence_details.period' => $record->period,
+                //         'institution_student_absence_details.student_id' => $record->student_id,
+                //         $InstitutionStudentAbsenceDetails->aliasField('period IN') => $periodId,
+                //     ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id'), $InstitutionStudentAbsenceDetails->aliasField('absence_type_id')])
+                //     ->toArray();
+                //POCOR-8763[START]
+                $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find()
+                ->select([
+                    'student_id' => $InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                    'period' => $InstitutionStudentAbsenceDetails->aliasField('period'),
+                    'class_id' => $InstitutionStudentAbsenceDetails->aliasField('institution_class_id'),
+                    'present' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id IS NULL OR absence_type_id = 3, 1, 0)'
+                    ),
+                    'absent' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id IN (1, 2), 1, 0)'
+                    ),
+                    'late' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id = 3, 1, 0)'
+                    ),
+                ])
+                ->join([
+                    'attendance_config' => [
+                        'table' => new \Cake\Database\Expression\QueryExpression(
+                            "(SELECT value FROM config_items WHERE code = 'calculate_daily_attendance')"
+                        ),
+                        'type' => 'INNER',
+                        'conditions' => []
+                    ],
+                ])
+                ->where([
+                    $InstitutionStudentAbsenceDetails->aliasField('date') => date('Y-m-d'),
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id') => $record->student_id,
+                    $InstitutionStudentAbsenceDetails->aliasField('period IN') => $periodId,
+                ])
+                ->group([
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                    $InstitutionStudentAbsenceDetails->aliasField('absence_type_id')
+                ])
+                ->toArray();
+                //POCOR-8763[END]
+
             } else {
                 // $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
                 //     ->select([
@@ -2737,6 +2774,41 @@ class StudentsTable extends ControllerActionTable
                 //         // 'institution_student_absence_details.period' => $record->period,
                 //         'institution_student_absence_details.student_id' => $record->student_id,
                 //     ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id')])->toArray();
+
+                //POCOR-8763[START]
+                $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find()
+                ->select([
+                    'student_id' => $InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                    'class_id' => $InstitutionStudentAbsenceDetails->aliasField('institution_class_id'),
+                    'present' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id IS NULL OR absence_type_id = 3, 1, 0)'
+                    ),
+                    'absent' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id IN (1, 2), 1, 0)'
+                    ),
+                    'late' => new \Cake\Database\Expression\QueryExpression(
+                        'IF(absence_type_id = 3, 1, 0)'
+                    ),
+                ])
+                ->join([
+                    'attendance_config' => [
+                        'table' => new \Cake\Database\Expression\QueryExpression(
+                            "(SELECT value FROM config_items WHERE code = 'calculate_daily_attendance')"
+                        ),
+                        'type' => 'INNER',
+                        'conditions' => []
+                    ],
+                ])
+                ->where([
+                    $InstitutionStudentAbsenceDetails->aliasField('date') => date('Y-m-d'),
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id') => $record->student_id,
+                ])
+                ->group([
+                    $InstitutionStudentAbsenceDetails->aliasField('student_id')
+                ])
+                ->toArray();
+                //POCOR-8763[END]
+
 
             }
             //POCOR-7050 end
