@@ -12,7 +12,7 @@ class IdpSamlTable extends Table
         $this->hasOne('SystemAuthentications', ['className' => 'SSO.SystemAuthentications', 'foreignKey' => 'id']);
     }
 
-    public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator) : Validator
     {
         return $validator
             ->requirePresence('idp_entity_id')

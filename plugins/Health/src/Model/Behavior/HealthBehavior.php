@@ -67,6 +67,11 @@ class HealthBehavior extends Behavior
         if (!$userID) {
             $userID = $model->getQueryString('user_id');
         }
+        //POCOR-8653 start
+        if (!$userID) {
+            $userID = $model->getQueryString('id');
+        }
+        // POCOR-8653 end
         if(!$userID){
             $userID = $model->getQueryString();
             //die('userID<pre>' . print_r($userID, true) . '</pre>');
