@@ -11,4 +11,10 @@ class Workflows extends Model
 
     public $timestamps = false;
     protected $table = "workflows";
+
+
+    public function WorkflowSteps()
+    {
+        return $this->hasMany(WorkflowSteps::class, 'workflow_id', 'id');
+    }
 }
