@@ -784,7 +784,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
             $getClassId = $institutionClass->find()->where(['institution_id' => $institutionid, 'academic_period_id' => $academicPeriodId])->first()->id;
             $className = $getClassId;
-            list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
+            //POCOR-8706 start
+            $levelOptions = null;
+            $selectedLevel = null;
+            if($className)
+              list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
+            //POCOR-8706 end
             $attr['options'] = $levelOptions;
             if ($action == 'add') {
                 $attr['default'] = $selectedLevel;
