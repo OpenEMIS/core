@@ -1045,5 +1045,26 @@ class ConfigItemsTable extends AppTable
         $customOptions[0] = 'Pending Enrolment : '."Enrolled";//POCOR-8434 ends
         return $customOptions;
     }
-    //POCOR-7716 end
+    //POCOR-8751 start
+        /**
+     * Handles updating the action buttons for a specific entity.
+     *
+     * @param Event $event The event triggered during the action.
+     * @param Entity $entity The entity associated with the action.
+     * @param array $buttons The existing action buttons that will be modified.
+     * @return array Modified action buttons.
+     */
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+      
+                if($entity->code=="edition" && $entity->type=="System"){
+                    if (isset($buttons['edit'])) {
+                        unset($buttons['edit']);
+                    }
+                }
+               
+        return $buttons;
+    }
+    //POCOR-8751 end 
 }
