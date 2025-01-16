@@ -514,12 +514,25 @@ Route::group(
         //POCOR-8363 end...
 
 
+        //POCOR-7429 start...
+        Route::get('surveys', 'SurveyController@getSurveys');
+        Route::get('survey/download/xform/{surveyFormId}', 'SurveyController@downloadXform');
+        Route::get('survey/checkins/xform/{surveyFormId}/{insCode}/{academicPeriodCode}', 'SurveyController@checkInsXform');
+        Route::get('survey/studentlist/xform/{surveyFormId}/{insCode}/{academicPeriodCode}', 'SurveyController@getStudentListForSurvey');
+        Route::post('survey/upload', 'SurveyController@uploadXform');
+        //POCOR-7429 end...
         //POCOR-8397 start...
         Route::get('/academic-period/archive', 'AttendanceController@getArchiveAcademicPeriods');
         Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked/archive', 'AttendanceController@getStudentAttendanceMarkedRecordArchiveList');
         Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance/archive', 'AttendanceController@getStudentAttendanceArchiveList');
         Route::get('/institutions/students/attendances/export/archive', 'AttendanceController@getStudentAttendanceArchiveExport');
         //POCOR-8397 end...
+
+
+        //POCOR-8617 start...
+        Route::get('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf', 'ReportCardController@studentReportCardPdfDownload');
+        Route::get('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls', 'ReportCardController@studentReportCardExcelDownload');
+        //POCOR-8617 end...
         
         //POCOR-8519 start...
         Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
@@ -537,8 +550,8 @@ Route::group(
         //POCOR-8666 start
         Route::get('scanned/{openemis_no}', 'ScannedController@scannedUserOpenemisNo');
         Route::post('scanned', 'ScannedController@addScannedUserData');
-        Route::post('update-scanned/{openemis_no}', 'ScannedController@updateScannedUserData');
-        Route::get('scannedlisting', 'ScannedController@scannedUserListing');
         //POCOR-8666 end
+        Route::get('scanned/data/export', 'ScannedController@institutionScannedExport');//POCOR-8793
+        
     }
 );

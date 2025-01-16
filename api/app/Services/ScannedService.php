@@ -64,5 +64,42 @@ class ScannedService extends Controller
         }
     }
 
+    /**
+     * POCOR-8793
+     * export institution scan data xlsx
+     * * This method fetches the scanned attendance data for a specific OpenEMIS number, including related user information (created by and modified by users).
+     * The data is retrieved from the `ScannedAttendance` model with relationships to the 'createdUser' and 'modifiedUser'.
+     * 
+     * @param array $params An associative array containing the `openemis_no` (OpenEMIS number) to filter the scanned data.
+     * 
+     */
+    public function institutionScannedDataExport($params)
+    {
+        try {
+            $data = $this->scannedRepository->institutionScannedDataExport($params);
+            $resp = [];
+            foreach($data as $key => $value){
+                $resp[$key]['Openemis Id'] = $value['openemis_no'];
+                $resp[$key]['DateTime'] = $value['datetime'];
+                $resp[$key]['Latitude'] = $value['latitude'];
+                $resp[$key]['Longitude'] = $value['longitude'];
+                $resp[$key]['Access'] = $value['access'];
+                $resp[$key]['Location'] = $value['location'];
+                $resp[$key]['Modified User'] = isset($value['modifiedUser']) ? $value['modifiedUser']['first_name'] . ' ' . $value['modifiedUser']['last_name'] : 'N/A';
+                $resp[$key]['Modified'] = $value['modified'];
+                $resp[$key]['Created User'] = isset($value['createdUser']) ? $value['createdUser']['first_name'] . ' ' . $value['createdUser']['last_name'] : 'N/A';
+                $resp[$key]['Created '] = $value['created'];
+            }
+            return $resp;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export students Scanned data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to export students Scanned data from DB.');
+        }
+    }
 
 }
