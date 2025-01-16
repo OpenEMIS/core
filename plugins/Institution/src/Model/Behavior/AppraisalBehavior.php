@@ -339,7 +339,7 @@ class AppraisalBehavior extends Behavior
                 $attr['type'] = 'text';
                 $name = $criteria->field_type->name ?? null;
                 $action = $model->action;
-                if($name == 'Note' && $action == 'edit') {
+                if($name == 'Note' && $action == 'add') {
                     $attr['attr']['disabled'] = true;
                 }
                 break;
