@@ -1329,9 +1329,12 @@ class StudentsTable extends ControllerActionTable
                 ])->toArray();
             if($existCurrentAcademicStudent){
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
-            }else{
-                $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
             }
+            //POCOR-8801::start
+            // else{
+            //     $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
+            // }
+            //POCOR-8801::end
         }
         //POCOR-8092::end
         $selectedStatus = $this->queryString('status_id', $statusOptions);

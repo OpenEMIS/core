@@ -10,6 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Table;
 
 class CustomFieldsTable extends ControllerActionTable
 {
@@ -52,7 +53,7 @@ class CustomFieldsTable extends ControllerActionTable
         }
         // End
 
-        $this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
+        $this->CustomFieldTypes = self::getDynamicTableInstance('CustomField.CustomFieldTypes'); // POCOR-8538
         $this->fieldTypeOptions = $this->CustomFieldTypes->getFieldTypeList($this->fieldTypeFormat, $this->fieldTypes);
     }
 
@@ -111,8 +112,8 @@ class CustomFieldsTable extends ControllerActionTable
         $url = $this->request->getRequestTarget();
          //POCOR-7872::Start //update student_custom_forms_fields if student_custom_field_id exist in table
          if (strpos($url, "StudentCustomFields")!==false){
-            $student_custom_forms_fieldsT = TableRegistry::get('StudentCustomField.StudentCustomFormsFields');
-            $student_custom_fieldsT = TableRegistry::get('StudentCustomField.StudentCustomFields');
+            $student_custom_forms_fieldsT = self::getDynamicTableInstance('StudentCustomField.StudentCustomFormsFields'); // POCOR-8538
+            $student_custom_fieldsT = self::getDynamicTableInstance('StudentCustomField.StudentCustomFields'); // POCOR-8538
             $student_custom_fields_data = $student_custom_fieldsT->get($entity->id);
             $student_custom_forms_fields_data = $student_custom_forms_fieldsT->find()->where(['student_custom_field_id'=> $entity->id])->first();
             if(!empty($student_custom_forms_fields_data)){
@@ -137,11 +138,11 @@ class CustomFieldsTable extends ControllerActionTable
             $this->getCustomFieldDomain($url);
         if($this->controller->getName() =='Infrastructures'){
             //$options_table_name = 'InfrastructureCustomFieldOptions';
-            //$CustomFieldOptions = TableRegistry::get($options_table_name);
-            $CustomFieldOptions = TableRegistry::get('Infrastructure.InfrastructureCustomFieldOptions');
+            //$CustomFieldOptions = self::getDynamicTableInstance($options_table_name);
+            $CustomFieldOptions = self::getDynamicTableInstance('Infrastructure.InfrastructureCustomFieldOptions'); // POCOR-8538
         }else{
             $CustomFieldOptions =
-            TableRegistry::get($options_table_name);
+            self::getDynamicTableInstance($options_table_name); // POCOR-8538
         }
         $oldCustomFieldOptions = $CustomFieldOptions->find('all')
                 ->where([$options_custom_field_id => $entity->id])
@@ -172,6 +173,55 @@ class CustomFieldsTable extends ControllerActionTable
             }
         }
 
+    }
+
+    /**
+     * POCOR-8538 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -290,7 +340,7 @@ class CustomFieldsTable extends ControllerActionTable
 
     public function getSupportedFieldTypesByModel($model)
     {
-        $CustomModules = TableRegistry::get('CustomField.CustomModules');//status save krte time idr ata hai
+        $CustomModules = self::getDynamicTableInstance('CustomField.CustomModules');//status save krte time idr ata hai // POCOR-8538
         $supportedFieldTypes = $CustomModules
             ->find()
             ->where([$CustomModules->aliasField('model') => $model])

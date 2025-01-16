@@ -94,7 +94,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         //Status Filter
         $ReportStatus = $this->getStatusList();
         $reportCardStatusOptions = ['0' => __(' All Status ')] + $ReportStatus; //POCOR-7989 start
-        $selectedReportStatus = !is_null($serverRequest->getQuery('status')) ? $serverRequest->getQuery('status') :-1 ; 
+        $selectedReportStatus = !is_null($serverRequest->getQuery('status')) ? $serverRequest->getQuery('status') :0 ; 
         $this->controller->set(compact('reportCardStatusOptions', 'selectedReportStatus'));
 
         foreach ($reportCardStatusOptions AS $key => $reportCardSatusOptionsData) {
