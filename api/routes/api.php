@@ -550,8 +550,10 @@ Route::group(
         //POCOR-8666 start
         Route::get('scanned/{openemis_no}', 'ScannedController@scannedUserOpenemisNo');
         Route::post('scanned', 'ScannedController@addScannedUserData');
+        Route::get('scanned', 'ScannedController@scannedUserListing');
         //POCOR-8666 end
         Route::get('scanned/data/export', 'ScannedController@institutionScannedExport');//POCOR-8793
+        Route::get('scanned/user/{scannedId}', 'ScannedController@scannedUserDetails');//POCOR-8824
         
     }
 );
