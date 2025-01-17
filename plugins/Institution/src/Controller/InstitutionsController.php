@@ -2877,20 +2877,29 @@ class InstitutionsController extends AppController
 //            $plugin,
 //            $furtherAction],
 //            true));
-        if ($action == 'checkUserAlreadyExistByIdentity'
-           || $action == 'saveGuardianData'
-            || $action == 'saveStudentData'
-            || $action == 'saveStaffData'
-            || $action == 'saveDirectoryData'
-            || $action == 'checkConfigurationForExternalSearch'
-            || $action == 'studentCustomFields'
-            || $action == 'staffCustomFields'
-            || $action == 'classCustomFields' //POCOR-8538,
-            || $action == 'saveAssessmentItemExemptions' //POCOR-8224,
-            || $furtherAction == 'removeReport'
-            || $furtherAction == 'downloadFailed'
-            || $furtherAction == 'downloadPassed'
-        ) {
+// POCOR-8224 start
+        $primaryActions = [
+            'checkUserAlreadyExistByIdentity',
+            'saveGuardianData',
+            'saveStudentData',
+            'saveStaffData',
+            'saveDirectoryData',
+            'saveAssessmentItemExemptions',
+            'classCustomFields', //POCOR-8538,
+            'ImportInstitutions', // POCOR-8683
+            'importInstitutions', // POCOR-8683
+            'checkConfigurationForExternalSearch',
+            'studentCustomFields',
+            'staffCustomFields'
+        ];
+
+        $furtherActions = [
+            'removeReport',
+            'downloadFailed',
+            'downloadPassed'
+        ];
+
+        if (in_array($action, $primaryActions) || in_array($furtherAction, $furtherActions)) {
             return true;
         }
         // POCOR-8224 end
@@ -2925,6 +2934,14 @@ class InstitutionsController extends AppController
         if ($furtherAction == 'image' || $furtherAction == 'download') {
             return true;
         }
+        // POCOR-8683 start
+        if (($furtherAction == 'add'
+                || $furtherAction == 'template'
+                ||  $furtherAction == 'results')
+            && $action == 'ComponentAction') {
+            return true;
+        }
+        // POCOR-8683 end
         if ($furtherAction == 'add'
             && $action == 'ImportInstitutions') {
             return true;
