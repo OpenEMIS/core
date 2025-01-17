@@ -375,7 +375,7 @@ class ExaminationsTable extends ControllerActionTable {
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->ExaminationSubjects->alias(), $this->ExaminationCentreRooms->alias()
+            $this->ExaminationSubjects->getAlias(), $this->ExaminationCentreRooms->getAlias()
         ];
     }
 
