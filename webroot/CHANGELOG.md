@@ -1,3 +1,16 @@
+### [4.8.0] - 2025-01-17
+- Implemented: Develop Scanned feature API - Part 2
+- Implemented: Develop enhancements to the Directory import function
+- Bug Fixed: Institutions > General > Overview: After uploading institution logo and clicking on the save button, the page gives a 404 error
+- Bug Fixed: Administration>System Configuration>Two Factor Authentication: Getting 404 error when editing
+- Bug Fixed: Institutions > Students > Academic > Programmes > Transition: When clicking on the transition button, the page gives 404 error
+- Bug Fixed: Institutions > Students > Export: When exporting students report under Institutions, the academic period column is not showing any data/incorrect data
+- Bug Fixed: Administration > Examinations > Centres > Invigilators: When adding invigilators, the page does show the added invigilators and it just refreshes. Upon saving, the page show a message that no invigilators was not added
+- Bug Fixed: Administration>Examinations>Centres: Unable to link examination
+- Bug Fixed: Directory > Add: When adding nationality and identity upon adding students, the Internal Search page does not allow users to click the Next button
+- Bug Fixed: Institutions>Surveys>Forms: Remove edit and delete from select for users that are not assignees
+- Bug Fixed: Institutions > Staff > Career > Appraisal: When adding "Note" type field under staff Appraisal Form, the "Note" type field is editable upon editing staff Appraisal Form
+
 ### [4.7.0] - 2025-01-15
 - Implemented: Develop custom fields for the Class feature
 - Implemented: Develop an OpenEMIS Core Download Student Report Cards v4 API
