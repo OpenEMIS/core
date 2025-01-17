@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { ITableApi, ITableColumn, ITableConfig } from 'openemis-styleguide-lib';
+import { ITableApi, ITableColumn, ITableConfig, KdAlertEvent } from 'openemis-styleguide-lib';
 import { timer } from 'rxjs';
 import { TABLE_COLUMN_LIST } from './scanned-student.config';
 import { ApiService } from 'src/app/api.service';
 import { DEFAULT_TEMPLATE_THEME } from 'src/app/shared/config.default-val';
+import { Router } from '@angular/router';
+import { SharedService } from 'src/app/shared/shared.service';
 
 @Component({
   selector: 'app-scanned-student',
@@ -19,7 +21,7 @@ export class ScannedStudentComponent implements OnInit {
       {
         type: "export",
         callback: (): void => {
-          // this.exportData();
+          this.exportData();
         }
       },
       // {
@@ -37,13 +39,13 @@ export class ScannedStudentComponent implements OnInit {
     ],
     moreAction: [],
     moreBtn: false,
-    pageheaderText: "Avory Primary School - Scanned",
+    pageheaderText: "",
     searchBtn: false,
     searchEvent: ['change', 'keyup']
   }
 
   public dropdownWithoutLabel: Array<any> = [{
-    'key': 'date',
+    'key': 'date_from',
     'placeholder': 'Date From',
     'visible': true,
     'required': false,
@@ -51,7 +53,7 @@ export class ScannedStudentComponent implements OnInit {
     'type': 'date',
     'value': ''
   }, {
-    'key': 'date',
+    'key': 'date_to',
     'placeholder': 'Date To',
     'visible': true,
     'required': false,
@@ -75,8 +77,12 @@ export class ScannedStudentComponent implements OnInit {
       enabled: true,
       list: [
         {
-          type: "view",
-          path: "/Institution/Institutions/Scanned/student/list",
+          icon: "far fa-eye",
+          name: "View",
+          custom: true,
+          callback: (_rowNode, _tableApi): void => {
+            this.setOpenEmisId(_rowNode.data);
+          },
         },
       ],
     },
@@ -85,11 +91,19 @@ export class ScannedStudentComponent implements OnInit {
   public _tableApi: ITableApi = {};
   public _row: Array<any> = [];
   public showTable: boolean = false;
+  date_from: any;
+  date_to: any;
+  institution_name: string;
 
-  constructor(private Rest: ApiService) { }
+  constructor(private Rest: ApiService,
+    public router: Router,
+    public _shared: SharedService,
+    private _kdAlertEvent: KdAlertEvent) { }
 
   ngOnInit(): void {
     this.counter = 0;
+    this.institution_name = localStorage.getItem("institutionName");
+    this.pageheader.pageheaderText = `${this.institution_name} - Scanned List`;
     timer(1000).subscribe((): void => {
       this._column = [
         TABLE_COLUMN_LIST.dateTime,
@@ -187,18 +201,18 @@ export class ScannedStudentComponent implements OnInit {
   }
 
   getAPIData() {
-    this.Rest.getWithToken('scanned/1611035684').subscribe({
+    this.Rest.getWithToken('scanned').subscribe({
       next: (response: any) => {
         if (response?.data) {
-          console.log(response, "response");
           let responseData = [];
           response?.data.forEach((element: any) => {
             let obj = {
               'dateTime': element.datetime,
               'openemis_no': element.openemis_no,
-              'name': element?.name,
+              'name': element?.security_user?.full_name,
               'access': element?.access,
-              'location': element?.location
+              'location': element?.location,
+              'id': element?.id
             }
             responseData.push(obj);
           });
@@ -218,7 +232,103 @@ export class ScannedStudentComponent implements OnInit {
   }
 
   _changeEvent(event: any) {
+    if (event.key == "date_from") {
+      this.date_from = event.value;
+    } else {
+      this.date_to = event.value;
+    }
 
+    if (Object.keys(this.date_from?.obj).length != 0 && Object.keys(this.date_to?.obj).length != 0) {
+      if (this.date_from?.text != 'undefined-undefined-undefined' || this.date_to?.text != 'undefined-undefined-undefined') {
+        this.Rest.getWithToken(`scanned?date_from=${this.date_from?.text}&date_to=${this.date_to?.text}`).subscribe({
+          next: (response: any) => {
+            if (response?.data) {
+              let responseData = [];
+              response?.data.forEach((element: any) => {
+                let obj = {
+                  'dateTime': element.datetime,
+                  'openemis_no': element.openemis_no,
+                  'name': element?.security_user?.full_name,
+                  'access': element?.access,
+                  'location': element?.location,
+                  'id': element?.id
+                }
+                responseData.push(obj);
+              });
+              this._row = responseData;
+              this.showTable = true;
+            }
+          },
+          error: (error) => {
+            if (error) {
+              if (error.message == "Token has expired") {
+                localStorage.removeItem("loginToken");
+                this.loginData();
+              }
+            }
+          }
+        })
+      }
+    } else {
+      this.Rest.getWithToken(`scanned`).subscribe({
+        next: (response: any) => {
+          if (response?.data) {
+            let responseData = [];
+            response?.data.forEach((element: any) => {
+              let obj = {
+                'dateTime': element.datetime,
+                'openemis_no': element.openemis_no,
+                'name': element?.security_user?.full_name,
+                'access': element?.access,
+                'location': element?.location,
+                'id': element?.id
+              }
+              responseData.push(obj);
+            });
+            this._row = responseData;
+            this.showTable = true;
+          }
+        },
+        error: (error) => {
+          if (error) {
+            if (error.message == "Token has expired") {
+              localStorage.removeItem("loginToken");
+              this.loginData();
+            }
+          }
+        }
+      })
+    }
+  }
+
+  setOpenEmisId(_rowNode: any) {
+    this._shared.setOpenEmisScannedList(_rowNode);
+    this.router.navigate(["Institution/Institutions/Scanned/list"]);
+  }
+
+  exportData() {
+    this.Rest.getItemExport(`scanned/data/export`).subscribe({
+      next: (response: any) => {
+        let url = window.URL.createObjectURL(response);
+        let a = document.createElement('a');
+        document.body.appendChild(a);
+        a.setAttribute('style', 'display: none');
+        a.href = url;
+        a.download = response.filename || 'Scanned file';
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      },
+      error: (error: any) => {
+        let toasterConfig: any = {
+          title: 'Something went wrong, Please try again later',
+          showCloseButton: true,
+          tapToDismiss: true,
+        };
+
+        this._kdAlertEvent.warn(toasterConfig);
+      }
+    })
   }
 
 }
