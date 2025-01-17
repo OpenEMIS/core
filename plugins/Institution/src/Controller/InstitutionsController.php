@@ -6409,7 +6409,7 @@ class InstitutionsController extends AppController
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
             if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {
-                $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId);
+                $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
             }
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
@@ -6455,7 +6455,7 @@ class InstitutionsController extends AppController
             $this->handleIdentities($requestData, $userRecordId, $userId);
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('staff', $requestData, $userRecordId, $userId);
-            $staff = $this->handleStaffInstitutionData($requestData, $userRecordId, $userId);
+            $staff = $this->handleStaffInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
             $this->handleShifts($requestData, $userRecordId);
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($staff,true)); // POCOR-8532
@@ -7452,6 +7452,7 @@ class InstitutionsController extends AppController
             $entity = $institutionStaffs->newEntity($entityStaffData);
             return $institutionStaffs->save($entity);
         }
+
     }
     /**
      * Retrieves or creates the security group user ID.
