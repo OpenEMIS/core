@@ -341,6 +341,11 @@ class AppraisalBehavior extends Behavior
                 $key = 'appraisal_text_answers';
                 $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'text';
+                $name = $criteria->field_type->name ?? null;
+                $action = $model->action;
+                if($name == 'Note' && $action == 'add') {
+                    $attr['attr']['disabled'] = true;
+                }
                 break;
             case 'DROPDOWN':
                 $key = 'appraisal_dropdown_answers';
