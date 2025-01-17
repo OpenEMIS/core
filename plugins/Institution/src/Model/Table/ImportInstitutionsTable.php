@@ -13,7 +13,7 @@ use PHPExcel_Worksheet;
 class ImportInstitutionsTable extends AppTable
 {
     use OptionsTrait;
-    
+
     public function initialize(array $config): void
     {
         $this->setTable('import_mapping');
@@ -62,8 +62,12 @@ class ImportInstitutionsTable extends AppTable
             $rowInvalidCodeCols['code'] = $this->getExcelLabel('Import', 'duplicate_unique_key');
             return false;
         }
-
-        $institution = $this->Institutions->find()->where(['code'=>$code])->first();
+        // POCOR-8683 start
+        $institution = null;
+        if ($code) {
+            $institution = $this->Institutions->find()->where(['code' => $code])->first();
+        }
+        // POCOR-8683 end
         if (!$institution) {
             $tempRow['entity'] = $this->Institutions->newEmptyEntity();
         } else {
@@ -80,7 +84,7 @@ class ImportInstitutionsTable extends AppTable
             }
         }
         return null;
-    }    
+    }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
     {
