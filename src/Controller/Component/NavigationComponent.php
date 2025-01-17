@@ -2748,6 +2748,7 @@ class NavigationComponent extends Component
                 'Manuals.Institutions' => [
                     'title' => 'Manuals',
                     'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Manuals'],//POCOR-8732
                     'selected' => ['Manuals.Institutions',
                         'Manuals.Directory',
                         'Manuals.Reports',
