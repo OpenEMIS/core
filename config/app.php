@@ -234,7 +234,8 @@ return [
             'plugins/Angular/config/routes.php',
             'plugins/ControllerAction/config/routes.php',
             'plugins/OpenEmis/config/routes.php',
-            'vendor/cakephp/cakephp/src/Routing/Router.php'
+            'vendor/cakephp/cakephp/src/Routing/Router.php',
+            'plugins/Gpa/config/routes.php'
         ],
     ],
 

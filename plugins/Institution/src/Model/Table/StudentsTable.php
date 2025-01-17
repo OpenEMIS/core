@@ -280,6 +280,11 @@ class StudentsTable extends ControllerActionTable
         if($tableName = 'institution'){
             $tableName = 'Institution.Institutions';
         }
+        //POCOR-8818 -- Start
+        if($tableName = 'academic_periods'){
+            $tableName = 'AcademicPeriod.AcademicPeriods';
+        }
+        //POCOR-8818 -- End
         $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
@@ -1327,9 +1332,12 @@ class StudentsTable extends ControllerActionTable
                 ])->toArray();
             if($existCurrentAcademicStudent){
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
-            }else{
-                $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
             }
+            //POCOR-8801::start
+            // else{
+            //     $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
+            // }
+            //POCOR-8801::end
         }
         //POCOR-8092::end
         $selectedStatus = $this->queryString('status_id', $statusOptions);
@@ -2304,16 +2312,16 @@ class StudentsTable extends ControllerActionTable
                     COUNT(DISTINCT s.student_id) AS student_count
                     FROM security_users u
                     INNER JOIN  institution_students s ON s.student_id = u.id
-                    WHERE  s.institution_id = ".$institutionId." AND academic_period_id = ".$academicPeriod." 
+                    WHERE  s.institution_id = ".$institutionId." AND academic_period_id = ".$academicPeriod."
                     GROUP BY  age ORDER BY age";
-            
+
         $ageCounts = $connection->execute($sql)->fetchAll('assoc');
         $dataSet = array_map(function($row) {
             return [__('Age') . ' ' . $row['age'], $row['student_count']];
         }, $ageCounts);
-    
+
         $params['dataSet'] = $dataSet;
-        
+
         return $params;
     }
     //POCOR-8721 end
@@ -3651,9 +3659,9 @@ class StudentsTable extends ControllerActionTable
                 $tableToClean->aliasField($field_name) => $student_id
             ]);
         } catch (\Exception $e) {
-            Log::error(
-                'Failed to fetch remove from table',
-                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            Log::error( // POCOR-8683
+                print_r(['Failed to fetch remove from table' =>
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], true)
             );
         }
         return $affected;

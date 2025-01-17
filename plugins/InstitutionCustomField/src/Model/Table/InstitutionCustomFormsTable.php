@@ -6,6 +6,8 @@ use CustomField\Model\Table\CustomFormsTable;
 use Cake\Event\Event;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;//POCOR-8538 
+use Cake\ORM\ResultSet;//POCOR-8538 
 
 class InstitutionCustomFormsTable extends CustomFormsTable {
 	public function initialize(array $config): void {
@@ -31,10 +33,12 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 	}
 
 	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request) {
+		
 		$module = $this->CustomModules
 			->find()
-			->where([$this->CustomModules->aliasField('code') => 'Institution'])
-			->first();
+			->where([$this->CustomModules->aliasField('code') . ' IN' => ['Institution', 'Institution > Classes'],
+				           $this->CustomModules->aliasField('id')=>$request->getQuery('module')])
+			->first();//POCOR-8538
 		$selectedModule = $module->id;
 		$request->getQuery['module'] = $selectedModule;
 
@@ -47,7 +51,7 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 
 	public function getModuleQuery() {
 		$query = parent::getModuleQuery();
-		return $query->where([$this->CustomModules->aliasField('code') => 'Institution']);
+		return $query->where([$this->CustomModules->aliasField('code'). ' IN' => ['Institution', 'Institution > Classes']]);//POCOR-8538
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
@@ -82,4 +86,20 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
-}
+	//POCOR-8538 start
+	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+		if($this->request->getQuery('module')){
+			$module = $this->CustomModules
+				->find()
+				->where([$this->CustomModules->aliasField('id')=>$this->request->getQuery('module')])
+				->first();//POCOR-8538
+			if (isset($extra['toolbarButtons']['add']) && $data->count() ==1 && $module->name=="Institution > Classes") {
+				unset($extra['toolbarButtons']['add']);
+			}
+	    }
+    }
+	//POCOR-8538 end
+	
+	
+}  
