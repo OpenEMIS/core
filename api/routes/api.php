@@ -552,6 +552,10 @@ Route::group(
         Route::post('scanned', 'ScannedController@addScannedUserData');
         //POCOR-8666 end
         Route::get('scanned/data/export', 'ScannedController@institutionScannedExport');//POCOR-8793
+
+        //POCOR-8619 START
+        Route::post('institutions/students/assessment-item-exemption', 'AssessmentController@saveAssessmentItemExemption');
+        //POCOR-8619 END
         
     }
 );
