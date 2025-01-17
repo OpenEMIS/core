@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { IDynamicFormApi } from 'openemis-styleguide-lib';
 import { ApiService } from 'src/app/api.service';
 import { DEFAULT_TEMPLATE_THEME } from 'src/app/shared/config.default-val';
+import { SharedService } from 'src/app/shared/shared.service';
 
 @Component({
   selector: 'app-student-list',
@@ -17,12 +18,12 @@ export class StudentListComponent implements OnInit {
     leftBtn: [
       {
         type: "back",
-        path: "/Institution/Institutions/Scanned/student",
+        path: `/Institution/Institutions/Scanned/index/${this.setEncodedId()}`,
       },
     ],
     moreAction: [],
     moreBtn: false,
-    pageheaderText: "Avory Primary School - Scanned List",
+    pageheaderText: "",
     searchBtn: false,
     searchEvent: ['change', 'keyup']
   }
@@ -76,12 +77,58 @@ export class StudentListComponent implements OnInit {
       'label': 'Longitude',
       'type': 'string'
     },
+    {
+      'value': '',
+      'key': 'created',
+      'visible': true,
+      'label': 'Created On',
+      'type': 'string'
+    },
+    {
+      'value': '',
+      'key': 'created_user_id',
+      'visible': true,
+      'label': 'Created By',
+      'type': 'string'
+    },
+    {
+      'value': '',
+      'key': 'modified',
+      'visible': true,
+      'label': 'Modified On',
+      'type': 'string'
+    },
+    {
+      'value': '',
+      'key': 'modified_user_id',
+      'visible': true,
+      'label': 'Modified By',
+      'type': 'string'
+    },
   ]
-  constructor(private Rest: ApiService) { }
+  scannedId: any;
+  institution_name: any;
+  constructor(
+    private Rest: ApiService,
+    public _shared: SharedService,
+  ) { }
 
   ngOnInit(): void {
     this.counter = 0;
+    this.institution_name = localStorage.getItem("institutionName");
+    this.pageheader.pageheaderText = `${this.institution_name} - Scanned List`;
     this.loginData();
+  }
+
+  setEncodedId() {
+    let token = localStorage.getItem('encoded_url');
+    if (token) {
+      return token;
+    } else {
+      setTimeout(() => {
+        this.setEncodedId();
+      }, 1000);
+    }
   }
 
   loginData() {
@@ -168,25 +215,43 @@ export class StudentListComponent implements OnInit {
   }
 
   getAPIData() {
-    this.Rest.getWithToken('scanned/1522415305').subscribe({
-      next: (response: any) => {
-        if (response) {
-          let responseData = response?.data[0];
-          console.log(responseData, "responseData");
-          for (let i = 0; i < this._viewQuestion.length; i++) {
-            this.api.setProperty(this._viewQuestion[i].key, 'value', responseData[this._viewQuestion[i].key] ? responseData[this._viewQuestion[i].key] : 'NA')
+    this.scannedId = this._shared.getOpenEmisScannedList();
+    console.log(this.scannedId,"scannedId");
+    if(this.scannedId){
+      this.Rest.getWithToken(`scanned/user/${this.scannedId?.id}`).subscribe({
+        next: (response: any) => {
+          if (response) {
+            let responseData = response?.data;
+            console.log(responseData, "responseData");
+            let obj = {
+              access: responseData?.access,
+              datetime: responseData?.datetime,
+              id: responseData?.id,
+              latitude: responseData?.latitude,
+              longitude: responseData?.longitude,
+              location: responseData?.location,
+              name: responseData?.security_user?.full_name,
+              openemis_no: responseData?.openemis_no,
+              created: responseData?.created,
+              created_user_id: responseData?.created_user_id,
+              modified: responseData?.modified,
+              modified_user_id: responseData?.modified_user_id
+            }
+            for (let i = 0; i < this._viewQuestion.length; i++) {
+              this.api.setProperty(this._viewQuestion[i].key, 'value', obj[this._viewQuestion[i].key] ? obj[this._viewQuestion[i].key] : 'NA')
+            }
+          }
+        },
+        error: (error: any) => {
+          if (error) {
+            if (error.message == "Token has expired") {
+              localStorage.removeItem("loginToken");
+              this.loginData();
+            }
           }
         }
-      },
-      error: (error: any) => {
-        if (error) {
-          if (error.message == "Token has expired") {
-            localStorage.removeItem("loginToken");
-            this.loginData();
-          }
-        }
-      }
-    })
+      })
+    }
   }
 
 }

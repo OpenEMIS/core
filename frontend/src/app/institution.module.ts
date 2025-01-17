@@ -60,8 +60,8 @@ export const appRoutes: Routes = [
   { path: 'Institution/Institutions/Classes', component: ClassesComponent },
   { path: 'Institution/Institutions/Subjects', component: SubjectsComponent },
 
-  { path: 'Institution/Institutions/Scanned/student', component: ScannedStudentComponent },
-  { path: 'Institution/Institutions/Scanned/student/list', component: StudentListComponent }
+  { path: `Institution/Institutions/Scanned/index/${setEncodedId()}`, component: ScannedStudentComponent },
+  { path: 'Institution/Institutions/Scanned/list', component: StudentListComponent }
 ];
 
 function setEncodedId() {

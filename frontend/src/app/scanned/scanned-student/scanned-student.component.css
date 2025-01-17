@@ -13,3 +13,15 @@
   }
   
 }
+
+::ng-deep .kdx-filter .form-horizontal-wrapper {
+    margin-right: 14px !important;
+}
+
+::ng-deep .form-horizontal {
+    margin: 8px 0px;
+}
+
+::ng-deep .kdx.kdx-ag-grid-wrapper{
+    margin-top: 42px !important;
+}
