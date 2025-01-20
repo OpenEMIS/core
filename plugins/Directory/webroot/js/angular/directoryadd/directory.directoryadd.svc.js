@@ -447,7 +447,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         }
     }
 
-    function validateUserDetails(scope) {
+    async function validateUserDetails(scope) {
         scope.error = {};
         const checkAndSetError = (field, message) => {
             if (!scope.selectedUserData[field]) {
@@ -463,7 +463,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (Object.keys(scope.error).length > 0) return;
 
         if (scope.step === 'user_details') {
-            const [blockName, hasError] = checkUserDetailValidationBlocksHasError(scope);
+            const [blockName, hasError] = await checkUserDetailValidationBlocksHasError(scope);
 
             if (blockName === 'Identity' && hasError) {
                 checkAndSetError('nationality_id', 'This field cannot be left empty');
@@ -484,7 +484,6 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
-            return checkUserAlreadyExistByIdentity(scope);
         }
     }
 
@@ -906,7 +905,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         return result.data.user_exist === 1;
     }
 
-    function checkUserDetailValidationBlocksHasError(scope) {
+    async function checkUserDetailValidationBlocksHasError(scope) {
         const {
             first_name,
             last_name,
@@ -918,6 +917,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             nationality_id,
             identity_type_name
         } = scope.selectedUserData;
+        const user_exists = await checkUserAlreadyExistByIdentity(scope);
 
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth);
         const isIdentityHasError = (identity_number?.length > 1 || nationality_id || identity_type_id) &&
@@ -934,11 +934,13 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         }
 
         if (isIdentityHasError) {
-            return ['Identity', true];
+                return ['Identity', true];
         }
 
         if (isSkipableForIdentity) {
-            return ['Identity', false];
+            if (user_exists === true) {
+                return ['Identity', false];
+            }
         }
 
         if (isGeneralInfodHasError) {
@@ -1012,6 +1014,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 getInternalSearchData(param)
                     .then(function (response) {
                         var gridData = response.data.data;
+                        console.log(gridData);
                         if (!gridData)
                             gridData = [];
                         var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
@@ -1460,7 +1463,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
         if (checkVars.isIdentityUserExist && isInternalSearch) return true;
         if (checkVars.openemis_no && !checkVars.user_id && isInternalSearch) return true;
-        if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true;
+        // if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true; // POCOR-8776
         if (isInternalSearch && !checkVars.isExternalSearchEnable && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
         if (isExternalSearch && checkVars.externalSearchSourceName === 'UNHCR' && !checkVars.identity_number) return true;
         if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;

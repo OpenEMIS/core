@@ -2321,52 +2321,55 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
 
-    function isNextButtonShouldDisable() {
-        const {
-            step,
-            selectedUserData: {
-                first_name,
-                last_name,
-                date_of_birth,
-                gender_id,
-                identity_number,
-                openemis_no,
-                user_id
-            },
-            isIdentityUserExist,
-            externalSearchSourceName,
-            isExternalSearchEnable
-        } = userCtrl;
+    // function isNextButtonShouldDisable() {
+    //     const {
+    //         step,
+    //         selectedUserData: {
+    //             first_name,
+    //             last_name,
+    //             date_of_birth,
+    //             gender_id,
+    //             identity_number,
+    //             openemis_no,
+    //             user_id
+    //         },
+    //         isIdentityUserExist,
+    //         externalSearchSourceName,
+    //         isExternalSearchEnable
+    //     } = userCtrl;
+    //
+    //     const checkVars = {
+    //         step,
+    //         first_name,
+    //         last_name,
+    //         date_of_birth,
+    //         gender_id,
+    //         identity_number,
+    //         openemis_no,
+    //         user_id,
+    //         isIdentityUserExist,
+    //         externalSearchSourceName,
+    //         isExternalSearchEnable
+    //     };
+    //
+    //     const isInternalSearch = checkVars.step === "internal_search";
+    //     const isExternalSearch = checkVars.step === "external_search";
+    //
+    //     // console.log(checkVars);
+    //
+    //     if (checkVars.isIdentityUserExist && isInternalSearch) return true;
+    //     if (checkVars.openemis_no && !checkVars.user_id && isInternalSearch) return true;
+    //     if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true;
+    //     if (isInternalSearch && !checkVars.isExternalSearchEnable && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
+    //     if (isExternalSearch && checkVars.externalSearchSourceName === 'UNHCR' && !checkVars.identity_number) return true;
+    //     if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
+    //
+    //     return false;
+    // }
 
-        const checkVars = {
-            step,
-            first_name,
-            last_name,
-            date_of_birth,
-            gender_id,
-            identity_number,
-            openemis_no,
-            user_id,
-            isIdentityUserExist,
-            externalSearchSourceName,
-            isExternalSearchEnable
-        };
-
-        const isInternalSearch = checkVars.step === "internal_search";
-        const isExternalSearch = checkVars.step === "external_search";
-
-        // console.log(checkVars);
-
-        if (checkVars.isIdentityUserExist && isInternalSearch) return true;
-        if (checkVars.openemis_no && !checkVars.user_id && isInternalSearch) return true;
-        if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true;
-        if (isInternalSearch && !checkVars.isExternalSearchEnable && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
-        if (isExternalSearch && checkVars.externalSearchSourceName === 'UNHCR' && !checkVars.identity_number) return true;
-        if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
-
-        return false;
+    function isNextButtonShouldDisable () {
+        return directorySvc.isNextButtonShouldDisable(userCtrl);
     }
-
 
     function getCSPDSearchData() {
         var param = userCtrl.selectedUserData; //POCOR-7916
