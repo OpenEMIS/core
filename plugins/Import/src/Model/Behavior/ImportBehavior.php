@@ -1074,7 +1074,7 @@ class ImportBehavior extends Behavior
                 }
                 $activeSheet->getRowDimension(($index + $rowData))->setRowHeight(15);
                 foreach ($values as $key => $value) {
-                    $alpha = $this->getExcelColumnAlpha($key + 1); // PhpSpreadsheet, rows and columns are typically start 1-indexed not 0 index
+                    $alpha = $this->getExcelColumnAlpha((int) $key + 1); // PhpSpreadsheet, rows and columns are typically start 1-indexed not 0 index // POCOR-8835
                     $activeSheet->setCellValue($alpha . ($index + $rowData), $value);
                     $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
 

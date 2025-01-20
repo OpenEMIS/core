@@ -37,21 +37,21 @@ class ImportUsersTable extends AppTable
                 'headings' => [
                     [
                         'title' => 'Import Users Data',
-                        'title_range' => 'C1:R1',
+                        'title_range' => 'C1:Q1', // POCOR-8835
                         'subtitle' => '* Mandatory for User Import',
-                        'subtitle_range' => 'D2:R2'
+                        'subtitle_range' => 'D2:Q2' // POCOR-8835
                     ],
                     [
                         'title' => 'Import User into an Institution',
-                        'title_range' => 'S1:W1',
+                        'title_range' => 'R1:V1', // POCOR-8835
                         'subtitle' => '** Mandatory for Institution Import',
-                        'subtitle_range' => 'S2:W2'
+                        'subtitle_range' => 'R2:V2' // POCOR-8835
                     ],
                     [
                         'title' => 'Import Guardian for the User',
-                        'title_range' => 'X1:AN1',
+                        'title_range' => 'W1:AN1', // POCOR-8835
                         'subtitle' => '*** Mandatory for Guardian Import',
-                        'subtitle_range' => 'X2:AN2'
+                        'subtitle_range' => 'W2:AN2' // POCOR-8835
                     ]
                 ]
             ]
@@ -139,70 +139,78 @@ class ImportUsersTable extends AppTable
 
         $tempRow['columns'] = $columns; // POCOR-8683 start
         $columns = new Collection($columns);
-        $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
-            return $value == 'openemis_no';
-        });
-
-        $openemisNoIndex = key($extractedOpenemisNo->toArray()) + 1;
-        $openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
-
-
-        // POCOR-8683 start
-        $user = null;
-        if ($openemisNo) {
-            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
-        }
+        // POCOR-8835 start
+//        $user = false;
+//        $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
+//            return $value == 'openemis_no';
+//        });
+//
+//        $openemisNoIndex = key($extractedOpenemisNo->toArray()) + 1;
+//        $openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
+//
+//
+//        // POCOR-8683 start
+//        $user = null;
+//        if ($openemisNo) {
+//            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+//        }
         // POCOR-8683 end
+        // POCOR-8835 end
         $accountType = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'account_type';
         });
         $accountTypeIndex = key($accountType->toArray()) + 1;
         $accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
         $accountTypeId = $this->getAccountTypeId($accountType);
-
-        if (!$user) {
-            if ($openemisNo) {
-                $rowInvalidCodeCols['openemis_no'] = __('No Such User');
-                return false;
-            }
+// POCOR-8835 start
+//        if (!$user) {
+//            if ($openemisNo) {
+//                $rowInvalidCodeCols['openemis_no'] = __('No Such User 1');
+//                return false;
+//            }
+        // POCOR-8835 end
             try{
                 // POCOR-8683 start
                 $username = "";
-                if(strlen($openemisNo) > 1){
-                    $username = Text::slug($openemisNo);
-                }
-                if(strlen($username) < 6){
+                // POCOR-8835 start
+//                if(strlen($openemisNo) > 1){
+//                    $username = Text::slug($openemisNo);
+//                }
+//                if(strlen($username) < 6){
+                // POCOR-8835 end
                     $username = $username . $this->getNewOpenEmisNo();
 
                     $tempRow['openemis_no'] = $username;
-                }
+//                } // POCOR-8835
                 $tempRow['username'] = $username;
                 // POCOR-8683 end
             } catch (\Exception $exception) {
                 $rowInvalidCodeCols['openemis_no'] = 'New User Creation Error: ' . __($exception->getMessage());
                 return false;
             }
-        } else {
-            $tempRow['entity'] = $user;
-            // POCOR-8683 start
-            $tempRow['security_user_id'] = $user->id;
-//            Log::debug('$accountTypeId' . strval($accountTypeId));
-
-            if($accountTypeId == "" || !$accountTypeId){
-                $tempRow['account_type'] = self::IS_STUDENT;
-                $accountTypeId = self::IS_STUDENT;
-            }
-            $defaults = [
-                'username' => $user->username,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'gender_id' => $user->gender_id,
-                'date_of_birth' => $user->date_of_birth
-            ];
-            foreach ($defaults as $key => $value) {
-                self::setIfEmpty($tempRow, $key, $value);
-            }
-        }
+        // POCOR-8835 start
+//        } else {
+//            $tempRow['entity'] = $user;
+//            // POCOR-8683 start
+//            $tempRow['security_user_id'] = $user->id;
+////            Log::debug('$accountTypeId' . strval($accountTypeId));
+//
+//            if($accountTypeId == "" || !$accountTypeId){
+//                $tempRow['account_type'] = self::IS_STUDENT;
+//                $accountTypeId = self::IS_STUDENT;
+//            }
+//            $defaults = [
+//                'username' => $user->username,
+//                'first_name' => $user->first_name,
+//                'last_name' => $user->last_name,
+//                'gender_id' => $user->gender_id,
+//                'date_of_birth' => $user->date_of_birth
+//            ];
+//            foreach ($defaults as $key => $value) {
+//                self::setIfEmpty($tempRow, $key, $value);
+//            }
+//        }
+        // POCOR-8835 end
         $tempRow['account_type'] = $accountTypeId;
 
         if (empty($tempRow['account_type'])) {
@@ -216,11 +224,13 @@ class ImportUsersTable extends AppTable
             // setting is_student = 1, or is_staff = 1, or is_guardian = 1
             $tempRow[$tempRow['account_type']] = 1;
         }
-        if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
-            $rowInvalidCodeCols['openemis_no'] = __('This OpenEMIS No is Already Present');//$this->getExcelLabel('Import', 'duplicate_unique_key');
-            $tempRow['duplicates'] = $rowInvalidCodeCols['openemis_no'] ;
-            return false;
-        }
+        // POCOR-8835 start
+//        if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
+//            $rowInvalidCodeCols['openemis_no'] = __('This OpenEMIS No is Already Present');//$this->getExcelLabel('Import', 'duplicate_unique_key');
+//            $tempRow['duplicates'] = $rowInvalidCodeCols['openemis_no'] ;
+//            return false;
+//        }
+        // POCOR-8835 end
 
     }
 
@@ -462,7 +472,7 @@ class ImportUsersTable extends AppTable
     {
         $flipped = array_flip($columns);
         $key = $flipped['openemis_no'];
-        $tempPassedRecord['data'][$key] = $clonedEntity->openemis_no;
+        $tempPassedRecord['data'][$key] = $clonedEntity->openemis_no . ' - ' . $clonedEntity->first_name; // POCOR-8835
         $key = $flipped['guardian_openemis_no']; // POCOR-8683
         $tempPassedRecord['data'][$key] = $clonedEntity->guardian_openemis_no; // POCOR-8683
     }
@@ -1486,30 +1496,31 @@ class ImportUsersTable extends AppTable
             }
             try {
                 if ($tempRow['guardian_entity']) {
-                    $newGuardian = $this->Users->patchEntity($tempRow['guardian_entity'], $guardian);
+//                    $newGuardian = $this->Users->patchEntity($tempRow['guardian_entity'], $guardian); // POCOR-8835
                 } else {
                     $newGuardian = $this->Users->newEntity($guardian);
+                    if ($newGuardian->getErrors()) { // POCOR-7973
+
+                        $errorMessages = array_reduce(
+                            $newGuardian->getErrors(),
+                            function ($carry, $errors) {
+                                return array_merge($carry, $errors);
+                            },
+                            []
+                        );
+
+                        $rowInvalidCodeCols['guardian_openemis_no'] = implode(',', $errorMessages);
+                        $tempRow['guardian_error'] = true;
+                        $have_error = true;
+                    }
+                    if ($this->Users->save($newGuardian)) {
+                        $newId = $newGuardian->id;  // Get the ID after save
+                        $tempRow['guardian_id'] = $newId;
+                        $tempRow['guardian_entity'] = $newGuardian;
+                    }
                 }
 //                    Log::debug(print_r(['$newGuardian' => $newGuardian], true));
-                if ($newGuardian->getErrors()) { // POCOR-7973
 
-                    $errorMessages = array_reduce(
-                        $newGuardian->getErrors(),
-                        function ($carry, $errors) {
-                            return array_merge($carry, $errors);
-                        },
-                        []
-                    );
-
-                    $rowInvalidCodeCols['guardian_openemis_no'] = implode(',', $errorMessages);
-                    $tempRow['guardian_error'] = true;
-                    $have_error = true;
-                }
-                if ($this->Users->save($newGuardian)) {
-                    $newId = $newGuardian->id;  // Get the ID after save
-                    $tempRow['guardian_id'] = $newId;
-                    $tempRow['guardian_entity'] = $newGuardian;
-                }
 
             } catch (\Exception $exception) {
                 $rowInvalidCodeCols['guardian_openemis_no'] = 'New Guardian Creation Error: ' . __($exception->getMessage());
