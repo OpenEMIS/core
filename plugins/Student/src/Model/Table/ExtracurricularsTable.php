@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class ExtracurricularsTable extends ControllerActionTable {
 	public function initialize(array $config): void {
-	
+
 		$this->setTable('student_extracurriculars');
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -26,7 +26,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	}
 
 	public function beforeAction() {
-		
+
 		$this->fields['academic_period_id']['type'] = 'select';
 		$this->fields['extracurricular_type_id']['type'] = 'select';
 
@@ -36,7 +36,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	}
 
 	public function indexBeforeAction(Event $event) {
-		
+
 		$this->fields['end_date']['visible'] = false;
 		$this->fields['hours']['visible'] = false;
 		$this->fields['points']['visible'] = false;
@@ -50,7 +50,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 		$this->ControllerAction->setFieldOrder('name', $order++);
 
 
-	
+
 	}
 
 	public function addEditBeforeAction(Event $event) {
@@ -90,7 +90,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	//POCOR-8795  refactored code
 	/*POCOR-6474 - commenting function because this function was enabling users to edit and view correct record*/
 	// public function beforeFind( Event $event, Query $query )
-	// {   
+	// {
 	// 	//if ($this->controller->getName() == 'Profiles' && $this->request->query['type'] == 'student') {
 	// 	$session = $this->request->getSession();
 	// 	$userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
@@ -124,7 +124,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	// 			} else {
 	// 				$studentId = $this->Session->read('Auth.User.id');
 	// 			}
-	// 		} 
+	// 		}
 	// 		/*POCOR-6267 starts*/
 	// 		if ($this->controller->getName() == 'GuardianNavs') {
 	// 			$session = $this->request->getSession();//POCOR-6267
@@ -132,7 +132,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	// 		}
 	// 		/*POCOR-6267 ends*/
 	// 		$conditions[$this->aliasField('security_user_id')] = $studentId;
-	// 		/*POCOR-6474 starts*/	
+	// 		/*POCOR-6474 starts*/
 	// 		if ($this->action == 'view' || $this->action == 'edit') {
 	// 			$id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
     // 			$conditions[$this->aliasField('id')] = $id;
@@ -140,7 +140,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	// 		} else {
 	// 		    $query->where($conditions, [], true);
 	// 		}
-	// 		/*POCOR-6474 ends*/	
+	// 		/*POCOR-6474 ends*/
 	// 	}
 	// }
 
@@ -148,7 +148,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	{
 		if ($this->getAlias() == 'Extracurriculars') {
 			$conditions = [];
-			
+
 			$academicPeriodId = !empty($options['academic_period_id']) ? $options['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 			$conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
 
@@ -165,7 +165,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	}
     //POCOR-8795 end
 	/**
-     * Added academic period filter into extracurricular index page 
+     * Added academic period filter into extracurricular index page
      * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
      * @return array
      * @ticket POCOR-6700
@@ -183,7 +183,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 
 		// Start POCOR-5188
 		if($this->request->getParam('controller') == 'Students'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Extracurricular','Students - Academic');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Extracurricular','Students - Academic');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -199,8 +199,8 @@ class ExtracurricularsTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Extracurriculars','Students - Academic');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Extracurriculars','Students - Academic');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
