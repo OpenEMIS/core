@@ -3580,7 +3580,7 @@ class InstitutionsController extends AppController
                 ->where([
                     'SecurityFunctions.controller' => 'Institutions',
                     'SecurityFunctions.name' => 'Institution Profile Completeness',
-                    'SecurityRoleFunctions.security_role_id'=> $roles,
+                    'SecurityRoleFunctions.security_role_id IS'=> $roles,
                     'SecurityRoleFunctions._view' => 1,
                 ])
                 ->toArray();
