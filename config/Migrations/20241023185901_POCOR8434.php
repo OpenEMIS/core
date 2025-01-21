@@ -129,14 +129,16 @@ class POCOR8434 extends AbstractMigration
         //Rename `institution_student_admission` INTO `institution_student_enrolment` table
         $this->execute("RENAME TABLE `institution_student_admission` TO `institution_student_enrolment`");
         //Drop FOREIGN KEY CONSTRAINT from `institution_student_enrolment` table
+        $this->execute('SET FOREIGN_KEY_CHECKS = 0;');
         $this->execute("ALTER TABLE `institution_student_enrolment`
-            DROP FOREIGN KEY insti_stude_admis_fk_aca_per_id,
-            DROP FOREIGN KEY insti_stude_admis_fk_ass_id,
-            DROP FOREIGN KEY insti_stude_admis_fk_edu_gra_id,
-            DROP FOREIGN KEY insti_stude_admis_fk_ins_cla_id,
-            DROP FOREIGN KEY insti_stude_admis_fk_ins_id,
-            DROP FOREIGN KEY insti_stude_admis_fk_statu_id,
-            DROP FOREIGN KEY insti_stude_admis_fk_stude_id;");
+                DROP FOREIGN KEY IF EXISTS `insti_stude_admis_fk_aca_per_id`,
+                DROP FOREIGN KEY IF EXISTS `insti_stude_admis_fk_ass_id`,
+                DROP FOREIGN KEY IF EXISTS `insti_stude_admis_fk_edu_gra_id`,
+                DROP FOREIGN KEY IF EXISTS `insti_stude_admis_fk_ins_cla_id`,
+                DROP FOREIGN KEY IF EXISTS `insti_stude_admis_fk_ins_id`,
+                DROP FOREIGN KEY IF EXISTS `insti_stude_admis_fk_statu_id`,
+                DROP FOREIGN KEY IF EXISTS `insti_stude_admis_fk_stude_id`;");
+        $this->execute('SET FOREIGN_KEY_CHECKS = 1;');
         //Not able to add FOREIGN KEY CONSTRAINT in `institution_student_enrolment` table because in this table in assignee_id column have 0 and -1 value 
         //ADD CONSTRAINT insti_stude_enrol_fk_ass_id FOREIGN KEY (assignee_id) REFERENCES security_users(id),
         //ADD CONSTRAINT insti_stude_enrol_fk_ins_cla_id FOREIGN KEY (institution_class_id) REFERENCES institution_classes(id) in `institution_student_admission` table some records have null values in institution_class_id column
