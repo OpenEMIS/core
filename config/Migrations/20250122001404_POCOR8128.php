@@ -103,7 +103,12 @@ class POCOR8128 extends AbstractMigration
 
         if (!$gpExists) {
             // Insert General Policy (GP) record
-            $this->execute("INSERT INTO `staff_leave_policies` (`code`, `name`, `description`, `created_user_id`, `created`) VALUES ('GP', 'General Policies', 'General Policies', 1, NOW());");
+            $this->execute("INSERT INTO `staff_leave_policies`
+    (`code`,
+     `name`,
+     `description`,
+     `created_user_id`,
+     `created`) VALUES ('GP', 'General Policies', 'General Policies', 1, NOW());");
         }
 
         // Fetch the ID of the `GP` record
@@ -115,7 +120,8 @@ class POCOR8128 extends AbstractMigration
         foreach ($leaveTypes as $type) {
             $uuid = Text::uuid();  // Generate UUID in PHP
             $this->execute("
-                INSERT INTO `staff_leave_policy_types` (`id`, `staff_leave_policy_id`, `staff_leave_type_id`, `days`, `rollover`)
+                INSERT INTO `staff_leave_policy_types`
+                    (`id`, `staff_leave_policy_id`, `staff_leave_type_id`, `days`, `rollover`)
                 VALUES ('{$uuid}', {$gpPolicyId}, {$type['id']}, NULL, 1)
                 ON DUPLICATE KEY UPDATE `id` = `id`;
             ");
@@ -198,14 +204,17 @@ class POCOR8128 extends AbstractMigration
     public function down()
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-
-        // Rename rollback table back to original `staff_leave_types`
-        $this->execute('DROP TABLE IF EXISTS `staff_position_titles`;');
-        $this->execute('RENAME TABLE `z_8128_staff_position_titles` TO `staff_position_titles`;');
-
-        $this->execute('DROP TABLE IF EXISTS `staff_leave_types`;');
-        $this->execute('RENAME TABLE `z_8128_staff_leave_types` TO `staff_leave_types`;');
-
+        $exists = $this->hasTable('z_8128_staff_position_titles');
+        if ($exists) {
+            // Rename rollback table back to original `staff_leave_types`
+            $this->execute('DROP TABLE IF EXISTS `staff_position_titles`;');
+            $this->execute('RENAME TABLE `z_8128_staff_position_titles` TO `staff_position_titles`;');
+        }
+        $exists = $this->hasTable('z_8128_staff_leave_types');
+        if ($exists) {
+            $this->execute('DROP TABLE IF EXISTS `staff_leave_types`;');
+            $this->execute('RENAME TABLE `z_8128_staff_leave_types` TO `staff_leave_types`;');
+        }
         $this->execute('DROP TABLE IF EXISTS `institution_staff_leave_entitlements`;');
         $this->execute('DROP TABLE IF EXISTS `staff_leave_entitlements`;');
         $this->execute('DROP TABLE IF EXISTS `staff_leave_policy_types`;');
