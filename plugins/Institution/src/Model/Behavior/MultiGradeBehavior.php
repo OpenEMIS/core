@@ -9,6 +9,9 @@ use Cake\Event\Event;
 use Cake\I18n\Time;
 
 use ControllerAction\Model\Traits\EventTrait;
+use Cake\ORM\TableRegistry;
+use Cake\Utility\Text;
+use Cake\Log\Log;
 
 class MultiGradeBehavior extends Behavior
 {
@@ -86,7 +89,7 @@ class MultiGradeBehavior extends Behavior
         $model->fields['classes_secondary_staff']['placeholder'] = $secondaryPlaceholderText;
 
         $model->fields['total_male_students']['visible'] = false;
-        $model->fields['total_female_students']['visible'] = false;  
+        $model->fields['total_female_students']['visible'] = false;
         $model->setFieldOrder([
             'academic_period_id', 'name', 'institution_shift_id', 'institution_unit_id','institution_course_id','staff_id', 'classes_secondary_staff', 'capacity', 'multi_grade_field'
         ]);
@@ -132,7 +135,102 @@ class MultiGradeBehavior extends Behavior
                 $model->Alert->error($requestData['errorMessage'], ['reset'=>true]);
             }
         }
+        $alias = $model->getAlias();
+        $data = $requestData[$alias];
+        $classData=$this->_table->find('all', [
+            'order' => ['InstitutionClasses.id' => 'DESC']
+        ])->first();
+        $cv = self::saveCustomFieldsForMultiGrade($data['custom_field_values'], $classData->id, $classData->created_user_id);
+
     }
+
+    public static function saveCustomFieldsForMultiGrade($customFields, $classId, $createdUserId): array
+    {
+        $cv = [];
+
+        if (!empty($customFields)) {
+            $customFieldValuesTable =
+                TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionClassesCustomFieldValues');
+
+            // Delete existing custom fields for this class
+            $customFieldValuesTable->deleteAll(
+                [$customFieldValuesTable->aliasField('institution_class_id') => $classId]
+            );
+
+            $relevantFields = [
+                "text" => "text_value",
+                "number" => "number_value",
+                "dropdown" => "number_value",
+                "checkbox" => "number_value",
+                "decimal" => "decimal_value",
+                "textarea" => "textarea_value",
+                "time" => "time_value",
+                "date" => "date_value",
+                "file" => "file"
+            ];
+
+            // Iterate over each custom field
+            foreach ($customFields as $field) {
+                $key = strtolower($field['field_type']);
+
+                // Special handling for CHECKBOX fields
+                if ($key === 'checkbox' && !empty($field['number_value']) && is_array($field['number_value'])) {
+                    foreach ($field['number_value'] as $optionId => $isChecked) {
+                        if ($isChecked) {  // Save only selected (checked) options
+                            $fieldData = [
+                                'id' => Text::uuid(),
+                                'institution_class_id' => $classId,
+                                'created_user_id' => $createdUserId,
+                                'created' => date('Y-m-d H:i:s'),
+                                'institution_custom_field_id' => $field['institution_custom_field_id'],
+                                'number_value' => $optionId  // Store each selected option as a separate entry
+                            ];
+
+                            $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
+                            try {
+                                $cv[] = $customFieldValuesTable->saveOrFail($fieldEntity);
+                            } catch (\Exception $e) {
+                                Log::error('Error saving checkbox field: ' . $e->getMessage());
+                            }
+                        }
+                    }
+                } else {
+                    // General handling for other field types (TEXT, NUMBER, DROPDOWN, etc.)
+                    $fieldData = [
+                        'id' => Text::uuid(),
+                        'institution_class_id' => $classId,
+                        'created_user_id' => $createdUserId,
+                        'created' => date('Y-m-d H:i:s'),
+                        'institution_custom_field_id' => $field['institution_custom_field_id']
+                    ];
+
+                    $hasValue = false;
+
+                    if (array_key_exists($key, $relevantFields)) {
+                        $fieldname = $relevantFields[$key];
+                        $value = $field[$fieldname] ?? null;
+
+                        if (!empty($value)) {
+                            $fieldData[$fieldname] = $value;
+                            $hasValue = true;
+                        }
+                    }
+
+                    if ($hasValue) {
+                        $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
+                        try {
+                            $cv[] = $customFieldValuesTable->saveOrFail($fieldEntity);
+                        } catch (\Exception $e) {
+                            Log::error('Error saving custom field: ' . $e->getMessage());
+                        }
+                    }
+                }
+            }
+        }
+
+        return $cv;
+    }
+    //POCOR-8538 end
 
     public function afterSaveCommit(Event $event, Entity $entity)
     {
@@ -154,6 +252,6 @@ class MultiGradeBehavior extends Behavior
                 $ClassesSecondaryStaff->saveMany($secondaryStaffEntities);
             }
         }
-       
+
     }
 }
