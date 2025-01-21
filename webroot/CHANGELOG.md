@@ -1,3 +1,28 @@
+### [4.8.0] - 2025-01-17
+- Implemented: Develop Scanned feature API - Part 2
+- Implemented: Develop enhancements to the Directory import function
+- Bug Fixed: Institutions > General > Overview: After uploading institution logo and clicking on the save button, the page gives a 404 error
+- Bug Fixed: Administration>System Configuration>Two Factor Authentication: Getting 404 error when editing
+- Bug Fixed: Institutions > Students > Academic > Programmes > Transition: When clicking on the transition button, the page gives 404 error
+- Bug Fixed: Institutions > Students > Export: When exporting students report under Institutions, the academic period column is not showing any data/incorrect data
+- Bug Fixed: Administration > Examinations > Centres > Invigilators: When adding invigilators, the page does show the added invigilators and it just refreshes. Upon saving, the page show a message that no invigilators was not added
+- Bug Fixed: Administration>Examinations>Centres: Unable to link examination
+- Bug Fixed: Directory > Add: When adding nationality and identity upon adding students, the Internal Search page does not allow users to click the Next button
+- Bug Fixed: Institutions>Surveys>Forms: Remove edit and delete from select for users that are not assignees
+- Bug Fixed: Institutions > Staff > Career > Appraisal: When adding "Note" type field under staff Appraisal Form, the "Note" type field is editable upon editing staff Appraisal Form
+
+### [4.7.0] - 2025-01-15
+- Implemented: Develop custom fields for the Class feature
+- Implemented: Develop an OpenEMIS Core Download Student Report Cards v4 API
+- Implemented: Develop extra column in the toilets report to include institution type, institution provider, and institution sector
+- Implemented: Develop a configuration to change system edition of Core and School
+- Bug Fixed: Home Page: Notices is not showing any notice even though the notices configuration is configured
+- Bug Fixed: Administrations > Performance > Report Cards > Processes: The filters should not auto refresh and should be sticking to selected 
+- Bug Fixed: Administration > Performance > Assessments: Not able to edit the academic term as the button to academic term is not showing
+- Bug Fixed: Administration > System Setup > System Configuration > Authentication: not able to login via SSO Google as the Redirect Uri does not have the 's' in the https://
+- Bug Fixed: Adding validation to Scanned feature API: Does not show which mandatory fields are missing
+- Bug Fixed: Institutions > Staff > Career > Leave: The leave tab is no longer present
+
 ### [4.6.1] - 2025-01-14
 - Bug Fixed: Institutions > Staff > Career > Appraisal > Save: A 404 error is showing when saving appraisal
 - Bug Fixed: Administration > Examinations > Students > Single Register/Bulk Register: When registering students for examination, there is a 404 error

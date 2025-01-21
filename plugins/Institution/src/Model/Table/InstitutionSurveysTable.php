@@ -828,6 +828,22 @@ class InstitutionSurveysTable extends ControllerActionTable
             unset($buttons['edit']);  //POCOR-8095
         }
         //POCOR-8515 ends
+
+        // POCOR-8430 starts (Remove edit and delete from select for users that are not assignees)
+        $session = $this->request->getSession();
+        $userId = $session->read('Auth.User.id');
+    
+        // Create an array of user IDs (you can modify this array as per your requirements)
+        $userIdsArray = [$userId];  // Add any additional user IDs if necessary
+    
+        // Check if the assignee_id exists in the user ID array
+        if (!in_array($entity->assignee_id, $userIdsArray)) {
+            // If the assignee_id matches
+            unset($buttons['remove']);
+            unset($buttons['edit']);
+        }
+        // POCOR-8430 ends
+        
         return $buttons;
     }
     //POCOR-7290:: End
