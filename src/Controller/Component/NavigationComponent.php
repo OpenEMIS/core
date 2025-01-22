@@ -1635,6 +1635,7 @@ class NavigationComponent extends Component
                     'Staff.InstitutionStaffAttendanceActivities',
                     //'Institutions.StaffLeave',
                     'Staff.StaffLeave',
+                    'Staff.StaffEntitlement', // POCOR-8128
                     'Institutions.ArchivedStaffLeave',
                     'Institutions.HistoricalStaffLeave',
                     'Staff.Behaviours',
