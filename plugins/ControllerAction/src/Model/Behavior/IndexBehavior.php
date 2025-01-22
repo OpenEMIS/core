@@ -159,10 +159,10 @@ class IndexBehavior extends Behavior
                     $action = $model->url('index', 'QUERY');
 
                     if (isset($action['page'])) {
-                        $action['page'] = 1;
+                        $action['page'] = 1; // POCOR-8128
                     }
                     if (isset($action['?']['page'])) {
-                        $action['?']['page'] = 1;
+                        $action['?']['page'] = 1; // POCOR-8128
                     }
 //                    dd($action);
                     $mainEvent->stopPropagation();
