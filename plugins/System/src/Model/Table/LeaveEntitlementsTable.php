@@ -68,10 +68,11 @@ class LeaveEntitlementsTable extends ControllerActionTable
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query->contain('StaffLeaveTypes');
-            $query = $this->addSearchConditions($query, ['alias' => 'Staff', 'searchTerm' => '%' . $search . '%',
+            $query = $this->addSearchConditions($query,
+                ['alias' => 'Staff', 'searchTerm' => '%' . $search . '%',
                 'OR' => ['StaffLeaveTypes.name LIKE ' => '%' . $search . '%']]);
         }
-//        dd($query->where());
+
         if (!isset($queryParams['sort'])) {
             $query->order(
                 [$this->aliasField('created') => 'DESC',
