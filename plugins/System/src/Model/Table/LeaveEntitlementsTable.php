@@ -25,7 +25,9 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
 
+
         $this->addBehavior('User.AdvancedNameSearch');
+
 //        $this->toggle('view', false);
 //        $this->toggle('add', false);
 //        $this->toggle('edit', false);
@@ -61,6 +63,15 @@ class LeaveEntitlementsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
+        $search = $this->getSearchKey();
+
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query->contain('StaffLeaveTypes');
+            $query = $this->addSearchConditions($query, ['alias' => 'Staff', 'searchTerm' => '%' . $search . '%',
+                'OR' => ['StaffLeaveTypes.name LIKE ' => '%' . $search . '%']]);
+        }
+//        dd($query->where());
         if (!isset($queryParams['sort'])) {
             $query->order(
                 [$this->aliasField('created') => 'DESC',
