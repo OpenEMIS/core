@@ -3937,53 +3937,7 @@ class NavigationComponent extends Component
     // POCOR-8128
     private function getAdministrationStaffNav()
     {
-        $session = $this->getController()->getRequest()->getSession();
-        $uId = $this->controller->paramsDecode(
-            $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')])
-        )['id'];
 
-        $usersTable = TableRegistry::getTableLocator()->get('User.Users');
-        $isSuperAdmin = $usersTable->exists([
-            $usersTable->aliasField('super_admin') => 1,
-            $usersTable->aliasField('id') => $uId
-        ]);
-
-        $groupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
-        $securityFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
-        $securityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
-
-        $roleData = $groupUsersTable->find()
-            ->matching('SecurityGroups')
-            ->matching('SecurityRoles')
-            ->where([$groupUsersTable->aliasField('security_user_id') => $uId])
-            ->group([
-                $groupUsersTable->aliasField('security_group_id'),
-                $groupUsersTable->aliasField('security_role_id')
-            ])
-            ->select([
-                'id' => 'SecurityRoles.id',
-                'role_name' => 'SecurityRoles.name'
-            ])
-            ->toArray();
-
-        $roleIds = array_column($roleData, 'id');
-
-        $staffFunctions = [];
-        if (!empty($roleIds)) {
-            $staffFunctions = $securityRoleFunctionsTable->find()
-                ->leftJoinWith($securityFunctionsTable->getAlias(), function ($join) use ($securityFunctionsTable, $securityRoleFunctionsTable) {
-                    return $join->on([
-                        $securityFunctionsTable->aliasField('id') . ' = ' . $securityRoleFunctionsTable->aliasField('security_function_id'),
-                    ]);
-                })
-                ->where([
-                    $securityRoleFunctionsTable->aliasField('security_role_id IN') => $roleIds,
-                    $securityFunctionsTable->aliasField('module') => 'Administration',
-                    $securityFunctionsTable->aliasField('controller') => 'Staff',
-                    $securityRoleFunctionsTable->aliasField('_view') => 1
-                ])
-                ->toArray();
-        }
 
         $nav = [
             'Administration.Staff' => [
@@ -3994,18 +3948,15 @@ class NavigationComponent extends Component
             'Systems.StaffPolicies' => [
                 'title' => 'Leaves',
                 'parent' => 'Administration.Staff',
-                'link' => false,
+                'link' => true,
             ],
             'Systems.StaffEntitlements' => [
                 'title' => 'Entitlements',
                 'parent' => 'Administration.Staff',
-                'link' => false,
+                'link' => true,
             ],
-        ];
 
-        if (!$isSuperAdmin && empty($staffFunctions)) {
-            return [];
-        }
+        ];
 
         return $nav;
     }
@@ -4429,6 +4380,7 @@ class NavigationComponent extends Component
         // Unset the children
         $linkOnly = [];
         foreach ($navigations as $key => $value) {
+
             $rolesRestrictedTo = $roles;
             //print_r($roles);die;
             if (isset($value['link']) && !$value['link']) {
@@ -4509,7 +4461,12 @@ class NavigationComponent extends Component
                     $params = $value['params'];
                 }
                 $url = $this->getLink($key, $params);
-
+                // POCOR-8128 start
+                if (isset($value['link']) && $value['link']) {
+                    $params = ['plugin' => 'Systems'];
+                    $url = $this->getLink($key, $params);
+                }
+                // POCOR-8128 end
                 // Ensure $url is an array and has necessary keys
                 if (!is_array($url) || !isset($url['controller'], $url['action'], $url['plugin'])) {
                     // Log or handle the case where $url is not as expected

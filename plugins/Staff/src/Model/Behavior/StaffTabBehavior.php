@@ -175,7 +175,8 @@ class StaffTabBehavior extends Behavior
         if($controllerName == "Directories") {
             unset($tabElements['StaffCurriculars']);
         }
-        return $controller->TabPermission->checkTabPermission($tabElements);//POCOR-8379
+        $checkedTabPermission = $controller->TabPermission->checkTabPermission($tabElements);
+        return $checkedTabPermission;//POCOR-8379
     }
 
 
