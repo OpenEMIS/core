@@ -6955,7 +6955,7 @@ class InstitutionsController extends AppController
             }
         }
         //POCOR-8434 starts
-        if ($studentAdmissionStatusValue == 0 && strtolower($studentAdmissionStatus) == "enrolled") {
+        if (!empty($institutionId) && $studentAdmissionStatusValue == 0 && strtolower($studentAdmissionStatus) == "enrolled") {
             $workflows = TableRegistry::get('Workflow.Workflows');
             $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
             $workflowResults = $workflows->find()
@@ -6994,7 +6994,7 @@ class InstitutionsController extends AppController
                 unset($entityEnrolmentData);
                 unset($InstitutionEnrolmentResult);
             }
-        } else {
+        } else if(!empty($institutionId)){ {
             $workflowStepId = $studentAdmissionStatusValue;
 
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
