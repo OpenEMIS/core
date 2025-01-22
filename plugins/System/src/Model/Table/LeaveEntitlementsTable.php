@@ -62,6 +62,7 @@ class LeaveEntitlementsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+
         $queryParams = $this->request->getQuery();
         $search = $this->getSearchKey();
 

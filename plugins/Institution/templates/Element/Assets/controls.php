@@ -37,7 +37,7 @@
                     'data-named-group' => 'accessibility'
                 ));
             }
-            
+
             if (!empty($accessibilityOptions)) {
                     echo $this->Form->input('accessibility', array(
                     'type' => 'select',
@@ -53,4 +53,4 @@
             }
 		?>
 		</div>
-	</div>	
+	</div>

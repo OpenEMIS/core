@@ -52,6 +52,7 @@ class StaffEntitlementTable extends ControllerActionTable
     }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->field('year', ['visible' => true]);
         $this->field('staff_leave_type_id', ['sort' => true]);
         $this->field('position_name', ['visible' => true]);
@@ -79,6 +80,34 @@ class StaffEntitlementTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $yearsQuery = clone $query;
+        $yearsQuery
+            ->select(['year' => $query->func()->year([$this->aliasField('date_from') => 'identifier'])])
+            ->distinct(['year']) // Get unique years
+            ->order(['year' => 'DESC'])                                ->limit(2)
+            ->enableHydration(false) // Return as array
+           ; // Remove the existing group by clause for the year-only query
+
+        $years = $yearsQuery->toArray();
+        $yearsOptions = array_combine(
+            array_column($years, 'year'),
+            array_column($years, 'year')
+        );
+        $year = $this->request->getQuery('year');
+        $selectedYear = !is_null($year) ? $year : null;
+        $this->controller->set(compact('yearsOptions', 'selectedYear'));
+
+        $extra['elements']['controls'] = ['name' => 'Institution.Entitlements/controls',
+            'data' => ['yearsOptions' => $yearsOptions,
+                'selectedYear' => $selectedYear], 'options' => [], 'order' => 1];
+
+        // Execute the query and format the results
+        $years = $yearsQuery->toArray();
+        $yearsList = array_combine(
+            array_column($years, 'year'),
+            array_column($years, 'year')
+        );
+
         // Add calculated fields, join related tables, and group the query
         $query
             ->select([
