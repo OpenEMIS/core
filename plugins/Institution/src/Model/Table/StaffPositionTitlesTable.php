@@ -14,8 +14,8 @@ use Cake\Log\Log;
 use ControllerAction\Model\Traits\UtilityTrait;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\ORM\Table;
-use Cake\Utility\Inflector;
+use Cake\ORM\Table; // POCOR-8128
+use Cake\Utility\Inflector; // POCOR-8128
 
 class StaffPositionTitlesTable extends ControllerActionTable
 {
@@ -33,7 +33,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
         parent::initialize($config);
         $this->hasMany('TrainingCoursesTargetPopulations', ['className' => 'Training.TrainingCoursesTargetPopulations', 'foreignKey' => 'target_population_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
-        $this->belongsTo('LeavePolicies', ['className' => 'System.LeavePolicies', 'foreignKey' => 'staff_leave_policy_id']);
+        $this->belongsTo('LeavePolicies', ['className' => 'System.LeavePolicies', 'foreignKey' => 'staff_leave_policy_id']); // POCOR-8128
         $this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('PositionGrades', [
@@ -83,6 +83,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 			'after' => 'name',
 			'onChangeReload' => true
 		]);
+        // POCOR-8128 start
 		$this->field('staff_leave_policy_id', [
 			'visible' => true,
             'type' => 'select',
@@ -99,6 +100,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 			'after' => 'type',
             'attr' => ['required' => true], // to add red asterisk
 		]);
+        // POCOR-8128 end
 
 		$extra['roleList'] = $this->SecurityRoles->getSystemRolesList();
 		$this->field('security_role_id', ['after' => 'staff_position_categories_id', 'options' => $extra['roleList']]);
@@ -111,8 +113,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		}
 		$this->field('type', ['after' => 'name']);
 		$this->field('security_role_id', ['after' => 'type']);
-		$this->field('file_content', ['after' => 'security_role_id',
-            'attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true, 'index' => false]]);//POCOR-7758
+		$this->field('file_content', ['after' => 'position_grades', 'attr' => ['label' => __('Description')], 'visible' => ['add' => true, 'view' => true, 'edit' => true, 'index' => false]]);//POCOR-7758
         $this->field('file_name',['visible'=>false]);//POCOR-7758
 	}
 
@@ -194,7 +195,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @author Rahul Singh <rahul.singh@mail.valuecoders.com>
      * @ticket POCOR-6950
      */
-
+// // POCOR-8128
 //	public function onUpdateFieldStaffPositionCategoriesId(Event $event, array $attr, $action, ServerRequest $request)
 //	{
 //		$request = $this->request;
@@ -348,7 +349,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	{
 		$this->setAllPositionGrades($entity);
 
-		if (!$entity->isNew() && $entity->isDirty('security_role_id')) {
+		if (!$entity->isNew() && $entity->isDirty('security_role_id')) { // POCOR-8128
 			$oldRoleId = $entity->getOriginal('security_role_id');
 			$newRoleId = $entity->security_role_id;
 			$titleId = $entity->id;
@@ -567,7 +568,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
             case 'type':
                 return __('Type');
             case 'staff_position_categories_id':
-                return __('Staff Position Categories');
+                return __('Staff Position Categories'); // POCOR-8128
             case 'security_role_id':
                 return __('Security Role');
             case 'position_grade_selection':
@@ -581,6 +582,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
         }
     }
 
+    // POCOR-8128 start
     private function getStaffLeavePolicyOptions(){
         $StaffLeavePolicyTable = self::getDynamicTableInstance('staff_leave_policies');
         $staffLeavePolicyOptions = $StaffLeavePolicyTable
@@ -597,6 +599,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
             ->toArray();
         return $staffPositionCategoryOptions;
     }
+
 
 
     /**
@@ -647,5 +650,6 @@ class StaffPositionTitlesTable extends ControllerActionTable
         // Return the table instance
         return $locator->get($tableFullAlias);
     }
+    // POCOR-8128 end
 
 }

@@ -2595,7 +2595,7 @@ class NavigationComponent extends Component
         $TrainingNav = $this->getAdminstrationTrainingNav();
         $PerformanceNav = $this->getAdminstrationPerformanceNav();
         $ExaminationNav = $this->getAdminstrationExaminationNav();
-        $StaffNav = $this->getAdministrationStaffNav();
+        $StaffNav = $this->getAdministrationStaffNav();    // POCOR-8128
         $ScholarshipNav = $this->getAdminstrationScholarshipNav();
         $MoodleNav = $this->getAdminstrationMoodleNav();
         $dataMgtNav = $this->getAdminstrationdataMgtNav();
@@ -2653,6 +2653,7 @@ class NavigationComponent extends Component
 
         ];
 
+        // POCOR-8128 start
         $getallNavigation = array_merge($firstSubMenuAdmin,
             $SecurityNav,
             $ProfileNav,
@@ -2666,6 +2667,7 @@ class NavigationComponent extends Component
             $navigation,
             $MoodleNav,
             $dataMgtNav); //POCOR-7527
+        // POCOR-8128 end
         return $getallNavigation;
     }
 
@@ -3932,6 +3934,7 @@ class NavigationComponent extends Component
 
     //POCOR-7527
 
+    // POCOR-8128
     private function getAdministrationStaffNav()
     {
         $session = $this->getController()->getRequest()->getSession();

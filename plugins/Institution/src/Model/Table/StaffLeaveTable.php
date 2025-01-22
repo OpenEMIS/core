@@ -784,7 +784,7 @@ class StaffLeaveTable extends ControllerActionTable
 
         $existingConditions = [
             $this->aliasField('staff_id') => $staffId,
-//            $this->aliasField('academic_period_id') => $academicPeriodId,
+//            $this->aliasField('academic_period_id') => $academicPeriodId, // POCOR-8128
         ];
 
         if (!$entity->isNew()) {
@@ -803,8 +803,8 @@ class StaffLeaveTable extends ControllerActionTable
             ])
             ->where($existingConditions)
             ->toArray();
-        $AcademicPeriod = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
-        $workingDaysOfWeek = $AcademicPeriod->getWorkingDaysOfWeek();
+        $AcademicPeriod = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods'); // POCOR-8128
+        $workingDaysOfWeek = $AcademicPeriod->getWorkingDaysOfWeek(); // POCOR-8128
 
         $startDate = $dateFrom;
         $endDate = $dateTo;
@@ -1096,8 +1096,8 @@ class StaffLeaveTable extends ControllerActionTable
             return __('End Time');
         } elseif ($field == 'number_of_days') {
             return __('Number Of Days');
-//        } elseif ($field == 'academic_period_id') {
-//            return __('Academic Period');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
         } elseif ($field == 'date_from') {
             return __('Date From');
         } elseif ($field == 'date_to') {
