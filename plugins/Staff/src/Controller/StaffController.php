@@ -253,11 +253,12 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']);
     }
 
+    // POCOR-8128 start
     public function StaffEntitlement()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffEntitlement']);
     }
-
+    // POCOR-8128 end
     // health
 
     public function Behaviours()
