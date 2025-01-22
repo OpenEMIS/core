@@ -2,6 +2,7 @@
 
 use Migrations\AbstractMigration;
 use Cake\Utility\Text;
+use Cake\ORM\TableRegistry;
 
 class POCOR8128 extends AbstractMigration
 {
@@ -83,6 +84,7 @@ class POCOR8128 extends AbstractMigration
             $this->changeStaffPositionTitles();
             $this->addNationalCodes();
             $this->makeAcademicPeriodForLeaveNullable();
+            $this->addWorkflowSteps();
 
             $this->execute('COMMIT;');
 
@@ -145,6 +147,143 @@ class POCOR8128 extends AbstractMigration
                 COMMENT 'links to academic_periods.id';;
         ");
 
+    }
+
+    private function addWorkflowSteps(): void
+    {
+
+        $this->execute('DROP TABLE IF EXISTS `z_8128_workflow_steps`');
+        $this->execute('CREATE TABLE `z_8128_workflow_steps` LIKE `workflow_steps`');
+        $this->execute('INSERT INTO `z_8128_workflow_steps` SELECT * FROM `workflow_steps`');
+
+        // Backup workflow_actions table
+        $this->execute('DROP TABLE IF EXISTS `z_8128_workflow_actions`');
+        $this->execute('CREATE TABLE `z_8128_workflow_actions` LIKE `workflow_actions`');
+        $this->execute('INSERT INTO `z_8128_workflow_actions` SELECT * FROM `workflow_actions`');
+
+        // Load necessary tables
+        $locator = TableRegistry::getTableLocator();
+        $WorkflowActionsTable = $locator->get('Workflow.WorkflowActions');
+        $WorkflowStepsTable = $locator->get('Workflow.WorkflowSteps');
+        $WorkflowsTable = $locator->get('Workflow.Workflows');
+
+        // Get the workflow ID for "Staff Leave" (LEAVE-1001)
+        $workflow = $WorkflowsTable->find()
+            ->where(['code' => 'LEAVE-1001'])
+            ->first();
+
+        if (!$workflow) {
+            throw new \RuntimeException('Workflow with code LEAVE-1001 not found');
+        }
+        $workflowId = $workflow->id;
+
+        // Add the new step "Pending for Recommendation"
+        $workflowStepData = [
+            'workflow_id' => $workflowId,
+            'name' => 'Pending for Recommendation',
+            'category' => 2, // "In Progress" category
+            'is_editable' => 0,
+            'is_removable' => 0,
+            'is_system_defined' => 0,
+            'created_user_id' => 1, // Adjust based on your setup
+            'created' => date('Y-m-d H:i:s'),
+        ];
+        $WorkflowStepsTable->save($WorkflowStepsTable->newEntity($workflowStepData));
+
+        // Fetch the new "Pending for Recommendation" step ID
+        $pendingForRecommendationStep = $WorkflowStepsTable->find()
+            ->where([
+                'workflow_id' => $workflowId,
+                'name' => 'Pending for Recommendation',
+            ])
+            ->first();
+
+        if (!$pendingForRecommendationStep) {
+            throw new \RuntimeException('"Pending for Recommendation" step could not be created');
+        }
+        $pendingForRecommendationStepId = $pendingForRecommendationStep->id;
+
+        // Fetch the "Open" step ID (to link the new action)
+        $openStep = $WorkflowStepsTable->find()
+            ->where([
+                'workflow_id' => $workflowId,
+                'name' => 'Open',
+            ])
+            ->first();
+        $approveStep = $WorkflowStepsTable->find()
+            ->where([
+                'workflow_id' => $workflowId,
+                'name' => 'Approved',
+            ])
+            ->first();
+        $rejectStep = $WorkflowStepsTable->find()
+            ->where([
+                'workflow_id' => $workflowId,
+                'name' => 'Rejected',
+            ])
+            ->first();
+
+        if (!$openStep) {
+            throw new \RuntimeException('"Open" step not found');
+        }
+        if (!$approveStep) {
+            throw new \RuntimeException('"Approve" step not found');
+        }
+        if (!$rejectStep) {
+            throw new \RuntimeException('"Reject" step not found');
+        }
+        $openStepId = $openStep->id;
+        $approveStepId = $approveStep->id;
+        $rejectStepId = $rejectStep->id;
+
+        // Add the new action "Submit for Recommendation"
+        $workflowActionOpen = $WorkflowActionsTable->find()
+            ->where(['workflow_step_id' => $openStepId])
+            ->first();
+
+        if ($workflowActionOpen) {
+            // Update the record with the new data
+            $workflowActionOpen->name = 'Submit for Recommendation';
+            $workflowActionOpen->next_workflow_step_id = $pendingForRecommendationStepId; // Link to the new "Pending for Recommendation" step
+            $workflowActionOpen->modified_user_id = 1; // Adjust based on your setup
+            $workflowActionOpen->modified = date('Y-m-d H:i:s'); // Update the modified timestamp
+            // Save the updated record
+            $WorkflowActionsTable->save($workflowActionOpen);
+        } else {
+            throw new \RuntimeException('No record found with workflow_step_id = ' . $openStepId);
+        }
+
+        $workflowActionApprove = $WorkflowActionsTable->find()
+            ->where(['workflow_step_id' => $pendingForRecommendationStepId,
+                'name' => 'Approve'])
+            ->first();
+
+        if ($workflowActionApprove) {
+            // Update the record with the new data
+            $workflowActionApprove->next_workflow_step_id = $approveStepId; // Link to the new "Pending for Recommendation" step
+            $workflowActionApprove->modified_user_id = 1; // Adjust based on your setup
+            $workflowActionApprove->modified = date('Y-m-d H:i:s'); // Update the modified timestamp
+            // Save the updated record
+            $WorkflowActionsTable->save($workflowActionApprove);
+        } else {
+            throw new \RuntimeException('No record found with workflow_step_id = ' . $pendingForRecommendationStepId);
+        }
+
+        $workflowActionReject = $WorkflowActionsTable->find()
+            ->where(['workflow_step_id' => $pendingForRecommendationStepId,
+                'name' => 'Reject'])
+            ->first();
+
+        if ($workflowActionReject) {
+            // Update the record with the new data
+            $workflowActionReject->next_workflow_step_id = $rejectStepId; // Link to the new "Pending for Recommendation" step
+            $workflowActionReject->modified_user_id = 1; // Adjust based on your setup
+            $workflowActionReject->modified = date('Y-m-d H:i:s'); // Update the modified timestamp
+            // Save the updated record
+            $WorkflowActionsTable->save($workflowActionReject);
+        } else {
+            throw new \RuntimeException('No record found with workflow_step_id = ' . $pendingForRecommendationStepId);
+        }
     }
 
     /**
@@ -225,6 +364,21 @@ class POCOR8128 extends AbstractMigration
     public function down()
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+
+        $exists = $this->hasTable('z_8128_workflow_actions');
+        if ($exists) {
+            // Rename rollback table back to original `staff_leave_types`
+            $this->execute('DROP TABLE IF EXISTS `workflow_actions`;');
+            $this->execute('RENAME TABLE `z_8128_workflow_actions` TO `workflow_actions`;');
+        }
+
+        $exists = $this->hasTable('z_8128_workflow_steps');
+        if ($exists) {
+            // Rename rollback table back to original `staff_leave_types`
+            $this->execute('DROP TABLE IF EXISTS `workflow_steps`;');
+            $this->execute('RENAME TABLE `z_8128_workflow_steps` TO `workflow_steps`;');
+        }
+
         $exists = $this->hasTable('z_8128_institution_staff_leave');
         if ($exists) {
             // Rename rollback table back to original `staff_leave_types`
