@@ -11,80 +11,16 @@ class POCOR8128 extends AbstractMigration
         $this->execute('START TRANSACTION;');
 
         try {
-            // Create staff_leave_policies table
-            $this->execute('CREATE TABLE IF NOT EXISTS `staff_leave_policies` (
-                `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-                `code` VARCHAR(50) NOT NULL,
-                `name` VARCHAR(100) NOT NULL,
-                `description` TEXT NULL,
-                `modified_user_id` INT UNSIGNED NULL,
-                `modified` DATETIME NULL,
-                `created_user_id` INT UNSIGNED NOT NULL,
-                `created` DATETIME NOT NULL,
-                PRIMARY KEY (`id`),
-                UNIQUE KEY `uq_code_name` (`code`, `name`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
+            // Create new tables
+            $this->createNewTables();
 
-            // Create staff_leave_policy_types table
-            $this->execute('
-                CREATE TABLE IF NOT EXISTS `staff_leave_policy_types` (
-                    `id` CHAR(36) NOT NULL,
-                    `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_policies.id",
-                    `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_types.id",
-                    `days` INT NULL COMMENT "Days allocated (nullable)",
-                    `rollover` TINYINT(1) NOT NULL DEFAULT 1 COMMENT "1: Yes Can rollover unused days, 0: No",
-                    PRIMARY KEY (`id`),
-                    UNIQUE KEY `uq_policy_type` (`staff_leave_policy_id`, `staff_leave_type_id`),
-                    KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`),
-                    KEY `idx_staff_leave_type_id` (`staff_leave_type_id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-            ');
-
-            $this->execute('CREATE TABLE IF NOT EXISTS `staff_leave_entitlements` (
-            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-            `staff_id` INT UNSIGNED NOT NULL COMMENT "links to staff.id",
-            `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
-            `adjustment` INT SIGNED NOT NULL COMMENT "Leave days adjustment (positive or negative)",
-            `modified_user_id` INT UNSIGNED NULL,
-            `modified` DATETIME NULL,
-            `created_user_id` INT UNSIGNED NOT NULL,
-            `created` DATETIME NOT NULL,
-            PRIMARY KEY (`id`),
-            KEY `idx_staff_id` (`staff_id`),
-            KEY `idx_staff_leave_type_id` (`staff_leave_type_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
-
-            // Create institution_staff_leave_entitlement table
-            $this->execute('CREATE TABLE IF NOT EXISTS `institution_staff_leave_entitlements` (
-            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-            `year` INT(4) NULL DEFAULT NULL COMMENT "Year",
-            `staff_id` INT UNSIGNED NOT NULL COMMENT "links to security_users.id",
-            `institution_id` INT NOT NULL COMMENT "links to institutions.id",
-            `institution_position_id` INT NOT NULL COMMENT "links to institution_positions.id",
-            `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to leave_policies.id",
-            `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
-            `days_total` INT SIGNED NULL DEFAULT NULL COMMENT "Total leave days",
-            `days_taken` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days taken",
-            `days_balance` INT SIGNED NULL DEFAULT NULL COMMENT "Remaining leave days",
-            `adjustment` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days adjustment (positive or negative)",
-            `modified_user_id` INT UNSIGNED NULL,
-            `modified` DATETIME NULL,
-            `created_user_id` INT UNSIGNED NOT NULL,
-            `created` DATETIME NOT NULL,
-            PRIMARY KEY (`id`),
-            KEY `idx_staff_id` (`staff_id`),
-            KEY `idx_institution_id` (`institution_id`),
-            KEY `idx_institution_position_id` (`institution_position_id`),
-            KEY `idx_leave_type_id` (`staff_leave_type_id`),
-            KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
-
-            // Create general leave policy and add national codes
+            // All other functions
             $this->createGeneralLeavePolicy();
             $this->changeStaffPositionTitles();
             $this->addNationalCodes();
             $this->makeAcademicPeriodForLeaveNullable();
             $this->addWorkflowSteps();
+            $this->addSecurityFunctions();
 
             $this->execute('COMMIT;');
 
@@ -130,7 +66,83 @@ class POCOR8128 extends AbstractMigration
             ");
         }
     }
-/**
+
+    /**
+     * Add `staff_leave_policy_id` foreign key to `staff_position_titles` table.
+     *
+     * @return void
+     */
+    private function changeStaffPositionTitles(): void
+    {
+        // Backup table
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_8128_staff_position_titles` LIKE `staff_position_titles`;');
+        $this->execute('INSERT IGNORE INTO `z_8128_staff_position_titles` SELECT * FROM `staff_position_titles`;');
+
+        // Add `staff_leave_policy_id` column
+        $this->execute('
+            ALTER TABLE `staff_position_titles`
+            ADD COLUMN `staff_leave_policy_id` INT UNSIGNED NULL DEFAULT NULL COMMENT "links to staff_leave_policies.id"
+            AFTER `security_role_id`;
+        ');
+
+        // Update NULL `staff_leave_policy_id` to `GP` policy ID
+        $this->execute('
+            UPDATE `staff_position_titles`
+            SET `staff_leave_policy_id` = (
+                SELECT `id` FROM `staff_leave_policies` WHERE `code` = "GP" LIMIT 1
+            )
+            WHERE `staff_leave_policy_id` IS NULL;
+        ');
+
+        // Set column as NOT NULL and add foreign key
+        $this->execute('
+            ALTER TABLE `staff_position_titles`
+            MODIFY `staff_leave_policy_id` INT UNSIGNED NOT NULL,
+            ADD CONSTRAINT `staff_posit_title_fk_leave_policy_id`
+            FOREIGN KEY (`staff_leave_policy_id`) REFERENCES `staff_leave_policies` (`id`)
+            ON DELETE RESTRICT;
+        ');
+
+
+    }
+
+    /**
+     * Add unique national codes for staff leave types.
+     *
+     * @return void
+     */
+    private function addNationalCodes(): void
+    {
+        $emptyNameTypes = $this->fetchAll("SELECT `id`, `name` FROM `staff_leave_types` WHERE `national_code` IS NULL OR `national_code` = '';");
+
+        // Backup table
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_8128_staff_leave_types` LIKE `staff_leave_types`;');
+        $this->execute('INSERT IGNORE INTO `z_8128_staff_leave_types` SELECT * FROM `staff_leave_types`;');
+
+        // Update `national_code` with unique values
+        $uniqueCodes = [];
+        foreach ($emptyNameTypes as $type) {
+            $nameParts = explode(' ', $type['name']);
+            $firstLetters = array_map(fn($word) => strtoupper($word[0]), $nameParts);
+            $baseCode = implode('', $firstLetters);
+
+            $uniqueCode = $baseCode;
+            $counter = 1;
+
+            while (in_array($uniqueCode, $uniqueCodes)) {
+                $uniqueCode = $baseCode . str_pad($counter++, 2, '0', STR_PAD_LEFT);
+            }
+
+            $uniqueCodes[] = $uniqueCode;
+            $this->execute("
+                UPDATE `staff_leave_types`
+                SET `national_code` = '{$uniqueCode}'
+                WHERE `id` = {$type['id']};
+            ");
+        }
+    }
+
+    /**
      * Create general leave policy and associate with staff leave types.
      *
      * @return void
@@ -286,108 +298,94 @@ class POCOR8128 extends AbstractMigration
         }
     }
 
-    /**
-     * Add `staff_leave_policy_id` foreign key to `staff_position_titles` table.
-     *
-     * @return void
-     */
-    private function changeStaffPositionTitles(): void
+    private function addSecurityFunctions(): void
     {
-        // Backup table
-        $this->execute('CREATE TABLE IF NOT EXISTS `z_8128_staff_position_titles` LIKE `staff_position_titles`;');
-        $this->execute('INSERT IGNORE INTO `z_8128_staff_position_titles` SELECT * FROM `staff_position_titles`;');
 
-        // Add `staff_leave_policy_id` column
-        $this->execute('
-            ALTER TABLE `staff_position_titles`
-            ADD COLUMN `staff_leave_policy_id` INT UNSIGNED NULL DEFAULT NULL COMMENT "links to staff_leave_policies.id"
-            AFTER `security_role_id`;
-        ');
+        // Backup security_functions table
+        $this->execute('DROP TABLE IF EXISTS `z_8128_security_functions`');
+        $this->execute('CREATE TABLE `z_8128_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_8128_security_functions` SELECT * FROM `security_functions`');
 
-        // Update NULL `staff_leave_policy_id` to `GP` policy ID
-        $this->execute('
-            UPDATE `staff_position_titles`
-            SET `staff_leave_policy_id` = (
-                SELECT `id` FROM `staff_leave_policies` WHERE `code` = "GP" LIMIT 1
-            )
-            WHERE `staff_leave_policy_id` IS NULL;
-        ');
+        // Getting max order value
+        $lastOrder = $this->fetchRow("SELECT  max(`order`) FROM `security_functions`");
 
-        // Set column as NOT NULL and add foreign key
-        $this->execute('
-            ALTER TABLE `staff_position_titles`
-            MODIFY `staff_leave_policy_id` INT UNSIGNED NOT NULL,
-            ADD CONSTRAINT `staff_posit_title_fk_leave_policy_id`
-            FOREIGN KEY (`staff_leave_policy_id`) REFERENCES `staff_leave_policies` (`id`)
-            ON DELETE RESTRICT;
-        ');
-
-
-    }
-
-    /**
-     * Add unique national codes for staff leave types.
-     *
-     * @return void
-     */
-    private function addNationalCodes(): void
-    {
-        $emptyNameTypes = $this->fetchAll("SELECT `id`, `name` FROM `staff_leave_types` WHERE `national_code` IS NULL OR `national_code` = '';");
-
-        // Backup table
-        $this->execute('CREATE TABLE IF NOT EXISTS `z_8128_staff_leave_types` LIKE `staff_leave_types`;');
-        $this->execute('INSERT IGNORE INTO `z_8128_staff_leave_types` SELECT * FROM `staff_leave_types`;');
-
-        // Update `national_code` with unique values
-        $uniqueCodes = [];
-        foreach ($emptyNameTypes as $type) {
-            $nameParts = explode(' ', $type['name']);
-            $firstLetters = array_map(fn($word) => strtoupper($word[0]), $nameParts);
-            $baseCode = implode('', $firstLetters);
-
-            $uniqueCode = $baseCode;
-            $counter = 1;
-
-            while (in_array($uniqueCode, $uniqueCodes)) {
-                $uniqueCode = $baseCode . str_pad($counter++, 2, '0', STR_PAD_LEFT);
-            }
-
-            $uniqueCodes[] = $uniqueCode;
-            $this->execute("
-                UPDATE `staff_leave_types`
-                SET `national_code` = '{$uniqueCode}'
-                WHERE `id` = {$type['id']};
-            ");
-        }
+        $current_time = date('Y-m-d H:i:s');
+        $data = [[
+            'name' => 'Staff Leave Policies',
+            'controller' => 'System',
+            'module' => 'Administration',
+            'category' => 'Staff Leave',
+            'parent_id' => 5000,
+            '_view' => 'LeavePolicies.index|LeavePolicies.view',
+            '_add' => 'LeavePolicies.add',
+            '_edit' => 'LeavePolicies.edit',
+            '_delete' => 'LeavePolicies.remove',
+            'order' => $lastOrder[0] + 1,
+            'visible' => 1,
+            'description' => NULL,
+            'created_user_id' => 1,
+            'created' => $current_time
+        ], [
+            'name' => 'Staff Entitlements',
+            'controller' => 'System',
+            'module' => 'Administration',
+            'category' => 'Staff Leave',
+            'parent_id' => 5000,
+            '_view' => 'LeaveEntitlements.index|LeaveEntitlements.view',
+            '_add' => 'LeaveEntitlements.add',
+            '_edit' => 'LeaveEntitlements.edit',
+            '_delete' => 'LeaveEntitlements.remove',
+            'order' => $lastOrder[0] + 2,
+            'visible' => 1,
+            'description' => NULL,
+            'created_user_id' => 1,
+            'created' => $current_time
+        ], [
+            'name' => 'Staff Entitlements',
+            'controller' => 'Staff',
+            'module' => 'Institutions',
+            'category' => 'Staff - Career',
+            'parent_id' => 1000,
+            '_view' => 'StaffEntitlements.index',
+            'order' => $lastOrder[0] + 2,
+            'visible' => 1,
+            'description' => NULL,
+            'created_user_id' => 1,
+            'created' => $current_time
+        ]];
+        $table = $this->table('security_functions');
+        $table->insert($data);
+        $table->saveData();
     }
 
     public function down()
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
+        $exists = $this->hasTable('z_8128_security_functions');
+        if ($exists) {
+            $this->execute('DROP TABLE IF EXISTS `security_functions`;');
+            $this->execute('RENAME TABLE `z_8128_security_functions` TO `security_functions`;');
+        }
         $exists = $this->hasTable('z_8128_workflow_actions');
         if ($exists) {
-            // Rename rollback table back to original `staff_leave_types`
             $this->execute('DROP TABLE IF EXISTS `workflow_actions`;');
             $this->execute('RENAME TABLE `z_8128_workflow_actions` TO `workflow_actions`;');
         }
 
         $exists = $this->hasTable('z_8128_workflow_steps');
         if ($exists) {
-            // Rename rollback table back to original `staff_leave_types`
             $this->execute('DROP TABLE IF EXISTS `workflow_steps`;');
             $this->execute('RENAME TABLE `z_8128_workflow_steps` TO `workflow_steps`;');
         }
 
         $exists = $this->hasTable('z_8128_institution_staff_leave');
         if ($exists) {
-            // Rename rollback table back to original `staff_leave_types`
             $this->execute('DROP TABLE IF EXISTS `institution_staff_leave`;');
             $this->execute('RENAME TABLE `z_8128_institution_staff_leave` TO `institution_staff_leave`;');
         }
         $exists = $this->hasTable('z_8128_staff_position_titles');
         if ($exists) {
-            // Rename rollback table back to original `staff_leave_types`
             $this->execute('DROP TABLE IF EXISTS `staff_position_titles`;');
             $this->execute('RENAME TABLE `z_8128_staff_position_titles` TO `staff_position_titles`;');
         }
@@ -402,5 +400,78 @@ class POCOR8128 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `staff_leave_policies`;');
 
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+    }
+
+    /**
+     * @return void
+     */
+    private function createNewTables(): void
+    {
+        $this->execute('CREATE TABLE IF NOT EXISTS `staff_leave_policies` (
+                `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `code` VARCHAR(50) NOT NULL,
+                `name` VARCHAR(100) NOT NULL,
+                `description` TEXT NULL,
+                `modified_user_id` INT UNSIGNED NULL,
+                `modified` DATETIME NULL,
+                `created_user_id` INT UNSIGNED NOT NULL,
+                `created` DATETIME NOT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `uq_code_name` (`code`, `name`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
+
+        // Create staff_leave_policy_types table
+        $this->execute('
+                CREATE TABLE IF NOT EXISTS `staff_leave_policy_types` (
+                    `id` CHAR(36) NOT NULL,
+                    `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_policies.id",
+                    `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_types.id",
+                    `days` INT NULL COMMENT "Days allocated (nullable)",
+                    `rollover` TINYINT(1) NOT NULL DEFAULT 1 COMMENT "1: Yes Can rollover unused days, 0: No",
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `uq_policy_type` (`staff_leave_policy_id`, `staff_leave_type_id`),
+                    KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`),
+                    KEY `idx_staff_leave_type_id` (`staff_leave_type_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+            ');
+
+        $this->execute('CREATE TABLE IF NOT EXISTS `staff_leave_entitlements` (
+            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            `staff_id` INT UNSIGNED NOT NULL COMMENT "links to staff.id",
+            `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
+            `adjustment` INT SIGNED NOT NULL COMMENT "Leave days adjustment (positive or negative)",
+            `modified_user_id` INT UNSIGNED NULL,
+            `modified` DATETIME NULL,
+            `created_user_id` INT UNSIGNED NOT NULL,
+            `created` DATETIME NOT NULL,
+            PRIMARY KEY (`id`),
+            KEY `idx_staff_id` (`staff_id`),
+            KEY `idx_staff_leave_type_id` (`staff_leave_type_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
+
+        // Create institution_staff_leave_entitlement table
+        $this->execute('CREATE TABLE IF NOT EXISTS `institution_staff_leave_entitlements` (
+            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            `year` INT(4) NULL DEFAULT NULL COMMENT "Year",
+            `staff_id` INT UNSIGNED NOT NULL COMMENT "links to security_users.id",
+            `institution_id` INT NOT NULL COMMENT "links to institutions.id",
+            `institution_position_id` INT NOT NULL COMMENT "links to institution_positions.id",
+            `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to leave_policies.id",
+            `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
+            `days_total` INT SIGNED NULL DEFAULT NULL COMMENT "Total leave days",
+            `days_taken` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days taken",
+            `days_balance` INT SIGNED NULL DEFAULT NULL COMMENT "Remaining leave days",
+            `adjustment` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days adjustment (positive or negative)",
+            `modified_user_id` INT UNSIGNED NULL,
+            `modified` DATETIME NULL,
+            `created_user_id` INT UNSIGNED NOT NULL,
+            `created` DATETIME NOT NULL,
+            PRIMARY KEY (`id`),
+            KEY `idx_staff_id` (`staff_id`),
+            KEY `idx_institution_id` (`institution_id`),
+            KEY `idx_institution_position_id` (`institution_position_id`),
+            KEY `idx_leave_type_id` (`staff_leave_type_id`),
+            KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
     }
 }
