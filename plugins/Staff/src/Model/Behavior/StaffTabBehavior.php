@@ -110,6 +110,7 @@ class StaffTabBehavior extends Behavior
             'Positions' => ['text' => __('Positions')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
+            'StaffEntitlement' => ['text' => __('Entitlement')],
             'StaffLeave' => ['text' => __('Leave')],
             'StaffAttendances' => ['text' => __('Attendances')],
             'Behaviours' => ['text' => __('Behaviours')],
@@ -128,11 +129,21 @@ class StaffTabBehavior extends Behavior
                 unset($staffTabElements['Classes']);
                 unset($staffTabElements['Subjects']);
             }
+            // Add 'StaffEntitlement' before 'StaffLeave'
+            $staffTabElements = array_slice($staffTabElements, 0, array_search('StaffLeave', array_keys($staffTabElements)), true)
+                + ['StaffEntitlement' => ['text' => __('Entitlement')]]
+                + array_slice($staffTabElements, array_search('StaffLeave', array_keys($staffTabElements)), null, true);
+
         }
 
         $tabElements = array_merge($tabElements, $staffTabElements);
         foreach ($staffTabElements as $key => $tab) {
-                $changeKeyArray = ['StaffLeave', 'StaffAttendances','StaffAppraisals','StaffAssociations','StaffCurriculars'];
+                $changeKeyArray = ['StaffLeave',
+                    'StaffEntitlement',
+                    'StaffAttendances',
+                    'StaffAppraisals',
+                    'StaffAssociations',
+                    'StaffCurriculars'];
                 if($controllerName == "Profiles" || $controllerName == "Directories"){
                     $type = (isset($options['type'])) ? $options['type'] : null;//POCOR-8379
                     if(in_array($key, $changeKeyArray)){
