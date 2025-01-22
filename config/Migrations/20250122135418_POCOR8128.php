@@ -82,6 +82,7 @@ class POCOR8128 extends AbstractMigration
             $this->createGeneralLeavePolicy();
             $this->changeStaffPositionTitles();
             $this->addNationalCodes();
+            $this->makeAcademicPeriodForLeaveNullable();
 
             $this->execute('COMMIT;');
 
@@ -127,6 +128,24 @@ class POCOR8128 extends AbstractMigration
             ");
         }
     }
+/**
+     * Create general leave policy and associate with staff leave types.
+     *
+     * @return void
+     */
+    private function makeAcademicPeriodForLeaveNullable(): void
+    {
+
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_8128_institution_staff_leave` LIKE `institution_staff_leave`;');
+        $this->execute('INSERT IGNORE INTO `z_8128_institution_staff_leave` SELECT * FROM `institution_staff_leave`;');
+
+        $this->execute("
+            ALTER TABLE `institution_staff_leave`
+            MODIFY `academic_period_id` INT DEFAULT NULL NULL
+                COMMENT 'links to academic_periods.id';;
+        ");
+
+    }
 
     /**
      * Add `staff_leave_policy_id` foreign key to `staff_position_titles` table.
@@ -163,6 +182,8 @@ class POCOR8128 extends AbstractMigration
             FOREIGN KEY (`staff_leave_policy_id`) REFERENCES `staff_leave_policies` (`id`)
             ON DELETE RESTRICT;
         ');
+
+
     }
 
     /**
@@ -204,6 +225,12 @@ class POCOR8128 extends AbstractMigration
     public function down()
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        $exists = $this->hasTable('z_8128_institution_staff_leave');
+        if ($exists) {
+            // Rename rollback table back to original `staff_leave_types`
+            $this->execute('DROP TABLE IF EXISTS `institution_staff_leave`;');
+            $this->execute('RENAME TABLE `z_8128_institution_staff_leave` TO `institution_staff_leave`;');
+        }
         $exists = $this->hasTable('z_8128_staff_position_titles');
         if ($exists) {
             // Rename rollback table back to original `staff_leave_types`
