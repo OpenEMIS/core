@@ -37,19 +37,13 @@ class StaffEntitlementTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->addBehavior('Institution.StaffProfile');
+//        $this->addBehavior('Institution.StaffProfile');
         $this->addBehavior('Institution.InstitutionTab');
         $this->addBehavior('Staff.StaffTab');
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('view', false);
         $this->toggle('remove', false);
-//        if ($this->behaviors()->has('ControllerAction')) {
-            $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
-            $controllerActionBehavior->setConfig([
-                'actions' => []]
-                );
-//        }//        $this->toggle('actions', false);
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -168,9 +162,18 @@ class StaffEntitlementTable extends ControllerActionTable
                 'days_total' // Group by days allocated for consistency
             ]);
 
+        $search = $this->getSearchKey();
 
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query->where(['OR' => ['StaffLeaveTypes.name LIKE ' => '%' . $search . '%',
+                            'StaffPositionTitles.name LIKE ' => '%' . $search . '%']]);
+        }
+        unset($extra['config']['search']);
+        return $query;
 
     }
+
 
     private function setupTabElements()
     {
@@ -185,6 +188,7 @@ class StaffEntitlementTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
+
 
     /**
      * Get a dynamic table instance with all associations.
