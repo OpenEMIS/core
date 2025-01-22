@@ -48,7 +48,14 @@ class LeaveEntitlementsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-
+        $this->field('openemis_no');
+        $this->field('staff_id', ['sort' => true]);
+        $this->field('staff_leave_type_id', ['sort' => true]);
+        $this->field('adjustment', ['sort' => true]);
+        $this->field('created_user_id', ['visible' => true]);
+        $this->field('created', ['visible' => true]);
+        $this->field('modified_user_id', ['visible' => true]);
+        $this->field('modified', ['visible' => true]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -67,6 +74,14 @@ class LeaveEntitlementsTable extends ControllerActionTable
 
     }
 
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('staff')) {
+            $value = $entity->staff->openemis_no;
+        }
+        return $value;
+    }
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -75,16 +90,16 @@ class LeaveEntitlementsTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
 //        $this->setupFields($entity);
-        $this->setfieldOrder($this->fieldsOrder);
+//        $this->setfieldOrder($this->fieldsOrder);
     }
     private function setupFields(Entity $entity)
     {
         $this->field('id', [
             'type' => 'hidden',
         ]);
-        $this->field('staff_id', ['entity' => $entity]);
-        $this->field('staff_leave_type_id', ['entity' => $entity]);
-        $this->field('adjustment');
+        $this->field('staff_id', ['entity' => $entity, 'sort' => true]);
+        $this->field('staff_leave_type_id', ['entity' => $entity, 'sort' => true]);
+        $this->field('adjustment', ['sort' => true]);
     }
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
