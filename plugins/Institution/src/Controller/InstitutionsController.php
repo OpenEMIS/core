@@ -6994,7 +6994,7 @@ class InstitutionsController extends AppController
                 unset($entityEnrolmentData);
                 unset($InstitutionEnrolmentResult);
             }
-        } else if(!empty($institutionId)){ {
+        } else if(!empty($institutionId)) { 
             $workflowStepId = $studentAdmissionStatusValue;
 
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
