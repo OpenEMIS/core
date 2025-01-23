@@ -23,10 +23,11 @@ class AccountsTable extends AppTable
         $this->addBehavior('User.UserTab');
 	}
 
-	/*public function validationDefault(Validator $validator): Validator
+	public function validationDefault(Validator $validator): Validator
     {
 
 		$validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
 		return $validator
             ->add('current_password', [
                 'ruleChangePassword' => [
@@ -34,7 +35,7 @@ class AccountsTable extends AppTable
                     'provider' => 'table',
                 ]
             ]);
-	}*/
+	}
 
     public function editAfterAction(Event $event, Entity $entity)
     {
@@ -116,6 +117,9 @@ class AccountsTable extends AppTable
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $param = $this->request->getParam('pass')[1];
+        $message = __('The record has been updated successfully.');
+        $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
+            
         $url = ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Accounts', '0' => 'view','1' => $param ];
         return $this->controller->redirect($url);
     }
