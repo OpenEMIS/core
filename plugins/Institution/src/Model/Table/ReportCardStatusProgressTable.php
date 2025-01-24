@@ -118,7 +118,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
             $reportCardEntity = $reportCardTable->find()->where(['id' => $selectedReportCard])->first();
            if (($isSuperAdmin) || $userRole['security_role']['name'] == 'Superrole') { //POCOR-8773
                 if (!empty($reportCardEntity)) {
-                    $classOptions = $classLists = $Classes->find('list')
+                    $classLists = $Classes->find('list')
                         ->matching('ClassGrades')
                         ->where([
                             $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
@@ -133,7 +133,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                 }
             }else{
                 if (!empty($reportCardEntity)) {
-                    $classOptions = $classLists = $Classes->find('list')
+                    $classLists = $Classes->find('list')
                         ->matching('ClassGrades')
                         ->where([
                             $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
@@ -150,10 +150,10 @@ class ReportCardStatusProgressTable extends ControllerActionTable
             }
         }
 
-        $classOptions['all']   = "All Classes" ;
-
+        
+        $classOptions = ['-1' => '-- ' . __('Select Class') . ' --'] + $classLists + ['all' => __('All Classes')];
        // echo $selectedClass; die;
-        $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
+       // $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
 
 
