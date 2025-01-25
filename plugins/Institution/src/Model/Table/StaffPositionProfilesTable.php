@@ -18,6 +18,9 @@ use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Text;
 use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
+use Cake\ORM\Table;
+
 class StaffPositionProfilesTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -230,7 +233,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         $institutionPositionId = $contextData['institution_position_id'];
                         $FTE = $contextData['FTE'];
                         $newStartDate = new Date($value); // new start_date
-                        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+                        $InstitutionStaff = self::getDynamicTableInstance('Institution.Staff');
                         $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);
                         // get the records that have same institution_id, same position_id, other than the records itself
                         // with the start_date before the record_original_start_date and end_date is after the new_start_date
@@ -302,7 +305,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         $institutionPositionId = $contextData['institution_position_id'];
                         $FTE = $contextData['FTE'];
                         $newStartDate = new Date($value); // new start_date
-                        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+                        $InstitutionStaff = self::getDynamicTableInstance('Institution.Staff');
                         $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);
                         // get the records that have same institution_id, same position_id, other than the records itself
                         // with the start_date before the record_original_start_date and end_date is after the new_start_date
@@ -345,7 +348,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $validator->requirePresence('effective_date');
     }
 
-    
+
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'staff_id';
@@ -353,8 +356,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
     }
 
     /**
-     * POCOR-8774 
-     * This beforeSave method implements logic to handle various staff change scenarios, 
+     * POCOR-8774
+     * This beforeSave method implements logic to handle various staff change scenarios,
      * such as homeroom teacher changes, shifts, and other staff-related modifications.
      * Key functionalities:
      * - Manages security group associations for homeroom teacher changes.
@@ -364,82 +367,21 @@ class StaffPositionProfilesTable extends ControllerActionTable
      */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $StaffChangeTypes = TableRegistry::getTableLocator()->get('Staff.StaffChangeTypes');
-        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
-        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
-        $SecurityGroups = TableRegistry::getTableLocator()->get('Security.SecurityGroups');
-        $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+        $alias = $this->getRegistryAlias();
 
-        $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
+        $StaffChangeTypes = self::getDynamicTableInstance('Staff.StaffChangeTypes');
+
+
+        $requestedStaffChangeType = $StaffChangeTypes->find()
             ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
             ->first();
 
-        if ($entity->staff_change_type_id == 6) { // Homeroom teacher change
-            $SecurityGroupInstitutionData = $SecurityGroupInstitutions->find()
-                ->select(["security_group_id" => $SecurityGroups->aliasField('id')])
-                ->innerJoin(
-                    [$SecurityGroups->getAlias() => $SecurityGroups->getTable()],
-                    [
-                        $SecurityGroups->aliasField('id=') . $SecurityGroupInstitutions->aliasField('security_group_id')
-                    ]
-                )
-                ->where([$SecurityGroupInstitutions->aliasField('institution_id') => $entity->institution_id])
-                ->first();
 
-            $entity->security_group_id = $SecurityGroupInstitutionData->security_group_id;
 
-            if ($entity->homeroom_teacher == 0) {
-                $count = $InstitutionStaff->find()
-                    ->where([
-                        "institution_id" => $entity->institution_id,
-                        "staff_id" => $entity->staff_id,
-                        "is_homeroom" => 1,
-                        "staff_status_id" => 1,
-                        "id !=" => $entity->institution_staff_id
-                    ])->count();
-
-                if ($count == 0) {
-                    $securityGroupEntry = $SecurityGroupUsers->find()
-                        ->where([
-                            'security_user_id' => $entity->staff_id,
-                            'security_group_id' => $entity->security_group_id,
-                            'security_role_id' => 5
-                        ])->first();
-                    if (isset($securityGroupEntry)) {
-                        $SecurityGroupUsers->delete($securityGroupEntry);
-                    }
-                }
-            }
-
-            if ($entity->homeroom_teacher == 1) {
-                $id = $SecurityGroupUsers->find()
-                    ->where([
-                        'security_user_id' => $entity->staff_id,
-                        'security_group_id' => $entity->security_group_id,
-                        'security_role_id' => 5
-                    ])->first();
-                if (!isset($id)) {
-                    $user = $SecurityGroupUsers->newEntity([]);
-                    $user->id = Text::uuid();
-                    $user->security_user_id = $entity->staff_id;
-                    $user->security_group_id = $entity->security_group_id;
-                    $user->created_user_id = $entity->created_user_id;
-                    $user->security_role_id = 5;
-                    $user->created = $entity->created;
-                    $SecurityGroupUsers->save($user);
-                }
-            }
-
-            $InstitutionStaff->query()
-                ->update()
-                ->set(['is_homeroom' => $entity->homeroom_teacher])
-                ->where(['id' => $entity->institution_staff_id])
-                ->execute();
-        }
 
         // Update the `end_date` based on StaffChangeTypes
-        if ($StaffChangeTypesDataForShift) {
-            switch ($StaffChangeTypesDataForShift->code) {
+        if ($requestedStaffChangeType) {
+            switch ($requestedStaffChangeType->code) {
                 case 'CHANGE_IN_STAFF_TYPE':
                     $entity->end_date = $entity->end_date ?? null;
                     break;
@@ -454,11 +396,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     break;
             }
         }
-        if ($StaffChangeTypesDataForShift['code'] == 'HOMEROOM_TEACHER') { // POCOR-8760
-            if (!isset($entity->end_date)) {
-                unset($entity->end_date);
-            }
-        }
 
         $associatedData = $this->getAssociatedData($entity);
 
@@ -468,15 +405,15 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($this->url('add'));
         } else {
-            $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
-            $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
+            $StaffChangeTypes = self::getDynamicTableInstance('Staff.StaffChangeTypes');
+            $requestedStaffChangeType = $StaffChangeTypes->find()
                 ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                 ->first();
 
-            if ($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT') {
-                $entity->status_id = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'APPROVED');
-                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+            if ($requestedStaffChangeType->code == 'CHANGE_OF_SHIFT') {
+                $entity->status_id = $this->Workflow->getStepsByModelCode($alias, 'APPROVED');
+                $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $InstitutionPositions = self::getDynamicTableInstance('Institution.InstitutionPositions');
                 $periodId = $AcademicPeriods->getCurrent();
 
                 if (!empty($entity->new_shift)) { // POCOR-7109
@@ -492,7 +429,90 @@ class StaffPositionProfilesTable extends ControllerActionTable
             }
         }
 
-        return $entity; 
+        return $entity;
+    }
+
+
+    /**
+     * POCOR-8853
+     * @param int $institutionId
+     * @return mixed
+     */
+    private function getInstitututionSecurityGroupId(int $institutionId)
+    {
+        $securityGroupInstitutions = self::getDynamicTableInstance('security_group_institutions');
+        $groupInstitution = $securityGroupInstitutions->find()
+            ->where(['institution_id' => $institutionId])
+            ->first();
+        $security_group_id = $groupInstitution->security_group_id;
+        return $security_group_id;
+    }
+
+    // POCOR-8853
+    private
+    static function getHomeroomTeacherSecurityRoleId(): int
+    {
+        $securityRolesTbl = self::getDynamicTableInstance('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'HOMEROOM_TEACHER',
+            ])->first();
+        $security_role_id = $securityRoles->id;
+        return $security_role_id;
+    }
+
+
+    /*
+*
+* @param string $tableName . POCOR-8231
+* @return \Cake\ORM\Table
+* @author Khindol Madraimov <khindol.madraimov@gmail.com>
+*/
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
     }
 
     private function getDefaultEndDate($entity)
@@ -511,16 +531,17 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         $requestData = $this->request->getData();
         $staffChangeTypes = $this->staffChangeTypesList;
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
 
         $associatedData = [];
-        if ((array_key_exists($this->getAlias(), $requestData)) && $requestData[$this->getAlias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
+        $alias = $this->getAlias();
+        if ((array_key_exists($alias, $requestData)) && $requestData[$alias]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
             $staffId = $entity->staff_id;
             $institutionId = $entity->institution_id;
             $institutionPositionId = $entity->institution_position_id;
             $institutionStaffId = $entity->institution_staff_id;
 
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $InstitutionStaff = self::getDynamicTableInstance('Institution.Staff');
             $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);
             $newStartDate = new Date($entity->start_date);
 
@@ -534,7 +555,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         'new_start_date' => $newStartDate
                     ]);
 
-                    $associatedModel = TableRegistry::get($model);
+                    $associatedModel = self::getDynamicTableInstance($model);
 
                     $event = $associatedModel->dispatchEvent('Model.StaffPositionProfiles.getAssociatedModelData', [$params], $this);
 
@@ -562,7 +583,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         if (!$entity->getErrors()) {
-            $StaffTable = TableRegistry::get('Institution.Staff');
+            $StaffTable = self::getDynamicTableInstance('Institution.Staff');
            // $url = $this->url('view');
             $url['plugin'] = 'Institution';
             $url['controller'] = 'Institutions';
@@ -584,14 +605,32 @@ class StaffPositionProfilesTable extends ControllerActionTable
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if(isset($entity->staff_change_type_id) && !empty($entity->staff_change_type_id)) {
-            $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+            $alias = $this->getRegistryAlias();
+            $StaffChangeTypes = self::getDynamicTableInstance('Staff.StaffChangeTypes');
+            $requestedStaffChangeType = $StaffChangeTypes->find()
+                ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
+                ->first();
 
-            $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
-                    ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
-                    ->first();
-            if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT' || $StaffChangeTypesDataForShift->code == 'HOMEROOM_TEACHER'){
-                if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT' && !empty($entity->new_shift)) {
-                    $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+            $StaffChangeTypes = self::getDynamicTableInstance('Staff.StaffChangeTypes');
+
+            $approved_status_id = $this->Workflow->getStepsByModelCode($alias, 'APPROVED');
+            if(is_array($approved_status_id)){
+                $approved_status_id = reset($approved_status_id);
+            }
+
+            $requestedChangeCode = $requestedStaffChangeType['code'];
+            $status_id = $entity->status_id;
+            if ($requestedChangeCode == 'HOMEROOM_TEACHER') { // POCOR-8760
+                Log::debug(print_r(['$requestedChangeCode' => $requestedChangeCode,
+                '$approved_status_id' => $approved_status_id,
+                '$status_id' => $status_id],true));
+                if($status_id === $approved_status_id) {
+                    $entity = $this->changeHomeroomStatus($entity);
+                }
+            }
+            if($requestedChangeCode == 'CHANGE_OF_SHIFT'){
+                if($requestedChangeCode == 'CHANGE_OF_SHIFT' && !empty($entity->new_shift)) {
+                    $InstitutionPositions = self::getDynamicTableInstance('Institution.InstitutionPositions');
                     $shiftUpdate =   $InstitutionPositions->updateAll(
                         ['shift_id' => $entity->new_shift,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
                         [
@@ -599,90 +638,13 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         ]
                     );
                     $StaffChangeTypesData = $StaffChangeTypes->find()
-                        ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
+                        ->where([$StaffChangeTypes->aliasField('id') =>
+                            $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
                         ->first();
                     if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
                         $event->stopPropagation();
                     }
                 }
-                //POCOR 7289 tables updation start for homeroom
-                if ($entity->staff_change_type_id == 6) {
-                    $InstitutionStaff = TableRegistry::get('Institution.Staff');
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
-                    $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-                    $SecurityGroupInstitutionData = $SecurityGroupInstitutions->find()
-                        ->select(["security_group_id" => $SecurityGroups->aliasField('id')])
-                        ->innerJoin(
-                            [$SecurityGroups->getAlias() => $SecurityGroups->getTable()],
-                            [
-                                $SecurityGroups->aliasField('id=') . $SecurityGroupInstitutions->aliasField('security_group_id')
-                            ]
-                        )
-                        ->where([$SecurityGroupInstitutions->aliasField('institution_id') => $entity->institution_id])
-                        ->first();
-                    $entity->security_group_id = $SecurityGroupInstitutionData->security_group_id;
-                    //No homeroom teacher
-                    if ($entity->homeroom_teacher == 0) {
-                        $count = $InstitutionStaff->find()
-                            ->where([
-                                "institution_id" => $entity->institution_id,
-                                "staff_id" => $entity->staff_id,
-                                "is_homeroom" => 1,
-                                "staff_status_id" => 1,
-                                "id !=" => $entity->institution_staff_id
-
-                            ])->count();
-
-                        if ($count == 0) {
-
-                            $securityGroupEntry = $SecurityGroupUsers->find()
-                                ->where([
-                                    'security_user_id' => $entity->staff_id,
-                                    'security_group_id' => $entity->security_group_id,
-                                    'security_role_id' => 5
-                                ])->first();
-                            if (isset($securityGroupEntry)) {
-                                $SecurityGroupUsers->delete($securityGroupEntry);
-                            }
-                        }
-                    }
-                    // Homeroom Teacher
-                    if ($entity->homeroom_teacher == 1) {
-                        $id = $SecurityGroupUsers->find()
-                            ->where([
-                                'security_user_id' => $entity->staff_id,
-                                'security_group_id' =>  $entity->security_group_id,
-                                'security_role_id' => 5
-                            ])->first();
-                        if (!isset($id)) {
-
-                            $user = $SecurityGroupUsers->newEntity([]);
-                            $user->id = Text::uuid();
-                            $user->security_user_id = $entity->staff_id;
-                            $user->security_group_id = $entity->security_group_id;
-                            $user->created_user_id = $entity->created_user_id;
-                            $user->security_role_id = 5;
-                            $user->created = $entity->created;
-                            $SecurityGroupUsers->save($user);
-                        }
-                    } 
-                    //Both case
-                    //$query=$InstitutionStaff->getQuery();
-                    $query = $InstitutionStaff->find();//POCOR-8447
-                    $query->update()
-                        ->set(['is_homeroom' => $entity->homeroom_teacher])
-                        ->where(['id' => $entity->institution_staff_id])
-                        ->execute();
-                    $StaffChangeTypesData = $StaffChangeTypes->find()
-                                    ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
-                                    ->first();
-
-                    if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
-                        $event->stopPropagation();
-                    }
-                }
-                //POCOR-7289 ends
                 $institutionId = $this->getQueryString('institution_id');
                 $url = $this->url('view');
                 $url['action'] = 'Staff';
@@ -747,7 +709,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $newEntity = $this->patchStaffProfile($data);
         // reject all pending transfers
         $this->rejectPendingTransfer($data);
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = self::getDynamicTableInstance('Institution.Staff');
         $InstitutionStaff->save($newEntity);
     }
 
@@ -755,7 +717,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         // reject all pending transfers
         $staffId = $data['staff_id'];
-        $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
+        $InstitutionStaffTransfers = self::getDynamicTableInstance('Institution.InstitutionStaffTransfers');
         $doneStatus = $InstitutionStaffTransfers::DONE;
 
         $transferRecords = $InstitutionStaffTransfers->find()
@@ -787,7 +749,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $InstitutionStaffTransfers->autoAssignAssignee($entity);
 
                     if ($InstitutionStaffTransfers->save($entity)) {
-                        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+                        $WorkflowTransitions = self::getDynamicTableInstance('Workflow.WorkflowTransitions');
                         $prevStepEntity = $this->Statuses->get($prevStep);
 
                         $transition = [
@@ -810,7 +772,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     private function patchStaffProfile(array $data)
     {
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = self::getDynamicTableInstance('Institution.Staff');
         $newEntity = null;
 
         // Get the latest staff record entry
@@ -883,7 +845,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     public function onGetEndDate(Event $event, Entity $entity)
     {
         //POCOR-6979
-        $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+        $StaffChangeTypes = self::getDynamicTableInstance('Staff.StaffChangeTypes');
         $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
@@ -893,7 +855,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             if ($newValue !== null && $newValue instanceof \DateTimeInterface) {
                 if ($newValue->format('Y-m-d H:i:s') === '1969-12-31 00:00:00') {
                     $newValue = '';
-                } 
+                }
             } else {
                 $newValue = ''; // or handle null in a different way if needed
             }
@@ -960,7 +922,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         // Set the header of the page
         $institutionId = $this->getQueryString('institution_id');
-        //$this->Institutions = TableRegistry::get('Institution.Institutions');
+        //$this->Institutions = self::getDynamicTableInstance('Institution.Institutions');
         $institutionName = $this->Institutions->get($institutionId)->name;
         $this->controller->set('contentHeader', $institutionName. ' - ' .__('Pending Change in Assignment'));
 
@@ -1025,11 +987,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        
+
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $institutionId = $this->getQueryString('institution_id');
-                
+
         $toolbarButtons = $extra['toolbarButtons'];
         $toolbarButtons['back']['url'] = [
             'plugin' => 'Institution',
@@ -1251,7 +1213,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $attr['value'] = $startDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($startDate);
         } else {
-            $getStaffStartData = TableRegistry::get('Institution.InstitutionStaff');
+            $getStaffStartData = self::getDynamicTableInstance('Institution.InstitutionStaff');
             $getStaffStartDateData = $getStaffStartData->find()
             ->where([
                 $getStaffStartData->aliasField('staff_id') => $entity->staff_id,
@@ -1284,7 +1246,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
 
-                    $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+                    $InstitutionSubjectStaff = self::getDynamicTableInstance('Institution.InstitutionSubjectStaff');
                     $latestSubjectStartDate = $InstitutionSubjectStaff->find()
                         ->where([
                             $InstitutionSubjectStaff->aliasField('staff_id') => $entity->staff_id,
@@ -1352,11 +1314,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $url[0] = $encodedQueryString;
         $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
        // return $this->controller->redirect($url);
-        
+
     }
     public function viewAfterAction(Event $event, Entity $entity, $extra)
     {
-        $StaffTable = TableRegistry::get('Institution.Staff');
+        $StaffTable = self::getDynamicTableInstance('Institution.Staff');
         $staffEntity = $StaffTable->find()
             ->contain(['StaffTypes'])
             ->where([$StaffTable->aliasField('id') => $entity->institution_staff_id])
@@ -1384,7 +1346,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if (is_null($institutionStaffId)) {
             return true;
         }
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = self::getDynamicTableInstance('Institution.Staff');
 
         $staff = $InstitutionStaff->get($institutionStaffId);
 
@@ -1419,7 +1381,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if (!isset($requestData['staff_change_type_id'])) {
             $requestData['staff_change_type_id'] = ''; // Set a default value if not present
         }
-        
+
         // Use the entity's set method to assign the request data
         $entity->set($requestData);
             return false;
@@ -1430,7 +1392,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $staffEntity = TableRegistry::get('Institution.Staff')->get($entity->institution_staff_id);
+        $staffEntity = self::getDynamicTableInstance('Institution.Staff')->get($entity->institution_staff_id);
         $this->Session->write('Institution.StaffPositionProfiles.staffRecord', $staffEntity);
         //$data = $this->request->getData();
         //$data['staff_change_type_id'] = $entity->staff_change_type_id;
@@ -1545,9 +1507,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
     */
     public function onUpdateFieldCurrentShift(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-        $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+        $InstitutionStaffShifts = self::getDynamicTableInstance('Institution.InstitutionStaffShifts');
+        $InstitutionShifts = self::getDynamicTableInstance('Institution.InstitutionShifts');
+        $ShiftOptions = self::getDynamicTableInstance('Institution.ShiftOptions');
         $shifts = [];
         $requestData = $request->getData();
         if ($action == 'add' || $action == 'edit') {
@@ -1559,8 +1521,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 $attr['type'] = 'readOnly';
                 if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-                    $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-                    $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+                    $InstitutionStaff = self::getDynamicTableInstance('Institution.InstitutionStaff');
+                    $InstitutionPositions = self::getDynamicTableInstance('Institution.InstitutionPositions');
                     $staffId = $entity->staff_id;
                     $staffShifts  = $InstitutionStaff
                             ->find()
@@ -1602,10 +1564,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if($institutionId == ''){
             $institutionId = $this->getQueryString('institution_id');
         }
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
         $periodId = $AcademicPeriods->getCurrent();
-        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-        $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+        $InstitutionShifts = self::getDynamicTableInstance('Institution.InstitutionShifts');
+        $ShiftOptions = self::getDynamicTableInstance('Institution.ShiftOptions');
         $optionList = $ShiftOptions->find('list')
                         ->leftJoin([$InstitutionShifts->getAlias() => $InstitutionShifts->getTable()],
                         [$InstitutionShifts->aliasField('shift_option_id = ') . $ShiftOptions->aliasField('id')])
@@ -1638,9 +1600,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onUpdateFieldCurrentShiftOne(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $InstitutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-        $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+        $InstitutionStaffShifts = self::getDynamicTableInstance('Institution.InstitutionStaffShifts');
+        $InstitutionShifts = self::getDynamicTableInstance('Institution.InstitutionShifts');
+        $ShiftOptions = self::getDynamicTableInstance('Institution.ShiftOptions');
         $shifts = [];
         $requestData = $request->getData();
         if ($action == 'add' || $action == 'edit') {
@@ -1751,6 +1713,65 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
         return $attr;
     }
-    
+
+    /**
+     * @param Entity $entity
+     * @return Entity
+     */
+    private function changeHomeroomStatus(Entity $entity): Entity
+    {
+        $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+        if (!isset($entity->end_date)) {
+            unset($entity->end_date);
+        }
+        $institutionId = $entity->institution_id;
+        $homeroomSecurityRoleId = self::getHomeroomTeacherSecurityRoleId();
+        $institution_security_group_id = $this->getInstitututionSecurityGroupId($institutionId);
+        $InstitutionStaff = self::getDynamicTableInstance('Institution.Staff');
+        $SecurityGroupUsers = self::getDynamicTableInstance('Security.SecurityGroupUsers');
+
+        $entity->security_group_id = $institution_security_group_id;
+
+        $is_homeroom_teacher = $entity->homeroom_teacher ?? 0;
+        $staff_id = $entity->staff_id;
+        $security_group_id = $entity->security_group_id;
+
+        if ($is_homeroom_teacher == 0) {
+            $SecurityGroupUsers->deleteAll([
+                'security_user_id' => $staff_id,
+                'security_group_id' => $security_group_id,
+                'security_role_id' => $homeroomSecurityRoleId
+            ]);
+        }
+
+        if ($is_homeroom_teacher == 1) {
+            $id = $SecurityGroupUsers->find()
+                ->where([
+                    'security_user_id' => $staff_id,
+                    'security_group_id' => $security_group_id,
+                    'security_role_id' => $homeroomSecurityRoleId
+                ])->first();
+            if (!isset($id)) {
+                $groupUserData = [
+                    'id' => Text::uuid(),
+                    'security_group_id' => $security_group_id, // POCOR-8853 start
+                    'security_user_id' => $staff_id,
+                    'security_role_id' => $homeroomSecurityRoleId, // POCOR-8853 start
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                $securityGroupUserEntity = $SecurityGroupUsers->newEntity($groupUserData);
+                $SecurityGroupUsers->save($securityGroupUserEntity);
+            }
+        }
+
+        $InstitutionStaff->query()
+            ->update()
+            ->set(['is_homeroom' => $is_homeroom_teacher])
+            ->where(['id' => $staff_id])
+            ->execute();
+        return $entity;
+    }
+
 }
 
