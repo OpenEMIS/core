@@ -18,6 +18,9 @@ use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Text;
 use Cake\Datasource\ConnectionManager;
+use Cake\ORM\Table;
+use Cake\Log\Log;
+
 class StaffPositionProfilesTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -370,40 +373,38 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $SecurityGroups = TableRegistry::getTableLocator()->get('Security.SecurityGroups');
         $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
 
-        $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
+        $requestedStaffChange = $StaffChangeTypes->find()
             ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
             ->first();
+        $requestedStaffChangeCode = $requestedStaffChange['code'];
 
-        if ($entity->staff_change_type_id == 6) { // Homeroom teacher change
+        if ($requestedStaffChangeCode == 'HOMEROOM_TEACHER') { // Homeroom teacher change
+            $institution_id = $entity->institution_id;
             $SecurityGroupInstitutionData = $SecurityGroupInstitutions->find()
-                ->select(["security_group_id" => $SecurityGroups->aliasField('id')])
-                ->innerJoin(
-                    [$SecurityGroups->getAlias() => $SecurityGroups->getTable()],
-                    [
-                        $SecurityGroups->aliasField('id=') . $SecurityGroupInstitutions->aliasField('security_group_id')
-                    ]
-                )
-                ->where([$SecurityGroupInstitutions->aliasField('institution_id') => $entity->institution_id])
+                ->where([$SecurityGroupInstitutions->aliasField('institution_id') => $institution_id])
                 ->first();
 
-            $entity->security_group_id = $SecurityGroupInstitutionData->security_group_id;
+            $security_group_id = $SecurityGroupInstitutionData->security_group_id;
 
+            $staff_id = $entity->staff_id;
+            $institution_staff_id = $entity->institution_staff_id;
+            $homeroom_teacher_security_role_id = self::getHomeroomTeacherSecurityRoleId();
             if ($entity->homeroom_teacher == 0) {
-                $count = $InstitutionStaff->find()
+                // CHECK THAT THE CURRENT STAFF DOES NOT HAVE ANOTHER HOMEROOM ASSIGNED POSITIONS
+                $anotherHomeroomPositionsCount = $InstitutionStaff->find()
                     ->where([
-                        "institution_id" => $entity->institution_id,
-                        "staff_id" => $entity->staff_id,
+                        "institution_id" => $institution_id,
+                        "staff_id" => $staff_id,
                         "is_homeroom" => 1,
                         "staff_status_id" => 1,
-                        "id !=" => $entity->institution_staff_id
+                        "id !=" => $institution_staff_id
                     ])->count();
-
-                if ($count == 0) {
+                if ($anotherHomeroomPositionsCount == 0) {
                     $securityGroupEntry = $SecurityGroupUsers->find()
                         ->where([
-                            'security_user_id' => $entity->staff_id,
-                            'security_group_id' => $entity->security_group_id,
-                            'security_role_id' => 5
+                            'security_user_id' => $staff_id,
+                            'security_group_id' => $security_group_id,
+                            'security_role_id' => $homeroom_teacher_security_role_id
                         ])->first();
                     if (isset($securityGroupEntry)) {
                         $SecurityGroupUsers->delete($securityGroupEntry);
@@ -412,34 +413,36 @@ class StaffPositionProfilesTable extends ControllerActionTable
             }
 
             if ($entity->homeroom_teacher == 1) {
-                $id = $SecurityGroupUsers->find()
+                $homeroom_teacher_institution_security_group = $SecurityGroupUsers->find()
                     ->where([
-                        'security_user_id' => $entity->staff_id,
-                        'security_group_id' => $entity->security_group_id,
-                        'security_role_id' => 5
+                        'security_user_id' => $staff_id,
+                        'security_group_id' => $security_group_id,
+                        'security_role_id' => $homeroom_teacher_security_role_id
                     ])->first();
-                if (!isset($id)) {
-                    $user = $SecurityGroupUsers->newEntity([]);
-                    $user->id = Text::uuid();
-                    $user->security_user_id = $entity->staff_id;
-                    $user->security_group_id = $entity->security_group_id;
-                    $user->created_user_id = $entity->created_user_id;
-                    $user->security_role_id = 5;
-                    $user->created = $entity->created;
-                    $SecurityGroupUsers->save($user);
+                if (!isset($homeroom_teacher_institution_security_group)) {
+                    $homeroom_teacher_institution_security_group = $SecurityGroupUsers->newEntity([]);
+                    $homeroom_teacher_institution_security_group->id = Text::uuid();
+                    $homeroom_teacher_institution_security_group->security_user_id = $staff_id;
+                    $homeroom_teacher_institution_security_group->security_group_id = $security_group_id;
+                    $homeroom_teacher_institution_security_group->created_user_id = $entity->created_user_id;
+                    $homeroom_teacher_institution_security_group->security_role_id = $homeroom_teacher_security_role_id;
+                    $homeroom_teacher_institution_security_group->created = $entity->created;
+                    $SecurityGroupUsers->save($homeroom_teacher_institution_security_group);
                 }
             }
 
             $InstitutionStaff->query()
                 ->update()
                 ->set(['is_homeroom' => $entity->homeroom_teacher])
-                ->where(['id' => $entity->institution_staff_id])
+                ->where(['id' => $institution_staff_id])
                 ->execute();
+            $entity->status_id = 35;
+
         }
 
         // Update the `end_date` based on StaffChangeTypes
-        if ($StaffChangeTypesDataForShift) {
-            switch ($StaffChangeTypesDataForShift->code) {
+        if ($requestedStaffChangeCode) {
+            switch ($requestedStaffChangeCode) {
                 case 'CHANGE_IN_STAFF_TYPE':
                     $entity->end_date = $entity->end_date ?? null;
                     break;
@@ -450,30 +453,29 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 case 'CHANGE_OF_START_DATE':
                     $entity->end_date = $entity->end_date ?? null;
                     break;
+                case 'HOMEROOM_TEACHER':
+                    if (!isset($entity->end_date)) {
+                        unset($entity->end_date);
+                    }
+                    $entity->status_id = 35;
                 default:
                     break;
             }
         }
-        if ($StaffChangeTypesDataForShift['code'] == 'HOMEROOM_TEACHER') { // POCOR-8760
-            if (!isset($entity->end_date)) {
-                unset($entity->end_date);
-            }
+
+
+
+        if ($requestedStaffChangeCode == 'CHANGE_OF_START_DATE') { // POCOR-8760
+            $associatedData = $this->getAssociatedData($entity, $event);
         }
-
-        $associatedData = $this->getAssociatedData($entity, $event);
-
         if (!empty($associatedData)) {
             $message = __('The record is not updated due to associated data encountered.');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('add'));
         } else {
-            $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
-            $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
-                ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
-                ->first();
 
-            if ($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT') {
+            if ($requestedStaffChangeCode == 'CHANGE_OF_SHIFT') {
                 $entity->status_id = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'APPROVED');
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
@@ -495,6 +497,73 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $entity;
     }
 
+    // POCOR-8853
+    private
+    static function getHomeroomTeacherSecurityRoleId(): int
+    {
+        $securityRolesTbl = self::getDynamicTableInstance('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'HOMEROOM_TEACHER',
+            ])->first();
+        $security_role_id = $securityRoles->id;
+        return $security_role_id;
+    }
+
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+//            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
     private function getDefaultEndDate($entity)
     {
         $staffPositionProfilesRecord = $this->find()
@@ -509,50 +578,50 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     private function getAssociatedData($entity, $mainEvent)
     {
-        $requestData = $this->request->getData();
-        $staffChangeTypes = $this->staffChangeTypesList;
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+//        $requestData = $this->request->getData();
+//        $staffChangeTypes = $this->staffChangeTypesList;
+//        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
         $associatedData = [];
-        if ((array_key_exists($this->getAlias(), $requestData)) && $requestData[$this->getAlias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
-            $staffId = $entity->staff_id;
-            $institutionId = $entity->institution_id;
-            $institutionPositionId = $entity->institution_position_id;
-            $institutionStaffId = $entity->institution_staff_id;
+//        if ((array_key_exists($this->getAlias(), $requestData)) && $requestData[$this->getAlias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_OF_START_DATE']) {
+        $staffId = $entity->staff_id;
+        $institutionId = $entity->institution_id;
+        $institutionPositionId = $entity->institution_position_id;
+        $institutionStaffId = $entity->institution_staff_id;
 
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
-            $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);
-            $newStartDate = new Date($entity->start_date);
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $originalStartDate = new Date($InstitutionStaff->get($institutionStaffId)->start_date);
+        $newStartDate = new Date($entity->start_date);
 
-            if ($newStartDate > $originalStartDate) { // if new_start_date is later than original_start_date
-                foreach ($this->associatedModelList as $model => $value) {
-                    $params = new ArrayObject([
-                        'staff_id' => $staffId,
-                        'institution_id' => $institutionId,
-                        'institution_position_id' => $institutionPositionId,
-                        'original_start_date' => $originalStartDate,
-                        'new_start_date' => $newStartDate
-                    ]);
+        if ($newStartDate > $originalStartDate) { // if new_start_date is later than original_start_date
+            foreach ($this->associatedModelList as $model => $value) {
+                $params = new ArrayObject([
+                    'staff_id' => $staffId,
+                    'institution_id' => $institutionId,
+                    'institution_position_id' => $institutionPositionId,
+                    'original_start_date' => $originalStartDate,
+                    'new_start_date' => $newStartDate
+                ]);
 
-                    $associatedModel = TableRegistry::get($model);
+                $associatedModel = TableRegistry::get($model);
 
-                    $event = $associatedModel->dispatchEvent('Model.StaffPositionProfiles.getAssociatedModelData', [$params], $this);
+                $event = $associatedModel->dispatchEvent('Model.StaffPositionProfiles.getAssociatedModelData', [$params], $this);
 
-                    if ($event->isStopped()) {
-                        $mainEvent->stopPropagation();
-                        return $event->getResult();
-                    }
-
-                    $result = $event->getResult();
-
-                    // if no result will not added to the associated data
-                    if (!empty($result)) {
-                        $associatedData[$value[0]] = $result;
-                    }
-
+                if ($event->isStopped()) {
+                    $mainEvent->stopPropagation();
+                    return $event->getResult();
                 }
+
+                $result = $event->getResult();
+
+                // if no result will not added to the associated data
+                if (!empty($result)) {
+                    $associatedData[$value[0]] = $result;
+                }
+
             }
         }
+//        }
 
         return $associatedData;
     }
@@ -583,11 +652,12 @@ class StaffPositionProfilesTable extends ControllerActionTable
     //POCOR-8447 Start
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if(isset($entity->staff_change_type_id) && !empty($entity->staff_change_type_id)) {
+        $staff_change_type_id = $entity->staff_change_type_id;
+        if(isset($staff_change_type_id) && !empty($staff_change_type_id)) {
             $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
 
             $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
-                    ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
+                    ->where([$StaffChangeTypes->aliasField('id') => $staff_change_type_id])
                     ->first();
             if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT' || $StaffChangeTypesDataForShift->code == 'HOMEROOM_TEACHER'){
                 if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT' && !empty($entity->new_shift)) {
@@ -606,82 +676,82 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     }
                 }
                 //POCOR 7289 tables updation start for homeroom
-                if ($entity->staff_change_type_id == 6) {
-                    $InstitutionStaff = TableRegistry::get('Institution.Staff');
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
-                    $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-                    $SecurityGroupInstitutionData = $SecurityGroupInstitutions->find()
-                        ->select(["security_group_id" => $SecurityGroups->aliasField('id')])
-                        ->innerJoin(
-                            [$SecurityGroups->getAlias() => $SecurityGroups->getTable()],
-                            [
-                                $SecurityGroups->aliasField('id=') . $SecurityGroupInstitutions->aliasField('security_group_id')
-                            ]
-                        )
-                        ->where([$SecurityGroupInstitutions->aliasField('institution_id') => $entity->institution_id])
-                        ->first();
-                    $entity->security_group_id = $SecurityGroupInstitutionData->security_group_id;
-                    //No homeroom teacher
-                    if ($entity->homeroom_teacher == 0) {
-                        $count = $InstitutionStaff->find()
-                            ->where([
-                                "institution_id" => $entity->institution_id,
-                                "staff_id" => $entity->staff_id,
-                                "is_homeroom" => 1,
-                                "staff_status_id" => 1,
-                                "id !=" => $entity->institution_staff_id
-
-                            ])->count();
-
-                        if ($count == 0) {
-
-                            $securityGroupEntry = $SecurityGroupUsers->find()
-                                ->where([
-                                    'security_user_id' => $entity->staff_id,
-                                    'security_group_id' => $entity->security_group_id,
-                                    'security_role_id' => 5
-                                ])->first();
-                            if (isset($securityGroupEntry)) {
-                                $SecurityGroupUsers->delete($securityGroupEntry);
-                            }
-                        }
-                    }
-                    // Homeroom Teacher
-                    if ($entity->homeroom_teacher == 1) {
-                        $id = $SecurityGroupUsers->find()
-                            ->where([
-                                'security_user_id' => $entity->staff_id,
-                                'security_group_id' =>  $entity->security_group_id,
-                                'security_role_id' => 5
-                            ])->first();
-                        if (!isset($id)) {
-
-                            $user = $SecurityGroupUsers->newEntity([]);
-                            $user->id = Text::uuid();
-                            $user->security_user_id = $entity->staff_id;
-                            $user->security_group_id = $entity->security_group_id;
-                            $user->created_user_id = $entity->created_user_id;
-                            $user->security_role_id = 5;
-                            $user->created = $entity->created;
-                            $SecurityGroupUsers->save($user);
-                        }
-                    }
-                    //Both case
-                    //$query=$InstitutionStaff->getQuery();
-                    $query = $InstitutionStaff->find();//POCOR-8447
-                    $query->update()
-                        ->set(['is_homeroom' => $entity->homeroom_teacher])
-                        ->where(['id' => $entity->institution_staff_id])
-                        ->execute();
-                    $StaffChangeTypesData = $StaffChangeTypes->find()
-                                    ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
-                                    ->first();
-
-                    if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
-                        $event->stopPropagation();
-                    }
-                }
+//                if ($staff_change_type_id == 6) {
+//                    $InstitutionStaff = TableRegistry::get('Institution.Staff');
+//                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+//                    $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
+//                    $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+//                    $SecurityGroupInstitutionData = $SecurityGroupInstitutions->find()
+//                        ->select(["security_group_id" => $SecurityGroups->aliasField('id')])
+//                        ->innerJoin(
+//                            [$SecurityGroups->getAlias() => $SecurityGroups->getTable()],
+//                            [
+//                                $SecurityGroups->aliasField('id=') . $SecurityGroupInstitutions->aliasField('security_group_id')
+//                            ]
+//                        )
+//                        ->where([$SecurityGroupInstitutions->aliasField('institution_id') => $entity->institution_id])
+//                        ->first();
+//                    $entity->security_group_id = $SecurityGroupInstitutionData->security_group_id;
+//                    //No homeroom teacher
+//                    if ($entity->homeroom_teacher == 0) {
+//                        $count = $InstitutionStaff->find()
+//                            ->where([
+//                                "institution_id" => $entity->institution_id,
+//                                "staff_id" => $entity->staff_id,
+//                                "is_homeroom" => 1,
+//                                "staff_status_id" => 1,
+//                                "id !=" => $entity->institution_staff_id
+//
+//                            ])->count();
+//
+//                        if ($count == 0) {
+//
+//                            $securityGroupEntry = $SecurityGroupUsers->find()
+//                                ->where([
+//                                    'security_user_id' => $entity->staff_id,
+//                                    'security_group_id' => $entity->security_group_id,
+//                                    'security_role_id' => 5
+//                                ])->first();
+//                            if (isset($securityGroupEntry)) {
+//                                $SecurityGroupUsers->delete($securityGroupEntry);
+//                            }
+//                        }
+//                    }
+//                    // Homeroom Teacher
+//                    if ($entity->homeroom_teacher == 1) {
+//                        $id = $SecurityGroupUsers->find()
+//                            ->where([
+//                                'security_user_id' => $entity->staff_id,
+//                                'security_group_id' =>  $entity->security_group_id,
+//                                'security_role_id' => 5
+//                            ])->first();
+//                        if (!isset($id)) {
+//
+//                            $user = $SecurityGroupUsers->newEntity([]);
+//                            $user->id = Text::uuid();
+//                            $user->security_user_id = $entity->staff_id;
+//                            $user->security_group_id = $entity->security_group_id;
+//                            $user->created_user_id = $entity->created_user_id;
+//                            $user->security_role_id = 5;
+//                            $user->created = $entity->created;
+//                            $SecurityGroupUsers->save($user);
+//                        }
+//                    }
+//                    //Both case
+//                    //$query=$InstitutionStaff->getQuery();
+//                    $query = $InstitutionStaff->find();//POCOR-8447
+//                    $query->update()
+//                        ->set(['is_homeroom' => $entity->homeroom_teacher])
+//                        ->where(['id' => $entity->institution_staff_id])
+//                        ->execute();
+//                    $StaffChangeTypesData = $StaffChangeTypes->find()
+//                                    ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
+//                                    ->first();
+//
+//                    if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
+//                        $event->stopPropagation();
+//                    }
+//                }
                 //POCOR-7289 ends
                 $institutionId = $this->getQueryString('institution_id');
                 $url = $this->url('view');
@@ -966,7 +1036,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
         $this->field('institution_staff_id', ['visible' => false]);
         $this->field('staff_id', ['before' => 'start_date']);
-        $this->field('FTE', ['type' => 'select','visible' => ['view' => true, 'edit' => false, 'add' => false]]);
+        $this->field('FTE', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Staff', 'index'];
     }
 
@@ -1149,9 +1219,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $requestData = $request->getData();
             $staffChangeTypes = $this->staffChangeTypesList;
             $attr['visible'] = false;
+            $attr['type'] = 'hidden';
             if (isset($requestData[$this->getAlias()])) {
                 if ($requestData[$this->getAlias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
                     $attr['visible'] = true;
+                    $attr['type'] = 'select';
                     if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                         $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
                         $options = $attr['options'];
@@ -1167,14 +1239,13 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onUpdateFieldFTE(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         if ($action == 'add' || $action == 'edit') {
             $requestData = $request->getData();
             $staffChangeTypes = $this->staffChangeTypesList;
+
             if (isset($requestData[$this->getAlias()])) {
-                if($requestData[$this->getAlias()]['staff_change_type_id'] == ''){
-                    $attr['visible'] = false;
-                }
-                else if ($requestData[$this->getAlias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE'] || $requestData[$this->getAlias()]['staff_change_type_id'] == 2) {
+                if ($requestData[$this->getAlias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
                     $attr['type'] = 'select';
                     $attr['visible'] = true;
                     if (isset($attr['options'])) {
@@ -1188,11 +1259,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         $attr['options'] = $options;
                     }
                 } else {
-                    $attr['type'] = 'hidden';
-                    if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
+                   if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                         $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
                         $attr['value'] = $entity->FTE;
-                    }
+                        $attr['type'] = 'hidden';
+                   }
                 }
             }
         }
