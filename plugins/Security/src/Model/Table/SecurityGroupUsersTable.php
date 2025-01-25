@@ -320,7 +320,7 @@ class SecurityGroupUsersTable extends AppTable {
                         $securityGroupId = $institutionObj->security_group_id;
                         $areaObj = $institutionObj->area;
 
-//                        Log::write('debug', 'Institution Id: ' . $institutionId);
+//                        Log::write('debug', 'Institution Id: ' . $institutionId); // POCOR-8853 removed logging
 //                        Log::write('debug', 'Security Group Id: ' . $securityGroupId);
 //                        Log::write('debug', 'Institution Area:');
 //                        Log::write('debug', print_r($areaObj, true));
