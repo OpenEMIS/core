@@ -540,7 +540,6 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 'url' => $attributes['url'],
                 'username' => $attributes['username'],
                 'password' => $this->decrypt($attributes['password'], Security::getSalt()),
-                'token_uri' => $attributes['token_uri'] ?? null
             ];
         }
         return $data;
