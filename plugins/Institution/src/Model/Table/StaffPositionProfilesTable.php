@@ -604,7 +604,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
     //POCOR-8447 Start
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+
         if(isset($entity->staff_change_type_id) && !empty($entity->staff_change_type_id)) {
+
             $alias = $this->getRegistryAlias();
             $StaffChangeTypes = self::getDynamicTableInstance('Staff.StaffChangeTypes');
             $requestedStaffChangeType = $StaffChangeTypes->find()
@@ -620,10 +622,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
             $requestedChangeCode = $requestedStaffChangeType['code'];
             $status_id = $entity->status_id;
-            if ($requestedChangeCode == 'HOMEROOM_TEACHER') { // POCOR-8760
-                Log::debug(print_r(['$requestedChangeCode' => $requestedChangeCode,
+            Log::debug(print_r(['$requestedChangeCode' => $requestedChangeCode,
                 '$approved_status_id' => $approved_status_id,
                 '$status_id' => $status_id],true));
+            if ($requestedChangeCode == 'HOMEROOM_TEACHER') { // POCOR-8760
+
                 if($status_id === $approved_status_id) {
                     $entity = $this->changeHomeroomStatus($entity);
                 }
@@ -1660,7 +1663,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $attr['visible'] = false;
                 }
 
-                else if ($requestData[$this->getAlias()]['staff_change_type_id'] != '' && $requestData[$this->getAlias()]['staff_change_type_id'] == 6) {
+                else if ($requestData[$this->getAlias()]['staff_change_type_id'] != ''
+                    && $requestData[$this->getAlias()]['staff_change_type_id'] == 6) {
                     $attr['visible'] = true;
 
 
@@ -1681,24 +1685,24 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onUpdateFieldHomeroomTeacher(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
             $requestData = $request->getData();
-            if (isset($requestData[$this->getAlias()])) {
-                if($requestData[$this->getAlias()]['staff_change_type_id'] == ''){
+            $alias = $this->getAlias();
+            if (isset($requestData[$alias])) {
+                if($requestData[$alias]['staff_change_type_id'] == ''){
                     $attr['visible'] = false;
                 }
-                else if ($requestData[$this->getAlias()]['staff_change_type_id'] == $staffChangeTypes['HOMEROOM_TEACHER'] || $requestData[$this->getAlias()]['staff_change_type_id'] == 6) {
+                else if ($requestData[$alias]['staff_change_type_id'] == $staffChangeTypes['HOMEROOM_TEACHER']
+                    || $requestData[$alias]['staff_change_type_id'] == 6) {
                     $attr['type'] = 'select';
                     if (isset($attr['options'])) {
                         $options = $attr['options'];
                         if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                             $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
                             $entity->is_homeroom =  ($entity->is_homeroom) ? __($entity->is_homeroom) : __("0") ;
-
                                 unset($options[strval($entity->is_homeroom)]);
-
-
                         }
                         $attr['options'] = $options;
                     }
@@ -1711,6 +1715,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 }
             }
         }
+
         return $attr;
     }
 
