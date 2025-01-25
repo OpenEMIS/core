@@ -17,6 +17,7 @@ class ExaminationsController extends AppController
             'ImportResults' => ['className' => 'Examination.ImportResults', 'actions' => ['add']],
             'ImportExaminationCentreRooms' => ['className' => 'Examination.ImportExaminationCentreRooms', 'actions' => ['add']],
         ];
+        $this->loadComponent('Examination.SyncExam'); //POCOR-7510
         $this->attachAngularModules();
     }
 
@@ -256,8 +257,8 @@ class ExaminationsController extends AppController
             'examination_id' => 'Examination.Examinations',
             'examination_centre_id' => 'Examination.ExaminationCentres',
         ]);
-        if (!empty($params)) {
-            // $this->SyncExam->getResultFromExam($params);
+        if (!empty($params)) {     
+            $this->SyncExam->getResultFromExam($params);
         }
 
         return $this->redirect($this->referer());
