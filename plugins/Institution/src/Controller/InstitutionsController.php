@@ -7462,7 +7462,7 @@ class InstitutionsController extends AppController
             $position = $institutionPositions->get($institutionPositionId);
             // POCOR-8853 start
             $securityRoleID = $this->getSecurityRoleID($position->staff_position_title_id);
-            $institution_security_group_id = $this->getInstitututionSecurityGroupId($institutionId);
+            $institution_security_group_id = $this->getInstitutionSecurityGroupId($institutionId);
 
             if($securityRoleID){
                 $staff_security_group_id = $this->getSecurityGroupUserId($securityGroupUsers, $institution_security_group_id, $userRecordId, $userId, $securityRoleID) ?? null;
@@ -9413,21 +9413,6 @@ class InstitutionsController extends AppController
             return $count;
         }
         return null;
-    }
-
-    /**
-     * POCOR-8853
-     * @param int $institutionId
-     * @return mixed
-     */
-    private function getInstitututionSecurityGroupId(int $institutionId)
-    {
-        $securityGroupInstitutions = self::getDynamicTableInstance('security_group_institutions');
-        $groupInstitution = $securityGroupInstitutions->find()
-            ->where(['institution_id' => $institutionId])
-            ->first();
-        $security_group_id = $groupInstitution->security_group_id;
-        return $security_group_id;
     }
 
 }

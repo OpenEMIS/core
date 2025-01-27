@@ -1735,11 +1735,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
 
         $institution_id = $entity->institution_id;
-        $SecurityGroupInstitutionData = $SecurityGroupInstitutions->find()
-            ->where([$SecurityGroupInstitutions->aliasField('institution_id') => $institution_id])
-            ->first();
-
-        $security_group_id = $SecurityGroupInstitutionData->security_group_id;
+        $security_group_id = $this->getInstitutionSecurityGroupId($institution_id);
 
         $staff_id = $entity->staff_id;
         $institution_staff_id = $entity->institution_staff_id;
@@ -1792,6 +1788,41 @@ class StaffPositionProfilesTable extends ControllerActionTable
             ->set(['is_homeroom' => $homeroom_teacher])
             ->where(['id' => $institution_staff_id])
             ->execute();
+    }
+
+    private
+    static function getInstitutionSecurityGroupId($institutionId)
+    {
+        $institutionTbl = self::getDynamicTableInstance('institutions');
+        $security_group_id = null;
+        $institutions = $institutionTbl->find()
+            ->where([
+                $institutionTbl->aliasField('id') => $institutionId
+            ])->first();
+        if (!empty($institutions)) {
+            $security_group_id = $institutions->security_group_id;
+        }
+        if ($security_group_id != null) {
+            $securityGroupInstitutionsTbl = self::getDynamicTableInstance('security_group_institutions');
+            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
+                ->where([
+                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
+                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
+                ])
+                ->first();
+            //save security group for institution
+            if (empty($securityGroupInstitutions)) {
+                $security_group_ins_data = [
+                    'security_group_id' => $security_group_id,
+                    'institution_id' => $institutionId,
+                    'created_user_id' => 1,
+                    'created' => new Time('NOW')
+                ];
+                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
+                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
+            }
+        }
+        return $security_group_id;
     }
 // POCOR-8853 end
 }
