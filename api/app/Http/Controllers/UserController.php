@@ -10,7 +10,6 @@ use App\Http\Requests\SaveStaffDataRequest;
 use App\Http\Requests\SaveGuardianDataRequest;
 use App\Http\Requests\UsersAddRequest;
 use App\Http\Requests\ExternalDataSourceRequest;
-use App\Models\SecurityUsers;
 
 class UserController extends Controller
 {
