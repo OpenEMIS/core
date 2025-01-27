@@ -10,12 +10,13 @@ use App\Http\Requests\SaveStaffDataRequest;
 use App\Http\Requests\SaveGuardianDataRequest;
 use App\Http\Requests\UsersAddRequest;
 use App\Http\Requests\ExternalDataSourceRequest;
+use App\Models\SecurityUsers;
 
 class UserController extends Controller
 {
     protected $userService;
 
-    public function __construct(UserService $userService) 
+    public function __construct(UserService $userService)
     {
         $this->userService = $userService;
     }
@@ -138,7 +139,7 @@ class UserController extends Controller
         try {
             $data = $this->userService->getUsersList($request);
             return $this->sendSuccessResponse("Users List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -267,7 +268,7 @@ class UserController extends Controller
         try {
             $data = $this->userService->getUsersData($userId);
             return $this->sendSuccessResponse("Users Data Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -275,6 +276,151 @@ class UserController extends Controller
             );
 
             return $this->sendErrorResponse('Users Data Not Found');
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/v4/users/username/{username}",
+     *      summary="Get user details by username",
+     *      description="Get user detailsby username",
+     *      tags={"Users", "Username"},
+     *      @OA\Parameter(
+     *         name="username",
+     *         in="path",
+     *         required=true,
+     *         description="Username",
+     *         @OA\Schema(type="string", example="username")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="username", type="string", example="admin"),
+     *                          @OA\Property(property="password", type="string", example=""),
+     *                          @OA\Property(property="openemis_no", type="string", example="1522271965"),
+     *                          @OA\Property(property="first_name", type="string", example="first name"),
+     *                          @OA\Property(property="middle_name", type="string", example="last name"),
+     *                          @OA\Property(property="third_name", type="string", example="third_name"),
+     *                          @OA\Property(property="last_name", type="string", example="last_name"),
+     *                          @OA\Property(property="preferred_name", type="string", example=""),
+     *                          @OA\Property(property="email", type="string", example=""),
+     *                          @OA\Property(property="address", type="string", example=""),
+     *                          @OA\Property(property="postal_code", type="string", example=""),
+     *                          @OA\Property(property="address_area_id", type="integer", example=1),
+     *                          @OA\Property(property="birthplace_area_id", type="integer", example=1),
+     *                          @OA\Property(property="gender_id", type="integer", example=1),
+     *                          @OA\Property(property="date_of_birth", type="string", example="2022-08-10 12:00:00"),
+     *                          @OA\Property(property="date_of_death", type="string", example=null),
+     *                          @OA\Property(property="nationality_id", type="integer", example=3),
+     *                          @OA\Property(property="identity_type_id", type="integer", example=1),
+     *                          @OA\Property(property="identity_type_name", type="string", example=null),
+     *                          @OA\Property(property="identity_number", type="string", example=null),
+     *                          @OA\Property(property="external_reference", type="string", example=null),
+     *                          @OA\Property(property="status", type="integer", example=1),
+     *                          @OA\Property(property="last_login", type="string", example=null),
+     *                          @OA\Property(property="photo_name", type="string", example=null),
+     *                          @OA\Property(property="photo_content", type="string", example=null),
+     *                          @OA\Property(property="preferred_language", type="string", example=null),
+     *                          @OA\Property(property="is_student", type="integer", example=1),
+     *                          @OA\Property(property="is_staff", type="integer", example=1),
+     *                          @OA\Property(property="is_guardian", type="integer", example=1),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                          @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="nationalities", type="array",
+     *                              @OA\Items(
+     *                                  type="object",
+     *                                  @OA\Property(property="preferred", type="integer", example=1),
+     *                                  @OA\Property(property="nationality_id", type="integer", example=1),
+     *                                  @OA\Property(property="nationality_name", type="string", example="Jordanian"),
+     *                                  @OA\Property(property="security_user_id", type="integer", example=1),
+     *                                  @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                                  @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                                  @OA\Property(property="created_user_id", type="integer", example=1),
+     *                                  @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                              )
+     *                          ),
+     *                          @OA\Property(property="identities", type="array",
+     *                              @OA\Items(
+     *                                  type="object",
+     *                                  @OA\Property(property="identity_type_id", type="integer", example=1),
+     *                                  @OA\Property(property="identity_type_name", type="string", example="National Number"),
+     *                                  @OA\Property(property="number", type="integer", example=1),
+     *                                  @OA\Property(property="issue_date", type="integer", example=1),
+     *                                  @OA\Property(property="expiry_date", type="integer", example=1),
+     *                                  @OA\Property(property="issue_location", type="string", example="Jordan"),
+     *                                  @OA\Property(property="nationality_id", type="integer", example=1),
+     *                                  @OA\Property(property="comments", type="string", example="No comment"),
+     *                                  @OA\Property(property="security_user_id", type="date", example="2022-01-01 10:32:20"),
+     *                                  @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                                  @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                                  @OA\Property(property="created_user_id", type="integer", example=1),
+     *                                  @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                              )
+     *                          ),
+     *                          @OA\Property(property="genderData", type="object",
+     *                              @OA\Property(property="key", type="integer", example=1),
+     *                              @OA\Property(property="value", type="string", example="Male"),
+     *                          ),
+     *                          @OA\Property(property="institution", type="object",
+     *                              @OA\Property(property="key", type="integer", example=1),
+     *                              @OA\Property(property="value", type="string", example=""),
+     *                          ),
+     *                          @OA\Property(property="educationGrade", type="object",
+     *                              @OA\Property(property="key", type="integer", example=1),
+     *                              @OA\Property(property="value", type="string", example=""),
+     *                          ),
+     *                          @OA\Property(property="studentStatus", type="object",
+     *                              @OA\Property(property="key", type="integer", example=1),
+     *                              @OA\Property(property="value", type="string", example=""),
+     *                          )
+     *                  )
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
+    public function getUserByUsername(string $username): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $userCheck = SecurityUsers::where('username', $username)
+                ->where('super_admin', 0) // Exclude super users
+                ->first();
+
+            if ($userCheck) {
+                $userId = $userCheck->id;
+
+                // Get the user's data
+                $data = $this->userService->getUsersData($userId);
+
+                // Remove password from the response
+                if (isset($data['password'])) {
+                    unset($data['password']);
+                }
+
+                return $this->sendSuccessResponse("User Found", $data);
+            } else {
+                return $this->sendErrorResponse("User Not Found");
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User Data Not Found');
         }
     }
 
@@ -354,7 +500,7 @@ class UserController extends Controller
     {
         try {
             $data = $this->userService->saveStudentData($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("Student data stored successfully.");
             } elseif($data == 2) {
@@ -362,7 +508,7 @@ class UserController extends Controller
             }else {
                 return $this->sendErrorResponse("Student data not stored.", $data);
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to store student data.',
@@ -449,7 +595,7 @@ class UserController extends Controller
     {
         try {
             $data = $this->userService->saveStaffData($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("Staff data stored successfully.");
             } elseif($data == 2) {
@@ -463,7 +609,7 @@ class UserController extends Controller
             } else {
                 return $this->sendErrorResponse("Staff data not stored.", $data);
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to store student data.',
@@ -473,7 +619,7 @@ class UserController extends Controller
             return $this->sendErrorResponse('Failed to store student data.');
         }
     }
-    
+
     //Day 2
 
     /**
@@ -533,7 +679,7 @@ class UserController extends Controller
         try {
             $data = $this->userService->getUsersGender($request);
             return $this->sendSuccessResponse("Users Gender List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Users Gender List from DB',
@@ -602,7 +748,7 @@ class UserController extends Controller
     {
         try {
             $data = $this->userService->saveGuardianData($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("Guardian data stored successfully.");
             } elseif($data == 2) {
@@ -612,7 +758,7 @@ class UserController extends Controller
             } else {
                 return $this->sendErrorResponse("Guardian data not stored.", $data);
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to store guardian data.',
@@ -681,7 +827,7 @@ class UserController extends Controller
     {
         try {
             $data = $this->userService->addUsers($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("User is created/updated successfully.");
             } elseif($data == 2){
@@ -689,7 +835,7 @@ class UserController extends Controller
             } else {
                 return $this->sendErrorResponse("User is not created/updated successfully.");
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'User is not created/updated successfully.',
@@ -877,6 +1023,6 @@ class UserController extends Controller
             return $this->sendErrorResponse('Failed to get data from external data sources.');
         }
     }
-    
+
     //POCOR-8139 Ends
 }
