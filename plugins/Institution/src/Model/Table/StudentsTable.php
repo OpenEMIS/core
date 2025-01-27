@@ -36,7 +36,7 @@ class StudentsTable extends ControllerActionTable
     // POCOR-6129 custome fields code
     private $_dynamicFieldName = 'custom_field_data';
     private $customFieldData = null;
-    private $customFieldTableName = 'StaffCustomField.StaffCustomFields';
+    private $customFieldTableName = 'StudentCustomField.StudentCustomFields';
     // POCOR-6129 custome fields code
 
     private $institution_id;
