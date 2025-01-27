@@ -107,7 +107,7 @@ class UserRepository extends Controller
     public function getUsersData(int $userId)
     {
         try {
-            
+
             $user = SecurityUsers::with(
                     'gender',
                     'nationalities',
@@ -138,9 +138,9 @@ class UserRepository extends Controller
                 $user->institution_students = $studIns;
             }
             //For POCOR-8536 End...
-          
+
             return $user;
-            
+
         } catch (\Exception $e) {
 
             Log::error(
@@ -152,6 +152,82 @@ class UserRepository extends Controller
         }
     }
 
+    //POCOR-8840 start
+    public function getUserIdByOpenemisNo(string $openemisNo)
+    {
+        try {
+            $user = SecurityUsers::
+                    where('openemis_no', $openemisNo)
+                    ->where('super_admin', 0)
+                    ->first();
+            if (isset($user)) {
+                return $user->id;
+            }
+
+
+        } catch (\Exception $e) {
+
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+
+    public function getGuardianWithStudents(int $guardianId)
+    {
+        try {
+            // Fetch the guardian data
+            $guardian = SecurityUsers::where('id', $guardianId)
+                ->where('super_admin', 0) // Ensure the guardian is not a super admin
+                ->first();
+
+            // If no guardian found, return an empty response
+            if (!$guardian) {
+                return $this->sendErrorResponse("Guardian Not Found");
+            }
+
+            // Fetch the students associated with the guardian
+            $students = StudentGuardians::where('guardian_id', $guardianId)
+                ->with('student') // Assuming there is a `student` relationship in the `StudentGuardians` model
+                ->get()
+                ->unique('student_id') // Ensure students are unique
+                ->map(function ($studentGuardian) {
+                    $student = $studentGuardian->student; // Access the student data
+                    return [
+                        'openemis_no' => $student->openemis_no ?? null,
+                        'first_name' => $student->first_name ?? null,
+                        'last_name' => $student->last_name ?? null,
+                    ];
+                })
+                ->filter() // Remove any null or empty students (just in case)
+                ->values(); // Reindex the array
+
+            // Prepare the response data for the guardian
+            $responseData = [
+                'openemis_no' => $guardian->openemis_no ?? null,
+                'first_name' => $guardian->first_name ?? null,
+                'last_name' => $guardian->last_name ?? null,
+                'students' => $students->isNotEmpty() ? $students : [], // Ensure an empty array if no students
+            ];
+            return $responseData;
+            // Return the success response
+//            return $this->sendSuccessResponse("Guardian Found", $responseData);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error(
+                'Failed to fetch guardian with students',
+                ['guardian_id' => $guardianId, 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            // Return a generic error response
+            return $this->sendErrorResponse("Failed to retrieve guardian data. Please try again.");
+        }
+    }
+    //POCOR-8840 end
+
 
 
     public function saveStudentData($request)
@@ -161,7 +237,7 @@ class UserRepository extends Controller
             $param = $request->all();
 
             $param['date_of_birth'] = date("Y-m-d", strtotime($param['date_of_birth']));
-            
+
             $param['is_diff_school'] = (array_key_exists('is_diff_school', $param)) ? $param['is_diff_school'] : 0;
 
             $start_date = Null;
@@ -177,7 +253,7 @@ class UserRepository extends Controller
             $start_year = Null;
             $end_year = Null;
             $academicPeriod = Null;
-            
+
             if(isset($param['academic_period_id'])){
                 $academicPeriod = AcademicPeriod::where('id', $param['academic_period_id'])->first();
 
@@ -188,7 +264,7 @@ class UserRepository extends Controller
                 $start_year = $academicPeriod->start_year;
                 $end_year = $academicPeriod->end_year;
             }
-            
+
 
             //get prefered language
             $pref_lang = ConfigItem::where('code', 'language')->where('type', 'System')->first();
@@ -196,7 +272,7 @@ class UserRepository extends Controller
 
             //get Student Status List
             $studentStatus = StudentStatuses::pluck('id', 'code')->toArray();
-            
+
 
             //get nationality data
             $nationalities = '';
@@ -227,13 +303,13 @@ class UserRepository extends Controller
 
 
             if(isset($param['is_diff_school']) && ($param['is_diff_school'] == 1)){
-                
+
                 $workflows = Workflows::join('workflow_steps', 'workflow_steps.workflow_id', '=', 'workflows.id')
                     ->where('workflow_steps.name', 'Open')
                     ->where('workflows.name', 'Student Transfer - Receiving')
                     ->select('workflow_steps.id as workflowSteps_id')
                     ->first();
-                
+
 
 
                 $entityTransferData = [
@@ -266,7 +342,7 @@ class UserRepository extends Controller
                 $openemis_no = $param['openemis_no']??0;
 
                 $checkStudentExist = SecurityUsers::where('openemis_no', $openemis_no)->first();
-                
+
                 $entityData = [
                     'openemis_no' => $openemis_no,
                     'first_name' => $param['first_name'],
@@ -284,12 +360,12 @@ class UserRepository extends Controller
                     'address_area_id' => $param['address_area_id']??null,
                     'birthplace_area_id' => $param['birthplace_area_id']??null,
                     'postal_code' => $param['postal_code']??null,
-                    
+
                     'is_student' => 1,
                     'created_user_id' => JWTAuth::user()->id,
                     'created' => Carbon::now()->toDateTimeString()
                 ];
-                
+
                 if($checkStudentExist){
                     $securityUser = $checkStudentExist;
                     $securityUserResult = SecurityUsers::where('id', $checkStudentExist->id)->update($entityData);
@@ -321,10 +397,10 @@ class UserRepository extends Controller
                     if(isset($nationality->id) && ($param['identity_type_id'] && $param['identity_type_id'] != '') && ($param['identity_number'] && $param['identity_number'] != '')){
 
                         $identityTypes = IdentityTypes::where('name', $param['identity_type_name']??"")->first();
-                        
+
                         if($identityTypes){
                             $userIdentity = UserIdentities::where('nationality_id', $nationality->id)->where('identity_type_id', $param['identity_type_id'])->where('number', $param['identity_number'])->first();
-                            
+
                             if(!$userIdentity){
                                 $storeArr = [];
                                 $storeArr['identity_type_id'] = $identityTypes->id;
@@ -372,7 +448,7 @@ class UserRepository extends Controller
                             $workflowStepId = $param['student_admission_status_value'];
                         }
                     }
-                    
+
 
 
                     if (!empty($param['education_grade_id']) && !empty($param['institution_id']) && !empty($param['academic_period_id']) && !empty($param['institution_class_id']) && !empty($workflows)) {
@@ -418,7 +494,7 @@ class UserRepository extends Controller
                                     'modified' => Carbon::now()->toDateTimeString(),
                                      'modified_user_id' => JWTAuth::user()->id]);
                         }
-                        
+
                     }
 
 
@@ -502,7 +578,7 @@ class UserRepository extends Controller
 
                                 $store = StudentCustomFieldValues::insert($entityCustomData);
                             }
-                            
+
                         }
                     }
 
@@ -527,7 +603,7 @@ class UserRepository extends Controller
     }
 
 
-    
+
     public function getUsersGender($request)
     {
         try {
@@ -541,11 +617,11 @@ class UserRepository extends Controller
                 $col = $params['order'];
                 $usersGender = $usersGender->orderBy($col, $orderBy);
             }
-                        
+
             if(isset($params['limit'])){
                 $limit = $params['limit'];
                 $list = $usersGender->paginate($limit)->toArray();
-                
+
             } else {
                 $list = $usersGender->get()->toArray();
             }
@@ -622,7 +698,7 @@ class UserRepository extends Controller
                         return 3; //Staff type don't exists...
                     }
                 }
-                
+
 
                 if(isset($staff_position_grade_id) && $staff_position_grade_id > 0){
                     $staffPositionGrade = DB::table('staff_position_grades')->where('id', $staff_position_grade_id)->first();
@@ -630,7 +706,7 @@ class UserRepository extends Controller
                         return 4; //Staff position grade don't exists...
                     }
                 }
-                
+
 
                 if(isset($institutionId) && isset($institutionPositionId)){
                     $institutionPosition = DB::table('institution_positions')->where('id', $institutionPositionId)->where('institution_id', $institutionId)->first();
@@ -638,13 +714,13 @@ class UserRepository extends Controller
                         return 5; //Institution Position don't exists...
                     }
                 }
-                
+
 
 
 
                 //get academic period data
                 $periods = AcademicPeriod::where('current', 1)->first();
-                
+
 
                 $startYear = $endYear = '';
                 if (!empty($periods)) {
@@ -664,11 +740,11 @@ class UserRepository extends Controller
 
                 //get Student Status List
                 $statuses = StaffStatuses::pluck('id', 'code')->toArray();
-                
+
 
                 //For POCOR-8184 Start
                 $dateOfBirth = date("Y-m-d", strtotime($requestData['date_of_birth']));
-                
+
                 //For POCOR-8184 End
 
                 //get nationality data
@@ -704,7 +780,7 @@ class UserRepository extends Controller
 
 
                 if ($isSameSchool == 1) {
-                    
+
                     $CheckStaffExist = SecurityUsers::where(['openemis_no' => $openemisNo
                         ])->first();
 
@@ -748,7 +824,7 @@ class UserRepository extends Controller
                         if ($SecurityUserResult) {
                             $user_record_id = $SecurityUserResult->id;
                             if (!empty($nationality_id) || !empty($nationalityName)) {
-                                
+
                                 if (!empty($nationalityId)) {
                                     $checkexistingNationalities = UserNationalities::where('nationality_id', $nationalityId)
                                         ->where('security_user_id', $user_record_id)
@@ -801,7 +877,7 @@ class UserRepository extends Controller
                         $staffPositionTitlesTbl = StaffPositionTitles::where('id', $InstitutionPositionsTbl->staff_position_title_id??0)->first();
 
                         if (!empty($InstitutionPositionsTbl)) {
-                            
+
 
                             $SecurityRolesTbl = SecurityRoles::where('id', $staffPositionTitlesTbl->security_role_id??0)->first();
 
@@ -831,14 +907,14 @@ class UserRepository extends Controller
                                     if (empty($countSecurityGroupUsers)) {
                                         $entityGroupData = [
                                             'id' => Str::uuid(),
-                                            'security_group_id' => $institutionsSecurityGroupId->security_group_id, 
+                                            'security_group_id' => $institutionsSecurityGroupId->security_group_id,
                                             //'security_user_id' => $staffId,
                                             'security_user_id' => $user_record_id,
-                                            'security_role_id' => $roleval['id'], 
+                                            'security_role_id' => $roleval['id'],
                                             'created_user_id' => $userId,
                                             'created' => date('Y-m-d H:i:s')
                                         ];
-                                        
+
                                         $store = SecurityGroupUsers::insert($entityGroupData);
                                     }
                                 }
@@ -857,7 +933,7 @@ class UserRepository extends Controller
                             ->where('security_roles.code', '!=', 'HOMEROOM_TEACHER')
                             ->first();
 
-                        
+
                         $entityStaffsData = [
                             'FTE' => $fte,
                             'start_date' => $startDate,
@@ -878,7 +954,7 @@ class UserRepository extends Controller
                             'created' => date('Y-m-d H:i:s')
                         ];
 
-                        $store = InstitutionStaff::insert($entityStaffsData);  
+                        $store = InstitutionStaff::insert($entityStaffsData);
                     }
 
                     if (!empty($shiftIds)) {
@@ -924,12 +1000,12 @@ class UserRepository extends Controller
 
                                 $store = StaffCustomFieldValues::insert($entityCustomData);
                             }
-                            
+
                         }
                     }
 
                 } elseif($isDiffSchool == 1) {
-                    
+
                     $workflowResults = Workflows::join('workflow_steps', 'workflow_steps.workflow_id', '=', 'workflows.id')
                         ->where('workflow_steps.name', 'Open')
                         ->where('workflows.name', 'Staff Transfer - Receiving')
@@ -964,7 +1040,7 @@ class UserRepository extends Controller
 
                     $store = InstitutionStaffTransfers::insert($entityTransferData);
                 } else {
-                    
+
                     $CheckStaffExist = SecurityUsers::where(['openemis_no' => $openemisNo
                         ])->first();
 
@@ -1029,7 +1105,7 @@ class UserRepository extends Controller
                     if ($SecurityUserResult) {
                         $user_record_id = $SecurityUserResult->id;
                         if (!empty($nationality_id) || !empty($nationalityName)) {
-                                
+
                             if (!empty($nationalityId)) {
                                 $checkexistingNationalities = UserNationalities::where('nationality_id', $nationalityId)
                                     ->where('security_user_id', $user_record_id)
@@ -1095,7 +1171,7 @@ class UserRepository extends Controller
                                 $institutionsSecurityGroupId = Institutions::where('id', $institutionId)->first();
 
                                 if (!empty($SecurityRolesTbl)) {
-                                    foreach ($SecurityRolesTbl as $rolekey => $roleval) 
+                                    foreach ($SecurityRolesTbl as $rolekey => $roleval)
                                     {
                                         $countSecurityGroupUsers = SecurityGroupUsers::leftjoin('security_group_institutions', function ($j) use($institutionsSecurityGroupId){
                                                 $j->on('security_group_institutions.security_group_id', '=', 'security_group_users.security_group_id')
@@ -1109,9 +1185,9 @@ class UserRepository extends Controller
                                         if (empty($countSecurityGroupUsers)) {
                                             $entityGroupData = [
                                                 'id' => Str::uuid(),
-                                                'security_group_id' => $institutionsSecurityGroupId->security_group_id, 
+                                                'security_group_id' => $institutionsSecurityGroupId->security_group_id,
                                                 'security_user_id' => $staffId,
-                                                'security_role_id' => $roleval['id'], 
+                                                'security_role_id' => $roleval['id'],
                                                 'created_user_id' => $userId,
                                                 'created' => date('Y-m-d H:i:s')
                                             ];
@@ -1152,7 +1228,7 @@ class UserRepository extends Controller
                                 'created_user_id' => $userId,
                                 'created' => date('Y-m-d H:i:s')
                             ];
-                            
+
                             $check = InstitutionStaff::where('institution_id', $institutionId)->where('staff_id', $staffId)->first();
                             if($check){
                                 $update = InstitutionStaff::where('institution_id', $institutionId)->where('staff_id', $staffId)->update($entityStaffsData);
@@ -1205,7 +1281,7 @@ class UserRepository extends Controller
 
                                     $store = StaffCustomFieldValues::insert($entityCustomData);
                                 }
-                                
+
                             }
                         }
 
@@ -1220,12 +1296,12 @@ class UserRepository extends Controller
             return 1;
         } catch(\Exception $e) {
             DB::rollback();
-            
+
             Log::error(
                 'Failed to store staff data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return $this->sendErrorResponse('Failed to store staff data.');
         }
     }
@@ -1280,7 +1356,7 @@ class UserRepository extends Controller
                         }
                     }
                 }
-                
+
 
                 //get nationality data
                 $nationalities = '';
@@ -1313,9 +1389,9 @@ class UserRepository extends Controller
 
 
                 $dateOfBirth = date("Y-m-d", strtotime($requestData['date_of_birth']));
-                
+
                 if (!empty($openemisNo)) {
-                    
+
                     $CheckGaurdianExist = SecurityUsers::where(['openemis_no' => $openemisNo])->first();
 
                     if($CheckGaurdianExist){
@@ -1373,11 +1449,11 @@ class UserRepository extends Controller
                             'created_user_id' => $userId,
                             'created' => date('Y-m-d H:i:s'),
                         ];
-                        
+
                         $securityUserId = SecurityUsers::insertGetId($entityData);
                         $SecurityUserResult = SecurityUsers::where('id', $securityUserId)->first();
                     }
-                    
+
                 } else {
 
                     $openemis_no = $this->getNewOpenemisNo();
@@ -1404,7 +1480,7 @@ class UserRepository extends Controller
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s'),
                     ];
-                    
+
                     $securityUserId = SecurityUsers::insertGetId($entityData);
                     $SecurityUserResult = SecurityUsers::where('id', $securityUserId)->first();
                 }
@@ -1493,14 +1569,14 @@ class UserRepository extends Controller
             }
             DB::commit();
             return 1;
-            
+
         } catch (\Exception $e) {
             DB::rollback();
             Log::error(
                 'Failed to store guardian data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return $this->sendErrorResponse('Failed to store guardian data.');
         }
     }
@@ -1554,7 +1630,7 @@ class UserRepository extends Controller
                 $newOpenemisNo=$prefix.$newOpenemisNo;
 
                 $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
-                
+
                 if(empty($resultOpenemisTemps->openemis_no)){
                     $storeOpenemisTemp = OpenemisTemp::insert([
                         'openemis_no' => $newOpenemisNo,
@@ -1605,14 +1681,14 @@ class UserRepository extends Controller
 
             DB::commit();
             return 1;
-            
+
         } catch (\Exception $e) {
             DB::rollback();
             Log::error(
                 'User is not created/updated successfully.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return $this->sendErrorResponse('User is not created/updated successfully.');
         }
     }
@@ -1648,7 +1724,7 @@ class UserRepository extends Controller
                 $userArr['super_admin'] = $params['super_admin']??0;
                 $userArr['last_login'] = $params['last_login']??Null;
                 $userArr['photo_name'] = $params['photo_name']??Null;
-                
+
                 if(isset($params['photo_content'])){
                     $userArr['photo_content'] = file_get_contents($params['photo_content']);
                 }
@@ -1660,9 +1736,9 @@ class UserRepository extends Controller
                 $userArr['created_user_id'] = JWTAuth::user()->id;
                 $userArr['created'] = Carbon::now()->toDateTimeString();
             }
-            
+
             return $userArr;
-            
+
         } catch (\Exception $e) {
             return [];
         }
@@ -1674,7 +1750,7 @@ class UserRepository extends Controller
         try {
             $configItemResult = ConfigItem::where('code', 'student_admission_status')->first();
             $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
-            
+
             if ($studentStatus == 0) {
                 $result_array[] = ["id" => 0, "name" => "Enrolled"];
             } else {
@@ -1689,7 +1765,7 @@ class UserRepository extends Controller
             );
             return $this->sendErrorResponse('Failed to get Student Admission Status.');
         }
-        
+
     }
     //POCOR-7716 end
 
@@ -1723,7 +1799,7 @@ class UserRepository extends Controller
     {
         try {
             $params = $request->all();
-            
+
             $authToken = $request->header('authorization');
 
             $authToken = str_replace("Bearer ", "", $authToken);
@@ -1781,7 +1857,7 @@ class UserRepository extends Controller
                 }
 
                 $response = HTTP::post($attributes['token_uri'], $data);
-                
+
 
                 $noData['data'] = [];
                 $noData['total'] = 0;
@@ -1791,7 +1867,7 @@ class UserRepository extends Controller
                 if ($response->ok()) {
                     $body = $response->body('json_decode');
                     $body = json_decode($body);
-                    
+
                     $recordUri = $attributes['record_uri'];
 
                     foreach ($fieldMapping as $key => $map) {
@@ -1799,11 +1875,11 @@ class UserRepository extends Controller
                     }
 
                     //$newToken = $this->getJwtToken($clientId, $scope, $tokenUri, $privateKey);
-                    
+
                     $response = HTTP::withHeaders(['Authorization' => $body->token_type.' '.$body->access_token]
                     )->get($recordUri);
-                    
-                    
+
+
                     if ($response->ok()) {
                         $body = $response->body('json_decode');
                         $body = json_decode($body);
@@ -1828,7 +1904,7 @@ class UserRepository extends Controller
             return $this->sendErrorResponse('Failed to get data from external data sources.');
         }
     }
-    
+
 
 
     public function generateServerAuthorisationToken($clientId, $scope, $tokenUri, $encryptedPrivateKey)
@@ -1853,7 +1929,7 @@ class UserRepository extends Controller
             $exp = intval(strtotime(Date("H:i:s"))) + 3600;
             $iat = strtotime(Date("H:i:s"));
 
-            
+
 
             $payload = json_encode([
                 'iss' => $clientId,
@@ -1872,21 +1948,21 @@ class UserRepository extends Controller
             $base64UrlHeader = $this->base64UrlEncode($header);
             $base64UrlPayload = $this->base64UrlEncode($payload);
             //dd($base64UrlPayload);
-            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true); 
+            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true);
 
             $privateKeyId = openssl_pkey_get_private($privatekey);
-            dd($privateKeyId); 
+            dd($privateKeyId);
 
 
             $base64UrlSignature = $this->base64UrlEncode($signature);
-            
+
 
             $token = "$base64UrlHeader.$base64UrlPayload.$base64UrlSignature";
 
             //dd("JWT: ",$jwt);
 
             //$token = JWTAuth::encode(JWTFactory::make( $payload2 ), $privateKey, 'RS256');
-            
+
             return $token;
 
         } catch (\Exception $e) {
@@ -1908,12 +1984,12 @@ class UserRepository extends Controller
             $padlen = 4 - $remainder;
             $input .= str_repeat('=', $padlen);
         }
-        
+
         return base64_decode(strtr($input, '-_', '+/'));
     }
 
     public function base64UrlEncode($text)
-    {   
+    {
         return str_replace(
             ['+', '/', '='],
             ['-', '_', ''],
@@ -1931,7 +2007,7 @@ class UserRepository extends Controller
             $exp = intval(strtotime(Date("H:i:s"))) + 3600;
             $iat = strtotime(Date("H:i:s"));
 
-            
+
 
             $payload = json_encode([
                 'iss' => $clientId,
@@ -1950,11 +2026,11 @@ class UserRepository extends Controller
             $base64UrlHeader = $this->base64UrlEncode($header);
             $base64UrlPayload = $this->base64UrlEncode($payload);
             //dd($base64UrlPayload);
-            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true);  
+            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true);
 
 
             $base64UrlSignature = $this->base64UrlEncode($signature);
-            
+
 
             $token = "$base64UrlHeader.$base64UrlPayload.$base64UrlSignature";
 
@@ -1987,7 +2063,7 @@ class UserRepository extends Controller
                         ->groupby('institution_staff.institution_id')
                         ->get()
                         ->toArray();
-                
+
                 foreach ($institutionStaffs as $i => $institution) {
                     $staffIns[$i]['institution-id'] = $institution['id'];
                     $staffIns[$i]['institution-code'] = $institution['code'];
