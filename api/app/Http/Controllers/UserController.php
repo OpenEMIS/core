@@ -303,7 +303,6 @@ class UserController extends Controller
      *                     type="object",
      *                          @OA\Property(property="id", type="integer", example=1),
      *                          @OA\Property(property="username", type="string", example="admin"),
-     *                          @OA\Property(property="password", type="string", example=""),
      *                          @OA\Property(property="openemis_no", type="string", example="1522271965"),
      *                          @OA\Property(property="first_name", type="string", example="first name"),
      *                          @OA\Property(property="middle_name", type="string", example="last name"),
