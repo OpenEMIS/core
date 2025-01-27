@@ -1733,7 +1733,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
-        $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
 
         $institution_id = $entity->institution_id;
         $security_group_id = $this->getInstitutionSecurityGroupId($institution_id);
@@ -1752,6 +1751,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     "staff_status_id" => 1,
                     "id !=" => $institution_staff_id
                 ])->count();
+//            dd($anotherHomeroomPositionsCount);
             if ($anotherHomeroomPositionsCount == 0) {
                 $securityGroupEntry = $SecurityGroupUsers->find()
                     ->where([
