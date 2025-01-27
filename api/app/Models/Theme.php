@@ -12,10 +12,10 @@ class Theme extends Model
 
     public function getdefaultContentAttribute($value)
     {
-        if(isset($this->default_value)){
-            $value = base64_encode($value, true);
-        }
-
+        //POCOR-8851 starts
+        if(isset($this->default_value) && !empty($value)){
+            $value = base64_encode($value);
+        }//POCOR-8851 ends
         return $value;
     }
 }
