@@ -538,7 +538,8 @@ class RemoveBehavior extends Behavior
 //                        $count = 0; // POCOR-8683-start
                         $assocTable =$assoc;
                         if ($assoc->type() == 'manyToMany') {
-                            $assocTable = $assoc->junction()->getAlias(); // POCOR-8683-start
+                            //$assocTable = $assoc->junction()->getAlias(); // POCOR-8683-start
+                            $assocTable = $assoc->junction(); // POCOR-8861
                         }
 //                        Log::write('debug', $assoc);
                         $bindingKey = $assoc->getBindingKey();
