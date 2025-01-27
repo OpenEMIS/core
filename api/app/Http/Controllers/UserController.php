@@ -995,19 +995,28 @@ class UserController extends Controller
      */
     public function getGuardianByOpenemisId(string $openemisId)
     {
-//        try {
-//            $data = $this->userService->getUsersData($userId);
-        $data = ['hello' => 'ok'];
-        return $this->sendSuccessResponse("Function Not Implementer", $data);
-//
-//        } catch (\Exception $e) {
-//            Log::error(
-//                'Failed to fetch list from DB',
-//                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-//            );
-//
-//            return $this->sendErrorResponse('Users Data Not Found');
-//        }
+        try {
+            $userId = $this->userService->getUserIdByOpenemisId($openemisId);
+
+//                if ($userCheck) {
+//                    $userId = $userCheck->id;
+//                    // Get the user's data
+//                    $data = $this->userService->getUsersData($userId);
+//                    // Remove password from the response
+//                    if (isset($data['password'])) {
+//                        unset($data['password']);
+//                    }
+//                    return $this->sendSuccessResponse("User Found", $data);
+//                } else {
+//                    return $this->sendErrorResponse("User Not Found");
+//                }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Data Not Found');
+        }
     }
 
 }
