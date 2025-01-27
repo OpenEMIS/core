@@ -129,7 +129,7 @@ Route::group(
          Route::get('users/genders', 'UserController@getUsersGender');
          // POCOR-7394 ends
          Route::get('users/{userId}', 'UserController@getUsersData')->where('userId', '[0-9]+');
-         Route::get('users/username/{username}', 'UserController@getUserByUsername')->where('username', '[^\s]+');
+         Route::get('users/username/{username}', 'UserController@getUserByUsername')->where('username', '[^\s]+'); // POCOR-8862
 
 
         Route::get('institutions/{id}/staff', 'InstitutionController@getInstitutionStaffList')->where('id', '[0-9]+');
