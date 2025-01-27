@@ -74,7 +74,7 @@ class RemoveBehavior extends Behavior
             $cells = $extra['cells'];
 
             $model->fields = [];
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             if (is_array($primaryKey)) {
                 foreach ($primaryKey as $key) {
                     $model->field($key, ['type' => 'hidden']);
@@ -93,7 +93,7 @@ class RemoveBehavior extends Behavior
             $entity = $extra['entity'];
             $cells = $extra['cells'];
             $model->fields = [];
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             if (is_array($primaryKey)) {
                 foreach ($primaryKey as $key) {
                     $model->field($key, ['type' => 'hidden']);
@@ -260,16 +260,16 @@ class RemoveBehavior extends Behavior
             if ($model->actions('remove') == 'restrict') {
                 if (is_array($primaryKey)) {
                     foreach ($primaryKey as $key) {
-                        if (!empty($request->data[$model->alias()][$key])) {
-                            $ids[$model->aliasField($key)] = $request->data[$model->alias()][$key];
+                        if (!empty($request->getData($model->getAlias())[$key])) {
+                            $ids[$model->aliasField($key)] = $request->data[$model->getAlias()][$key];
                         } else {
                             $ids = [];
                             break;
                         }
                     }
                 } else {
-                    if (!empty($request->data[$model->alias()][$primaryKey])) {
-                        $ids[$model->aliasField($primaryKey)] = $request->data[$model->alias()][$primaryKey];
+                    if (!empty($request->getData($model->getAlias())[$primaryKey])) {
+                        $ids[$model->aliasField($primaryKey)] = $request->data[$model->getAlias()][$primaryKey];
                     } else {
                         $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
                     }
@@ -334,7 +334,7 @@ class RemoveBehavior extends Behavior
         $request = $model->request;
         $extra['config']['form'] = ['type' => 'DELETE'];
         $extra['options'] = [
-            'keyField' => $model->primaryKey(),
+            'keyField' => $model->getPrimaryKey(),
             'valueField' => 'name'
         ];
 
@@ -371,7 +371,7 @@ class RemoveBehavior extends Behavior
                     ->toArray();
 
                 $convertOptions = [];
-                $primaryKey = $model->primaryKey();
+                $primaryKey = $model->getPrimaryKey();
 
                 foreach ($convertOptions as $value) {
                     $keysToEncode = $model->getIdKeys($model, $value, false);
@@ -409,8 +409,8 @@ class RemoveBehavior extends Behavior
             }
             return $entity;
         } else if ($request->is('delete')) {
-            $primaryKey = $model->primaryKey();
-            $idKeys = $model->getIdKeys($model, $request->data($this->alias()));
+            $primaryKey = $model->getPrimaryKey();
+            $idKeys = $model->getIdKeys($model, $request->getData($this->getAlias()));
             if (!empty($idKeys)) {
                 try {
                     $entity = $model->get($idKeys);
@@ -489,7 +489,7 @@ class RemoveBehavior extends Behavior
                     break;
             }
         }
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $ids = [];
         if (is_array($primaryKey)) {
             foreach ($primaryKey as $key) {
