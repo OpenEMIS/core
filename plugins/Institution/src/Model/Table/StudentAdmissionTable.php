@@ -88,7 +88,11 @@ class StudentAdmissionTable extends ControllerActionTable
 
         //POCOR-8434 add custome fileds record in pending admission starts
         $request = Router::getRequest();
-        if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel' && $request->getParam('action') != 'saveStudentData') {
+        if (
+            $request !== null &&
+            ($param = $request->getParam('pass')[0] ?? null) !== 'excel' &&
+            !in_array($request->getParam('action'), ['saveStudentData', 'Promotion', 'Transfer', 'Undo'])
+        ) {    
             $this->addBehavior('CustomField.Record', [
                 'model' => 'Institution.StudentAdmission',
                 'behavior' => 'Student',
