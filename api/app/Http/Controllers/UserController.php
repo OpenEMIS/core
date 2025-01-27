@@ -279,6 +279,7 @@ class UserController extends Controller
         }
     }
 
+    //POCOR-8862 start
     /**
      * @OA\Get(
      *      path="/api/v4/users/username/{username}",
@@ -394,12 +395,9 @@ class UserController extends Controller
     public function getUserByUsername(string $username): \Illuminate\Http\JsonResponse
     {
         try {
-            $userCheck = SecurityUsers::where('username', $username)
-                ->where('super_admin', 0) // Exclude super users
-                ->first();
+            $userId = $this->userService->getUserIdByUsername($username);
 
-            if ($userCheck) {
-                $userId = $userCheck->id;
+            if ($userId) {
 
                 // Get the user's data
                 $data = $this->userService->getUsersData($userId);
@@ -422,6 +420,7 @@ class UserController extends Controller
             return $this->sendErrorResponse('User Data Not Found');
         }
     }
+    //POCOR-8862 end
 
 
 
