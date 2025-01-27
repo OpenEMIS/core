@@ -554,7 +554,7 @@ Route::group(
         //POCOR-8666 end
         Route::get('scanned/data/export', 'ScannedController@institutionScannedExport');//POCOR-8793
         Route::get('scanned/user/{scannedId}', 'ScannedController@scannedUserDetails');//POCOR-8824
-        Route::get('guardians/{openemisId}', 'UserController@getGuardianByOpenemisId')->where('openemisId', '[\pL0-9]+');
+        Route::get('guardians/{openemisId}', 'UserController@getGuardianByOpenemisNo')->where('openemisNo', '[\pL0-9]+'); // POCOR-8840
 
     }
 );
