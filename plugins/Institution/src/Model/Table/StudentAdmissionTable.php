@@ -91,7 +91,7 @@ class StudentAdmissionTable extends ControllerActionTable
         if (
             $request !== null &&
             ($param = $request->getParam('pass')[0] ?? null) !== 'excel' &&
-            !in_array($request->getParam('action'), ['saveStudentData', 'Promotion', 'Transfer', 'Undo'])
+            !in_array($request->getParam('action'), ['saveStudentData', 'Promotion', 'Transfer', 'Undo', 'ImportUsers', 'ImportStudentAdmission'])
         ) {    
             $this->addBehavior('CustomField.Record', [
                 'model' => 'Institution.StudentAdmission',
