@@ -16,9 +16,6 @@ use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Text;
 use Cake\ORM\Table;
-use Cake\ORM\Locator\TableLocator;
-use Cake\Datasource\EntityInterface;
-use Cake\Collection\Collection;
 use ArrayObject;
 
 class StaffPositionProfilesTable extends ControllerActionTable
@@ -371,7 +368,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
      * - Manages security group associations for homeroom teacher changes.
      * - Updates `end_date` based on the type of staff change.
      * - Validates and updates associated data to ensure consistency.
-     *
+     * POCOR-8853 fixed change FTE and change homeroom teacher
      */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -1013,10 +1010,17 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         $attr['type'] = 'select';
         $attr['onChangeReload'] = true;
+//        dd($attr);
         $data = $request->getData($this->getAlias());
         if(!isset($data)) {
             $attr['value'] = 0;
             $attr['attr']['value'] = 0;
+        }else{
+//            dd($this->staffChangeTypesList);
+            $value = $data['staff_change_type_id'];
+            $attr['type'] = 'disabled';
+            $attr['value'] = $this->StaffChangeTypes->get($value)->name;;
+            $attr['attr']['value'] = $this->StaffChangeTypes->get($value)->name;;
         }
         return $attr;
     }
@@ -1119,8 +1123,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         $options = $attr['options'];
                         if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                             $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-                            if (isset($options[strval($entity->FTE)])) {
-                                unset($options[strval($entity->FTE)]);
+                            $fteval = $entity->FTE == '1.00' ? 1 : $entity->FTE;
+                            if (isset($options[$fteval])) {
+                                unset($options[$fteval]);
                             }
                         }
                         $attr['options'] = $options;
