@@ -688,7 +688,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
         $newEntity = $this->patchStaffProfile($data);
         // reject all pending transfers
-        $this->rejectPendingTransfer($data);
+
+        $staff_change_code = $this->getStaffChangeCode($newEntity);
+        if ($staff_change_code == 'CHANGE_IN_FTE') {
+            $this->rejectPendingTransfer($data);
+        }
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $InstitutionStaff->save($newEntity);
     }
@@ -706,7 +710,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             })
             ->where([$InstitutionStaffTransfers->aliasField('staff_id') => $staffId])
             ->all();
-
+//        dd($transferRecords);
         if (!empty($transferRecords)) {
             foreach ($transferRecords as $key => $entity) {
                 $workflowId = $entity->_matchingData['Statuses']->workflow_id;
@@ -903,7 +907,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
         // Set the header of the page
         $institutionId = $this->getQueryString('institution_id');
         //$this->Institutions = TableRegistry::get('Institution.Institutions');
-        $institutionName = $this->Institutions->get($institutionId)->name;
+        if ($institutionId) {
+            $institutionName = $this->Institutions->get($institutionId)->name;
+        }
         $this->controller->set('contentHeader', $institutionName. ' - ' .__('Pending Change in Assignment'));
 
         $this->field('institution_staff_id', ['visible' => false]);
@@ -1015,12 +1021,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if(!isset($data)) {
             $attr['value'] = 0;
             $attr['attr']['value'] = 0;
-        }else{
-//            dd($this->staffChangeTypesList);
-            $value = $data['staff_change_type_id'];
-            $attr['type'] = 'disabled';
-            $attr['value'] = $this->StaffChangeTypes->get($value)->name;;
-            $attr['attr']['value'] = $this->StaffChangeTypes->get($value)->name;;
         }
         //      POCOR-8853 end
         return $attr;
@@ -1079,9 +1079,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         // POCOR-8553 cleaned some code
         $data = $request->getData($this->getAlias());
-        if(!isset($data)) {
-            $attr['visible'] = false;
-        }
+//        if(!isset($data)) {
+//            $attr['visible'] = false;
+//        }
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
             if (isset($data)) {
@@ -1110,9 +1110,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         // POCOR-8853 cleaned some code
         $data = $request->getData($this->getAlias());
-        if(!isset($data)) {
-            $attr['visible'] = false;
-        }
+//        if(!isset($data)) {
+//            $attr['visible'] = false;
+//        }
 
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
