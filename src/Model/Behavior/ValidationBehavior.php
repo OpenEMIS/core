@@ -565,12 +565,12 @@ class ValidationBehavior extends Behavior
             ->first();
         if ($checkRecord && $checkRecord->value == 1) {
             // If validation is enabled, return false if special characters are found
-            $specialCharPattern = '/[^a-zA-Z0-9\s]/';
+            $specialCharPattern = '/[^a-zA-Z0-9\s]/';  
             $containsSpecialChar = preg_match($specialCharPattern, $check);
             if ($containsSpecialChar) {
-                return false;
+                return false; 
             }
-            return true;
+            return true; 
         } else {
             // Validation is disabled, so allow any string
             return true;
@@ -1495,11 +1495,6 @@ class ValidationBehavior extends Behavior
 
     public static function checkFTE($field, array $globalData)
     {
-//        dd($globalData);
-        //don't check if change in homeroom
-        if($globalData['data']['staff_change_type_id'] == 6){
-            return true;
-        }
         if (!empty($globalData['data']['start_date'])) {
             $date = new DateTime($globalData['data']['start_date']);
             $startDate = date_format($date, 'Y-m-d');
