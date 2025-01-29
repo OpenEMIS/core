@@ -1010,7 +1010,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         $attr['type'] = 'select';
         $attr['onChangeReload'] = true;
-//        dd($attr);
+//      POCOR-8853 start made it once changeable to avoid trash data
         $data = $request->getData($this->getAlias());
         if(!isset($data)) {
             $attr['value'] = 0;
@@ -1022,6 +1022,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $attr['value'] = $this->StaffChangeTypes->get($value)->name;;
             $attr['attr']['value'] = $this->StaffChangeTypes->get($value)->name;;
         }
+        //      POCOR-8853 end
         return $attr;
     }
 
@@ -1076,6 +1077,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onUpdateFieldCurrentFTE(Event $event, array $attr, $action, ServerRequest $request)
     {
+        // POCOR-8553 cleaned some code
         $data = $request->getData($this->getAlias());
         if(!isset($data)) {
             $attr['visible'] = false;
@@ -1106,6 +1108,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onUpdateFieldFTE(Event $event, array $attr, $action, ServerRequest $request)
     {
+        // POCOR-8853 cleaned some code
         $data = $request->getData($this->getAlias());
         if(!isset($data)) {
             $attr['visible'] = false;
