@@ -185,6 +185,36 @@ class AlertLogsTable extends ControllerActionTable
 
     }
 
+    public function insertSystemUpdateAlertLog($method, $feature, $email, $subject = null, $message = null)
+    {
+        $today = Time::now();
+        $todayDate = Date::now();
+
+        // general feature options from alertRules
+        $AlertRules = TableRegistry::get('Alert.AlertRules');
+        $alertFeatures = $AlertRules->getFeatureOptions();
+
+        // checksum hash($subject,$message)
+        $checksum = Security::hash($subject . ',' . $message, 'sha256');
+        // to update and add new records into the alert_logs
+        $entity = $this->newEntity([
+            'feature' => $feature,
+            'method' => $method,
+            'destination' => $email,
+            'status' => 0,
+            'subject' => $subject,
+            'message' => $message,
+            'checksum' => $checksum
+        ]);
+        $saveData = $this->save($entity);
+
+        if(!empty($saveData)){
+            $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
+            $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
+        }
+
+    }
+
     public function replaceMessage($feature, $message, $vars, $workflow = false)
     {
         $AlertRules = TableRegistry::get('Alert.AlertRules');
