@@ -127,7 +127,7 @@ class SecurityGroupUsersTable extends AppTable {
             $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $institutionQuery = $Institution
                     ->find()
-                    ->where([$Institution->aliasField($Institution->primaryKey()) => $institutionId])
+                    ->where([$Institution->aliasField($Institution->getPrimaryKey()) => $institutionId])
                     ->first()
             ;
 
