@@ -434,7 +434,7 @@ class RemoveBehavior extends Behavior
             }
             return $entity;
         } else if ($request->is('delete')) {
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             $idKeys = $model->getIdKeys($model, $request->data($this->alias()));
             if (!empty($idKeys)) {
                 try {
