@@ -560,5 +560,29 @@ class StudentService extends Controller
     }
     //POCOR-8221 Ends...
 
+    public function getStudentAbsencesDetails($request, $openemis_no)
+    {
+        try {
+            $absencesDetailsData = $this->studentRepository->getStudentAbsencesDetails($request, $openemis_no);
+            $arr = [];
+            foreach($absencesDetailsData as $key => $dd){
+                $arr[$key]['date'] = $dd['date']??Null;
+                $arr[$key]['institution'] = $dd['institution']['name']??Null;
+                $arr[$key]['period'] = $dd['period']['name']??Null;
+                $arr[$key]['class'] = $dd['institution_class']['name']??Null;
+                $arr[$key]['subject'] = $dd['subject']['name']??Null;
+                $arr[$key]['absence_type'] = $dd['absence_type']['name']??Null;
+            }
+            return $arr;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Student Absences Data Not Found.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Absences Data Not Found.');
+        }
+    }
 
 }
