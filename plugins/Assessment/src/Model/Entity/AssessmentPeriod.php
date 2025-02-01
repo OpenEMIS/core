@@ -44,7 +44,7 @@ class AssessmentPeriod extends Entity
         }
 
         if($ExcludedSecurityRoleCount > 0){ // POCOR-8859
-            return false; // POCOR-8859
+            return true; // POCOR-8859
         }
         //POCOR-7400 end
 
