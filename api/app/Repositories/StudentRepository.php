@@ -1155,7 +1155,7 @@ class StudentRepository extends Controller
     public function getStudentAbsencesDetails($request, $openemis_no)
     {
         try {
-            $absencesDetailsData = InstitutionStudentAbsenceDetails::with('securityUser','absenceType:id,name', 'studentAbsenceReason:id,name', 'period', 'subject','institution','institutionClass')
+            $absencesDetailsData = InstitutionStudentAbsenceDetails::with('securityUser','absenceType:id,name', 'studentAbsenceReason:id,name', 'subject','institution','institutionClass')
                 ->whereHas('securityUser', function ($query) use ($openemis_no) {
                     $query->where('openemis_no', $openemis_no);
                 })

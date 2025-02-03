@@ -1272,11 +1272,10 @@ class StudentController extends Controller
      *                     type="object",
      *                     @OA\Property(property="date", type="string", format="date", example="2024-03-01"),
      *                     @OA\Property(property="institution", type="string", example="Avory Primary School"),
-     *                     @OA\Property(property="period", type="string", nullable=true, example=null),
+     *                     @OA\Property(property="period", type="string", nullable=true, example=1),
      *                     @OA\Property(property="class", type="string", example="Primary 1-A"),
      *                     @OA\Property(property="subject", type="string", nullable=true, example="Creative Arts"),
-     *                     @OA\Property(property="absence_type", type="string", example="Absence - Excused"),
-     *                     @OA\Property(property="student_absence_reason_name", type="string", example="Illness")
+     *                     @OA\Property(property="absence_type", type="string", example="Absence - Excused")
      *                 )
      *             )
      *         )
