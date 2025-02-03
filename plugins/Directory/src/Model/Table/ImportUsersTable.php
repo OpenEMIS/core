@@ -37,21 +37,21 @@ class ImportUsersTable extends AppTable
                 'headings' => [
                     [
                         'title' => 'Import Users Data',
-                        'title_range' => 'C1:Q1', // POCOR-8835
+                        'title_range' => 'C1:R1',
                         'subtitle' => '* Mandatory for User Import',
-                        'subtitle_range' => 'D2:Q2' // POCOR-8835
+                        'subtitle_range' => 'D2:R2'
                     ],
                     [
                         'title' => 'Import User into an Institution',
-                        'title_range' => 'R1:V1', // POCOR-8835
+                        'title_range' => 'S1:W1',
                         'subtitle' => '** Mandatory for Institution Import',
-                        'subtitle_range' => 'R2:V2' // POCOR-8835
+                        'subtitle_range' => 'S2:W2'
                     ],
                     [
                         'title' => 'Import Guardian for the User',
-                        'title_range' => 'W1:AN1', // POCOR-8835
+                        'title_range' => 'X1:AN1',
                         'subtitle' => '*** Mandatory for Guardian Import',
-                        'subtitle_range' => 'W2:AN2' // POCOR-8835
+                        'subtitle_range' => 'X2:AN2'
                     ]
                 ]
             ]
@@ -154,6 +154,22 @@ class ImportUsersTable extends AppTable
 //        if ($openemisNo) {
 //            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
 //        }
+        $extractedUsername = $columns->filter(function ($value, $key, $iterator) {
+            return $value == 'username';
+        });
+
+        $usernameNoIndex = key($extractedUsername->toArray()) + 1;
+        $username = $sheet->getCellByColumnAndRow($usernameNoIndex, $row)->getValue();
+
+
+        // POCOR-8683 start
+        $user = null;
+        if ($username) {
+            $userCount = $this->Users->find()->where(['username' => $username])->count();
+        }
+        if($userCount > 0){
+
+        }
         // POCOR-8683 end
         // POCOR-8835 end
         $accountType = $columns->filter(function ($value, $key, $iterator) {
@@ -171,21 +187,29 @@ class ImportUsersTable extends AppTable
         // POCOR-8835 end
             try{
                 // POCOR-8683 start
-                $username = "";
+                $newOpenemisNo = "";
                 // POCOR-8835 start
 //                if(strlen($openemisNo) > 1){
 //                    $username = Text::slug($openemisNo);
 //                }
 //                if(strlen($username) < 6){
                 // POCOR-8835 end
-                    $username = $username . $this->getNewOpenEmisNo();
+                $newOpenemisNo = $newOpenemisNo . $this->getNewOpenEmisNo();
 
-                    $tempRow['openemis_no'] = $username;
+                    $tempRow['openemis_no'] = $newOpenemisNo;
 //                } // POCOR-8835
-                $tempRow['username'] = $username;
+                $tempRow['username'] = $tempRow['username'] ?? $newOpenemisNo;
+                if (isset($tempRow['username']) && preg_match('/^\w+$/', $tempRow['username'])) {
+                    $validUserName = true;
+                } else {
+                    $validUserName = false;
+                }
+                if (!$validUserName) {
+                    $rowInvalidCodeCols['username'] = 'New User Creation Error: ' . __($exception->getMessage());
+                }
                 // POCOR-8683 end
             } catch (\Exception $exception) {
-                $rowInvalidCodeCols['openemis_no'] = 'New User Creation Error: ' . __($exception->getMessage());
+                $rowInvalidCodeCols['username'] = 'New User Creation Error: ' . __($exception->getMessage());
                 return false;
             }
         // POCOR-8835 start

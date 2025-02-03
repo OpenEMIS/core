@@ -31,18 +31,18 @@ class POCOR8835 extends AbstractMigration
     {
 
         // Step 1: Update the `order` field by reducing by 1 for all rows where model='User.Users'
-        $this->query("
-            UPDATE import_mapping
-            SET `order` = `order` - 1
-            WHERE model = 'User.Users' AND `order` > (
-                SELECT MIN(`order`)
-                FROM (SELECT * FROM import_mapping) as temp
-                WHERE model = 'User.Users' AND column_name = 'openemis_no'
-            )
-        ");
+//        $this->query("
+//            UPDATE import_mapping
+//            SET `order` = `order` - 1
+//            WHERE model = 'User.Users' AND `order` > (
+//                SELECT MIN(`order`)
+//                FROM (SELECT * FROM import_mapping) as temp
+//                WHERE model = 'User.Users' AND column_name = 'openemis_no'
+//            )
+//        ");
 
         // Step 2: Remove the `openemis_no` record
-        $this->query("DELETE FROM import_mapping WHERE model = 'User.Users' AND column_name = 'openemis_no'");
+        $this->query("UPDATE `import_mapping` SET `column_name` = 'username', `description` = '' WHERE model = 'User.Users' AND column_name = 'openemis_no'");
 
     }
 
