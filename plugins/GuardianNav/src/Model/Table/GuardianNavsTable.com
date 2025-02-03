@@ -926,7 +926,7 @@ class GuardianNavsTable extends ControllerActionTable
 
             $studentEducationGrade = $EducationGrades
                 ->find()
-                ->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $gradeId])
+                ->where([$EducationGrades->aliasField($EducationGrades->getPrimaryKey()) => $gradeId])
                 ->first();
 
             $currentProgrammeGrades = $EducationGrades

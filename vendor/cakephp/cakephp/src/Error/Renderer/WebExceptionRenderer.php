@@ -386,14 +386,14 @@ class WebExceptionRenderer implements ExceptionRendererInterface
     protected function _template(Throwable $exception, string $method, int $code): string
     {
         //POCOR-8422[START]
-        // if(!empty($exception->getMessage())){
-        //     try {
-        //         $ErrorTable = TableRegistry::getTableLocator()->get('System.SystemErrors');
-        //         $ErrorTable->insertError($exception);
-        //     } catch (Exception $ex) {
+        if(!empty($exception->getMessage())){
+            try {
+                $ErrorTable = TableRegistry::getTableLocator()->get('System.SystemErrors');
+                $ErrorTable->insertError($exception);
+            } catch (Exception $ex) {
                 
-        //     }
-        // }
+            }
+        }
         //POCOR-8422[END]
         //POCOR-8412[START]
         if ($code!=403) {
