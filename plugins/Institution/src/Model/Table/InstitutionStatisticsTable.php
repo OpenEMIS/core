@@ -281,9 +281,8 @@ class InstitutionStatisticsTable extends AppTable
         if ($action == 'add') {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
-            $selectedPeriod = $AcademicPeriods->getCurrent();
-            $selectedPeriod = $this->request->getData('InstitutionStatistics')['academic_period_id'];
-            $institutionId = $this->request->getData('InstitutionStatistics')['institution_id'];
+            $selectedPeriod = $this->request->getData('InstitutionStatistics')['academic_period_id'] ?? $AcademicPeriods->getCurrent();//POCOR-8857
+            $institutionId = $this->request->getData('InstitutionStatistics')['institution_id'] ?? $this->getInstitutionID();//POCOR-8857
             $EducationGrades = TableRegistry::get('Education.EducationGrades');
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $grades = TableRegistry::get('Institution.InstitutionGrades');

@@ -310,7 +310,7 @@ class ContactsTable extends ControllerActionTable
                 },
             ])
             ->add('value', 'ruleValidateEmail', [
-                'rule' => ['email', 'notBlank'],
+                'rule' => ['email'],
                 'on' => function ($context) {
                     // POCOR-8080-1 start
                     // I've cleaned the new code
