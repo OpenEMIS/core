@@ -2261,7 +2261,6 @@ public function getIdentityTypeData($value_selection)
         if ($this->action == 'index') {
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             //POCOR-6248 starts
-            if ($userType == self::STAFF || $userType == self::STUDENT) {
                 $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
                 $ConfigItem = $ConfigItemTable
                     ->find()
@@ -2340,8 +2339,10 @@ public function getIdentityTypeData($value_selection)
                 case self::OTHER:
                     $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
                     break;
+                default: //POCOR-8850
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
+                    break;
             }
-        }
     }
 
     public function onGetStudentStatus(Event $event, Entity $entity)
