@@ -1022,4 +1022,83 @@ class UserController extends Controller
     }
 
     //POCOR-8139 Ends
+
+    // POCOR-8840 start
+    /**
+     * @OA\Get(
+     *     path="/api/v4/guardians/{openemisNo}",
+     *     summary="Get Guardian and Students Details",
+     *     description="Retrieve details of a guardian and their associated students.",
+     *     tags={"Guardians"},
+     *
+     *     @OA\Parameter(
+     *         name="openemisNo",
+     *         in="path",
+     *         required=true,
+     *         description="OpenEMIS number of the guardian",
+     *         @OA\Schema(type="string", example="oe1234567")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful response",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="openemis_no", type="string", example="oe123456"),
+     *                     @OA\Property(property="first_name", type="string", example="Nomen"),
+     *                     @OA\Property(property="last_name", type="string", example="Familia"),
+     *                     @OA\Property(property="students", type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="openemis_no", type="string", example="oe234567"),
+     *                             @OA\Property(property="first_name", type="string", example="Lorem"),
+     *                             @OA\Property(property="last_name", type="string", example="Ipsum")
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
+    public function getGuardianByOpenemisNo(string $openemisNo)
+    {
+        try {
+            // Retrieve the user ID using the OpenEMIS number
+            $userId = $this->userService->getUserIdByOpenemisNo($openemisNo);
+
+            if (!$userId) {
+                // Return error response if no guardian is found
+                return $this->sendErrorResponse("Guardian Not Found");
+            }
+
+            // Retrieve students associated with the guardian
+            $data = $this->userService->getGuardianWithStudents($userId);
+
+            // Return success response with the data
+            return $this->sendSuccessResponse("Guardian Found", $data);
+        } catch (\Exception $e) {
+            // Log error details with OpenEMIS number for traceability
+            Log::error('Failed to fetch guardian data', [
+                'openemisNo' => $openemisNo,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Return generic error response
+            return $this->sendErrorResponse('Failed to retrieve guardian data. Please try again.');
+         }
+
+    }
+    // POCOR-8840 end
+
 }

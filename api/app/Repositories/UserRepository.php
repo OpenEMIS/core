@@ -177,6 +177,82 @@ class UserRepository extends Controller
     }
     //POCOR-8862 end
 
+    //POCOR-8840 start
+    public function getUserIdByOpenemisNo(string $openemisNo)
+    {
+        try {
+            $user = SecurityUsers::
+                    where('openemis_no', $openemisNo)
+                    ->where('super_admin', 0)
+                    ->first();
+            if (isset($user)) {
+                return $user->id;
+            }
+
+
+        } catch (\Exception $e) {
+
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+
+    public function getGuardianWithStudents(int $guardianId)
+    {
+        try {
+            // Fetch the guardian data
+            $guardian = SecurityUsers::where('id', $guardianId)
+                ->where('super_admin', 0) // Ensure the guardian is not a super admin
+                ->first();
+
+            // If no guardian found, return an empty response
+            if (!$guardian) {
+                return $this->sendErrorResponse("Guardian Not Found");
+            }
+
+            // Fetch the students associated with the guardian
+            $students = StudentGuardians::where('guardian_id', $guardianId)
+                ->with('student') // Assuming there is a `student` relationship in the `StudentGuardians` model
+                ->get()
+                ->unique('student_id') // Ensure students are unique
+                ->map(function ($studentGuardian) {
+                    $student = $studentGuardian->student; // Access the student data
+                    return [
+                        'openemis_no' => $student->openemis_no ?? null,
+                        'first_name' => $student->first_name ?? null,
+                        'last_name' => $student->last_name ?? null,
+                    ];
+                })
+                ->filter() // Remove any null or empty students (just in case)
+                ->values(); // Reindex the array
+
+            // Prepare the response data for the guardian
+            $responseData = [
+                'openemis_no' => $guardian->openemis_no ?? null,
+                'first_name' => $guardian->first_name ?? null,
+                'last_name' => $guardian->last_name ?? null,
+                'students' => $students->isNotEmpty() ? $students : [], // Ensure an empty array if no students
+            ];
+            return $responseData;
+            // Return the success response
+//            return $this->sendSuccessResponse("Guardian Found", $responseData);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error(
+                'Failed to fetch guardian with students',
+                ['guardian_id' => $guardianId, 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            // Return a generic error response
+            return $this->sendErrorResponse("Failed to retrieve guardian data. Please try again.");
+        }
+    }
+    //POCOR-8840 end
+
 
 
     public function saveStudentData($request)
