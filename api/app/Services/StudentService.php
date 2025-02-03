@@ -568,7 +568,7 @@ class StudentService extends Controller
             foreach($absencesDetailsData as $key => $dd){
                 $arr[$key]['date'] = $dd['date']??Null;
                 $arr[$key]['institution'] = $dd['institution']['name']??Null;
-                $arr[$key]['period'] = $dd['period']['name']??Null;
+                $arr[$key]['period'] = $dd['period']??Null;
                 $arr[$key]['class'] = $dd['institution_class']['name']??Null;
                 $arr[$key]['subject'] = $dd['subject']['name']??Null;
                 $arr[$key]['absence_type'] = $dd['absence_type']['name']??Null;
