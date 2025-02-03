@@ -168,6 +168,8 @@ class ImportUsersTable extends AppTable
             $userCount = $this->Users->find()->where(['username' => $username])->count();
         }
         if($userCount > 0){
+            $rowInvalidCodeCols['username'] = 'This username is already in use';
+            return false;
 
         }
         // POCOR-8683 end
@@ -195,17 +197,17 @@ class ImportUsersTable extends AppTable
 //                if(strlen($username) < 6){
                 // POCOR-8835 end
                 $newOpenemisNo = $newOpenemisNo . $this->getNewOpenEmisNo();
-
                     $tempRow['openemis_no'] = $newOpenemisNo;
 //                } // POCOR-8835
-                $tempRow['username'] = $tempRow['username'] ?? $newOpenemisNo;
+                $tempRow['username'] = $username ?? $newOpenemisNo;
                 if (isset($tempRow['username']) && preg_match('/^\w+$/', $tempRow['username'])) {
                     $validUserName = true;
                 } else {
                     $validUserName = false;
                 }
                 if (!$validUserName) {
-                    $rowInvalidCodeCols['username'] = 'New User Creation Error: ' . __($exception->getMessage());
+                    $rowInvalidCodeCols['username'] = 'The Username has invalid characters';
+                    return false;
                 }
                 // POCOR-8683 end
             } catch (\Exception $exception) {
