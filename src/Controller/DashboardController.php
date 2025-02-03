@@ -59,9 +59,9 @@ class DashboardController extends AppController
         parent::beforeFilter($event);
 
         $user = $this->Auth->user();
-
-        if (is_array($user) && isset($user['last_login']) && is_null($user['last_login'])) {
-            $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user['id']);
+        if (is_array($user)&& ($user['last_login'] === null || $user['last_login'] === '')) {
+            
+            $userInfo = TableRegistry::get('User.Users')->get($user['id']);
             if ($userInfo->password) {
                 $this->Alert->warning('security.login.changePassword');
                 $lastLogin = $userInfo->last_login;
@@ -70,6 +70,7 @@ class DashboardController extends AppController
             }
 
         }
+      
         $header = __('Home Page');
         $this->set('contentHeader', $header);
 
