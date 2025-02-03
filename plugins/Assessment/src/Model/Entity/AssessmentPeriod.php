@@ -20,7 +20,11 @@ class AssessmentPeriod extends Entity
 
         //POCOR-7400 start
         $assessment_period_id=$this->getOriginal('id');
-         $user_id=$_SESSION['Auth']['User']['id']; // POCOR-8859
+        $user_id=$_SESSION['Auth']['User']['id']; // POCOR-8859
+        $super_admin = $_SESSION['Auth']['User']['super_admin'];
+        if($super_admin == 1){
+            return true;
+        }
 //        $user_id= $this->created_user_id;
         $SecurityGroupUsersTable=TableRegistry::get('Security.SecurityGroupUsers');
         $securityGroupUserData=$SecurityGroupUsersTable->
