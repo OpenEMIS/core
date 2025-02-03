@@ -3631,11 +3631,11 @@ class StaffTable extends ControllerActionTable
             ->toArray();
         foreach ($institutionStaffRecords as $entity) {
             $SecurityGroupUsers->deleteAll([
-                $SecurityGroupUsers->aliasField($SecurityGroupUsers->primaryKey()) => $entity->security_group_user_id
+                $SecurityGroupUsers->aliasField($SecurityGroupUsers->getPrimaryKey()) => $entity->security_group_user_id
             ]);
             $this->updateAll(
                 ['security_group_user_id' => null],
-                [$this->primaryKey() => $entity->id]
+                [$this->getPrimaryKey() => $entity->id]
             );
             $this->updateStaffStatus($entity, $this->endOfAssignment);
         }
