@@ -293,6 +293,14 @@ class AssessmentsTable extends ControllerActionTable {
                 $classification = $assessment_item['classification'];
                 $is_new = $assessment_item['id_check'];
                 $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+                $weight = preg_replace('/\.(?=.*\.)/', '', $weight);
+
+                $floatValue = filter_var($weight, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                
+                if ($floatValue === false || $floatValue === '') {
+                    $floatValue =  '0.00';
+                }
+                $weight =  number_format((float)$floatValue, 2, '.', '');
                 if (!$is_new) {
                     $assessmentData = $assessmentItems->
                     find()
