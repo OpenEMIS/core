@@ -149,7 +149,6 @@ class ImportUsersTable extends AppTable
 //        $openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
 //
 //
-//        // POCOR-8683 start
 //        $user = null;
 //        if ($openemisNo) {
 //            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
@@ -161,9 +160,9 @@ class ImportUsersTable extends AppTable
         $usernameNoIndex = key($extractedUsername->toArray()) + 1;
         $username = $sheet->getCellByColumnAndRow($usernameNoIndex, $row)->getValue();
 
-
+//        dd($username);
         // POCOR-8683 start
-        $user = null;
+        Log::debug(strval($username));
         if ($username) {
             $userCount = $this->Users->find()->where(['username' => $username])->count();
         }
@@ -173,7 +172,6 @@ class ImportUsersTable extends AppTable
 
         }
         // POCOR-8683 end
-        // POCOR-8835 end
         $accountType = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'account_type';
         });
@@ -189,6 +187,7 @@ class ImportUsersTable extends AppTable
         // POCOR-8835 end
             try{
                 // POCOR-8683 start
+                // POCOR-8835 start
                 $newOpenemisNo = "";
                 // POCOR-8835 start
 //                if(strlen($openemisNo) > 1){
@@ -214,6 +213,7 @@ class ImportUsersTable extends AppTable
                 $rowInvalidCodeCols['username'] = 'New User Creation Error: ' . __($exception->getMessage());
                 return false;
             }
+        // POCOR-8835 end
         // POCOR-8835 start
 //        } else {
 //            $tempRow['entity'] = $user;
@@ -498,7 +498,13 @@ class ImportUsersTable extends AppTable
     {
         $flipped = array_flip($columns);
         $key = $flipped['openemis_no'];
-        $tempPassedRecord['data'][$key] = $clonedEntity->openemis_no . ' - ' . $clonedEntity->first_name; // POCOR-8835
+        // POCOR-8835 start
+        if ($clonedEntity->openemis_no != $clonedEntity->username) {
+            $tempPassedRecord['data'][$key] = $clonedEntity->openemis_no . ' - ' . $clonedEntity->username; // POCOR-8835
+        }else{
+            $tempPassedRecord['data'][$key] = $clonedEntity->username;
+        }
+        // POCOR-8835 end
         $key = $flipped['guardian_openemis_no']; // POCOR-8683
         $tempPassedRecord['data'][$key] = $clonedEntity->guardian_openemis_no; // POCOR-8683
     }
