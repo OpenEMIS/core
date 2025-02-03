@@ -1,5 +1,5 @@
 <div name="UserDetailsOpenEmisNo">
-    <?php $dynamicOpenemisNoHeader = (isset($dynamicOpenemisNoHeader) && !empty($dynamicOpenemisNoHeader)) ? h($dynamicOpenemisNoHeader) : __('OpenEMISA ID'); ?>
+    <?php $dynamicOpenemisNoHeader = (isset($dynamicOpenemisNoHeader) && !empty($dynamicOpenemisNoHeader)) ? h($dynamicOpenemisNoHeader) : __('OpenEMIS ID'); ?>
     <div class="row section-header header-space-lg"><?= __('Search By ') . $dynamicOpenemisNoHeader ?></div>
     <div class="input string">
         <label><?= $dynamicOpenemisNoHeader ?></label> <!-- POCOR-8646 -->
