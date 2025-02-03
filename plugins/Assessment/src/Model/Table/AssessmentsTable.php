@@ -304,7 +304,7 @@ class AssessmentsTable extends ControllerActionTable {
                         ->toArray();
                     $assessment_item_id = $assessmentData[0]['id'];
                     $assesmentItem = $assessmentItems->updateAll(
-                        ['weight' => $weight,
+                        ['weight' => is_null($weight) ? 0.00 : $weight,
                             'classification' => $classification],    //field
                         ['id' => $assessment_item_id,
                         ] //condition
@@ -315,7 +315,7 @@ class AssessmentsTable extends ControllerActionTable {
                     $assessmenItemId = Text::uuid();
                     $assessment_data = [
                         'id' => $assessmenItemId,
-                        'weight' => $weight,
+                        'weight' => is_null($weight) ? 0.00 : $weight,
                         'classification' => $classification,
                         'assessment_id' => $assessment_id,
                         'education_subject_id' => $is_new,
@@ -373,7 +373,7 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
             $this->AssessmentItems->getAlias(),
-            $this->GradingTypes->getAlias()
+            //$this->GradingTypes->getAlias()
         ];
     }
 
@@ -704,8 +704,9 @@ class AssessmentsTable extends ControllerActionTable {
     {
 
         $associatedRecordsExist = 
-            $this->AssessmentPeriods->exists(['assessment_id' => $entity->id]) ||
-            $this->AssessmentItems->exists(['assessment_id' => $entity->id]);
+            $this->AssessmentPeriods->exists(['assessment_id' => $entity->id]) ;
+
+            //|| $this->AssessmentItems->exists(['assessment_id' => $entity->id]);
 
         if ($associatedRecordsExist) { 
                 $message = __('Delete operation is not allowed as there are other information linked to this record.');
