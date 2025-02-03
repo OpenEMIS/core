@@ -6995,6 +6995,7 @@ class InstitutionsController extends AppController
 
     }
 
+
     /**
      * @return int
      * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
@@ -7009,6 +7010,19 @@ class InstitutionsController extends AppController
             ])->first();
         $student_role_id = $securityRoles->id;
         return $student_role_id;
+    }
+
+    // POCOR-8853
+    private
+    static function getHomeroomTeacherSecurityRoleId(): int
+    {
+        $securityRolesTbl = self::getDynamicTableInstance('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'HOMEROOM_TEACHER',
+            ])->first();
+        $security_role_id = $securityRoles->id;
+        return $security_role_id;
     }
 
     /**
@@ -7446,8 +7460,18 @@ class InstitutionsController extends AppController
             $StaffStatuses = self::getDynamicTableInstance('Staff.StaffStatuses');
             $statuses = $StaffStatuses->findCodeList();
             $position = $institutionPositions->get($institutionPositionId);
-            $securityRole = $this->getSecurityRole($position->staff_position_title_id);
+            // POCOR-8853 start
+            $securityRoleID = $this->getSecurityRoleID($position->staff_position_title_id);
+            $institution_security_group_id = $this->getInstitutionSecurityGroupId($institutionId);
 
+            if($securityRoleID){
+                $staff_security_group_id = $this->getSecurityGroupUserId($securityGroupUsers, $institution_security_group_id, $userRecordId, $userId, $securityRoleID) ?? null;
+            }
+            if($is_homeroom){
+                $homeroomSecurityRoleId = self::getHomeroomTeacherSecurityRoleId();
+                $homeroom_security_group_id = $this->getSecurityGroupUserId($securityGroupUsers, $institution_security_group_id, $userRecordId, $userId, $homeroomSecurityRoleId);
+            }
+            // POCOR-8853 end
             $entityStaffData = [
                 'FTE' => $fte,
                 'start_date' => $startDate,
@@ -7460,7 +7484,7 @@ class InstitutionsController extends AppController
                 'is_homeroom' => $is_homeroom, //POCOR-5070
                 'institution_id' => $institutionId,
                 'institution_position_id' => $institutionPositionId,
-                'security_group_user_id' => $this->getSecurityGroupUserId($securityGroupUsers, $institutionId, $userRecordId, $userId, $securityRole) ?? null,
+                'security_group_user_id' => $staff_security_group_id, // POCOR-8853
                 'staff_position_grade_id' => $staff_position_grade_id,//POCOR-7238
                 'created_user_id' => $userId,
                 'created' => date('Y-m-d H:i:s')
@@ -7476,36 +7500,31 @@ class InstitutionsController extends AppController
      * POCOR-8231
      *
      * @param \Cake\ORM\Table $securityGroupUsers
-     * @param int $institutionId
+     * @param int $security_group_id // POCOR-8853 start
      * @param int $userRecordId
      * @param int $userId
-     * @param \Cake\Datasource\EntityInterface $securityRole
+     * @param int $securityRoleId // POCOR-8853 start
      * @return string|null
      * @throws \Cake\ORM\Exception\PersistenceFailedException
      * @throws \Cake\Datasource\Exception\RecordNotFoundException
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function getSecurityGroupUserId($securityGroupUsers, $institutionId, $userRecordId, $userId, $securityRole)
+    private function getSecurityGroupUserId($securityGroupUsers, $security_group_id, $userRecordId, $userId, $securityRoleId)
     {
-        $securityGroupInstitutions = self::getDynamicTableInstance('security_group_institutions');
-        $groupInstitution = $securityGroupInstitutions->find()
-            ->where(['institution_id' => $institutionId])
-            ->first();
-
         $groupUser = $securityGroupUsers->find()
             ->where([
                 'security_user_id' => $userRecordId,
-                'security_role_id' => $securityRole->id,
-                'security_group_id' => $groupInstitution->security_group_id
+                'security_role_id' => $securityRoleId, // POCOR-8853 start
+                'security_group_id' => $security_group_id // POCOR-8853 start
             ])
             ->first();
 
         if (empty($groupUser)) {
             $groupUserData = [
                 'id' => Text::uuid(),
-                'security_group_id' => $groupInstitution->security_group_id,
+                'security_group_id' => $security_group_id, // POCOR-8853 start
                 'security_user_id' => $userRecordId,
-                'security_role_id' => $securityRole->id,
+                'security_role_id' => $securityRoleId, // POCOR-8853 start
                 'created_user_id' => $userId,
                 'created' => date('Y-m-d H:i:s')
             ];
@@ -7520,18 +7539,17 @@ class InstitutionsController extends AppController
     /**
      * Retrieves the security role based on the position title ID.
      * POCOR-8231
-     *
+     * POCOR-8853 renamed/refactured
      * @param int $staffPositionTitleId
-     * @return \Cake\Datasource\EntityInterface
+     * @return int | null
      * @throws \Cake\Datasource\Exception\RecordNotFoundException
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function getSecurityRole($staffPositionTitleId)
+    private function getSecurityRoleID($staffPositionTitleId)
     {
         $staffPositionTitles = self::getDynamicTableInstance('staff_position_titles');
         $title = $staffPositionTitles->get($staffPositionTitleId);
-        $securityRoles = self::getDynamicTableInstance('security_roles');
-        return $securityRoles->get($title->security_role_id);
+        return $title->security_role_id ?? null;
     }
 
     /**
