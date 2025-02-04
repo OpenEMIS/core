@@ -621,7 +621,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         if (isset($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         }
-        $userData = TableRegistry::get('security_users')
+        $userData = TableRegistry::get('Security.Users')
                     ->find()
                     ->where([
                         'id' => $userId

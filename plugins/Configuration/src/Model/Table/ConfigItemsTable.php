@@ -453,7 +453,7 @@ class ConfigItemsTable extends AppTable
     {
         $this->ControllerAction->field('value_selection', ['visible' => ['view' => true], 'after' => 'value']);
 
-        $identity_types = TableRegistry::get('identity_types');
+        $identity_types = TableRegistry::get('FieldOption.IdentityTypes');
         $option_types = $identity_types
             ->find()
             ->where(['id' => $entity->value_selection])
