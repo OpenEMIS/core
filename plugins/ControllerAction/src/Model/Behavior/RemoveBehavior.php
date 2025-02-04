@@ -434,7 +434,7 @@ class RemoveBehavior extends Behavior
             }
             return $entity;
         } else if ($request->is('delete')) {
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             $idKeys = $model->getIdKeys($model, $request->data($this->alias()));
             if (!empty($idKeys)) {
                 try {
@@ -538,7 +538,8 @@ class RemoveBehavior extends Behavior
 //                        $count = 0; // POCOR-8683-start
                         $assocTable =$assoc;
                         if ($assoc->type() == 'manyToMany') {
-                            $assocTable = $assoc->junction()->getAlias(); // POCOR-8683-start
+                            //$assocTable = $assoc->junction()->getAlias(); // POCOR-8683-start
+                            $assocTable = $assoc->junction(); // POCOR-8861
                         }
 //                        Log::write('debug', $assoc);
                         $bindingKey = $assoc->getBindingKey();
