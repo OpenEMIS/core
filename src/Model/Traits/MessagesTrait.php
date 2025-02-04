@@ -1130,7 +1130,7 @@ trait MessagesTrait
                     'ruleCheckFTE' => 'No available FTE.',
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleStaffExistWithinPeriod' => 'This staff member is already assigned within the selected dates. Please choose a different period.',
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
@@ -1218,7 +1218,7 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleStaffExistWithinPeriod' => 'This staff member is already assigned within the selected dates. Please choose a different period.',
                     'ruleInAllPeriod' => 'Staff start date must be within all academic period range'
                 ],
                 'end_date' => [
@@ -2670,7 +2670,7 @@ trait MessagesTrait
                         'ruleIsDecimal' => 'Value is not a valid decimal',
                         'ruleRange' => 'Mark entered exceeds system limit'
                     ],
-            ], 
+            ],
 
             'GradingOptions' => [
                 'code' => [

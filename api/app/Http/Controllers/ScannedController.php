@@ -113,11 +113,13 @@ class ScannedController extends Controller
     public function addScannedUserData(ScannedAttendanceRequest $request)
     {
         try {
+            
             if (empty($request->all())) {
                 return $this->sendErrorResponse("Missing data. Please provide scanned user data.");
             }
             
             $data = $this->scannedService->addScannedUser($request);
+
             if ($data == 1) {
                 return $this->sendSuccessResponse("Scanned User Data added successfully.");
             } else {
