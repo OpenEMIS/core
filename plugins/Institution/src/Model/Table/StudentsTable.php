@@ -1338,7 +1338,7 @@ class StudentsTable extends ControllerActionTable
                             $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'student_status_id']);
                         }
                     } else {
-                        $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'student_status_id']);
+                        $this->field("student_identity_number", ['visible' => false, 'after' => 'student_status_id']);
                     }
                 }
             }
