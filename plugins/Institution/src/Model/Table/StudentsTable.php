@@ -7,6 +7,8 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -35,7 +37,7 @@ class StudentsTable extends ControllerActionTable
     // POCOR-6129 custome fields code
     private $_dynamicFieldName = 'custom_field_data';
     private $customFieldData = null;
-    private $customFieldTableName = 'StaffCustomField.StaffCustomFields';
+    private $customFieldTableName = 'StudentCustomField.StudentCustomFields';
     // POCOR-6129 custome fields code
 
     private $institution_id;
@@ -449,7 +451,7 @@ class StudentsTable extends ControllerActionTable
 
         $extraField[] = [
             'key' => 'student_nationality',
-            'field' => 'student_nationality',
+            'field' => 'student_nationality_id', //POCOR-8830
             'type' => 'string',
             'label' => __('Nationality')
         ];
@@ -595,6 +597,49 @@ class StudentsTable extends ControllerActionTable
 
         return implode(' ', $studentName);
     }
+
+    //POCOR-8830
+    public function onExcelRenderDate(Event $event, Entity $entity, $attr)
+    {
+        $field = $entity->{$attr['field']};
+        
+        if (!empty($field)) {
+            if ($field instanceof FrozenTime || $field instanceof FrozenDate) {
+                return $this->formatDate($field);
+            } else {
+                $date = new FrozenTime($field);
+                return $this->formatDate($date);
+            }
+        } else {
+            return $field;
+        }
+    }
+
+    //POCOR-8830
+    public function onExcelGetStudentNationalityId(Event $event, Entity $entity)
+    {  
+        $studentId = $entity->student_id;
+        $studentNationalityId = $entity->student_nationality_id;
+        $nationalitiesTable = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
+        $nationalities = $nationalitiesTable
+        ->find()
+        ->select(['name' => $nationalitiesTable->aliasField('name')])
+        ->where(function($exp) use ($studentNationalityId, $nationalitiesTable) {
+            if ($studentNationalityId !== null) {
+                return $exp->eq($nationalitiesTable->aliasField('id'), $studentNationalityId);
+            } else {
+                return $exp->isNull($nationalitiesTable->aliasField('id'));
+            }
+        })
+        ->first();
+        if ($nationalities) {
+            return $nationalities->name;
+        } else {
+            return null;
+        }
+        
+    }
+    
 
     // returns error message if validation false
     public function validateEnrolledInAnyInstitution($studentId, $systemId, $options = [])
