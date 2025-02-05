@@ -278,25 +278,27 @@ class StudentsTable extends ControllerActionTable
     private static function getRelatedRecord($tableName, $relatedField)
     {
         if (!$relatedField) {
-            null;
+            return null;
         }
-        if($tableName = 'institution'){
+
+        // POCOR-8830 Ensure we don't overwrite the $tableName variable unintentionally
+        if ($tableName == 'institutions') {
             $tableName = 'Institution.Institutions';
         }
-        //POCOR-8818 -- Start
-        if($tableName = 'academic_periods'){
+
+        if ($tableName == 'academic_periods') {
             $tableName = 'AcademicPeriod.AcademicPeriods';
         }
-        //POCOR-8818 -- End
+
         $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
         } catch (RecordNotFoundException $e) {
-            null;
+            return null;
         }
-        return null;
     }
+
 
     /**
      * @param $tableName
@@ -3367,39 +3369,44 @@ class StudentsTable extends ControllerActionTable
      * @param Query $query
      * @return Query
      */
+
     private function addInstitutionFields(Query $query)
     {
         $institutionId = $this->institution_id;
         $institution = self::getRelatedRecord('institutions', $institutionId);
-        $institution_code = $institution['code'];
-        $institution_name = $institution['name'];
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
-        use ($institution_name, $institution_code) {
-            return $results->map(function ($row) use ($institution_name, $institution_code) {
-                $row['institution_code'] = $institution_code;
-                $row['institution_name'] = $institution_name;
-                return $row;
+        
+        if ($institution) {
+            $institution_code = $institution['code'];
+            $institution_name = $institution['name'];
+
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
+            use ($institution_name, $institution_code) {
+                return $results->map(function ($row) use ($institution_name, $institution_code) {
+                    $row['institution_code'] = $institution_code;
+                    $row['institution_name'] = $institution_name;
+                    return $row;
+                });
             });
-        });
+        }
         return $query;
     }
 
-    /**
-     * @param Query $query
-     * @return Query
-     */
     private function addAcademicPeriodField(Query $query)
     {
         $periodId = $this->academic_period_id;
         $academic_period = self::getRelatedRecord('academic_periods', $periodId);
-        $academic_period_name = $academic_period['name'];
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
-        use ($academic_period_name) {
-            return $results->map(function ($row) use ($academic_period_name) {
-                $row['academic_period_name'] = $academic_period_name;
-                return $row;
+
+        if ($academic_period) {
+            $academic_period_name = $academic_period['name'];
+
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+            use ($academic_period_name) {
+                return $results->map(function ($row) use ($academic_period_name) {
+                    $row['academic_period_name'] = $academic_period_name;
+                    return $row;
+                });
             });
-        });
+        }
         return $query;
     }
 
