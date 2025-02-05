@@ -13,6 +13,7 @@ use Cake\Log\Log;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
+use Cake\Datasource\ConnectionManager;
 
 class AlertRulesTable extends ControllerActionTable
 {
@@ -508,6 +509,10 @@ class AlertRulesTable extends ControllerActionTable
     }
      //POCOR-7558 start
     public function getLastRunDate(){
+        //POCOR-8575[START]
+        $connection = ConnectionManager::get('default');
+        $connection->execute("DELETE FROM system_processes WHERE `status` = 3;");
+        //POCOR-8575[END]
         $systemProcess = TableRegistry::get('SystemProcesses');
         $data=$systemProcess->find()->select([
              'name'=> $systemProcess->aliasField('name'),
