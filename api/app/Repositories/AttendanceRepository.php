@@ -3375,6 +3375,29 @@ class AttendanceRepository extends Controller
     }
     //For POCOR-8396 End...
 
+    public function getSingleStaffAttendances($request, $institutionId, $staffId)
+    {
+        try {
+            $singleStaffAttendances = InstitutionStaffAttendances::select(
+                    'institution_staff_attendances.date',
+                    'institutions.name as institution',
+                    'institution_staff_attendances.time_in as date_time_in',
+                    'institution_staff_attendances.time_out as date_time_out',
+                )->where('institution_id', $institutionId)
+                ->where('staff_id', $staffId)
+                ->leftJoin('institutions', 'institutions.id', '=', 'institution_staff_attendances.institution_id')
+                ->get();
+            return $singleStaffAttendances;
+                            
+        } catch (\Throwable $th) {
+            Log::error(
+                'Failed to fetch Staff Attendances Details from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Attendances Details Not Found');
+        }
+    }
+
 }
 
 
