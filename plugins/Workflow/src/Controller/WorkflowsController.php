@@ -195,8 +195,8 @@ class WorkflowsController extends AppController
 
         // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
         // echo "<pre>"; print_r($caseOptions);die;
-        Log::write('debug', 'CaseLink:');
-        Log::write('debug', print_r($caseOptions, true));
+//        Log::write('debug', 'CaseLink:');
+//        Log::write('debug', print_r($caseOptions, true));
 
         $defaultKey = empty($caseOptions) ? __('No options') : '-- ' . __('Select') . ' --';
         $options = $caseOptions;
@@ -236,13 +236,13 @@ class WorkflowsController extends AppController
         } catch (\Exception $exception) {
             $institutionID = $this->getInstitutionIDFromUrl($url);
         }
-       
+
         //End POCOR-6619
 
         $isSchoolBased = $this->request->getQuery('is_school_based');
         $nextStepId = $this->request->getQuery('next_step_id');
         $autoAssignAssignee = $this->request->getQuery('auto_assign_assignee');
- 
+
         if (!$autoAssignAssignee) {
             $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $params = [
@@ -265,8 +265,8 @@ class WorkflowsController extends AppController
 
             $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
 
-            Log::write('debug', 'Assignee:');
-            Log::write('debug', print_r($assigneeOptions, true));
+//            Log::write('debug', 'Assignee:');
+//            Log::write('debug', print_r($assigneeOptions, true));
 
             $defaultKey = empty($assigneeOptions) ? __('No options') : '-- ' . __('Select') . ' --';
             $options = $assigneeOptions;
@@ -286,8 +286,8 @@ class WorkflowsController extends AppController
                 }
             } else {
                 $transferType = '';
-            }    
-           
+            }
+
             if ($transferType === 'StudentTransferOut' || $transferType === 'StudentTransferIn') {
                 $tableName = 'Institution.StudentTransferOut';
                 $primaryKey = $_SESSION['Institution'][$transferType]['primaryKey']; // Fetching primaryKey for StudentTransferOut
@@ -299,13 +299,13 @@ class WorkflowsController extends AppController
             $id = isset($primaryKey['id']) ? $primaryKey['id'] : null;
             $institutionId = isset($primaryKey['institution_id']) ? $primaryKey['institution_id'] : null;
             $receivingInsttutionId = TableRegistry::get($tableName)->getReceivingInstList($id);
-            
+
             $params = [
                 'is_school_based' => $isSchoolBased,
                 'workflow_step_id' => $nextStepId,
                 'url_institution_id' => $getInstitutionId[1]  //POCOR-6619
             ];
-         
+
             if ($isSchoolBased) {
                 if (!empty($institutionID)) {
                     $params['institution_id'] = $receivingInsttutionId;
@@ -314,14 +314,14 @@ class WorkflowsController extends AppController
 
             $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
 
-            Log::write('debug', 'Assignee:');
-            Log::write('debug', print_r($assigneeOptions, true));
+//            Log::write('debug', 'Assignee:');
+//            Log::write('debug', print_r($assigneeOptions, true));
 
             $defaultKey = empty($assigneeOptions) ? __('No options') : '-- ' . __('Select') . ' --';
             $options = $assigneeOptions;
 
             if(empty($options)) {
-                Log::write('debug', 'Auto Assign Assignee');
+//                Log::write('debug', 'Auto Assign Assignee');
 
                 $defaultKey = '';
                 $options = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080
@@ -346,7 +346,7 @@ class WorkflowsController extends AppController
         if ($viewIndex !== false) {
             // Find the position of the next /
             $nextSlashIndex = strpos($url, '?', $viewIndex + 6); // Adding 6 to skip /view/
-            
+
             if ($nextSlashIndex !== false) {
                 // Extract the substring between /view/ and the next /
                 $viewParamValue = substr($url, $viewIndex + 6, $nextSlashIndex - ($viewIndex + 6));
@@ -358,7 +358,7 @@ class WorkflowsController extends AppController
             // 'view' parameter is not present in the URL
             $viewParamValue = "";
         }
-   
+
         $institutionID = -1;
         if ($viewParamValue) {
             $params = $this->paramsDecode($viewParamValue);
@@ -366,7 +366,7 @@ class WorkflowsController extends AppController
         }
         return $institutionID;
     }
-    
+
     public function ajaxUpdateComment()
     {
         $this->viewBuilder()->setLayout('ajax');
@@ -383,7 +383,7 @@ class WorkflowsController extends AppController
         $dataRecord->comment = $comment;
         $workflow_transitions_table->save($dataRecord);
 
-        Log::write('debug', 'Update case comment:');
+//        Log::write('debug', 'Update case comment:');
 
         $responseData = [
             'default_key' => 'success'
@@ -409,8 +409,8 @@ class WorkflowsController extends AppController
         $data = $workflow_transitions_table->find()->where(['id' => $case_id])->first();
         $comment = $data->comment;
 
-        Log::write('debug', 'CaseLink:');
-        Log::write('debug', print_r($comment, true));
+//        Log::write('debug', 'CaseLink:');
+//        Log::write('debug', print_r($comment, true));
 
         $responseData = [
             'default_key' => 'Success',
@@ -440,7 +440,7 @@ class WorkflowsController extends AppController
             $success = $workflow_transitions_table->delete($entity);
         }
 
-        Log::write('debug', 'Delete case comment:');
+//        Log::write('debug', 'Delete case comment:');
 
 
         $responseData = [

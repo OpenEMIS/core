@@ -28,8 +28,8 @@ class ScannedAttendanceRequest extends FormRequest
     public function rules()
     {
         return [
-            'openemis_no' => 'required|string',
-            'datetime' => 'required|date'
+            '*.openemis_no' => 'required|string',
+            '*.datetime' => 'required|date'
         ];
     }
 
@@ -42,11 +42,7 @@ class ScannedAttendanceRequest extends FormRequest
     {
         return [
             '*.openemis_no.required' => 'The openemis_no field is required.',
-            '*.datetime.required' => 'The datetime field is required.',
-            '*.latitude.numeric' => 'Latitude must be a valid number.',
-            '*.longitude.numeric' => 'Longitude must be a valid number.',
-            '*.location.string' => 'Location must be a valid string.',
-            '*.access.string' => 'Access must be a valid string.',
+            '*.datetime.required' => 'The datetime field is required.'
         ];
     }
 
