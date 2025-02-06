@@ -30,18 +30,27 @@ import { StudentAttendanceReportComponent } from './student-attendance-report/st
 import { StaffAttendanceReportComponent } from './staff-attendance-report/staff-attendance-report.component';
 import { StudentMealImportComponent } from './student-meal-import/student-meal-import.component';
 import { StudentMealResultComponent } from './student-meal-result/student-meal-result.component';
+import { StudentAttendanceImportResultComponent } from './student-attendance-import-result/student-attendance-import-result.component';
+import { StudentAttendanceArchiveComponent } from './student-attendance-archive/student-attendance-archive.component';
+import { ScannedStudentComponent } from './scanned/scanned-student/scanned-student.component';
+import { StudentListComponent } from './scanned/student-list/student-list.component';
 
 export const appRoutes: Routes = [
   { path: 'Dashboard', component: WorkbenchComponent },
-  { path: 'Institution/Institutions/Comments', component: CommentsComponent },
+  { path: `Institution/Institutions/Comments/${setEncodedId()}`, component: CommentsComponent },
   { path: 'Institution/Institutions/Results', component: AssessmentComponent },
   { path: 'Institution/Institutions/ResultsReport', component: AssessmentReportComponent },
-  { path: `Institution/Institutions/${setEncodedId()}/StudentAttendances/index`, component: StudentAttendanceComponent },
-  { path: `Institution/Institutions/${setEncodedId()}/ImportStudentAttendances/add`, component: StudentAttendanceReportComponent },
+
+  { path: `Institution/Institutions/StudentAttendances/index/${setEncodedData()}`, component: StudentAttendanceComponent },
+  { path: `Institution/Institutions/${setEncodedData()}/ImportStudentAttendances/add`, component: StudentAttendanceReportComponent },
+  { path: `Institution/Institutions/ImportStudentAttendance/results`, component: StudentAttendanceImportResultComponent },
+  { path: `Institution/Institutions/InstitutionStudentAbsencesArchived/${setEncodedData()}`, component: StudentAttendanceArchiveComponent },
+
   { path: `Institution/Institutions/StudentMeals/index/${setEncodedId()}`, component: StudentMealsComponent },
   { path: `Institution/Institutions/${setEncodedData()}/ImportStudentMeals/add`, component: StudentMealImportComponent },
   { path: `Institution/Institutions/ImportStudentMeals/results`, component: StudentMealResultComponent },
   { path: `Institution/Institutions/${setEncodedData()}/StudentMeals`, component: StudentMealsComponent },
+
   { path: 'Directory/Directories/Directories/add', component: AddDirectoryComponent },
   { path: `Institution/Institutions/${setEncodedId()}/Students/add`, component: AddStudentComponent },
   { path: `Institution/Institutions/${setEncodedId()}/Staff/add`, component: AddStaffComponent },
@@ -49,7 +58,10 @@ export const appRoutes: Routes = [
   { path: `Institution/Institutions/${setEncodedId()}/InstitutionStaffAttendances/index`, component: StaffAttendanceComponent },
   { path: `Institution/Institutions/${setEncodedId()}/ImportStaffAttendances/add`, component: StaffAttendanceReportComponent },
   { path: 'Institution/Institutions/Classes', component: ClassesComponent },
-  { path: 'Institution/Institutions/Subjects', component: SubjectsComponent }
+  { path: 'Institution/Institutions/Subjects', component: SubjectsComponent },
+
+  { path: `Institution/Institutions/Scanned/index/${setEncodedId()}`, component: ScannedStudentComponent },
+  { path: 'Institution/Institutions/Scanned/list', component: StudentListComponent }
 ];
 
 function setEncodedId() {
@@ -116,7 +128,11 @@ function getBaseUrl() {
     StudentAttendanceReportComponent,
     StaffAttendanceReportComponent,
     StudentMealImportComponent,
-    StudentMealResultComponent
+    StudentMealResultComponent,
+    StudentAttendanceImportResultComponent,
+    StudentAttendanceArchiveComponent,
+    ScannedStudentComponent,
+    StudentListComponent
   ],
   imports: [
     BrowserModule,
