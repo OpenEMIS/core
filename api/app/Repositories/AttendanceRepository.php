@@ -3375,10 +3375,10 @@ class AttendanceRepository extends Controller
     }
     //For POCOR-8396 End...
 
-    public function getSingleStaffAttendances($request, $institutionId, $staffId)
+    public function getStaffAttendancesDetails($request, $institutionId, $staffId)
     {
         try {
-            $singleStaffAttendances = InstitutionStaffAttendances::select(
+            $staffAttendancesDetails = InstitutionStaffAttendances::select(
                     'institution_staff_attendances.date',
                     'institutions.name as institution',
                     'institution_staff_attendances.time_in as date_time_in',
@@ -3387,7 +3387,7 @@ class AttendanceRepository extends Controller
                 ->where('staff_id', $staffId)
                 ->leftJoin('institutions', 'institutions.id', '=', 'institution_staff_attendances.institution_id')
                 ->get();
-            return $singleStaffAttendances;
+            return $staffAttendancesDetails;
                             
         } catch (\Throwable $th) {
             Log::error(
