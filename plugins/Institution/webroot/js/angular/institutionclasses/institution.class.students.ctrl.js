@@ -63,9 +63,11 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     Controller.postError = [];
     Controller.maxStudentsPerClass = null;
     Controller.classCapacity = null;
+    Controller.customFieldsArray = [];
 
     // Function mapping
     Controller.setTop = setTop;
+    Controller.selectOption = selectOption;
     Controller.setBottom = setBottom;
     Controller.postForm = postForm;
     Controller.updateQueryStringParameter = updateQueryStringParameter;
@@ -163,7 +165,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 Controller.maxStudentsPerClass = parseInt(promises[3]);
                 Controller.unitOptions = promises[4];
                 Controller.courseOptions = promises[5];
-  
+
                 Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
                 Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
 
@@ -184,6 +186,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
             }, function (error) {
                 console.log(error);
             })
+            .then(Controller.getClassCustomFields)
             .finally(function(){
                 Controller.dataReady = true;
                 UtilsSvc.isAppendLoader(false);
@@ -192,9 +195,27 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
 
     });
 
+
+    Controller.getClassCustomFields = function() {
+        let classId = Controller.classId;
+        InstitutionClassStudentsSvc.getClassCustomFields(classId).then(function(resp){
+            Controller.customFields = resp.data;
+            Controller.customFieldsArray = Controller.createCustomFieldsArray();
+            console.log(Controller.customFieldsArray);
+            UtilsSvc.isAppendLoader(false);
+        }, function(error){
+            console.error(error);
+            UtilsSvc.isAppendLoader(false);
+        });
+    }
+
+    Controller.createCustomFieldsArray = function() {
+        // console.log('createCustomFieldsArray CTRL')
+        return InstitutionClassStudentsSvc.createCustomFieldsArray(Controller);
+    }
     function changeStaff(key) {
-        console.log("Controller.mainTeacherOptions");
-        console.log(Controller.mainTeacherOptions);
+        // console.log("Controller.mainTeacherOptions");
+        // console.log(Controller.mainTeacherOptions);
         var newOptions = [];
         for (var i = 0; i < Controller.mainTeacherOptions.length; i++) {
             if (key instanceof Array) {
@@ -206,7 +227,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     newOptions.push(Controller.mainTeacherOptions[i]);
                 }
             }
-            
+
         }
         return newOptions;
     }
@@ -258,6 +279,14 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         Controller.gridOptionsBottom.primaryKey = Controller.bottomKey;
     }
 
+    function selectOption(field) {
+        field.answer = [];
+        field.option.forEach((option) => {
+            if (option.selected) {
+                field.answer.push(option.option_id);
+            }
+        })
+    }
     function postForm() {
         Controller.postError = [];
         var classStudents = [];
@@ -275,7 +304,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;
         postData.capacity = parseInt(Controller.classCapacity);
-
+        postData.custom = [];
         // postData.secondary_staff_id = Controller.selectedSecondaryTeacher;
         postData.classes_secondary_staff = [];
         angular.forEach(Controller.selectedSecondaryTeacher, function(value, key) {
@@ -284,7 +313,89 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 institution_class_id: Controller.classId
             });
         }, postData.classes_secondary_staff);
+        Controller.customFieldsArray.forEach((customField) => {
+            customField.data.forEach((field) => {
+                    if (field.field_type !== 'CHECKBOX') {
+                        let fieldData = {
+                            institution_custom_field_id: field.institution_custom_field_id,
+                            text_value: null,
+                            unique: field.is_unique,
+                            mandatory: field.is_mandatory,
+                            number_value: null,
+                            decimal_value: null,
+                            textarea_value: null,
+                            time_value: null,
+                            date_value: null,
+                            file: null,
+                        };
+                        if (field.field_type === 'TEXT' || field.field_type === 'NOTE') {
+                            if (field.answer) {
+                                fieldData.text_value = field.answer;
+                            }
+                        }
+                        if (field.field_type === 'TEXTAREA') {
+                            if (field.answer) {
+                                fieldData.textarea_value = field.answer;
+                            }
+                        }
+                        if (field.field_type === 'NUMBER') {
+                            if (field.answer) {
+                                fieldData.number_value = field.answer;
+                            }
+                        }
+                        if (field.field_type === 'DECIMAL') {
+                            if (field.answer) {
+                                fieldData.decimal_value = String(field.answer);
+                            }
+                        }
+                        if (field.field_type === 'DROPDOWN') {
+                            if (field.answer) {
+                                fieldData.number_value = Number(field.answer);
+                            }
+                        }
+                        if (field.field_type === 'TIME') {
+                            if (field.answer) {
 
+                                let time = field.answer.toLocaleTimeString();
+                                let timeArray = time.split(':');
+                                fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
+                            }
+                        }
+                        if (field.field_type === 'DATE') {
+                            if (field.answer) {
+                                fieldData.date_value = $filter('date')(field.answer, 'yyyy-MM-dd');
+                            }
+                        }
+                        if (field.field_type === 'FILE') {
+                            if (field.answer) {
+                                fieldData.file = field.file;
+                                fieldData.text_value = field.answer;
+                            }
+                        }
+                        postData.custom.push(fieldData);
+                    } else {
+                        if (field.answer) {
+                            field.answer.forEach((id) => {
+                                let fieldData = {
+                                    institution_custom_field_id: field.institution_custom_field_id,
+                                    text_value: null,
+                                    unique: field.is_unique,
+                                    mandatory: field.is_mandatory,
+                                    number_value: Number(id),
+                                    decimal_value: null,
+                                    textarea_value: null,
+                                    time_value: null,
+                                    date_value: null,
+                                    file: null,
+                                };
+                                postData.custom.push(fieldData);
+                            });
+                        }
+                    }
+                }
+            )
+            ;
+        });
         if(postData.capacity > Controller.maxStudentsPerClass) {
             Controller.postError.capacity = {
                 'error': 'The capacity per class has exceeded the maximum capacity limit of '+Controller.maxStudentsPerClass+' students.'

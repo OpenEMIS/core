@@ -527,6 +527,12 @@ Route::group(
         Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance/archive', 'AttendanceController@getStudentAttendanceArchiveList');
         Route::get('/institutions/students/attendances/export/archive', 'AttendanceController@getStudentAttendanceArchiveExport');
         //POCOR-8397 end...
+
+
+        //POCOR-8617 start...
+        Route::get('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf', 'ReportCardController@studentReportCardPdfDownload');
+        Route::get('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls', 'ReportCardController@studentReportCardExcelDownload');
+        //POCOR-8617 end...
         
         //POCOR-8519 start...
         Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
@@ -544,6 +550,7 @@ Route::group(
         //POCOR-8666 start
         Route::get('scanned/{openemis_no}', 'ScannedController@scannedUserOpenemisNo');
         Route::post('scanned', 'ScannedController@addScannedUserData');
+        Route::get('scanned', 'ScannedController@scannedUserListing');
         //POCOR-8666 end
         //POCOR-8030 start
         Route::get('institutions/{institutionId}/departments', 'DepartmentController@getDepartmentList');
@@ -553,5 +560,10 @@ Route::group(
         Route::get('institutions/department/edit', 'DepartmentController@institutionDepartmentEditMessage');
         //POCOR-8030 end
         Route::get('scanned/data/export', 'ScannedController@institutionScannedExport');//POCOR-8793
+        Route::get('scanned/user/{scannedId}', 'ScannedController@scannedUserDetails');//POCOR-8824
+
+        //POCOR-8619 START
+        Route::post('institutions/students/assessment-item-exemption', 'AssessmentController@saveAssessmentItemExemption');
+        //POCOR-8619 END
     }
 );

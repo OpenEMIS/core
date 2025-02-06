@@ -25,7 +25,12 @@ class StudentCustomFieldsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StudentCustomField.StudentCustomForms']);
     }
-
+    //POCOR-8434 starts
+    public function Filters()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StudentCustomField.StudentCustomFilters']);
+    }//POCOR-8434 ends
+    
     public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'StudentCustomField') {
@@ -41,7 +46,11 @@ class StudentCustomFieldsController extends AppController
             'Pages' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Pages'],
                 'text' => __('Pages')
-            ]
+            ],//POCOR-8434 starts
+            'Filters' => [
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Filters'],
+                'text' => __('Filters')
+            ]//POCOR-8434 ends
         ];
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
@@ -53,7 +62,7 @@ class StudentCustomFieldsController extends AppController
         $header = __('Custom Field (Student)');
 
         $header .= ' - ' . $model->getHeader($model->getAlias());
-        $this->Navigation->addCrumb('Custom Field (Student)', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Custom Field (Student)', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->getAlias()]);
         $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
 
         $this->set('contentHeader', $header);

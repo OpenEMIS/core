@@ -425,7 +425,7 @@ class CustomFormsTable extends ControllerActionTable
                         return 1;
                     } else {
                         $fieldType = $Fields->get($id)->field_type;
-                        if (in_array($fieldType, $supportedFieldTypes)) {
+                        if (in_array($fieldType, (array) $supportedFieldTypes)) {//POCOR-8434 add (array) before $supportedFieldTypes
                             return 1;
                         } else {
                             // field type not support for this module
