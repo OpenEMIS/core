@@ -41,13 +41,13 @@ class POCOR8030 extends AbstractMigration
                        PRIMARY KEY (`id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         $this->execute("ALTER TABLE `institution_departments`
-            ADD CONSTRAINT `fk_institution_id`
+            ADD CONSTRAINT `fk_institution_departments_institution_id`
             FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`)");
         $this->execute("ALTER TABLE `institution_departments`
             ADD CONSTRAINT `fk_manager_id`
             FOREIGN KEY (`manager_id`) REFERENCES `security_users`(`id`)");
         $this->execute("ALTER TABLE `institution_departments`
-            ADD CONSTRAINT `fk_staff_id`
+            ADD CONSTRAINT `fk_departments_staff_id`
             FOREIGN KEY (`staff_id`) REFERENCES `security_users`(`id`)");
 
         // Assigning Staff to Multiple Departments system configuration
