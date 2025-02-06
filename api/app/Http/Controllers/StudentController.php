@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\WebhookController;
+
 use Illuminate\Http\Request;
 use App\Services\StudentService;
 use Illuminate\Support\Facades\Log;
@@ -1035,7 +1037,6 @@ class StudentController extends Controller
     public function addStudentAbsences(StudentAbsenceAdd $request)
     {
         try {
-
             //For POCOR-7772 Start
             $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'edit'], ['institution_id' => $request['institution_id']]);
             
@@ -1045,10 +1046,17 @@ class StudentController extends Controller
             //For POCOR-7772 End
 
             $data = $this->studentService->addStudentAbsences($request);
-            
             if($data == 1){
+                //POCOR-8631[START]
+                $webhookController = app(WebhookController::class);
+                $result = $webhookController->handleWebhookRequest($request);
+                //POCOR-8631[END]
                 return $this->sendSuccessResponse("Student absences data added.");
             } elseif($data == 2) {
+                //POCOR-8631[START]
+                $webhookController = app(WebhookController::class);
+                $result = $webhookController->handleWebhookRequest($request);
+                //POCOR-8631[END]
                 return $this->sendSuccessResponse("Student absences data updated.");
             } elseif($data == 3) {
                 return $this->sendErrorResponse("Student is not assigned to the class, grade and academic period for which attendance/absence is marked");
