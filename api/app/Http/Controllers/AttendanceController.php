@@ -2279,10 +2279,10 @@ class AttendanceController extends Controller
      *     )
      * )
     */
-    public function getSingleStaffAttendances(Request $request, $institutionId, $staffId)
+    public function getStaffAttendancesDetails(Request $request, $institutionId, $staffId)
     {
         try {
-            $data = $this->attendanceService->getSingleStaffAttendances($request, $institutionId, $staffId);
+            $data = $this->attendanceService->getStaffAttendancesDetails($request, $institutionId, $staffId);
             if(count($data)<=0) {
                 $this->sendSuccessResponse("Staff Attendances Details Not Found", false);
             }
