@@ -2106,13 +2106,13 @@ class InstitutionsTable extends AppTable
                                 'valueField' => 'name'
                             ])
                         ->leftJoin(
-                            [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                            [$StudentMarkTypeStatuses->getAlias() => $StudentMarkTypeStatuses->getTable()],
                             [
                                 $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id') . ' = ' . $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
                             ]
                         )
                         ->leftJoin(
-                            [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                            [$StudentMarkTypeStatusGrades->getAlias() => $StudentMarkTypeStatusGrades->getTable()],
                             [
                                 $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id') . ' = ' . $StudentMarkTypeStatuses->aliasField('id')
                             ]
@@ -2369,19 +2369,19 @@ class InstitutionsTable extends AppTable
                         $workflowModelsTable->aliasField('model')
                     ])
                     ->LeftJoin(
-                        [$institutionStaffLeave->alias() => $institutionStaffLeave->table()],
+                        [$institutionStaffLeave->getAlias() => $institutionStaffLeave->getTable()],
                         [
                             $institutionStaffLeave->aliasField('status_id') . ' = ' . $workflowStepsTable->aliasField('id')
                         ]
                     )
                     ->LeftJoin(
-                        [$workflowsTable->alias() => $workflowsTable->table()],
+                        [$workflowsTable->getAlias() => $workflowsTable->getTable()],
                         [
                             $workflowsTable->aliasField('id') . ' = ' . $workflowStepsTable->aliasField('workflow_id')
                         ]
                     )
                     ->LeftJoin(
-                        [$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                        [$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                         [
                             $workflowModelsTable->aliasField('id') . ' = ' . $workflowsTable->aliasField('workflow_model_id')
                         ]
@@ -2483,7 +2483,7 @@ class InstitutionsTable extends AppTable
                         $staffPositionTitlesTable->aliasField('name')
                     ])
                     ->RightJoin(
-                        [$staffPositionTitlesTable->alias() => $staffPositionTitlesTable->table()],
+                        [$staffPositionTitlesTable->getAlias() => $staffPositionTitlesTable->getTable()],
                         [
                             $institutionPositionsTable->aliasField('staff_position_title_id') . ' = ' . $staffPositionTitlesTable->aliasField('id')
                         ]

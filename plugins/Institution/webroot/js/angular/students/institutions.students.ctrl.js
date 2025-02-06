@@ -217,6 +217,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             return userSvc.getAcademicPeriods()
                 .then(resp => {
                     userCtrl.academicPeriodOptions = resp.data;
+                    console.log(userCtrl.academicPeriodOptions);
                     // Iterate over the array to find the current academic period
                     for (const period of resp.data) {
                         if (period.current === 1) {
