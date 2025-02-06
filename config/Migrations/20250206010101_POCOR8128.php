@@ -74,36 +74,36 @@ class POCOR8128 extends AbstractMigration
      */
     private function changeStaffPositionTitles(): void
     {
-        // Backup table
+        // Backup the existing `staff_position_titles` table before making changes
         $this->execute('CREATE TABLE IF NOT EXISTS `z_8128_staff_position_titles` LIKE `staff_position_titles`;');
         $this->execute('INSERT IGNORE INTO `z_8128_staff_position_titles` SELECT * FROM `staff_position_titles`;');
 
-        // Add `staff_leave_policy_id` column
+        // Add `staff_leave_policy_id` column and index
         $this->execute('
-            ALTER TABLE `staff_position_titles`
-            ADD COLUMN `staff_leave_policy_id` INT UNSIGNED NULL DEFAULT NULL COMMENT "links to staff_leave_policies.id"
-            AFTER `security_role_id`;
-        ');
+        ALTER TABLE `staff_position_titles`
+        ADD COLUMN `staff_leave_policy_id` INT UNSIGNED NULL DEFAULT NULL COMMENT "links to staff_leave_policies.id"
+        AFTER `security_role_id`,
+        ADD INDEX `idx_staff_leave_policy_id` (`staff_leave_policy_id`);
+    ');
 
-        // Update NULL `staff_leave_policy_id` to `GP` policy ID
+        // Add foreign key constraint with RESTRICT behavior
         $this->execute('
-            UPDATE `staff_position_titles`
-            SET `staff_leave_policy_id` = (
-                SELECT `id` FROM `staff_leave_policies` WHERE `code` = "GP" LIMIT 1
-            )
-            WHERE `staff_leave_policy_id` IS NULL;
-        ');
-
-        // Set column as NOT NULL and add foreign key
-        $this->execute('
-            ALTER TABLE `staff_position_titles`
-            MODIFY `staff_leave_policy_id` INT UNSIGNED NOT NULL,
-            ADD CONSTRAINT `staff_posit_title_fk_leave_policy_id`
+        ALTER TABLE `staff_position_titles`
+        ADD CONSTRAINT `fk_staff_position_titles_policy_id`
             FOREIGN KEY (`staff_leave_policy_id`) REFERENCES `staff_leave_policies` (`id`)
-            ON DELETE RESTRICT;
-        ');
+            ON DELETE RESTRICT ON UPDATE RESTRICT;
+    ');
 
+        // Modify the column to be NOT NULL after ensuring all rows have a valid `staff_leave_policy_id`
+        $this->execute('
+        ALTER TABLE `staff_position_titles`
+        MODIFY `staff_leave_policy_id` INT UNSIGNED NOT NULL;
+    ');
 
+        // No risk of orphaned records:
+        // - `staff_position_titles` is backed up before modification.
+        // - The `DOWN` function restores `staff_position_titles` from the backup, removing the column and constraint.
+        // - `staff_leave_policies` is deleted in `DOWN`, so no orphaned records can exist.
     }
 
     /**
@@ -421,57 +421,81 @@ class POCOR8128 extends AbstractMigration
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
 
         // Create staff_leave_policy_types table
-        $this->execute('
-                CREATE TABLE IF NOT EXISTS `staff_leave_policy_types` (
-                    `id` CHAR(36) NOT NULL,
-                    `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_policies.id",
-                    `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_types.id",
-                    `days` INT NULL COMMENT "Days allocated (nullable)",
-                    `rollover` TINYINT(1) NOT NULL DEFAULT 1 COMMENT "1: Yes Can rollover unused days, 0: No",
-                    PRIMARY KEY (`id`),
-                    UNIQUE KEY `uq_policy_type` (`staff_leave_policy_id`, `staff_leave_type_id`),
-                    KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`),
-                    KEY `idx_staff_leave_type_id` (`staff_leave_type_id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-            ');
+        $this->execute('CREATE TABLE IF NOT EXISTS `staff_leave_policy_types` (
+        `id` CHAR(36) NOT NULL,
+        `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_policies.id",
+        `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_types.id",
+        `days` INT NULL COMMENT "Days allocated (nullable)",
+        `rollover` TINYINT(1) NOT NULL DEFAULT 1 COMMENT "1: Yes Can rollover unused days, 0: No",
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `uq_policy_type` (`staff_leave_policy_id`, `staff_leave_type_id`),
+        KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`),
+        KEY `idx_staff_leave_type_id` (`staff_leave_type_id`),
+        CONSTRAINT `fk_staff_leave_policy_types_policy_id`
+            FOREIGN KEY (`staff_leave_policy_id`) REFERENCES `staff_leave_policies` (`id`)
+            ON DELETE RESTRICT ON UPDATE RESTRICT,
+        CONSTRAINT `fk_staff_leave_policy_types_type_id`
+            FOREIGN KEY (`staff_leave_type_id`) REFERENCES `staff_leave_types` (`id`)
+            ON DELETE RESTRICT ON UPDATE RESTRICT
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
 
         $this->execute('CREATE TABLE IF NOT EXISTS `staff_leave_entitlements` (
-            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-            `staff_id` INT UNSIGNED NOT NULL COMMENT "links to staff.id",
-            `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
-            `adjustment` INT SIGNED NOT NULL COMMENT "Leave days adjustment (positive or negative)",
-            `modified_user_id` INT UNSIGNED NULL,
-            `modified` DATETIME NULL,
-            `created_user_id` INT UNSIGNED NOT NULL,
-            `created` DATETIME NOT NULL,
-            PRIMARY KEY (`id`),
-            KEY `idx_staff_id` (`staff_id`),
-            KEY `idx_staff_leave_type_id` (`staff_leave_type_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
+        `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+        `staff_id` INT UNSIGNED NOT NULL COMMENT "links to staff.id",
+        `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
+        `adjustment` INT SIGNED NOT NULL COMMENT "Leave days adjustment (positive or negative)",
+        `modified_user_id` INT UNSIGNED NULL,
+        `modified` DATETIME NULL,
+        `created_user_id` INT UNSIGNED NOT NULL,
+        `created` DATETIME NOT NULL,
+        PRIMARY KEY (`id`),
+        KEY `idx_staff_id` (`staff_id`),
+        KEY `idx_staff_leave_type_id` (`staff_leave_type_id`),
+        CONSTRAINT `fk_staff_leave_entitlements_staff_id`
+            FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`)
+            ON DELETE RESTRICT ON UPDATE RESTRICT,
+        CONSTRAINT `fk_staff_leave_entitlements_leave_type_id`
+            FOREIGN KEY (`staff_leave_type_id`) REFERENCES `staff_leave_types` (`id`)
+            ON DELETE RESTRICT ON UPDATE RESTRICT
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
 
-        // Create institution_staff_leave_entitlement table
         $this->execute('CREATE TABLE IF NOT EXISTS `institution_staff_leave_entitlements` (
-            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-            `year` INT(4) NULL DEFAULT NULL COMMENT "Year",
-            `staff_id` INT UNSIGNED NOT NULL COMMENT "links to security_users.id",
-            `institution_id` INT NOT NULL COMMENT "links to institutions.id",
-            `institution_position_id` INT NOT NULL COMMENT "links to institution_positions.id",
-            `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to leave_policies.id",
-            `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
-            `days_total` INT SIGNED NULL DEFAULT NULL COMMENT "Total leave days",
-            `days_taken` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days taken",
-            `days_balance` INT SIGNED NULL DEFAULT NULL COMMENT "Remaining leave days",
-            `adjustment` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days adjustment (positive or negative)",
-            `modified_user_id` INT UNSIGNED NULL,
-            `modified` DATETIME NULL,
-            `created_user_id` INT UNSIGNED NOT NULL,
-            `created` DATETIME NOT NULL,
-            PRIMARY KEY (`id`),
-            KEY `idx_staff_id` (`staff_id`),
-            KEY `idx_institution_id` (`institution_id`),
-            KEY `idx_institution_position_id` (`institution_position_id`),
-            KEY `idx_leave_type_id` (`staff_leave_type_id`),
-            KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
+        `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+        `year` INT(4) NULL DEFAULT NULL COMMENT "Year",
+        `staff_id` INT UNSIGNED NOT NULL COMMENT "links to security_users.id",
+        `institution_id` INT NOT NULL COMMENT "links to institutions.id",
+        `institution_position_id` INT NOT NULL COMMENT "links to institution_positions.id",
+        `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to leave_policies.id",
+        `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
+        `days_total` INT SIGNED NULL DEFAULT NULL COMMENT "Total leave days",
+        `days_taken` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days taken",
+        `days_balance` INT SIGNED NULL DEFAULT NULL COMMENT "Remaining leave days",
+        `adjustment` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days adjustment (positive or negative)",
+        `modified_user_id` INT UNSIGNED NULL,
+        `modified` DATETIME NULL,
+        `created_user_id` INT UNSIGNED NOT NULL,
+        `created` DATETIME NOT NULL,
+        PRIMARY KEY (`id`),
+        KEY `idx_staff_id` (`staff_id`),
+        KEY `idx_institution_id` (`institution_id`),
+        KEY `idx_institution_position_id` (`institution_position_id`),
+        KEY `idx_leave_type_id` (`staff_leave_type_id`),
+        KEY `idx_staff_leave_policy_id` (`staff_leave_policy_id`),
+        CONSTRAINT `fk_inst_staff_leave_staff_id`
+            FOREIGN KEY (`staff_id`) REFERENCES `security_users` (`id`)
+            ON DELETE RESTRICT ON UPDATE RESTRICT,
+        CONSTRAINT `fk_inst_staff_leave_institution_id`
+            FOREIGN KEY (`institution_id`) REFERENCES `institutions` (`id`)
+            ON DELETE RESTRICT ON UPDATE RESTRICT,
+        CONSTRAINT `fk_inst_staff_leave_position_id`
+            FOREIGN KEY (`institution_position_id`) REFERENCES `institution_positions` (`id`)
+            ON DELETE RESTRICT ON UPDATE RESTRICT,
+        CONSTRAINT `fk_inst_staff_leave_policy_id`
+            FOREIGN KEY (`staff_leave_policy_id`) REFERENCES `staff_leave_policies` (`id`)
+            ON DELETE RESTRICT ON UPDATE RESTRICT,
+        CONSTRAINT `fk_inst_staff_leave_type_id`
+            FOREIGN KEY (`staff_leave_type_id`) REFERENCES `staff_leave_types` (`id`)
+            ON DELETE RESTRICT ON UPDATE RESTRICT
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;');
     }
 }
