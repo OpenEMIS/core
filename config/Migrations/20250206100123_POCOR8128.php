@@ -8,6 +8,7 @@ class POCOR8128 extends AbstractMigration
 {
     public function up()
     {
+
         $this->execute('START TRANSACTION;');
 
         try {
@@ -93,6 +94,15 @@ class POCOR8128 extends AbstractMigration
             FOREIGN KEY (`staff_leave_policy_id`) REFERENCES `staff_leave_policies` (`id`)
             ON DELETE RESTRICT ON UPDATE RESTRICT;
     ');
+
+        // Update NULL staff_leave_policy_id to GP policy ID
+        $this->execute('
+            UPDATE staff_position_titles
+            SET staff_leave_policy_id = (
+                SELECT id FROM staff_leave_policies WHERE code = "GP" LIMIT 1
+            )
+            WHERE staff_leave_policy_id IS NULL;
+        ');
 
         // Modify the column to be NOT NULL after ensuring all rows have a valid `staff_leave_policy_id`
         $this->execute('
@@ -424,7 +434,7 @@ class POCOR8128 extends AbstractMigration
         $this->execute('CREATE TABLE IF NOT EXISTS `staff_leave_policy_types` (
         `id` CHAR(36) NOT NULL,
         `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_policies.id",
-        `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to staff_leave_types.id",
+        `staff_leave_type_id` INT NOT NULL COMMENT "links to staff_leave_types.id",
         `days` INT NULL COMMENT "Days allocated (nullable)",
         `rollover` TINYINT(1) NOT NULL DEFAULT 1 COMMENT "1: Yes Can rollover unused days, 0: No",
         PRIMARY KEY (`id`),
@@ -441,8 +451,8 @@ class POCOR8128 extends AbstractMigration
 
         $this->execute('CREATE TABLE IF NOT EXISTS `staff_leave_entitlements` (
         `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-        `staff_id` INT UNSIGNED NOT NULL COMMENT "links to staff.id",
-        `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
+        `staff_id` INT NOT NULL COMMENT "links to staff.id",
+        `staff_leave_type_id` INT NOT NULL COMMENT "links to staff_leave_types.id",
         `adjustment` INT SIGNED NOT NULL COMMENT "Leave days adjustment (positive or negative)",
         `modified_user_id` INT UNSIGNED NULL,
         `modified` DATETIME NULL,
@@ -452,7 +462,7 @@ class POCOR8128 extends AbstractMigration
         KEY `idx_staff_id` (`staff_id`),
         KEY `idx_staff_leave_type_id` (`staff_leave_type_id`),
         CONSTRAINT `fk_staff_leave_entitlements_staff_id`
-            FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`)
+            FOREIGN KEY (`staff_id`) REFERENCES `security_users` (`id`)
             ON DELETE RESTRICT ON UPDATE RESTRICT,
         CONSTRAINT `fk_staff_leave_entitlements_leave_type_id`
             FOREIGN KEY (`staff_leave_type_id`) REFERENCES `staff_leave_types` (`id`)
@@ -462,11 +472,11 @@ class POCOR8128 extends AbstractMigration
         $this->execute('CREATE TABLE IF NOT EXISTS `institution_staff_leave_entitlements` (
         `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
         `year` INT(4) NULL DEFAULT NULL COMMENT "Year",
-        `staff_id` INT UNSIGNED NOT NULL COMMENT "links to security_users.id",
+        `staff_id` INT NOT NULL COMMENT "links to security_users.id",
         `institution_id` INT NOT NULL COMMENT "links to institutions.id",
         `institution_position_id` INT NOT NULL COMMENT "links to institution_positions.id",
         `staff_leave_policy_id` INT UNSIGNED NOT NULL COMMENT "links to leave_policies.id",
-        `staff_leave_type_id` INT UNSIGNED NOT NULL COMMENT "links to leave_types.id",
+        `staff_leave_type_id` INT NOT NULL COMMENT "links to leave_types.id",
         `days_total` INT SIGNED NULL DEFAULT NULL COMMENT "Total leave days",
         `days_taken` INT SIGNED NULL DEFAULT NULL COMMENT "Leave days taken",
         `days_balance` INT SIGNED NULL DEFAULT NULL COMMENT "Remaining leave days",
