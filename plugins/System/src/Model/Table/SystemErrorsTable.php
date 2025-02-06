@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\Utility\Text;
 use Cake\Log\Log;
+use Throwable;
 
 use App\Model\Table\AppTable;
 
@@ -32,7 +33,7 @@ class SystemErrorsTable extends AppTable
         return ['index'];
     }
 
-    public function insertError(Exception $ex)
+    public function insertError(Throwable $ex)
     {
         $msg = $ex->getMessage();
         $trace = $ex->getTraceAsString();
