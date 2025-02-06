@@ -334,6 +334,8 @@ class ReportCardCommentsTable extends ControllerActionTable
                 'institution_id' => $entity->institution_id
             ];
 
+            $backEncodedUrl = $buttons['view']['url'][1];
+            
             $buttons['view']['url'] = $this->setQueryString($url, $params);
         }
 
