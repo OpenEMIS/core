@@ -892,7 +892,7 @@ class LandsTable extends ControllerActionTable
 
         $institutionData = $this->Institutions->find()
             ->where([
-                $this->Institutions->aliasField($this->Institutions->primaryKey()) => $institutionId
+                $this->Institutions->aliasField($this->Institutions->getPrimaryKey()) => $institutionId
             ])
             ->select([$this->Institutions->aliasField('code')])
             ->first();

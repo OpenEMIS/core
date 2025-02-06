@@ -33,6 +33,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as SpreadsheetDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing; // POCOR-8683
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use function PHPUnit\Framework\isEmpty;
 
@@ -95,8 +96,10 @@ class ImportBehavior extends Behavior
         'max_rows' => 2000,
         'max_size' => 524288,
         'backUrl' => [],
-        'custom_text' => ''
+        'custom_text' => '', //POCOR-8683
+        'row_heights' => [75,25], //POCOR-8683
     ];
+    protected $type = ''; //POCOR-8683
     protected $rootFolder = 'import';
     protected $_fileTypesMap = [
         // 'csv'    => 'text/plain',
@@ -149,14 +152,27 @@ class ImportBehavior extends Behavior
 
     private function isCustomText()
     {
+        // POCOR-8683 start
+        $headings = $this->getConfig('headings') ?? [];
+
+        foreach ($headings as $heading) {
+            if (!empty($heading['subtitle'])) {
+                return true; // At least one subheading exists
+            }
+        }
         $this->customText = $this->getConfig('custom_text');
         if (!empty($this->customText) && strlen($this->customText) > 0) {
+            $row_heights = $this->getConfig('row_heights');
+            if(!isset($row_heights[2])){
+                $row_heights[2] = 25;
+            }
+            $this->getConfig('row_heights', $row_heights);
             return true;
         } else {
             return false;
         }
+        // POCOR-8683 end
     }
-
 
     /******************************************************************************************************************
      **
@@ -404,7 +420,7 @@ class ImportBehavior extends Behavior
                 }
 //                if ($row == $highestRow) { // check if the row cells are really empty, if yes then end the loop
                     if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
-                        break;
+                        continue;
                     }
 //                }
 
@@ -412,6 +428,7 @@ class ImportBehavior extends Behavior
                 $tempRow = new ArrayObject;
                 $rowInvalidCodeCols = new ArrayObject;
                 $params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes, $rowInvalidCodeCols];
+
                 $this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
 
                 // for each columns
@@ -467,7 +484,6 @@ class ImportBehavior extends Behavior
                 if ($extra['entityValidate'] == true) {
                     // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
                     try {
-//                        Log::debug(print_r($tableEntity, true));
                         $newEntity = $activeModel->save($tableEntity);
                     } catch (Exception $e) {
                         $newEntity = false;
@@ -683,40 +699,149 @@ class ImportBehavior extends Behavior
     /******************************************************************************************************************
      **
      ** Import Functions
-     **
-     ******************************************************************************************************************/
-    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = '')
+     ** POCOR-8683 refactured
+     *****************************************************************************************************************
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     */
+    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $defaultTitle = ''): void
     {
-        if (empty($title)) {
-            $title = $dataSheetName;
-        } else {//5695 starts
-            if ($title == 'Import Training Session Trainee Results Data') {
-                $title = 'Import Training Results Data';
-            }//5695 ends
+
+        // Set default title if not provided
+        if (empty($defaultTitle)) {
+            $defaultTitle = $dataSheetName;
+        } else { // 5695 starts
+            if ($defaultTitle == 'Import Training Session Trainee Results Data') {
+                $defaultTitle = 'Import Training Results Data';
+            } // 5695 ends
         }
+
+// Set up the sheet
         $activeSheet = $objPHPExcel->getActiveSheet();
+        $activeSheetIndex = $objPHPExcel->getIndex($activeSheet); // Get current sheet index
         $activeSheet->setTitle($dataSheetName);
-        if (function_exists('imagecreatefromjpeg')) {
-            //POCOR-7474-HINDOL - in case that imagecreatefromjpeg is not available
-            $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
-            $objDrawing = new \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing();
-            $objDrawing->setName('OpenEMIS Logo');
-            $objDrawing->setDescription('OpenEMIS Logo');
-            $objDrawing->setImageResource($gdImage);
-            $objDrawing->setRenderingFunction(\PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::RENDERING_JPEG);
-            $objDrawing->setMimeType(\PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::MIMETYPE_DEFAULT);
-            $objDrawing->setHeight(100);
-            $objDrawing->setCoordinates('A1');
-            $objDrawing->setWorksheet($activeSheet);
+        $this->addLogo($activeSheet);
+// Logic for the first sheet
+        if ($activeSheetIndex === 0) {
+            // Add a logo if the function is available
+
+
+            // Get titles and subtitles from config
+            $headings = $this->getConfig('headings') ?? [
+                [
+                    'title' => $defaultTitle,
+                    'title_range' => 'C1:R1',
+                ]
+            ];
+            $rowHeights = $this->getConfig('row_heights') ?? [75, 25]; // Default heights for rows
+            $headerFontSize = $this->getConfig('header_font_size') ?? 16;
+
+            // Set default row heights
+            foreach ($rowHeights as $index => $height) {
+                $activeSheet->getRowDimension($index + 1)->setRowHeight($height);
+            }
+            $activeSheet->getRowDimension(3)->setRowHeight(25);
+
+            // Process each title and subtitle
+            $titleindex = 1; // Start at the first row
+            foreach ($headings as $index => $heading) {
+                $this->applyHeadingToSheet($activeSheet, $heading, $titleindex, $headerFontSize);
+
+                // Add custom text for headings other than the first/default heading
+                if ($index > 0 && $this->customText != "") {
+                    $customTextColumn = explode(':', $heading['title_range'])[0]; // Start column of the title range
+                    $customTextCell = $customTextColumn . "3"; // Custom text in the third row of the title's start column
+                    $activeSheet->setCellValue($customTextCell, $this->customText);
+                }
+
+                $titleindex++;
+            }
+
+            // Add custom text only for subheaders
+            if ($this->isCustomText() && $this->customText != "") {
+                $activeSheet->setCellValue("A3", $this->customText);
+            }
+        } else {
+            // Logic for subsequent sheets
+            $activeSheet->getRowDimension(1)->setRowHeight(75); // Default row height for header
+            $activeSheet->setCellValue("C1", "Resources"); // Add "Resources" as the only header
+            $activeSheet->getStyle("C1")->getFont()->setBold(true)->setSize(16);
         }
-        $activeSheet->getRowDimension(1)->setRowHeight(75);
-        $activeSheet->getRowDimension(2)->setRowHeight(25);
 
-        ($this->isCustomText()) ? $activeSheet->getRowDimension(3)->setRowHeight(25) : '';
 
-        $activeSheet->setCellValue("C1", $title);
     }
 
+    /**
+     * POCOR-8683 refactured
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     */
+    private function addLogo($activeSheet): void
+    {
+        $imagePath = ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg';
+        if (file_exists($imagePath)) {
+            $drawing = new Drawing();
+            $drawing->setName('OpenEMIS Logo');
+            $drawing->setDescription('OpenEMIS Logo');
+            $drawing->setPath($imagePath); // Set the path to the image file
+            $drawing->setHeight(100); // Set the height of the image
+            $drawing->setCoordinates('A1'); // Position the image
+            $drawing->setWorksheet($activeSheet); // Add the image to the active sheet
+        }
+    }
+
+    /*
+     * POCOR-8683 refactured
+     */
+    private function applyHeadingToSheet($activeSheet, $heading, $titleindex, $fontSize): void
+    {
+        $title = $heading['title'] ?? '';
+        $titleRange = $heading['title_range'] ?? '';
+        $subtitle = $heading['subtitle'] ?? [];
+        $subtitleRange = $heading['subtitle_range'] ?? '';
+        // Apply title if it exists
+        $type = $this->type;
+        if (!empty($title) && !empty($titleRange)) {
+            $this->applyCellStyle($activeSheet, $titleRange, $fontSize, true);
+            if ($titleindex > 1) {
+                $activeSheet->mergeCells($titleRange);
+            }
+            $activeSheet->setCellValue(explode(':', $titleRange)[0], $title); // Set title in the first cell of the range
+        }
+
+        // Apply subtitle if it exists
+        if (!empty($subtitle) && !empty($subtitleRange)) {
+//            $this->applyCellStyle($activeSheet, $subtitleRange, $fontSize, false);
+            $subtitleCells = explode(':', $subtitleRange);
+            $startColumn = $subtitleCells[0];
+            $cell = $startColumn; // Subtitle row is after the title
+            if (empty($type) || $type != 'failed' ) {
+                $activeSheet->mergeCells($subtitleRange);
+            }
+            $activeSheet->setCellValue($cell, $subtitle);
+        }
+    }
+
+    /*
+     * POCOR-8683 refactured
+     */
+    private function applyCellStyle($activeSheet, $range, $fontSize, $bold)
+    {
+        $style = [
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'font' => [
+                'bold' => $bold,
+                'size' => $fontSize,
+            ],
+        ];
+
+        $activeSheet->getStyle($range)->applyFromArray($style);
+    }
+
+    /*
+     * POCOR-8683 refactured
+     */
     public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign = 2, $applyFillFontSetting = [], $applyCellBorder = [])
     {
         if (empty($applyFillFontSetting)) {
@@ -728,10 +853,20 @@ class ImportBehavior extends Behavior
         }
 
         $activeSheet = $objPHPExcel->getActiveSheet();
-
+        if ($this->getConfig('headings')) {
+            // Get the last column of the first title range from config
+            $headings = $this->getConfig('headings');
+            if (!empty($headings[0]['title_range'])) {
+                $headerLastAlphaOne = explode(':', $headings[0]['title_range'])[1][0]; // Extract column from "R1"
+            } else {
+                $headerLastAlphaOne = $headerLastAlpha; // Fallback to default
+            }
+        } else {
+            $headerLastAlphaOne = $headerLastAlpha; // Fallback to default
+        }
         // merging should start from cell C1 instead of A1 since the title is already set in cell C1 in beginExcelHeaderStyling()
         if (!in_array($headerLastAlpha, ['A', 'B', 'C'])) {
-            $activeSheet->mergeCells('C1:' . $headerLastAlpha . '1');
+            $activeSheet->mergeCells('C1:' . $headerLastAlphaOne . '1');
         }
 
         $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
@@ -776,13 +911,18 @@ class ImportBehavior extends Behavior
 
             $activeSheet->setCellValue("A2", $this->customText);
         }
-
+        // POCOR-8683 start
+        if($type == 'failed') { //if failed, then need to merge 4 columns instead of 3
+            $this->type = 'failed';
+        }
+        // POCOR-8683 end
         $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) . ' ' . $dataSheetName);
 
         $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
 
         foreach ($header as $key => $value) {
-            $alpha = $this->getExcelColumnAlpha($key + 1);// PhpSpreadsheet, rows and columns are typically 1-indexed
+            //echo "<pre>"; print_r($key); die;
+            $alpha = $this->getExcelColumnAlpha((string)((int)$key + 1));// PhpSpreadsheet, rows and columns are typically 1-indexed
             $activeSheet->setCellValue($alpha . $lastRowToAlign, $value);
             $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
             if (strlen($value) < 50) {
@@ -935,7 +1075,7 @@ class ImportBehavior extends Behavior
                 }
                 $activeSheet->getRowDimension(($index + $rowData))->setRowHeight(15);
                 foreach ($values as $key => $value) {
-                    $alpha = $this->getExcelColumnAlpha($key + 1); // PhpSpreadsheet, rows and columns are typically start 1-indexed not 0 index
+                    $alpha = $this->getExcelColumnAlpha((string)((int)$key + 1)); // PhpSpreadsheet, rows and columns are typically start 1-indexed not 0 index
                     $activeSheet->setCellValue($alpha . ($index + $rowData), $value);
                     $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
 
@@ -1060,9 +1200,8 @@ class ImportBehavior extends Behavior
 
     protected function getHeader($mapping = [])
     {
-        $model = $this->_table;
         if (empty($mapping)) {
-            $mapping = $this->getMapping($model);
+            $mapping = $this->getMapping(); // POCOR-8683
         }
 
         $header = [];
@@ -1118,9 +1257,10 @@ class ImportBehavior extends Behavior
 
     protected function getColumns($mapping = [])
     {
+
         $columns = [];
         if (empty($mapping)) {
-            $mapping = $this->getMapping($model);
+            $mapping = $this->getMapping(); // POCOR-8683
         }
 
         foreach ($mapping as $key => $value) {
@@ -1213,11 +1353,19 @@ class ImportBehavior extends Behavior
                 }
 
                 if ($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
-
                     $emptyCodeRecords = $relatedModel;
                     $modelData = $relatedModel;
                 } else {
-                    $modelData = $relatedModel->getList($relatedModel->find());
+                    // POCOR-8683 start
+                    $relatedQuery = $relatedModel->find();
+
+// Check if the 'order' field exists in the model's schema
+                    if ($relatedModel->getSchema()->hasColumn('order')) {
+                        $relatedQuery->order($relatedModel->aliasField('order'));
+                    }
+
+                    $modelData = $relatedModel->getList($relatedQuery);
+                    // POCOR-8683 end
                     $emptyCodeRecords = $modelData;
                     $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
                         return !empty($record->national_code);

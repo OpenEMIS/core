@@ -102,4 +102,34 @@ class ScannedService extends Controller
         }
     }
 
+    public function scannedUserListing(Request $request)
+    {
+        try {
+            $data = $this->scannedRepository->scannedListing($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Scanned User Data from db',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch Scanned User Data from db.');
+        }
+    }
+
+    public function scannedUserDetails($scannedId)
+    {
+        try {
+            $details = $this->scannedRepository->scanUserDetails($scannedId);
+            return $details;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Scanned User Data from db',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch Scanned User Data from db');
+        }
+    }
+
 }

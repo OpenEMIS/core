@@ -61,8 +61,35 @@ class CustomModule extends Entity
             'filter' => 'Infrastructure.RoomTypes',
             'behavior' => null,
             'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES','NOTE']
-        ]
+        ],//POCOR-8434 starts
+        'Institution.StudentAdmission' => [
+            'filter' => null,
+            'behavior' => null,
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES','NOTE']
+        ]//POCOR-8434 ends
         // End infrastructure modules
+        ,
+         //POCOR-8538 start
+         'Institution.InstitutionClasses' => [
+            'filter'=>null,
+            'behavior' => null,
+            'supported_field_types' => ['TEXT',
+                'NUMBER',
+                'DECIMAL',
+                'TEXTAREA',
+                'DROPDOWN',
+                'CHECKBOX',
+                'TABLE',
+                'DATE',
+                'TIME',
+                'STUDENT_LIST',
+                'STAFF_LIST',
+                'FILE',
+                'COORDINATES',
+                'REPEATER',
+                'NOTE']
+        ],
+        //POCOR-8538 end
     ];
 
     protected function _getFilter()
