@@ -11,3 +11,16 @@
     position: absolute !important;
     top: 1249.7188px !important;
 }
+
+::ng-deep kd-view .section-header {
+    display: block !important;
+}
+
+::ng-deep .popover.popover-bottom.kdx-popover-window.configSingle {
+    top: -905px !important;
+}
+
+::ng-deep ngb-datepicker.dropdown-menu.show.ngb-dp-body {
+    top: 30px !important;
+    transform: none !important;
+}
