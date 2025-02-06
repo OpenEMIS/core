@@ -445,4 +445,19 @@ class AttendanceService extends Controller
     }
     //For POCOR-8396 End...
 
+    public function getSingleStaffAttendances($request, $institutionId, $staffId)
+    {
+        try {
+            $data = $this->attendanceRepository->getSingleStaffAttendances($request, $institutionId, $staffId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Attendances Details from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Attendances Details Not Found');
+        }
+    }
+
 }

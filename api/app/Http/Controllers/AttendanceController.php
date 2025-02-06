@@ -2221,4 +2221,79 @@ class AttendanceController extends Controller
         }
     }
     //For POCOR-8397 Ends...
+
+    /**
+     * @OA\Get(
+     *     path="/institutions/{institutionId}/staff/{staffId}/attendances",
+     *     summary="Get a single staff member's attendance records",
+     *     description="Fetches attendance records for a specific staff member in an institution.",
+     *     tags={"Attendance"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution ID",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="staffId",
+     *         in="path",
+     *         required=true,
+     *         description="Staff ID",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Staff Attendances Details Found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Staff Attendances Details Found"),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="date", type="string", format="date", example="2018-05-09"),
+     *                     @OA\Property(property="institution", type="string", example="Avory Primary School"),
+     *                     @OA\Property(property="date_time_in", type="string", format="time", nullable=true, example="07:00:00"),
+     *                     @OA\Property(property="date_time_out", type="string", format="time", nullable=true, example=null)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Staff Attendances Details Not Found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Staff Attendances Details Not Found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to fetch Staff Attendances Details from DB")
+     *         )
+     *     )
+     * )
+    */
+    public function getSingleStaffAttendances(Request $request, $institutionId, $staffId)
+    {
+        try {
+            $data = $this->attendanceService->getSingleStaffAttendances($request, $institutionId, $staffId);
+            if(count($data)<=0) {
+                $this->sendSuccessResponse("Staff Attendances Details Not Found", false);
+            }
+            return $this->sendSuccessResponse("Staff Attendances Details Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Attendances Details from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Attendances Details Not Found');
+        }
+    }
 }
