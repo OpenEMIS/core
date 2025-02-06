@@ -1,3 +1,12 @@
+### [4.9.0] - 2025-02-05
+- Implemented: Develop Admissions workflow and custom fields 
+- Bug Fixed: Theme Api is not working
+- Implemented: Develop a function to flag specific students as exempt from specific assessments items - part 3 (api)
+- Bug Fixed: Institutions>Performance>Report Cards: Download button is missing
+- Bug Fixed: Reports > Institutions > Class Attendance Marked Report: When generating report "Class Attendance Marked Report" and the any filter is selected, the report generated should show data.
+- Bug Fixed: Institutions > Students > Export: When exporting students report under Institutions, date of birth,start date and end date and nationality are not showing
+- Bug Fixed: Administrations > System Setup > Manuals: Permissions are not working
+
 ### [4.8.1] - 2025-02-03
 - Bug Fixed: Institutions > Appointments > Positions: Users who have permission to view and add Institutions Position is getting 404 error when viewing the page
 - Bug Fixed: 404 error page is displayed but system errors is not showing meaningful error

@@ -129,7 +129,6 @@ Route::group(
          Route::get('users/genders', 'UserController@getUsersGender');
          // POCOR-7394 ends
          Route::get('users/{userId}', 'UserController@getUsersData')->where('userId', '[0-9]+');
-         Route::get('users/username/{username}', 'UserController@getUserByUsername')->where('username', '[^\s]+'); // POCOR-8862
 
 
         Route::get('institutions/{id}/staff', 'InstitutionController@getInstitutionStaffList')->where('id', '[0-9]+');
@@ -556,6 +555,11 @@ Route::group(
         Route::get('scanned/data/export', 'ScannedController@institutionScannedExport');//POCOR-8793
         Route::get('scanned/user/{scannedId}', 'ScannedController@scannedUserDetails');//POCOR-8824
         Route::get('guardians/{openemisId}', 'UserController@getGuardianByOpenemisNo')->where('openemisNo', '[\pL0-9]+'); // POCOR-8840
+        Route::get('users/username/{username}', 'UserController@getUserByUsername')->where('username', '[^\s]+'); // POCOR-8862
+
+        //POCOR-8619 START
+        Route::post('institutions/students/assessment-item-exemption', 'AssessmentController@saveAssessmentItemExemption');
+        //POCOR-8619 END
 
     }
 );
