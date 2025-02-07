@@ -24,6 +24,7 @@ use ControllerAction\Model\Traits\UtilityTrait;
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Event\EventInterface;
+use Cake\Auth\DefaultPasswordHasher;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Cake\I18n\Time;
 
@@ -1049,7 +1050,18 @@ class InstitutionsController extends AppController
     }
 
     //POCOR-6028 ends
+    //POCOR-8434 start
+    public function StudentEnrolment()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentEnrolment']);
+    }
 
+    public function BulkStudentEnrolment()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.BulkStudentEnrolment']);
+    }
+    //POCOR-8434 Ends
+    
     public function StudentTransferIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferIn']);
@@ -1437,6 +1449,14 @@ class InstitutionsController extends AppController
 
     public function StudentAttendances($pass = '')
     {
+        $institutionId = $this->getInstitutionId();
+        $institutionName = $this->Institutions->get($institutionId)->name;
+        $url = $_SERVER['REQUEST_URI'];
+        $startPos = strpos($url, '/Institution/Institutions/StudentAttendances/index') + strlen('/Institution/Institutions/StudentAttendances/index');
+        $encodedPart = substr($url, $startPos);
+        $endPos = ltrim($encodedPart,'/');
+        $baseUrl = Router::fullBaseUrl();
+
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
         } else {
@@ -1500,6 +1520,10 @@ class InstitutionsController extends AppController
             $this->set('importUrl', Router::url($importUrl));
             $this->set('archiveUrl', Router::url($archiveUrl));
             $this->set('institution_id', $institutionId);
+            $this->set('encoded_url', $endPos);
+            $this->set('baseUrl', $baseUrl);
+            $this->set('institutionName', $institutionName);
+
             $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
 
             // Start POCOR-5188
@@ -1569,7 +1593,11 @@ class InstitutionsController extends AppController
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
 
             $this->Navigation->addCrumb($crumbTitle);
-
+            //POCOR-8500 do not remove it. used in angular start
+            $user = $this->getRequest()->getSession()->read('sbn');
+            $pass = $this->getRequest()->getSession()->read('nbn');
+            $pass = $this->paramsEncode([$pass]);
+            //end
             $this->set('_edit', $_edit);
             $this->set('_excel', $_excel);
             $this->set('_import', $_import);
@@ -1581,6 +1609,8 @@ class InstitutionsController extends AppController
             $this->set('institutionDashborad', $institutionDashborad);
             $this->set('institutionIndexUrl', $institutionIndex);
             $this->set('baseUrl', $baseUrl);
+            $this->set('user', $user);
+            $this->set('pass', $pass);
             $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
         }
 
@@ -1809,8 +1839,13 @@ class InstitutionsController extends AppController
     public function Comments()
     {
         // POCOR-3983 check institution status
+        $baseUrl = Router::fullBaseUrl();
         $institutionId = $this->getQueryString('institution_id');
-
+        $institutionClassId = $this->getQueryString('institution_class_id');
+        $reportCardId = $this->getQueryString('report_card_id');
+        $encodedUrl = $this->request->getParam('pass')[0];
+        $institutionName = $this->Institutions->get($institutionId)->name;
+        
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
         if ($isActive) {
@@ -1826,6 +1861,12 @@ class InstitutionsController extends AppController
         $this->set('loginUserId', $userId);
         $this->set('queryString', $queryString);
         $this->set('_edit', $_edit);
+        $this->set('encodedUrl', $encodedUrl);
+        $this->set('institutionClassId', $institutionClassId);
+        $this->set('reportCardId', $reportCardId);
+        $this->set('institutionName', $institutionName);
+        $this->set('institutionId', $institutionId);
+        $this->set('baseUrl', $baseUrl);
         $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
 
@@ -5163,14 +5204,19 @@ class InstitutionsController extends AppController
         $academic_periods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academic_periods_result = $academic_periods
             ->find()
-            ->select(['id', 'name', 'current'])
+            ->select(['id', 'name', 'current','start_date','end_date', 'start_year', 'end_year'])//POCOR-8434
             ->where(['code !=' => 'All', 'visible' => 1])
             ->order([$academic_periods->aliasField('id DESC')])
             ->toArray();
         foreach ($academic_periods_result as $result) {
             $result_array[] = array("id" => $result['id'],
                 "name" => $result['name'],
-                "current" => $result['current']);
+                "current" => $result['current'],
+                "start_date" => $result['start_date'],//POCOR-8434
+                "end_date" => $result['end_date'],//POCOR-8434
+                "start_year" => $result['start_year'],//POCOR-8434
+                "end_year" => $result['end_year']//POCOR-8434
+            );
         }
         echo json_encode($result_array);
         die;
@@ -6425,9 +6471,9 @@ class InstitutionsController extends AppController
             $this->handleIdentities($requestData, $userRecordId, $userId);
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
-            if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {
+            //if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {//POCOR-8434
                 $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
-            }
+            //}//POCOR-8434
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId, 'saved_student' => $saved_student], 200);
@@ -6906,33 +6952,158 @@ class InstitutionsController extends AppController
         $academicPeriodId = $requestData['academic_period_id'] ?? null;
         $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
         $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
+        //POCOR-8434 starts
+        $studentAdmissionStatus = !empty($requestData['student_admission_status']) ? $requestData['student_admission_status'] : null;//POCOR-7716
+        $studentAdmissionStatusValue = !empty($requestData['student_admission_status_value']) ? $requestData['student_admission_status_value'] : null;//POCOR-7716
+        //POCOR-8434 ends
         $saved_student = [];
-        if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId) && !empty($startDate) && !empty($endDate)) {
-            $institutionStudents = self::getDynamicTableInstance('institution_students');
-            $entityStudentsData = [
-                'id' => Text::uuid(),
-                'student_status_id' => $requestData['student_status_id'] ?? null,
-                'student_id' => $userRecordId,
-                'education_grade_id' => $educationGradeId,
-                'academic_period_id' => $academicPeriodId,
-                'start_date' => $startDate,
-                'start_year' => date('Y', strtotime($startDate)),
-                'end_date' => $endDate,
-                'end_year' => date('Y', strtotime($endDate)),
-                'institution_id' => $institutionId,
-                'created_user_id' => $userId,
-                'created' => date('Y-m-d H:i:s')
-            ];
-            $entityStudentsData = $institutionStudents->newEntity($entityStudentsData);
-            try {
-                $saved_student['institution_student'] = $institutionStudents->save($entityStudentsData)->toArray();
-            } catch (\Exception $exception) {
-                Log::debug(__FUNCTION__);
+        if ($studentAdmissionStatusValue == 0 || strtolower($studentAdmissionStatus) == "enrolled") {//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
+            if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId) && !empty($startDate) && !empty($endDate)) {
+                $institutionStudents = self::getDynamicTableInstance('institution_students');
+                $entityStudentsData = [
+                    'id' => Text::uuid(),
+                    'student_status_id' => $requestData['student_status_id'] ?? null,
+                    'student_id' => $userRecordId,
+                    'education_grade_id' => $educationGradeId,
+                    'academic_period_id' => $academicPeriodId,
+                    'start_date' => $startDate,
+                    'start_year' => date('Y', strtotime($startDate)),
+                    'end_date' => $endDate,
+                    'end_year' => date('Y', strtotime($endDate)),
+                    'institution_id' => $institutionId,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                $entityStudentsData = $institutionStudents->newEntity($entityStudentsData);
+                try {
+                    $saved_student['institution_student'] = $institutionStudents->save($entityStudentsData)->toArray();
+                } catch (\Exception $exception) {
+                    Log::debug(__FUNCTION__);
 
-                Log::debug('Error: ' . $exception->getMessage());
+                    Log::debug('Error: ' . $exception->getMessage());
+                }
             }
         }
+        //POCOR-8434 starts
+        if (!empty($institutionId) && $studentAdmissionStatusValue == 0 && strtolower($studentAdmissionStatus) == "enrolled") {
+            $workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowResults = $workflows->find()
+                ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
+                ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
+                    $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                    $workflowSteps->aliasField('name') => 'Approved'
+                ])
+                ->where([
+                    $workflows->aliasField('name') => 'Student Enrolment'
+                ])
+                ->first();
+            $workflowStepId = $workflowResults->workflowSteps_id;
+            
+            if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($workflowResults)) {
+                $institutionStudentEnrolment = TableRegistry::get('Institution.StudentEnrolment');
+                $entityEnrolmentData = [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'student_id' => $userRecordId,
+                    'status_id' => $workflowStepId,
+                    'assignee_id' => $this->Auth->user('id'), 
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_class_id' => $institutionClassId,
+                    'test_score' => '',
+                    'interview_score' => '',
+                    'comment' => '',
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                //save in institution_student_enrolment table
+                $entityEnrolmentData = $institutionStudentEnrolment->newEntity($entityEnrolmentData);
+                $InstitutionEnrolmentResult = $institutionStudentEnrolment->save($entityEnrolmentData);
+                unset($entityEnrolmentData);
+                unset($InstitutionEnrolmentResult);
+            }
+        } else if(!empty($institutionId)) { 
+            $workflowStepId = $studentAdmissionStatusValue;
 
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowStepData = $workflowStepsTable->find()->contain('Workflows')
+                ->where([
+                    $workflowStepsTable->aliasField('id') => $workflowStepId
+                    ])->first();
+            
+            if($workflowStepData->workflow->name == 'Student Admission'){
+                if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
+                    $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+                    $entityAdmissionData = [
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'student_id' => $userRecordId,
+                        'status_id' => $workflowStepId,//POCOR-7716
+                        'assignee_id' => $this->Auth->user('id'), //POCOR7080
+                        'institution_id' => $institutionId,
+                        'academic_period_id' => $academicPeriodId,
+                        'education_grade_id' => $educationGradeId,
+                        'institution_class_id' => $institutionClassId,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in institution_student_admission table
+                    $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
+                    $InstitutionAdmissionResult = $institutionStudentAdmission->save($entityAdmissionData);
+                    unset($entityAdmissionData);//POCOR-7716
+                    unset($InstitutionAdmissionResult);//POCOR-7716
+                }
+            } else if($workflowStepData->workflow->name == 'Student Enrolment') {
+                if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
+                    $institutionStudentEnrolment = TableRegistry::get('Institution.StudentEnrolment');
+                    $entityEnrolmentData = [
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'student_id' => $userRecordId,
+                        'status_id' => $workflowStepId,
+                        'assignee_id' => $this->Auth->user('id'), 
+                        'institution_id' => $institutionId,
+                        'academic_period_id' => $academicPeriodId,
+                        'education_grade_id' => $educationGradeId,
+                        'institution_class_id' => $institutionClassId,
+                        'test_score' => '',
+                        'interview_score' => '',
+                        'comment' => '',
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in institution_student_enrolment table
+                    $entityEnrolmentData = $institutionStudentEnrolment->newEntity($entityEnrolmentData);
+                    $InstitutionEnrolmentResult = $institutionStudentEnrolment->save($entityEnrolmentData);
+                    unset($entityEnrolmentData);
+                    unset($InstitutionEnrolmentResult);
+                }
+            }       
+        }
+        //previous code commented by Abhinav               
+        // $workflows = TableRegistry::get('Workflow.Workflows');
+        // $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        // $workflowResults = $workflows->find()
+        //     ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
+        //     ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
+        //         $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+        //         $workflowSteps->aliasField('name') => 'Approved'
+        //     ])
+        //     ->where([
+        //         $workflows->aliasField('name') => 'Student Admission'
+        //     ])
+        //     ->first();
+        
+        //POCOR-7716 start
+        //$workflowStepId = $workflowResults->workflowSteps_id;
+        // if ($studentAdmissionStatusValue !== 0 && strtolower($studentAdmissionStatus) !== "enrolled") {
+        //     $workflowStepId = $studentAdmissionStatusValue;
+        // }
+        //POCOR-7716 end
+        
+        //POCOR-8434 ends
         if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)) {
             $studentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
             $statuses = $studentStatuses->findCodeList();
@@ -8650,8 +8821,7 @@ class InstitutionsController extends AppController
     //     $this->set('excelUrl', Router::url($excelUrl));
     // }
 
-//POCOR-7716 start
-
+    //POCOR-7716 start
     public
     function getStudentAdmissionStatus()
     {
@@ -8664,14 +8834,22 @@ class InstitutionsController extends AppController
         if ($studentStatus == 0) {
             $result_array[] = array("id" => 0, "name" => "Enrolled");// setting 0 for enrolled as zero is not any id in workflow step
         } else {
-            $status = $WorkflowStepsTable->get($studentStatus)->name;
+            //POCOR-8434 starts
+            //$status = $WorkflowStepsTable->get($studentStatus)->name;
+            $WorkflowRes = $WorkflowStepsTable->find()->contain('Workflows')
+                            ->where([$WorkflowStepsTable->aliasField('id') => $studentStatus])
+                            ->first();
+            if($WorkflowRes->workflow->name == 'Student Admission'){
+                $status = 'Pending Admission : '.$WorkflowRes->name;
+            }else{
+                $status = 'Pending Enrolment : '.$WorkflowRes->name;
+            }//POCOR-8434 ends
             $result_array[] = array("id" => $studentStatus, "name" => $status);
         }
         echo json_encode($result_array);
         die;
     }
-
-//POCOR-7716 end
+    //POCOR-7716 end
 
     public
     function getMessagingTabElements($options = [])
@@ -9413,6 +9591,42 @@ class InstitutionsController extends AppController
             return $count;
         }
         return null;
+    }
+
+    public function Scanned($pass = '')
+    {
+        $baseUrl = Router::fullBaseUrl();
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionId();
+        $institutionName = $this->Institutions->get($institutionId)->name;
+        $encodedParams = $this->ControllerAction->paramsEncode(['id' => $institutionId]);
+        $institutionDashborad = "{$this->plugin}/Institutions/{$encodedParams}/dashboard/{$encodedParams}";
+        $institutionIndex = "Institutions/Institutions/index/";
+
+        
+             $url = $_SERVER['REQUEST_URI'];
+             $startPos = strpos($url, '/Institution/Institutions/Scanned/index/') + strlen('/Institution/Institutions/Scanned/index/');
+             $encodedPart = substr($url, $startPos);
+
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
+
+            $this->Navigation->addCrumb($crumbTitle);
+            //POCOR-8500 do not remove it. used in angular start
+            $user = $this->getRequest()->getSession()->read('sbn');
+            $pass = $this->getRequest()->getSession()->read('nbn');
+            $pass = $this->paramsEncode([$pass]);
+            //end
+            $this->set('institution_id', $institutionId);
+            $this->set('url', $encodedPart);
+            $this->set('institutionName', $institutionName);
+            $this->set('institutionDashborad', $institutionDashborad);
+            $this->set('institutionIndexUrl', $institutionIndex);
+            $this->set('baseUrl', $baseUrl);
+            $this->set('user', $user);
+            $this->set('pass', $pass);
+            $this->render('scanned_data');
     }
 
 }
