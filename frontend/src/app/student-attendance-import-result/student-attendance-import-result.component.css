@@ -1,0 +1,11 @@
+::ng-deep .error-data-style {
+    color: red !important;
+}
+
+.kdx-table,
+.student-meal-table-result {
+  .stg-theme {
+    min-height: 450px !important;
+  }
+
+}
