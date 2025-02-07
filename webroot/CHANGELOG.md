@@ -1,3 +1,38 @@
+### [4.10.0] - 2025-02-06
+- Implemented: Develop Scanned feature
+- Bug Fixed: Institutions > Students: When viewing students page, the page gives 404 error
+- Bug Fixed: Administration > Performance > Assessments > Templates: When adding assessments, the page give the error message
+- Implemented: Develop Student Absence API
+- Implemented: Develop Student Absence Webhook API
+### [4.9.0] - 2025-02-05
+- Implemented: Develop Admissions workflow and custom fields 
+- Bug Fixed: Theme Api is not working
+- Implemented: Develop a function to flag specific students as exempt from specific assessments items - part 3 (api)
+- Bug Fixed: Institutions>Performance>Report Cards: Download button is missing
+- Bug Fixed: Reports > Institutions > Class Attendance Marked Report: When generating report "Class Attendance Marked Report" and the any filter is selected, the report generated should show data.
+- Bug Fixed: Institutions > Students > Export: When exporting students report under Institutions, date of birth,start date and end date and nationality are not showing
+- Bug Fixed: Administrations > System Setup > Manuals: Permissions are not working
+
+### [4.8.1] - 2025-02-03
+- Bug Fixed: Institutions > Appointments > Positions: Users who have permission to view and add Institutions Position is getting 404 error when viewing the page
+- Bug Fixed: 404 error page is displayed but system errors is not showing meaningful error
+- Bug Fixed: API: Scanned api is not working
+- Bug Fixed: Administration>System Setup>System Configuration: External search identity is giving 404 error
+- Bug Fixed: Institutions > Academic > Subjects: When deleting subjects, the page gives a 404 error
+- Bug Fixed: Institutions > Classes > Delete function : System displays 404 error message
+- Bug Fixed: Institutions > Students > Import: When importing students, the page gives a 404 error
+- Bug Fixed: Login > Home: A user in the system gets 404 error when logging in into their account
+- Bug Fixed: Institutions > Statistics > Custom: When accessing institutions statistics custom report, the page gives a 404 error
+- Bug Fixed: Institutions > Staff > Import: When clicking on the download button for import staff, the page gives a 404 error
+- Bug Fixed: Administration > Appraisal > Form > Add Section: When adding section to staff appraisal, the page gives a 404 error
+- Bug Fixed: Institutions > Staff > Contacts > Add: when entering email under contacts, the system display an error message of email have to be numeric
+- Bug Fixed: Institutions>Students>Add: Naming of OpenEMISA to OpenEMIS
+- Bug Fixed: Personal>Attachments: Duplicate types appearing
+- Bug Fixed: Institutions > Staff > Add: When assigning staff to an institution and appointing staff as a homeroom teacher, the account page does not reflect the homeroom teacher role
+- Bug Fixed: Institutions > Academic > Classes: When viewing classes page, the class teacher and secondary teacher is not showing even though there are teachers assigned
+- Bug Fixed: Login page > Change Password page: When users log in for the first time, the system does not prompt user to change password
+- Bug Fixed: Directory > Users: When viewing users on directory, the institutions column is not showing even when the institutions column is configured in system configuration
+
 ### [4.8.0] - 2025-01-17
 - Implemented: Develop Scanned feature API - Part 2
 - Implemented: Develop enhancements to the Directory import function
