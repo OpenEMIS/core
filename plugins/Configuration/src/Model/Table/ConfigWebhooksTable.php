@@ -67,6 +67,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         'role_create'           => 'Role Create',
         'role_delete'           => 'Role Delete',
         'education_structure_system_delete' => 'Education Structure System Delete',
+        'attendance_update' => 'Student Attendance Update',
     ];
 
 
