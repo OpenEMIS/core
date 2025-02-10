@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { ITableApi, ITableColumn, KdPageBase, KdPageBaseEvent, KdTable, KdToolbarEvent } from 'openemis-styleguide-lib';
+import { ITableApi, ITableColumn, ITableConfig, KdAlertEvent, KdPageBase, KdPageBaseEvent, KdTable, KdToolbarEvent } from 'openemis-styleguide-lib';
 import { MINI_DASHBOARD_CONFIG, TABLE_COLUMN_LIST } from './student_attendance.config';
 import { IMiniDashboardConfig, IMiniDashboardItem } from 'openemis-styleguide-lib/kd-components/kd-angular-mini-dashboard/kd-angular-mini-dashboard-interface';
 import { Subscription, timer } from 'rxjs';
@@ -41,7 +41,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     leftBtn: [{
       type: "export",
       callback: (): void => {
-        this.backToData();
+        this.exportData();
       }
     },
     {
@@ -57,15 +57,21 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       }
     },
     {
-      icon: "fa kd-null",
-      path: '/'
-    },
-    {
-      icon: "fa fa-folder",
+      custom: true,
+      icon: 'fa kd-null',
+      tooltip: 'No Scheduled Class',
       callback: (): void => {
-        this.onEditClick();
+        this.nullData();
       }
     },
+    {
+      custom: true,
+      icon: 'fa fa-folder',
+      tooltip: 'Archive',
+      callback: (): void => {
+        this.archiveData();
+      }
+    }
     ],
     moreAction: [],
     moreBtn: false,
@@ -81,7 +87,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
 
   public miniDashboardConfig: IMiniDashboardConfig = MINI_DASHBOARD_CONFIG;
   public miniDashboardData: Array<IMiniDashboardItem>;
-  public _row: Array<any>;
+  public _row: Array<any> = [];
   public _column: Array<ITableColumn>;
   public displayEditTable: boolean = false;
   academicYear: any = [];
@@ -101,7 +107,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
 
   public studentAbsenceReasons: any = [];
 
-  public _config: any;
+  public _config: ITableConfig;
 
   public _tableApi: ITableApi = {};
   private _toolbarSearchSub: Subscription;
@@ -114,7 +120,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       'required': false,
       'controlType': 'dropdown',
       'disabled': false,
-      'options': []
+      'options': [],
+      'value': ''
     }
   ]
   public week: Array<any> = [
@@ -126,6 +133,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       'controlType': 'dropdown',
       'disabled': false,
       'options': [],
+      'value': ''
     }
   ]
   public day: Array<any> = [
@@ -135,7 +143,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       'visible': true,
       'required': false,
       'controlType': 'dropdown',
-      'options': []
+      'options': [],
+      'value': ''
     }
   ]
   public class: Array<any> = [
@@ -145,7 +154,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       'visible': true,
       'required': false,
       'controlType': 'dropdown',
-      'options': []
+      'options': [],
+      'value': ''
     }
   ]
   public period: Array<any> = [
@@ -167,8 +177,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       'visible': true,
       'required': false,
       'controlType': 'dropdown',
-      'options': [
-      ]
+      'options': [],
+      'value': ''
     }
   ]
 
@@ -202,7 +212,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
   instution_subject: any[] = [];
   selected_institution_subject: any;
   selected_day: any;
-  oldRowData: any;
+  oldRowData: any = [];
   education_grade_id: any;
   selectedInstitutionSubject: any;
   counter: any = 0;
@@ -210,6 +220,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
   themeArray = DEFAULT_TEMPLATE_THEME;
   selected_day_week: any;
   institution_name: any;
+  subject_day_data: any;
+  displayDaySubject: boolean = false;
 
   constructor(
     private _router: Router,
@@ -217,6 +229,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     public pageEvent: KdPageBaseEvent,
     private Rest: ApiService,
     private _toolbarEvent: KdToolbarEvent,
+    private _kdAlertEvent: KdAlertEvent
 
   ) {
     super({
@@ -236,6 +249,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
 
     super.updatePageHeader();
     super.updateBreadcrumb();
+    this.displayLoading = true;
     this.counter = 0;
     this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
     // this.institution_id = 6;
@@ -373,7 +387,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     this.Rest.getWithToken('absence-types').subscribe({
       next: (response: any) => {
         if (response) {
-          this.absenceTypeList = response?.data?.list;
+          this.absenceTypeList = response?.data?.data;
           this.absenceReasonAPI();
         }
 
@@ -446,6 +460,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
           });
           this.academic_Period = this.academicYear[0].key;
           this.academicPeriod[0].options = this.academicYear;
+          this.academicPeriod[0].value = this.academic_Period;
           this.getAcademicWeek(this.academic_Period);
         }
       },
@@ -555,6 +570,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
           this.selected_academic_class = this.academic_class[0]?.key;
           let classData = this.class;
           classData[0].options = this.academic_class;
+          classData[0].value = this.selected_academic_class;
           this.class = [...classData];
           this.getEducationGrade(this.selected_academic_class);
         }
@@ -588,8 +604,9 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
           this.selected_education_grade = this.education_grade[0].key;
           let education_grade_data = this.educationGrade;
           education_grade_data[0].options = this.education_grade;
+          education_grade_data[0].value = this.selected_education_grade;
           this.educationGrade = [...education_grade_data];
-          this.institutionSubjectClass(this.selected_education_grade);
+          this.subjectDayInstitution(this.selected_education_grade);
         }
       },
       error: (error: any) => {
@@ -599,6 +616,27 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
             this.loginData();
           }
         }
+      }
+    })
+  }
+
+  subjectDayInstitution(id: any) {
+    this.selected_education_grade = id;
+    this.Rest.getWithToken(`grades/${this.selected_education_grade}/attendance-types?academic_period_id=${this.academic_Period}&institution_class_id=${this.selected_academic_class}&day_id=${this.selected_day_week}`).subscribe({
+      next: (response: any) => {
+        console.log(response, "response Data Topa");
+        if (response) {
+          if (response?.data?.data[0].code == 'DAY') {
+            this.displayDaySubject = true;
+            this.studentAttendanceType();
+          } else {
+            this.displayDaySubject = false;
+            this.institutionSubjectClass(id);
+          }
+        }
+
+      }, error: () => {
+
       }
     })
   }
@@ -621,7 +659,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
           let insitution_subject_data = this.institutionSubject;
           insitution_subject_data[0].options = this.instution_subject;
           this.institutionSubject = [...insitution_subject_data];
-          this.studentAttendanceType();
+          this.studentAttendanceMarked(this.selected_institution_subject);
         }
       },
       error: (error: any) => {
@@ -651,7 +689,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
           attendance_mark[0].list = this.attendanceMarkType;
           attendance_mark[0].value = this.attendanceMarkType[0].value;
           this.period = [...attendance_mark];
-          this.studentAttendanceMarked();
+          this.selected_institution_subject = 0;
+          this.studentAttendanceMarked(0);
         }
       },
       error: (error: any) => {
@@ -665,8 +704,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     })
   }
 
-  studentAttendanceMarked() {
-    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendance-marked?academic_period_id=${this.academic_Period}&day_id=${this.selected_day_week}&attendance_period_id=1&subject_id=0`).subscribe({
+  studentAttendanceMarked(subjectId: any) {
+    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendance-marked?academic_period_id=${this.academic_Period}&day_id=${this.selected_day_week}&attendance_period_id=1&subject_id=${subjectId}`).subscribe({
       next: (response: any) => {
         if (response) {
           this.getStudentAttendanceData();
@@ -685,14 +724,153 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
 
   getStudentAttendanceData() {
     // insitutions/6/grades/206/classes/591/student-attendances?academic_period_id=33&day_id=2024-02-05&attendance_period_id=1&subject_id=0&week_id=6&week_start_day=2024-02-05&week_end_day=2024-02-11
+    if (this.academic_period_day == -1) {
+      console.log(this._column, "this._column");
+      this._column = [
+        TABLE_COLUMN_LIST.openEmisId,
+        TABLE_COLUMN_LIST.personName,
+        TABLE_COLUMN_LIST.monday,
+        TABLE_COLUMN_LIST.tuesday,
+        TABLE_COLUMN_LIST.wednesday,
+        TABLE_COLUMN_LIST.thursday,
+        TABLE_COLUMN_LIST.friday
+      ];
+      this.pageheader = {
+        leftBtn: [{
+          type: "export",
+          callback: (): void => {
+            this.exportData();
+          }
+        },
+        {
+          type: "import",
+          callback: (): void => {
+            this.editTableFields();
+          }
+        },
+        {
+          custom: true,
+          icon: 'fa fa-folder',
+          tooltip: 'Archive',
+          callback: (): void => {
+            this.archiveData();
+          }
+        }
+        ],
+        moreAction: [],
+        moreBtn: false,
+        pageheaderText: `${this.institution_name} - Student Attendances`,
+        searchBtn: false,
+        searchEvent: ['change', 'keyup']
+      }
+      let classData = document.getElementsByClassName("ag-row-no-animation")[0];
+      if (classData) {
+        classData.classList.add("all-days");
+      }
 
-    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendances?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=0&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
+    } else {
+      this._column = [
+        TABLE_COLUMN_LIST.openEmisId,
+        TABLE_COLUMN_LIST.personName,
+        TABLE_COLUMN_LIST.student_attendance_select_new,
+        TABLE_COLUMN_LIST.reasonOrComment_select_new
+      ];
+      this.pageheader = {
+        leftBtn: [{
+          type: "export",
+          callback: (): void => {
+            this.exportData();
+          }
+        },
+        {
+          type: "import",
+          callback: (): void => {
+            this.editTableFields();
+          }
+        },
+        {
+          type: "edit",
+          callback: (): void => {
+            this.onEditClick();
+          }
+        },
+        {
+          custom: true,
+          icon: 'fa kd-null',
+          tooltip: 'No Scheduled Class',
+          callback: (): void => {
+            this.nullData();
+          }
+        },
+        {
+          custom: true,
+          icon: 'fa fa-folder',
+          tooltip: 'Archive',
+          callback: (): void => {
+            this.archiveData();
+          }
+        }
+        ],
+        moreAction: [],
+        moreBtn: false,
+        pageheaderText: `${this.institution_name} - Student Attendances`,
+        searchBtn: false,
+        searchEvent: ['change', 'keyup']
+      }
+      let classData = document.getElementsByClassName("ag-row-no-animation")[0];
+      if (classData) {
+        classData.classList.remove("all-days");
+      }
+    }
+    this._row = [
+      // { 
+      //   user: {
+      //     openemis_no: 111,
+      //     full_name: 'Abcd'
+      //   },
+      //   M1: 1,
+      //   M2: 2,
+      //   T1: '-',
+      //   T2: '-',
+      //   W1: 3,
+      //   W2: 4,
+      //   TH1: '-',
+      //   TH2: '-',
+      //   F1: 5,
+      //   F2: 6
+      // }
+    ]
+    this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendances?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
       next: (response: any) => {
         if (response) {
-          this._row = response?.data?.list;
+          console.log(response.data.data, "this._row 1111");
+          this._row = [];
+          response?.data?.data.forEach((element: any, index: any) => {
+            if (element?.is_NoClassScheduled == 1) {
+              element.institution_student_absences.absence_type_id = 99;
+              element.institution_student_absences.absence_type_code = 99;
+            }
+            let obj = {
+              academic_period_id: element?.academic_period_id,
+              created_date: element?.created_date,
+              institution_class_id: element?.institution_class_id,
+              institution_class_name: element?.institution_class_name,
+              institution_id: element?.institution_id,
+              institution_student_absences: element?.institution_student_absences,
+              is_NoClassScheduled: element?.is_NoClassScheduled,
+              student_id: element?.student_id,
+              user: element?.user
+            }
+            this._row.push(obj);
+            // this.oldRowData.push(obj);
+          });
+          // this._row = newRow;
+          //   this.displayLoading = false;
+          // this._row = response?.data?.data;
+          console.log(this._row, "this._row 1111");
+          this.displayLoading = false;
           this.oldRowData = JSON.parse(JSON.stringify(this._row));
           this.setDashboard();
-          this.displayLoading = false;
         }
 
       },
@@ -703,17 +881,27 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
             this.loginData();
           }
         }
+        this.setDashboard();
         this.displayLoading = false;
       }
     })
   }
 
   public editTableFields() {
+    let tokenData = localStorage.getItem('encoded_url');
+    localStorage.setItem("academic_Period", this.academic_Period);
+    if (tokenData) {
+      this._router.navigateByUrl(`Institution/Institutions/${tokenData}/ImportStudentAttendances/add`);
+    }
   }
 
   public backToData() {
     this._row.forEach((item) => {
+      if (item?.institution_student_absences?.absence_type_id == 99 || item?.institution_student_absences?.absence_type_id == null) {
+        item.institution_student_absences.absence_type_id = 0;
+      }
       const indexInArray2 = this.findIndexInArray2(item?.institution_student_absences?.absence_type_id, item.user.openemis_no);
+      console.log(indexInArray2, "indexInArray2");
       if (indexInArray2 !== -1) {
         this.callPostAttandanceAPI(item);
       }
@@ -721,7 +909,9 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
   }
 
   findIndexInArray2(keyValue: any, id: any) {
-    for (let i = 0; i < this.oldRowData.length; i++) {
+    // console.log(this.oldRowData,"this._row old");
+
+    for (let i = 0; i < this.oldRowData?.length; i++) {
       if (this.oldRowData[i].institution_student_absences.absence_type_id != keyValue && this.oldRowData[i].user.openemis_no == id) {
         if ((this.oldRowData[i].institution_student_absences.absence_type_id == null && keyValue == 0) ||
           (this.oldRowData[i].institution_student_absences.absence_type_id == 0 && keyValue == null)) {
@@ -736,6 +926,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
   }
 
   callPostAttandanceAPI(data: any) {
+    console.log(data, "data 11");
+
     let obj = {
       "student_id": data?.student_id,
       "institution_id": data?.institution_id,
@@ -746,9 +938,11 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       "comment": data?.institution_student_absences?.comment,
       "period": data?.institution_student_absences?.period,
       "date": data?.institution_student_absences?.date,
-      "subject_id": this.selectedInstitutionSubject,
+      "subject_id": this.selectedInstitutionSubject ? this.selectedInstitutionSubject : 0,
       "education_grade_id": this.education_grade_id
     }
+    console.log(obj, "obj");
+
     this.Rest.postWithToken(`institutions/students/absences`, obj).subscribe({
       next: (response: any) => {
         if (response) {
@@ -771,6 +965,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
 
     if (this.displayEditTable) {
       this.displayMiniDashboard = false;
+      this._config.rowContentHeight = 140;
       this.pageheader = {
         leftBtn: [
           {
@@ -807,16 +1002,21 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       education_grade[0].disabled = true;
       this.educationGrade = [...education_grade];
 
+      let periodData = this.period;
+      periodData[0].disabled = true;
+      this.period = [...periodData];
+
       let institution_Subject = this.institutionSubject;
       institution_Subject[0].disabled = true;
       this.institutionSubject = [...institution_Subject];
     } else {
       this.displayMiniDashboard = true;
+      this._config.rowContentHeight = 60;
       this.pageheader = {
         leftBtn: [{
           type: "export",
           callback: (): void => {
-            this.backToData();
+            this.exportData();
           }
         },
         {
@@ -832,15 +1032,21 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
           }
         },
         {
-          icon: "fa kd-null",
-          path: '/'
-        },
-        {
-          icon: "fa fa-folder",
+          custom: true,
+          icon: 'fa kd-null',
+          tooltip: 'No Scheduled Class',
           callback: (): void => {
-            this.onEditClick();
+            this.nullData();
           }
         },
+        {
+          custom: true,
+          icon: 'fa fa-folder',
+          tooltip: 'Archive',
+          callback: (): void => {
+            this.archiveData();
+          }
+        }
         ],
         moreAction: [],
         moreBtn: false,
@@ -868,6 +1074,10 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       education_grade[0].disabled = false;
       this.educationGrade = [...education_grade];
 
+      let periodData = this.period;
+      periodData[0].disabled = false;
+      this.period = [...periodData];
+
       let institution_Subject = this.institutionSubject;
       institution_Subject[0].disabled = false;
       this.institutionSubject = [...institution_Subject];
@@ -892,24 +1102,28 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       case 'academicPeriod':
         this.displayLoading = true;
         this._row = [];
+        this.academicPeriod[0].value = event.target.value;
         this.getAcademicWeek(event.target.value);
         break;
 
       case 'week':
         this.displayLoading = true;
         this._row = [];
+        this.week[0].value = event.target.value;
         this.getAcademicDay(event.target.value);
         break;
 
       case 'day':
         this.displayLoading = true;
         this._row = [];
+        this.day[0].value = event.target.value;
         this.getClassData(event.target.value);
         break;
 
       case 'class':
         this._row = [];
         this.displayLoading = true;
+        this.class[0].value = event.target.value;
         this.education_grade_id = event.target.value;
         this.getEducationGrade(event.target.value);
         break;
@@ -917,10 +1131,68 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       case 'educationGrade':
         this.displayLoading = true;
         this._row = [];
+        this.educationGrade[0].value = event.target.value;
         this.selectedInstitutionSubject = event.target.value;
         this.institutionSubjectClass(event.target.value);
         break;
     }
+  }
+
+  nullData() {
+    // `institutions/students/attendances/no-scheduled-class?institution_id=${this.institution_id}&institution_class_id=${this.selected_academic_class}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=0`
+    this.Rest.getWithToken(`institutions/students/attendances/no-scheduled-class?institution_id=${this.institution_id}&institution_class_id=${this.selected_academic_class}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}`).subscribe({
+      next: (response: any) => {
+        if (response) {
+          this.displayLoading = true;
+          this.getStudentAttendanceData();
+        }
+
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+        this.displayLoading = false;
+      }
+    })
+  }
+
+  archiveData() {
+    let tokenData = localStorage.getItem('encoded_url');
+    if (tokenData) {
+      this._router.navigateByUrl(`Institution/Institutions/InstitutionStudentAbsencesArchived/${tokenData}`);
+    }
+  }
+
+  exportData() {
+    this.displayLoading = true;
+    // `/institutions/students/attendances/export?institution_id=${this.institution_id}&institution_class_id=${this.selected_academic_class}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=0&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`
+    this.Rest.getItemExport(`institutions/students/attendances/export?institution_id=${this.institution_id}&institution_class_id=${this.selected_academic_class}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
+      next: (response: any) => {
+        this.displayLoading = false;
+        let url = window.URL.createObjectURL(response);
+        let a = document.createElement('a');
+        document.body.appendChild(a);
+        a.setAttribute('style', 'display: none');
+        a.href = url;
+        a.download = response.filename || 'Student attendance';
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+        this.displayLoading = false;
+      }
+    })
   }
 
   ngOnDestroy(): void {

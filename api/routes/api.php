@@ -554,12 +554,16 @@ Route::group(
         //POCOR-8666 end
         Route::get('scanned/data/export', 'ScannedController@institutionScannedExport');//POCOR-8793
         Route::get('scanned/user/{scannedId}', 'ScannedController@scannedUserDetails');//POCOR-8824
-        Route::get('guardians/{openemisId}', 'UserController@getGuardianByOpenemisNo')->where('openemisNo', '[\pL0-9]+'); // POCOR-8840
-        Route::get('users/username/{username}', 'UserController@getUserByUsername')->where('username', '[^\s]+'); // POCOR-8862
+        Route::get('students/{openemis_no}/absences', 'StudentController@getStudentAbsencesDetails'); //POCOR-8880
 
         //POCOR-8619 START
         Route::post('institutions/students/assessment-item-exemption', 'AssessmentController@saveAssessmentItemExemption');
         //POCOR-8619 END
+
+        // POCOR-8862 start
+        Route::get('guardians/{openemisId}', 'UserController@getGuardianByOpenemisNo')->where('openemisNo', '[\pL0-9]+'); // POCOR-8840
+        Route::get('users/username/{username}', 'UserController@getUserByUsername')->where('username', '[^\s]+'); // POCOR-8862
+        // POCOR8862 end
 
     }
 );

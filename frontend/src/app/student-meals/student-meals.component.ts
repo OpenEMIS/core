@@ -213,7 +213,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
       },
       error: (error: any) => {
 
-      
+
       }
     })
   }
@@ -225,7 +225,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     // console.log(this.mealImportUrl, "mealImportUrl");
 
     let tokenData = localStorage.getItem('encoded_url');
-    if(tokenData){
+    if (tokenData) {
       localStorage.setItem("institution_id", JSON.stringify(this.institution_id));
       localStorage.setItem("academic_Period", JSON.stringify(this.academic_Period));
       this.router.navigateByUrl(`Institution/Institutions/${tokenData}/ImportStudentMeals/add`);
@@ -501,10 +501,10 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     // this.Rest.setSession();
     let token = localStorage.getItem("loginToken");
     if (!token) {
-      let userName = sessionStorage.getItem('username');
-      let password = sessionStorage.getItem('password');
-      console.log(userName, password, "userName");
-
+      let userName = sessionStorage.getItem('nbn');
+      let password = sessionStorage.getItem('pbn');
+      const chars = password.split('.');
+      password = chars[0];
       if (userName == null && password == null) {
         setTimeout(() => {
           this.counter = this.counter + 1;
@@ -516,6 +516,9 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         }, 1500);
       } else {
         var decodedPassword = atob(password);
+        // decodedPassword = decodedPassword.replace(/^"(.*)"$/, '$1');
+        decodedPassword = decodedPassword.replace(/[\[\]"]/g, '');
+        console.log(decodedPassword,"decodedPassword");
         if (userName && decodedPassword) {
           this.loginApi(userName, decodedPassword);
         } else {
@@ -736,7 +739,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         newDay[0].options = this.academic_day;
         newDay[0].value = this.academic_period_day;
         this.day = [...newDay];
-        this.getMealProgramData();
+        this.getClassData();
       },
       error: (error: any) => {
         if (error) {
@@ -766,6 +769,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
           classData[0].options = this.academic_class;
           this.class = [...classData];
           this.displayLoading = false;
+          this.getMealProgramData();
         }
       },
       error: (error: any) => {
@@ -824,6 +828,10 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
 
     //This is static link
     // institutions/${this.institution_id}/meal-students?academic_period_id=33&day_id=2024-01-30&institution_class_id=591&meal_program_id=3
+    console.log(this.academic_Period, "academic_Period");
+    console.log(this.academic_period_day, "this.academic_period_day");
+    console.log(this.selected_academic_class, "this.selected_academic_class");
+    console.log(this.selected_meal_program, "selected_meal_program");
 
     if (this.academic_Period && this.academic_period_day && this.selected_academic_class && this.selected_meal_program) {
       this.Rest.getWithToken(`institutions/${this.institution_id}/meal-students?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&institution_class_id=${this.selected_academic_class}&meal_program_id=${this.selected_meal_program}`).subscribe({
@@ -895,7 +903,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
               showCloseButton: true,
               tapToDismiss: true,
             };
-      
+
             this._kdAlertEvent.warn(toasterConfig);
           }
 
@@ -963,6 +971,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         this.getClassData();
         this.day[0].value = event.target.value;
         this.academic_period_day = event.target.value;
+        this.getClassData();
         this.getMealProgramData();
         break;
       }
