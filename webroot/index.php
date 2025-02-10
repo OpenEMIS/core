@@ -36,11 +36,14 @@ $server = new Server(new Application(dirname(__DIR__) . '/config'));
 
 // Run the request/response through the application
 // and emit the response.
+
+//POCOR-8789
 try {
     $server->emit($server->run());
 } catch (Exception $ex) {
-    //$ErrorTable = TableRegistry::getTableLocator()->get('System.SystemErrors');
-    //$ErrorTable->insertError($ex);
+    $ErrorTable = TableRegistry::get('System.SystemErrors');
+    $ErrorTable->insertError($ex);
     Log::write('error', $ex);
     throw $ex;
 }
+

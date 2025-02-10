@@ -20,7 +20,8 @@ class ConfigItemsBehavior extends Behavior
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
-        if ($this->isCAv4()) {
+        $events['Model.custom.onUpdateToolbarButtons'] =  ['callable' => 'onUpdateToolbarButtons'];//POCOR-8751
+        if ($this->isCAv4()) {          
             $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
         }
         return $events;
@@ -111,6 +112,9 @@ class ConfigItemsBehavior extends Behavior
         if($typeValue == 'ExternalDataSource-Exams'){
             $typeValue = 'ExternalDataSourceExams';
         }
+        if($typeValue == 'ExternalDataSource-LMS'){ //POCOR-8386
+            $typeValue = 'ExternalDataSourceLMS';
+        }
         //POCOR-7531 start
          // End POCOR-7507
 
@@ -142,4 +146,33 @@ class ConfigItemsBehavior extends Behavior
             $this->checkController();
         }
     }
+    //POCOR-8751 start
+    /**
+     * Handles updating the toolbar buttons during the action.
+     *
+     * @param Event $event The event triggered during the action.
+     * @param ArrayObject $buttons The existing buttons for the action.
+     * @param ArrayObject $toolbarButtons The toolbar buttons that will be modified.
+     * @param array $attr Additional attributes or options for the action.
+     * @param string $action The action being performed (e.g., 'view', 'edit').
+     * @param bool $isFromModel Flag indicating if the action is originating from a model.
+     */
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        if ($this->_table->action == 'view') {
+            $session = $this->_table->request->getSession();
+            $key = $session->read('Configuration.ConfigItems.primaryKey.id');
+            $entity =  TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->get($key);
+            if($entity->code=="edition" && $entity->type=="System"){
+                if (isset($toolbarButtons['edit'])) {
+                    unset($toolbarButtons['edit']);
+                }
+            }  
+        }
+        
+    } 
+     //POCOR-8751 end
+
 }
+

@@ -67,6 +67,7 @@
                                     echo $this->Form->input($field_weight, [
                                         'type' => 'float',
                                         'label' => false,
+                                        'placeholder' => '0.00',
                                         'onblur' => "return utility.checkDecimal(this, 2);",
                                         'onkeypress' => "return utility.floatCheck(event)",
                                     ]);
@@ -164,7 +165,9 @@
                                             'onblur' => "return utility.checkDecimal(this, 2);",
                                             'onkeypress' => "return utility.floatCheck(event)",
                                             'required' => false,
-                                            'value' => $weight
+                                            'value' => $weight,
+                                            'placeholder' => '0.00'
+
                                         ]);
                                     }
                                     if (!$present) {
@@ -174,7 +177,8 @@
                                             'onblur' => "return utility.checkDecimal(this, 2);",
                                             'onkeypress' => "return utility.floatCheck(event)",
                                             'required' => false,
-                                            'value' => '0.00'
+                                            'value' => '0.00',
+                                            'placeholder' => '0.00'
                                         ]);
                                     }
                                     ?>
@@ -209,11 +213,27 @@
         </div>
     </div>
 <?php endif ?>
-<!-- <script>
-    $(document).ready(function(){
-        $("#selectAll").click(function(){
-                $("input[type=checkbox]").prop('checked', $(this).prop('checked'));
+<!--POCOR-8889-->
+<script>
+   document.addEventListener("DOMContentLoaded", function () {
+    // Function to append the error message
+    function appendErrorMessage(newMessage) {
+        let errorAlert = document.querySelector(".alert.alert-danger");
 
-        });
-    });
-</script> -->
+        if (errorAlert) {
+            let errorText = errorAlert.innerHTML;
+
+            // Only append the new message if it's not already present
+            if (errorText.includes("The record is not added due to errors encountered") && !errorText.includes(newMessage)) {
+                errorAlert.innerHTML += " " + newMessage;
+            }
+            if (errorText.includes("The record is not updated due to errors encountered") && !errorText.includes(newMessage)) {
+                errorAlert.innerHTML += " " + newMessage;
+            }
+        }
+    }
+
+    // Check for the specific message and append additional error
+    appendErrorMessage("Please check weight value.Value must be positive and less than 2.0");
+});
+</script>

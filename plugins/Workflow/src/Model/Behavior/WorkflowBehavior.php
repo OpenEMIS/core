@@ -149,6 +149,7 @@ class WorkflowBehavior extends Behavior
         }
         $events['ControllerAction.Model.index.afterAction']     = ['callable' => 'indexAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.view.afterAction']      = ['callable' => 'viewAfterAction', 'priority' => 1000];
+        $events['ControllerAction.Model.view.beforeAction']      = ['callable' => 'viewBeforeAction', 'priority' => 1000];//POCOR-8434
         $events['ControllerAction.Model.addEdit.afterAction']   = ['callable' => 'addEditAfterAction', 'priority' => 1000];
         $events['ControllerAction.Model.addEdit.beforeAction']  = ['callable' => 'addEditBeforeAction', 'priority' => 1];
         $events['ControllerAction.Model.edit.beforePatch']      = ['callable' => 'editBeforePatch', 'priority' => 1];
@@ -360,6 +361,23 @@ class WorkflowBehavior extends Behavior
 
     public function onGetWorkflowStatus(Event $event, Entity $entity)
     {
+        //POCOR-8434 Starts
+        if($this->_table->getRegistryAlias() == 'Institution.StudentAdmission'){
+            if(($entity->status->name == 'Approved')){
+                $WorkflowActionsTable = TableRegistry::get('Workflow.WorkflowActions');
+                $WorkflowActions = $WorkflowActionsTable->find()
+                    ->where([
+                        $WorkflowActionsTable->aliasField('next_workflow_step_id') => $entity->status->id
+                    ])->first();
+                if($WorkflowActions->event_key == 'Workflow.onTriggerPendingEnrolment'){
+                    $entity->workflow_status = 'Admitted';
+                }
+            }
+        }else if($this->_table->getRegistryAlias() == 'Institution.StudentEnrolment'){
+            if(($entity->status->name == 'Approved')){
+                $entity->workflow_status = 'Enrolled';
+            }
+        }//POCOR-8434 Ends
         return '<span class="status highlight">' . $entity->workflow_status . '</span>';
     }
 
@@ -885,6 +903,19 @@ class WorkflowBehavior extends Behavior
                         $transitionDisplay = '<span class="status past">' . __($transition->prev_workflow_step_name) . '</span>';
                         $transitionDisplay .= '<span class="transition-arrow"></span>';
                         if (count($transitions) - 1 == $key) {
+                            //POCOR-8434 Starts
+                            if(($workflowStep->name == 'Approved') && ($transition->workflow_step_name == $workflowStep->name) && ($workflowModel == 'Institution.StudentAdmission')){
+                                $WorkflowActionsTable = TableRegistry::get('Workflow.WorkflowActions');
+                                $WorkflowActions = $WorkflowActionsTable->find()
+                                    ->where([
+                                        $WorkflowActionsTable->aliasField('next_workflow_step_id') => $workflowStep->id
+                                    ])->first();
+                                if($WorkflowActions->event_key == 'Workflow.onTriggerPendingEnrolment'){
+                                    $transition->workflow_step_name = 'Admitted';
+                                }
+                            }else if(($workflowStep->name == 'Approved') && ($transition->workflow_step_name == $workflowStep->name) && $workflowModel == 'Institution.StudentEnrolment'){
+                                $transition->workflow_step_name = 'Enrolled';
+                            }//POCOR-8434 Ends
                             $transitionDisplay .= '<span class="status highlight">' . __($transition->workflow_step_name) . '</span>';
                         } else {
                             $transitionDisplay .= '<span class="status past">' . __($transition->workflow_step_name) . '</span>';
@@ -901,6 +932,7 @@ class WorkflowBehavior extends Behavior
                     }
                 }
 
+
                 $ControllerAction->field('workflow_transitions', [
                     'type' => 'element',
                     'element' => 'Workflow.transitions',
@@ -910,18 +942,43 @@ class WorkflowBehavior extends Behavior
                     'tableCells' => $tableCells
                 ]);
                 // End
-
+                //POCOR-8434 starts
+                if($model->getAlias() == 'StudentAdmission'){
+                    if($entity->has('test_score') && $entity->has('interview_score')){
+                        $tableHeaders1[] = __('Shortlisting');
+                        $ControllerAction->field('shortlist', [
+                            'type' => 'element',
+                            'element' => 'Workflow.shortlist',
+                            'override' => true,
+                            'rowClass' => 'section-header',
+                            'tableHeaders' => $tableHeaders1
+                        ]);
+                    }
+                }                 
+                //POCOR-8434 ends
                 // Reorder fields
                 $fieldOrder = [];
                 $fields = $model->fields;
+                //POCOR-8434 starts
+                $excludeFields = $model->getAlias() == 'StudentAdmission' 
+                                ? ['workflow_status', 'assignee_id', 'shortlist', 'workflow_transitions'] 
+                                : ['workflow_status', 'assignee_id', 'workflow_transitions'];
                 foreach ($fields as $fieldKey => $fieldAttr) {
-                    if (!in_array($fieldKey, ['workflow_status', 'assignee_id', 'workflow_transitions'])) {
+                    if (!in_array($fieldKey, $excludeFields)) {
                         $fieldOrder[$fieldAttr['order']] = $fieldKey;
                     }
-                }
+                }//POCOR-8434 ends
                 ksort($fieldOrder);
                 array_unshift($fieldOrder, 'assignee_id');  // Set workflow_status to second
                 array_unshift($fieldOrder, 'workflow_status');  // Set workflow_status to first
+                //POCOR-8434 starts
+                if($model->getAlias() == 'StudentAdmission'){
+                    $fieldOrder[] = 'shortlist'; // Place 'shortlist' just after 'institution_id'
+                    // Remove "shortlist"
+                    $shortlist = array_splice($fieldOrder, array_search('shortlist', $fieldOrder), 1);
+                    // Insert "shortlist" after "institution_id"
+                    array_splice($fieldOrder, array_search('institution_id', $fieldOrder) + 1, 0, $shortlist);
+                } //POCOR-8434 ends               
                 $fieldOrder[] = 'workflow_transitions'; // Set workflow_transitions to last
                 $ControllerAction->setFieldOrder($fieldOrder);
                 // End
@@ -930,6 +987,23 @@ class WorkflowBehavior extends Behavior
             }
         }
     }
+    //POCOR-8434 starts
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $ControllerAction = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $model = $this->_table;
+        if($model->getAlias() == 'StudentAdmission'){
+            $tableHeaders1[] = __('Shortlisting');
+            $ControllerAction->field('shortlist', [
+                'type' => 'element',
+                'element' => 'Workflow.shortlist',
+                'override' => true,
+                'rowClass' => 'section-header',
+                'tableHeaders' => $tableHeaders1
+            ]);
+        } 
+         
+    }//POCOR-8434 ends
 
     public function addEditBeforeAction(Event $event)
     {
@@ -1140,24 +1214,20 @@ class WorkflowBehavior extends Behavior
                     return $buttons;
                 }
             }else{
-                if (!$model->AccessControl->isAdmin()) {
+                if ($model->AccessControl->isAdmin()) {
+               
+
                     $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
 
                     $workflowStep = $this->getWorkflowStep($entity);
                     $isEditable = false;
                     $isDeletable = false;
                     if (!empty($workflowStep)) {
-                        $isEditable = $workflowStep->is_editable == 1 ? true : false;
-                        $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+                        $isEditable = $workflowStep->is_editable == 1 ? true : true;
+                        $isDeletable = $workflowStep->is_removable == 1 ? true : true;
                     }
 
-                    if (isset($buttons['edit']) && !$isEditable) {
-                        unset($buttons['edit']);
-                    }
-
-                    if (isset($buttons['remove']) && !$isDeletable) {
-                        unset($buttons['remove']);
-                    }
+                    
 
                     return $buttons;
                 }
@@ -1519,7 +1589,16 @@ class WorkflowBehavior extends Behavior
     public function getWorkflowStep($entity = null)
     {
         if (!is_null($entity)) {
-            $workflowStepId = $entity->has('status_id') ? $entity->status_id : $entity->status_id;
+            // $workflowStepId = $entity->has('status_id') ? $entity->status_id : $entity->status_id;
+            //POCOR-8561 -- Start
+            $workflowStep = $entity->status;
+            $workflowStepId = $workflowStep ? $workflowStep->id : null;
+            //POCOR-8561 -- End
+            //POCOR-8411 -- Start
+            if(empty($workflowStepId)){
+                $workflowStepId = $entity->has('status_id') ? $entity->status_id : -1;
+            }
+            //POCOR-8411 -- End
             $model = $this->_table;
             $userId = $model->Auth->user('id');
             $assigneeId = $entity->assignee_id;
@@ -2442,6 +2521,11 @@ class WorkflowBehavior extends Behavior
             }
 
             $params = $this->_table->getQueryString();
+            if(!isset($params['id'])){
+                if(isset($entity->id)){
+                    $params['id'] = $entity->id;
+                }
+            }
             $encodedQueryString = $this->_table->paramsEncode($params);
             $url['1'] = $encodedQueryString;
             return $this->_table->controller->redirect($url);
@@ -2474,9 +2558,22 @@ class WorkflowBehavior extends Behavior
             $this->WorkflowTransitions->trackChanges($workflowModelEntity, $entity, $assigneeId, $requestDataComment);
 
             $entity->assignee_id = $assigneeId;
-            $model->save($entity);
+            $entity = $model->save($entity);
 
             $url = $model->url('view');
+            $params = $this->_table->getQueryString();
+            $params = $this->_table->getQueryString();
+            if(!isset($params['id'])){
+                if(isset($entity->id)){
+                    $params['id'] = $entity->id;
+                }
+            }
+            $encodedQueryString = $this->_table->paramsEncode($params);
+            $url['1'] = $encodedQueryString;
+
+            $encodedQueryString = $this->_table->paramsEncode($params);
+            $url['1'] = $encodedQueryString;
+
             return $this->_table->controller->redirect($url);
         }
     }

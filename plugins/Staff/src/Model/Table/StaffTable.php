@@ -152,7 +152,7 @@ class StaffTable extends AppTable
         $query->innerJoin(
             ['InstitutionStaff' => 'institution_site_staff'],
             [
-                'InstitutionStaff.security_user_id = ' . $this->aliasField($this->primaryKey()),
+                'InstitutionStaff.security_user_id = ' . $this->aliasField($this->getPrimaryKey()),
                 'InstitutionStaff.institution_site_id IN ' => $institutionIds
             ]
         );
@@ -275,7 +275,7 @@ class StaffTable extends AppTable
         $searchConditions = isset($params['searchConditions']) ? $params['searchConditions'] : [];
         $query = $this->find();
         $query
-            ->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->primaryKey()))])
+            ->select(['gender_id', 'count' => $query->func()->count('DISTINCT '.$this->aliasField($this->getPrimaryKey()))])
             ->where([$this->aliasField('is_staff') => 1])
             ->where($searchConditions)
             ->group('gender_id')

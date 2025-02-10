@@ -492,26 +492,50 @@ class RenderRepeaterBehavior extends RenderBehavior {
                     ])->andWhere([$RepeaterSurveys->aliasField('parent_form_id') => $surveyFormId])//POCOR-8223
                     ->all();
 
+                // if (!$surveyResults->isEmpty()) {
+                //     foreach ($surveyResults as $survey) {
+                //         $answersArray = [];
+                //         if ($survey->has('custom_field_values')) {
+                //             foreach ($survey->custom_field_values as $answer) {
+                //                 $answersArray[$answer->{$fieldKey}] = [
+                //                     'text_value' => $answer->text_value,
+                //                     'number_value' => $answer->number_value,
+                //                     'decimal_value' => $answer->decimal_value,
+                //                     'textarea_value' => $answer->textarea_value,
+                //                     'date_value' => $answer->date_value,
+                //                     'time_value' => $answer->time_value
+                //                 ];
+                //             }
+                //         }
+                //         $surveysArray[$customField->id][$survey->repeater_id] = $answersArray;
+                //         $surveysArray[$customField->id][$survey->repeater_id]['id'] = $survey->id;
+                //         $repeatersArray[$customField->id][] = $survey->repeater_id;
+                //     }
+                // }
+                //POCOR-8576 --START
                 if (!$surveyResults->isEmpty()) {
                     foreach ($surveyResults as $survey) {
                         $answersArray = [];
-                        if ($survey->has('custom_field_values')) {
-                            foreach ($survey->custom_field_values as $answer) {
-                                $answersArray[$answer->{$fieldKey}] = [
-                                    'text_value' => $answer->text_value,
-                                    'number_value' => $answer->number_value,
-                                    'decimal_value' => $answer->decimal_value,
-                                    'textarea_value' => $answer->textarea_value,
-                                    'date_value' => $answer->date_value,
-                                    'time_value' => $answer->time_value
-                                ];
+                        if ($formId == $survey['survey_form_id']) {
+                            if ($survey->has('custom_field_values')) {
+                                foreach ($survey->custom_field_values as $answer) {
+                                    $answersArray[$answer->{$fieldKey}] = [
+                                        'text_value' => $answer->text_value,
+                                        'number_value' => $answer->number_value,
+                                        'decimal_value' => $answer->decimal_value,
+                                        'textarea_value' => $answer->textarea_value,
+                                        'date_value' => $answer->date_value,
+                                        'time_value' => $answer->time_value
+                                    ];
+                                }
                             }
+                            $surveysArray[$customField->id][$survey->repeater_id] = $answersArray;
+                            $surveysArray[$customField->id][$survey->repeater_id]['id'] = $survey->id;
+                            $repeatersArray[$customField->id][] = $survey->repeater_id;
                         }
-                        $surveysArray[$customField->id][$survey->repeater_id] = $answersArray;
-                        $surveysArray[$customField->id][$survey->repeater_id]['id'] = $survey->id;
-                        $repeatersArray[$customField->id][] = $survey->repeater_id;
                     }
                 }
+                //POCOR-8576 --END
             }
         }
 

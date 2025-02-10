@@ -43,7 +43,9 @@ class StaffAttendancesTable extends ControllerActionTable
                 'staff_status_id',
                 'institution_id',
                 'institution_position_id',
-                'security_group_user_id'
+                'security_group_user_id',
+                'is_homeroom', //POCOR-8167
+                'staff_position_grade_id' //POCOR-8167
             ],
             'pages' => ['index']
         ]);

@@ -167,12 +167,76 @@ return [
      *   the memory limit by when a fatal error is encountered. This allows
      *   breathing room to complete logging or error handling.
      */
+    //POCOR-8626 -- Added ignoredDeprecationPaths for deprecation warnings.
     'Error' => [
         'errorLevel' => E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING ,
         'exceptionRenderer' => 'Cake\Error\ExceptionRenderer',
         'skipLog' => [],
         'log' => true,
         'trace' => true,
+        'ignoredDeprecationPaths' => [
+            'config/routes.php',
+            'plugins/User/config/routes.php',
+            'plugins/Archive/config/routes.php',
+            'plugins/GuardianNav/config/routes.php',
+            'plugins/Meal/config/routes.php',
+            'plugins/ProfileTemplate/config/routes.php',
+            'plugins/MoodleApi/config/routes.php',
+            'plugins/SpecialNeeds/config/routes.php',
+            'plugins/Email/config/routes.php',
+            'plugins/Guardian/config/routes.php',
+            'plugins/Attendance/config/routes.php',
+            'plugins/StaffAppraisal/config/routes.php',
+            'plugins/Theme/config/routes.php',
+            'plugins/Outcome/config/routes.php',
+            'plugins/Installer/config/routes.php',
+            'plugins/Transport/config/routes.php',
+            'plugins/Profile/config/routes.php',
+            'plugins/ReportCard/config/routes.php',
+            'plugins/Competency/config/routes.php',
+            'plugins/CustomExcel/config/routes.php',
+            'plugins/Configuration/config/routes.php',
+            'plugins/Examination/config/routes.php',
+            'plugins/InstitutionRepeater/config/routes.php',
+            'plugins/System/config/routes.php',
+            'plugins/Cache/config/routes.php',
+            'plugins/Health/config/routes.php',
+            'plugins/Map/config/routes.php',
+            'plugins/Training/config/routes.php',
+            'plugins/Log/config/routes.php',
+            'plugins/API/config/routes.php',
+            'plugins/Import/config/routes.php',
+            'plugins/Error/config/routes.php',
+            'plugins/Infrastructure/config/routes.php',
+            'plugins/StaffCustomField/config/routes.php',
+            'plugins/StudentCustomField/config/routes.php',
+            'plugins/InstitutionCustomField/config/routes.php',
+            'plugins/Risk/config/routes.php',
+            'plugins/CustomField/config/routes.php',
+            'plugins/Workflow/config/routes.php',
+            'plugins/Rubric/config/routes.php',
+            'plugins/Rubric/config/routes.php',
+            'plugins/Rest/config/routes.php',
+            'plugins/Survey/config/routes.php',
+            'plugins/Security/config/routes.php',
+            'plugins/Textbook/config/routes.php',
+            'plugins/Assessment/config/routes.php',
+            'plugins/Education/config/routes.php',
+            'plugins/Staff/config/routes.php',
+            'plugins/Student/config/routes.php',
+            'plugins/FieldOption/config/routes.php',
+            'plugins/Directory/config/routes.php',
+            'plugins/AcademicPeriod/config/routes.php',
+            'plugins/Alert/config/routes.php',
+            'plugins/Manuals/config/routes.php',
+            'plugins/Area/config/routes.php',
+            'plugins/Localization/config/routes.php',
+            'plugins/Angular/config/routes.php',
+            'plugins/ControllerAction/config/routes.php',
+            'plugins/OpenEmis/config/routes.php',
+            'vendor/cakephp/cakephp/src/Routing/Router.php',
+            'plugins/Gpa/config/routes.php'
+        ],
     ],
 
     /**
@@ -314,7 +378,7 @@ return [
             'className' => 'Cake\Log\Engine\FileLog',
             'path' => LOGS,
             'file' => 'error',
-            'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
+            'levels' => ['error', 'critical', 'alert', 'emergency'],
             'url' => env('LOG_ERROR_URL', null),
         ],
     ],
@@ -367,19 +431,19 @@ return [
     'installerCensus' => false,
     'installerVaccinations' => false,
     //POCOR-7485 for angular build start
-    'BUILD_MAIN' => define('BUILD_MAIN', 'angular/main.e960dd01416aada109b0'),
-    'BUILD_POLYFILLS' => define('BUILD_POLYFILLS', 'angular/polyfills.0947d4c9434ec41ea5bf'),
+    'BUILD_MAIN' => define('BUILD_MAIN', 'angular/main.66a793f23a6841626168'),
+    'BUILD_POLYFILLS' => define('BUILD_POLYFILLS', 'angular/polyfills.f7d72f42a315012edb4e'),
     'BUILD_RUNTIME' => define('BUILD_RUNTIME', 'angular/runtime.7b63b9fd40098a2e8207'),
     'BUILD_SCRIPTS' => define('BUILD_SCRIPTS', 'angular/scripts.986023b5d731304047cb'),
-    'STYLE_GUIDE' => define('STYLE_GUIDE', 'angular/main/styles.da9cec2553232f6df040'),
+    'STYLE_GUIDE' => define('STYLE_GUIDE', 'angular/main/styles.127653db94df200a4321'),
     'BUILD_STYLE' => define('BUILD_STYLE', 'angular/main/newStyles'),
 
-    // 'Application' => [
-    //     'public' => [
-    //         'key' => file_get_contents(CONFIG . 'public.key')
-    //     ],
-    //     'private' => [
-    //         'key' => file_get_contents(CONFIG . 'private.key')
-    //     ],
-    // ],
+    'Application' => [
+        'public' => [
+            'key' => @file_get_contents(CONFIG . 'public.key')
+        ],
+        'private' => [
+            'key' => @file_get_contents(CONFIG . 'private.key')
+        ],
+    ],
 ];

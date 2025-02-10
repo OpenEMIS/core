@@ -93,10 +93,22 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     // POCOR-8231 to set Openemis No
     function setUniqueOpenEmisId(scope) {
         // if OpenEmisNo is present
+        if (
+            (scope.isExternalSearchSelected || scope.isInternalSearchSelected) &&
+            scope.selectedUserData.openemis_no &&
+            scope.selectedUserData.openemis_no.toString().trim() !== ''
+        ) {
+            // if UserName is absent
+            if (!scope.selectedUserData.username) {
+                scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
+            }
+            return Promise.resolve();
+        }
+
         if ((scope.isExternalSearchSelected || scope.isInternalSearchSelected) &&
             scope.selectedUserData.openemis_no &&
-            !isNaN(Number(scope.selectedUserData.openemis_no.toString()))
-        ) {
+            scope.selectedUserData.openemis_no.toString() !== '')
+        {
             // if UserName is absent
             if (!scope.selectedUserData.username) {
                 scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
@@ -435,7 +447,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         }
     }
 
-    function validateUserDetails(scope) {
+    async function validateUserDetails(scope) {
         scope.error = {};
         const checkAndSetError = (field, message) => {
             if (!scope.selectedUserData[field]) {
@@ -451,7 +463,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (Object.keys(scope.error).length > 0) return;
 
         if (scope.step === 'user_details') {
-            const [blockName, hasError] = checkUserDetailValidationBlocksHasError(scope);
+            const [blockName, hasError] = await checkUserDetailValidationBlocksHasError(scope);
 
             if (blockName === 'Identity' && hasError) {
                 checkAndSetError('nationality_id', 'This field cannot be left empty');
@@ -472,7 +484,6 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
-            return checkUserAlreadyExistByIdentity(scope);
         }
     }
 
@@ -660,7 +671,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 scope.internalGridOptions = {
                     columnDefs: [
                         {
-                            headerName: scope.translateFields.openemis_no,
+                            headerName: angular.isDefined(scope.dynamicOpenemisNoHeader) ? scope.dynamicOpenemisNoHeader : scope.translateFields.openemis_no,
                             field: "openemis_no",
                             suppressMenu: true,
                             suppressSorting: true
@@ -875,7 +886,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     async function checkUserAlreadyExistByIdentity(scope) {
         const userData = scope.selectedUserData;
-        console.log(scope);
+        // console.log(scope);
         const result = await checkUserExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
@@ -894,7 +905,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         return result.data.user_exist === 1;
     }
 
-    function checkUserDetailValidationBlocksHasError(scope) {
+    async function checkUserDetailValidationBlocksHasError(scope) {
         const {
             first_name,
             last_name,
@@ -906,6 +917,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             nationality_id,
             identity_type_name
         } = scope.selectedUserData;
+        const user_exists = await checkUserAlreadyExistByIdentity(scope);
 
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth);
         const isIdentityHasError = (identity_number?.length > 1 || nationality_id || identity_type_id) &&
@@ -922,11 +934,13 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         }
 
         if (isIdentityHasError) {
-            return ['Identity', true];
+                return ['Identity', true];
         }
 
         if (isSkipableForIdentity) {
-            return ['Identity', false];
+            if (user_exists === true) {
+                return ['Identity', false];
+            }
         }
 
         if (isGeneralInfodHasError) {
@@ -970,6 +984,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         nationality_name = scope.selectedUserData.nationality_name;
         identity_type_name = scope.selectedUserData.identity_type_name;
         identity_type_id = scope.selectedUserData.identity_type_id;
+        let user_type_id =  scope.selectedUserData.user_type_id ?? null; // POCOR-8063
+        let guardian_type_id = scope.selectedUserData.relation_type_id ?? null; // POCOR-8063
+        let student_openemis_no = scope.studentOpenEmisId ?? null; // POCOR-8063
+        let institution_id = scope.institutionId ?? null; // POCOR-8063
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -982,17 +1000,21 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     openemis_no: openemis_no,
                     date_of_birth: date_of_birth,
                     identity_number: identity_number,
-                    institution_id: null,
-                    user_type_id: scope.selectedUserData.user_type_id,
+                    institution_id: institution_id,
+                    user_type_id: user_type_id,
+                    guardian_type_id: guardian_type_id,
                     nationality_id: nationality_id,
                     nationality_name: nationality_name,
                     identity_type_name: identity_type_name,
-                    identity_type_id: identity_type_id
+                    identity_type_id: identity_type_id,
+                    student_openemis_no: student_openemis_no
     };
+
                 // console.log(param);
                 getInternalSearchData(param)
                     .then(function (response) {
                         var gridData = response.data.data;
+                        console.log(gridData);
                         if (!gridData)
                             gridData = [];
                         var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
@@ -1140,7 +1162,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         function filterBySection(item, section) {
             return section === item.section;
         }
-        console.log(scope.customFields);
+        // console.log(scope.customFields);
         if(scope.customFields && scope.customFields.length > 0) {
             var selectedCustomField = scope.customFields;
             var filteredSections = Array.from(new Set(scope.customFields.map((item) => mapBySection(item))));
@@ -1441,7 +1463,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
         if (checkVars.isIdentityUserExist && isInternalSearch) return true;
         if (checkVars.openemis_no && !checkVars.user_id && isInternalSearch) return true;
-        if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true;
+        // if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true; // POCOR-8776
         if (isInternalSearch && !checkVars.isExternalSearchEnable && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
         if (isExternalSearch && checkVars.externalSearchSourceName === 'UNHCR' && !checkVars.identity_number) return true;
         if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;

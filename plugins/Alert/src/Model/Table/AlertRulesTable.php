@@ -13,6 +13,7 @@ use Cake\Log\Log;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
+use Cake\Datasource\ConnectionManager;
 
 class AlertRulesTable extends ControllerActionTable
 {
@@ -282,6 +283,24 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
+    //POCOR-8690[START]
+    public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add'||$action == 'edit') {
+            $entity = $attr['entity'];
+            if($entity->feature)
+            {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $this->getMethod($entity->feature);;
+            $attr['attr']['value'] =$this->getMethod($entity->feature);;
+            }
+           
+        }
+
+        return $attr;
+    }
+    //POCOR-8690[END]
+
     public function addEditOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data)) {
@@ -386,7 +405,13 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('rule_setup', ['type' => 'section']);
         $this->field('feature', ['type' => 'select', 'entity' => $entity]);
         $this->field('enabled', ['type' => 'select']);
-        $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
+        //POCOR-8690[START]
+        // $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
+        $this->field('method', [
+            'after' => 'threshold',
+            'entity' => $entity,
+        ]);
+        //POCOR-8690[END]
         $this->field('security_roles', ['after' => 'method', 'entity' => $entity]);
         $this->field('threshold', ['after' => 'security_roles', 'entity' => $entity]);
 
@@ -484,6 +509,10 @@ class AlertRulesTable extends ControllerActionTable
     }
      //POCOR-7558 start
     public function getLastRunDate(){
+        //POCOR-8575[START]
+        $connection = ConnectionManager::get('default');
+        $connection->execute("DELETE FROM system_processes WHERE `status` = 3;");
+        //POCOR-8575[END]
         $systemProcess = TableRegistry::get('SystemProcesses');
         $data=$systemProcess->find()->select([
              'name'=> $systemProcess->aliasField('name'),

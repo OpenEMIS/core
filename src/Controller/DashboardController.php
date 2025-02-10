@@ -31,7 +31,7 @@ class DashboardController extends AppController
 
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
-       // $this->callAlerts(); //POCOR-7558
+        //$this->callAlerts(); //POCOR-7558
 
     }
 
@@ -59,9 +59,9 @@ class DashboardController extends AppController
         parent::beforeFilter($event);
 
         $user = $this->Auth->user();
-
-        if (is_array($user) && isset($user['last_login']) && is_null($user['last_login'])) {
-            $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user['id']);
+        if (is_array($user)&& ($user['last_login'] === null || $user['last_login'] === '')) {
+            
+            $userInfo = TableRegistry::get('User.Users')->get($user['id']);
             if ($userInfo->password) {
                 $this->Alert->warning('security.login.changePassword');
                 $lastLogin = $userInfo->last_login;
@@ -70,6 +70,7 @@ class DashboardController extends AppController
             }
 
         }
+      
         $header = __('Home Page');
         $this->set('contentHeader', $header);
 
@@ -559,7 +560,10 @@ class DashboardController extends AppController
     private function callAlerts()
     {
         $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-        $AlertsData = $AlertsTable->find('all')->toArray();
+        $AlertsData = $AlertsTable->find('all')
+            ->where(['frequency !=' => 'Never']) // POCOR-8533-C3
+            ->toArray();
+//        Log::debug(print_r($AlertsData, true));
         $lastRunDates = TableRegistry::getTableLocator()->get('Alert.AlertRules')->getLastRunDate();
         $mainAlerts = [];
         foreach ($AlertsData as $key => $value) {

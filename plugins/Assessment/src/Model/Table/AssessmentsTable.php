@@ -32,16 +32,6 @@ class AssessmentsTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => false]);
-        $this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes']); //POCOR-7318
-        $this->belongsToMany('GradingTypes', [
-            'className' => 'Assessment.AssessmentGradingTypes',
-            'joinTable' => 'assessment_items_grading_types',
-            'foreignKey' => 'assessment_id',
-            'targetForeignKey' => 'assessment_grading_type_id',
-            'through' => 'Assessment.AssessmentItemsGradingTypes',
-            'dependent' => true,
-            'cascadeCallbacks' => true
-        ]);
 
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
@@ -104,14 +94,12 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $this->field('excel_template_name', ['visible' => false]);
         $this->field('excel_template', ['visible' => true]);
-        $this->field('assessment_grading_type_id', ['type' => 'select']);
         $this->setFieldOrder(['code',
             'name',
             'description',
             'excel_template_name',
             'excel_template',
             'academic_period_id',
-            'assessment_grading_type_id',
             'education_grade_id']);
     }
 
@@ -305,6 +293,14 @@ class AssessmentsTable extends ControllerActionTable {
                 $classification = $assessment_item['classification'];
                 $is_new = $assessment_item['id_check'];
                 $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+                $weight = preg_replace('/\.(?=.*\.)/', '', $weight);
+
+                $floatValue = filter_var($weight, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                
+                if ($floatValue === false || $floatValue === '') {
+                    $floatValue =  '0.00';
+                }
+                $weight =  number_format((float)$floatValue, 2, '.', '');
                 if (!$is_new) {
                     $assessmentData = $assessmentItems->
                     find()
@@ -316,7 +312,7 @@ class AssessmentsTable extends ControllerActionTable {
                         ->toArray();
                     $assessment_item_id = $assessmentData[0]['id'];
                     $assesmentItem = $assessmentItems->updateAll(
-                        ['weight' => $weight,
+                        ['weight' => is_null($weight) ? 0.00 : $weight,
                             'classification' => $classification],    //field
                         ['id' => $assessment_item_id,
                         ] //condition
@@ -327,7 +323,7 @@ class AssessmentsTable extends ControllerActionTable {
                     $assessmenItemId = Text::uuid();
                     $assessment_data = [
                         'id' => $assessmenItemId,
-                        'weight' => $weight,
+                        'weight' => is_null($weight) ? 0.00 : $weight,
                         'classification' => $classification,
                         'assessment_id' => $assessment_id,
                         'education_subject_id' => $is_new,
@@ -347,13 +343,19 @@ class AssessmentsTable extends ControllerActionTable {
     public
     function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        //patch data to handle fail save because of validation error.
-        if (isset($requestData[$this->getAlias()])) {
-            if (isset($requestData[$this->getAlias()]['assessment_items'])) {
+        if ($requestData->offsetExists($this->getAlias())) {
+        $assessmentItems = $requestData[$this->getAlias()]['assessment_items'] ?? null;
+        if ($assessmentItems) {
                 $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-                foreach ($requestData[$this->getAlias()]['assessment_items'] as $key => $item) {
-                    $subjectId = $item['education_subject_id'];
-                    $requestData[$this->getAlias()]['assessment_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
+                foreach ($assessmentItems as $key => $item) {
+                    try {
+                        $subjectId = $item['education_subject_id'];
+                        $subject = $EducationSubjects->get($subjectId);
+                        $requestData[$this->getAlias()]['assessment_items'][$key]['education_subject'] = $subject;
+                    } catch (RecordNotFoundException $e) {
+                        // Handle missing subject, maybe log or set another error
+                        $requestData['errorMessage'] = 'Subject not found for id ' . $subjectId;
+                    }
                 }
             } else { //logic to capture error if no subject inside the grade.
                 $errorMessage = $this->aliasField('noSubjects');
@@ -379,7 +381,7 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
             $this->AssessmentItems->getAlias(),
-            $this->GradingTypes->getAlias()
+            //$this->GradingTypes->getAlias()
         ];
     }
 
@@ -655,37 +657,6 @@ class AssessmentsTable extends ControllerActionTable {
         }
     }
 
-//POCOR-7318
-    public function onUpdateFieldAssessmentGradingTypeId(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        $assessmentGradingType = TableRegistry::get('Assessment.AssessmentGradingTypes');
-        $assessmentGradingTypeOptions = $assessmentGradingType->find('list')->toArray();
-        if ($action == 'add' || $action == 'edit') {
-            if ($action == 'add') {
-                $attr['options'] = $assessmentGradingTypeOptions;
-                $attr['default'] = $assessmentGradingTypeOptions;
-                $attr['attr']['label'] = 'GPA';
-                $attr['onChangeReload'] = true;
-
-            } else {
-                if ($attr['entity']->assessment_grading_type_id == null) {
-                    $attr['options'] = $assessmentGradingTypeOptions;
-                    $attr['default'] = $assessmentGradingTypeOptions;
-                    $attr['attr']['label'] = 'GPA';
-                    $attr['onChangeReload'] = true;
-                } else {
-                    $attr['type'] = 'readonly';
-                    $attr['attr']['label'] = 'GPA';
-                    $attr['value'] = $attr['entity']->assessment_grading_type_id;
-                    $attr['attr']['value'] = $assessmentGradingType->get($attr['entity']->academic_period_id)->name;
-                }
-            }
-        } elseif ($action == 'view') {
-            $attr['attr']['label'] = 'GPA';
-        }
-        return $attr;
-    }
-
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
@@ -733,6 +704,25 @@ class AssessmentsTable extends ControllerActionTable {
             $entityId = $data['id'];
             $queryString = $this->getQueryString();
             $data['id'] = $queryString['id'];
+        }
+    }
+    
+    //POCOR-8554
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+
+        $associatedRecordsExist = 
+            $this->AssessmentPeriods->exists(['assessment_id' => $entity->id]) ;
+
+            //|| $this->AssessmentItems->exists(['assessment_id' => $entity->id]);
+
+        if ($associatedRecordsExist) { 
+                $message = __('Delete operation is not allowed as there are other information linked to this record.');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                
+                $url = $this->request->referer();
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
         }
     }
 

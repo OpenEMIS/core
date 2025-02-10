@@ -46,8 +46,8 @@
     <div class="input date required">
         <label ng-attr-for="{{ addNewStudentConfig ? 'Student_date_of_birth' : (addNewStaffConfig ? 'Staff_date_of_birth' : 'User_date_of_birth') }}"><?= __('Date Of Birth') ?></label>
         <div class="input-group date "
-             ng-attr-id="{{ addNewStudentConfig ? 'student-date_of_birth' : (addNewStaffConfig ? 'staff-date_of_birth' : 'user-date_of_birth') }}"
-             style="">
+        id="User_date_of_birth"           
+        style="">
             <input type="text" class="form-control "
                    name="User[date_of_birth]"
                    ng-model="selectedUserData.date_of_birth"
@@ -59,3 +59,18 @@
         </div>
     </div>
 </div>
+<!-- POCOR-8613 start -->
+<script>
+$(function () {
+var datepicker2 = $('#User_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
+$( document ).on('DOMMouseScroll mousewheel scroll', function(){
+    window.clearTimeout( t );
+    t = window.setTimeout( function(){
+        datepicker2.datepicker('place');
+    });
+});
+});
+
+//]]>
+</script>
+<!-- POCOR-8613 end -->
