@@ -462,7 +462,7 @@ class StudentsTable extends ControllerActionTable
             'key' => 'student_status_id',
             'field' => 'student_status',
             'type' => 'string',
-            'label' => __('Student 1 Status')
+            'label' => __('Student Status') //POCOR-8895
         ];
 
 
