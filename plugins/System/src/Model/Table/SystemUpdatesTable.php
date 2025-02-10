@@ -187,7 +187,7 @@ class SystemUpdatesTable extends ControllerActionTable
             $query->order([$this->aliasField('date_released') => 'DESC', $this->aliasField('version') => 'DESC']);
         }
 
-        if ($this->exists(['status' => 1])) {
+        // if ($this->exists(['status' => 1])) { // POCOR-8891 already handle in update action
             $updateBtn = $this->getButtonTemplate();
 
             $updateBtn['attr']['title'] = __('Update');
@@ -195,7 +195,7 @@ class SystemUpdatesTable extends ControllerActionTable
             $updateBtn['url'] = ['controller' => $this->controller->getName(), 'action' => 'Updates', 'updates'];
 
             $extra['toolbarButtons']['update'] = $updateBtn;
-        }
+        // }
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
