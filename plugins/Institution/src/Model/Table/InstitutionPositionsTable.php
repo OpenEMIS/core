@@ -677,7 +677,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     $whereStaff = [
                         $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                         $Staff->aliasField('institution_position_id') => $id,
-//                        $Staff->aliasField('staff_id') => $staffId
+                        $Staff->aliasField('staff_id') => 0
                     ];
                 }
                 // POCOR-8908 end
@@ -730,7 +730,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
                     $whereStaff = [
                         $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                         $Staff->aliasField('institution_position_id') => $id,
-//                        $Staff->aliasField('staff_id') => $staffId
+                        $Staff->aliasField('staff_id') => 0
                     ];
                 }
                 // POCOR-8908 end
