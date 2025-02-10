@@ -195,4 +195,9 @@ class ConfigurationsController extends AppController
             throw new NotFoundException('Configuration item not found');
         }
     }
+
+    public function ExternalDataSourceLMS()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ExternalDataSourceLMS']);
+    }
 }

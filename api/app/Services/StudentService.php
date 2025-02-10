@@ -502,4 +502,87 @@ class StudentService extends Controller
     //POCOR-7547 Ends...
 
 
+    //POCOR-8221 Starts...
+    public function getStudentTransferData($params, $institutionId, $studentId)
+    {
+        try {
+            $resp = [];
+            $list = $this->studentRepository->getStudentTransferData($params, $institutionId, $studentId);
+
+            foreach ($list['data'] as $k => $l) {
+                $resp[$k]['id'] = $l['id'];
+                $resp[$k]['enrolment_start_date'] = $l['start_date'];
+                $resp[$k]['enrolment_end_date'] = $l['end_date'];
+                $resp[$k]['requested_date'] = $l['requested_date'];
+                $resp[$k]['student_id'] = $l['student_id'];
+                $resp[$k]['status_id'] = $l['status_id'];
+                $resp[$k]['status_name'] = $l['status']['name'];
+                $resp[$k]['assignee_id'] = $l['assignee_id'];
+                $resp[$k]['institution_id'] = $l['institution_id'];
+                $resp[$k]['academic_period_id'] = $l['academic_period_id'];
+                $resp[$k]['education_grade_id'] = $l['education_grade_id'];
+                $resp[$k]['institution_class_id'] = $l['institution_class_id'];
+                $resp[$k]['previous_institution_id'] = $l['previous_institution_id'];
+                $resp[$k]['previous_academic_period_id'] = $l['previous_academic_period_id'];
+                $resp[$k]['previous_education_grade_id'] = $l['previous_education_grade_id'];
+                $resp[$k]['student_transfer_reason_id'] = $l['student_transfer_reason_id'];
+                $resp[$k]['comment'] = $l['comment'];
+                $resp[$k]['all_visible'] = $l['all_visible'];
+            }
+            $list['data'] = $resp;
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Transfer List Not Found');
+        }
+    }
+
+
+    public function addStudentTransferData($params, $institutionId)
+    {
+        try {
+            $data = $this->studentRepository->addStudentTransferData($params, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add student tranfer data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add student tranfer data.');
+        }
+    }
+    //POCOR-8221 Ends...
+
+    public function getStudentAbsencesDetails($request, $openemis_no)
+    {
+        try {
+            $absencesDetailsData = $this->studentRepository->getStudentAbsencesDetails($request, $openemis_no);
+            $arr = [];
+            foreach($absencesDetailsData as $key => $dd){
+                $arr[$key]['date'] = $dd['date']??Null;
+                $arr[$key]['institution'] = $dd['institution']['name']??Null;
+                $arr[$key]['period'] = $dd['period']??Null;
+                $arr[$key]['class'] = $dd['institution_class']['name']??Null;
+                $arr[$key]['subject'] = $dd['subject']['name']??Null;
+                $arr[$key]['absence_type'] = $dd['absence_type']['name']??Null;
+            }
+            return $arr;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Student Absences Data Not Found.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Absences Data Not Found.');
+        }
+    }
+
 }

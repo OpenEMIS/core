@@ -124,7 +124,6 @@ class InstitutionTabBehavior extends Behavior
 
     public function fixAddDeleteRedirectURL()
     {
-// http://localhost:8182/core/Institution/Institutions/InstitutionTransportProviders/index/eyJpbnN0aXR1dGlvbl9pZCI6Nn0.MjFlNjlhMTg1Y2I5ZGIyYzA5YWY3YzJjZjUwYWM1NWQyNmJhNTBkOGJjMjRiZmVhYTgyOGVkMDhjZjU4ZWY1Yw
         $model = $this->_table;
         $url = $model->url('index');
         $queryString = $model->getQueryString();
@@ -153,6 +152,11 @@ class InstitutionTabBehavior extends Behavior
         if (!$userID) {
             $userID = $model->getQueryString('user_id');
         }
+        //POCOR-8653 start
+        if (!$userID) {
+            $userID = $model->getQueryString('id');
+        }
+        // POCOR-8653 end
         if (!$userID) {
             return null;
         }
@@ -163,6 +167,41 @@ class InstitutionTabBehavior extends Behavior
     {
         $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
         $buttons = $this->fixActionButtons($entity, $buttons);
+        //POCOR-8561 -- Start
+        if($this->_table->alias == "Positions") {
+            $workflowStep = $this->_table->getWorkflowStep($entity);
+            $isEditable = false;
+            $isDeletable = false;
+            $isSuperAdmin = $this->_table->AccessControl->isAdmin();
+            $securityRoleAllowedEdit = $this->_table->AccessControl->isAdmin();
+            if(!$securityRoleAllowedEdit){
+                $institutionId = $this->getInstitutionID() ;
+                $userId = $this->_table->Auth->user('id');
+                $roles = $this->_table->Institutions->getInstitutionRoles($userId, $institutionId);
+                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $stepRoles = $WorkflowStepsRoles->getRolesByStep($workflowStep->id);
+                $securityRoleAllowedEdit=!empty(array_intersect($roles, $stepRoles));
+            }
+           
+            if (!empty($workflowStep)) {
+                $isEditable = $workflowStep->is_editable == 1 ? true : false;
+                $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+            }
+
+            
+            if (isset($buttons['edit'])) {
+                if (!$isEditable || !$securityRoleAllowedEdit) {
+                    unset($buttons['edit']);
+                }
+            }
+            if (isset($buttons['remove'])) {
+                if (!$isDeletable || !$securityRoleAllowedEdit) {
+                    unset($buttons['remove']);
+                }
+            }
+  
+        }
+        //POCOR-8561 -- End
         return $buttons;
     }
 
@@ -179,11 +218,8 @@ class InstitutionTabBehavior extends Behavior
                 $appliedAction = $this->getConfig()['appliedAction'];
             }
         } catch (Exception $e) {
-            // Handle the exception
-            //echo "An error occurred: " . $e->getMessage();
             die('<pre> An error occurred:' . print_r($e->getMessage(), true));
         }
-        //$action name and additional params to pass
         $appliedActions = [];
         if (!empty($appliedAction)) {
             $appliedActions = array_merge($appliedActions, $appliedAction);
@@ -218,10 +254,6 @@ class InstitutionTabBehavior extends Behavior
                         }else{
                             $queryString['institution_id'] = $institutionID;
                         }
-                        // echo "<pre>"; print_r($url_action);
-                        // echo "<pre>"; print_r($appliedActions[$url_action]);
-                        // echo "<pre>"; print_r($entity);
-                        // die;
                         foreach ($appliedActions[$url_action] as $additionalParam) {
                             if($url_action == 'Classes' && $additionalParam == 'institution_class_id'){
                                 $queryString['id'] = $entity->{$additionalParam};
@@ -238,6 +270,8 @@ class InstitutionTabBehavior extends Behavior
                             }//PCOOR-8324 ends
                             else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
                                 $queryString['academic_period_id'] = $entity->academic_period->id;
+                            } else if ($url_action == 'ExaminationStudents' && $additionalParam == 'student_id') { //POCOR-8813
+                                $queryString['student_id'] = $entity->getOriginal('student_id');
                             }
                             else{
                                 $queryString[$additionalParam] = $entity->{$additionalParam};
@@ -275,10 +309,7 @@ class InstitutionTabBehavior extends Behavior
 
     public function addDeleteBeforeAction(Event $event = null, ArrayObject $extra = null)
     {
-
         //echo "<pre>"; print_r($this->_table->ControllerAction); echo'test'; die;
-
-        //echo "<pre>"; print_r($extra); die;
         if ($extra == null) {
             return;
         }
@@ -373,8 +404,6 @@ class InstitutionTabBehavior extends Behavior
         }
 
         $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
-        //die('<pre>' . print_r($tabElements, true));
-
         $maincontroller->set('tabElements', $tabElements);
         $action = $model->getAlias();
         if ($action == 'UserLanguages') {
@@ -384,7 +413,6 @@ class InstitutionTabBehavior extends Behavior
             $action = 'History';
         }
         $maincontroller->set('selectedAction', $action);
-//
         return $tabElements;
     }
 
@@ -404,7 +432,6 @@ class InstitutionTabBehavior extends Behavior
 
     public function getAcademicTabElements($options = [], $modelName = null)
     {
-        //$id = (isset($options['id'])) ? $options['id'] : 0;
         $model = $this->_table;
         $type = (isset($options['type'])) ? $options['type'] : null;
         //PCOOR-8388 starts
@@ -450,6 +477,8 @@ class InstitutionTabBehavior extends Behavior
             'Assessments' => ['text' => __('Assessments')], //POCOR-5786
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
+            'StudentGpa' => ['text' => __('GPA')], //POCOR-8222 for student
+            'Gpa' => ['text' => __('GPA')], //POCOR-8222 for personal
             'Awards' => ['text' => __('Awards')],
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
             'Textbooks' => ['text' => __('Textbooks')],
@@ -479,6 +508,7 @@ class InstitutionTabBehavior extends Behavior
                     $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
                 } else {
                     if($controllerName == 'Profiles'){
+
                         $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
                         $urlParams = ['action' => 'Student' . $key, '0' => 'index', 'type' => $type];
                     }else{
@@ -489,7 +519,6 @@ class InstitutionTabBehavior extends Behavior
                     $tabElements[$key]['url'] = array_merge($studentUrl, $urlParams);
                 }
             }
-
         if (Configure::read('schoolMode')) {
             if (isset($tabElements['ExaminationResults'])) {
                 unset($tabElements['ExaminationResults']);
@@ -500,11 +529,16 @@ class InstitutionTabBehavior extends Behavior
                 }
             }
         }
+        if($controllerName == 'Students' || $controllerName == 'Institutions' && $controllerName != 'Profiles'){
+            unset($tabElements['Gpa']);
+        }
+
         if(!empty($modelName)){
             $tabElements = $modelName->TabPermission->checkTabPermission($tabElements);
         }else{
             $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
         }
+         //echo "<pre>"; print_r($tabElements); die;
         return $tabElements;
     }
 }

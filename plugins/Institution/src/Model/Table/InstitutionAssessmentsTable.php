@@ -339,9 +339,22 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
 
             // Assessments
+            //POCOR-8698 -- Changes in query to fetch correct education grades
             $assessmentOptions = $Assessments
                 ->find('list')
-                ->where([$Assessments->aliasField('academic_period_id') => $selectedPeriod])
+                ->join([
+                    'table' => 'institution_grades',
+                    'alias' => 'InstitutionGrades',
+                    'type' => 'INNER',
+                    'conditions' => [
+                        'InstitutionGrades.academic_period_id' => $selectedPeriod,
+                        'InstitutionGrades.education_grade_id = Assessments.education_grade_id',
+                        'InstitutionGrades.institution_id' => $institutionId
+                    ],
+                ])
+                ->where([
+                    $Assessments->aliasField('academic_period_id') => $selectedPeriod
+                ])
                 ->toArray();
             $assessmentOptions = /*['-1' => __('All Assessments')] +*/ $assessmentOptions; //comment `All Assessments` option POCOR-6906
             $selectedAssessment = $this->queryString('assessment_id', $assessmentOptions);
@@ -369,8 +382,10 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             $this->controller->set(compact('assessmentOptions', 'selectedAssessment'));
             // End
 
-            if ($selectedAssessment != '-1') {
-                $query->where([$Assessments->aliasField('id') => $selectedAssessment]);
+            if(isset($selectedAssessment)){
+                if ($selectedAssessment != '-1') {
+                    $query->where([$Assessments->aliasField('id') => $selectedAssessment]);
+                }
             }
         }
 

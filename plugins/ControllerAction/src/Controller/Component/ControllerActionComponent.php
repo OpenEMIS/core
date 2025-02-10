@@ -237,7 +237,7 @@ class ControllerActionComponent extends Component
         if ($this->getController()->getRequest()->is('post')) {
             $requestCookie = $this->getController()->getRequest()->getCookie('csrfToken');
             $token = isset($requestCookie) ? $requestCookie : '';
-            $this->getController()->getRequest()->env('HTTP_X_CSRF_TOKEN', $token);
+            $this->getController()->getRequest()->getEnv('HTTP_X_CSRF_TOKEN', $token);
         }
         $controller->Security->setConfig('unlockedActions', [
             $action
@@ -866,6 +866,7 @@ class ControllerActionComponent extends Component
         * @ticket POCOR-5301
         */
         //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        $defaultvals = '';
         $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem =   $ConfigItemsTable
                             ->find()
@@ -1025,7 +1026,7 @@ class ControllerActionComponent extends Component
         }
 
         $indexElements = [
-            ['name' => 'OpenEmis.ControllerAction/index', 'data' => [], 'options' => []]
+            ['name' => 'OpenEmis.ControllerAction/index', 'data' => [], 'options' => [],'order' => 4]
         ];
 
         try {
@@ -1034,7 +1035,7 @@ class ControllerActionComponent extends Component
                     $model = TableRegistry::getTableLocator()->get($settings['model']);
                 }
                 $data = $this->search($model);
-                $indexElements[] = ['name' => 'OpenEmis.pagination', 'data' => [], 'options' => []];
+                $indexElements[] = ['name' => 'OpenEmis.pagination', 'data' => [], 'options' => [],'order' => 5];
             } else {
                 $data = $query->all();
             }
@@ -1953,7 +1954,7 @@ class ControllerActionComponent extends Component
                     ->select($orderField)
                     ->where(['OR' => $idKeys])
                     ->order([$model->aliasField($orderField)])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->toArray();
 
                 $originalOrder = array_reverse($originalOrder);

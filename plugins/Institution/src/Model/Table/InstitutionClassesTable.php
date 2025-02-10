@@ -20,6 +20,8 @@ use Cake\Routing\Router;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
+use Cake\Datasource\ConnectionManager; //POCOR-8538 start
+
 
 class InstitutionClassesTable extends ControllerActionTable
 {
@@ -96,7 +98,39 @@ class InstitutionClassesTable extends ControllerActionTable
             'appliedAction' => ['Classes' =>['id']
             ]
         ]);
-        Log::write('debug', 'Here it us beforeFilter initialize End');
+        //POCOR-8538 start
+        $this->hasMany('InstitutionClassesCustomFieldValues', [
+            'className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', // Correct class name
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+            'foreignKey' => 'institution_class_id'
+        ]);
+        $this->hasMany('CustomFieldValues',
+        ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues',
+            'foreignKey' => 'institution_class_id']);
+        $this->addBehavior('CustomField.Record', [
+            'model' => 'Institution.InstitutionClasses',
+            'fieldKey' => 'institution_custom_field_id',
+            'tableColumnKey' => 'institution_custom_table_column_id',
+            'tableRowKey' => 'institution_custom_table_row_id',
+            'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
+            'formKey' => 'institution_custom_form_id',
+            'filterKey' => 'institution_custom_filter_id',
+            'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
+            'recordKey' => 'institution_class_id',
+            'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', 'foreignKey' => 'institution_class_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => null
+                ,'events' => [
+                'ControllerAction.Model.add.onInitialize'       => [],
+                'ControllerAction.Model.add.beforeSave'         => [],
+                'ControllerAction.Model.addEdit.beforePatch'    => [],
+                'ControllerAction.Model.addEdit.afterAction'    => [],
+                'ControllerAction.Model.add.beforeSave'         => ['callable' => 'addBeforeSave', 'priority' => 500]
+
+        ],]);
+    //POCOR-8538 end
+// POCOR-8391 remove annoing log
+//        Log::write('debug', 'Here it us beforeFilter initialize End');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -272,7 +306,10 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        Log::write('debug', 'Here it us beforeFilter beforeAction Start');
+
+// POCOR-8391 remove annoing log
+//        Log::write('debug', 'Here it us beforeFilter beforeAction Start');
+
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
@@ -349,8 +386,8 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('institution_shift_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
 
-        $this->field('institution_unit_id', ['type' => 'select', 'visible' => ['index' => false, 'add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('institution_course_id', ['type' => 'select', 'visible' => ['index' => false, 'add' => true,'view' => true, 'edit' => true]]);
+        $this->field('institution_unit_id', ['type' => 'select', 'visible' => ['index' => false, 'add' => false, 'view' => false, 'edit' => false]]);//POCOR-8671
+        $this->field('institution_course_id', ['type' => 'select', 'visible' => ['index' => false, 'add' => false,'view' => false, 'edit' => false]]);//POCOR-8671
 
         $this->field('total_students', ['type' => 'integer', 'visible' => ['index' => true]]);
         $this->field('subjects', ['override' => true, 'type' => 'integer', 'visible' => ['index' => true]]);
@@ -461,7 +498,29 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        try {
+
+//            Log::debug(print_r(['beforeSave' => $entity], true));
+//            Log::debug(print_r(['beforeSave' => $options], true));
+
+        // POCOR-8538 start
+        if ($entity->has('custom') && !empty($entity->custom)) {
+            $createdUserId = $entity->created_user_id;
+            $classId = $entity->id;
+            if (!empty($entity->modified_user_id)) {
+                $createdUserId = $entity->modified_user_id;
+            }
+            $customFields = $entity->custom;
+
+            $cv = self::saveCustomFields($customFields, $classId, $createdUserId);
+        }
+        }catch (\Exception $exception){
+            Log::debug(print_r(['Error Saving Class Custom Fields:' => $exception->getMessage()], true));
+        }
+        // POCOR-8538 end
+
         if ($entity->isNew()) {
+
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
 
              if(!empty($this->controllerAction) && ($this->controllerAction == 'Classes')) {
@@ -557,7 +616,6 @@ class InstitutionClassesTable extends ControllerActionTable
                 // POCOR-5435 ->Webhook Feature class (create) -- end
             }
         } else {
-
             $editAction  = json_decode(json_encode($options), true);
             $webhook_action = $editAction['extra']['action'];
 
@@ -709,6 +767,75 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
+    // POCOR-8538 start
+    private static function saveCustomFields($customFields, $classId, $createdUserId): array
+    {
+//        Log::debug(print_r(['beforeSave' => $customFields], true));
+        $cv = [];
+        if (!empty($customFields)) {
+            $customFieldValuesTable =
+                TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionClassesCustomFieldValues');
+;
+
+            // Delete existing custom fields
+            $customFieldValuesTable->deleteAll(
+                [$customFieldValuesTable->aliasField('institution_class_id') => $classId]);
+            $relevantFields = [
+                'text_value',
+                'number_value',
+                'decimal_value',
+                'textarea_value',
+                'time_value',
+                'date_value',
+                'file'
+            ];
+            // Save new custom fields
+            foreach ($customFields as $field) {
+                $fieldData = [
+                    'id' => Text::uuid(),
+                    'institution_class_id' => $classId,
+                    'created_user_id' => $createdUserId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+
+                // Relevant fields to check
+
+                $hasValue = false;
+
+                foreach ($field as $key => $value) {
+                    // Check if the current key is in the relevant fields and has a value
+                    if (in_array($key, $relevantFields) && (!empty($value) || $value !== null || $value != '')) {
+                        $fieldData[$key] = $value;
+                        $hasValue = true;
+//                        Log::debug(print_r([$key, $value], true));
+                    }
+                    if (!in_array($key, $relevantFields)) {
+                        $fieldData[$key] = $value;
+                    }
+                }
+
+                // Only create and save the entity if at least one relevant field has a value
+                if ($hasValue) {
+                    if (isset($fieldData['custom_field_id'])) {
+                        // Copy the value from 'custom_field_id' to 'student_custom_field_id'
+                        $fieldData['institution_custom_field_id'] = $fieldData['custom_field_id'];
+                        // Remove the old 'custom_field_id' key
+                        unset($fieldData['custom_field_id']);
+                    }
+//                    Log::debug(print_r($fieldData, true));
+                    $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
+                    try {
+                        $cv[] = $customFieldValuesTable->save($fieldEntity);
+                    } catch (\Exception $e) {
+                        Log::debug(__FUNCTION__);
+                        Log::debug('Error: ' . $e->getMessage());
+                    }
+                }
+            }
+        }
+        return $cv;
+    }
+    // POCOR-8538 end
     /******************************************************************************************************************
     **
     ** delete action methods
@@ -854,7 +981,7 @@ class InstitutionClassesTable extends ControllerActionTable
         ];
 
         $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $configItemsData = $configItems->find()->where(['type'=>'Columns for Institutions Classes List Page'])->toArray();
+        $configItemsData = $configItems->find()->where(['type'=>'Columns for Institutions Classes List Page','visible'=>1])->toArray();//POCOR-8671
         //echo "<pre>";print_r($configItemsData);die;
         foreach($configItemsData as $configItemsData1){
             if(($configItemsData1['code'] == 'class_name') && ($configItemsData1['value'] == 0)){
@@ -923,11 +1050,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 'created',
                 'education_stage_order' => $query->func()->min('EducationStages.order')
             ])
-            ->contain([
-                'ClassesSecondaryStaff.SecondaryStaff',
-                'Staff' => [
-                    'fields' => ['openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']
-                ]
+            ->contain([//POCOR-8852
+                'Staff',
+                'ClassesSecondaryStaff.SecondaryStaff'
             ])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
             ->group([$this->aliasField('id')]);
@@ -939,7 +1064,6 @@ class InstitutionClassesTable extends ControllerActionTable
                     $this->aliasField('name') => 'ASC'
                 ]);
         }
-        //echo "<pre>";print_r($query->toArray());die;
     }
 
 
@@ -1007,7 +1131,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 'ClassStudents.Users.Genders',
                 'ClassStudents.EducationGrades',
                 'AcademicPeriods',
-                'ClassesSecondaryStaff.SecondaryStaff'
+                'ClassesSecondaryStaff.SecondaryStaff',
+                'CustomFieldValues.CustomFields'//POCOR-8538
             ]);
     }
 
@@ -1054,6 +1179,7 @@ class InstitutionClassesTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
+
         if ($extra['selectedAcademicPeriodId'] == -1) {
             return $this->controller->redirect([
                 'plugin' => $this->controller->getPlugin(),
@@ -1084,7 +1210,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('total_students', ['visible' => true]);
 
         $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page','visible'=>1])->toArray();//POCOR-8671
         foreach($configItemsData as $configItemsData1){
             if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
                 $this->fields['institution_unit_id']['visible'] = false;
@@ -1134,6 +1260,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+
         $decodedClass = $this->paramsDecode($this->request->getParam('pass')[1]);
         if (!empty($decodedClass)) {
             $classId = $decodedClass['id'];
@@ -1441,7 +1568,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         //POCOR-7803 :: start
         $configItems = TableRegistry::get('Configuration.ConfigItems');
-        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page','visible'=>1])->toArray();//POCOR-8671
         foreach($configItemsData as $configItemsData1){
             if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
                 $unitEnable = 0;
@@ -1557,7 +1684,13 @@ class InstitutionClassesTable extends ControllerActionTable
         } else {
             if ($entity->has('staff')) {
                 return $entity->staff->name_with_id;
-            } else {
+            } //POCOR-8852
+            else if($entity->has('staff_id')&& $entity->staff_id > 0){
+                $Staff = TableRegistry::getTableLocator()->get('Staff.Staff');
+                $staffEntity = $Staff->get($entity->staff_id);
+                return $staffEntity->name_with_id;
+            }
+            else {
                 return $this->getMessage($this->aliasField('noTeacherAssigned'));
             }
         }
@@ -2543,4 +2676,42 @@ class InstitutionClassesTable extends ControllerActionTable
         }
         return $result;
     }
+   //POCOR-8538 start
+    private function getCustomFieldData($class_id){
+        $connection = ConnectionManager::get('default');
+
+        $sql = "
+            SELECT
+                CustomModules.*,
+                InstitutionCustomForms.*,
+                InstitutionCustomFormsFields.*,
+                InstitutionCustomFields.*,
+                InstitutionCustomFieldOptions.*,
+                InstitutionClassesCustomFieldValues.*,
+                InstitutionClasses.*
+            FROM
+                custom_modules AS CustomModules
+            INNER JOIN
+                institution_custom_forms AS InstitutionCustomForms ON InstitutionCustomForms.custom_module_id = CustomModules.id
+            INNER JOIN
+                institution_custom_forms_fields AS InstitutionCustomFormsFields ON InstitutionCustomFormsFields.institution_custom_form_id = InstitutionCustomForms.id
+            INNER JOIN
+                institution_custom_fields AS InstitutionCustomFields ON InstitutionCustomFields.id = InstitutionCustomFormsFields.institution_custom_field_id
+            LEFT JOIN
+                institution_custom_field_options AS InstitutionCustomFieldOptions ON InstitutionCustomFieldOptions.institution_custom_field_id = InstitutionCustomFields.id
+            LEFT JOIN
+                institution_classes_custom_field_values AS InstitutionClassesCustomFieldValues ON
+                InstitutionClassesCustomFieldValues.institution_custom_field_id = InstitutionCustomFormsFields.institution_custom_field_id
+            LEFT JOIN
+            institution_classes AS InstitutionClasses ON
+            InstitutionClassesCustomFieldValues.institution_class_id = InstitutionClasses.id
+            WHERE
+                CustomModules.code = 'Institution > Classes' AND InstitutionClasses.id = ".$class_id;
+
+
+        $result = $connection->execute($sql)->fetchAll('assoc');
+
+        return $result;
+    }
+      //POCOR-8538 end
 }

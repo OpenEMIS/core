@@ -122,7 +122,9 @@ class AlertLogsTable extends ControllerActionTable
                     $defaultMessage = __('Your action is required for [${feature} Workflow].');
                     $defaultMessage .= "\n"; // line break
                     $defaultMessage .= "\n" . __('Status')      . ': ' . "\t \t"    . '${status.name}' ;
+                    $defaultMessage .= "\n"; // POCOR-8198 line break added
                     $defaultMessage .= "\n" . __('Sent By')     . ': ' . "\t \t"    . '${last_executor_name}' ;
+                    $defaultMessage .= "\n"; // POCOR-8198 line break added
                     $defaultMessage .= "\n" . __('Comments')    . ': ' . "\t"    . '${workflow_comment}' ;
 
                     $message = $this->getWorkflowEmailMessage($recordEntity);

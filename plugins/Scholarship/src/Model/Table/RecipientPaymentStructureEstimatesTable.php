@@ -109,7 +109,7 @@ class RecipientPaymentStructureEstimatesTable extends AppTable
                     ]
                 ])
                 ->where([$sqlConditions[$conditionKey]])
-                ->hydrate(false)
+                ->disableHydration()
                 ->toArray();
         }
 

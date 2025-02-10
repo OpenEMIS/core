@@ -53,6 +53,7 @@ class AssessmentItemsTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Results' => ['index', 'view']
         ]);
+        
     }
 
     public function implementedEvents(): array
@@ -71,20 +72,27 @@ class AssessmentItemsTable extends AppTable
         }
     }
 
+    //POCOR-8889
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
 
         $validator
+            ->allowEmptyString('weight') // Allow weight to be null or an empty string
             ->add('weight', 'ruleIsDecimal', [
                 'rule' => ['decimal', null],
+                'message' => 'Value is not a valid decimal',
             ])
             ->add('weight', 'ruleWeightRange', [
                 'rule' => ['range', 0, 2],
+                'message' => 'Value must be positive and less than 2.0',
                 'last' => true
             ]);
+
         return $validator;
     }
+
 
     public function populateAssessmentItemsArray($gradeId)
     {

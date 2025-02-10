@@ -23,10 +23,11 @@ class AccountsTable extends AppTable
         $this->addBehavior('User.UserTab');
 	}
 
-	/*public function validationDefault(Validator $validator): Validator
+	public function validationDefault(Validator $validator): Validator
     {
 
 		$validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
 		return $validator
             ->add('current_password', [
                 'ruleChangePassword' => [
@@ -34,7 +35,7 @@ class AccountsTable extends AppTable
                     'provider' => 'table',
                 ]
             ]);
-	}*/
+	}
 
     public function editAfterAction(Event $event, Entity $entity)
     {
@@ -114,10 +115,25 @@ class AccountsTable extends AppTable
 
     //For POCOR-8448, POCOR-8449 PHP version 8
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
+    {   
+        //POCOR-8844
+        $errors = $entity->getErrors();
         $param = $this->request->getParam('pass')[1];
-        $url = ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Accounts', '0' => 'view','1' => $param ];
-        return $this->controller->redirect($url);
+        if (empty($errors)) {
+            $this->Alert->success('general.edit.success', ['reset' => true]);
+            $session = $this->request->getSession();
+            $session->write('successAlert', 'yes');
+           $action = ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Accounts','view',$this->request->getParam('pass.1')];
+            return $this->controller->redirect($action);
+        }
+    }
+    //POCOR-8844
+    public function viewBeforeAction() {    
+        $session = $this->request->getSession();
+        if($session->read('successAlert') === 'yes' && empty($session->read('_alert'))){
+            $session->delete('successAlert');
+            $this->Alert->success('general.edit.success', ['reset' => true]);
+        }
     }
 
 }

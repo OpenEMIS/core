@@ -39,13 +39,13 @@ class UsersController extends AppController
     {
         parent::beforeFilter($event);
 
-        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword', 'twoFactorAuthentication', 'sendOtp', 'verifyOtp']);
+        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword', 'twoFactorAuthentication', 'sendOtp', 'verifyOtp', 'verifyOtpView']);
         $request = $this->request;
         $action = $this->request->getParam('action');
         
         if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {
             $this->getEventManager()->off($this->Csrf);
-            $this->Security->config('unlockedActions', [$action]);
+            $this->Security->setConfig('unlockedActions', [$action]);
         }
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $localLoginEnabled = $ConfigItems->value('enable_local_login');
@@ -127,7 +127,6 @@ class UsersController extends AppController
             if ($session->check('login.password')) {
                 $password = $session->read('login.password');
             }
-
             $this->set('username', $username);
             $this->set('password', $password);
         }
@@ -150,7 +149,7 @@ class UsersController extends AppController
 
         $this->autoRender = false;
         if ($this->request->is('post')) {
-            $userIdentifier = $this->request->getData('username');
+            $userIdentifier = $this->request->getData()['username'];
 
             if (strlen($userIdentifier) === 0) {
                 $message = __('This field cannot be left empty');
@@ -171,33 +170,33 @@ class UsersController extends AppController
                 ])
                 ->where([
                     'OR' => [
-                        [$this->Users->aliasField('username') => $userIdentifier],
-                        [$this->Users->aliasField('email') => $userIdentifier]
+                        [$this->Users->aliasField('username') => trim($userIdentifier)],
+                        [$this->Users->aliasField('email') => trim($userIdentifier)]
                     ]
                 ])
                 ->first();
 
             if (!is_null($userEntity) && !is_null($userEntity->email)) {
-//                Log::write('debug', "1");
+                //Log::write('debug', "1");
                 $userId = $userEntity->id;
                 $now = new DateTime();
                 $expiry = (new DateTime())->modify('+ 1hour');
                 $expiryFormat = $expiry->format('Y-m-d H:i:s');
-//                Log::write('debug', "2");
+                //Log::write('debug', "2");
 
                 // remove any request that is passed expiry date
                 $SecurityUserPasswordRequests = TableRegistry::getTableLocator()->get('User.SecurityUserPasswordRequests');
                 $SecurityUserPasswordRequests->deleteAll([
                     $SecurityUserPasswordRequests->aliasField('expiry_date < ') => $now
                 ]);
-//                Log::write('debug', "3");
+                //Log::write('debug', "3");
 
                 // check if the user previously requested for reset password that is not expired. If requested before, reject the current request
                 $userRequestCount = $SecurityUserPasswordRequests
                     ->find()
                     ->where([$SecurityUserPasswordRequests->aliasField('user_id') => $userId])
                     ->count();
-//                Log::write('debug', "4");
+                    //Log::write('debug', "4");
 
                 // user still have active reset request - redirect to login page with info message
                 if ($userRequestCount > 0) {
@@ -205,9 +204,14 @@ class UsersController extends AppController
                     $this->Alert->info($message, ['type' => 'string', 'reset' => true]);
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                 }
-//                Log::write('debug', "5");
-
-
+                //Log::write('debug', "5");
+                $checksum = Security::hash($userId . $expiryFormat, 'sha256');
+                $storedChecksum = Security::hash($checksum, 'sha256');
+                $passwordRequestData = [
+                    'user_id' => $userId,
+                    'expiry_date' => $expiry,
+                    'id' => $storedChecksum
+                ];
                     $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
                     $SecurityUserPasswordRequests->save($saveEntity);
 
@@ -217,7 +221,7 @@ class UsersController extends AppController
                         'plugin' => 'User',
                         'controller' => 'Users',
                         'action' => 'resetPassword',
-                        'token' => $checksum
+                        '?' => ['token' => $checksum]
                     ], true);
 
                     /*POCOR-5284 Starts*/
@@ -236,7 +240,7 @@ class UsersController extends AppController
                     'expiry_date' => $expiry,
                     'id' => $storedChecksum
                 ];
-//                Log::write('debug', "6");
+                //Log::write('debug', "6");
                 $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
                 $SecurityUserPasswordRequests->save($saveEntity);
 
@@ -246,7 +250,7 @@ class UsersController extends AppController
                     'plugin' => 'User',
                     'controller' => 'Users',
                     'action' => 'resetPassword',
-                    'token' => $checksum
+                    '?' => ['token' => $checksum]
                 ], true);
 
                 /*POCOR-5284 Starts*/
@@ -283,8 +287,8 @@ class UsersController extends AppController
                     }
                     try {
                         $e = $email
-                            ->to($userEmail)
-                            ->subject($emailSubject)
+                            ->setTo($userEmail)
+                            ->setSubject($emailSubject)
                             ->send($emailMessage);
             
                     } catch (\Exception $exception) {
@@ -357,7 +361,7 @@ class UsersController extends AppController
                         Log::write('error', __METHOD__ . ' 2: ' . $exception->getMessage() . ": $userEmail");
                     }
                     try {
-                        $emailMessage = "Dear " . $name . ",\n\nWe received a username recovery request for your account.\nYour username is: " . $username . "\n\nThank you.";
+                        $emailMessage = "Dear " . $name . ",\n\nWe received a username recovery request for your account.\n\nYour username is: " . $username . "\n\nThank you."; //POCOR-8198 space added in second line
                     } catch (\Exception $exception) {
                         Log::write('error', __METHOD__ . ' 3: ' . $exception->getMessage() . ": $userEmail");
                     }
@@ -394,7 +398,7 @@ class UsersController extends AppController
     {
         $this->autoRender = false;
         if ($this->request->is('post')) {
-            $token = $this->request->query('token');
+            $token = $this->request->getQuery('token');
             if (!is_null($token)) {
                 $checksum = Security::hash($token, 'sha256');
                 $SecurityUserPasswordRequests = TableRegistry::getTableLocator()->get('User.SecurityUserPasswordRequests');
@@ -412,9 +416,9 @@ class UsersController extends AppController
                         ->where([$Passwords->aliasField('id') => $userId])
                         ->first();
 
-                    $requestData = $this->request->data;
+                    $requestData = $this->request->getData();
                     $Passwords->patchEntity($userEntity, $requestData);
-                    $errors = $userEntity->errors();
+                    $errors = $userEntity->getErrors();
                     if (empty($errors)) {
                         if ($Passwords->save($userEntity)) {
                             $setdata = $this->updateUserPassword($userId); //POCOR-7159
@@ -435,7 +439,12 @@ class UsersController extends AppController
                             }
                         }
                         $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                        return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'resetPassword', 'token' => $token]);
+                        //POCOR-8609
+                        $this->set('token', $token); 
+                        $this->viewBuilder()->disableAutoLayout();
+                        $this->render('reset_password');
+                        //return $this->redirect($url);
+                        // return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'resetPassword', '?' =>['token' => $token]]);
                     }
                 } else {
                     $message = __('Sorry, there was an error. Please retry your request.');
@@ -466,9 +475,15 @@ class UsersController extends AppController
             if (!is_null($passwordRequestEntity)) {
                 $now = new DateTime();
                 $expiry = $passwordRequestEntity->expiry_date;
+                //POCOR-8609 Becuase did not get same timezone so we convert timezone for comparsion
+                $now->setTimezone(new \DateTimeZone('UTC'));
+                $expiry = $expiry->setTimezone(new \DateTimeZone('UTC'));; 
 
                 if ($now <= $expiry) {
                     $this->set('token', $token);
+                    //POCOR-8609
+                    $this->viewBuilder()->disableAutoLayout();
+                    $this->render('reset_password');
                 } else {
                     $SecurityUserPasswordRequests->delete($passwordRequestEntity);
                     $message = __('Sorry, there was an error. Please retry your request.');
@@ -630,25 +645,59 @@ class UsersController extends AppController
         //$session->write('auth_password', base64_encode($this->request->getData('password')));
         //POCOR-8127 ends
         if ($this->request->is('post') && $this->request->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
-            if ($this->request->getData['username'] == '' || $this->request->getData['password'] == '') {
+            if ($this->request->getData()['username'] == '' || $this->request->getData()['password'] == '') {
                 $this->Alert->error('security.login.fail', ['reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
-            $userEntity = $this->Users
-                ->find()
+            
+            $username = $this->request->getData()['username'];
+            $SecurityUser = TableRegistry::getTableLocator()->get('User.Users');
+            
+            $userEntity = $SecurityUser->find()
                 ->select([
-                    $this->Users->aliasField('id'),
-                    $this->Users->aliasField('username'),
-                    $this->Users->aliasField('email'),
-                    $this->Users->aliasField('first_name'),
-                    $this->Users->aliasField('middle_name'),
-                    $this->Users->aliasField('third_name'),
-                    $this->Users->aliasField('last_name'),
-                    $this->Users->aliasField('preferred_name')
-                ])->where([
-                    $this->Users->aliasField('username') => $this->request->getData['username']
-                ])->first();
-            if ($userEntity->email == "") {
+                    'id', 'username', 'email', 'first_name', 'middle_name', 
+                    'third_name', 'last_name', 'preferred_name', 'status'
+                ])
+                ->where(['username' => $username])
+                ->first();
+            //POCOR-8680 Start
+            if (!$userEntity) {
+                $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }
+            
+            if ($userEntity->status == 0) {
+                $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }
+            
+            // Attempt to identify user
+            $user = $this->Auth->identify();
+            $loginStatus = false;
+            
+            if ($user) {
+                $this->Auth->setUser($user);
+                $loginStatus = true;
+            }
+            
+            // Handle login attempts
+            $session = $this->request->getSession();
+            $noOfPendingAttempts = $session->read('login.attempts') - 1;
+            $session->write('login.attempts', $noOfPendingAttempts);
+            if (!$loginStatus) {
+                if ($noOfPendingAttempts <= 0) {
+                    // Lock account after failed attempts
+                    $SecurityUser->updateAll(['status' => 0], ['username' => $username]);
+                    $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                } else {
+                    $message = __("You have {$noOfPendingAttempts} more login attempts before your account will be locked.");
+                    $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
+                }
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }
+            //POCOR-8680 End
+            // Check if email is set
+            if (empty($userEntity->email)) {
                 $message = __('An email address is not registered for this account. Please contact your system administrator.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
@@ -694,19 +743,22 @@ class UsersController extends AppController
             $emailSubject = __('OpenEMIS - One-time Password (OTP)');
             $emailMessage = "Dear " . $name . ",\n\nOne-time Password (OTP) is " . $six_digit_random_number . " . This OTP expires in 1 hour. \n\nBest regards,\nOpenEMIS Support\n\nThis is a system - generated email. Please do not reply to this email address.";
             $email
-                ->to($userEmail)
-                ->subject($emailSubject)
+                ->setTo($userEmail)
+                ->setSubject($emailSubject)
                 ->send($emailMessage);
             $message = __('A verification code has been sent to your registered email address.');
             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
             $userName = $this->encrypt($userEntity->username, Security::getSalt());
             $userEmail = $this->encrypt($userEntity->email, Security::getSalt());
             $userPass = $this->encrypt($this->request->getData('password'), Security::getSalt());
+            $id = $this->encrypt($userEntity->id, Security::getSalt());
             $encodedUserData = $this->paramsEncode(['username' => $userName, 'email'=>$userEmail, 'password' => $userPass]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
         } else {//POCOR-7156 ends
             $this->SSO->doAuthentication($authenticationType, $code);
         } 
+        $this->getRequest()->getSession()->write('nbn', $this->request->getData()['password']);
+        $this->getRequest()->getSession()->write('sbn', $this->request->getData()['username']);
     }
 
     //POCOR-7156 starts
@@ -765,6 +817,7 @@ class UsersController extends AppController
                 $this->set('encryptdata', $this->request->getParam('pass')[0]);
                 $this->set('username', $userData['username']);
                 $this->set('password', $userData['password']);
+                $this->set('id', $userData['id']);
                 if ($this->request->is('post') && $this->request->getData('submit') == 'login') {
                     $SystemUserOtpTbl = TableRegistry::getTableLocator()->get('User.SecurityUserCodes');
                     $SystemUserOtpEntity = $SystemUserOtpTbl
@@ -789,9 +842,13 @@ class UsersController extends AppController
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
-        // $this->viewBuilder()->layout(false);
+        
         $this->viewBuilder()->disableAutoLayout();
-    }//POCOR-7156 ends
+        //POCOR-8589 add render verify otp
+        if($this->request->getQuery('type') != 'otp'){ 
+            $this->render('verify_otp');
+        }
+    }
 
     public function logout($username = null)
     {
@@ -838,10 +895,15 @@ class UsersController extends AppController
     {
         //POCOR-2976 start
         $SecurityUser = TableRegistry::getTableLocator()->get('User.Users');
-        $userData = $SecurityUser->find()
+        //POCOR-8498 Start
+        $userData = '';
+        if(!empty($this->request->getData()['username'])) {
+            $userData = $SecurityUser->find()
             ->where(
-                [$SecurityUser->aliasField('username') => $this->request->getData('username')]
+                [$SecurityUser->aliasField('username') => $this->request->getData()['username']]
             )->first();
+        }
+        //POCOR-8498 End
         if (!$extra['loginStatus']) {
             if (!$extra['status']) {
                 $this->Alert->error('security.login.inactive', ['reset' => true]);

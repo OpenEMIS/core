@@ -56,7 +56,7 @@ class ProfilesController extends AppController
 
             // Student
             // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
-            'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+            //'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             //'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],//POCOR-6700
             // Staff
             'StaffPositions' => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
@@ -670,6 +670,7 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->getAlias();
+            
             $excludedModel = ['ScholarshipApplications',
                 'Applications', // POCOR-7905
                 'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds', 'Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
@@ -677,7 +678,7 @@ class ProfilesController extends AppController
             if (!in_array($alias, $excludedModel)) {
                 ## Enabled in POCOR-6314
 
-                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications', 'StaffTrainingApplications', 'StaffTrainings', 'EmploymentStatuses', 'Leave'];
+                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications', 'StaffTrainingApplications', 'StaffTrainings', 'EmploymentStatuses', 'Leave','InstitutionChoices','InstitutionApplicationAttachment'];
 
                 if (in_array($alias, $enabledCrudOperation)) {
                     $model->toggle('add', true);
@@ -720,9 +721,16 @@ class ProfilesController extends AppController
         if ($alias == 'HealthImmunizations') {
             $alias = __('Vaccinations');
         }
-        //POCOR-5890 ends
-        $this->Navigation->addCrumb($model->getHeader($alias));
-        //POCOR-5675
+        if($alias == 'StudentGpa' || $alias == 'Gpa'){
+            $alias = 'Student GPA';
+            $alias = $model->getHeader($alias);
+            $alias = preg_replace('/G\s*P\s*A/', 'GPA', $alias);
+            $this->Navigation->addCrumb($alias);
+            $header = $header . ' - ' . $alias;
+
+        }else{
+            $this->Navigation->addCrumb($model->getHeader($alias));
+        }
         $action = $this->request->getParam('action');
         if ($action == 'Profiles') {
             $action = __('Personal');
@@ -1054,6 +1062,7 @@ class ProfilesController extends AppController
             //'Results' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
+            'StudentGpa' => ['text' => __('GPA')], //POCOR-8222
             'Awards' => ['text' => __('Awards')],
             //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7413
             'Textbooks' => ['text' => __('Textbooks')],
@@ -1523,5 +1532,20 @@ class ProfilesController extends AppController
     public function SpecialNeedsDiagnostics()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
+    }
+
+    public function ScholarshipApplicationInstitutionChoices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.InstitutionChoices']);
+    }
+
+    public function ScholarshipApplicationAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.InstitutionApplicationAttachment']);
+    }
+
+    public function StudentGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
     }
 }

@@ -51,9 +51,9 @@
                     <h1>Welcome to <?= APPLICATION_NAME;  ?> </h1>
                     <p style="margin-top: 30px">
                     <?php 
-                        if (file_exists(ROOT . DS . LICENSE)) {
-                            echo file_get_contents(ROOT . DS . LICENSE); 
-                        }
+                       if (file_exists(ROOT . DS ."LICENSE")) {
+                        echo file_get_contents(ROOT . DS ."LICENSE"); 
+                       }
                     ?>
                     </p>
 
@@ -83,24 +83,24 @@
                     <div class="section-header">Database Connection Information</div>
                     <div class="clearfix">&nbsp;</div>
                     <?php
-                        echo $this->Form->input('database_server_host', ['class' => 'form-control db-host', 'value' => 'localhost']);
-                        echo $this->Form->input('database_server_port', ['class' => 'form-control db-port', 'value' => '3306']);
-                        echo $this->Form->input('database_admin_user', ['label' => __('Admin User'), 'class' => 'form-control admin-user', 'value' => 'root']);
-                        echo $this->Form->input('database_admin_password', ['label' => __('Admin Password'), 'class' => 'form-control admin-password', 'type' => 'password']);
-                    ?>
+                         echo $this->Form->input('database_server_host', ['label' => __('Database Server Host'),'class' => 'form-control db-host', 'value' => 'localhost','required' => true]);
+                         echo $this->Form->input('database_server_port', ['label' => __('Database Server Port'),'class' => 'form-control db-port', 'value' => '3306','required' => true]);
+                         echo $this->Form->input('database_admin_user', ['label' => __('Admin User'), 'class' => 'form-control admin-user', 'value' => 'root','required' => true]);
+                         echo $this->Form->input('database_admin_password', ['label' => __('Admin Password'), 'class' => 'form-control admin-password', 'type' => 'password','required' => true]);
+   ?>
                     <div class="section-header">Administrator Account</div>
                     <div class="clearfix">&nbsp;</div>
                     <?php
-                        echo $this->Form->input('account_username', ['class' => 'form-control username', 'value' => 'admin', 'disabled' => true, 'required' => true]);
-                        echo $this->Form->input('account_password', ['class' => 'form-control password', 'type' => 'password']);
-                        echo $this->Form->input('retype_password', ['class' => 'form-control retype', 'type' => 'password']);
-                    ?>
+                        echo $this->Form->input('account_username', ['class' => 'form-control username', 'value' => 'admin','label' => 'Account Username', 'disabled' => true, 'required' => true]);
+                        echo $this->Form->input('account_password', ['class' => 'form-control password', 'type' => 'password','label' => 'Account Password','required' => true]);
+                        echo $this->Form->input('retype_password', ['class' => 'form-control retype', 'type' => 'password','label' => 'Retype Password','required' => true]);
+             ?>
                     <div class="section-header">Country / Area Information</div>
                     <div class="clearfix">&nbsp;</div>
                     <?php
-                        echo $this->Form->input('area_code', ['class' => 'form-control area-code', 'type' => 'text', 'maxlength' => '60', 'label' => 'Country Code']);
-                        echo $this->Form->input('area_name', ['class' => 'form-control area-name', 'type' => 'text', 'maxlength' => '100', 'label' => 'Country Name']);
-                    ?>
+                        echo $this->Form->input('area_code', ['class' => 'form-control area-code', 'type' => 'text', 'maxlength' => '60', 'label' => 'Country Code','required' => true]);
+                        echo $this->Form->input('area_name', ['class' => 'form-control area-name', 'type' => 'text', 'maxlength' => '100', 'label' => 'Country Name','required' => true]);
+                      ?>
                     <div class="clearfix">&nbsp;</div>
                     <div class="">
                         <?= $this->Form->button('Next', ['type' => 'submit', 'class' => 'btn btn-default', 'onclick' => "(function(){

@@ -205,12 +205,14 @@ class ProgrammesTable extends ControllerActionTable
         			$this->aliasField('student_id') => $studentId,
         			//$this->aliasField('institution_id') => $institutionId
         		]);
-		if(!empty($institutionId)) {
-			$query
-			->where([
-				$this->aliasField('institution_id') => $institutionId
-			]);
-		}
+		//POCOR-8704 -- Commenting code as it is fetching limited data		
+		// if(!empty($institutionId)) {
+		// 	$query
+		// 	->where([
+		// 		$this->aliasField('institution_id') => $institutionId
+		// 	]);
+		// }
+		//POCOR-8704 -- END
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 
 	}
@@ -271,7 +273,17 @@ class ProgrammesTable extends ControllerActionTable
 	{
 		$queryString   = $this->getQueryString();
 		$institutionId  = $queryString['institution_id'];
-		$entity->institution->id = $institutionId;
+		$studentId = $queryString['student_id'];
+ 		 //entity->institution->id = $institutionId;
+		if(!empty($entity->institution)) {
+			$entity->institution->id = $institutionId;
+		} else {
+			$result = $this->Institutions
+				->find()
+				->where(['id' =>  $institutionId])
+				->first();
+			$entity->institution = $result;
+		}
 		$encodedQueryString = $this->paramsEncode($queryString);
 
 		if (isset($buttons['view'])) {
@@ -310,8 +322,8 @@ class ProgrammesTable extends ControllerActionTable
 				'controller' => 'Institutions',
 				'action' => 'StudentTransition',
 				'edit',
-				$this->paramsEncode(['id' => $entity->id]),
-				'institution_id' => $entity->institution->id
+				$this->paramsEncode(['id' => $entity->id,'institution_id' => $institutionId,'student_id'=>$studentId]),
+				'institution_id' => $institutionId
 			];
             $buttons['transition'] = $buttons['view'];
             $buttons['transition']['label'] = $icon . __('Transition');

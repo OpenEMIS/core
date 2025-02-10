@@ -15,37 +15,43 @@ class GoogleAuthenticationBehavior extends Behavior
 {
     private $model;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->model = $this->_table;
     }
 
-    public function implementedEvents()
+    public function implementedEvents() : array
     {
         $events = [
             'ControllerAction.Model.beforeAction' => 'beforeAction',
             'ControllerAction.Model.view.afterAction' => 'viewAfterAction',
             'ControllerAction.Model.edit.afterAction' => 'editAfterAction',
-            'ControllerAction.Model.addEdit.afterAction' => 'addEditAfterAction'
+            'ControllerAction.Model.addEdit.afterAction' => 'addEditAfterAction',
         ];
         return $events;
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $entity->errors($entity->errors('google'), null, true);
+        $entity->getErrors($entity->getErrors('google'), null, true);
+        $requestData = $this->_table->request->getData()[$this->_table->getAlias()];
         $this->model->field('client_id', ['attr' => ['required' => true, 'label' => __('Client ID')]]);
         $this->model->field('client_secret', ['attr' => ['required' => true]]);
         $this->model->field('redirect_uri', ['type' => 'readonly', 'attr' => ['required' => true]]);
         $this->model->field('hd', ['attr' => ['label' => __('Hosted Domain')]]);
-        if ($entity->errors('code')) {
+        $this->model->fields['code']['value'] = $entity->code = $requestData['code'];
+        if ($entity->getErrors('code')) {
             $code = uniqid('IDP');
-            $this->model->request->data[$this->alias()]['code'] = $code;
-            $entity->invalid('code', $code, true);
-            $entity->errors('redirect_uri', $entity->errors('code'), true);
+           // $this->model->request->getData()[$this->getAlias()]['code'] = $code;
+           // $entity->invalid('code', $code, true);
+            $entity->getErrors('redirect_uri', $entity->getErrors('code'), true);
         }
-        $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'Google', $this->model->request->data[$this->model->alias()]['code']], true);
+        $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'Google', $this->model->request->getData()[$this->model->getAlias()]['code']], true);
+        if (strpos($url, 'https://') !== 0) { //POCOR-8810
+            $url = 'https://' . preg_replace('/^http:\/\//', '', $url);
+        }
+
         $this->model->fields['redirect_uri']['value'] = $url;
         $this->model->fields['redirect_uri']['attr']['value'] = $url;
 
@@ -89,5 +95,10 @@ class GoogleAuthenticationBehavior extends Behavior
     public function onGetHd(Event $event, Entity $entity)
     {
         return $entity->google->hd;
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra = null)
+    {
+
     }
 }

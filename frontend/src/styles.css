@@ -39,6 +39,9 @@ footer {
 .ag-body-viewport.ag-layout-normal.ag-row-no-animation {
   margin-top: 38px !important;
 }
+.ag-body-viewport.ag-layout-normal.ag-row-no-animation.all-days {
+  margin-top: 70px !important;
+}
 
 .ui-menu.ui-widget.ui-widget-content.ui-corner-all.ui-menu-dynamic.ui-shadow {
   display: block !important;
@@ -326,3 +329,11 @@ button.btn.btn-icon.btn-xs {
 a.btn {
   padding: 6px 10px !important;
 }
+
+/* .kdx-tabs .scroll-left, .kdx-tabs .scroll-right {
+  position: absolute !important;
+  width: 25px !important;
+  height: 35px !important;
+  font-size: 0 !important;
+  z-index: 1 !important;
+} */
