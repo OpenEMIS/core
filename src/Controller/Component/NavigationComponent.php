@@ -882,6 +882,13 @@ class NavigationComponent extends Component
                     'Institutions.ImportStaffAttendances',
                     'Institutions.StaffAttendancesArchived'],
             ],
+            
+            //POCOR-8667 start
+            'Institutions.Scanned.index' => [ 
+                'title' => 'Scanned',
+                'parent' => 'Institutions.Institutions.index',
+                'selected' => ['Institutions.Scanned'],
+            ], //POCOR-8667 end
 
             'Institution.Behaviour' => [
                 'title' => 'Behaviour',
