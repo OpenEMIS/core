@@ -101,7 +101,8 @@ class POCOR8128 extends AbstractMigration
             SET staff_leave_policy_id = (
                 SELECT id FROM staff_leave_policies WHERE code = "GP" LIMIT 1
             )
-            WHERE staff_leave_policy_id IS NULL;
+            WHERE staff_leave_policy_id IS NULL ;
+            AND EXISTS (SELECT id FROM staff_leave_policies WHERE code = "GP" LIMIT 1);
         ');
 
         // Modify the column to be NOT NULL after ensuring all rows have a valid `staff_leave_policy_id`
@@ -396,8 +397,11 @@ class POCOR8128 extends AbstractMigration
         }
         $exists = $this->hasTable('z_8128_staff_position_titles');
         if ($exists) {
-            $this->execute('DROP TABLE IF EXISTS `staff_position_titles`;');
-            $this->execute('RENAME TABLE `z_8128_staff_position_titles` TO `staff_position_titles`;');
+            $this->execute('ALTER TABLE `staff_position_titles`
+DROP FOREIGN KEY `fk_staff_position_titles_policy_id`,
+DROP INDEX idx_staff_leave_policy_id,
+DROP COLUMN staff_leave_policy_id;');
+            $this->execute('DROP TABLE IF EXISTS `z_8128_staff_position_titles`;');
         }
         $exists = $this->hasTable('z_8128_staff_leave_types');
         if ($exists) {
