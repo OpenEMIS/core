@@ -70,12 +70,11 @@ export class ExcelService {
   ) {
     this.workbook = new ExcelJS.Workbook();
     this.dataSheet = this.workbook.addWorksheet("Data");
-    this.referenceSheet = this.workbook.addWorksheet("Reference");
-
-    this.addOELogo([this.dataSheet, this.referenceSheet]);
+    // this.referenceSheet = this.workbook.addWorksheet("Reference");
+    this.addOELogo([this.dataSheet]);
     this.addTitle([
       { title: title, sheet: this.dataSheet },
-      { title: "References", sheet: this.referenceSheet },
+      // { title: "References", sheet: this.referenceSheet },
     ]);
 
     this.dataSheet.addRow(dataColumnHeadings);
@@ -136,9 +135,9 @@ export class ExcelService {
       let headerRow = sheet.sheet.getRow(1);
 
       /* setting height and width for OE logo.  */
-      headerRow.height = 75;
+      headerRow.height = 80;
       sheet.sheet.getColumn(1).width = 20;
-      sheet.sheet.getColumn(2).width = 20;
+      sheet.sheet.getColumn(2).width = 10;
 
       /* Setting and formatting title next to OE logo */
       let title = headerRow.getCell(3);
@@ -150,18 +149,18 @@ export class ExcelService {
 
   protected setReferenceNames(referenceNames) {
     /* Adding Headings of references in the sheet below OE logo */
-    let row = this.referenceSheet.addRow([]);
+    let row = this.dataSheet.addRow([]);
     let i = 1;
     referenceNames.forEach((referenceName) => {
       let cell = row.getCell(i);
-      cell.value = referenceName;
-      this.referenceSheet.getColumn(cell.fullAddress.col).width = 30;
-      this.referenceSheet.getColumn(cell.fullAddress.col + 1).width = 10;
+      cell.value = referenceName.Name;
+      this.dataSheet.getColumn(cell.fullAddress.col).width = 30;
+      // this.dataSheet.getColumn(cell.fullAddress.col + 1).width = 10;
       cell.alignment = this.alignment;
       cell.font = {
         name: "calibri",
-        size: 12,
-        bold: true,
+        size: 11,
+        bold: false,
       };
       cell.border = {
         top: { style: "thin" },
@@ -169,17 +168,17 @@ export class ExcelService {
         bottom: { style: "thin" },
         right: { style: "thin" },
       };
-      let colName1 =
-        i > 26 ? "A" + this.alphabets[i - (1 + 26)] : this.alphabets[i - 1];
-      let colName2 = i > 26 ? "A" + this.alphabets[i - 26] : this.alphabets[i];
-      this.referenceSheet.mergeCells(colName1 + "2:" + colName2 + "2");
-      i = i + 2;
+      // let colName1 =
+      //   i > 26 ? "A" + this.alphabets[i - (1 + 26)] : this.alphabets[i - 1];
+      // let colName2 = i > 26 ? "A" + this.alphabets[i - 26] : this.alphabets[i];
+      // this.dataSheet.mergeCells(colName1 + "2:" + colName2 + "2");
+      // i = i + 2;
     });
   }
 
   /* sets reference data with name and id. */
   protected setReferenceData(referenceData) {
-    let row = this.referenceSheet.addRow([]);
+    let row = this.dataSheet.addRow([]);
     row.alignment = this.alignment;
 
     let col = 1;
@@ -188,42 +187,46 @@ export class ExcelService {
       let id;
       if (this.idAsKey) {
         name = row.getCell(col + 1);
-        id = row.getCell(col);
+        // id = row.getCell(col);
       } else {
         name = row.getCell(col);
-        id = row.getCell(col + 1);
-      }      
-      name.value = referenceData[referenceDataArr].header[0];
-      id.value = referenceData[referenceDataArr].header[1];
-      if (["Candidate"].includes(referenceDataArr)) {
-        this.referenceHeadingsAddressObject[referenceDataArr] = col;
-      } else {
-        this.referenceHeadingsAddressObject[referenceDataArr] = col + 1;
+        // id = row.getCell(col + 1);
       }
-      name.font = this.columnHeaderFont;
-      id.font = this.columnHeaderFont;
-      name.fill = this.columnHeaderFill;
-      id.fill = this.columnHeaderFill;
+      name.value = referenceData[referenceDataArr].header[0];
+      // id.value = referenceData[referenceDataArr].header[1];
+      // if (["Candidate"].includes(referenceDataArr)) {
+      //   this.referenceHeadingsAddressObject[referenceDataArr] = col;
+      // } else {
+      //   this.referenceHeadingsAddressObject[referenceDataArr] = col + 1;
+      // }
+      // name.font = this.columnHeaderFont;
+      // id.font = this.columnHeaderFont;
+      // name.fill = this.columnHeaderFill;
+      // id.fill = this.columnHeaderFill;
 
       // j is the number of row where we will begin to add references after adding logo, subtitle and col heading. hence j=4.
-      let j = 4;
+      let j = 3;
       let refData = referenceData[referenceDataArr].data;
-      console.log(refData,"refData");
-      console.log(this.idAsKey,"this.idAsKey");
-      
+
       for (let x in refData) {
-        console.log(this.referenceSheet.getCell(j, col).value,"topa", refData[x]);
-        
-        this.referenceSheet.getCell(j, col).value = this.idAsKey
-          ? refData[x]
-          : x;
-        this.referenceSheet.getCell(j, col + 1).value = this.idAsKey
-          ? x
-          : refData[x];
-        this.referenceSheet.getRow(j).alignment = this.alignment;
+        // this.dataSheet.getCell(j, col).value = this.idAsKey
+        //   ? refData[x].Name
+        //   : x;
+        for (let key in refData[x]) {
+          if (key == 'Name') {
+            this.dataSheet.getCell(j, col).value = this.idAsKey
+              ? x
+              : refData[x].Name;
+          } else {
+            this.dataSheet.getCell(j, col).value = this.idAsKey
+            ? x
+            : refData[x];
+          }
+        }
+        this.dataSheet.getRow(j).alignment = this.alignment;
         j++;
       }
-      col = col + 2;
+      col = col + 1;
     });
   }
 
@@ -236,12 +239,12 @@ export class ExcelService {
           this.dataSheet.getCell(x, colNumber).dataValidation = {
             type: "list",
             formulae: [
-              "Reference!" +
-                this.getDataValidationRange(
-                  referenceData,
-                  dataValidationHeadings,
-                  cell.value
-                ),
+              "Reference!"
+              // this.getDataValidationRange(
+              //   referenceData,
+              //   dataValidationHeadings,
+              //   cell.value
+              // )
             ],
             // formulae: ['Reference!B4:B5'],
             allowBlank: true,
@@ -255,16 +258,13 @@ export class ExcelService {
     // ['"One,Two,Three,Four"']
     let colNumber = this.referenceHeadingsAddressObject[headings[currentValue]];
     let startRow = 4;
-    console.log(referenceData,"Object.keys(referenceData[headings[currentValue]].data).length");
-    console.log(headings,"headings");
-    console.log(currentValue,"currentValue");
-    
+
     let endRow =
       Object.keys(referenceData[headings[currentValue]].data).length + 3;
     let range =
-      this.referenceSheet.getCell(startRow, colNumber).fullAddress.address +
+      this.dataSheet.getCell(startRow, colNumber).fullAddress.address +
       ":" +
-      this.referenceSheet.getCell(endRow, colNumber).fullAddress.address;
+      this.dataSheet.getCell(endRow, colNumber).fullAddress.address;
     return range;
   }
 

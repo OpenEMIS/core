@@ -38,7 +38,7 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
 
   public academicPeriod: Array<any> = [
     {
-      'key': 'dropdown',
+      'key': '',
       'label': '',
       'visible': true,
       'required': false,
@@ -128,6 +128,7 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
   gradingTypeOption_id: any;
   academicPeriod_id: any;
   education_grade_id: any;
+  assessmentPeriodData: any;
 
   constructor(
     private _router: Router,
@@ -156,7 +157,7 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
 
     super.updatePageHeader();
     super.updateBreadcrumb();
-    
+
     this.class_Id = JSON.parse(localStorage.getItem("classId"));
     this.class_Id = 591;
     this.institution_id = JSON.parse(localStorage.getItem("institutionId"));
@@ -183,7 +184,7 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
 
     let queryData = this.activatedRoute.snapshot.queryParamMap.get('queryString');
     this.queryParamsData = queryData.split(".");
-    
+
   }
 
   loginData() {
@@ -262,6 +263,7 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
 
   getAPIlist() {
     this.assessmentPeriods();
+    this.assessmentAcademicPeriod('Term 1');
     this.assessment();
     this.assessmentItems();
   }
@@ -281,6 +283,24 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
           // this.academic_Period = this.academicYear[0].key;
           this.academicPeriod[0].options = this.academicTerm;
 
+        }
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
+
+  assessmentAcademicPeriod(data: string) {
+    this.Rest.getWithToken(`assessments/${this.assessment_id}/periods?academic_term=${data}`).subscribe({
+      next: (res: any) => {
+        if (res) {
+          this.assessmentPeriodData = res?.data;
         }
       },
       error: (error: any) => {
@@ -334,6 +354,7 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
             }
             this.tabsListHtml.push(obj);
           });
+          this._state = this.tabsListHtml[0].tabId;
           this.institutionsSubject(this.tabsListHtml[0].tabId);
         }
       },
@@ -366,56 +387,107 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
     }
   }
 
-
   institutionsSubject(institution_subject_id) {
     this.Rest.getWithToken(`institutions/subject/student?institution_id=${this.institution_id}&institution_class_id=${this.class_Id}&assessment_id=${this.assessment_id}&academic_period_id=${this.academicPeriod_id}&institution_subject_id=${institution_subject_id}&education_grade_id=${this.education_grade_id}`).subscribe({
       next: (res: any) => {
         if (res) {
           let objData = [];
-          res?.data?.data.forEach((element: any, index: any) => {
-            if (element) {
-              console.log(element.mark,"element.mark", element.first_name + ' ' + element.last_name);
-              
-              let obj = {
-                id: element.the_student_code,
-                name: element.first_name + ' ' + element.last_name,
-                status: element.the_student_status,
-                period1: element.mark != null ? parseFloat(element.mark) : '',
-                period2: element.mark != null ? parseFloat(element.mark) : '',
-                period3: element.mark != null ? parseFloat(element.mark) : '',
-                totalMark: element.total_mark,
-                student_id: element?.student_id,
-                education_subject_id: element?.education_subject_id,
-                assessment_period_id: element?.assessment_period_id
-              }
-              let newIndex = objData.findIndex(element => element.id == obj.id);
-              if (newIndex == -1) {
+          // res?.data?.data.forEach((element: any, index: any) => {
+          //   if (element) {
+          //     console.log(element.mark,"element.mark", element.first_name + ' ' + element.last_name);
+          //     let obj = {
+          //       id: element.the_student_code,
+          //       name: element.first_name + ' ' + element.last_name,
+          //       status: element.the_student_status,
+          //       period1: element.mark != null ? parseFloat(element.mark) : '',
+          //       period2: element.mark != null ? parseFloat(element.mark) : '',
+          //       period3: element.mark != null ? parseFloat(element.mark) : '',
+          //       totalMark: element.total_mark,
+          //       student_id: element?.student_id,
+          //       education_subject_id: element?.education_subject_id,
+          //       assessment_period_id: element?.assessment_period_id
+          //     }
+          //     let newIndex = objData.findIndex(element => element.id == obj.id);
+          //     if (newIndex == -1) {
+          //       objData.push(obj);
+          //       this.oldData.push(obj);
+          //     } else {
+          //       objData.splice(newIndex, 1, obj);
+          //       this.oldData.splice(newIndex, 1, obj);
+          //     }
+          //   }
+          // });
+
+          let obj = {};
+          let newId = this.assessmentPeriodData?.data[0]?.id;
+          if (this.assessmentPeriodData?.data[0]?.academic_term == 'Term 1') {
+            res?.data?.data.forEach((element: any, index: any) => {
+              if (element.assessment_period_id == newId) {
+                obj = {
+                  id: element.the_student_code,
+                  name: element.first_name + ' ' + element.last_name,
+                  status: element.the_student_status,
+                  period1: element.mark,
+                  totalMark: element.total_mark,
+                  student_id: element?.student_id,
+                  education_subject_id: element?.education_subject_id,
+                  assessment_period_id: element?.assessment_period_id
+                }
                 objData.push(obj);
-                this.oldData.push(obj);
-              } else {
-                objData.splice(newIndex, 1, obj);
-                this.oldData.splice(newIndex, 1, obj);
               }
+            })
+            if (this.assessmentPeriodData.data.length > 1) {
+              let secondId = this.assessmentPeriodData.data[1].id;
+              res?.data?.data.forEach((element: any, index: any) => {
+                if (element.assessment_period_id == secondId) {
+                  let newIndex = objData.findIndex(element1 => element1.id == element.the_student_code);
+                  if (newIndex != -1) {
+                    console.log(objData[newIndex], "newIndex");
+
+                    objData[newIndex]['period2'] = element.mark;
+                    objData[newIndex]['assessment_period_id2'] = element.assessment_period_id
+                  }
+                }
+              })
             }
-          });
+          } else if (this.assessmentPeriodData?.data[0]?.academic_term == 'Term 2') {
+            res?.data?.data.forEach((element: any, index: any) => {
+              if (element.assessment_period_id == newId) {
+                obj = {
+                  id: element.the_student_code,
+                  name: element.first_name + ' ' + element.last_name,
+                  status: element.the_student_status,
+                  period3: element.mark,
+                  totalMark: element.total_mark,
+                  student_id: element?.student_id,
+                  education_subject_id: element?.education_subject_id,
+                  assessment_period_id: element?.assessment_period_id
+                }
+                objData.push(obj);
+              }
+            })
+          }
           let baseData = this.getBaseUrl();
-          if (res?.data?.urls?.excel) {
-            let importExcelUrl = res?.data?.urls?.excel;
-            let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
-            this.excelReport = baseData + finalExcelUrl;
-          }
-          if (res?.data?.urls?.pdf) {
-            let importExcelUrl = res?.data?.urls?.pdf;
-            let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
-            this.pdfReport = baseData + finalExcelUrl;
-          }
-          if (res?.data?.urls?.reportCardGenerate) {
-            let importExcelUrl = res?.data?.urls?.reportCardGenerate;
-            let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
-            this.reportCard = baseData + finalExcelUrl;
+          if (this.queryParamsData?.length > 0) {
+            if (res?.data?.urls?.excel) {
+              let importExcelUrl = res?.data?.urls?.excel;
+              let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
+              this.excelReport = baseData + finalExcelUrl;
+            }
+            if (res?.data?.urls?.pdf) {
+              let importExcelUrl = res?.data?.urls?.pdf;
+              let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
+              this.pdfReport = baseData + finalExcelUrl;
+            }
+            if (res?.data?.urls?.reportCardGenerate) {
+              let importExcelUrl = res?.data?.urls?.reportCardGenerate;
+              let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
+              this.reportCard = baseData + finalExcelUrl;
+            }
           }
           timer(2000).subscribe((): void => {
             this._row = objData;
+            this.oldData = JSON.parse(JSON.stringify(objData));
             this.displayLoading = false;
           });
 
@@ -432,18 +504,18 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
     })
   }
 
-  exportSheet(){
-    console.log(this.excelReport,"this.excelReport");
-    
+  exportSheet() {
+    console.log(this.excelReport, "this.excelReport");
+
     var link = document.createElement('a');
     link.href = window.URL.createObjectURL(this.excelReport);
     link.download = 'Report';
     link.click();
   }
 
-  gePdftReport(){
-    console.log(this.pdfReport,"pdfReport");
-    
+  gePdftReport() {
+    console.log(this.pdfReport, "pdfReport");
+
     var link = document.createElement('a');
     link.href = window.URL.createObjectURL(this.pdfReport);
     link.download = 'Report';
@@ -451,8 +523,8 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
   }
 
   getReport() {
-    console.log(this.reportCard,"reportCard");
-    
+    console.log(this.reportCard, "reportCard");
+
     var link = document.createElement('a');
     link.href = window.URL.createObjectURL(this.reportCard);
     link.download = 'Report';
@@ -506,15 +578,57 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
       this.child.toggleEdits('number');
       this._row.forEach((item) => {
         const indexInArray2 = this.findIndexInArray2(item.period1, item.id);
+        const indexInArray3 = this.findIndexInArray3(item.period2, item.id);
+        const indexInArray4 = this.findIndexInArray4(item.period3, item.id);
         if (indexInArray2 !== -1) {
-          console.log(item,"item");
-          
           this.Rest.postWithToken
             (`institutions/students/assessment-item-results?student_id=${item.student_id}&assessment_id=${this.assessment_id}&education_subject_id=${item.education_subject_id}&assessment_grading_option_id=${this.gradingTypeOption_id}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academicPeriod_id}&assessment_period_id=${item?.assessment_period_id}&institution_id=${this.institution_id}&institution_classes_id=${this.class_Id}&marks=${item.period1}&action_type=default`, {}).subscribe({
               next: (res: any) => {
                 if (res) {
-                  this._displayEditable = false;
                   this.displayLoading = false;
+                  this._displayEditable = false;
+                }
+              },
+              error: (error: any) => {
+                if (error) {
+                  if (error.message == "Token has expired") {
+                    localStorage.removeItem("loginToken");
+                    this.loginData();
+                  }
+                }
+                this._displayEditable = false;
+              }
+            })
+        }
+
+        if (indexInArray3 !== -1) {
+          this.Rest.postWithToken
+            (`institutions/students/assessment-item-results?student_id=${item.student_id}&assessment_id=${this.assessment_id}&education_subject_id=${item.education_subject_id}&assessment_grading_option_id=${this.gradingTypeOption_id}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academicPeriod_id}&assessment_period_id=${item?.assessment_period_id2}&institution_id=${this.institution_id}&institution_classes_id=${this.class_Id}&marks=${item.period2}&action_type=default`, {}).subscribe({
+              next: (res: any) => {
+                if (res) {
+                  this.displayLoading = false;
+                  this._displayEditable = false;
+                }
+              },
+              error: (error: any) => {
+                if (error) {
+                  if (error.message == "Token has expired") {
+                    localStorage.removeItem("loginToken");
+                    this.loginData();
+                  }
+                }
+                this._displayEditable = false;
+              }
+            })
+        }
+
+        if (indexInArray4 !== -1) {
+          this.Rest.postWithToken
+            (`institutions/students/assessment-item-results?student_id=${item.student_id}&assessment_id=${this.assessment_id}&education_subject_id=${item.education_subject_id}&assessment_grading_option_id=${this.gradingTypeOption_id}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academicPeriod_id}&assessment_period_id=${item?.assessment_period_id}&institution_id=${this.institution_id}&institution_classes_id=${this.class_Id}&marks=${item.period3}&action_type=default`, {}).subscribe({
+              next: (res: any) => {
+                if (res) {
+                  this.displayLoading = false;
+                  this._displayEditable = false;
                 }
               },
               error: (error: any) => {
@@ -578,6 +692,7 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
   findIndexInArray2(keyValue: any, id: any) {
     for (let i = 0; i < this.oldData.length; i++) {
       if (this.oldData[i].period1 != keyValue && this.oldData[i].id == id) {
+        console.log(this.oldData[i].period1, keyValue, this.oldData[i].id, id);
         if ((this.oldData[i].meal_received_id == null && keyValue == 3) || (this.oldData[i].meal_received_id == 3 && keyValue == null)) {
           return -1;
         } else {
@@ -587,6 +702,35 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
     }
     return -1; // Return -1 if the value is not found
   }
+
+  findIndexInArray3(keyValue: any, id: any) {
+    for (let i = 0; i < this.oldData.length; i++) {
+      if (this.oldData[i].period2 != keyValue && this.oldData[i].id == id) {
+        console.log(this.oldData[i].period1, keyValue, this.oldData[i].id, id);
+        if ((this.oldData[i].meal_received_id == null && keyValue == 3) || (this.oldData[i].meal_received_id == 3 && keyValue == null)) {
+          return -1;
+        } else {
+          return i;
+        }
+      }
+    }
+    return -1; // Return -1 if the value is not found
+  }
+
+  findIndexInArray4(keyValue: any, id: any) {
+    for (let i = 0; i < this.oldData.length; i++) {
+      if (this.oldData[i].period3 != keyValue && this.oldData[i].id == id) {
+        console.log(this.oldData[i].period1, keyValue, this.oldData[i].id, id);
+        if ((this.oldData[i].meal_received_id == null && keyValue == 3) || (this.oldData[i].meal_received_id == 3 && keyValue == null)) {
+          return -1;
+        } else {
+          return i;
+        }
+      }
+    }
+    return -1; // Return -1 if the value is not found
+  }
+
 
   _selectTabs(event: any) {
     this.pageheader = {
@@ -641,6 +785,7 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
   changeTermData(data: any) {
     if (data.target.value == "Term 2") {
       this._column = [];
+      this.assessmentAcademicPeriod('Term 2');
       timer(100).subscribe((): void => {
         this._column = [
           TABLE_COLUMN_LIST.id,
@@ -652,6 +797,7 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
       });
     } else {
       this._column = [];
+      this.assessmentAcademicPeriod('Term 1');
       timer(100).subscribe((): void => {
         this._column = [
           TABLE_COLUMN_LIST.id,
@@ -663,6 +809,7 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
         ];
       });
     }
+    this.institutionsSubject(this.tabsListHtml[0].tabId);
   }
 
   ngOnDestroy(): void {
