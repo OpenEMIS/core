@@ -652,7 +652,7 @@ class InstitutionsTable extends AppTable
         $filter = $requestData->institution_filter;
         if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
             $sheets[] = [
-                'name' => $this->alias(),
+                'name' => $this->getAlias(), //POCOR-8794
                 'table' => $this,
                 'query' => $this->find(),
             ];
@@ -2115,13 +2115,13 @@ class InstitutionsTable extends AppTable
                                 'valueField' => 'name'
                             ])
                         ->leftJoin(
-                            [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                            [$StudentMarkTypeStatuses->getAlias() => $StudentMarkTypeStatuses->getTable()],
                             [
                                 $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id') . ' = ' . $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
                             ]
                         )
                         ->leftJoin(
-                            [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                            [$StudentMarkTypeStatusGrades->getAlias() => $StudentMarkTypeStatusGrades->getTable()],
                             [
                                 $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id') . ' = ' . $StudentMarkTypeStatuses->aliasField('id')
                             ]
@@ -2157,22 +2157,22 @@ class InstitutionsTable extends AppTable
             ->select(['area_code' => 'Areas.code', 'area_administrative_code' => 'AreaAdministratives.code', 'institution_status' => 'Statuses.name'])
             ->where([$where]);
         switch ($filter) {
-            case self::NO_STUDENT:
-                $StudentsTable = self::getDynamicTableInstance('Institution.Students');
-                $academicPeriodId = $requestData->academic_period_id;
-
-                $query
-                    ->leftJoin(
-                        [$StudentsTable->alias() => $StudentsTable->table()],
-                        [
-                            $StudentsTable->aliasField('institution_id') . ' = ' . $this->aliasField('id'),
-                            $StudentsTable->aliasField('academic_period_id') => $academicPeriodId
-                        ]
-                    )
-                    ->select(['student_count' => $query->func()->count('Students.id')])
-                    ->group([$this->aliasField('id')])
-                    ->having(['student_count' => 0]);
-                break;
+            case self::NO_STUDENT: //POCOR-8794
+                    $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
+                    $academicPeriodId = $requestData->academic_period_id;
+    
+                    $query
+                        ->leftJoin(
+                            [$StudentsTable->getAlias() => $StudentsTable->getTable()],
+                            [
+                                $StudentsTable->aliasField('institution_id') . ' = '. $this->aliasField('id'),
+                                $StudentsTable->aliasField('academic_period_id') => $academicPeriodId
+                            ]
+                        )
+                        ->select(['student_count' => $query->func()->count('Students.id')])
+                        ->group([$this->aliasField('id')])
+                        ->having(['student_count' => 0]);
+                    break;
 
             case self::NO_STAFF:
                 $query
@@ -2378,19 +2378,19 @@ class InstitutionsTable extends AppTable
                         $workflowModelsTable->aliasField('model')
                     ])
                     ->LeftJoin(
-                        [$institutionStaffLeave->alias() => $institutionStaffLeave->table()],
+                        [$institutionStaffLeave->getAlias() => $institutionStaffLeave->getTable()],
                         [
                             $institutionStaffLeave->aliasField('status_id') . ' = ' . $workflowStepsTable->aliasField('id')
                         ]
                     )
                     ->LeftJoin(
-                        [$workflowsTable->alias() => $workflowsTable->table()],
+                        [$workflowsTable->getAlias() => $workflowsTable->getTable()],
                         [
                             $workflowsTable->aliasField('id') . ' = ' . $workflowStepsTable->aliasField('workflow_id')
                         ]
                     )
                     ->LeftJoin(
-                        [$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                        [$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                         [
                             $workflowModelsTable->aliasField('id') . ' = ' . $workflowsTable->aliasField('workflow_model_id')
                         ]
@@ -2492,7 +2492,7 @@ class InstitutionsTable extends AppTable
                         $staffPositionTitlesTable->aliasField('name')
                     ])
                     ->RightJoin(
-                        [$staffPositionTitlesTable->alias() => $staffPositionTitlesTable->table()],
+                        [$staffPositionTitlesTable->getAlias() => $staffPositionTitlesTable->getTable()],
                         [
                             $institutionPositionsTable->aliasField('staff_position_title_id') . ' = ' . $staffPositionTitlesTable->aliasField('id')
                         ]

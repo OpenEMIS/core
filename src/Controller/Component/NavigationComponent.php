@@ -247,6 +247,9 @@ class NavigationComponent extends Component
                 if ($this->request) { //POCOR-8082
                     $encodedParam = $this->request->getAttribute('params')['pass'][1];
                 }
+                if($action === 'ImportUsers'){
+                    $encodedParam = null; // POCOR-8683 ignore query string
+                }
                 if (!empty($encodedParam)) {
                     $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
                     /*POCOR-STARTS*/
@@ -824,6 +827,7 @@ class NavigationComponent extends Component
                     'Institutions.Transfer',
                     'Institutions.Undo',
                     'Institutions.StudentAdmission',
+                    'Institutions.StudentEnrolment',//POCOR-8434
                     'Institutions.StudentTransferIn',
                     'Institutions.StudentTransferOut',
                     'Institutions.StudentWithdraw',
@@ -833,6 +837,7 @@ class NavigationComponent extends Component
                     'Institutions.Students',
                     'Institutions.StudentHistories.index',//POCOR-8333
                     'Institutions.BulkStudentAdmission',
+                    'Institutions.BulkStudentEnrolment',//POCOR-8434
                     'Institutions.ImportStudentBodyMasses',
                     'Institutions.ImportStudentGuardians',
                     'Institutions.StudentStatusUpdates', 'Institutions.ImportStudentExtracurriculars',
@@ -877,6 +882,13 @@ class NavigationComponent extends Component
                     'Institutions.ImportStaffAttendances',
                     'Institutions.StaffAttendancesArchived'],
             ],
+            
+            //POCOR-8667 start
+            'Institutions.Scanned.index' => [ 
+                'title' => 'Scanned',
+                'parent' => 'Institutions.Institutions.index',
+                'selected' => ['Institutions.Scanned'],
+            ], //POCOR-8667 end
 
             'Institution.Behaviour' => [
                 'title' => 'Behaviour',
@@ -974,6 +986,7 @@ class NavigationComponent extends Component
             'Institutions.ExaminationStudents.index' => [
                 'title' => 'Students',
                 'parent' => 'Institutions.Examinations',
+                'selected' => ['Institutions.ExaminationStudents'],
             ],
 
             'Institutions.ExaminationResults.index' => [
@@ -2747,6 +2760,7 @@ class NavigationComponent extends Component
                 'Manuals.Institutions' => [
                     'title' => 'Manuals',
                     'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Manuals'],//POCOR-8732
                     'selected' => ['Manuals.Institutions',
                         'Manuals.Directory',
                         'Manuals.Reports',
@@ -2858,7 +2872,7 @@ class NavigationComponent extends Component
                             'parent' => 'SystemSetup.CustomField',
                             'params' => ['plugin' => 'StudentCustomField'],
                             'selected' => ['StudentCustomFields.Fields',
-                                'StudentCustomFields.Pages']
+                                'StudentCustomFields.Pages', 'StudentCustomFields.Filters']//POCOR-8434 add filters
                         ],
                         'StaffCustomFields.Fields' => [
                             'title' => 'Staff',
@@ -2932,7 +2946,7 @@ class NavigationComponent extends Component
                             'parent' => 'SystemSetup.CustomField',
                             'params' => ['plugin' => 'StudentCustomField'],
                             'selected' => ['StudentCustomFields.Fields',
-                                'StudentCustomFields.Pages']
+                                'StudentCustomFields.Pages', 'StudentCustomFields.Filters']//POCOR-8434 add filters
                         ],
                         'StaffCustomFields.Fields' => [
                             'title' => 'Staff',
@@ -3022,7 +3036,7 @@ class NavigationComponent extends Component
                         'parent' => 'SystemSetup.CustomField',
                         'params' => ['plugin' => 'StudentCustomField'],
                         'selected' => ['StudentCustomFields.Fields',
-                            'StudentCustomFields.Pages']
+                            'StudentCustomFields.Pages', 'StudentCustomFields.Filters']//POCOR-8434 add filters
                     ],
                     'StaffCustomFields.Fields' => [
                         'title' => 'Staff',

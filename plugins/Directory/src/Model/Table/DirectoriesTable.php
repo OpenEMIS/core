@@ -336,6 +336,8 @@ class DirectoriesTable extends ControllerActionTable
      */
     public static function getUsersSearchWithIdentityArr(Table $securityUsers, Table $genders, Table $mainIdentityTypes, Table $mainNationalities, Table $areaAdministratives, Table $userIdentities, array $identityCondition, Table $birthAreaAdministratives, int $limit, int $page): array
     {
+        $userNationalities = self::getDynamicTableInstance('user_nationalities'); //POCOR-8776
+
         $identityUsersResult = $securityUsers
             ->find()
             ->select([
@@ -390,8 +392,12 @@ class DirectoriesTable extends ControllerActionTable
             ->leftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                 $mainIdentityTypes->aliasField('id') . ' = ' . $userIdentities->aliasField('identity_type_id')
             ])
+            ->leftJoin([$userNationalities->getAlias() => $userNationalities->getTable()], [ //POCOR-8776 start
+                $userNationalities->aliasField('security_user_id') . ' = ' . $securityUsers->aliasField('id')
+            ])
             ->leftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
-                $mainNationalities->aliasField('id') . ' = ' . $securityUsers->aliasField('nationality_id')
+                $mainNationalities->aliasField('id') . ' = ' . $userNationalities->aliasField('nationality_id'),
+                $userNationalities->aliasField('preferred = 1') // //POCOR-8776 end
             ])
             ->leftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()], [
                 $areaAdministratives->aliasField('id') . ' = ' . $securityUsers->aliasField('address_area_id')
@@ -1166,7 +1172,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->hasMany('InstitutionStudentsReportCardsCommentsStaff', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionStudentsReportCardsCommentsStudent', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'student_id', 'dependent' => true]);
        // not found
-        $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
+        // $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);POCOR-8795
         $this->hasMany('InstitutionSubjectStaff', ['className' => 'Staff.StaffSubjects', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Student.StudentSubjects', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionTripPassengers', ['className' => 'Student.StudentTransport', 'foreignKey' => 'student_id', 'dependent' => true]);
@@ -2080,7 +2086,7 @@ public function getIdentityTypeData($value_selection)
             ],
             'url' => '#',
             'label' => '<i class="fa fa-search-plus"></i>',
-        ];    
+        ];
         if(isset($toolbarButtons['search']))//POCOr-8733
            unset($toolbarButtons['search']);
     }
@@ -2255,7 +2261,6 @@ public function getIdentityTypeData($value_selection)
         if ($this->action == 'index') {
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             //POCOR-6248 starts
-            if ($userType == self::STAFF || $userType == self::STUDENT) {
                 $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
                 $ConfigItem = $ConfigItemTable
                     ->find()
@@ -2334,8 +2339,10 @@ public function getIdentityTypeData($value_selection)
                 case self::OTHER:
                     $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
                     break;
+                default: //POCOR-8850
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
+                    break;
             }
-        }
     }
 
     public function onGetStudentStatus(Event $event, Entity $entity)
@@ -2840,4 +2847,21 @@ public function getIdentityTypeData($value_selection)
         return $result;
     }
 
+    //POCOR-8743 Start
+    public function onGetModifiedUserId(Event $event, Entity $entity)
+    {
+        if(!empty($entity->modified_user_id)) {
+            $users = TableRegistry::get('Security.Users');
+            $user = $users->get($entity->modified_user_id);
+            return $user->name;
+        }
+    }
+
+    public function onGetCreatedUserId(Event $event, Entity $entity)
+    {
+        $users = TableRegistry::get('Security.Users');
+        $user = $users->get($entity->created_user_id);
+        return $user->name;
+    }
+    //POCOR-8743 End
 }
