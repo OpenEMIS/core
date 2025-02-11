@@ -58,21 +58,22 @@ class StudentBehavioursTable extends AppTable  {
         $userId = $requestData->user_id;
         $where=[];
         //area filter
-        $areaLevelId = $requestData->area_level_id;
+        $area_level_id = $requestData->area_level_id;
         $institutionId = $requestData->institution_id;
 
-        $areaList = [];
-        if ($areaLevelId > 1 && $areaId > 1) {
-            $areaList = $this->getAreaList($areaLevelId, $areaId);
-        } elseif ($areaLevelId > 1) {
-            $areaList = $this->getAreaList($areaLevelId, 0);
-        } elseif ($areaId > 1) {
-            $areaList = $this->getAreaList(0, $areaId);
+        $selectedArea = $requestData->area_education_id;
+        if ($areaId != -1 && !empty($areaId)) {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+            $where['institutions.area_id IN'] = $allselectedAreas;
         }
-        if (!empty($areaList)) {
-            $where['Institutions.area_id IN'] = $areaList;
-        }
-        
+
         $Statuses1 = TableRegistry::get('Workflow.WorkflowSteps');
         $query->select([
              "institution_code"=>'Institutions.code',
@@ -95,7 +96,7 @@ class StudentBehavioursTable extends AppTable  {
         ->InnerJoin([$Statuses1->getAlias()=>$Statuses1->getTable()],[
                 $Statuses1->aliasField('id')."=(`StudentBehaviours`.`status_id`)"
         ])      
-        -> where([$where]);
+        ->where([$where]);
         if ($institutionId != 0) {
             $query->where([
                 $this->aliasField('institution_id') => $institutionId
@@ -180,7 +181,12 @@ class StudentBehavioursTable extends AppTable  {
             'type' => 'string',
             'label' => __('Description')
         ];
-       
+        $extraField[] = [
+            'key' => 'StudentBehaviour.action',
+            'field' => 'action',
+            'type' => 'string',
+            'label' => __('Action')
+        ];
       
         $fields->exchangeArray($extraField);
     }
@@ -199,6 +205,21 @@ class StudentBehavioursTable extends AppTable  {
         } else {
             return $field;
         }
+    }
+
+    public function getChildren($id, $idArray) 
+    {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+        foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 
 }
