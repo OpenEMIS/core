@@ -346,4 +346,22 @@ class AssessmentService extends Controller
         }
     }
     //POCOR-8292 end...
+
+    //POCOR-8619 [START]
+    public function assessmentItemExemption($request)
+    {
+        try {
+            $data = $this->assessmentRepository->saveAssessmentItemExemption($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to save Exempted User Data in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to save Exempted User Data in DB.');
+        }
+    }
+    //POCOR-8619 [END]
 }

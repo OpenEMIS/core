@@ -10,7 +10,7 @@ class ImageComponent extends Component {
 		$UserModel = $controller->ControllerAction->model;
 		$photoData = $UserModel->find()
 			->select(['photo_content'])
-			->where([$UserModel->aliasField($UserModel->primaryKey()) => $id])
+			->where([$UserModel->aliasField($UserModel->getPrimaryKey()) => $id])
 			->first()
 			;
 		$phpResourceFile = $photoData->photo_content;

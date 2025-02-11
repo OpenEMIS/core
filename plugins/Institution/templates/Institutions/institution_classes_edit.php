@@ -137,7 +137,77 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionClassStudentsController.postError.capacity">{{ error }}</p>
         </div>
     </div>
-	<div class="input select">
+
+    <div ng-repeat="customField in InstitutionClassStudentsController.customFieldsArray">
+        <div class="row section-header header-space-lg">{{customField.sectionName}}</div>
+
+        <div ng-repeat="field in customField.data">
+            <div class="input string" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'TEXT' || field.field_type === 'TEXTAREA' || field.field_type === 'NOTE' || field.field_type === 'NUMBER' || field.field_type === 'DECIMAL'">
+                <label>{{field.name}}</label>
+                <input ng-if="field.field_type === 'TEXT'"
+                       ng-model="field.answer" type="text"
+                       ng-required="field.is_mandatory !== 0">
+                <textarea ng-if="field.field_type === 'TEXTAREA' || field.field_type === 'NOTE'" ng-model="field.answer" type="text" ng-required="field.is_mandatory !== 0"></textarea>
+                <input ng-if="field.field_type === 'NUMBER'" ng-model="field.answer" type="number" ng-required="field.is_mandatory !== 0">
+                <input ng-if="field.field_type === 'DECIMAL'" ng-model="field.answer" type="number" step="0.01" onKeyPress="if(this.value.length === 10) return false;"
+                       ng-change="onDecimalNumberChange(field)"
+                       ng-required="field.is_mandatory !== 0">
+                <div ng-if="field.errorMessage" class="error-message">
+                    <p>{{ field.errorMessage }}</p>
+                </div>
+            </div>
+            <div class="input select" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DROPDOWN'">
+                <label>{{field.name}}</label>
+                <div class="input-select-wrapper">
+                    <select name="Student[option_id]" id={{field.institution_custom_field_id}}
+                            ng-options="option.option_id as option.option_name for option in field.option"
+                            ng-model="field.answer"
+                            ng-change="changeOption(field,field.answer)" ng-required="field.is_mandatory !== 0">
+                        <option value="" >-- <?= __('Select') ?> --</option>
+                    </select>
+                </div>
+                <div ng-if="field.errorMessage" class="error-message">
+                    <p>{{ field.errorMessage }}</p>
+                </div>
+            </div>
+            <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DATE'">
+                <label for={{field.institution_custom_field_id}}>{{field.name}}</label>
+                <div class="input-group date" id={{field.institution_custom_field_id}} datepicker="" ng-model="field.answer" ng-click="[field.isDatepickerOpen = !field.isDatepickerOpen]" ng-init="field.isDatepickerOpen = false">
+                    <input type="text" class="form-control" ng-model="field.answer" uib-datepicker-popup="dd-MM-yyyy" is-open="field.isDatepickerOpen" datepicker-options="datepickerOptions" close-text="Close" alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important" ng-change="field.isDatepickerOpen = false" ng-required="field.is_mandatory !== 0">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                </div>
+                <div ng-if="field.errorMessage" class="error-message">
+                    <p>{{ field.errorMessage }}</p>
+                </div>
+            </div>
+            <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'TIME'">
+                <label for={{field.institution_custom_field_id}}>{{field.name}}</label>
+                <div class="input-group time" uib-timepicker ng-model="field.answer" hour-step="field.hourStep" minute-step="field.minuteStep" show-meridian="field.isMeridian"></div>
+                <div ng-if="field.errorMessage" class="error-message" style="margin-left: 150px;">
+                    <p>{{ field.errorMessage }}</p>
+                </div>
+            </div>
+            <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'CHECKBOX'">
+                <label for={{field.institution_custom_field_id}}>{{field.name}}</label>
+                <div class="input-group check_box">
+                    <div ng-repeat="option in field.option">
+                        <input type="checkbox" id={{option.option_id}}
+                               name={{option.option_name}}
+                               value={{option.option_id}}
+                               ng-model="option.selected"
+                               ng-change="InstitutionClassStudentsController.selectOption(field)" ng-required="field.is_mandatory !== 0">
+                        <label for={{option.option_id}}> {{option.option_name}}</label>
+                    </div>
+                    <div ng-if="field.errorMessage" class="error-message">
+                        <p>{{ field.errorMessage }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row section-header header-space-lg"><?= __('Students') ?></div>
+
+    <div class="input select">
         <label><?= __('Add Student') ?></label>
         <div class="input-form-wrapper" ng-init="InstitutionClassStudentsController.classId='<?= $classId ?>'; InstitutionClassStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionClassStudentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
     		<kd-multi-select ng-if="InstitutionClassStudentsController.dataReady" grid-options-top="InstitutionClassStudentsController.gridOptionsTop" grid-options-bottom="InstitutionClassStudentsController.gridOptionsBottom"></kd-multi-select>

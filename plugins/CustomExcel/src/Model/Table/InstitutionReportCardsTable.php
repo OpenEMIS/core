@@ -3879,14 +3879,14 @@ class InstitutionReportCardsTable extends AppTable
     }
 
     /**
-     * Create a placeholder to display institution data from this table report_student_assessment_summary
+     * Create a placeholder to display institution data from this table summary_student_assessments
      * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
      * @ticket POCOR-6519
      */
     public function onExcelTemplateInitialiseReportStudentAssessmentSummary(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $ReportStudentAssessmentSummary = TableRegistry::get('report_student_assessment_summary');
+            $ReportStudentAssessmentSummary = TableRegistry::get('summary_student_assessments');
             $AssessmentSummaryData = $ReportStudentAssessmentSummary->find()
                 ->select([
                     //'id' => $ReportStudentAssessmentSummary->aliasField('id'),
@@ -4120,7 +4120,7 @@ class InstitutionReportCardsTable extends AppTable
             $Users = TableRegistry::get('User.Users');
             $studentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             $studentAbsencesDay = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
-            $studentAssessmentSummary = TableRegistry::get('report_student_assessment_summary');
+            $studentAssessmentSummary = TableRegistry::get('summary_student_assessments');
             $userIdentity = TableRegistry::get('User.Identities');
             $studentData = $studentAssessmentSummary->find()
                 ->select([

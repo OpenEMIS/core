@@ -3,7 +3,7 @@
 	$alias = $model->getAlias();
 	$this->Form->create();
 	$this->Form->unlockField("$alias.custom_field_options");
-	//echo "<pre>";print_r($data->custom_field_options);die;
+	//dd($data)
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>
@@ -37,6 +37,11 @@
 	</div>
 <?php elseif ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
 	<div class="input">
+        <?php
+        if(isset($data->id)) {
+            echo $this->Form->hidden("id", ['value' => $data->id, 'label' => false]);
+        }
+        ?>
 		<label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
 		<div class="input-form-wrapper">
 			<div class="table-toolbar">
@@ -59,7 +64,7 @@
 						</thead>
 						<?php if (!empty($data->custom_field_options)) : ?>
 							<tbody>
-								<?php foreach ($data->custom_field_options as $key => $obj) : 
+								<?php foreach ($data->custom_field_options as $key => $obj) :
 									//print_r($alias);die;
 									?>
 									<tr>

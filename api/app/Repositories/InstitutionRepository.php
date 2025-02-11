@@ -127,7 +127,7 @@ class InstitutionRepository extends Controller
             }*/
             
             //$institutions = new Institutions();
-            $institutions = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender');
+            $institutions = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender','areaEducation','areaAdministratives');
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -1965,7 +1965,7 @@ class InstitutionRepository extends Controller
             $staffs = InstitutionStaff::with('institution:id,code,name', 
                     'staffStatus:id,name as staff_status_name', 
                     'institutionPosition:id,staff_position_title_id', 
-                    'institutionPosition.staffPositionTitle:id,name', 
+                    'institutionPosition.staffPositionTitle:id,name,type', 
                     'staffType:id,name as staff_type_name',
                     'classes:id,name,staff_id',
                     'user:id,openemis_no,first_name,middle_name,third_name,last_name',

@@ -230,7 +230,7 @@ class RemoveBehavior extends Behavior
                     $extra['config']['form'] = ['type' => 'DELETE'];
                     $this->recordHasAssociatedRecords = false;
                 }
-                
+
                 /** Start POCOR-7253 */
                 if(!empty($cells)){
                     foreach($cells as $key => $cell_val){
@@ -260,9 +260,9 @@ class RemoveBehavior extends Behavior
                 $controller->set('data', $entity);
             }
             return $entity;
-            
+
         } else if ($request->is('delete') || $forceDeleteRecord ) {
-            
+
             $ids = [];
 
             if ($model->actions('remove') == 'restrict') {
@@ -309,25 +309,25 @@ class RemoveBehavior extends Behavior
                     //POCOR-8072 add conditon if else
                     if($request->getParam('plugin') == 'Scholarship' && $request->getParam('action') == 'ScholarshipApplicationInstitutionChoices'){
                         $array = $ids;
-                        $ids = reset($array); 
-                        $entity = $model->get($ids); 
+                        $ids = reset($array);
+                        $entity = $model->get($ids);
                     }elseif($request->getParam('plugin') == 'Scholarship' && $request->getParam('action') == 'ScholarshipApplicationAttachments'){
                         $array = $ids;
-                        $ids = reset($array); 
-                        $entity = $model->get($ids); 
+                        $ids = reset($array);
+                        $entity = $model->get($ids);
                     }else{
-                     $entity = $model->get($ids);   
+                     $entity = $model->get($ids);
                     }
-                    
+
                 } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
                     $mainEvent->stopPropagation();
                     return $model->controller->redirect($extra['redirect']);
                 }
                 $result = $this->doDelete($entity, $extra);
             }
-            
+
         }
-        
+
         $extra['result'] = $result;
         $extra['forceDeleteRecord'] = $forceDeleteRecord;
 
@@ -434,7 +434,7 @@ class RemoveBehavior extends Behavior
             }
             return $entity;
         } else if ($request->is('delete')) {
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             $idKeys = $model->getIdKeys($model, $request->data($this->alias()));
             if (!empty($idKeys)) {
                 try {
@@ -527,11 +527,19 @@ class RemoveBehavior extends Behavior
         foreach ($model->associations() as $assoc) {
             if (in_array($assoc->getDependent(), $dependent)) {
                 if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
+                    // POCOR-8683-start
+                    try{
+                        $assocTable = self::getDynamicTableInstance($assoc->getAlias());
+                    }catch (\Exception $exception){
+                        continue;
+                    }
+                    // POCOR-8683-end
                     if (!array_key_exists($assoc->getAlias(), $associations)) {
-                        $count = 0;
-                        $assocTable = $assoc;
+//                        $count = 0; // POCOR-8683-start
+                        $assocTable =$assoc;
                         if ($assoc->type() == 'manyToMany') {
-                            $assocTable = $assoc->junction();
+                            //$assocTable = $assoc->junction()->getAlias(); // POCOR-8683-start
+                            $assocTable = $assoc->junction(); // POCOR-8861
                         }
 //                        Log::write('debug', $assoc);
                         $bindingKey = $assoc->getBindingKey();
@@ -694,4 +702,50 @@ class RemoveBehavior extends Behavior
         $model = $globalData['providers']['table'];
         return ((new DefaultPasswordHasher)->check($field, $Users->get($model->Auth->user('id'))->password));
     }
+
+    /*
+     * POCOR-8683
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }

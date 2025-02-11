@@ -60,8 +60,8 @@ class EmailTemplateBehavior extends Behavior
                 $emailTemplateEntity = $EmailTemplatesTable
                     ->find()
                     ->where([
-                        'model_alias' => $model->registryAlias(),
-                        'model_reference' => $row->{$model->primaryKey()}
+                        'model_alias' => $model->getRegistryAlias(),
+                        'model_reference' => $row->{$model->getPrimaryKey()}
                     ])
                     ->first();
                 $row->email_template = $emailTemplateEntity;
@@ -71,7 +71,7 @@ class EmailTemplateBehavior extends Behavior
                 $defaultEmailTemplateEntity = $EmailTemplatesTable
                     ->find()
                     ->where([
-                        'model_alias' => $model->registryAlias(),
+                        'model_alias' => $model->getRegistryAlias(),
                         'model_reference' => 0
                     ])
                     ->first();
@@ -122,8 +122,8 @@ class EmailTemplateBehavior extends Behavior
                 $requestData = $data[$model->alias()];
 
                 $emailTemplateData = [
-                    'model_alias' => $model->registryAlias(),
-                    'model_reference' => $entity->{$model->primaryKey()},
+                    'model_alias' => $model->getRegistryAlias(),
+                    'model_reference' => $entity->{$model->getPrimaryKey()},
                     'subject' => $requestData['subject'],
                     'message' => $requestData['message']
                 ];

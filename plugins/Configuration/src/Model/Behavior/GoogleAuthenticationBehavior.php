@@ -48,6 +48,10 @@ class GoogleAuthenticationBehavior extends Behavior
             $entity->getErrors('redirect_uri', $entity->getErrors('code'), true);
         }
         $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'Google', $this->model->request->getData()[$this->model->getAlias()]['code']], true);
+        if (strpos($url, 'https://') !== 0) { //POCOR-8810
+            $url = 'https://' . preg_replace('/^http:\/\//', '', $url);
+        }
+
         $this->model->fields['redirect_uri']['value'] = $url;
         $this->model->fields['redirect_uri']['attr']['value'] = $url;
 
