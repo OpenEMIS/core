@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Http\ServerRequestFactory;
 
 class InstitutionTabBehavior extends Behavior
 {
@@ -120,7 +121,10 @@ class InstitutionTabBehavior extends Behavior
         $model = $this->_table;
         $institutionID = $model->getQueryString('institution_id');
         if(empty($institutionID)) { //POCOR-8890
-            $institutionID = $model->request->getQuery('institution_id') ?? $institutionID;
+            $request = ServerRequestFactory::fromGlobals();
+            if ($request instanceof \Cake\Http\ServerRequest) {  // Ensure request exists
+                $institutionID = $request->getQuery('institution_id') ?? $institutionID;
+            }
         }
         return $institutionID;
     }
