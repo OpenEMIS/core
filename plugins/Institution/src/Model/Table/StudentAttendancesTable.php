@@ -18,7 +18,7 @@ use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Core\Configure;
 use Cake\Log\Log;
-use Cake\Datasource\ConnectionManager;//POCOR-6658
+use Cake\Datasource\ConnectionManager; //POCOR-6658
 use Cake\ORM\Locator\TableLocator;
 use App\Model\Table\ControllerActionTable;
 
@@ -59,12 +59,18 @@ class StudentAttendancesTable extends ControllerActionTable
             'pages' => ['index']
         ]);
 
-        $this->addBehavior('Institution.InstitutionTab',
-            ['appliedAction' => ['Students'=>
+        $this->addBehavior(
+            'Institution.InstitutionTab',
+            ['appliedAction' => [
+                'Students' =>
                 ['student_status_id', 'academic_period_id',],
-        'StudentUser'=>
-            ['student_status_id',
-                'academic_period_id',]]]);
+                'StudentUser' =>
+                [
+                    'student_status_id',
+                    'academic_period_id',
+                ]
+            ]]
+        );
 
         $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
         $this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
@@ -87,6 +93,8 @@ class StudentAttendancesTable extends ControllerActionTable
         $weekEndDay = $options['week_end_day'];
         $day = $options['day_id'];
         $subjectId = $options['subject_id'];
+        $attendanceBy = $options['attendance_by']; //POCOR-8874
+       
 
         $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $InstitutionStudents = TableRegistry::get('Institution.Students');
@@ -99,7 +107,8 @@ class StudentAttendancesTable extends ControllerActionTable
         /* POCOR-5912 condition for week filter ends */
         /* POCOR-5919 condition for day filter starts */
         if ($day != -1) {
-            $conditionQuery = [$InstitutionStudents->aliasField('start_date <= ') => $day,
+            $conditionQuery = [
+                $InstitutionStudents->aliasField('start_date <= ') => $day,
                 'OR' => [
                     $InstitutionStudents->aliasField('end_date is ') => null,
                     $InstitutionStudents->aliasField('end_date >= ') => $day,
@@ -108,10 +117,10 @@ class StudentAttendancesTable extends ControllerActionTable
             ];
         }
         /* POCOR-5919 condition for day filter ends */
-         /* POCOR-7956 fetch status starts */
-         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-         $statuses = $StudentStatuses->findCodeList();
-         /* POCOR-7956 fetch status starts */
+        /* POCOR-7956 fetch status starts */
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+        /* POCOR-7956 fetch status starts */
         if ($day == -1) {
             $findDay[] = $weekStartDay;
             $findDay[] = $weekEndDay;
@@ -158,7 +167,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('institution_id') => $institutionId,
                     $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                     $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['REPEATED'], $statuses['CURRENT'], $statuses['TRANSFERRED'],$statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],
+                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['REPEATED'], $statuses['CURRENT'], $statuses['TRANSFERRED'], $statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],
                     $overlapDateCondition,
                     $conditionQuery
                 ])
@@ -201,7 +210,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('institution_id') => $institutionId,
                     $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                     $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['REPEATED'], $statuses['CURRENT'], $statuses['TRANSFERRED'],$statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],
+                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['REPEATED'], $statuses['CURRENT'], $statuses['TRANSFERRED'], $statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],
                     $overlapDateCondition,
                     $conditionQuery
                 ])
@@ -211,182 +220,200 @@ class StudentAttendancesTable extends ControllerActionTable
                 ->order([
                     $this->Users->aliasField('first_name')
                 ]);
-                // echo "<pre>";print_r($query);die;
+            // echo "<pre>";print_r($query);die;
         }
 
         if ($day != -1) {
             // single day
             $query
-                ->formatResults(function (ResultSetInterface $results) use ($findDay, $attendancePeriodId, $subjectId, $educationGradeId) {
-                    $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-                    $InstitutionStudents = TableRegistry::get('Institution.Students');
-                    return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId, $educationGradeId, $InstitutionStudents) {
-                        $academicPeriodId = $row->academic_period_id;
-                        $institutionClassId = $row->institution_class_id;
-                        $studentId = $row->student_id;
-                        $institutionId = $row->institution_id;
-                        $PRESENT = 0;
-                        $conditions = [];
-                        $conditions = [
-                            $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
-                            $StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') => $institutionClassId,
-                            $StudentAbsencesPeriodDetails->aliasField('education_grade_id = ') => $educationGradeId,
-                            $StudentAbsencesPeriodDetails->aliasField('student_id = ') => $studentId,
-                            $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
-                            $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId,
-                            $StudentAbsencesPeriodDetails->aliasField('date = ') => $findDay,
-                            // $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
-                        ];
-                        if ($subjectId) {
-                            $SubId[] = [$StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId];
+                ->formatResults(
+                    function (ResultSetInterface $results) use ($findDay, $attendancePeriodId, $subjectId, $educationGradeId, $attendanceBy) { //POCOR-8874 add param attendanceBy
+                        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+                        $InstitutionStudents = TableRegistry::get('Institution.Students');
+                        return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId, $educationGradeId, $InstitutionStudents, $attendanceBy) { // POCOR-8874 add param attendanceBy
+                            $academicPeriodId = $row->academic_period_id;
+                            $institutionClassId = $row->institution_class_id;
+                            $studentId = $row->student_id;
+                            $institutionId = $row->institution_id;
+                            $PRESENT = 0;
+                            $conditions = [];
+                            $conditions = [
+                                $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
+                                $StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') => $institutionClassId,
+                                $StudentAbsencesPeriodDetails->aliasField('education_grade_id = ') => $educationGradeId,
+                                $StudentAbsencesPeriodDetails->aliasField('student_id = ') => $studentId,
+                                $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
+                                // $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId, // commented due to POCOR-8874
+                                $StudentAbsencesPeriodDetails->aliasField('date = ') => $findDay,
+                                // $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
+                            ];
+                            if ($subjectId) {
+                                $SubId[] = [$StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId];
 
-                            $conditions = array_merge($conditions, $SubId[0]);
-                        }
-                        $absenceReason = array();
-                        $absenceType = array();
-                        $result = $StudentAbsencesPeriodDetails
-                            ->find()
-                            ->contain(['AbsenceTypes'])
-                            ->select([
-                                $StudentAbsencesPeriodDetails->aliasField('date'),
-                                $StudentAbsencesPeriodDetails->aliasField('period'),
-                                $StudentAbsencesPeriodDetails->aliasField('comment'),
-                                $StudentAbsencesPeriodDetails->aliasField('absence_type_id'),
-                                $StudentAbsencesPeriodDetails->aliasField('student_absence_reason_id'),
-                                'AbsenceTypes.code'
-                            ])
-                            ->where($conditions)
-                            ->all();
-                        if (!$result->isEmpty()) {
-                            $entity = $result->first();
-                            $data = [
-                                'date' => $entity->date,
-                                'period' => $entity->period,
-                                'comment' => $entity->comment,
-                                'absence_type_id' => $entity->absence_type_id,
-                                'student_absence_reason_id' => $entity->student_absence_reason_id,
-                                'absence_type_code' => $entity->absence_type->code
-                            ];       
-                            if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) {   
-                                $StudentAbsenceReasons = TableRegistry::get('Institution.StudentAbsenceReasons');
-                                if(isset($entity->student_absence_reason_id)){
-                                    $studentAbsenceReason = $StudentAbsenceReasons
-                                        ->find()
-                                        ->select([
-                                            'name' => $StudentAbsenceReasons->aliasField('name')
-                                        ])
-                                        ->where(
-                                            [$StudentAbsenceReasons->aliasField('id = ') => $entity->student_absence_reason_id])->first();
-                                    if (!empty($studentAbsenceReason)) {
-                                        $absenceReason['name'] = $studentAbsenceReason->name;
-                                    }
-                                }
-                                $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
-                                if(isset($entity->absence_type_id)){
-                                    $absenceType = $AbsenceTypes
-                                        ->find()
-                                        ->select([
-                                            'name' => $AbsenceTypes->aliasField('name'),
-                                            'code' => $AbsenceTypes->aliasField('code')
-                                        ])
-                                        ->where([$AbsenceTypes->aliasField('id = ') => $entity->absence_type_id])->first();
-                                    if (!empty($absenceType)) {
-                                        $absenceType['name'] = $absenceType->name;
-                                        $absenceType['code'] = $absenceType->code;
-                                    }
-                                }
+                                $conditions = array_merge($conditions, $SubId[0]);
                             }
-                        } else {
-                            // $StudentAttendanceMarkedRecords = TableRegistry::get('Institution.StudentAttendanceMarkedRecords');
-                            $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
-                            $isMarkedRecords = $StudentAttendanceMarkedRecords
+                            //POCOR-8874 start
+                            else {
+                                $SubId[] = [$StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId];
+                                $conditions = array_merge($conditions, $SubId[0]);
+                            }
+                            //POCOR-8874 end
+                            $absenceReason = array();
+                            $absenceType = array();
+                            $result = $StudentAbsencesPeriodDetails
                                 ->find()
+                                ->contain(['AbsenceTypes'])
                                 ->select([
-                                    $StudentAttendanceMarkedRecords->aliasField('date'),
-                                    $StudentAttendanceMarkedRecords->aliasField('period')
+                                    $StudentAbsencesPeriodDetails->aliasField('date'),
+                                    $StudentAbsencesPeriodDetails->aliasField('period'),
+                                    $StudentAbsencesPeriodDetails->aliasField('comment'),
+                                    $StudentAbsencesPeriodDetails->aliasField('absence_type_id'),
+                                    $StudentAbsencesPeriodDetails->aliasField('student_absence_reason_id'),
+                                    'AbsenceTypes.code'
                                 ])
-                                //POCOR-5900 start (Filter for check start date of student)
-                                ->leftJoin(
-                                    [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
-                                    [
-                                        $InstitutionStudents->aliasField('institution_id = ') . $StudentAttendanceMarkedRecords->aliasField('institution_id'),
-                                    ]
-                                )
-                                //POCOR-5900 end
+                                ->where($conditions)
+                                ->all();
+                            if (!$result->isEmpty()) {
+                                $entity = $result->first();
+                                $data = [
+                                    'date' => $entity->date,
+                                    'period' => $entity->period,
+                                    'comment' => $entity->comment,
+                                    'absence_type_id' => $entity->absence_type_id,
+                                    'student_absence_reason_id' => $entity->student_absence_reason_id,
+                                    'absence_type_code' => $entity->absence_type->code
+                                ];
+                                if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) {
+                                    $StudentAbsenceReasons = TableRegistry::get('Institution.StudentAbsenceReasons');
+                                    if (isset($entity->student_absence_reason_id)) {
+                                        $studentAbsenceReason = $StudentAbsenceReasons
+                                            ->find()
+                                            ->select([
+                                                'name' => $StudentAbsenceReasons->aliasField('name')
+                                            ])
+                                            ->where(
+                                                [$StudentAbsenceReasons->aliasField('id = ') => $entity->student_absence_reason_id]
+                                            )->first();
+                                        if (!empty($studentAbsenceReason)) {
+                                            $absenceReason['name'] = $studentAbsenceReason->name;
+                                        }
+                                    }
+                                    $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
+                                    if (isset($entity->absence_type_id)) {
+                                        $absenceType = $AbsenceTypes
+                                            ->find()
+                                            ->select([
+                                                'name' => $AbsenceTypes->aliasField('name'),
+                                                'code' => $AbsenceTypes->aliasField('code')
+                                            ])
+                                            ->where([$AbsenceTypes->aliasField('id = ') => $entity->absence_type_id])->first();
+                                        if (!empty($absenceType)) {
+                                            $absenceType['name'] = $absenceType->name;
+                                            $absenceType['code'] = $absenceType->code;
+                                        }
+                                    }
+                                }
+                            } else {
+                                // $StudentAttendanceMarkedRecords = TableRegistry::get('Institution.StudentAttendanceMarkedRecords');
+                                $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+                                $isMarkedRecords = $StudentAttendanceMarkedRecords
+                                    ->find()
+                                    ->select([
+                                        $StudentAttendanceMarkedRecords->aliasField('date'),
+                                        $StudentAttendanceMarkedRecords->aliasField('period')
+                                    ])
+                                    //POCOR-5900 start (Filter for check start date of student)
+                                    ->leftJoin(
+                                        [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
+                                        [
+                                            $InstitutionStudents->aliasField('institution_id = ') . $StudentAttendanceMarkedRecords->aliasField('institution_id'),
+                                        ]
+                                    )
+                                    //POCOR-5900 end
+                                    ->where([
+                                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
+                                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
+                                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
+                                        $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
+                                        $StudentAttendanceMarkedRecords->aliasField('date = ') => $findDay,
+                                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
+                                        $InstitutionStudents->aliasField('start_date') . ' <= ' => $findDay
+                                    ])->toArray();
+
+                                if (!empty($isMarkedRecords)) {
+                                    $data = [
+                                        'date' => $findDay,
+                                        'period' => $attendancePeriodId,
+                                        'comment' => null,
+                                        'absence_type_id' => $PRESENT,
+                                        'student_absence_reason_id' => null,
+                                        'absence_type_code' => null
+                                    ];
+                                } else {
+                                    $data = [
+                                        'date' => $findDay,
+                                        'period' => $attendancePeriodId,
+                                        'comment' => null,
+                                        'absence_type_id' => null,
+                                        'student_absence_reason_id' => null,
+                                        'absence_type_code' => null
+                                    ];
+                                }
+                            }
+                            $row->institution_student_absences = $data;
+                            $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+                            $getRecord = $StudentAttendanceMarkedRecords->find('all')
                                 ->where([
-                                    $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
-                                    $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
-                                    $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
-                                    $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
-                                    $StudentAttendanceMarkedRecords->aliasField('date = ') => $findDay,
-                                    $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
-                                    $InstitutionStudents->aliasField('start_date') . ' <= ' => $findDay
-                                ])->toArray();
-
-                            if (!empty($isMarkedRecords)) {
-                                $data = [
-                                    'date' => $findDay,
-                                    'period' => $attendancePeriodId,
-                                    'comment' => null,
-                                    'absence_type_id' => $PRESENT,
-                                    'student_absence_reason_id' => null,
-                                    'absence_type_code' => null
-                                ];
+                                    $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
+                                    $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
+                                    $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+                                    $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+                                    $StudentAttendanceMarkedRecords->aliasField('date') => $findDay,
+                                    $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') => 1,
+                                    $StudentAttendanceMarkedRecords->aliasField('period IS') => $attendancePeriodId //POCOR-8383
+                                ])->first();
+                            if (!empty($getRecord)) {
+                                $row->is_NoClassScheduled = 1;
                             } else {
-                                $data = [
-                                    'date' => $findDay,
-                                    'period' => $attendancePeriodId,
-                                    'comment' => null,
-                                    'absence_type_id' => null,
-                                    'student_absence_reason_id' => null,
-                                    'absence_type_code' => null
-                                ];
+                                $row->is_NoClassScheduled = 0;
                             }
-                        }
-                        $row->institution_student_absences = $data;
-                        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
-                        $getRecord = $StudentAttendanceMarkedRecords->find('all')
-                            ->where([
-                                $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
-                                $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
-                                $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
-                                $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
-                                $StudentAttendanceMarkedRecords->aliasField('date') => $findDay,
-                                $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') => 1,
-                                $StudentAttendanceMarkedRecords->aliasField('period IS') => $attendancePeriodId //POCOR-8383
-                            ])->first();
-                        if (!empty($getRecord)) {
-                            $row->is_NoClassScheduled = 1;
-                        } else {
-                            $row->is_NoClassScheduled = 0;
-                        }
-                        if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) {
+                            //POCOR-8874 start
+                            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+                            $getSubject = $InstitutionSubjects->find('all')
+                                ->where([
+                                    $InstitutionSubjects->aliasField('id') => $subjectId,
+                                ])->first();
+                            $row->subject = $getSubject->name;
+                            //POCOR-8874 end
+                            if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) {
 
-                            $row->attendance = '';
+                                $row->attendance = '';
 
-                            if ($row->is_NoClassScheduled == 1) {//POCOR-7929
-                                $row->attendance = 'No scheduled class';
-                            } else if (isset($data['absence_type_id']) && ($data['absence_type_id'] == $PRESENT)) {
-                                $row->attendance = 'Present';
-                            } else if (isset($data['absence_type_code']) && ($data['absence_type_code'] == 'EXCUSED' || $data['absence_type_code'] == 'UNEXCUSED')) {
-                                $row->attendance = 'Absent - ' . (isset($absenceType['name'])) ? $absenceType['name'] : '';
-                            } else if (isset($data['absence_type_code']) && $data['absence_type_code'] == 'LATE') {
-                                $row->attendance = 'Late';
-                            } else {
-                                $row->attendance = 'NOTMARKED';
+                                if ($row->is_NoClassScheduled == 1) { //POCOR-7929
+                                    $row->attendance = 'No scheduled class';
+                                } else if (isset($data['absence_type_id']) && ($data['absence_type_id'] == $PRESENT)) {
+                                    $row->attendance = 'Present';
+                                } else if (isset($data['absence_type_code']) && ($data['absence_type_code'] == 'EXCUSED' || $data['absence_type_code'] == 'UNEXCUSED')) {
+                                    $row->attendance = 'Absent - ' . (isset($absenceType['name'])) ? $absenceType['name'] : '';
+                                } else if (isset($data['absence_type_code']) && $data['absence_type_code'] == 'LATE') {
+                                    $row->attendance = 'Late';
+                                } else {
+                                    $row->attendance = 'NOTMARKED';
+                                }
+                                $row->comment = $data['comment'];
+                                $row->student_absence_reasons = (isset($absenceReason['name'])) ? $absenceReason['name'] : NULL;
+                                $row->name = $row['user']['first_name'] . ' ' . $row['user']['last_name'];
+                                $row->class = $row['institution_class']['name'];
+                                $row->date = date("d/m/Y", strtotime($findDay));
+                                $row->StudentStatuses = $row['_matchingData']['StudentStatuses']['name'];
+                                $row->studentId = $row['student_id'];
+                                $row->attendanceBy = $attendanceBy; //POCOR-8874
+                                $row->period = "Period " . $attendancePeriodId; //POCOR-8874
+                                $row->test = 1;
                             }
-                            $row->comment = $data['comment'];
-                            $row->student_absence_reasons = (isset($absenceReason['name'])) ? $absenceReason['name'] : NULL;
-                            $row->name = $row['user']['first_name'] . ' ' . $row['user']['last_name'];
-                            $row->class = $row['institution_class']['name'];
-                            $row->date = date("d/m/Y", strtotime($findDay));
-                            $row->StudentStatuses = $row['_matchingData']['StudentStatuses']['name'];
-                            $row->studentId = $row['student_id'];
-                            $row->test = 1;
-                        }
-                        return $row;
-                    });
-                }
+                            return $row;
+                        });
+                    }
                 );
         } else {
             // all day
@@ -398,8 +425,8 @@ class StudentAttendancesTable extends ControllerActionTable
                     'academic_period_id' => $academicPeriodId,
                     'day_id' => $day,
                     'education_grade_id' => $educationGradeId,
-                    'week_start_day' => $weekStartDay,//POCOR-7183
-                    'week_end_day' => $weekEndDay//POCOR-7183
+                    'week_start_day' => $weekStartDay, //POCOR-7183
+                    'week_end_day' => $weekEndDay //POCOR-7183
                 ])->toArray();
 
             $dayList = $AcademicPeriodsTable
@@ -426,8 +453,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 ])->all();
             if (!$studentListResult->isEmpty()) {
                 $studentList = $studentListResult->toArray();
-//                $this->log('$studentList','debug');
-//                $this->log($studentList,'debug');
+                //                $this->log('$studentList','debug');
+                //                $this->log($studentList,'debug');
                 $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
                 $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
                 if (empty($studentList)) { //POCOR-8022
@@ -440,6 +467,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         $StudentAbsencesPeriodDetails->aliasField('student_id'),
                         $StudentAbsencesPeriodDetails->aliasField('date'),
                         $StudentAbsencesPeriodDetails->aliasField('period'),
+                        $StudentAbsencesPeriodDetails->aliasField('subject_id'), //POCOR-8874
                         $StudentAbsencesPeriodDetails->aliasField('absence_type_id'),
                         'code' => 'AbsenceTypes.code'
                     ])
@@ -450,6 +478,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         $StudentAbsencesPeriodDetails->aliasField('student_id IN ') => $studentList,
                         $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
                         $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
+                        // $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId, //POCOR-8874
                         'AND' => [
                             $StudentAbsencesPeriodDetails->aliasField('date >= ') => $weekStartDay,
                             $StudentAbsencesPeriodDetails->aliasField('date <= ') => $weekEndDay,
@@ -461,7 +490,8 @@ class StudentAttendancesTable extends ControllerActionTable
                     ->select([
                         $StudentAttendanceMarkedRecords->aliasField('date'),
                         $StudentAttendanceMarkedRecords->aliasField('period'),
-                        $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class')//POCOR-7929
+                        $StudentAttendanceMarkedRecords->aliasField('subject_id'), //POCOR-8874
+                        $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') //POCOR-7929
                     ])
                     ->where([
                         $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
@@ -469,6 +499,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
                         $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
                         $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
+                        // $StudentAttendanceMarkedRecords->aliasField('period = ') => $attendancePeriodId, //POCOR-8874
                         $StudentAttendanceMarkedRecords->aliasField('date >= ') => $weekStartDay,
                         $StudentAttendanceMarkedRecords->aliasField('date <= ') => $weekEndDay
                     ])->toArray();
@@ -487,14 +518,17 @@ class StudentAttendancesTable extends ControllerActionTable
                             $studentAttenanceData[$studentId][$dayId] = [];
                         }
 
+                        // print_r($periodList);die;
                         foreach ($periodList as $period) {
                             $periodId = $period['id'];
                             if (!isset($studentAttenanceData[$studentId][$dayId][$periodId])) {
                                 $studentAttenanceData[$studentId][$dayId][$periodId] = 'NOTMARKED';
-                                if (!empty($isMarkedRecords)) {//POCOR-7183 add if check isMarkedRecords condition not empty
+                                if (!empty($isMarkedRecords)) { //POCOR-7183 add if check isMarkedRecords condition not empty
                                     foreach ($isMarkedRecords as $entity) {
                                         $entityDate = $entity->date->format('Y-m-d');
                                         $entityPeriod = $entity->period;
+                                        $entitySubject = $entity->subject_id; //POCOR-8874
+
                                         //POCOR-7929 start
                                         if ($entityDate == $date && $entity->no_scheduled_class == 1) {
                                             $studentAttenanceData[$studentId][$dayId][$periodId] = 'NoScheduledClicked';
@@ -504,15 +538,23 @@ class StudentAttendancesTable extends ControllerActionTable
                                             $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
                                             break;
                                         }
+                                        //POCOR-8874 start
+                                        else if ($entityDate == $date && $entitySubject == $subjectId && $attendanceBy == 'subject') {
+                                            $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
+                                            break;
+                                        }
+                                        //POCOR-8874 end
                                     }
                                 }
                             }
-                            if (!empty($result)) {//POCOR-7183 add if check result condition not empty
+                            if (!empty($result)) { //POCOR-7183 add if check result condition not empty
                                 foreach ($result as $entity) {
                                     $entityDateFormat = $entity->date->format('Y-m-d');
                                     $entityStudentId = $entity->student_id;
                                     $entityPeriod = $entity->period;
-                                    if ($studentId == $entityStudentId && $entityDateFormat == $date && $entityPeriod == $periodId) {
+                                    $entitySubject = $entity->subject_id; //POCOR-8874
+                                   
+                                    if ($studentId == $entityStudentId && $entityDateFormat == $date && ($entityPeriod == $periodId || ($entitySubject == $subjectId && $attendanceBy == 'subject'))) { //POCOR-8874 add condition to check subject id
                                         if (isset($this->request) && ('excel' === $this->request->pass[0])) {
                                             if ($entity->code == 'EXCUSED' || $entity->code == 'UNEXCUSED') {
                                                 $studentAttenanceData[$studentId][$dayId][$periodId] = 'ABSENT';
@@ -533,30 +575,51 @@ class StudentAttendancesTable extends ControllerActionTable
                 }
 
                 $query
-                    ->formatResults(function (ResultSetInterface $results) use ($studentAttenanceData, $weekStartDay, $weekEndDay, $periodList) {
-                        return $results->map(function ($row) use ($studentAttenanceData, $weekStartDay, $weekEndDay, $periodList) {
+                    ->formatResults(function (ResultSetInterface $results) use ($studentAttenanceData, $weekStartDay, $weekEndDay, $periodList, $attendanceBy,$subjectId) { //POCOR-8874 add params attendanceBy and subjectId
+                        return $results->map(function ($row) use ($studentAttenanceData, $weekStartDay, $weekEndDay, $periodList, $attendanceBy,$subjectId) { //POCOR-8874 add params attendanceBy and subjectId
                             $studentId = $row->student_id;
                             if (isset($studentAttenanceData[$studentId])) {
                                 $row->week_attendance = $studentAttenanceData[$studentId];
 
                                 $row->current = date("d/m/Y", strtotime($weekStartDay)) . ' - ' . date("d/m/Y", strtotime($weekEndDay));
-
-                                if (isset($this->request) && ('excel' === $this->request->pass[0])) {
+                                // print_r($row);die;
+                                if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) { //POCOR-8874
+                                    // if (isset($this->request) && ('excel' === $this->request->pass[0])) { //POCOR -8874 commented this line because it is not working
                                     $row->name = $row['user']['openemis_no'] . ' - ' . $row['user']['first_name'] . ' ' . $row['user']['last_name'];
+                                    
+                                    foreach ($periodList as $Period) {
+                                        $row->period .= $Period['name']." "; //POCOR-8874
+                                    }
 
                                     foreach ($studentAttenanceData[$studentId] as $key => $value) {
+
                                         //POCOR-7929 start
                                         foreach ($periodList as $Key => $PeriodData) {
                                             $id = (int)$PeriodData['id'];
                                             if ($value[$id] == "NoScheduledClicked") {
                                                 $value[$id] = "No Scheduled Classes";
                                             }
-                                            $row->{'week_attendance_status_' . $key . '-' . $PeriodData['name']} = $value[$id];
-                                            //POCOR-7929 end
+                                            //POCOR-8874 start
+                                            if ($attendanceBy == 'period') {
+                                                $row->{'week_attendance_status_' . $key . '-' . $PeriodData['name']} = $value[$id];
+                                                //POCOR-7929 end
+                                            } else {
+                                                $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+                                                $getSubject = $InstitutionSubjects->find('all')
+                                                    ->where([
+                                                        $InstitutionSubjects->aliasField('id') => $subjectId,
+                                                    ])->first();
+                                                $row->{'week_attendance_status_' . $key . '-' . $getSubject->name} = $value[$id];
+                                                //POCOR-7929 end
+                                                $row->subject = $getSubject->name; //POCOR-8874
+                                            }
+                                            //POCOR-8874 end
                                         }
                                     }
                                 }
                             }
+                            $row->attendanceBy = $attendanceBy; //POCOR-8874
+
                             return $row;
                         });
                     });
@@ -576,7 +639,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 ];
             } else {
                 $DayCondititon = [$studentWithdraw->aliasField('effective_date <= ') => $findDay];
-            }//POCOR-7183 ends
+            } //POCOR-7183 ends
             $studentWithdrawData = $studentWithdraw->find()
                 ->select([
                     // 'student_id' => $InstitutionStudents->aliasField('student_id'),
@@ -593,7 +656,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
                     $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
                     // $studentWithdraw->aliasField('effective_date >= ') => $day,
-                    $DayCondititon,//POCOR-7183
+                    $DayCondititon, //POCOR-7183
                     $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
                 ])->toArray();
         } else {
@@ -602,7 +665,7 @@ class StudentAttendancesTable extends ControllerActionTable
             $studentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
             $studentWithdrawData = $studentWithdraw->find()
                 ->select([
-                    'student_id' =>$InstitutionStudents->aliasField('student_id'),
+                    'student_id' => $InstitutionStudents->aliasField('student_id'),
                 ])
                 /*POCOR-6062 starts*/
                 ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()], [
@@ -627,17 +690,17 @@ class StudentAttendancesTable extends ControllerActionTable
             $WithDrawstudentId = [];
             $CurrentStudentId = [];
             $InstitutionStudentsCurrentData = []; //POCOR-8022
-            $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');//POCOR-7902
+            $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents'); //POCOR-7902
             foreach ($studentWithdrawData as $studenetVal) {
                 $WithDrawstudentId[] = $studenetVal['student_id'];
             }
             if (empty($WithDrawstudentId)) { //POCOR-8022
                 $WithDrawstudentId = [0];
             }
-//            $this->log('$WithDrawstudentId', 'debug');
-//            $this->log($WithDrawstudentId, 'debug');
+            //            $this->log('$WithDrawstudentId', 'debug');
+            //            $this->log($WithDrawstudentId, 'debug');
             //POCOR-7902 start
-            if(!empty($WithDrawstudentId)){ //POCOR-8022
+            if (!empty($WithDrawstudentId)) { //POCOR-8022
                 $whereWDR = [
                     $InstitutionStudents->aliasField('institution_id') => $institutionId,
                     $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
@@ -645,8 +708,8 @@ class StudentAttendancesTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('student_status_id') => 1,
                     $InstitutionStudents->aliasField('student_id IN') => $WithDrawstudentId
                 ];
-//                $this->log('$whereWDR', 'debug');
-//                $this->log($whereWDR, 'debug');
+                //                $this->log('$whereWDR', 'debug');
+                //                $this->log($whereWDR, 'debug');
                 $InstitutionStudentsCurrentData = $InstitutionStudents
                     ->find()
                     ->select([
@@ -656,18 +719,18 @@ class StudentAttendancesTable extends ControllerActionTable
                     ->enableAutoFields(true)
                     ->toArray();
             }
-            if(!empty($InstitutionStudentsCurrentData)){ //POCOR-8022
+            if (!empty($InstitutionStudentsCurrentData)) { //POCOR-8022
                 foreach ($InstitutionStudentsCurrentData as $CurrentstudenetVal) {
                     $CurrentStudentId[] = $CurrentstudenetVal['student_id'];
                 }
             }
             $studentId = array_diff($WithDrawstudentId, $CurrentStudentId); //POCOR-7902 end
-            if(empty($studentId)){ //POCOR-8022
+            if (empty($studentId)) { //POCOR-8022
                 $studentId = [0];
             }
             $whereWDR2 = [$this->aliasField('student_id NOT IN') => $studentId]; //POCOR-8022
-//            $this->log('$whereWDR', 'debug');
-//            $this->log($whereWDR, 'debug');
+            //            $this->log('$whereWDR', 'debug');
+            //            $this->log($whereWDR, 'debug');
             $query->where($whereWDR2); //POCOR-8022
 
         }
@@ -692,15 +755,15 @@ class StudentAttendancesTable extends ControllerActionTable
         $weekEndDay = $options['week_end_day'];
         $day = $options['day_id'];
         $subjectId = $options['subject_id'];
-//        $this->log("institutionId = $institutionId", 'debug');
-//        $this->log("institutionClassId = $institutionClassId", 'debug');
-//        $this->log("educationGradeId = $educationGradeId", 'debug');
-//        $this->log("academicPeriodId = $academicPeriodId", 'debug');
-//        $this->log("weekId = $weekId", 'debug');
-//        $this->log("weekStartDay = $weekStartDay", 'debug');
-//        $this->log("weekEndDay = $weekEndDay", 'debug');
-//        $this->log("day = $day", 'debug');
-//        $this->log("subjectId = $subjectId", 'debug');
+        //        $this->log("institutionId = $institutionId", 'debug');
+        //        $this->log("institutionClassId = $institutionClassId", 'debug');
+        //        $this->log("educationGradeId = $educationGradeId", 'debug');
+        //        $this->log("academicPeriodId = $academicPeriodId", 'debug');
+        //        $this->log("weekId = $weekId", 'debug');
+        //        $this->log("weekStartDay = $weekStartDay", 'debug');
+        //        $this->log("weekEndDay = $weekEndDay", 'debug');
+        //        $this->log("day = $day", 'debug');
+        //        $this->log("subjectId = $subjectId", 'debug');
         $archive = true;
         $weekly = false;
         $dayly = false;
@@ -720,17 +783,21 @@ class StudentAttendancesTable extends ControllerActionTable
             $academicPeriodId,
             $institutionClassId,
             $educationGradeId,
-            $institutionId);
-//        $this->log("step 1", 'debug');
+            $institutionId
+        );
+        //        $this->log("step 1", 'debug');
         if ($subjectId != 0) {
-            $query = $this->getAttendanceQueryWithSubjectId($query,
-                $subjectId);
+            $query = $this->getAttendanceQueryWithSubjectId(
+                $query,
+                $subjectId
+            );
         } else {
             $subjectId = null;
         }
-//        $this->log("step 2", 'debug');
+        //        $this->log("step 2", 'debug');
 
-        $query = $this->getAttendanceQueryWithoutWithdrawn($query,
+        $query = $this->getAttendanceQueryWithoutWithdrawn(
+            $query,
             $dayly,
             $day,
             $institutionId,
@@ -738,36 +805,38 @@ class StudentAttendancesTable extends ControllerActionTable
             $educationGradeId,
             $weekStartDay,
             $weekEndDay,
-            $archive);
-//        $this->log("step 3", 'debug');
+            $archive
+        );
+        //        $this->log("step 3", 'debug');
 
         if ($dayly) {
             // single day
-//            $this->log("step 4", 'debug');
+            //            $this->log("step 4", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithDayCondition($query, $day);
-//            $this->log("step 5", 'debug');
+            //            $this->log("step 5", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithDetails($query, $attendancePeriodId, $day, $subjectId, $archive);
-//            $this->log("step 6", 'debug');
+            //            $this->log("step 6", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithAbsenceTypes($query, $archive);
-//            $this->log("step 7", 'debug');
+            //            $this->log("step 7", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithMarkedRecords($query, $day, $archive);
-//            $this->log("step 8", 'debug');
+            //            $this->log("step 8", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithAbsenceReasons($query, $archive);
-//            $this->log("step 9", 'debug');
+            //            $this->log("step 9", 'debug');
 
             $query = $this->getAttendanceDailySelectFields($query, $day, $archive);
-//            $this->log("step 10", 'debug');
+            //            $this->log("step 10", 'debug');
 
         }
 
         if ($weekly) {
             $query = $this->getOverlapWeekCondition($query, $weekStartDay, $weekEndDay);
-            $WeekDaysAbsenceArray = $this->getWeekDaysAbsenceArray($query,
+            $WeekDaysAbsenceArray = $this->getWeekDaysAbsenceArray(
+                $query,
                 $academicPeriodId,
                 $weekId,
                 $institutionId,
@@ -778,8 +847,9 @@ class StudentAttendancesTable extends ControllerActionTable
                 $weekEndDay,
                 $attendancePeriodId,
                 $subjectId,
-                $archive);
-//            $this->log($WeekDaysAbsenceArray, 'debug');
+                $archive
+            );
+            //            $this->log($WeekDaysAbsenceArray, 'debug');
             $query = $this->getAttendanceWeeklySelectFields($query);
             $query = $this->getAbsenceWeeklyQueryFormatResults($query, $WeekDaysAbsenceArray, $weekStartDay, $weekEndDay);
         }
@@ -815,7 +885,8 @@ class StudentAttendancesTable extends ControllerActionTable
         $weekEndDay = $this->request->getQuery()['week_end_day'];
         $dayId = $this->request->getQuery()['day_id'];
         $educationGradeId = $this->request->getQuery()['education_grade_id'];
-        $subjectId = $this->request->getQuery()['subject_id'];
+        $subjectId = $this->request->getQuery()['subject_id']; //POCOR-8874
+        $attendanceBy = $this->request->getQuery()['attendance_by']; //POCOR-8874
 
         $sheetName = 'StudentAttendances';
         $sheets[] = [
@@ -826,7 +897,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 ->select(
                     [
                         'openemis_no' => 'Users.openemis_no'
-                    ]),
+                    ]
+                ),
             'institutionId' => $institutionId,
             'classId' => $classId,
             'educationGradeId' => $educationGradeId,
@@ -836,7 +908,8 @@ class StudentAttendancesTable extends ControllerActionTable
             'weekStartDay' => $weekStartDay,
             'weekEndDay' => $weekEndDay,
             'dayId' => $dayId,
-            'subjectId' => $subjectId,
+            'subjectId' => $subjectId, // POCOR-8874
+            'attendance_by' => $attendanceBy, //POCOR-8874
             'orientation' => 'landscape'
         ];
     }
@@ -847,6 +920,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $weekStartDay = $this->request->getQuery()['week_start_day'];
         $weekEndDay = $this->request->getQuery()['week_end_day'];
         $day_id = $this->request->getQuery()['day_id'];
+        $attendanceBy = $this->request->getQuery()['attendance_by']; //POCOR-8874
         $newArray[] = [
             'key' => 'StudentAttendances.openemis_no',
             'field' => 'openemis_no',
@@ -860,6 +934,30 @@ class StudentAttendancesTable extends ControllerActionTable
             'type' => 'string',
             'label' => 'Name'
         ];
+        //POCOR-8874 start
+        $newArray[] = [
+            'key' => 'StudentAttendances.attendanceBy',
+            'field' => 'attendanceBy',
+            'type' => 'string',
+            'label' => 'Attendance By'
+        ];
+        if ($attendanceBy == 'subject') {
+            $newArray[] = [
+                'key' => 'StudentAttendances.subject',
+                'field' => 'subject',
+                'type' => 'string',
+                'label' => 'Subject'
+            ];
+        } else {
+            $newArray[] = [
+                'key' => 'StudentAttendances.period',
+                'field' => 'period',
+                'type' => 'string',
+                'label' => 'Period'
+            ];
+        }
+        //POCOR-8874 end
+
         if ($day_id == -1) {
 
 
@@ -887,6 +985,13 @@ class StudentAttendancesTable extends ControllerActionTable
                     'week_end_day' => $weekEndDay //POCOR-7183
                 ])->toArray();
             //POCOR-7929 end
+            //POCOR-8874 start
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $getSubject = $InstitutionSubjects->find('all')
+                ->where([
+                    $InstitutionSubjects->aliasField('id') => $this->request->getQuery()['subject_id'],
+                ])->first();
+            //POCOR-8874 end
             $schooldays = [];
             for ($i = 0; $i < $daysPerWeek; ++$i) {
                 $schooldays[] = ($firstDayOfWeek + 7 + $i) % 7;
@@ -900,17 +1005,28 @@ class StudentAttendancesTable extends ControllerActionTable
                     'label' => 'Current Week'
                 ];
                 foreach ($schooldays as $key => $value) {
-                    //POCOR-7929 start
-                    foreach ($periodList as $Key => $PeriodData) {
+                    //POCOR-8874 start
+                    if ($attendanceBy == 'period') {
+                        //POCOR-7929 start
+                        foreach ($periodList as $Key => $PeriodData) {
 
+                            $newArray[] = [
+                                'key' => 'StudentAttendances.week_attendance_status_' . $options[$value] . '-' . $PeriodData['name'],
+                                'field' => 'week_attendance_status_' . $options[$value] . '-' . $PeriodData['name'],
+                                'type' => 'string',
+                                'label' => $options[$value] . '-' . $PeriodData['name']
+                            ];
+                        }
+                        //POCOR-7929 end
+                    } else {
                         $newArray[] = [
-                            'key' => 'StudentAttendances.week_attendance_status_' . $options[$value] . '-' . $PeriodData['name'],
-                            'field' => 'week_attendance_status_' . $options[$value] . '-' . $PeriodData['name'],
+                            'key' => 'StudentAttendances.week_attendance_status_' . $options[$value] . '-' . $getSubject->name,
+                            'field' => 'week_attendance_status_' . $options[$value] . '-' . $getSubject->name,
                             'type' => 'string',
-                            'label' => $options[$value] . '-' . $PeriodData['name']
+                            'label' => $options[$value] . '-' . $getSubject->name
                         ];
                     }
-                    //POCOR-7929 end
+                    //POCOR-8874 end
                 }
             }
         } else {
@@ -980,7 +1096,9 @@ class StudentAttendancesTable extends ControllerActionTable
         $options['week_start_day'] = $sheet['weekStartDay'];
         $options['week_end_day'] = $sheet['weekEndDay'];
         $options['day_id'] = $sheet['dayId'];
-        $options['subject_id'] = $sheet['subjectId'];
+        $options['subject_id'] = $sheet['subjectId']; //POCOR-8874
+        $options['attendance_by'] = $sheet['attendance_by']; //POCOR-8874
+
 
         $this->_absenceData = $this->findClassStudentsWithAbsence($sheet['query'], $options);
     }
@@ -1067,7 +1185,7 @@ class StudentAttendancesTable extends ControllerActionTable
             ])
             ->count();
         if ($AttendanceMarkedData > 0) {
-            return $query->find('list')->where(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId, 'institution_class_id' => $institutionClassId, 'education_grade_id' => $educationGradeId]);//POCOR-7028
+            return $query->find('list')->where(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId, 'institution_class_id' => $institutionClassId, 'education_grade_id' => $educationGradeId]); //POCOR-7028
             // return true;
         } else {
             $connection = ConnectionManager::get('default');
@@ -1088,12 +1206,13 @@ class StudentAttendancesTable extends ControllerActionTable
      * @return Query
      */
 
-    private function getAttendanceBasicQuery(Query $query,
-                                             $academicPeriodId,
-                                             $institutionClassId,
-                                             $educationGradeId,
-                                             $institutionId)
-    {
+    private function getAttendanceBasicQuery(
+        Query $query,
+        $academicPeriodId,
+        $institutionClassId,
+        $educationGradeId,
+        $institutionId
+    ) {
         $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $Users = TableRegistry::get('Security.Users');
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
@@ -1144,7 +1263,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
                 $InstitutionStudents->aliasField('student_status_id') => 1, //POCOR-7895
-//                $Statuses->aliasField('code NOT IN') => ['WITHDRAWN'],
+                //                $Statuses->aliasField('code NOT IN') => ['WITHDRAWN'],
             ])->group([
                 $Users->aliasField('id')
             ])
@@ -1222,7 +1341,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 $studentWithdraw->aliasField('institution_id') => $institutionId,
                 $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
                 $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
-                $DayCondititon,//POCOR-7183
+                $DayCondititon, //POCOR-7183
                 $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
             ])->toArray();
         //POCOR-6547[END]
@@ -1245,9 +1364,10 @@ class StudentAttendancesTable extends ControllerActionTable
 
     private function getAttendanceDailyQueryWithDayCondition(Query $query, $day)
     {
-//        $this->log("getAttendanceDailyQueryWithDayCondition $day", 'debug');
+        //        $this->log("getAttendanceDailyQueryWithDayCondition $day", 'debug');
         $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $dayCondition = [$InstitutionStudents->aliasField('start_date <= ') => $day,
+        $dayCondition = [
+            $InstitutionStudents->aliasField('start_date <= ') => $day,
             'OR' => [
                 $InstitutionStudents->aliasField('end_date is ') => null,
                 $InstitutionStudents->aliasField('end_date >= ') => $day,
@@ -1279,27 +1399,27 @@ class StudentAttendancesTable extends ControllerActionTable
             $Details = $tableLocator->get($table_name);
         }
 
-//        $this->log($subjectId, 'debug');
+        //        $this->log($subjectId, 'debug');
         $options = [
             $Details->aliasField('academic_period_id = ')
-            . $this->aliasField('academic_period_id'),
+                . $this->aliasField('academic_period_id'),
             $Details->aliasField('institution_class_id = ')
-            . $this->aliasField('institution_class_id'),
-//            $Details->aliasField('education_grade_id = ')
-//            . $this->aliasField('education_grade_id'),
+                . $this->aliasField('institution_class_id'),
+            //            $Details->aliasField('education_grade_id = ')
+            //            . $this->aliasField('education_grade_id'),
             $Details->aliasField('student_id = ')
-            . $this->aliasField('student_id'),
+                . $this->aliasField('student_id'),
             $Details->aliasField('institution_id = ')
-            . $this->aliasField('institution_id'),
+                . $this->aliasField('institution_id'),
             $Details->aliasField('period = ')
-            . $attendancePeriodId,
+                . $attendancePeriodId,
             $Details->aliasField('date = "')
-            . $day . '"'
+                . $day . '"'
         ];
         if ($subjectId) {
             $options[] = $Details->aliasField('subject_id = ') . $subjectId;
         }
-//        $this->log($options, 'debug');
+        //        $this->log($options, 'debug');
         $query->leftJoin(
             [$Details->getAlias() => $Details->getTable()],
             $options
@@ -1329,7 +1449,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
         $options = [
             $Types->aliasField('id = ')
-            . $Details->aliasField('absence_type_id'),
+                . $Details->aliasField('absence_type_id'),
         ];
 
         $query->leftJoin(
@@ -1349,7 +1469,7 @@ class StudentAttendancesTable extends ControllerActionTable
      */
     private function getAttendanceDailyQueryWithMarkedRecords(Query $query, $day, $archive = false)
     {
-//        $this->log($subjectId, 'debug');
+        //        $this->log($subjectId, 'debug');
         $table_name = 'student_attendance_marked_records';
         $tableLocator = new TableLocator();
         if (!$archive) {
@@ -1363,13 +1483,13 @@ class StudentAttendancesTable extends ControllerActionTable
 
         $options = [
             $Records->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
-//            $Records->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+            //            $Records->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
             $Records->aliasField('institution_id = ') . $this->aliasField('institution_id'),
             $Records->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
             $Records->aliasField('date = "') . $day . '"',
             $Records->aliasField('no_scheduled_class = ') . 1
         ];
-//        $this->log($options, 'debug');
+        //        $this->log($options, 'debug');
         $query->leftJoin(
             [$Records->getAlias() => $Records->getTable()],
             $options
@@ -1386,7 +1506,7 @@ class StudentAttendancesTable extends ControllerActionTable
      */
     private function getAttendanceDailyQueryWithAbsenceReasons(Query $query, $archive = false)
     {
-//        $this->log($subjectId, 'debug');
+        //        $this->log($subjectId, 'debug');
         $table_name = 'institution_student_absence_details';
         $tableLocator = new TableLocator();
         if (!$archive) {
@@ -1449,7 +1569,9 @@ class StudentAttendancesTable extends ControllerActionTable
         $absence_type_code = $Types->aliasField('code');
         $absence_type_name = $Types->aliasField('name');
         $student_absence_reason_id = $Details->aliasField('student_absence_reason_id');
-        $query->select([$this->aliasField('id'),
+        $query->select(
+            [
+                $this->aliasField('id'),
                 'date' => $Details->aliasField('date'),
                 'day' => '"' . $day . '"',
                 'period' => $Details->aliasField('period'),
@@ -1509,44 +1631,49 @@ class StudentAttendancesTable extends ControllerActionTable
      * @return array
      * @throws \Exception
      */
-    private function getWeekDaysAbsenceArray(Query $query,
-                                             $academicPeriodId,
-                                             $weekId,
-                                             $institutionId,
-                                             $institutionClassId,
-                                             $day,
-                                             $educationGradeId,
-                                             $weekStartDay,
-                                             $weekEndDay,
-                                             $attendancePeriodId,
-                                             $subjectId,
-                                             $archive = false)
-    {
+    private function getWeekDaysAbsenceArray(
+        Query $query,
+        $academicPeriodId,
+        $weekId,
+        $institutionId,
+        $institutionClassId,
+        $day,
+        $educationGradeId,
+        $weekStartDay,
+        $weekEndDay,
+        $attendancePeriodId,
+        $subjectId,
+        $archive = false
+    ) {
         $dayList = $this->getWeekDaysList(
             $academicPeriodId,
             $weekId,
-            $institutionId);
+            $institutionId
+        );
         $periodList = $this->getPeriodList(
             $institutionClassId,
             $academicPeriodId,
             $day,
             $educationGradeId,
             $weekStartDay,
-            $weekEndDay);
+            $weekEndDay
+        );
         $WeekDaysAbsenceArray = [];
         foreach ($dayList as $day) {
             $weekday = $day['day'];
             $date = $day['date'];
             foreach ($periodList as $period) {
                 $periodId = $period['id'];
-                $not_marked = $this->getNotMarkedDay($institutionId,
+                $not_marked = $this->getNotMarkedDay(
+                    $institutionId,
                     $academicPeriodId,
                     $institutionClassId,
                     $educationGradeId,
                     $attendancePeriodId,
                     $subjectId,
                     $date,
-                    $archive);
+                    $archive
+                );
                 $wideQuery = clone $query;
                 $wideQuery = $this->getAttendanceDailyQueryWithDetails($wideQuery, $periodId, $date, $subjectId, $archive);
                 $wideQuery = $this->getAttendanceDailyQueryWithAbsenceTypes($wideQuery, $archive);
@@ -1558,7 +1685,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     'groupField' => 'user_id',
                     'valueField' => function ($result) use ($not_marked, $periodId) {
                         $day = $result;
-//                            $this->log($day, 'debug');
+                        //                            $this->log($day, 'debug');
                         if ($not_marked) {
                             if (isset($result->no_scheduled_class) && $result->no_scheduled_class == 1) {
                                 return [$periodId => "NoScheduledClicked"];
@@ -1570,7 +1697,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     },
                 ])
                     ->toArray();
-//                    $this->log($wideQueryResult,'debug');
+                //                    $this->log($wideQueryResult,'debug');
                 foreach ($wideQueryResult as $student => $markday) {
                     if (isset($WeekDaysAbsenceArray[$student])) {
                         $WeekDaysAbsenceArray[$student][$weekday][$periodId] = $markday[$date][$periodId];
@@ -1591,7 +1718,9 @@ class StudentAttendancesTable extends ControllerActionTable
         $first_name = $Users->aliasField('first_name');
         $last_name = $Users->aliasField('last_name');
 
-        $query->select([$this->aliasField('id'),
+        $query->select(
+            [
+                $this->aliasField('id'),
                 $this->aliasField('student_id'),
                 'class_name' => $Classes->aliasField('name'),
                 'student_name' => "CONCAT($first_name, ' ', $last_name)",
@@ -1640,8 +1769,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 'academic_period_id' => $academicPeriodId,
                 'day_id' => $day,
                 'education_grade_id' => $educationGradeId,
-                'week_start_day' => $weekStartDay,//POCOR-7183
-                'week_end_day' => $weekEndDay//POCOR-7183
+                'week_start_day' => $weekStartDay, //POCOR-7183
+                'week_end_day' => $weekEndDay //POCOR-7183
             ])->toArray();
         return $periodList;
     }
@@ -1658,15 +1787,16 @@ class StudentAttendancesTable extends ControllerActionTable
      * @return bool
      * @throws \Exception
      */
-    private function getNotMarkedDay($institutionId,
-                                     $academicPeriodId,
-                                     $institutionClassId,
-                                     $educationGradeId,
-                                     $attendancePeriodId,
-                                     $subjectId,
-                                     $day,
-                                     $archive = false)
-    {
+    private function getNotMarkedDay(
+        $institutionId,
+        $academicPeriodId,
+        $institutionClassId,
+        $educationGradeId,
+        $attendancePeriodId,
+        $subjectId,
+        $day,
+        $archive = false
+    ) {
         $table_name = 'student_attendance_marked_records';
         $tableLocator = new TableLocator();
         if (!$archive) {
@@ -1675,13 +1805,13 @@ class StudentAttendancesTable extends ControllerActionTable
         if ($archive) {
             $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
             $table_name = $archiveTableAndConnection[0];
-            $Records = $tableLocator ->get($table_name);
+            $Records = $tableLocator->get($table_name);
         }
         $where = [
             $Records->aliasField('institution_id') => $institutionId,
             $Records->aliasField('academic_period_id') => $academicPeriodId,
             $Records->aliasField('institution_class_id') => $institutionClassId,
-//            $Records->aliasField('education_grade_id') => $educationGradeId,
+            //            $Records->aliasField('education_grade_id') => $educationGradeId,
             $Records->aliasField('date') => $day
         ];
         if ($attendancePeriodId) {
@@ -1738,5 +1868,4 @@ class StudentAttendancesTable extends ControllerActionTable
             });
         return $query;
     }
-
 }
