@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\WebhookController;
+
 use Illuminate\Http\Request;
 use App\Services\StudentService;
 use Illuminate\Support\Facades\Log;
@@ -1035,7 +1037,6 @@ class StudentController extends Controller
     public function addStudentAbsences(StudentAbsenceAdd $request)
     {
         try {
-
             //For POCOR-7772 Start
             $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'edit'], ['institution_id' => $request['institution_id']]);
             
@@ -1045,10 +1046,17 @@ class StudentController extends Controller
             //For POCOR-7772 End
 
             $data = $this->studentService->addStudentAbsences($request);
-            
             if($data == 1){
+                //POCOR-8631[START]
+                $webhookController = app(WebhookController::class);
+                $result = $webhookController->handleWebhookRequest($request);
+                //POCOR-8631[END]
                 return $this->sendSuccessResponse("Student absences data added.");
             } elseif($data == 2) {
+                //POCOR-8631[START]
+                $webhookController = app(WebhookController::class);
+                $result = $webhookController->handleWebhookRequest($request);
+                //POCOR-8631[END]
                 return $this->sendSuccessResponse("Student absences data updated.");
             } elseif($data == 3) {
                 return $this->sendErrorResponse("Student is not assigned to the class, grade and academic period for which attendance/absence is marked");
@@ -1244,4 +1252,68 @@ class StudentController extends Controller
         }
     }
     //POCOR-8221 Ends...
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/students/{openemis_no}/absences",
+     *     summary="Get Student Absence Details",
+     *     description="Retrieves student absence details for a given OpenEMIS number.",
+     *     tags={"Institutions"},
+     *     security={{"BearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="openemis_no",
+     *         in="path",
+     *         required=true,
+     *         description="The OpenEMIS number of the student.",
+     *         @OA\Schema(type="string", example="ST12345")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful retrieval of student absences.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="date", type="string", format="date", example="2024-03-01"),
+     *                     @OA\Property(property="institution", type="string", example="Avory Primary School"),
+     *                     @OA\Property(property="period", type="string", nullable=true, example=1),
+     *                     @OA\Property(property="class", type="string", example="Primary 1-A"),
+     *                     @OA\Property(property="subject", type="string", nullable=true, example="Creative Arts"),
+     *                     @OA\Property(property="absence_type", type="string", example="Absence - Excused")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Student Absences Data Not Found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Student Absences Data Not Found")
+     *         )
+     *     )
+     * )
+    */
+    public function getStudentAbsencesDetails(Request $request, $openemis_no)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->studentService->getStudentAbsencesDetails($params, $openemis_no);
+            if(count($data) > 0) {
+                return $this->sendSuccessResponse("Student Absences Data Found", $data);
+            } else {
+                return $this->sendSuccessResponse("Student Absences Data Not Found", false);
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Student Absences Data Not Found.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Student Absences Data Not Found');
+        }
+    }
 }
