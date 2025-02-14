@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\AssessmentService;
 use Illuminate\Support\Facades\Log;
+use App\Http\Requests\AssessmentItemStudentExemptionRequest;
 
 class AssessmentController extends Controller
 {
@@ -852,4 +853,92 @@ class AssessmentController extends Controller
         }
     }
     //POCOR-8292 end...
+
+    //POCOR-8292 start...
+
+     /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/students/assessment-item-exemption",
+     *     summary="Save Assessment Item Exemption",
+     *     description="Create an exemption record for a student based on the provided assessment and related details.",
+     *     tags={"Assessment"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={
+     *                 "assessment_id",
+     *                 "education_subject_id",
+     *                 "student_id",
+     *                 "institution_class_id",
+     *                 "education_grade_id",
+     *                 "assessment_period_id"
+     *             },
+     *             @OA\Property(property="assessment_id", type="integer", example=38, description="ID of the assessment."),
+     *             @OA\Property(property="education_subject_id", type="integer", example=37, description="ID of the education subject."),
+     *             @OA\Property(property="student_id", type="integer", example=13766, description="ID of the student."),
+     *             @OA\Property(property="institution_class_id", type="integer", example=611, description="ID of the institution class."),
+     *             @OA\Property(property="education_grade_id", type="integer", example=224, description="ID of the education grade."),
+     *             @OA\Property(property="assessment_period_id", type="integer", example=49, description="ID of the assessment period.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Exemption record created successfully.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Exemption record created successfully."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="assessment_id", type="integer", example=38),
+     *                 @OA\Property(property="education_subject_id", type="integer", example=37),
+     *                 @OA\Property(property="student_id", type="integer", example=13766),
+     *                 @OA\Property(property="institution_class_id", type="integer", example=611),
+     *                 @OA\Property(property="education_grade_id", type="integer", example=224),
+     *                 @OA\Property(property="assessment_period_id", type="integer", example=49),
+     *                 @OA\Property(property="created", type="string", format="date-time", example="2024-01-01T10:00:00Z")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Validation error.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Validation failed."),
+     *             @OA\Property(property="errors", type="object", additionalProperties=@OA\Property(type="string"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="An unexpected error occurred.")
+     *         )
+     *     )
+     * )
+     */
+
+    // POCOR-8619 end
+    public function saveAssessmentItemExemption(AssessmentItemStudentExemptionRequest $request)
+    {
+        try {
+            $data = $this->assessmentService->assessmentItemExemption($request);
+            if($data == 1){
+                return $this->sendSuccessResponse("Save successfuly", $data);
+            }else{
+                return $this->sendErrorResponse("Student is already exempted");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to save Exempted User Data in DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to save Exempted User Data in D');
+        }
+    }
 }

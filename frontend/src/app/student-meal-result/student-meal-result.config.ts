@@ -23,7 +23,7 @@ const textCheck: any = {
         console.log(params,"params");
         
         if (params && params.value) {
-            return params.value.includes("Invalid")
+            return (params.value.includes("Invalid") || params.value.includes("required"))
         }
     }
 }
@@ -83,7 +83,11 @@ const COLUMN_MEAL_BENEFIT_NAME: any = {
     width: 240,
     class: "ag-school-column",
     canEdit: false,
-    cellClassRules: textCheckId
+    cellClassRules: {
+        'error-data-style': (params: any) => {
+            return typeof params.value !== 'number';
+        }
+    }
 }
 
 const COLUMN_COMMENT: any = {

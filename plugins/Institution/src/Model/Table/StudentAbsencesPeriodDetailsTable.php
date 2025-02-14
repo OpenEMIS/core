@@ -510,6 +510,24 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 $absenceEntity = $InstitutionStudentAbsences->patchEntity($absenceEntity, $data);
                 $InstitutionStudentAbsences->save($absenceEntity);
             }
+            //POCOR-8631[START] webhook implementation 
+            if (!empty($studentId)) {
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+
+                $body = [
+                    'institution_class_id' => $classId,
+                    'education_grade_id' => $educationGradeId,
+                    'academic_period_id' => $academicPeriodId,
+                    'date' => $date,
+                    'institution_id' => $institutionId,
+                    'student_id' => $studentId,
+                    'absence_type_id' => $absenceTypeId,
+                ];
+
+                $body = json_encode($body);
+                $Webhooks->triggerShell('attendance_update', ['username' => ''], $body);
+            }
+            //POCOR-8631[END]
         }
     }
 
