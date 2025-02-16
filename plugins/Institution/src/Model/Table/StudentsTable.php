@@ -604,7 +604,7 @@ class StudentsTable extends ControllerActionTable
     public function onExcelRenderDate(Event $event, Entity $entity, $attr)
     {
         $field = $entity->{$attr['field']};
-        
+
         if (!empty($field)) {
             if ($field instanceof FrozenTime || $field instanceof FrozenDate) {
                 return $this->formatDate($field);
@@ -619,7 +619,7 @@ class StudentsTable extends ControllerActionTable
 
     //POCOR-8830
     public function onExcelGetStudentNationalityId(Event $event, Entity $entity)
-    {  
+    {
         $studentId = $entity->student_id;
         $studentNationalityId = $entity->student_nationality_id;
         $nationalitiesTable = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
@@ -639,9 +639,9 @@ class StudentsTable extends ControllerActionTable
         } else {
             return null;
         }
-        
+
     }
-    
+
 
     // returns error message if validation false
     public function validateEnrolledInAnyInstitution($studentId, $systemId, $options = [])
@@ -1786,12 +1786,12 @@ class StudentsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $listeners = [
+            TableRegistry::get('Institution.StudentUser'),
             TableRegistry::get('Institution.StudentAdmission'),
             TableRegistry::get('Institution.StudentTransferIn'),
             TableRegistry::get('Institution.StudentTransferOut'),
             TableRegistry::get('Institution.InstitutionClassStudents'),
             TableRegistry::get('Institution.InstitutionSubjectStudents'),
-            TableRegistry::get('Institution.StudentUser'),
             $this->Users
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
@@ -3374,12 +3374,12 @@ class StudentsTable extends ControllerActionTable
     {
         $institutionId = $this->institution_id;
         $institution = self::getRelatedRecord('institutions', $institutionId);
-        
+
         if ($institution) {
             $institution_code = $institution['code'];
             $institution_name = $institution['name'];
 
-            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
             use ($institution_name, $institution_code) {
                 return $results->map(function ($row) use ($institution_name, $institution_code) {
                     $row['institution_code'] = $institution_code;
