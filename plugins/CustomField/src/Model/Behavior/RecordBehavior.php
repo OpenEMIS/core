@@ -77,6 +77,7 @@ class RecordBehavior extends Behavior
 
     public function initialize(array $config): void
     {
+        // POCOR-8917 start
         parent::initialize($config);
         $model = $this->_table;
 //        dd($model);
@@ -161,10 +162,11 @@ class RecordBehavior extends Behavior
             $model->addBehavior('OpenEmis.Section');
         }
 
-        $model = $this->getConfig('model');
-        if (empty($model)) {
+        $theModel = $this->getConfig('model');
+        if (empty($theModel)) {
             $this->setConfig('model', $model->getRegistryAlias());
         }
+        // POCOR-8917 end
     }
 
     private function isCAv4()

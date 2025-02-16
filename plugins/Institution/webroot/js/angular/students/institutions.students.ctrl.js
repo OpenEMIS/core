@@ -611,10 +611,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         fileReader.readAsDataURL(photo);
 
         fileReader.onload = () => {
-            userCtrl.selectedUserData.photo_base_64 = fileReader.result;
-        };
-    }
+            const base64String = fileReader.result.split(',')[1];
 
+            // POCOR-8917 Manually trigger AngularJS digest cycle
+            $scope.$apply(() => {
+                userCtrl.selectedUserData.photo_base_64 = base64String;
+            });
+        };
+
+    };
     function getStudentCustomFields() {
         const studentId = userCtrl.userData?.id || null;
 
@@ -1712,8 +1717,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         userCtrl.selectedUserData.last_name = selectedData.last_name;
         userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
         userCtrl.selectedUserData.gender_id = selectedData.gender_id;
-        userCtrl.selectedUserData.photo_name = selectedData.photo_name;
-        userCtrl.selectedUserData.photo_base_64 = selectedData.photo_content;
+        userCtrl.selectedUserData.photo_name = selectedData.photo_name; // POCOR-8917
+        userCtrl.selectedUserData.photo_base_64 = selectedData.photo_content; // POCOR-8917
         userCtrl.selectedUserData.gender = {
             name: selectedData.gender
         };
