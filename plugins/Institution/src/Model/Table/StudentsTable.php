@@ -1786,7 +1786,7 @@ class StudentsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $listeners = [
-            TableRegistry::get('Institution.StudentUser'),
+            TableRegistry::get('Institution.StudentUser'), // POCOR-8917
             TableRegistry::get('Institution.StudentAdmission'),
             TableRegistry::get('Institution.StudentTransferIn'),
             TableRegistry::get('Institution.StudentTransferOut'),
