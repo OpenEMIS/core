@@ -129,7 +129,7 @@ class RecordBehavior extends Behavior
         $this->CustomModules = TableRegistry::get('CustomField.CustomModules');
         $this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
         try{
-        $this->CustomFields = $this->CustomFieldValues->CustomFields;
+            $this->CustomFields = $this->CustomFieldValues->CustomFields;
         }catch (\Exception $exception){
             Log::debug($exception->getMessage());
         }
