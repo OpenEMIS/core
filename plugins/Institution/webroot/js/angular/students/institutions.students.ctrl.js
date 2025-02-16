@@ -1712,6 +1712,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         userCtrl.selectedUserData.last_name = selectedData.last_name;
         userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
         userCtrl.selectedUserData.gender_id = selectedData.gender_id;
+        userCtrl.selectedUserData.photo_name = selectedData.photo_name;
+        userCtrl.selectedUserData.photo_base_64 = selectedData.photo_content;
         userCtrl.selectedUserData.gender = {
             name: selectedData.gender
         };
