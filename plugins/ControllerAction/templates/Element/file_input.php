@@ -13,6 +13,7 @@ if (isset($attr['label'])){
 } else {
 	$label = __('File');
 }
+//dd($attr['field']);
 $startWithOneLeftButton = false;
 $selectedButton = 'import'; // either import or download
 if (isset($attr['startWithOneLeftButton'])) {
@@ -86,9 +87,19 @@ if (isset($attr['alwaysShowOneButton'])) {
 
 
 			<div class="form-control" data-trigger="fileinput">
-				<i class="fa fa-file-o fileinput-exists"></i>
-				<span class="fileinput-filename"><?= !empty($attr['value']) ? $attr['value'] : ''; ?></span>
+			    <i class="fa fa-file-o fileinput-exists"></i>
+			    <!--POCOR-8903 start-->
+			    <?php if ($attr['field'] == 'excel_template') { ?>
+			        <span class="fileinput-filename" style=" padding-left: 40px;"">
+			            <?= !empty(trim($attr['attr']['value'], "^\"'")) ? trim($attr['attr']['value'], "^\"'") : ''; ?>
+			        </span>
+			    <?php } else { ?>
+			        <span class="fileinput-filename">
+			            <?= !empty($attr['value']) ? $attr['value'] : ''; ?>
+			        </span>
+			    <?php } ?> <!--POCOR-8903 end-->
 			</div>
+
 
 			<a href="#" class="input-group-addon btn fileinput-exists btn-file-cancel" data-dismiss="fileinput" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?=__('Remove') ?>"><i class="fa fa-close"></i></a>
 			<div class="input-group-addon btn btn-default btn-file" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?=__('Browse') ?>">
