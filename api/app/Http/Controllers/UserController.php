@@ -15,7 +15,7 @@ class UserController extends Controller
 {
     protected $userService;
 
-    public function __construct(UserService $userService) 
+    public function __construct(UserService $userService)
     {
         $this->userService = $userService;
     }
@@ -138,7 +138,7 @@ class UserController extends Controller
         try {
             $data = $this->userService->getUsersList($request);
             return $this->sendSuccessResponse("Users List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -267,7 +267,7 @@ class UserController extends Controller
         try {
             $data = $this->userService->getUsersData($userId);
             return $this->sendSuccessResponse("Users Data Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -354,7 +354,7 @@ class UserController extends Controller
     {
         try {
             $data = $this->userService->saveStudentData($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("Student data stored successfully.");
             } elseif($data == 2) {
@@ -362,7 +362,7 @@ class UserController extends Controller
             }else {
                 return $this->sendErrorResponse("Student data not stored.", $data);
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to store student data.',
@@ -449,7 +449,7 @@ class UserController extends Controller
     {
         try {
             $data = $this->userService->saveStaffData($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("Staff data stored successfully.");
             } elseif($data == 2) {
@@ -463,7 +463,7 @@ class UserController extends Controller
             } else {
                 return $this->sendErrorResponse("Staff data not stored.", $data);
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to store student data.',
@@ -473,7 +473,7 @@ class UserController extends Controller
             return $this->sendErrorResponse('Failed to store student data.');
         }
     }
-    
+
     //Day 2
 
     /**
@@ -533,7 +533,7 @@ class UserController extends Controller
         try {
             $data = $this->userService->getUsersGender($request);
             return $this->sendSuccessResponse("Users Gender List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Users Gender List from DB',
@@ -602,7 +602,7 @@ class UserController extends Controller
     {
         try {
             $data = $this->userService->saveGuardianData($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("Guardian data stored successfully.");
             } elseif($data == 2) {
@@ -612,7 +612,7 @@ class UserController extends Controller
             } else {
                 return $this->sendErrorResponse("Guardian data not stored.", $data);
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to store guardian data.',
@@ -681,7 +681,7 @@ class UserController extends Controller
     {
         try {
             $data = $this->userService->addUsers($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("User is created/updated successfully.");
             } elseif($data == 2){
@@ -689,7 +689,7 @@ class UserController extends Controller
             } else {
                 return $this->sendErrorResponse("User is not created/updated successfully.");
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'User is not created/updated successfully.',
@@ -877,6 +877,206 @@ class UserController extends Controller
             return $this->sendErrorResponse('Failed to get data from external data sources.');
         }
     }
-    
+
     //POCOR-8139 Ends
+
+    // POCOR-8896 start
+    /**
+     * @OA\Schema(
+     *     schema="UserUpdateRequest",
+     *     @OA\Property(property="first_name", type="string", example="Test"),
+     *     @OA\Property(property="middle_name", type="string", example=""),
+     *     @OA\Property(property="third_name", type="string", example=""),
+     *     @OA\Property(property="last_name", type="string", example="User"),
+     *     @OA\Property(property="preferred_name", type="string", example=""),
+     *     @OA\Property(property="gender_id", type="integer", example=1),
+     *     @OA\Property(property="date_of_birth", type="string", format="date", example="2011-01-01"),
+     *     @OA\Property(property="username", type="string", example="TestUser101"),
+     *     @OA\Property(property="password", type="string", example="TestUser101"),
+     *     @OA\Property(property="postal_code", type="string", example="12233"),
+     *     @OA\Property(property="address", type="string", example=""),
+     *     @OA\Property(property="birthplace_area_id", type="integer", example=2),
+     *     @OA\Property(property="address_area_id", type="integer", example=2),
+     *     @OA\Property(property="nationality_id", type="integer", example=2),
+     *     @OA\Property(property="identity_type_id", type="integer", example=160),
+     *     @OA\Property(property="identity_number", type="string", example="54542"),
+     * )
+     */
+    /**
+     * Updates a user's details using their OpenEMIS ID.
+     *
+     * @OA\Post(
+     *     path="/api/v4/users/openemisId/{openemis_no}",
+     *     summary="Update user data",
+     *     description="Update user details using OpenEMIS ID.",
+     *     tags={"Users"},
+     *     @OA\Parameter(
+     *         name="openemis_no",
+     *         in="path",
+     *         required=true,
+     *         description="The OpenEMIS number of the user",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
+     *     ),
+     *     @OA\Response(response=200, description="User data updated successfully."),
+     *     @OA\Response(response=403, description="Unauthorized access."),
+     *     @OA\Response(response=404, description="User not found."),
+     *     @OA\Response(response=500, description="Internal server error.")
+     * )
+     */
+    /**
+     * Updates a user's details using their OpenEMIS ID.
+     *
+     * @OA\Patch(
+     *     path="/api/v4/users/openemisId/{openemis_no}",
+     *     summary="Update user data",
+     *     description="Update user details using OpenEMIS ID.",
+     *     tags={"Users"},
+     *     @OA\Parameter(
+     *         name="openemis_no",
+     *         in="path",
+     *         required=true,
+     *         description="The OpenEMIS number of the user",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
+     *     ),
+     *     @OA\Response(response=200, description="User data updated successfully."),
+     *     @OA\Response(response=403, description="Unauthorized access."),
+     *     @OA\Response(response=404, description="User not found."),
+     *     @OA\Response(response=500, description="Internal server error.")
+     * )
+     */
+    /**
+     * Updates a user's details using their OpenEMIS ID.
+     *
+     * @OA\Put(
+     *     path="/api/v4/users/openemisId/{openemis_no}",
+     *     summary="Update user data",
+     *     description="Update user details using OpenEMIS ID.",
+     *     tags={"Users"},
+     *     @OA\Parameter(
+     *         name="openemis_no",
+     *         in="path",
+     *         required=true,
+     *         description="The OpenEMIS number of the user",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
+     *     ),
+     *     @OA\Response(response=200, description="User data updated successfully."),
+     *     @OA\Response(response=403, description="Unauthorized access."),
+     *     @OA\Response(response=404, description="User not found."),
+     *     @OA\Response(response=500, description="Internal server error.")
+     * )
+     */
+    public function updateUserByOpenemisId(Request $request, string $openemis_no)
+    {
+        try {
+            // Determine required permissions
+            $requiredPermissions = $this->determinePermissionsToUpdateUser($request->all());
+
+            // Check all required permissions
+            if (!$this->hasAllPermissions($requiredPermissions)) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+
+            // Filter and process user data
+            $userData = $request->only([
+                'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name',
+                'gender_id', 'date_of_birth', 'identity_number', 'nationality_id', 'username',
+                'password', 'postal_code', 'address', 'birthplace_area_id', 'address_area_id',
+                'identity_type_id', 'identity_type_name'
+            ]);
+
+            if (empty($userData)) {
+                return $this->sendErrorResponse("Invalid user data.");
+            }
+
+            $userData['openemis_no'] = $openemis_no;
+
+            // Call service to update user
+            return $this->userService->patchUser($userData);
+
+        } catch (\Exception $e) {
+            Log::error('User update failed.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $this->sendErrorResponse('Internal server error.');
+        }
+    }
+
+    /**
+     * Determines the permissions required to update a user.
+     *
+     * @param array $requestData
+     * @return array
+     */
+    private function determinePermissionsToUpdateUser(array $requestData): array
+    {
+        $permissions = [];
+
+        if ($this->hasAny($requestData, ['first_name', 'last_name', 'middle_name',
+            'third_name', 'preferred_name', 'gender_id', 'date_of_birth',
+            'address', 'postal_code', 'address_area_id', 'birthplace_area_id'])) {
+            $permissions[] = ['Directories', 'Overview', 'edit'];
+        }
+
+        if ($this->hasAny($requestData, ['username', 'password'])) {
+            $permissions[] = ['Directories', 'Accounts', 'edit'];
+        }
+
+        if ($this->hasAny($requestData, ['identity_type_id', 'identity_number'])) {
+            $permissions[] = ['Directories', 'Identities', 'edit'];
+        }
+
+        if ($this->hasAny($requestData, ['nationality_id'])) {
+            $permissions[] = ['Directories', 'Nationalities', 'edit'];
+        }
+
+        if ($this->hasAny($requestData, ['email'])) {
+            $permissions[] = ['Directories', 'Contacts', 'edit'];
+        }
+
+        return $permissions;
+    }
+
+    /**
+     * Checks if the user has all required permissions.
+     *
+     * @param array $permissions
+     * @return bool
+     */
+    private function hasAllPermissions(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if (!checkPermission($permission)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Checks if any of the given fields exist in the request data.
+     *
+     * @param array $requestData
+     * @param array $fields
+     * @return bool
+     */
+    private function hasAny(array $requestData, array $fields): bool
+    {
+        return (bool) array_intersect_key(array_flip($fields), $requestData);
+    }
+    // POCOR-8896 end
+
 }
