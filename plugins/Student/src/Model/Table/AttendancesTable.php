@@ -57,23 +57,44 @@ class AttendancesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->
-            select(['student_id' => $this->aliasField('student_id'),
-            'date' => 'AttendanceMarkedRecords.date',
-            'period' => 'AttendanceMarkedRecords.period',
-            'subject_id' => 'AttendanceMarkedRecords.subject_id',
-            'comment' => 'Absences.comment',
-            'absence_type_id' => 'Absences.absence_type_id',
-            'student_absence_reason_id' => 'Absences.student_absence_reason_id',
-            $this->aliasField('academic_period_id'),
-            $this->aliasField('institution_id'),
-            $this->aliasField('education_grade_id')
-            ])->
-        innerJoin(['AttendanceMarkedRecords' => 'student_attendance_marked_records'],
-        ['AttendanceMarkedRecords.institution_class_id = ' . $this->aliasField('institution_class_id')])
-        ->leftJoin(['Absences' => 'institution_student_absence_details'],
-        ['Absences.student_id = ' . $this->aliasField('student_id'),
-            'Absences.date = AttendanceMarkedRecords.date' ]);
+        $query
+            ->select([
+                'student_id' => $this->aliasField('student_id'),
+                'date' => 'AttendanceMarkedRecords.date',
+                'period' => 'AttendanceMarkedRecords.period',
+                'subject_id' => 'AttendanceMarkedRecords.subject_id',
+                'comment' => 'Absences.comment',
+                'absence_type_id' => 'Absences.absence_type_id',
+                'student_absence_reason_id' => 'Absences.student_absence_reason_id',
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('education_grade_id')
+            ])
+            ->innerJoin(
+                ['InstitutionStudents' => 'institution_students'],
+                [
+                    'InstitutionStudents.student_id = ' . $this->aliasField('student_id'),
+                    'InstitutionStudents.institution_id = ' . $this->aliasField('institution_id'),
+                    'InstitutionStudents.student_status_id = ' . $this->aliasField('student_status_id'),
+                    'InstitutionStudents.education_grade_id = ' . $this->aliasField('education_grade_id'),
+
+                ]
+            )
+            ->innerJoin(
+                ['AttendanceMarkedRecords' => 'student_attendance_marked_records'],
+                [
+                    'AttendanceMarkedRecords.institution_class_id = ' . $this->aliasField('institution_class_id'),
+                    'AttendanceMarkedRecords.date BETWEEN InstitutionStudents.start_date AND IFNULL(InstitutionStudents.end_date, AttendanceMarkedRecords.date)'
+                ]
+            )
+            ->leftJoin(
+                ['Absences' => 'institution_student_absence_details'],
+                [
+                    'Absences.student_id = ' . $this->aliasField('student_id'),
+                    'Absences.date = AttendanceMarkedRecords.date'
+                ]
+            );
+
 //        dd($query);
     }
 
@@ -82,18 +103,32 @@ class AttendancesTable extends ControllerActionTable
     }
     public function setupFields()
     {
-        $this->field('date');
-//        $this->field('institution_class_id');
-        $this->fields['next_institution_class_id'];
-        $this->fields['institution_class_id'];
-        $this->fields['absence_type_id'];
-        $this->fields['student_absence_reason_id'];
-        $this->fields['comment'];
-        $this->fields['subject'];
-        $this->setFieldOrder([
-            'academic_period_id', 'institution_id', 'institution_class_id', 'date',
-            'absence_type_id', 'student_absence_reason_id', 'comment'
-        ]);
+        $this->fields['next_institution_class_id']['visible'] = false;
+        $this->fields['institution_student_absence_day_id']['visible'] = false;
+        $this->fields['education_grade_id']['visible'] = false;
+        $this->field('comment', ['visible' => true, 'attr' => ['label' => __('Comate')]]);
+        $this->fields['student_absence_reason_id']['visible'] = true;
+        $this->field('institution_class_id', ['visible' => true, 'type' => 'text']);
+        $this->field('date', ['visible' => true, 'attr' => ['label' => __('Date')]]);
+        $this->field('periods', ['visible' => true]);
+        $this->field('subjects', ['visible' => true]);
+        $this->setFieldOrder(['date', 'periods', 'subjects', 'institution_class_id', 'absence_type_id']);
+
+    }
+
+
+
+    public function onGetInstitutionClassId(Event $event, $entity)
+    {
+//        return 'a';
+        return $entity->institution_class->name;
+
+//        return $result->name;
+    }
+    public function onGetComment(Event $event, Entity $entity)
+    {
+
+        return $entity->comment;
     }
 
 
