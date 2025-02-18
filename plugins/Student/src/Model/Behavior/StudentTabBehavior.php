@@ -82,7 +82,7 @@ class StudentTabBehavior extends Behavior
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
+            'Absences' => ['text' => __('Attendance')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
             'Competencies' => ['text' => __('Competencies')],
