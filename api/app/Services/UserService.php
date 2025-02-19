@@ -447,4 +447,23 @@ class UserService extends Controller
 
 
     // POCOR-8896 end
+
+
+    //POCOR-8912 start
+    public function getUserIdByEmail(string $email)
+    {
+        try {
+            $user_id = $this->userRepository->getUserIdByEmail($email);
+
+            return $user_id;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+    //POCOR-8912 end
 }

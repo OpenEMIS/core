@@ -2312,4 +2312,29 @@ class UserRepository extends Controller
 
     // POCOR-8896 ends
 
+
+    //POCOR-8912 start
+    public function getUserIdByEmail(string $email)
+    {
+        try {
+            $user = SecurityUsers::
+            where('email', $email)
+                ->where('super_admin', 0)
+                ->first();
+            if (isset($user)) {
+                return $user->id;
+            }
+            return $this->sendErrorResponse('User Not Found');
+
+        } catch (\Exception $e) {
+
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+    //POCOR-8912 end
 }
