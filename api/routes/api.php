@@ -387,6 +387,7 @@ Route::group(
 
         Route::get('institutions/{institution_id}/shift-options', 'AttendanceController@getInstitutionShiftOption');
         //POCOR-7853 end
+        Route::get('institutions/{institutionId}/staff/{staffId}/attendances', 'AttendanceController@getStaffAttendancesDetails');//POCOR-8888
 
 
 
@@ -559,6 +560,11 @@ Route::group(
         //POCOR-8619 START
         Route::post('institutions/students/assessment-item-exemption', 'AssessmentController@saveAssessmentItemExemption');
         //POCOR-8619 END
+
+        // POCOR-8862 start
+        Route::get('guardians/{openemisId}', 'UserController@getGuardianByOpenemisNo')->where('openemisNo', '[\pL0-9]+'); // POCOR-8840
+        Route::get('users/username/{username}', 'UserController@getUserByUsername')->where('username', '[^\s]+'); // POCOR-8862
+        // POCOR8862 end
 
         // POCOR-8896 start
         Route::match(['post', 'patch', 'put'], 'users/openemisId/{openemis_no}', 'UserController@updateUserByOpenemisId')

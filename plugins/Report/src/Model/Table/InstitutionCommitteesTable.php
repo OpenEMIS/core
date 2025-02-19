@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 
 class InstitutionCommitteesTable extends AppTable
@@ -42,7 +42,7 @@ class InstitutionCommitteesTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $institutions = TableRegistry::get('institutions');
+        $institutions = TableRegistry::get('Institution.Institutions');
         $areaId = $requestData->area_education_id;
         $where = [];
         if($requestData->institution_id == 0){
