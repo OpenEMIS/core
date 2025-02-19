@@ -12,6 +12,7 @@ class POCOR8114 extends AbstractMigration
      */
     public function up()
     {
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         // create backup for security_functions     
         $this->execute('CREATE TABLE `z_8114_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `z_8114_security_functions` SELECT * FROM `security_functions`');
