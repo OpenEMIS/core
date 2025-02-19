@@ -572,7 +572,7 @@ class DirectoriesController extends AppController
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Attendance')],
+            'Absences' => ['text' => __('Absences')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
             'Results' => ['text' => __('Assessments')],
