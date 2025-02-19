@@ -1061,7 +1061,7 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.BulkStudentEnrolment']);
     }
     //POCOR-8434 Ends
-    
+
     public function StudentTransferIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferIn']);
@@ -1845,7 +1845,7 @@ class InstitutionsController extends AppController
         $reportCardId = $this->getQueryString('report_card_id');
         $encodedUrl = $this->request->getParam('pass')[0];
         $institutionName = $this->Institutions->get($institutionId)->name;
-        
+
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
         if ($isActive) {
@@ -6017,7 +6017,7 @@ class InstitutionsController extends AppController
 
         $sections = $this->getSections($tables["{$prefix}CustomForms"], $tables["{$prefix}CustomFormsFields"], $customModuleId, $prefix);
 
-        $fieldsArr = $this->getFieldsData($sections, $tables, $studentId, ['COORDINATES', 'TABLE'], $prefix);
+        $fieldsArr = $this->getFieldsData($sections, $tables, $studentId, ['COORDINATES', 'TABLE'], $prefix, $customModuleId); // POCOR-8917
         foreach ($fieldsArr as &$item) {
             $item[$this->getPrefixedFieldName($prefix, 'custom_form_id')] = $item['custom_form_id'];
             $item[$this->getPrefixedFieldName($prefix, 'custom_field_id')] = $item['custom_field_id'];
@@ -6388,7 +6388,7 @@ class InstitutionsController extends AppController
 
         $sections = $this->getSections($tables["{$prefix}CustomForms"], $tables["{$prefix}CustomFormsFields"], $customModuleId, $prefix);
 //        Log::debug(print_r($sections, true));
-        $fieldsArr = $this->getFieldsData($sections, $tables, $staffId, ['COORDINATES', 'TABLE'], $prefix);
+        $fieldsArr = $this->getFieldsData($sections, $tables, $staffId, ['COORDINATES', 'TABLE'], $prefix, $customModuleId); // POCOR-8917
 //        Log::debug(print_r($fieldsArr, true));
         foreach ($fieldsArr as &$item) {
             $item[$this->getPrefixedFieldName($prefix, 'custom_form_id')] = $item['custom_form_id'];
@@ -6584,7 +6584,7 @@ class InstitutionsController extends AppController
      */
     private function saveSecurityUser($userData)
     {
-        $securityUsers = self::getDynamicTableInstance('security_users');
+        $securityUsers = self::getDynamicTableInstance('User.Users');//POCOR-8706
         $checkStudentExist = $securityUsers->find()->where(['openemis_no' => $userData['openemis_no']])->first();
 //        self::debug($userData);
         if ($checkStudentExist) {
@@ -6594,7 +6594,9 @@ class InstitutionsController extends AppController
         } else {
             $entity = $securityUsers->newEntity($userData);
         }
-
+        //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
+        $securityUsers->addBehavior('User.MoodleCreateUser');
+        
         try {
             return $securityUsers->save($entity);
         } catch (\Exception $e) {
@@ -6999,7 +7001,7 @@ class InstitutionsController extends AppController
                 ])
                 ->first();
             $workflowStepId = $workflowResults->workflowSteps_id;
-            
+
             if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($workflowResults)) {
                 $institutionStudentEnrolment = TableRegistry::get('Institution.StudentEnrolment');
                 $entityEnrolmentData = [
@@ -7007,7 +7009,7 @@ class InstitutionsController extends AppController
                     'end_date' => $endDate,
                     'student_id' => $userRecordId,
                     'status_id' => $workflowStepId,
-                    'assignee_id' => $this->Auth->user('id'), 
+                    'assignee_id' => $this->Auth->user('id'),
                     'institution_id' => $institutionId,
                     'academic_period_id' => $academicPeriodId,
                     'education_grade_id' => $educationGradeId,
@@ -7024,7 +7026,7 @@ class InstitutionsController extends AppController
                 unset($entityEnrolmentData);
                 unset($InstitutionEnrolmentResult);
             }
-        } else if(!empty($institutionId)) { 
+        } else if(!empty($institutionId)) {
             $workflowStepId = $studentAdmissionStatusValue;
 
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
@@ -7032,7 +7034,7 @@ class InstitutionsController extends AppController
                 ->where([
                     $workflowStepsTable->aliasField('id') => $workflowStepId
                     ])->first();
-            
+
             if($workflowStepData->workflow->name == 'Student Admission'){
                 if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
                     $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission');
@@ -7063,7 +7065,7 @@ class InstitutionsController extends AppController
                         'end_date' => $endDate,
                         'student_id' => $userRecordId,
                         'status_id' => $workflowStepId,
-                        'assignee_id' => $this->Auth->user('id'), 
+                        'assignee_id' => $this->Auth->user('id'),
                         'institution_id' => $institutionId,
                         'academic_period_id' => $academicPeriodId,
                         'education_grade_id' => $educationGradeId,
@@ -7080,9 +7082,9 @@ class InstitutionsController extends AppController
                     unset($entityEnrolmentData);
                     unset($InstitutionEnrolmentResult);
                 }
-            }       
+            }
         }
-        //previous code commented by Abhinav               
+        //previous code commented by Abhinav
         // $workflows = TableRegistry::get('Workflow.Workflows');
         // $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         // $workflowResults = $workflows->find()
@@ -7095,14 +7097,14 @@ class InstitutionsController extends AppController
         //         $workflows->aliasField('name') => 'Student Admission'
         //     ])
         //     ->first();
-        
+
         //POCOR-7716 start
         //$workflowStepId = $workflowResults->workflowSteps_id;
         // if ($studentAdmissionStatusValue !== 0 && strtolower($studentAdmissionStatus) !== "enrolled") {
         //     $workflowStepId = $studentAdmissionStatusValue;
         // }
         //POCOR-7716 end
-        
+
         //POCOR-8434 ends
         if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)) {
             $studentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
@@ -9603,7 +9605,7 @@ class InstitutionsController extends AppController
         $institutionDashborad = "{$this->plugin}/Institutions/{$encodedParams}/dashboard/{$encodedParams}";
         $institutionIndex = "Institutions/Institutions/index/";
 
-        
+
              $url = $_SERVER['REQUEST_URI'];
              $startPos = strpos($url, '/Institution/Institutions/Scanned/index/') + strlen('/Institution/Institutions/Scanned/index/');
              $encodedPart = substr($url, $startPos);
