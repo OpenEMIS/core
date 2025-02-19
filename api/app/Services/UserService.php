@@ -215,6 +215,60 @@ class UserService extends Controller
     }
 
 
+    //POCOR-8862 start
+    public function getUserIdByUsername(string $username)
+    {
+        try {
+            $user_id = $this->userRepository->getUserIdByUsername($username);
+
+            return $user_id;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+    //POCOR-8862 end
+
+
+    //POCOR-8840 start
+    public function getUserIdByOpenemisNo(string $openemisNo)
+    {
+        try {
+            $user_id = $this->userRepository->getUserIdByOpenemisNo($openemisNo);
+
+            return $user_id;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+
+    public function getGuardianWithStudents(int $guardianId)
+    {
+        try {
+            $guardianData = $this->userRepository->getGuardianWithStudents($guardianId);
+
+            return $guardianData;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+
+
+    //POCOR-8840 end
 
 
     public function saveStudentData($request)
