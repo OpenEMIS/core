@@ -571,5 +571,9 @@ Route::group(
             ->where('openemis_no', '[\pL0-9]+');
         // POCOR-8896 end
 
+        // POCOR-8912 start
+        Route::get('users/email/{email}', 'UserController@getUserByEmail'); // POCOR-8912
+        // POCOR-8912 end
+
     }
 );
