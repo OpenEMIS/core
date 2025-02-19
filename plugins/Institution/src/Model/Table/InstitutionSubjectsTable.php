@@ -76,6 +76,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         // this behavior restricts current user to see All Subjects or My Subjects
         $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Security.InstitutionSubject');
+        $this->addBehavior('User.MoodleCreateUser'); //POCOR-8706
 
         /**
          * Short cuts
@@ -783,7 +784,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
             $getClassId = $institutionClass->find()->where(['institution_id' => $institutionid, 'academic_period_id' => $academicPeriodId])->first()->id;
             $className = $getClassId;
-            list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
+            //POCOR-8706 start
+            $levelOptions = null;
+            $selectedLevel = null;
+            if($className)
+              list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
+            //POCOR-8706 end
             $attr['options'] = $levelOptions;
             if ($action == 'add') {
                 $attr['default'] = $selectedLevel;
@@ -2364,6 +2370,49 @@ class InstitutionSubjectsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+    /**
+     * Attach field names to the provided data entity by fetching associated details.
+     * 
+     * This function queries the database to fetch related data for a given entity ID 
+     * and populates the `fieldNames` array with information like academic period name, 
+     * institution code, education grade details, class name, and subject code.
+     * 
+     * @param \Cake\ORM\Entity $data The entity data to which field names will be attached.
+     * @return \Cake\ORM\Entity The modified entity with the `fieldNames` attribute populated.
+     * 
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException If no record is found for the given ID.
+     * 
+     * @author [Megha Gupta <barkha@madvit.com>]
+     * @since 2024-12-30
+     * @task POCOR-8706
+     */
+    public function attachFieldNames($data)
+    {
+        $fieldNames = [];
+        $subjectData = $this->find('all', [
+            'contain' => [
+                'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems',
+                'AcademicPeriods',
+                'EducationSubjects',
+                'Institutions',
+                'Teachers',
+                'Students',
+                'Classes'
+            ],
+        ])->where([$this->aliasField('id') => $data->id])->first();
 
-    // POCOR-6128 End
+        if ($subjectData) {
+            $fieldNames = [
+                'academic_period_name' => $subjectData->academic_period->name ?? null,
+                'institution_code' => $subjectData->institution->code ?? null,
+                'education_grade_code' => $subjectData->education_grade->code ?? null,
+                'education_grade_name' => $subjectData->education_grade->name ?? null,
+                'class_name' => $subjectData->class_name ?? null,
+                'subject_code' => $subjectData->education_subject_code ?? null,
+            ];
+        }
+        
+        $data['fieldNames'] = $fieldNames;
+        return $data;
+    }
 }

@@ -935,12 +935,14 @@ class EducationGradesTable extends ControllerActionTable
         // Academic period filter
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? //POCOR-8897
+                                    $serverRequest->getQuery('academic_period_id') :
+                                    $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         //Return all required options and their key
         $levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
-        $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
+        $selectedLevel = !is_null($serverRequest->getQuery('level')) ? $serverRequest->getQuery('level') : key($levelOptions);//POCOR-8897
 
         $cycleIds = $this->EducationProgrammes->EducationCycles
             ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -967,7 +969,7 @@ class EducationGradesTable extends ControllerActionTable
                 $EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'
             ])
             ->toArray();
-        $selectedProgramme = !is_null($serverRequest->getAttribute('query')['programme']) ? $serverRequest->getAttribute('query')['programme'] : key($programmeOptions);
+        $selectedProgramme = !is_null($serverRequest->getQuery('programme')) ? $serverRequest->getQuery('programme') : key($programmeOptions);//POCOR-8897
 
         return compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme');
     }
