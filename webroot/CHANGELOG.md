@@ -1,9 +1,30 @@
+### [4.11.0] - 2025-02-19
+- Implemented: Develop Guardian feature APIs
+- Implemented: Develop Users feature APIs by username
+- Implemented: Develop Staff Attendance API
+- Implemented: Develop changes to the Nationalities API
+- Bug Fixed: Reports > Institutions > Staff Leave: Getting 404 error when generating
+- Bug Fixed: Institutions>Performance>Assessments: Certain roles having issues accessing and editing assessments even when permission is given
+- Bug Fixed: Administration > System Setup > Education Structure > Grades: When creating grades for previous academic periods, the grades are showing up in the current academic period instead of previous academic periods
+- Bug Fixed: Institutions > General > Overview: When adding institution custom field, the custom field is not showing
+- Bug Fixed: Administration > System Configuration > Custom Validation: When navigating to Custom Validation page under System Configuration, the page refreshes but goes to Add A New Guardian page under System Configuration
+- Bug Fixed: Institutions > Behaviour > Students: The drop-down for classification is showing to the linked on
+- Bug Fixed: Institutions > Students > Bulk Transfer: When doing bulk transfer for enrolled students within the same academic period, the next education grade is showing a different grade
+- Bug Fixed: Develop enhancements to the Directory import function Part Two: Remove OpenEMIS ID column
+- Bug Fixed: Institutions > Appointments > Positions: When accessing Positions page, the page gives a 404 error. 
+- Bug Fixed: Reports > Institutions: Institutions: When users have permission to generate the institutions report, the report goes to error status
+- Bug Fixed: Administration>Survey>Forms>Rules: User is unable to save the rule
+- Bug Fixed: Institutions>Students>Transfer: Student is not transferred to another school even though transfer is completed
+- Bug Fixed: Reports > Institutions > Classes: When generating classes report, the report got stuck in progress
+- Bug Fixed: Homepage > Workbench: When assignee click on the workflow link to approve institutions positions, the page gives a 404 error
+
 ### [4.10.0] - 2025-02-06
 - Implemented: Develop Scanned feature
 - Bug Fixed: Institutions > Students: When viewing students page, the page gives 404 error
 - Bug Fixed: Administration > Performance > Assessments > Templates: When adding assessments, the page give the error message
 - Implemented: Develop Student Absence API
 - Implemented: Develop Student Absence Webhook API
+
 ### [4.9.0] - 2025-02-05
 - Implemented: Develop Admissions workflow and custom fields 
 - Bug Fixed: Theme Api is not working

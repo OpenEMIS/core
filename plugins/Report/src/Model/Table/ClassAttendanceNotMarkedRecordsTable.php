@@ -294,7 +294,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             'table' => 'institution_class_grades',
             'alias' => 'InstitutionClassGrades',
             'conditions' => [
-                'InstitutionClassGrades.institution_class_id = ' . $this->aliasField('id')
+                'InstitutionClassGrades.institution_class_id IS = ' . $this->aliasField('id')
             ]
         ];
 

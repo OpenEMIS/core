@@ -214,8 +214,13 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         let fileReader = new FileReader();
         fileReader.readAsDataURL(photo);
         fileReader.onload = () => {
-            userCtrl.selectedUserData.photo_base_64 = fileReader.result;
-        }
+            const base64String = fileReader.result.split(',')[1];
+
+            // POCOR-8917 Manually trigger AngularJS digest cycle
+            $scope.$apply(() => {
+                userCtrl.selectedUserData.photo_base_64 = base64String;
+            });
+        };
     }
 
 
