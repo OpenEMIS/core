@@ -241,7 +241,14 @@ class StudentsController extends AppController
 
     public function Absences()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Attendances']);
+        $request = $this->request;
+        $pass = $request->getParam('pass');
+        $passAction = $pass[0] ?? null;
+        if ($passAction === 'index') {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Attendances']);
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
+        }
     }
 
     public function ArchivedAbsences()
@@ -547,8 +554,9 @@ class StudentsController extends AppController
 
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->getAttribute('params')['action'];
-        $institutionID = $this->getInstitutionID();
+//
 
+        $institutionID = $this->getInstitutionID();
         $activeInstitution = $this->Institutions->get($institutionID);
         $institutionName = $activeInstitution->name;
 

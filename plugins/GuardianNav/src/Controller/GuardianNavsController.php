@@ -323,7 +323,7 @@ class GuardianNavsController extends AppController
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Attendance')],
+            'Absences' => ['text' => __('Absences')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
             'Competencies' => ['text' => __('Competencies')],
@@ -345,7 +345,7 @@ class GuardianNavsController extends AppController
         }
         // POCOR-8415:end
         foreach ($studentTabElements as $key => $tab) {
-            if(!empty($period) && $key == 'Attendance') {
+            if(!empty($period) && $key == 'Absences') {
                 $tabElements[$key]['url'] = array_merge($studentUrl, [
                     'action' =>'Student'.$key,
                     'queryString' => $queryString,

@@ -670,7 +670,7 @@ class ProfilesController extends AppController
             }
 
             $alias = $model->getAlias();
-
+            
             $excludedModel = ['ScholarshipApplications',
                 'Applications', // POCOR-7905
                 'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds', 'Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
@@ -1054,7 +1054,7 @@ class ProfilesController extends AppController
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Attendance')],
+            'Absences' => ['text' => __('Absences')],
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
             'Competencies' => ['text' => __('Competencies')],
