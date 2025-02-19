@@ -1478,7 +1478,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         'controller' => 'Institutions',
                         'action' => 'StaffPositionProfiles',
                         'view',
-                        $this->paramsEncode(['id' => $row->id]),
+                        $this->paramsEncode(['id' => $row->id, 'institution_id' => $row->institution_id]),
                         'institution_id' => $row->institution_id
                     ];
 
