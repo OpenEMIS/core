@@ -387,6 +387,7 @@ Route::group(
 
         Route::get('institutions/{institution_id}/shift-options', 'AttendanceController@getInstitutionShiftOption');
         //POCOR-7853 end
+        Route::get('institutions/{institutionId}/staff/{staffId}/attendances', 'AttendanceController@getStaffAttendancesDetails');//POCOR-8888
 
 
 
