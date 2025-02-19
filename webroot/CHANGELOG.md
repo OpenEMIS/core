@@ -24,6 +24,7 @@
 - Bug Fixed: Administration > Performance > Assessments > Templates: When adding assessments, the page give the error message
 - Implemented: Develop Student Absence API
 - Implemented: Develop Student Absence Webhook API
+
 ### [4.9.0] - 2025-02-05
 - Implemented: Develop Admissions workflow and custom fields 
 - Bug Fixed: Theme Api is not working
