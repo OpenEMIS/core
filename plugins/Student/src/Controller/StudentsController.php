@@ -245,7 +245,7 @@ class StudentsController extends AppController
         $pass = $request->getParam('pass');
         $passAction = $pass[0] ?? null;
         if ($passAction === 'index') {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Attendances']);
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Attendances', 'actions' => ['index']]);
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
         }
