@@ -265,7 +265,8 @@ class AlertsTable extends ControllerActionTable
             "Daily" => __("Daily"),
             "Weekly" => __("Weekly"),
             "Monthly" => __("Monthly"),
-            "Yearly" => __("Yearly")
+            "Yearly" => __("Yearly"),
+            "Once" => __("Once")
         ];
         $attr['type'] = 'select';
         $attr['attr']['options'] = $freqOptions;

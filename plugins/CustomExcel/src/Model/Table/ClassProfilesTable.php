@@ -289,7 +289,7 @@ class ClassProfilesTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionCommittees(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $InstitutionCommittees = TableRegistry::get('institution_committees');
+            $InstitutionCommittees = TableRegistry::get('Institution.InstitutionCommittees');
             $entity = $InstitutionCommittees
                 ->find()
                 ->where([$InstitutionCommittees->aliasField('academic_period_id') => $params['academic_period_id']])
