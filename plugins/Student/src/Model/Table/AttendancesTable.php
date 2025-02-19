@@ -40,12 +40,13 @@ class AttendancesTable extends ControllerActionTable
 //        $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
         //$this->hasOne('StudentAbsencesPeriodDetails', ['className' => 'Institution.StudentAbsencesPeriodDetails']);institution_class_id
 
-        $this->addBehavior('Institution.InstitutionTab',
-            ['appliedAction' => ['Students'=>
-                ['student_status_id', 'academic_period_id',],
-        'StudentUser'=>
-            ['student_status_id',
-                'academic_period_id',]]]);
+        $this->toggle('add', false);
+        $this->toggle('edit', false);
+        $this->toggle('delete', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Attendances' =>['student_id','institution_id','academic_period_id','institution_class_id','date','period','subject_id']
+            ]
+        ]);
 
         $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
         $this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
@@ -55,7 +56,13 @@ class AttendancesTable extends ControllerActionTable
             'StudentAttendances' => ['index', 'view']
         ]);
     }
-
+    private function setupTabElements()
+    {
+        $options['type'] = 'student';
+        $tabElements = $this->getAcademicTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'Absences');
+    }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         extract($this->getAcademicPeriodOptions());
@@ -140,6 +147,7 @@ class AttendancesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra){
         $this->setupFields();
+        $this->setupTabElements();
     }
     public function setupFields()
     {
