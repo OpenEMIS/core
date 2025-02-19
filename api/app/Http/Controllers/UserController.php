@@ -1096,7 +1096,7 @@ class UserController extends Controller
 
             // Return generic error response
             return $this->sendErrorResponse('Failed to retrieve guardian data. Please try again.');
-         }
+        }
 
     }
     // POCOR-8840 end
