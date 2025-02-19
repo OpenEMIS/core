@@ -36,7 +36,7 @@ class AbsencesTable extends ControllerActionTable
         }
         $this->toggle('add', false);
         $this->toggle('edit', false);
-        $this->toggle('delete', false);
+        $this->toggle('delete', false); // POCOR-8299
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Absences' =>['student_id','institution_id','academic_period_id','institution_class_id','date','period','subject_id']
             ]

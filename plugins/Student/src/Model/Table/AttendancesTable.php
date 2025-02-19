@@ -43,6 +43,8 @@ class AttendancesTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('delete', false);
+        $this->toggle('view', false);
+        $this->toggle('remove', false);
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Attendances' =>['student_id','institution_id','academic_period_id','institution_class_id','date','period','subject_id']
             ]
