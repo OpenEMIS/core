@@ -95,26 +95,34 @@ class POCOR8128 extends AbstractMigration
             ON DELETE RESTRICT ON UPDATE RESTRICT;
     ');
 
-        // Update NULL staff_leave_policy_id to GP policy ID
-        $this->execute('
-            UPDATE staff_position_titles
-            SET staff_leave_policy_id = (
-                SELECT id FROM staff_leave_policies WHERE code = "GP" LIMIT 1
-            )
-            WHERE staff_leave_policy_id IS NULL ;
-            AND EXISTS (SELECT id FROM staff_leave_policies WHERE code = "GP" LIMIT 1);
-        ');
+        $staffLeavePoliciesTable = TableRegistry::getTableLocator()->get('StaffLeavePolicies');
 
-        // Modify the column to be NOT NULL after ensuring all rows have a valid `staff_leave_policy_id`
-        $this->execute('
+        // Fetch the ID of the "GP" policy safely
+        $gpPolicy = $staffLeavePoliciesTable->find()
+            ->select(['id'])
+            ->where(['code' => 'GP'])
+            ->first();
+
+        if ($gpPolicy) { // this is done only if there is this policy
+            $gpPolicyId = $gpPolicy->id;
+
+            // Update staff_position_titles safely using PHP
+            $this->execute("
+                UPDATE staff_position_titles
+                SET staff_leave_policy_id = {$gpPolicyId}
+                WHERE staff_leave_policy_id IS NULL;
+            ");
+
+
+            // Modify the column to be NOT NULL after ensuring all rows have a valid `staff_leave_policy_id`
+            $this->execute('
         ALTER TABLE `staff_position_titles`
         MODIFY `staff_leave_policy_id` INT UNSIGNED NOT NULL;
     ');
 
-        // No risk of orphaned records:
-        // - `staff_position_titles` is backed up before modification.
-        // - The `DOWN` function restores `staff_position_titles` from the backup, removing the column and constraint.
-        // - `staff_leave_policies` is deleted in `DOWN`, so no orphaned records can exist.
+        }
+
+
     }
 
     /**
