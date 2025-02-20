@@ -16,13 +16,14 @@ use Cake\ORM\Locator\TableLocator;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\FrozenTime;
 use Cake\I18n\I18n;
+use Cake\Utility\Text;
+
 //POCOR-6658
 
 class AttendancesTable extends ControllerActionTable
 {
-    private $allDayOptions = [];
-    private $selectedDate;
-    private $_absenceData = [];
+    private $absenceList = [];
+    private $absenceReasonList = [];
 
     public function initialize(array $config): void
     {
@@ -33,7 +34,6 @@ class AttendancesTable extends ControllerActionTable
         //$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 //        $this->belongsTo('NextInstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'next_institution_class_id']);
@@ -50,13 +50,24 @@ class AttendancesTable extends ControllerActionTable
             ]
         ]);
 
-        $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
-        $this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
-        $this->absenceCodeList = $AbsenceTypesTable->getCodeList();
 
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'StudentAttendances' => ['index', 'view']
+        $this->absenceList = $this->getTypeList('Institution.AbsenceTypes');
+        $this->absenceReasonList = $this->getTypeList('Institution.StudentAbsenceReasons');
+        $this->addBehavior('Excel', [
+            'excludes' => ['id'],
+            'autoFields' => false
         ]);
+    }
+
+    public function getTypeList($tableAlias) {
+        $TypesTable = TableRegistry::get($tableAlias);
+        $result = $TypesTable
+            ->find('list')
+            ->toArray();
+        foreach ($result as $key => $value) {
+            $result[$key] = __($value);
+        }
+        return $result;
     }
     private function setupTabElements()
     {
@@ -87,7 +98,7 @@ class AttendancesTable extends ControllerActionTable
 
         $extra['elements']['controls'] = ['name' => 'Student.Attendances/controls', 'order' => 1];
 
-        $this->setIndexQuery($query, $selectedMonth);
+        $query = $this->setIndexQuery($query, $selectedMonth);
 
 
 //        dd($query);
@@ -156,13 +167,24 @@ class AttendancesTable extends ControllerActionTable
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['institution_student_absence_day_id']['visible'] = false;
         $this->fields['education_grade_id']['visible'] = false;
-        $this->field('comment', ['visible' => true, 'attr' => ['label' => __('Comate')]]);
-        $this->fields['student_absence_reason_id']['visible'] = true;
-        $this->field('institution_class_id', ['visible' => true, 'type' => 'text']);
+        $this->fields['student_status_id']['visible'] = false;
         $this->field('date', ['visible' => true, 'attr' => ['label' => __('Date')]]);
-        $this->field('periods', ['visible' => true]);
-        $this->field('subjects', ['visible' => true]);
-        $this->setFieldOrder(['date', 'periods', 'subjects', 'institution_class_id', 'absence_type_id']);
+        $this->field('period', ['visible' => true, 'attr' => ['label' => __('Period')]]);
+        $this->field('subject', ['visible' => true, 'attr' => ['label' => __('Subject')]]);
+        $this->field('absence_type', ['visible' => true, 'attr' => ['label' => __('Absence Type')]]);
+        $this->field('absence_reason', ['visible' => true, 'attr' => ['label' => __('Absence Reason')]]);
+        $this->field('comment', ['visible' => true, 'attr' => ['label' => __('Comments')]]);
+
+        $this->field('institution_class_id', ['visible' => true, 'type' => 'text']);
+        $this->setFieldOrder(['academic_period_id',
+            'institution_id',
+            'date',
+            'period',
+            'subject',
+            'institution_class_id',
+            'absence_type',
+            'absence_reason',
+            'comment']);
 
     }
 
@@ -177,16 +199,89 @@ class AttendancesTable extends ControllerActionTable
     }
     public function onGetComment(Event $event, Entity $entity)
     {
-
-        return $entity->comment;
+//        dd($entity);
+        return $this->getShortComment($entity->comment);
     }
 
+
+    /**
+     * Truncate a comment to a maximum length without breaking words,
+     * supporting international characters (UTF-8).
+     *
+     * @param string|null $comment The original comment text.
+     * @param int $maxLength Maximum allowed length (default: 250).
+     * @return string Truncated comment with "..." if necessary.
+     */
+    private function getShortComment(?string $comment, int $maxLength = 250): string
+    {
+        if (empty($comment)) {
+            return ''; // Return empty string if no comment
+        }
+
+        // Use CakePHP's Text::truncate() to ensure words are not cut in half
+        return Text::truncate($comment, $maxLength, [
+            'ellipsis' => '...',   // Add "..." if truncated
+            'exact' => false,      // Ensure we don't break words
+            'html' => false        // No HTML processing, treat as plain text
+        ]);
+    }
+
+    public function onGetAbsenceType(Event $event, Entity $entity)
+    {
+
+        $absence_type_id = $entity->absence_type_id;
+        if ($absence_type_id) {
+            $absenceList = $this->absenceList;
+            return __($absenceList[$absence_type_id] ?? '');
+        } else {
+            return __('Present');
+        }
+    }
+
+     public function onGetAbsenceReason(Event $event, Entity $entity)
+     {
+         $absence_reason_id = $entity->student_absence_reason_id;
+         if ($absence_reason_id) {
+             $absenceReasonList = $this->absenceReasonList;
+             return __($absenceReasonList[$absence_reason_id] ?? '');
+         } else {
+             return '';
+         }
+     }
+
+     public function onGetPeriod(Event $event, Entity $entity)
+     {
+         if(!$entity->period){
+             return '';
+         }
+         $Periods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+         $result = $Periods
+             ->find()
+             ->select(['name'])
+             ->where(['id' => $entity->period])
+             ->first();
+         return __($result->name ?? "");
+     }
+
+    public function onGetSubject(Event $event, Entity $entity)
+    {
+        if(!$entity->subject){
+            return '';
+        }
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $result = $InstitutionSubjects
+            ->find()
+            ->select(['name'])
+            ->where(['id' => $entity->subject_id])
+            ->first();
+        return __($result->name ?? "");
+    }
     /**
      * @param Query $query
      * @param string $selectedMonth
-     * @return void
+     * @return Query $query
      */
-    private function setIndexQuery(Query $query, string $selectedMonth): void
+    private function setIndexQuery(Query $query, string $selectedMonth): Query
     {
         $query
             ->select([
@@ -197,9 +292,10 @@ class AttendancesTable extends ControllerActionTable
                 'comment' => 'Absences.comment',
                 'absence_type_id' => 'Absences.absence_type_id',
                 'student_absence_reason_id' => 'Absences.student_absence_reason_id',
+                'absence_reason' => 'AbsenceReasons.name',
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('education_grade_id')
+                $this->aliasField('institution_class_id')
             ])
             ->innerJoin(
                 ['InstitutionStudents' => 'institution_students'],
@@ -224,8 +320,104 @@ class AttendancesTable extends ControllerActionTable
                     'Absences.student_id = ' . $this->aliasField('student_id'),
                     'Absences.date = AttendanceMarkedRecords.date'
                 ]
-            );
+            )
+            ->leftJoin(
+                ['AbsenceReasons' => 'student_absence_reasons'],
+                [
+                    'Absences.student_absence_reason_id = AbsenceReasons.id'
+                ]
+            )
+        ;
+        return $query;
     }
 
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $selectedMonth = $this->request->getQuery('month') ?? null;
+        $student_id = $this->getQueryString('student_id');
 
+        if (!$selectedMonth) {
+            $event->stopPropagation();
+        }
+        $query = $this->setIndexQuery($query, $selectedMonth);
+        $query->contain(['Users','Institutions','AcademicPeriods','InstitutionClasses']);
+        $query->select(['Users.first_name',
+            'Users.last_name',
+            'Institutions.name',
+            'AcademicPeriods.name',
+            'InstitutionClasses.name']);
+        $query->where([$this->aliasField('student_id = ') . $student_id]);
+//        dd($query);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
+
+        $extraField = [
+            [
+                "key" => "Attendances.student_id",
+                "field" => "student_id",
+                "type" => "integer",
+                "label" => __("Student")
+            ],
+//            [
+//                "key" => "Attendances.academic_period_id",
+//                "field" => "academic_period_id",
+//                "type" => "integer",
+//                "label" => __("Academic Period")
+//            ],
+//            [
+//                "key" => "AttendanceMarkedRecords.date",
+//                "field" => "date",
+//                "type" => "date",
+//                "label" => __("Date"),
+//                "formatting" => "DATE"
+//            ],
+//            [
+//                "key" => "Attendances.institution_id",
+//                "field" => "institution_id",
+//                "type" => "integer",
+//                "label" => __("Institution")
+//            ],
+//            [
+//                "key" => "Attendances.institution_class_id",
+//                "field" => "institution_class_id",
+//                "type" => "integer",
+//                "label" => __("Institution Class")
+//            ],
+//            [
+//                "key" => "AttendanceMarkedRecords.period",
+//                "field" => "period",
+//                "type" => "integer",
+//                "label" => __("Period")
+//            ],
+//            [
+//                "key" => "AttendanceMarkedRecords.subject",
+//                "field" => "subject",
+//                "type" => "integer",
+//                "label" => __("Subject"),
+//            ],
+//            [
+//                "key" => "Absences.comment",
+//                "field" => "comment",
+//                "type" => "string",
+//                "label" => __("Comment"),
+//                "formatting" => "TEXT"
+//            ],
+//            [
+//                "key" => "Absences.absence_type_id",
+//                "field" => "absence_type",
+//                "type" => "integer",
+//                "label" => __("Absence Type")
+//            ],
+//            [
+//                "key" => "Absences.student_absence_reason_id",
+//                "field" => "absence_reason",
+//                "type" => "integer",
+//                "label" => __("Absence Reason")
+//            ],
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
 }
