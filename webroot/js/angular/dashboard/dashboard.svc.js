@@ -391,3 +391,4 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             });
     };
 }
+

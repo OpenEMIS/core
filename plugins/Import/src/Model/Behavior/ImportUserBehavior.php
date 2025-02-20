@@ -16,7 +16,8 @@ class ImportUserBehavior extends Behavior {
 		'prefix' => ''
 	];
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void // POCOR-8683
+    {
 		$plugin = $this->config('plugin');
 		if (empty($plugin)) {
 			$exploded = explode('.', $this->_table->registryAlias());
@@ -30,7 +31,7 @@ class ImportUserBehavior extends Behavior {
 			$this->config('model', Inflector::pluralize($plugin));
 		}
 		$model = $this->config('model');
-		
+
 		$prefix_key = strtolower(Inflector::singularize($model)).'_prefix';
 		$prefix = TableRegistry::get('Configuration.ConfigItems')->value($prefix_key);
 		$prefix = explode(",", $prefix);
@@ -40,7 +41,7 @@ class ImportUserBehavior extends Behavior {
 	    // register the Users table once
 		$this->Users = TableRegistry::get('User.Users');
 	}
-	
+
 	public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
 		$importedUniqueCodes[] = $entity->openemis_no;
 	}

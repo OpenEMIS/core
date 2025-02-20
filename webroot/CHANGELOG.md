@@ -1,3 +1,72 @@
+### [4.11.0] - 2025-02-19
+- Implemented: Develop Guardian feature APIs
+- Implemented: Develop Users feature APIs by username
+- Implemented: Develop Staff Attendance API
+- Implemented: Develop changes to the Nationalities API
+- Bug Fixed: Reports > Institutions > Staff Leave: Getting 404 error when generating
+- Bug Fixed: Institutions>Performance>Assessments: Certain roles having issues accessing and editing assessments even when permission is given
+- Bug Fixed: Administration > System Setup > Education Structure > Grades: When creating grades for previous academic periods, the grades are showing up in the current academic period instead of previous academic periods
+- Bug Fixed: Institutions > General > Overview: When adding institution custom field, the custom field is not showing
+- Bug Fixed: Administration > System Configuration > Custom Validation: When navigating to Custom Validation page under System Configuration, the page refreshes but goes to Add A New Guardian page under System Configuration
+- Bug Fixed: Institutions > Behaviour > Students: The drop-down for classification is showing to the linked on
+- Bug Fixed: Institutions > Students > Bulk Transfer: When doing bulk transfer for enrolled students within the same academic period, the next education grade is showing a different grade
+- Bug Fixed: Develop enhancements to the Directory import function Part Two: Remove OpenEMIS ID column
+- Bug Fixed: Institutions > Appointments > Positions: When accessing Positions page, the page gives a 404 error. 
+- Bug Fixed: Reports > Institutions: Institutions: When users have permission to generate the institutions report, the report goes to error status
+- Bug Fixed: Administration>Survey>Forms>Rules: User is unable to save the rule
+- Bug Fixed: Institutions>Students>Transfer: Student is not transferred to another school even though transfer is completed
+- Bug Fixed: Reports > Institutions > Classes: When generating classes report, the report got stuck in progress
+- Bug Fixed: Homepage > Workbench: When assignee click on the workflow link to approve institutions positions, the page gives a 404 error
+
+### [4.10.0] - 2025-02-06
+- Implemented: Develop Scanned feature
+- Bug Fixed: Institutions > Students: When viewing students page, the page gives 404 error
+- Bug Fixed: Administration > Performance > Assessments > Templates: When adding assessments, the page give the error message
+- Implemented: Develop Student Absence API
+- Implemented: Develop Student Absence Webhook API
+
+### [4.9.0] - 2025-02-05
+- Implemented: Develop Admissions workflow and custom fields 
+- Bug Fixed: Theme Api is not working
+- Implemented: Develop a function to flag specific students as exempt from specific assessments items - part 3 (api)
+- Bug Fixed: Institutions>Performance>Report Cards: Download button is missing
+- Bug Fixed: Reports > Institutions > Class Attendance Marked Report: When generating report "Class Attendance Marked Report" and the any filter is selected, the report generated should show data.
+- Bug Fixed: Institutions > Students > Export: When exporting students report under Institutions, date of birth,start date and end date and nationality are not showing
+- Bug Fixed: Administrations > System Setup > Manuals: Permissions are not working
+
+### [4.8.1] - 2025-02-03
+- Bug Fixed: Institutions > Appointments > Positions: Users who have permission to view and add Institutions Position is getting 404 error when viewing the page
+- Bug Fixed: 404 error page is displayed but system errors is not showing meaningful error
+- Bug Fixed: API: Scanned api is not working
+- Bug Fixed: Administration>System Setup>System Configuration: External search identity is giving 404 error
+- Bug Fixed: Institutions > Academic > Subjects: When deleting subjects, the page gives a 404 error
+- Bug Fixed: Institutions > Classes > Delete function : System displays 404 error message
+- Bug Fixed: Institutions > Students > Import: When importing students, the page gives a 404 error
+- Bug Fixed: Login > Home: A user in the system gets 404 error when logging in into their account
+- Bug Fixed: Institutions > Statistics > Custom: When accessing institutions statistics custom report, the page gives a 404 error
+- Bug Fixed: Institutions > Staff > Import: When clicking on the download button for import staff, the page gives a 404 error
+- Bug Fixed: Administration > Appraisal > Form > Add Section: When adding section to staff appraisal, the page gives a 404 error
+- Bug Fixed: Institutions > Staff > Contacts > Add: when entering email under contacts, the system display an error message of email have to be numeric
+- Bug Fixed: Institutions>Students>Add: Naming of OpenEMISA to OpenEMIS
+- Bug Fixed: Personal>Attachments: Duplicate types appearing
+- Bug Fixed: Institutions > Staff > Add: When assigning staff to an institution and appointing staff as a homeroom teacher, the account page does not reflect the homeroom teacher role
+- Bug Fixed: Institutions > Academic > Classes: When viewing classes page, the class teacher and secondary teacher is not showing even though there are teachers assigned
+- Bug Fixed: Login page > Change Password page: When users log in for the first time, the system does not prompt user to change password
+- Bug Fixed: Directory > Users: When viewing users on directory, the institutions column is not showing even when the institutions column is configured in system configuration
+
+### [4.8.0] - 2025-01-17
+- Implemented: Develop Scanned feature API - Part 2
+- Implemented: Develop enhancements to the Directory import function
+- Bug Fixed: Institutions > General > Overview: After uploading institution logo and clicking on the save button, the page gives a 404 error
+- Bug Fixed: Administration>System Configuration>Two Factor Authentication: Getting 404 error when editing
+- Bug Fixed: Institutions > Students > Academic > Programmes > Transition: When clicking on the transition button, the page gives 404 error
+- Bug Fixed: Institutions > Students > Export: When exporting students report under Institutions, the academic period column is not showing any data/incorrect data
+- Bug Fixed: Administration > Examinations > Centres > Invigilators: When adding invigilators, the page does show the added invigilators and it just refreshes. Upon saving, the page show a message that no invigilators was not added
+- Bug Fixed: Administration>Examinations>Centres: Unable to link examination
+- Bug Fixed: Directory > Add: When adding nationality and identity upon adding students, the Internal Search page does not allow users to click the Next button
+- Bug Fixed: Institutions>Surveys>Forms: Remove edit and delete from select for users that are not assignees
+- Bug Fixed: Institutions > Staff > Career > Appraisal: When adding "Note" type field under staff Appraisal Form, the "Note" type field is editable upon editing staff Appraisal Form
+
 ### [4.7.0] - 2025-01-15
 - Implemented: Develop custom fields for the Class feature
 - Implemented: Develop an OpenEMIS Core Download Student Report Cards v4 API

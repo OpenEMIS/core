@@ -1151,4 +1151,25 @@ class StudentRepository extends Controller
         }
     }
     //POCOR-8221 Ends...
+
+    public function getStudentAbsencesDetails($request, $openemis_no)
+    {
+        try {
+            $absencesDetailsData = InstitutionStudentAbsenceDetails::with('securityUser','absenceType:id,name', 'studentAbsenceReason:id,name', 'subject','institution','institutionClass')
+                ->whereHas('securityUser', function ($query) use ($openemis_no) {
+                    $query->where('openemis_no', $openemis_no);
+                })
+                ->get()
+                ->toArray();
+            return $absencesDetailsData;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Student Absences Data Not Found.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Absences Data Not Found.');
+        }
+    }
 }

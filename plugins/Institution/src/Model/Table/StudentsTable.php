@@ -7,6 +7,8 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -28,13 +30,14 @@ class StudentsTable extends ControllerActionTable
     const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
     const PENDING_WITHDRAW = -4;
+    const PENDING_ENROLMENT = -5;//POCOR-8434
     const IN_QUEUE = -10;
 
     private $dashboardQuery = null;
     // POCOR-6129 custome fields code
     private $_dynamicFieldName = 'custom_field_data';
     private $customFieldData = null;
-    private $customFieldTableName = 'StaffCustomField.StaffCustomFields';
+    private $customFieldTableName = 'StudentCustomField.StudentCustomFields';
     // POCOR-6129 custome fields code
 
     private $institution_id;
@@ -275,20 +278,27 @@ class StudentsTable extends ControllerActionTable
     private static function getRelatedRecord($tableName, $relatedField)
     {
         if (!$relatedField) {
-            null;
+            return null;
         }
-        if($tableName = 'institution'){
+
+        // POCOR-8830 Ensure we don't overwrite the $tableName variable unintentionally
+        if ($tableName == 'institutions') {
             $tableName = 'Institution.Institutions';
         }
+
+        if ($tableName == 'academic_periods') {
+            $tableName = 'AcademicPeriod.AcademicPeriods';
+        }
+
         $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
         } catch (RecordNotFoundException $e) {
-            null;
+            return null;
         }
-        return null;
     }
+
 
     /**
      * @param $tableName
@@ -443,7 +453,7 @@ class StudentsTable extends ControllerActionTable
 
         $extraField[] = [
             'key' => 'student_nationality',
-            'field' => 'student_nationality',
+            'field' => 'student_nationality_id', //POCOR-8830
             'type' => 'string',
             'label' => __('Nationality')
         ];
@@ -589,6 +599,49 @@ class StudentsTable extends ControllerActionTable
 
         return implode(' ', $studentName);
     }
+
+    //POCOR-8830
+    public function onExcelRenderDate(Event $event, Entity $entity, $attr)
+    {
+        $field = $entity->{$attr['field']};
+
+        if (!empty($field)) {
+            if ($field instanceof FrozenTime || $field instanceof FrozenDate) {
+                return $this->formatDate($field);
+            } else {
+                $date = new FrozenTime($field);
+                return $this->formatDate($date);
+            }
+        } else {
+            return $field;
+        }
+    }
+
+    //POCOR-8830
+    public function onExcelGetStudentNationalityId(Event $event, Entity $entity)
+    {
+        $studentId = $entity->student_id;
+        $studentNationalityId = $entity->student_nationality_id;
+        $nationalitiesTable = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
+        $nationalities = $nationalitiesTable
+        ->find()
+        ->select(['name' => $nationalitiesTable->aliasField('name')])
+        ->where(function($exp) use ($studentNationalityId, $nationalitiesTable) {
+            if ($studentNationalityId !== null) {
+                return $exp->eq($nationalitiesTable->aliasField('id'), $studentNationalityId);
+            } else {
+                return $exp->isNull($nationalitiesTable->aliasField('id'));
+            }
+        })
+        ->first();
+        if ($nationalities) {
+            return $nationalities->name;
+        } else {
+            return null;
+        }
+
+    }
+
 
     // returns error message if validation false
     public function validateEnrolledInAnyInstitution($studentId, $systemId, $options = [])
@@ -1155,6 +1208,7 @@ class StudentsTable extends ControllerActionTable
         // To redirect to Pending statuses page
         $pendingStatuses = [
             self::PENDING_ADMISSION => 'StudentAdmission',
+            self::PENDING_ENROLMENT => 'StudentEnrolment',//POCOR-8434
             self::PENDING_TRANSFERIN => 'StudentTransferIn',
             self::PENDING_TRANSFEROUT => 'StudentTransferOut',
             self::PENDING_WITHDRAW => 'StudentWithdraw',
@@ -1284,7 +1338,7 @@ class StudentsTable extends ControllerActionTable
                             $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'student_status_id']);
                         }
                     } else {
-                        $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'student_status_id']);
+                        $this->field("student_identity_number", ['visible' => false, 'after' => 'student_status_id']);
                     }
                 }
             }
@@ -1732,12 +1786,12 @@ class StudentsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $listeners = [
+            TableRegistry::get('Institution.StudentUser'), // POCOR-8917
             TableRegistry::get('Institution.StudentAdmission'),
             TableRegistry::get('Institution.StudentTransferIn'),
             TableRegistry::get('Institution.StudentTransferOut'),
             TableRegistry::get('Institution.InstitutionClassStudents'),
             TableRegistry::get('Institution.InstitutionSubjectStudents'),
-            TableRegistry::get('Institution.StudentUser'),
             $this->Users
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
@@ -2307,16 +2361,16 @@ class StudentsTable extends ControllerActionTable
                     COUNT(DISTINCT s.student_id) AS student_count
                     FROM security_users u
                     INNER JOIN  institution_students s ON s.student_id = u.id
-                    WHERE  s.institution_id = ".$institutionId." AND academic_period_id = ".$academicPeriod." 
+                    WHERE  s.institution_id = ".$institutionId." AND academic_period_id = ".$academicPeriod."
                     GROUP BY  age ORDER BY age";
-            
+
         $ageCounts = $connection->execute($sql)->fetchAll('assoc');
         $dataSet = array_map(function($row) {
             return [__('Age') . ' ' . $row['age'], $row['student_count']];
         }, $ageCounts);
-    
+
         $params['dataSet'] = $dataSet;
-        
+
         return $params;
     }
     //POCOR-8721 end
@@ -3315,39 +3369,44 @@ class StudentsTable extends ControllerActionTable
      * @param Query $query
      * @return Query
      */
+
     private function addInstitutionFields(Query $query)
     {
         $institutionId = $this->institution_id;
         $institution = self::getRelatedRecord('institutions', $institutionId);
-        $institution_code = $institution['code'];
-        $institution_name = $institution['name'];
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
-        use ($institution_name, $institution_code) {
-            return $results->map(function ($row) use ($institution_name, $institution_code) {
-                $row['institution_code'] = $institution_code;
-                $row['institution_name'] = $institution_name;
-                return $row;
+
+        if ($institution) {
+            $institution_code = $institution['code'];
+            $institution_name = $institution['name'];
+
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+            use ($institution_name, $institution_code) {
+                return $results->map(function ($row) use ($institution_name, $institution_code) {
+                    $row['institution_code'] = $institution_code;
+                    $row['institution_name'] = $institution_name;
+                    return $row;
+                });
             });
-        });
+        }
         return $query;
     }
 
-    /**
-     * @param Query $query
-     * @return Query
-     */
     private function addAcademicPeriodField(Query $query)
     {
         $periodId = $this->academic_period_id;
         $academic_period = self::getRelatedRecord('academic_periods', $periodId);
-        $academic_period_name = $academic_period['name'];
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
-        use ($academic_period_name) {
-            return $results->map(function ($row) use ($academic_period_name) {
-                $row['academic_period_name'] = $academic_period_name;
-                return $row;
+
+        if ($academic_period) {
+            $academic_period_name = $academic_period['name'];
+
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+            use ($academic_period_name) {
+                return $results->map(function ($row) use ($academic_period_name) {
+                    $row['academic_period_name'] = $academic_period_name;
+                    return $row;
+                });
             });
-        });
+        }
         return $query;
     }
 
@@ -3654,9 +3713,9 @@ class StudentsTable extends ControllerActionTable
                 $tableToClean->aliasField($field_name) => $student_id
             ]);
         } catch (\Exception $e) {
-            Log::error(
-                'Failed to fetch remove from table',
-                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            Log::error( // POCOR-8683
+                print_r(['Failed to fetch remove from table' =>
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], true)
             );
         }
         return $affected;
@@ -3699,6 +3758,7 @@ class StudentsTable extends ControllerActionTable
             self::PENDING_TRANSFERIN => __('Pending Transfer In'),
             self::PENDING_TRANSFEROUT => __('Pending Transfer Out'),
             self::PENDING_ADMISSION => __('Pending Admission'),
+            self::PENDING_ENROLMENT => __('Pending Enrolment'),//POCOR-8434
             self::PENDING_WITHDRAW => __('Pending Withdraw'),
             self::IN_QUEUE => __('In Queue'),
         ];
