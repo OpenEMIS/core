@@ -453,7 +453,7 @@ class ConfigItemsTable extends AppTable
     {
         $this->ControllerAction->field('value_selection', ['visible' => ['view' => true], 'after' => 'value']);
 
-        $identity_types = TableRegistry::get('identity_types');
+        $identity_types = TableRegistry::get('FieldOption.IdentityTypes');
         $option_types = $identity_types
             ->find()
             ->where(['id' => $entity->value_selection])
@@ -1031,12 +1031,18 @@ class ConfigItemsTable extends AppTable
         $query = $workflowStepsTable->find()->contain('Workflows')
             ->where([
                 $workflowStepsTable->aliasField('category IN') => [1, 2],
-                "Workflows.code" => "STUDENT-ADMISSION-1001"
+                "Workflows.code IN" => ["STUDENT-ADMISSION-1001","STUDENT-ENROLMENT-1001"]//POCOR-8434
             ])->toArray();
-        $customOptions[0] = "Enrolled";
         foreach ($query as $key => $value) {
-            $customOptions[$value->id] = $value->name;
+            //POCOR-8434 starts
+            if($value->workflow->name == 'Student Admission'){
+                $valName = 'Pending Admission : '.$value->name;
+            }else{
+                $valName = 'Pending Enrolment : '.$value->name;
+            }
+            $customOptions[$value->id] = $valName;
         }
+        $customOptions[0] = 'Pending Enrolment : '."Enrolled";//POCOR-8434 ends
         return $customOptions;
     }
     //POCOR-8751 start

@@ -44,7 +44,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         getMySubjectTeacherViewPermissions : getMySubjectTeacherViewPermissions,//POCOR-6734 
         getAllSubjectTeacherViewPermissions : getAllSubjectTeacherViewPermissions,//POCOR-6734
         getAllCommentTeacherViewPermissions : getAllCommentTeacherViewPermissions,//POCOR-6800
-        getAllCommentTeacherEditPermissions : getAllCommentTeacherEditPermissions//POCOR-6800
+        getAllCommentTeacherEditPermissions : getAllCommentTeacherEditPermissions,//POCOR-6800
+        getCurrentUserRole: getCurrentUserRole
     };
 
     return service;
@@ -147,13 +148,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             .ajax({success: success, defer: true});
     };
 
-    function getAllSubjectTeacherViewPermissions(params,institutionId,role) {
+    function getAllSubjectTeacherViewPermissions(params,institutionId,academic_period_id) {
         var extra = {
             staff_id: params.id,
             is_staff: params.is_staff,
             super_admin: params.super_admin,
             institution_id: institutionId,
-            role: role,
+            academic_period_id: academic_period_id,
         };
         console.log('AllSubjectTeacherViewPermissions->extra svc==>>');
         console.log(extra);
@@ -197,6 +198,27 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
         return StaffTable
             .find('allCommentsViewPermissions', extra)
+            .ajax({success: success, defer: true});
+    };
+
+     //POCOR-6800:START
+     function getCurrentUserRole(params, institutionId, staff_id) {
+        var extra = {
+            staff_id: staff_id,
+            institution_id: institutionId,
+            super_admin: params.super_admin
+        };
+        var success = function(response, deferred) {
+            var permissionData = response
+            if (angular.isObject(permissionData)) {
+                deferred.resolve(permissionData);
+            } else {
+                deferred.reject('No proper data found regarding to permission.');
+            }
+        };
+
+        return StaffTable
+            .find('getCurrentUserRole', extra)
             .ajax({success: success, defer: true});
     };
 
@@ -273,7 +295,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         return $q.all(promises);
     };
 
-    function getTabs(reportCardId, classId, institutionId, currentUserId, principalCommentsRequired, principalEditCommentsRequired, homeroomTeacherCommentsRequired, homeroomTeacherEditCommentsRequired, teacherCommentsRequired, myteacherPermission, myteacherEditPermission, allCommentsViewRequired, allCommentsEditRequired) {
+    function getTabs(reportCardId, classId, institutionId, currentUserId, principalCommentsRequired, principalEditCommentsRequired, homeroomTeacherCommentsRequired, homeroomTeacherEditCommentsRequired, teacherCommentsRequired, myteacherPermission, myteacherEditPermission, allCommentsViewRequired, allCommentsEditRequired, allSubjectViewRequired, getCurrentUserRole, isHomeRoomClass) {
         var deferred = $q.defer();
         var tabs = [];
 
@@ -282,74 +304,571 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var homeroomTeacherPermission = {};
         var teacherPermission = {};
         var nonTeacherPermission = {};
-
         this.getEditPermissions(reportCardId, institutionId, classId, currentUserId)
             .then(function(response) {
                 console.log('getEditPermissions svc==>>');
-                console.log(response);
+                console.log(getCurrentUserRole);
                 isSuperAdmin = response[0];
                 principalPermission = response[1].data;
                 homeroomTeacherPermission = response[2].data;
                 teacherPermission = response[3].data;
                 nonTeacherPermission = response[4].data;
 
-                if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1)) || (allCommentsViewRequired == 1) || (principalCommentsRequired)) {//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
-                    editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
-                    tabs.push({
-                        tabName: "Principal",
-                        type: roles.PRINCIPAL,
-                        education_subject_id: 0,
-                        editable: editable
-                    });
+                //POCOR-8579[START]
+                //Superadmin[START]
+                if(getCurrentUserRole[0] == 'SUPER_ADMIN'){
+                    // if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1)) || (allCommentsViewRequired == 1) || (principalCommentsRequired)) {//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) {    
+                        editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
+                        tabs.push({
+                            tabName: "Principal",
+                            type: roles.PRINCIPAL,
+                            education_subject_id: 0,
+                            editable: editable
+                        });
+                    }
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
+                        editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
+                        tabs.push({
+                            tabName: "Homeroom Teacher",
+                            type: roles.HOMEROOM_TEACHER,
+                            education_subject_id: 0,
+                            editable: editable
+                        });
+                    }else if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) {
+                        editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
+                        tabs.push({
+                            tabName: "Homeroom Teacher",
+                            type: roles.HOMEROOM_TEACHER,
+                            education_subject_id: 0,
+                            editable: editable
+                        });
+                    }
                 }
+                //Superadmin[END]
 
-                if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1)) || (allCommentsViewRequired == 1) || homeroomTeacherCommentsRequired) {//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
-                    editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
-                    tabs.push({
-                        tabName: "Homeroom Teacher",
-                        type: roles.HOMEROOM_TEACHER,
-                        education_subject_id: 0,
-                        editable: editable
-                    });
+                //Superrole[START]
+                if(getCurrentUserRole[0] == 'Superrole'){
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) {
+                        if(allCommentsViewRequired == 1){
+                            editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
+                            tabs.push({
+                                tabName: "Principal",
+                                type: roles.PRINCIPAL,
+                                education_subject_id: 0,
+                                editable: editable
+                            });
+                        }
+                    }
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
+                        if(allCommentsViewRequired == 1){
+                            editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
+                            tabs.push({
+                                tabName: "Homeroom Teacher",
+                                type: roles.HOMEROOM_TEACHER,
+                                education_subject_id: 0,
+                                editable: editable
+                            });
+                        }
+                    }
                 }
+                //Superrole[START]
+
+                //Principle Case[START]
+                if((getCurrentUserRole.length == 1 && getCurrentUserRole[0] == 'PRINCIPAL')){
+                    if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1)) || (allCommentsViewRequired == 1) || (principalCommentsRequired)) {//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
+                        editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
+                        tabs.push({
+                            tabName: "Principal",
+                            type: roles.PRINCIPAL,
+                            education_subject_id: 0,
+                            editable: editable
+                        });
+                    }
+                    if(principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1 && allCommentsViewRequired == 1){
+                        tabs.push({
+                            tabName: "Homeroom Teacher",
+                            type: roles.HOMEROOM_TEACHER,
+                            education_subject_id: 0,
+                            editable: editable
+                        });
+                    }
+                }
+                //Principle Case[END]
+
+                //HOMEROOM_TEACHER[START]
+                if((getCurrentUserRole.length == 1 && getCurrentUserRole[0] == 'HOMEROOM_TEACHER')){
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
+                        editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
+                        tabs.push({
+                            tabName: "Homeroom Teacher",
+                            type: roles.HOMEROOM_TEACHER,
+                            education_subject_id: 0,
+                            editable: editable
+                        });
+                    }
+                }
+                //HOMEROOM_TEACHER[END]
+
+                //PRINCIPAL, HOMEROOM_TEACHER[START]
+                if((getCurrentUserRole[0] == 'PRINCIPAL' && getCurrentUserRole[1] == 'HOMEROOM_TEACHER')){
+                   if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1 && allSubjectViewRequired == 1 && isHomeRoomClass == 1)) { // Ehteram Code
+                        // if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1 && principalCommentsRequired == 1)) || (allCommentsViewRequired == 1)) {//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
+                            editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
+                            tabs.push({
+                                tabName: "Principal",
+                                type: roles.PRINCIPAL,
+                                education_subject_id: 0,
+                                editable: editable
+                            });
+                            tabs.push({
+                                tabName: "Homeroom Teacher",
+                                type: roles.HOMEROOM_TEACHER,
+                                education_subject_id: 0,
+                                editable: editable
+                            });
+                        // }
+                    }else if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1 && allSubjectViewRequired == 1 && isHomeRoomClass == 1)) {
+                        editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
+                            tabs.push({
+                                tabName: "Homeroom Teacher",
+                                type: roles.HOMEROOM_TEACHER,
+                                education_subject_id: 0,
+                                editable: editable
+                            });
+                    }else  if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1 && allSubjectViewRequired == 1 && isHomeRoomClass == 0)) {
+                        editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
+                        tabs.push({
+                            tabName: "Principal",
+                            type: roles.PRINCIPAL,
+                            education_subject_id: 0,
+                            editable: editable
+                        });
+                    }
+                }
+                //PRINCIPAL, HOMEROOM_TEACHER[END]
+
+                //HOMEROOM_TEACHER, TEACHER[START]
+
+                if((getCurrentUserRole[0] == 'HOMEROOM_TEACHER')){
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1  && isHomeRoomClass == 1)) { // Ehteram Code//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
+                        editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
+                        tabs.push({
+                            tabName: "Homeroom Teacher",
+                            type: roles.HOMEROOM_TEACHER,
+                            education_subject_id: 0,
+                            editable: editable
+                        });
+                    }else if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1  && isHomeRoomClass == 1)) {
+                        editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
+                        tabs.push({
+                            tabName: "Homeroom Teacher",
+                            type: roles.HOMEROOM_TEACHER,
+                            education_subject_id: 0,
+                            editable: editable
+                        });
+                    }
+                }
+                //HOMEROOM_TEACHER, TEACHER[END]
+
+                // if((getCurrentUserRole[0] == 'PRINCIPAL' && getCurrentUserRole[1] == 'HOMEROOM_TEACHER')){
+                //     if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1 && allSubjectViewRequired == 1)) { // Ehteram Code
+                //         // if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1 && principalCommentsRequired == 1)) || (allCommentsViewRequired == 1)) {//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
+                //             editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
+                //             tabs.push({
+                //                 tabName: "Principal",
+                //                 type: roles.PRINCIPAL,
+                //                 education_subject_id: 0,
+                //                 editable: editable
+                //             });
+                //             // tabs.push({
+                //             //     tabName: "Homeroom Teacher",
+                //             //     type: roles.HOMEROOM_TEACHER,
+                //             //     education_subject_id: 0,
+                //             //     editable: editable
+                //             // });
+                //         // }
+                //     }
+                // }
+                // else if((getCurrentUserRole[0] == 'PRINCIPAL' && getCurrentUserRole[1] == 'HOMEROOM_TEACHER')){
+                //     if (((allCommentsViewRequired == 1) && (allCommentsEditRequired == 1 && principalCommentsRequired == 1)) || (allCommentsViewRequired == 1)) {//POCOR-6800 add vm.allCommentsEditRequired //POCOR-6814
+                //         editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
+                //         tabs.push({
+                //             tabName: "Principal",
+                //             type: roles.PRINCIPAL,
+                //             education_subject_id: 0,
+                //             editable: editable
+                //         });
+                //         tabs.push({
+                //             tabName: "Homeroom Teacher",
+                //             type: roles.HOMEROOM_TEACHER,
+                //             education_subject_id: 0,
+                //             editable: editable
+                //         });
+                //     }
+                // }
                 return getSubjects(reportCardId, classId, principalPermission, nonTeacherPermission);
             }, function(error) {
                 console.log(error);
             })
             .then(function(response) {
-                if (((allCommentsViewRequired == 1) && (teacherCommentsRequired)) || (homeroomTeacherCommentsRequired == 1)) {
-                    subjects = response.data;
-                    if (angular.isObject(subjects) && subjects.length > 0) {
-                        angular.forEach(subjects, function(subject, key) {
-                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
-                            this.push({
-                                tabName: subject.name + " Teacher",
-                                type: roles.TEACHER,
-                                id: subject.id,
-                                education_subject_id: subject.education_subject_id,
-                                editable: editable
-                            });
-                        }, tabs);
-                    }
-                }else if((myteacherPermission == 1) && (teacherCommentsRequired == 0)){//POCOR-6734 starts
-                    subjects = response.data;
-                    console.log('subjects svc===>>>>>>>');
-                    console.log(response.data);
-                    if (angular.isObject(subjects) && subjects.length > 0) {
-                        angular.forEach(subjects, function(subject, key) {
-                            editable = /*(angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0) ||*/ (allCommentsEditRequired == 1) || (myteacherEditPermission == 1);//POCOR-8007 add myteacherEditPermission
-                            if((myteacherPermission == 1) && (teacherCommentsRequired == 0) && currentUserId == subject.staff_id){
+
+                //SUPER_ADMIN[START]
+                if(getCurrentUserRole[0] == 'SUPER_ADMIN'){
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
                                 this.push({
                                     tabName: subject.name + " Teacher",
                                     type: roles.TEACHER,
                                     id: subject.id,
                                     education_subject_id: subject.education_subject_id,
                                     editable: editable
-                                });   
-                            }
-                        }, tabs);
+                                });
+                            }, tabs);
+                        }
                     }
-                }//POCOR-6734 ends
+                    else if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { 
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }else if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 0 && teacherCommentsRequired == 1)) { 
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+                }
+                //SUPER_ADMIN[END]
+
+                //Superrole[START]
+                if(getCurrentUserRole[0] == 'Superrole'){
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }else if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) {
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    } else if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 0 && teacherCommentsRequired == 1)) {
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+                }
+                //Superrole[END]
+
+                // if (((allCommentsViewRequired == 1) && (teacherCommentsRequired) && (allSubjectViewRequired == 1)) || ((homeroomTeacherCommentsRequired == 1)  && (allSubjectViewRequired == 1))) { // Anubhav code
+                //Principle Case
+
+                //Principle Case[START  ]
+                if((getCurrentUserRole.length == 1 && getCurrentUserRole[0] == 'PRINCIPAL')){
+                    // if (((teacherCommentsRequired) && (allSubjectViewRequired == 1)) || ((homeroomTeacherCommentsRequired == 1)  && (allSubjectViewRequired == 1))) { // Ehteram Code
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+                    if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+                    if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 0 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+                }
+                //Principle Case[END]
+
+                //HomeRoom Teacher[START]
+                if(getCurrentUserRole[0] == 'HOMEROOM_TEACHER'){
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+
+                    if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+
+                    if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 0 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+
+                    if(isHomeRoomClass == 0){
+                        subjects = response.data;
+                        console.log('subjects svc===>>>>>>>');
+                        console.log(response.data);
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = /*(angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0) ||*/ (allCommentsEditRequired == 1) || (myteacherEditPermission == 1);//POCOR-8007 add myteacherEditPermission
+                                if((myteacherPermission == 1) && (teacherCommentsRequired == 0) && currentUserId == subject.staff_id){
+                                    this.push({
+                                        tabName: subject.name + " Teacher",
+                                        type: roles.TEACHER,
+                                        id: subject.id,
+                                        education_subject_id: subject.education_subject_id,
+                                        editable: editable
+                                    });   
+                                }
+                            }, tabs);
+                        }
+                    }
+                }
+                //HomeRoom Teacher[END]
+
+                //Teacher Case[START]
+                if(getCurrentUserRole[0] == 'TEACHER'){
+                    // alert(principalCommentsRequired);
+                    // alert(homeroomTeacherCommentsRequired);
+                    // alert(teacherCommentsRequired);
+                        subjects = response.data;
+                        console.log('subjects svc===>>>>>>>');
+                        console.log(response.data);
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = /*(angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0) ||*/ (allCommentsEditRequired == 1) || (myteacherEditPermission == 1);//POCOR-8007 add myteacherEditPermission
+                                if((myteacherPermission == 1) && (teacherCommentsRequired == 0) && currentUserId == subject.staff_id){
+                                    this.push({
+                                        tabName: subject.name + " Teacher",
+                                        type: roles.TEACHER,
+                                        id: subject.id,
+                                        education_subject_id: subject.education_subject_id,
+                                        editable: editable
+                                    });   
+                                }
+                            }, tabs);
+                    }
+                }
+
+
+                if(getCurrentUserRole[0] == 'TEACHER'){
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+                }
+
+                //Teacher Case[END]
+
+                //PRINCIPAL,HOMEROOM_TEACHER[START]
+                if((getCurrentUserRole[0] == 'PRINCIPAL' && getCurrentUserRole[1] == 'HOMEROOM_TEACHER')){
+                    if ((principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+                    if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+
+                    if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 0 && teacherCommentsRequired == 1)) { // Ehteram Code
+                        subjects = response.data;
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                                this.push({
+                                    tabName: subject.name + " Teacher",
+                                    type: roles.TEACHER,
+                                    id: subject.id,
+                                    education_subject_id: subject.education_subject_id,
+                                    editable: editable
+                                });
+                            }, tabs);
+                        }
+                    }
+                }
+                //PRINCIPAL,HOMEROOM_TEACHER[END]
+
+
+                // if (((teacherCommentsRequired) && (allSubjectViewRequired == 1)) || ((homeroomTeacherCommentsRequired == 1)  && (allSubjectViewRequired == 1))) { // Ehteram Code
+                //     subjects = response.data;
+                //     if (angular.isObject(subjects) && subjects.length > 0) {
+                //         angular.forEach(subjects, function(subject, key) {
+                //             editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                //             this.push({
+                //                 tabName: subject.name + " Teacher",
+                //                 type: roles.TEACHER,
+                //                 id: subject.id,
+                //                 education_subject_id: subject.education_subject_id,
+                //                 editable: editable
+                //             });
+                //         }, tabs);
+                //     }
+                // }
+                // else if((myteacherPermission == 1) && (teacherCommentsRequired == 0)){//POCOR-6734 starts
+                //     subjects = response.data;
+                //     console.log('subjects svc===>>>>>>>');
+                //     console.log(response.data);
+                //     if (angular.isObject(subjects) && subjects.length > 0) {
+                //         angular.forEach(subjects, function(subject, key) {
+                //             editable = /*(angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0) ||*/ (allCommentsEditRequired == 1) || (myteacherEditPermission == 1);//POCOR-8007 add myteacherEditPermission
+                //             if((myteacherPermission == 1) && (teacherCommentsRequired == 0) && currentUserId == subject.staff_id){
+                //                 this.push({
+                //                     tabName: subject.name + " Teacher",
+                //                     type: roles.TEACHER,
+                //                     id: subject.id,
+                //                     education_subject_id: subject.education_subject_id,
+                //                     editable: editable
+                //                 });   
+                //             }
+                //         }, tabs);
+                //     }
+                // }//POCOR-6734 ends
+
+                //POCOR-8579[END]
             }, function(error) {
                 console.log(error);
             })
@@ -357,7 +876,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 if (tabs.length > 0) {
                     deferred.resolve(tabs);
                 } else {
-                    deferred.reject('You have to configure the comments required first');
+                    deferred.reject('Report Card Comments are not required');
                 }
             });
 

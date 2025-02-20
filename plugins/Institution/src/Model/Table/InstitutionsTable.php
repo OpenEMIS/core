@@ -174,8 +174,8 @@ class InstitutionsTable extends ControllerActionTable
         ]);
         //POCOR-6520 starts: add isset condition only
         
-        if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel'&& $request->getParam('action') != "Classes") {//POCOR-8538
-            
+        $request = Router::getRequest();   
+        if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel' && $request->getParam('action')=="Institutions"){//POCOR-8538    
             $this->addBehavior('CustomField.Record', [
                 'fieldKey' => 'institution_custom_field_id',
                 'tableColumnKey' => 'institution_custom_table_column_id',
@@ -211,7 +211,7 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
-        $this->addBehavior('Area.Areapicker'); 
+        $this->addBehavior('Area.Areapicker');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
@@ -269,8 +269,10 @@ class InstitutionsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] != 'edit') { //POCOR-8585
-            $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
+        if(isset($this->request)) { // POCOR-8683
+            if (isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] != 'edit') { //POCOR-8585
+                $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
+            }
         }
         $validator
             ->setProvider('custom', $this)
@@ -987,7 +989,7 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view' => true]]);
         $this->field('shift_type', ['visible' => ['view' => false]]);
-        
+
         $institutionId = $this->getInstitutionID();
         if($institutionId){
             $this->field('shift_details', [
@@ -997,7 +999,7 @@ class InstitutionsTable extends ControllerActionTable
                 'data' => $this->getViewShiftDetail($institutionId, $this->InstitutionShifts->AcademicPeriods->getCurrent())
             ]);
         }
-        
+
         $this->field('location_section', ['type' => 'section', 'title' => __('Location')]);
 
         $language = I18n::getLocale();
@@ -1628,7 +1630,7 @@ class InstitutionsTable extends ControllerActionTable
         $extra['auto_contain'] = false;
         $query->contain($extra['query']['contain']);
         $query->select($extra['query']['select']);
-    
+
         // Start:POCOR-6849
         $sortList = ['Areas.name', 'name', 'code', 'Types.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
@@ -1636,7 +1638,7 @@ class InstitutionsTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
         // End:POCOR-6849
-    
+
         // POCOR-3983 if no sort, active status will be followed by inactive status
         if (!isset($this->request->getQuery['sort'])) {
             $query->order([
@@ -1646,14 +1648,14 @@ class InstitutionsTable extends ControllerActionTable
         }
         // end POCOR-3983
     }
-    
+
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
         if (empty($search) && !$this->isAdvancedSearchEnabled()) {
             // redirect to school dashboard if it is only one record and no add access
-    
+
             //POCOR-6866[START]
             $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
             $securityFunctionsData = $securityFunctions
@@ -1671,7 +1673,7 @@ class InstitutionsTable extends ControllerActionTable
             $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
             if(!empty($permission_id)){
                 $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
-        
+
                 $securityRoleFunctionsData = $securityRoleFunctions
                 ->find()
                 ->select([
@@ -1716,7 +1718,7 @@ class InstitutionsTable extends ControllerActionTable
                 $query->find('SearchInstitution', ['search' => $search]);
             }
         }
-        
+
         // to display message after redirect
         $sessionKey = 'HideButton.warning';
         if ($this->Session->check($sessionKey)) {
@@ -1742,7 +1744,7 @@ class InstitutionsTable extends ControllerActionTable
      **
      ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
-    { 
+    {
         $this->setFieldOrder([
             'information_section',
             'logo_content',

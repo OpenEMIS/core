@@ -56,7 +56,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
     gridHeight: "auto",
     loadType: "normal",
     externalFilter: false,
-    rowContentHeight: 35,
+    rowContentHeight: 60,
     paginationConfig: {
       pagesize: 10,
       total: 50000
@@ -77,6 +77,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
   institution_name: any;
   userId: number;
   commentArray: any[];
+  displayTabs: boolean = false;
 
   constructor(
     private _router: Router,
@@ -192,7 +193,10 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
       },
       error: (error: any) => {
         if (error) {
-          this.loginData();
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
         }
       }
     })
@@ -369,7 +373,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
               id: element?._matchingData?.Users?.openemis_no,
               name: element?._matchingData?.Users?.full_name,
               status: element?.student_status?.code,
-              total_mark: element?.total_mark,
+              total_mark: (Math.round(element?.total_mark * 100) / 100).toFixed(2),
               student_id: element?.student_id,
               comment_code: element.comments_code,
               comments: element?.comments,
@@ -379,7 +383,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
           });
         }
         this.displayLoading = false;
-
+        this.displayTabs = true;
         this.oldRowData = JSON.parse(JSON.stringify(this._row));
       },
       error: (error: any) => {
@@ -523,6 +527,8 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
         pageheaderText: "Avory Primary School - Comments",
         searchBtn: false
       }
+    } else {
+      this.displayLoading = false;
     }
   }
 

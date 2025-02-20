@@ -88,9 +88,9 @@ export class StudentMealImportComponent implements OnInit {
 
   ngOnInit(): void {
     this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
-    this.institution_id = 6;
+    // this.institution_id = 6;
     this.academic_Period = JSON.parse(localStorage.getItem("academic_Period"));
-    this.academic_Period = 33;
+    // this.academic_Period = 33;
     this.institution_name = localStorage.getItem("institutionName");
     this.pageheader.pageheaderText = `${this.institution_name} - Import Student Attendances`
     this.loginData();
@@ -251,11 +251,18 @@ export class StudentMealImportComponent implements OnInit {
 
   public generateImportTemplate() {
 
-    this.Rest.getItemImportTemplate(`institutions/students/meals/import/template?institution_id=${this.institution_id}&institution_class_id=${this.selectedClassId}`).subscribe((res: any) => {
+    this.Rest.getItemExport(`institutions/students/meals/import/template?institution_id=${this.institution_id}&institution_class_id=${this.selectedClassId}`).subscribe((res: any) => {
       console.log(res, "res");
-      this.meal_import_data = res;
-      // localStorage.setItem("meal_import_result",JSON.stringify(res));
-
+      // this.meal_import_data = res;
+      let url = window.URL.createObjectURL(res);
+      let a = document.createElement('a');
+      document.body.appendChild(a);
+      a.setAttribute('style', 'display: none');
+      a.href = url;
+      a.download = res.filename || 'Student meal';
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
     },
       (error: any) => {
 
@@ -315,7 +322,8 @@ export class StudentMealImportComponent implements OnInit {
               'label': 'Download',
               'callback': (): void => {
                 // event.preventDefault();
-                this.exportToExcel();
+                // this.exportToExcel();
+                this.generateImportTemplate();
               }
             }
           ],
@@ -333,8 +341,8 @@ export class StudentMealImportComponent implements OnInit {
         }
       };
       this._confirmationData = [...confirmation];
-
-      this._formButtons = [
+      let formButton = this._formButtons;
+      formButton = [
         {
           type: 'submit',
           name: 'Import',
@@ -348,8 +356,10 @@ export class StudentMealImportComponent implements OnInit {
           class: 'btn-outline'
         }
       ]
+      this._formButtons = [...formButton]
+      console.log(this._formButtons, "_formButtons");
+
       console.log(this._confirmationData, "_confirmationData");
-      this.generateImportTemplate();
       // this._confirmationData[this._confirmationData.length - 1]['config']['leftButton'][0].callback = this.generateImportTemplate.bind(this);
     } else if (event.controlType == "dropdown" && event.value == '') {
       let confirmation = this._confirmationData;
