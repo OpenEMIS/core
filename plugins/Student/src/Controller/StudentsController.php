@@ -66,7 +66,7 @@ class StudentsController extends AppController
         $this->ControllerAction->models = [
             'Accounts' => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
             'Nationalities' => ['className' => 'User.Nationalities'],
-//             'Absences'          => ['className' => 'Student.Attendances', 'actions' => ['index', 'excel']],
+            // 'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
            // 'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'Extracurriculars' => ['className' => 'Student.Extracurriculars', 'actions' => ['index', 'add', 'edit', 'remove', 'view']],//POCOR-6700
 //            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']], //POCOR-7485 cakephp4 use as a function
@@ -239,6 +239,7 @@ class StudentsController extends AppController
         }
     }
 
+    // POCOR-8299 start
     public function Absences()
     {
         $request = $this->request;
@@ -250,6 +251,7 @@ class StudentsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
         }
     }
+    // POCOR-8299 end
 
     public function ArchivedAbsences()
     {
@@ -554,8 +556,6 @@ class StudentsController extends AppController
 
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->getAttribute('params')['action'];
-//
-
         $institutionID = $this->getInstitutionID();
         $activeInstitution = $this->Institutions->get($institutionID);
         $institutionName = $activeInstitution->name;
@@ -915,7 +915,6 @@ class StudentsController extends AppController
 
     public  function excel($id = 0)
     {
-        die('Excel!');
         $this->Students->excel($id);
         $this->autoRender = false;
     }
