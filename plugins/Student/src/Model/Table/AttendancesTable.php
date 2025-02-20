@@ -169,8 +169,8 @@ class AttendancesTable extends ControllerActionTable
         $this->fields['education_grade_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
         $this->field('date', ['visible' => true, 'attr' => ['label' => __('Date')]]);
-        $this->field('period', ['visible' => true, 'attr' => ['label' => __('Period')]]);
-        $this->field('subject', ['visible' => true, 'attr' => ['label' => __('Subject')]]);
+        $this->field('period_name', ['visible' => true, 'attr' => ['label' => __('Period')]]);
+        $this->field('subject_name', ['visible' => true, 'attr' => ['label' => __('Subject')]]);
         $this->field('absence_type', ['visible' => true, 'attr' => ['label' => __('Absence Type')]]);
         $this->field('absence_reason', ['visible' => true, 'attr' => ['label' => __('Absence Reason')]]);
         $this->field('comment', ['visible' => true, 'attr' => ['label' => __('Comments')]]);
@@ -178,10 +178,10 @@ class AttendancesTable extends ControllerActionTable
         $this->field('institution_class_id', ['visible' => true, 'type' => 'text']);
         $this->setFieldOrder(['academic_period_id',
             'institution_id',
-            'date',
-            'period',
-            'subject',
             'institution_class_id',
+            'date',
+            'period_name',
+            'subject_name',
             'absence_type',
             'absence_reason',
             'comment']);
@@ -190,13 +190,6 @@ class AttendancesTable extends ControllerActionTable
 
 
 
-    public function onGetInstitutionClassId(Event $event, $entity)
-    {
-//        return 'a';
-        return $entity->institution_class->name;
-
-//        return $result->name;
-    }
     public function onGetComment(Event $event, Entity $entity)
     {
 //        dd($entity);
@@ -226,56 +219,7 @@ class AttendancesTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetAbsenceType(Event $event, Entity $entity)
-    {
 
-        $absence_type_id = $entity->absence_type_id;
-        if ($absence_type_id) {
-            $absenceList = $this->absenceList;
-            return __($absenceList[$absence_type_id] ?? '');
-        } else {
-            return __('Present');
-        }
-    }
-
-     public function onGetAbsenceReason(Event $event, Entity $entity)
-     {
-         $absence_reason_id = $entity->student_absence_reason_id;
-         if ($absence_reason_id) {
-             $absenceReasonList = $this->absenceReasonList;
-             return __($absenceReasonList[$absence_reason_id] ?? '');
-         } else {
-             return '';
-         }
-     }
-
-     public function onGetPeriod(Event $event, Entity $entity)
-     {
-         if(!$entity->period){
-             return '';
-         }
-         $Periods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
-         $result = $Periods
-             ->find()
-             ->select(['name'])
-             ->where(['id' => $entity->period])
-             ->first();
-         return __($result->name ?? "");
-     }
-
-    public function onGetSubject(Event $event, Entity $entity)
-    {
-        if(!$entity->subject){
-            return '';
-        }
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $result = $InstitutionSubjects
-            ->find()
-            ->select(['name'])
-            ->where(['id' => $entity->subject_id])
-            ->first();
-        return __($result->name ?? "");
-    }
     /**
      * @param Query $query
      * @param string $selectedMonth
@@ -283,6 +227,10 @@ class AttendancesTable extends ControllerActionTable
      */
     private function setIndexQuery(Query $query, string $selectedMonth): Query
     {
+        $Types = TableRegistry::get('Institution.AbsenceTypes');
+
+        $absence_type_name = $Types->aliasField('name');
+
         $query
             ->select([
                 'student_id' => $this->aliasField('student_id'),
@@ -291,8 +239,11 @@ class AttendancesTable extends ControllerActionTable
                 'subject_id' => 'AttendanceMarkedRecords.subject_id',
                 'comment' => 'Absences.comment',
                 'absence_type_id' => 'Absences.absence_type_id',
+                'absence_type' => "COALESCE($absence_type_name, 'Present')",
                 'student_absence_reason_id' => 'Absences.student_absence_reason_id',
                 'absence_reason' => 'AbsenceReasons.name',
+                'period_name' => 'Periods.name',
+                'subject_name' => 'Subjects.name',
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('institution_id'),
                 $this->aliasField('institution_class_id')
@@ -325,6 +276,24 @@ class AttendancesTable extends ControllerActionTable
                 ['AbsenceReasons' => 'student_absence_reasons'],
                 [
                     'Absences.student_absence_reason_id = AbsenceReasons.id'
+                ]
+            )
+            ->leftJoin(
+                ['Periods' => 'student_attendance_per_day_periods'],
+                [
+                    'Absences.period = Periods.id'
+                ]
+            )
+            ->leftJoin(
+                ['Subjects' => 'institution_subjects'],
+                [
+                    'Absences.subject_id = Subjects.id'
+                ]
+            )
+            ->leftJoin(
+                [$Types->getAlias() => $Types->getTable()],
+                [
+                    'Absences.absence_type_id = ' . $Types->aliasField('id')
                 ]
             )
         ;
@@ -360,62 +329,60 @@ class AttendancesTable extends ControllerActionTable
                 "type" => "integer",
                 "label" => __("Student")
             ],
-//            [
-//                "key" => "Attendances.academic_period_id",
-//                "field" => "academic_period_id",
-//                "type" => "integer",
-//                "label" => __("Academic Period")
-//            ],
-//            [
-//                "key" => "AttendanceMarkedRecords.date",
-//                "field" => "date",
-//                "type" => "date",
-//                "label" => __("Date"),
-//                "formatting" => "DATE"
-//            ],
-//            [
-//                "key" => "Attendances.institution_id",
-//                "field" => "institution_id",
-//                "type" => "integer",
-//                "label" => __("Institution")
-//            ],
-//            [
-//                "key" => "Attendances.institution_class_id",
-//                "field" => "institution_class_id",
-//                "type" => "integer",
-//                "label" => __("Institution Class")
-//            ],
-//            [
-//                "key" => "AttendanceMarkedRecords.period",
-//                "field" => "period",
-//                "type" => "integer",
-//                "label" => __("Period")
-//            ],
-//            [
-//                "key" => "AttendanceMarkedRecords.subject",
-//                "field" => "subject",
-//                "type" => "integer",
-//                "label" => __("Subject"),
-//            ],
-//            [
-//                "key" => "Absences.comment",
-//                "field" => "comment",
-//                "type" => "string",
-//                "label" => __("Comment"),
-//                "formatting" => "TEXT"
-//            ],
-//            [
-//                "key" => "Absences.absence_type_id",
-//                "field" => "absence_type",
-//                "type" => "integer",
-//                "label" => __("Absence Type")
-//            ],
-//            [
-//                "key" => "Absences.student_absence_reason_id",
-//                "field" => "absence_reason",
-//                "type" => "integer",
-//                "label" => __("Absence Reason")
-//            ],
+            [
+                "key" => "Attendances.academic_period_id",
+                "field" => "academic_period_id",
+                "type" => "integer",
+                "label" => __("Academic Period")
+            ],
+            [
+                "key" => "AttendanceMarkedRecords.date",
+                "field" => "date",
+                "type" => "string",
+                "label" => __("Date")
+            ],
+            [
+                "key" => "Attendances.institution_id",
+                "field" => "institution_id",
+                "type" => "integer",
+                "label" => __("Institution")
+            ],
+            [
+                "key" => "Attendances.institution_class_id",
+                "field" => "institution_class_id",
+                "type" => "integer",
+                "label" => __("Institution Class")
+            ],
+            [
+                "key" => "",
+                "field" => "period_name",
+                "type" => "integer",
+                "label" => __("Period")
+            ],
+            [
+                "key" => "",
+                "field" => "subject",
+                "type" => "integer",
+                "label" => __("Subject"),
+            ],
+            [
+                "key" => "",
+                "field" => "absence_type",
+                "type" => "string",
+                "label" => __("Absence Type")
+            ],
+            [
+                "key" => "",
+                "field" => "absence_reason",
+                "type" => "string",
+                "label" => __("Absence Reason")
+            ],
+            [
+                "key" => "Absences.comment",
+                "field" => "comment",
+                "type" => "string",
+                "label" => __("Comment"),
+            ],
         ];
 
         $fields->exchangeArray($extraField);
