@@ -66,7 +66,7 @@ class StudentsController extends AppController
         $this->ControllerAction->models = [
             'Accounts' => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
             'Nationalities' => ['className' => 'User.Nationalities'],
-            // 'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
+//             'Absences'          => ['className' => 'Student.Attendances', 'actions' => ['index', 'excel']],
            // 'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'Extracurriculars' => ['className' => 'Student.Extracurriculars', 'actions' => ['index', 'add', 'edit', 'remove', 'view']],//POCOR-6700
 //            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']], //POCOR-7485 cakephp4 use as a function
@@ -244,8 +244,8 @@ class StudentsController extends AppController
         $request = $this->request;
         $pass = $request->getParam('pass');
         $passAction = $pass[0] ?? null;
-        if ($passAction === 'index') {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Attendances', 'actions' => ['index']]);
+        if ($passAction === 'index' || $passAction === 'excel') {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Attendances', 'actions' => ['index', 'excel']]);
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
         }
@@ -913,9 +913,9 @@ class StudentsController extends AppController
         }
     }
 
-    public
-    function excel($id = 0)
+    public  function excel($id = 0)
     {
+        die('Excel!');
         $this->Students->excel($id);
         $this->autoRender = false;
     }
