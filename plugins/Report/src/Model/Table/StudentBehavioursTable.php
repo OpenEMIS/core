@@ -71,7 +71,7 @@ class StudentBehavioursTable extends AppTable  {
             }else{
                 $allselectedAreas = $selectedArea1;
             }
-            $where['institutions.area_id IN'] = $allselectedAreas;
+            $where['Institutions.area_id IN'] = $allselectedAreas;
         }
 
         $Statuses1 = TableRegistry::get('Workflow.WorkflowSteps');
