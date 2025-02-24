@@ -624,6 +624,7 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'format';
                     break;
                 case 'Report.StudentBehaviours': //POCOR-7517
+                    $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'institution_id';
@@ -1020,10 +1021,11 @@ class InstitutionsTable extends AppTable
                         'Report.InstitutionPositionsSummaries',
                         'Report.StudentAbsencesPerDays', //POCOR-7276
                         'Report.InstitutionInfrastructureSummaryReport',
+                        'Report.StudentBehaviours'
 
 
                     ]
-                )) || (((in_array($feature, ['Report.Institutions']) || in_array($feature, ['Report.StaffBehaviours']) ||  in_array($feature, ['Report.StudentBehaviours'])) && !empty($data['institution_filter']) && $data['institution_filter'] == self::NO_STUDENT))) {
+                )) || (((in_array($feature, ['Report.Institutions']) || in_array($feature, ['Report.StaffBehaviours'])) && !empty($data['institution_filter']) && $data['institution_filter'] == self::NO_STUDENT))) {
 
                 $AcademicPeriodTable = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -1054,7 +1056,7 @@ class InstitutionsTable extends AppTable
 
         if (isset($data['feature'])) {
             $feature = $data['feature'];
-
+            
             if ((in_array($feature, ['Report.Institutions',
                 'Report.InstitutionAssociations',
                 'Report.InstitutionPositions',
