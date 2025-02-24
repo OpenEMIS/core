@@ -12,6 +12,8 @@ use Cake\I18n\Time;
 use App\Model\Table\AlertsTable;
 use Cake\Controller\Controller;
 use Cake\Event\EventInterface;
+use Cake\Http\Client;
+use Cake\Http\Response;
 
 class DashboardController extends AppController
 {
@@ -32,7 +34,7 @@ class DashboardController extends AppController
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
         //$this->callAlerts(); //POCOR-7558
-
+        $this->sendSystemUpdateAlerts(); //POCOR-7559
     }
 
     // CAv4
@@ -623,4 +625,36 @@ class DashboardController extends AppController
         }
     }
     //POCOR-7558 end
+
+    //[POCOR-7559]
+    private function sendSystemUpdateAlerts()
+    {
+        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+        $this->loadModel('System.SystemUpdates');
+        $latestVersion = $this->SystemUpdates->find()
+            ->order([$this->SystemUpdates->aliasField('id') => 'desc'])
+            ->first();
+        $maxId = $latestVersion->id;
+
+        //code to get the latest version[POCOR-7559]
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $domain = $ConfigItems->value('version_api_domain');
+        $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
+
+        $http = new Client();
+        $response = $http->get($api);
+        $response = $response->getBody()->getContents();
+        //code to get the latest version[POCOR-7559]
+        $get_response = new Response();
+        if ($get_response->getStatusCode() == 200) {
+            $jsonResponse = json_decode($response, true);
+            $data = array_reverse($jsonResponse['data']);
+            $key = "SystemUpdates";
+            foreach ($data as $item) {
+                if ($item['id'] > $maxId) {
+                    $AlertsTable->triggerAlertFeatureShell($key);
+                }
+            }
+        }
+    }
 }

@@ -439,6 +439,7 @@ class InstitutionSubjectStaffTable extends AppTable
                     ]
                 ])
                 ->group([$this->aliasField('id')]); // so it doesn't show duplicate subjects
+                return $query;
             }
         }
     }
@@ -456,7 +457,7 @@ class InstitutionSubjectStaffTable extends AppTable
         $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
         $userAccessRoles = implode(', ', $roles);
 
-        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->innerJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
