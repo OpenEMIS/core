@@ -795,7 +795,13 @@ class InstitutionLandsTable extends ControllerActionTable
                 $attr['attr']['value'] = $this->formatDate($today);
             } else {
                 $attr['type'] = 'hidden';
-                $attr['value'] = $entity->end_date->format('Y-m-d');
+                // POCOR-8037 start
+                if($entity->end_date){
+                    $attr['value'] = $entity->end_date->format('Y-m-d');
+                }
+//                $attr['value'] = $entity->end_date->format('Y-m-d');
+            //POCOR-8037 end
+
             }
         }
 
