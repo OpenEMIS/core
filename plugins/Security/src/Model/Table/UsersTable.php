@@ -801,4 +801,12 @@ class UsersTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
+    public function findSystemUpdateEmailList(Query $query, array $options) {
+        $conditions = [
+            $this->aliasField('id') => $options['securityRoleId']
+        ];
+        
+        return $query->where($conditions);
+    }
+
 }

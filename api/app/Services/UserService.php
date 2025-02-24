@@ -12,7 +12,7 @@ class UserService extends Controller
 
     protected $userRepository;
 
-    public function __construct(UserRepository $userRepository) 
+    public function __construct(UserRepository $userRepository)
     {
         $this->userRepository = $userRepository;
     }
@@ -68,7 +68,7 @@ class UserService extends Controller
                 } else {
                     $resp[$k]['photo_content'] = Null;
                 }
-                
+
                 $resp[$k]['preferred_language'] = $d['preferred_language'];
                 $resp[$k]['is_student'] = $d['is_student'];
                 $resp[$k]['is_staff'] = $d['is_staff'];
@@ -100,7 +100,7 @@ class UserService extends Controller
 
             $data['data'] = $resp;
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -116,7 +116,7 @@ class UserService extends Controller
     {
         try {
             $data = $this->userRepository->getUsersData($userId);
-           
+
             $resp = [];
             if(isset($data)){
                 if($data['photo_content']){
@@ -202,9 +202,9 @@ class UserService extends Controller
                          //POCOR-8639
                     ];
             }
-            
+
             return $resp;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -215,13 +215,67 @@ class UserService extends Controller
     }
 
 
+    //POCOR-8862 start
+    public function getUserIdByUsername(string $username)
+    {
+        try {
+            $user_id = $this->userRepository->getUserIdByUsername($username);
+
+            return $user_id;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+    //POCOR-8862 end
+
+
+    //POCOR-8840 start
+    public function getUserIdByOpenemisNo(string $openemisNo)
+    {
+        try {
+            $user_id = $this->userRepository->getUserIdByOpenemisNo($openemisNo);
+
+            return $user_id;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+
+    public function getGuardianWithStudents(int $guardianId)
+    {
+        try {
+            $guardianData = $this->userRepository->getGuardianWithStudents($guardianId);
+
+            return $guardianData;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+
+
+    //POCOR-8840 end
 
 
     public function saveStudentData($request)
     {
         try {
             $data = $this->userRepository->saveStudentData($request);
-            
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -233,14 +287,14 @@ class UserService extends Controller
         }
     }
 
-    
+
     public function getUsersGender($request)
     {
         try {
             $data = $this->userRepository->getUsersGender($request);
-            
+
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Users Gender list from DB',
@@ -257,9 +311,9 @@ class UserService extends Controller
     {
         try {
             $data = $this->userRepository->saveStaffData($request);
-            
+
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to store staff data.',
@@ -275,9 +329,9 @@ class UserService extends Controller
     {
         try {
             $data = $this->userRepository->saveGuardianData($request);
-            
+
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to store guardian data.',
@@ -296,7 +350,7 @@ class UserService extends Controller
         try {
             $data = $this->userRepository->addUsers($request);
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'User is not created/updated successfully.',
@@ -360,6 +414,6 @@ class UserService extends Controller
             return $this->sendErrorResponse('Failed to get data from external data sources.');
         }
     }
-    
+
     //POCOR-8139 Ends
 }
