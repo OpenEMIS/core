@@ -139,18 +139,37 @@ class ImportUsersTable extends AppTable
 
         $tempRow['columns'] = $columns; // POCOR-8683 start
         $columns = new Collection($columns);
-        $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
-            return $value == 'openemis_no';
+        // POCOR-8835 start
+//        $user = false;
+//        $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {
+//            return $value == 'openemis_no';
+//        });
+//
+//        $openemisNoIndex = key($extractedOpenemisNo->toArray()) + 1;
+//        $openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
+//
+//
+//        $user = null;
+//        if ($openemisNo) {
+//            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+//        }
+        $extractedUsername = $columns->filter(function ($value, $key, $iterator) {
+            return $value == 'username';
         });
 
-        $openemisNoIndex = key($extractedOpenemisNo->toArray()) + 1;
-        $openemisNo = $sheet->getCellByColumnAndRow($openemisNoIndex, $row)->getValue();
+        $usernameNoIndex = key($extractedUsername->toArray()) + 1;
+        $username = $sheet->getCellByColumnAndRow($usernameNoIndex, $row)->getValue();
 
-
+//        dd($username);
         // POCOR-8683 start
-        $user = null;
-        if ($openemisNo) {
-            $user = $this->Users->find()->where(['openemis_no' => $openemisNo])->first();
+        Log::debug(strval($username));
+        if ($username) {
+            $userCount = $this->Users->find()->where(['username' => $username])->count();
+        }
+        if($userCount > 0){
+            $rowInvalidCodeCols['username'] = 'This username is already in use';
+            return false;
+
         }
         // POCOR-8683 end
         $accountType = $columns->filter(function ($value, $key, $iterator) {
@@ -159,50 +178,65 @@ class ImportUsersTable extends AppTable
         $accountTypeIndex = key($accountType->toArray()) + 1;
         $accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
         $accountTypeId = $this->getAccountTypeId($accountType);
-
-        if (!$user) {
-            if ($openemisNo) {
-                $rowInvalidCodeCols['openemis_no'] = __('No Such User');
-                return false;
-            }
+// POCOR-8835 start
+//        if (!$user) {
+//            if ($openemisNo) {
+//                $rowInvalidCodeCols['openemis_no'] = __('No Such User 1');
+//                return false;
+//            }
+        // POCOR-8835 end
             try{
                 // POCOR-8683 start
-                $username = "";
-                if(strlen($openemisNo) > 1){
-                    $username = Text::slug($openemisNo);
+                // POCOR-8835 start
+                $newOpenemisNo = "";
+                // POCOR-8835 start
+//                if(strlen($openemisNo) > 1){
+//                    $username = Text::slug($openemisNo);
+//                }
+//                if(strlen($username) < 6){
+                // POCOR-8835 end
+                $newOpenemisNo = $newOpenemisNo . $this->getNewOpenEmisNo();
+                    $tempRow['openemis_no'] = $newOpenemisNo;
+//                } // POCOR-8835
+                $tempRow['username'] = $username ?? $newOpenemisNo;
+                if (isset($tempRow['username']) && preg_match('/^\w+$/', $tempRow['username'])) {
+                    $validUserName = true;
+                } else {
+                    $validUserName = false;
                 }
-                if(strlen($username) < 6){
-                    $username = $username . $this->getNewOpenEmisNo();
-
-                    $tempRow['openemis_no'] = $username;
+                if (!$validUserName) {
+                    $rowInvalidCodeCols['username'] = 'The Username has invalid characters';
+                    return false;
                 }
-                $tempRow['username'] = $username;
                 // POCOR-8683 end
             } catch (\Exception $exception) {
-                $rowInvalidCodeCols['openemis_no'] = 'New User Creation Error: ' . __($exception->getMessage());
+                $rowInvalidCodeCols['username'] = 'New User Creation Error: ' . __($exception->getMessage());
                 return false;
             }
-        } else {
-            $tempRow['entity'] = $user;
-            // POCOR-8683 start
-            $tempRow['security_user_id'] = $user->id;
-//            Log::debug('$accountTypeId' . strval($accountTypeId));
-
-            if($accountTypeId == "" || !$accountTypeId){
-                $tempRow['account_type'] = self::IS_STUDENT;
-                $accountTypeId = self::IS_STUDENT;
-            }
-            $defaults = [
-                'username' => $user->username,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'gender_id' => $user->gender_id,
-                'date_of_birth' => $user->date_of_birth
-            ];
-            foreach ($defaults as $key => $value) {
-                self::setIfEmpty($tempRow, $key, $value);
-            }
-        }
+        // POCOR-8835 end
+        // POCOR-8835 start
+//        } else {
+//            $tempRow['entity'] = $user;
+//            // POCOR-8683 start
+//            $tempRow['security_user_id'] = $user->id;
+////            Log::debug('$accountTypeId' . strval($accountTypeId));
+//
+//            if($accountTypeId == "" || !$accountTypeId){
+//                $tempRow['account_type'] = self::IS_STUDENT;
+//                $accountTypeId = self::IS_STUDENT;
+//            }
+//            $defaults = [
+//                'username' => $user->username,
+//                'first_name' => $user->first_name,
+//                'last_name' => $user->last_name,
+//                'gender_id' => $user->gender_id,
+//                'date_of_birth' => $user->date_of_birth
+//            ];
+//            foreach ($defaults as $key => $value) {
+//                self::setIfEmpty($tempRow, $key, $value);
+//            }
+//        }
+        // POCOR-8835 end
         $tempRow['account_type'] = $accountTypeId;
 
         if (empty($tempRow['account_type'])) {
@@ -216,11 +250,13 @@ class ImportUsersTable extends AppTable
             // setting is_student = 1, or is_staff = 1, or is_guardian = 1
             $tempRow[$tempRow['account_type']] = 1;
         }
-        if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
-            $rowInvalidCodeCols['openemis_no'] = __('This OpenEMIS No is Already Present');//$this->getExcelLabel('Import', 'duplicate_unique_key');
-            $tempRow['duplicates'] = $rowInvalidCodeCols['openemis_no'] ;
-            return false;
-        }
+        // POCOR-8835 start
+//        if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
+//            $rowInvalidCodeCols['openemis_no'] = __('This OpenEMIS No is Already Present');//$this->getExcelLabel('Import', 'duplicate_unique_key');
+//            $tempRow['duplicates'] = $rowInvalidCodeCols['openemis_no'] ;
+//            return false;
+//        }
+        // POCOR-8835 end
 
     }
 
@@ -462,7 +498,13 @@ class ImportUsersTable extends AppTable
     {
         $flipped = array_flip($columns);
         $key = $flipped['openemis_no'];
-        $tempPassedRecord['data'][$key] = $clonedEntity->openemis_no;
+        // POCOR-8835 start
+        if ($clonedEntity->openemis_no != $clonedEntity->username) {
+            $tempPassedRecord['data'][$key] = $clonedEntity->openemis_no . ' - ' . $clonedEntity->username; // POCOR-8835
+        }else{
+            $tempPassedRecord['data'][$key] = $clonedEntity->username;
+        }
+        // POCOR-8835 end
         $key = $flipped['guardian_openemis_no']; // POCOR-8683
         $tempPassedRecord['data'][$key] = $clonedEntity->guardian_openemis_no; // POCOR-8683
     }
@@ -1486,30 +1528,31 @@ class ImportUsersTable extends AppTable
             }
             try {
                 if ($tempRow['guardian_entity']) {
-                    $newGuardian = $this->Users->patchEntity($tempRow['guardian_entity'], $guardian);
+//                    $newGuardian = $this->Users->patchEntity($tempRow['guardian_entity'], $guardian); // POCOR-8835
                 } else {
                     $newGuardian = $this->Users->newEntity($guardian);
+                    if ($newGuardian->getErrors()) { // POCOR-7973
+
+                        $errorMessages = array_reduce(
+                            $newGuardian->getErrors(),
+                            function ($carry, $errors) {
+                                return array_merge($carry, $errors);
+                            },
+                            []
+                        );
+
+                        $rowInvalidCodeCols['guardian_openemis_no'] = implode(',', $errorMessages);
+                        $tempRow['guardian_error'] = true;
+                        $have_error = true;
+                    }
+                    if ($this->Users->save($newGuardian)) {
+                        $newId = $newGuardian->id;  // Get the ID after save
+                        $tempRow['guardian_id'] = $newId;
+                        $tempRow['guardian_entity'] = $newGuardian;
+                    }
                 }
 //                    Log::debug(print_r(['$newGuardian' => $newGuardian], true));
-                if ($newGuardian->getErrors()) { // POCOR-7973
 
-                    $errorMessages = array_reduce(
-                        $newGuardian->getErrors(),
-                        function ($carry, $errors) {
-                            return array_merge($carry, $errors);
-                        },
-                        []
-                    );
-
-                    $rowInvalidCodeCols['guardian_openemis_no'] = implode(',', $errorMessages);
-                    $tempRow['guardian_error'] = true;
-                    $have_error = true;
-                }
-                if ($this->Users->save($newGuardian)) {
-                    $newId = $newGuardian->id;  // Get the ID after save
-                    $tempRow['guardian_id'] = $newId;
-                    $tempRow['guardian_entity'] = $newGuardian;
-                }
 
             } catch (\Exception $exception) {
                 $rowInvalidCodeCols['guardian_openemis_no'] = 'New Guardian Creation Error: ' . __($exception->getMessage());

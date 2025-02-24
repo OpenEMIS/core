@@ -2755,6 +2755,8 @@ class NavigationComponent extends Component
                         'Configurations.edit',
                         'Configurations.Authentication',
                         'Configurations.AuthSystemAuthentications',
+                        'Configurations.CustomValidation',
+                        'Configurations.AdministrativeBoundaries',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',

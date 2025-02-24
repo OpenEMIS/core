@@ -69,17 +69,37 @@ class ConfigItemsBehavior extends Behavior
                 unset($typeOptions[$key]);
             }
         }
+        //POCOR-8883 code logic change start
         $selectedType = $this->model->queryString('type', $typeOptions);
         $this->selectedType = $selectedType;
         $typeValue = $typeOptions[$selectedType];
-        $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
+        if(empty($typeValue)){
+           $typeValue = $this->model->request->getQueryParams()['type'];
+        }
+        if($typeValue !== 'Custom Validation'){
+            $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
 
-        $this->model->advancedSelectOptions($typeOptions, $selectedType);
-        $this->model->controller->set('typeOptions', $typeOptions);
-        $controlElement = $toolbarElements[0];
-        $controlElement['data'] = ['typeOptions' => $typeOptions];
-        $controlElement['order'] = 1;
-        return $controlElement;
+            $this->model->advancedSelectOptions($typeOptions, $selectedType);
+            $this->model->controller->set('typeOptions', $typeOptions);
+            $controlElement = $toolbarElements[0];
+            $controlElement['data'] = ['typeOptions' => $typeOptions];
+            $controlElement['order'] = 1;
+            return $controlElement;
+        }else{
+            if ($typeValue !== null) {
+                $queryParams = $this->model->request->getQueryParams();
+                $queryParams['type'] = $selectedType;
+                $queryParams['type_value'] = $typeValue;
+                $this->model->request = $this->model->request->withQueryParams($queryParams);
+            }
+            $this->model->advancedSelectOptions($typeOptions, $selectedType);
+            $this->model->controller->set('typeOptions', $typeOptions);
+            $controlElement = $toolbarElements[0];
+            $controlElement['data'] = ['typeOptions' => $typeOptions];
+            $controlElement['order'] = 1;
+            return $controlElement;
+            //POCOR-8883 end
+        }
     }
 
     public function checkController()
@@ -128,7 +148,8 @@ class ConfigItemsBehavior extends Behavior
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
                 'action' => 'index',
-                'type' => $this->selectedType]);
+                '?' => ['type' => $this->selectedType] //POCOR-8883
+            ]);
         }
     }
     public function beforeAction(Event $event, $extra)
