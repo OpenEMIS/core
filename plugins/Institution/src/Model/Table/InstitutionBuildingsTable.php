@@ -35,7 +35,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('BuildingStatuses', ['className' => 'Infrastructure.InfrastructureStatuses']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+ //       $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']); // POCOR-8037
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('BuildingTypes', ['className' => 'Infrastructure.BuildingTypes']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
@@ -44,7 +44,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->belongsTo('InfrastructureOwnership', ['className' => 'FieldOption.InfrastructureOwnerships']);
         $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true]);
 
-        $this->addBehavior('AcademicPeriod.AcademicPeriod');
+        // $this->addBehavior('AcademicPeriod.AcademicPeriod'); // POCOR-8037
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         /*$this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
@@ -84,15 +84,21 @@ class InstitutionBuildingsTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ])
-            ->add('start_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ]
-            ])
+            // POCOR-8037 start
+            // ->add('start_date', [
+            //     'ruleInAcademicPeriod' => [
+            //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+            //     ]
+            // ])
+            // POCOR-8037 end
             ->add('end_date', [
-                'ruleInAcademicPeriod' => [
-                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                ],
+                // POCOR-8037 start
+                // ->add('start_date', [
+                // //     'ruleInAcademicPeriod' => [
+                // //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                // //     ]
+                // ])
+                // POCOR-8037 end
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', true],
                     'on' => function ($context) { //POCOR-8241 -- Date validation when start_date is not empty
@@ -114,7 +120,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
                         // Skip validation when datatype is 'copy'
                         return true;
                     }
-            
+
                     // Proceed with validation when datatype is not 'copy'
                     return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_building_size', $context);
                 },
@@ -155,7 +161,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
-        $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
+// $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave'; // POCOR-8037
         return $events;
     }
 
@@ -293,7 +299,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->field('end_date', ['visible' => false]);
         $this->field('end_year', ['visible' => false]);
         $this->field('institution_land_id', ['visible' => false]);
-        $this->field('academic_period_id', ['visible' => false]);
+        // $this->field('academic_period_id', ['visible' => false]); // POCOR-8037
         $this->field('infrastructure_condition_id', ['visible' => false]);
         $this->field('previous_institution_building_id', ['visible' => false]);
 
@@ -325,11 +331,13 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $query->where([$this->aliasField('institution_land_id IS NULL')]);
         }
 
+        // POCOR-8037 start
         // Academic Period
-        list($periodOptions, $selectedPeriod) = array_values($this->getPeriodOptions());
-        $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
-        $this->controller->set(compact('periodOptions', 'selectedPeriod'));
+        // list($periodOptions, $selectedPeriod) = array_values($this->getPeriodOptions());
+        // $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
+        // $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         // End
+        // POCOR-8037 end
 
         // Building Types
         list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
@@ -379,7 +387,9 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['AcademicPeriods', 'InstitutionLands', 'BuildingTypes', 'InfrastructureConditions']);
+        $query->contain([
+//            'AcademicPeriods', // POCOR-8037
+            'InstitutionLands', 'BuildingTypes', 'InfrastructureConditions']);
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
@@ -459,12 +469,15 @@ class InstitutionBuildingsTable extends ControllerActionTable
         ];
 
         // check if the same building is copy from / copy to other academic period, then not allow user to delete
+        // POCOR-8037 start
         //POCOR-5330 starts
         $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         $this->currentAcademicPeriod = $this->AcademicPeriods->get($currentAcademicPeriodId);
         $resultQuery = $this->find()->where([$this->aliasField('academic_period_id') => $currentAcademicPeriodId]);
         //POCOR-5330 ends
-        $results = $resultQuery
+//        $results = $resultQuery
+        // POCSO-8037 end
+        $results = $this->find()
             ->select([
                 'academic_period_name' => 'AcademicPeriods.name',
                 'count' => $resultQuery->func()->count($this->aliasField('id'))
