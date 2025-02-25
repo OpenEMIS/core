@@ -575,5 +575,15 @@ Route::group(
         Route::get('users/email/{email}', 'UserController@getUserByEmail'); // POCOR-8912
         // POCOR-8912 end
 
+        // POCOR-8915 start
+        // should be always the last, as it is all-consuming
+        Route::group(
+            ['namespace' => 'BaseApi', 'middleware' => 'auth.jwt'],
+            function () {
+                Route::match(['GET', 'POST', 'PUT', 'DELETE'], '/{any}', [CrudApiController::class, 'common'])
+                    ->where('any', '.*');
+            });
+        // POCOR-8915 end
+
     }
 );
