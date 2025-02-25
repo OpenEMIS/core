@@ -88,6 +88,19 @@ class InstitutionAssetsTable extends ControllerActionTable
     }
     // POCOR-6152 set breadcrumb header <vikas.rathore@mail.valuecoders.com>
 
+    // POCOR-8914 start
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->requirePresence('accessibility')
+            ->requirePresence('asset_status_id')
+            ->requirePresence('asset_condition_id')
+            ->requirePresence('purpose')
+            ;
+    }
+    // POCOR-8914 end
     // setting up  fields and filter POCOR-6152
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -134,7 +147,7 @@ class InstitutionAssetsTable extends ControllerActionTable
     }
     // setting up query for index POCOR-6152 ends
 
-    // POCOR-6152 Export Functionality 
+    // POCOR-6152 Export Functionality
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $query->select([]);
@@ -325,9 +338,6 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->fields['asset_make_id']['type'] = 'select';
         $this->fields['asset_make_id']['default'] = -1;
         $this->fields['asset_make_id']['options'] = $makeOptions;
-        $this->fields['asset_make_id']['empty'] = true;
-        $this->fields['asset_model_id']['type'] = 'select';
-        $this->fields['asset_make_id']['options'] = $makeOptions;
         $this->fields['asset_model_id']['empty'] = true;
         $this->fields['asset_model_id']['options'] = $modelOptions;
         $this->fields['asset_condition_id']['type'] = 'select';
@@ -339,6 +349,12 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->fields['user_id']['empty'] = true;
         $this->fields['user_id']['options'] = $userOptions;
         $this->fields['accessibility']['type'] = 'select';
+        // POCOR-8914 start
+        $this->fields['accessibility']['default'] = 1;
+        $this->fields['asset_condition_id']['default'] = 1;
+        $this->fields['asset_status_id']['default'] = 1;
+        $this->fields['purpose']['default'] = 1;
+        // POCOR-8914 end
         //$this->log($this->fields['asset_make_id'], 'debug');
         $this->fields['purpose']['options'] = $this->purposeOptions;
         $this->fields['accessibility']['options'] = $this->accessibilityOptions;
@@ -424,7 +440,7 @@ class InstitutionAssetsTable extends ControllerActionTable
                 });
             })
             ->toArray();
-        
+
         foreach ($user_options as $user_option) {
             $userOptions[$user_option->id] = $user_option->name;
         }
@@ -519,7 +535,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
-    
+
 
     public function onGetUserId(Event $event, Entity $entity)
     {
@@ -535,21 +551,25 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     public function onGetPurpose(Event $event, Entity $entity)
     {
+        // POCOR-8914 start
         if ($entity->purpose) {
-            $purpose = 'Teaching';
+            $purpose = __('Teaching');
         } else {
-            $purpose = 'Non-Teaching';
+            $purpose = __('Non-Teaching');
         }
+        // POCOR-8914 end
         return $purpose;
     }
 
     public function onGetAccessibility(Event $event, Entity $entity)
     {
+        // POCOR-8914 start
         if ($entity->accessibility) {
-            $accessibility = 'Accessible';
+            $accessibility = __('Accessible');
         } else {
-            $accessibility = 'Not Accessible';
+            $accessibility = __('Not Accessible');
         }
+        // POCOR-8914 end
         return $accessibility;
     }
 
@@ -608,7 +628,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         if (!$relatedField) {
             return null;
         }
-        
+
         if($tableName == 'security_users'){
             $tableName = 'SecurityUsers';
         }

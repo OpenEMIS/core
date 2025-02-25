@@ -1218,6 +1218,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function findWorkbench(Query $query, array $options)
     {
+        ini_set('memory_limit', '1G');//POCOR-8821
         $controller = $options['_controller'];
         $session = $controller->getRequest()->getSession();
         $userId = $session->read('Auth.User.id');

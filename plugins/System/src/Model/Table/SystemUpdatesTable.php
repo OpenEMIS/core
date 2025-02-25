@@ -61,6 +61,7 @@ class SystemUpdatesTable extends ControllerActionTable
             ->first();
 
         $maxId = $latestVersion->id;
+        
         if ($latestVersion->status == 2) {
             $this->updateAll(
                 [
@@ -96,19 +97,18 @@ class SystemUpdatesTable extends ControllerActionTable
         $get_response = new Response();
         $host = $request->getUri()->getHost();
         $subject = 'Core Upgrade Request Failed - ' . $host;
-
         if ($get_response->getStatusCode() == 200) {
             // $jsonResponse = json_decode($response->body(), true);
             $jsonResponse = json_decode($response, true);
             // echo "<pre>";print_r($jsonResponse);die;
             $data = array_reverse($jsonResponse['data']);
-
             foreach ($data as $item) {
                 if ($item['id'] > $maxId) {
                     $entity = $this->newEntity([
                         'id' => $item['id'],
                         'version' => $item['version'],
                         'date_released' => $item['date_released'],
+                        'status' => 1, //POCOR-8891
                         'created' => Time::now(),
                     ]);
                     $result = $this->save($entity);
@@ -127,7 +127,6 @@ class SystemUpdatesTable extends ControllerActionTable
 
             $version = trim(file_get_contents(WWW_ROOT . 'version'));
             $entity = $this->find()->where(['version' => $version])->first();
-
             if (!is_null($entity)) {
                 $this->updateAll(
                     [
@@ -187,7 +186,7 @@ class SystemUpdatesTable extends ControllerActionTable
             $query->order([$this->aliasField('date_released') => 'DESC', $this->aliasField('version') => 'DESC']);
         }
 
-        if ($this->exists(['status' => 1])) {
+        // if ($this->exists(['status' => 1])) { // POCOR-8891 already handle in update action
             $updateBtn = $this->getButtonTemplate();
 
             $updateBtn['attr']['title'] = __('Update');
@@ -195,7 +194,7 @@ class SystemUpdatesTable extends ControllerActionTable
             $updateBtn['url'] = ['controller' => $this->controller->getName(), 'action' => 'Updates', 'updates'];
 
             $extra['toolbarButtons']['update'] = $updateBtn;
-        }
+        // }
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)

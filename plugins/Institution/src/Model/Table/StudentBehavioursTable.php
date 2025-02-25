@@ -1222,29 +1222,38 @@ class StudentBehavioursTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $behaviourClassificationOptions = [];
-            $behaviourCategoryId = 0;
-            if ($request->is(['post', 'put'])) {
-                $behaviourCategoryId = $request->getData($this->aliasField('student_behaviour_category_id'));
-            }
-            if( $action == 'edit') {
-                $behaviourCategoryId = $attr['attr']['entity']->student_behaviour_category_id;
-            }
-            if (! $behaviourCategoryId== 0 && ! empty($behaviourCategoryId)) {
+            //POCOR-8866 start
+            $behaviourClassificationOptions = $this->StudentBehaviourClassifications
+            ->find('list', [
+                'keyField' => 'id', 
+                'valueField' => 'name' 
+            ])
+            ->toArray();
+           
+            // $behaviourCategoryId = 0;
+            // if ($request->is(['post', 'put'])) {
+            //     $behaviourCategoryId = $request->getData($this->aliasField('student_behaviour_category_id'));
+            // }
+            // if( $action == 'edit') {
+            //     $behaviourCategoryId = $attr['attr']['entity']->student_behaviour_category_id;
+            // }
+            // if (! $behaviourCategoryId== 0 && ! empty($behaviourCategoryId)) {
 
-                $behaviourCategories = $this->StudentBehaviourCategories
-                    ->find()
-                    ->select('behaviour_classification_id')
-                    ->where([$this->StudentBehaviourCategories->aliasField('id') => $behaviourCategoryId])
-                    ->first()->behaviour_classification_id;
+                // $behaviourCategories = $this->StudentBehaviourCategories
+                //     ->find()
+                //     ->select('behaviour_classification_id')
+                //     ->where([$this->StudentBehaviourCategories->aliasField('id') => $behaviourCategoryId])
+                //     ->first()->behaviour_classification_id;
 
-                if(!empty($behaviourCategories)) {
-                    $behaviourClassificationOptions = $this->StudentBehaviourClassifications
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                    ->where([$this->StudentBehaviourClassifications->aliasField('id') => $behaviourCategories])
-                    ->toArray();
-                } 
-            }
+                // if(!empty($behaviourCategories)) {
+                //     $behaviourClassificationOptions = $this->StudentBehaviourClassifications
+                //     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                //     ->where([$this->StudentBehaviourClassifications->aliasField('id') => $behaviourCategories])
+                //     ->toArray();
+                // } 
+            // }
             $attr['options'] = $behaviourClassificationOptions;
+            //POCOR-8866 end
         }
         return $attr;
     }
