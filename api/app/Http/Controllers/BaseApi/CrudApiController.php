@@ -642,8 +642,6 @@ class CrudApiController extends Controller
         'assessment-item-results' => \App\Models\AssessmentItemResults::class,
         'assessment-grading-types' => \App\Models\AssessmentGradingTypes::class,
         'assessment-grading-options' => \App\Models\AssessmentGradingOptions::class,
-        'area-levels' => \App\Models\AreaLevels::class,
-        'area-administratives' => \App\Models\AreaAdministratives::class,
         'area-administrative-levels' => \App\Models\AreaAdministrativeLevels::class,
         'appraisal-types' => \App\Models\AppraisalTypes::class,
         'appraisal-text-answers' => \App\Models\AppraisalTextAnswers::class,
@@ -671,10 +669,11 @@ class CrudApiController extends Controller
         'alerts' => \App\Models\Alerts::class,
         'alert-rules' => \App\Models\AlertRules::class,
         'alert-logs' => \App\Models\AlertLogs::class,
+        'academic-periods' => \App\Models\AcademicPeriods::class,
         'academic-period-levels' => \App\Models\AcademicPeriodLevels::class,
         'absence-types' => \App\Models\AbsenceTypes::class,
-        'areas' => \App\Models\Area::class,
-        'academic-periods' => \App\Models\AcademicPeriods::class,
+        'area-levels' => \App\Models\AreaLevels::class,
+        'area-administratives' => \App\Models\AreaAdministratives::class,
         'areas' => \App\Models\Areas::class,
         //...
         //...
@@ -744,7 +743,7 @@ class CrudApiController extends Controller
             $possibleId = array_shift($segments);
             if ($this->isValidIdentifier($possibleId)) {
                 try {
-                    $record = $model::findOrFail($possibleId);
+                    $record = $model::where('id', $possibleId)->first();
                     return response()->json($record);
                 } catch (\Exception $e) {
                     return response()->json(['error' => $e->getMessage()], 404);
@@ -942,7 +941,7 @@ class CrudApiController extends Controller
                 \DB::rollBack();
                 return $this->sendServerErrorResponse($e->getMessage());
             }
-            return $this->sendSuccessResponse('Records created successfully.', $records);
+            return $this->sendCreateSuccessResponse('Successful.', $records);
         } else {
             // Otherwise, treat it as a single record
             try {
@@ -950,7 +949,7 @@ class CrudApiController extends Controller
             } catch (\Exception $e) {
                 return $this->sendServerErrorResponse($e->getMessage());
             }
-            return $this->sendSuccessResponse('Record created successfully.', $record);
+            return $this->sendCreateSuccessResponse('Successful.', $record);
         }
     }
 
@@ -1010,7 +1009,8 @@ class CrudApiController extends Controller
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             // Case 1: Update by numeric (or UUID) ID.
             try {
-                $record = $model::findOrFail($segments[0]);
+                $record = $model::where('id', $segments[0])->first();
+//                $record = $model::findOrFail($segments[0]);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 404);
             }
@@ -1096,7 +1096,8 @@ class CrudApiController extends Controller
             \DB::beginTransaction();
             try {
                 foreach ($ids as $id) {
-                    $record = $model::findOrFail($id);
+//                    $record = $model::findOrFail($id);
+                    $record = $model::where('id', $id)->first();
                     $record->delete();
                 }
                 \DB::commit();
@@ -1111,12 +1112,15 @@ class CrudApiController extends Controller
         // Case 2: Deletion by a single identifier.
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             try {
-                $record = $model::findOrFail($segments[0]);
+                $record = $model::where('id', $segments[0])->first();
+//                $record = $model::findOrFail($segments[0]);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 404);
             }
             try {
-                $record->delete();
+                if($record){
+                    $record->delete();
+                }
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 403);
             }

@@ -82,6 +82,19 @@ class Controller extends BaseController
         );
     }
 
+    public function sendCreateSuccessResponse($message, $data = [], $success=true)
+    {
+        $message = $message ?? "Successful.";
+        return response()->json(
+            [
+                'message' => $message,
+                'data' => $data,
+                //'success' => $success
+            ],
+            config('constantvalues.statusCodes.createSuccess')
+        );
+    }
+
 
     public function changeDateFormat($date)
     {
