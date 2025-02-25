@@ -1096,9 +1096,353 @@ class UserController extends Controller
 
             // Return generic error response
             return $this->sendErrorResponse('Failed to retrieve guardian data. Please try again.');
-         }
+        }
 
     }
     // POCOR-8840 end
 
+    // POCOR-8896 start
+    /**
+     * @OA\Schema(
+     *     schema="UserUpdateRequest",
+     *     @OA\Property(property="first_name", type="string", example="Test"),
+     *     @OA\Property(property="middle_name", type="string", example=""),
+     *     @OA\Property(property="third_name", type="string", example=""),
+     *     @OA\Property(property="last_name", type="string", example="User"),
+     *     @OA\Property(property="preferred_name", type="string", example=""),
+     *     @OA\Property(property="gender_id", type="integer", example=1),
+     *     @OA\Property(property="date_of_birth", type="string", format="date", example="2011-01-01"),
+     *     @OA\Property(property="username", type="string", example="TestUser101"),
+     *     @OA\Property(property="password", type="string", example="TestUser101"),
+     *     @OA\Property(property="postal_code", type="string", example="12233"),
+     *     @OA\Property(property="address", type="string", example=""),
+     *     @OA\Property(property="birthplace_area_id", type="integer", example=2),
+     *     @OA\Property(property="address_area_id", type="integer", example=2),
+     *     @OA\Property(property="nationality_id", type="integer", example=2),
+     *     @OA\Property(property="identity_type_id", type="integer", example=160),
+     *     @OA\Property(property="identity_number", type="string", example="54542"),
+     * )
+     */
+    /**
+     * Updates a user's details using their OpenEMIS ID.
+     *
+     * @OA\Post(
+     *     path="/api/v4/users/openemisId/{openemis_no}",
+     *     summary="Update user data",
+     *     description="Update user details using OpenEMIS ID.",
+     *     tags={"Users"},
+     *     @OA\Parameter(
+     *         name="openemis_no",
+     *         in="path",
+     *         required=true,
+     *         description="The OpenEMIS number of the user",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
+     *     ),
+     *     @OA\Response(response=200, description="User data updated successfully."),
+     *     @OA\Response(response=403, description="Unauthorized access."),
+     *     @OA\Response(response=404, description="User not found."),
+     *     @OA\Response(response=500, description="Internal server error.")
+     * )
+     */
+    /**
+     * Updates a user's details using their OpenEMIS ID.
+     *
+     * @OA\Patch(
+     *     path="/api/v4/users/openemisId/{openemis_no}",
+     *     summary="Update user data",
+     *     description="Update user details using OpenEMIS ID.",
+     *     tags={"Users"},
+     *     @OA\Parameter(
+     *         name="openemis_no",
+     *         in="path",
+     *         required=true,
+     *         description="The OpenEMIS number of the user",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
+     *     ),
+     *     @OA\Response(response=200, description="User data updated successfully."),
+     *     @OA\Response(response=403, description="Unauthorized access."),
+     *     @OA\Response(response=404, description="User not found."),
+     *     @OA\Response(response=500, description="Internal server error.")
+     * )
+     */
+    /**
+     * Updates a user's details using their OpenEMIS ID.
+     *
+     * @OA\Put(
+     *     path="/api/v4/users/openemisId/{openemis_no}",
+     *     summary="Update user data",
+     *     description="Update user details using OpenEMIS ID.",
+     *     tags={"Users"},
+     *     @OA\Parameter(
+     *         name="openemis_no",
+     *         in="path",
+     *         required=true,
+     *         description="The OpenEMIS number of the user",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
+     *     ),
+     *     @OA\Response(response=200, description="User data updated successfully."),
+     *     @OA\Response(response=403, description="Unauthorized access."),
+     *     @OA\Response(response=404, description="User not found."),
+     *     @OA\Response(response=500, description="Internal server error.")
+     * )
+     */
+    public function updateUserByOpenemisId(Request $request, string $openemis_no)
+    {
+        try {
+            // Determine required permissions
+            $requiredPermissions = $this->determinePermissionsToUpdateUser($request->all());
+
+            // Check all required permissions
+            if (!$this->hasAllPermissions($requiredPermissions)) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+
+            // Filter and process user data
+            $userData = $request->only([
+                'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name',
+                'gender_id', 'date_of_birth', 'identity_number', 'nationality_id', 'username',
+                'password', 'postal_code', 'address', 'birthplace_area_id', 'address_area_id',
+                'identity_type_id', 'identity_type_name'
+            ]);
+
+            if (empty($userData)) {
+                return $this->sendErrorResponse("Invalid user data.");
+            }
+
+            $userData['openemis_no'] = $openemis_no;
+
+            // Call service to update user
+            return $this->userService->patchUser($userData);
+
+        } catch (\Exception $e) {
+            Log::error('User update failed.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $this->sendErrorResponse('Internal server error.');
+        }
+    }
+
+    /**
+     * Determines the permissions required to update a user.
+     *
+     * @param array $requestData
+     * @return array
+     */
+    private function determinePermissionsToUpdateUser(array $requestData): array
+    {
+        $permissions = [];
+
+        if ($this->hasAny($requestData, ['first_name', 'last_name', 'middle_name',
+            'third_name', 'preferred_name', 'gender_id', 'date_of_birth',
+            'address', 'postal_code', 'address_area_id', 'birthplace_area_id'])) {
+            $permissions[] = ['Directories', 'Overview', 'edit'];
+        }
+
+        if ($this->hasAny($requestData, ['username', 'password'])) {
+            $permissions[] = ['Directories', 'Accounts', 'edit'];
+        }
+
+        if ($this->hasAny($requestData, ['identity_type_id', 'identity_number'])) {
+            $permissions[] = ['Directories', 'Identities', 'edit'];
+        }
+
+        if ($this->hasAny($requestData, ['nationality_id'])) {
+            $permissions[] = ['Directories', 'Nationalities', 'edit'];
+        }
+
+        if ($this->hasAny($requestData, ['email'])) {
+            $permissions[] = ['Directories', 'Contacts', 'edit'];
+        }
+
+        return $permissions;
+    }
+
+    /**
+     * Checks if the user has all required permissions.
+     *
+     * @param array $permissions
+     * @return bool
+     */
+    private function hasAllPermissions(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if (!checkPermission($permission)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Checks if any of the given fields exist in the request data.
+     *
+     * @param array $requestData
+     * @param array $fields
+     * @return bool
+     */
+    private function hasAny(array $requestData, array $fields): bool
+    {
+        return (bool) array_intersect_key(array_flip($fields), $requestData);
+    }
+    // POCOR-8896 end
+
+    //POCOR-8912 start
+    /**
+     * @OA\Get(
+     *      path="/api/v4/users/email/{email}",
+     *      summary="Get user details by email",
+     *      description="Get user details by email",
+     *      tags={"Users", "Email"},
+     *      @OA\Parameter(
+     *         name="email",
+     *         in="path",
+     *         required=true,
+     *         description="Main Email",
+     *         @OA\Schema(type="string", example="username")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                          @OA\Property(property="id", type="integer", example=1),
+     *                          @OA\Property(property="username", type="string", example="admin"),
+     *                          @OA\Property(property="openemis_no", type="string", example="1522271965"),
+     *                          @OA\Property(property="first_name", type="string", example="first name"),
+     *                          @OA\Property(property="middle_name", type="string", example="last name"),
+     *                          @OA\Property(property="third_name", type="string", example="third_name"),
+     *                          @OA\Property(property="last_name", type="string", example="last_name"),
+     *                          @OA\Property(property="preferred_name", type="string", example=""),
+     *                          @OA\Property(property="email", type="string", example=""),
+     *                          @OA\Property(property="address", type="string", example=""),
+     *                          @OA\Property(property="postal_code", type="string", example=""),
+     *                          @OA\Property(property="address_area_id", type="integer", example=1),
+     *                          @OA\Property(property="birthplace_area_id", type="integer", example=1),
+     *                          @OA\Property(property="gender_id", type="integer", example=1),
+     *                          @OA\Property(property="date_of_birth", type="string", example="2022-08-10 12:00:00"),
+     *                          @OA\Property(property="date_of_death", type="string", example=null),
+     *                          @OA\Property(property="nationality_id", type="integer", example=3),
+     *                          @OA\Property(property="identity_type_id", type="integer", example=1),
+     *                          @OA\Property(property="identity_type_name", type="string", example=null),
+     *                          @OA\Property(property="identity_number", type="string", example=null),
+     *                          @OA\Property(property="external_reference", type="string", example=null),
+     *                          @OA\Property(property="status", type="integer", example=1),
+     *                          @OA\Property(property="last_login", type="string", example=null),
+     *                          @OA\Property(property="photo_name", type="string", example=null),
+     *                          @OA\Property(property="photo_content", type="string", example=null),
+     *                          @OA\Property(property="preferred_language", type="string", example=null),
+     *                          @OA\Property(property="is_student", type="integer", example=1),
+     *                          @OA\Property(property="is_staff", type="integer", example=1),
+     *                          @OA\Property(property="is_guardian", type="integer", example=1),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                          @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                          @OA\Property(property="nationalities", type="array",
+     *                              @OA\Items(
+     *                                  type="object",
+     *                                  @OA\Property(property="preferred", type="integer", example=1),
+     *                                  @OA\Property(property="nationality_id", type="integer", example=1),
+     *                                  @OA\Property(property="nationality_name", type="string", example="Jordanian"),
+     *                                  @OA\Property(property="security_user_id", type="integer", example=1),
+     *                                  @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                                  @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                                  @OA\Property(property="created_user_id", type="integer", example=1),
+     *                                  @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                              )
+     *                          ),
+     *                          @OA\Property(property="identities", type="array",
+     *                              @OA\Items(
+     *                                  type="object",
+     *                                  @OA\Property(property="identity_type_id", type="integer", example=1),
+     *                                  @OA\Property(property="identity_type_name", type="string", example="National Number"),
+     *                                  @OA\Property(property="number", type="integer", example=1),
+     *                                  @OA\Property(property="issue_date", type="integer", example=1),
+     *                                  @OA\Property(property="expiry_date", type="integer", example=1),
+     *                                  @OA\Property(property="issue_location", type="string", example="Jordan"),
+     *                                  @OA\Property(property="nationality_id", type="integer", example=1),
+     *                                  @OA\Property(property="comments", type="string", example="No comment"),
+     *                                  @OA\Property(property="security_user_id", type="date", example="2022-01-01 10:32:20"),
+     *                                  @OA\Property(property="modified_user_id", type="integer", example=1),
+     *                                  @OA\Property(property="modified", type="date", example="2022-01-01 10:32:20"),
+     *                                  @OA\Property(property="created_user_id", type="integer", example=1),
+     *                                  @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
+     *                              )
+     *                          ),
+     *                          @OA\Property(property="genderData", type="object",
+     *                              @OA\Property(property="key", type="integer", example=1),
+     *                              @OA\Property(property="value", type="string", example="Male"),
+     *                          ),
+     *                          @OA\Property(property="institution", type="object",
+     *                              @OA\Property(property="key", type="integer", example=1),
+     *                              @OA\Property(property="value", type="string", example=""),
+     *                          ),
+     *                          @OA\Property(property="educationGrade", type="object",
+     *                              @OA\Property(property="key", type="integer", example=1),
+     *                              @OA\Property(property="value", type="string", example=""),
+     *                          ),
+     *                          @OA\Property(property="studentStatus", type="object",
+     *                              @OA\Property(property="key", type="integer", example=1),
+     *                              @OA\Property(property="value", type="string", example=""),
+     *                          )
+     *                  )
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
+    public function getUserByEmail(string $email): \Illuminate\Http\JsonResponse
+    {
+        try {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return response()->json(['error' => 'Invalid email format'], 400);
+            }
+            $userId = $this->userService->getUserIdByEmail($email);
+
+            if ($userId) {
+
+                // Get the user's data
+                $data = $this->userService->getUsersData($userId);
+
+                // Remove password from the response
+                if (isset($data['password'])) {
+                    unset($data['password']);
+                }
+
+                return $this->sendSuccessResponse("User Found", $data);
+            } else {
+                return $this->sendErrorResponse("User Not Found");
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User Data Not Found');
+        }
+    }
+    //POCOR-8912 end
 }
