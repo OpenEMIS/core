@@ -906,30 +906,31 @@ EOT;
 
 
         // Handle different column types with limitations
-            $fakerFields[$column] = match (true) {
-                str_contains($attributes['type'], 'int') && preg_match('/\((\d+)\)/', $attributes['type'], $matches) => '$this->faker->numberBetween(0, ' . (10 ** $matches[1] - 1) . ')',
-                str_contains($attributes['type'], 'int') => '$this->faker->numberBetween(1, 1000)',
-                str_contains($attributes['type'], 'decimal') || str_contains($attributes['type'], 'float') => '$this->faker->randomFloat(2, 10, 1000)',
-                str_contains($attributes['type'], 'varchar') && preg_match('/\((\d+)\)/', $attributes['type'], $matches) => '$this->faker->lexify(str_repeat("?", ' . $matches[1] . '))',
-                str_contains($attributes['type'], 'text') => '$this->faker->text(50)',
-                str_contains($attributes['type'], 'datetime') || str_contains($attributes['type'], 'timestamp') => '\Carbon\Carbon::now()->format("Y-m-d H:i:s")',
-                str_contains($attributes['type'], 'date') => '\Carbon\Carbon::now()->format("Y-m-d")',
-                str_contains($attributes['type'], 'tinyint(1)') => '$this->faker->boolean',
-                default => '$this->faker->word()',
-            };
+        $fakerFields[$column] = match (true) {
+            str_contains($attributes['type'], 'int') && preg_match('/\((\d+)\)/', $attributes['type'], $matches) => '$this->faker->numberBetween(0, ' . (10 ** $matches[1] - 1) . ')',
+            str_contains($attributes['type'], 'int') => '$this->faker->numberBetween(1, 1000)',
+            str_contains($attributes['type'], 'decimal') || str_contains($attributes['type'], 'float') => '$this->faker->randomFloat(2, 10, 1000)',
+            str_contains($attributes['type'], 'varchar') && preg_match('/\((\d+)\)/', $attributes['type'], $matches) => '$this->faker->lexify(str_repeat("?", ' . $matches[1] . '))',
+            str_contains($attributes['type'], 'text') => '$this->faker->text(50)',
+            str_contains($attributes['type'], 'datetime') || str_contains($attributes['type'], 'timestamp') => '\Carbon\Carbon::now()->format("Y-m-d H:i:s")',
+            str_contains($attributes['type'], 'date') => '\Carbon\Carbon::now()->format("Y-m-d")',
+            str_contains($attributes['type'], 'tinyint(1)') => '$this->faker->boolean',
+            default => '$this->faker->word()',
+        };
         // Handle primary key
         if ($column == 'id' && empty($attributes['is_primary'])) {
             if (str_contains($attributes['type'], 'int')) {
                 $fakerFields[$column] = '$this->faker->unique()->numberBetween(1, 1000)';
             } else {
                 $fakerFields[$column] = '(string) \Illuminate\Support\Str::uuid()';
-        }
+            }
             if ($column == 'id' && $attributes['is_primary']) {
                 if (str_contains($attributes['type'], 'int')) {
-                    continue; // Skip numeric primary keys (usually auto-incrementing)
+                    unset($fakerFields[$column]);
+//                    continue; // Skip numeric primary keys (usually auto-incrementing)
                 } else {
                     $fakerFields[$column] = '(string) \Illuminate\Support\Str::uuid()';
-                    continue;
+//                    continue;
                 }
             }
         }
