@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class MakeNewApi extends Command
 {
@@ -14,10 +15,13 @@ class MakeNewApi extends Command
 
     public function handle()
     {
-        $apiPath = trim($this->argument('apiPath'), '/'); // Example: api/v4/areas
+        $apiPath = trim($this->argument('apiPath'), '/'); // Example: api/v5/areas or areas
+        $apiPath = str_replace('_', '-', $apiPath); // Convert to kebab-case
+        if (!str_starts_with($apiPath, 'api/v5/')) {
+            $apiPath = 'api/v5/' . $apiPath;
+        }
         $segments = explode('/', $apiPath);
         $resourceName = end($segments); // Extract the last segment (e.g., 'areas')
-        $resourceName = str_replace('_', '-', $resourceName); // Convert to kebab-case anyway
 
         $tableName = str_replace('-', '_', $resourceName); // Convert to snake_case anyway
         $modelName = Str::studly($tableName); // Convert to PascalCase (Areas → Areas)
@@ -614,10 +618,20 @@ EOT;
             }
         }
 
-        // Remove primary key, timestamps from fillable columns
-        $fillableColumns = array_filter($fillableColumns, function ($column) use ($timestamps) {
+        // Remove primary key, timestamps, and duplicates from fillable columns
+        $fillableColumns = array_unique(array_filter($fillableColumns, function ($column) use ($timestamps) {
             return !in_array($column, $timestamps);
-        });
+        }));
+
+        // Detect composite primary keys
+        $primaryKeys = array_filter($columns, fn($details) => $details['is_primary']);
+        $primaryKeyLine = count($primaryKeys) > 1
+            ? "protected \$primaryKey = ['" . implode("', '", array_keys($primaryKeys)) . "'];"
+            : '';
+        $incrementingLine = '';
+        if (count($primaryKeys) > 1 || (isset($columns['id']) && $columns['id']['type'] === 'string')) {
+            $incrementingLine = 'public $incrementing = false;';
+        }
 
         // ✅ Generate `$fillable` array
         $fillableLine = "protected \$fillable = ['" . implode("', '", $fillableColumns) . "'];";
@@ -646,19 +660,46 @@ class {$modelName} extends Model
     // ✅ Treat 'modified' and 'created' as timestamps
     protected \$dates = ['modified', 'created'];
 
+    // ✅ Define the primary key
+    {$primaryKeyLine}
+    {$incrementingLine}
+
+     // Override getKeyForSaveQuery to handle composite keys
+    protected function getKeyForSaveQuery()
+    {
+        \$query = \$this->newQueryWithoutScopes();
+
+        foreach (\$this->getKeyName() as \$key) {
+            \$query->where(\$key, '=', \$this->getAttribute(\$key));
+        }
+
+        return \$query;
+    }
+
+    // Override setKeysForSaveQuery to handle composite keys
+    protected function setKeysForSaveQuery(\$query)
+    {
+        foreach (\$this->getKeyName() as \$key) {
+            \$query->where(\$key, '=', \$this->getAttribute(\$key));
+        }
+
+        return \$query;
+    }
+
     public static function getValidationRules(): array
     {
         return [
             // Add validation rules here
         ];
     }
+
+
 }
 EOT;
 
         File::put(app_path("Models/{$modelName}.php"), $modelStub);
         $this->info("✅ Model `{$modelName}` successfully created.");
     }
-
 
     private function checkFactory($factoryFile)
     {
@@ -675,6 +716,32 @@ EOT;
 
         $fakerData = $this->generateFakerData($columns);
 
+        // Detect composite primary keys
+        $primaryKeys = array_filter($columns, fn($details) => $details['is_primary']);
+        $primaryKeyConditions = '';
+        if (count($primaryKeys) > 1) {
+            $primaryKeyConditions = implode("\n            ", array_map(fn($key) => "\${$key} = \$this->faker->randomElement(\App\Models\\{$modelName}::pluck('{$key}')->toArray()) ?? 1;", array_keys($primaryKeys)));
+        }
+
+        $primaryKeyCheck = '';
+        if (count($primaryKeys) > 1) {
+            $whereConditions = '';
+            foreach (array_keys($primaryKeys) as $key) {
+                $whereConditions .= "->where('{$key}', \${$key})\n                ";
+            }
+            $whereConditions = ltrim($whereConditions, '->where('); // Remove the trailing spaces and newline
+            $whereConditions = rtrim($whereConditions, ")\n                "); // Remove the trailing spaces and newline
+
+            $primaryKeyCheck = <<<EOT
+do {
+    {$primaryKeyConditions}
+    \$exists = {$modelName}::where({$whereConditions})
+        ->exists();
+} while (\$exists);
+EOT;
+            Log::info($primaryKeyCheck);
+        }
+
         $factoryStub = <<<EOT
 <?php
 
@@ -682,14 +749,17 @@ namespace Database\Factories;
 
 use App\Models\\{$modelName};
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class {$modelName}Factory extends Factory
 {
     protected \$model = {$modelName}::class;
 
-    public function definition()
+    public function definition(): array
     {
+        {$primaryKeyCheck}
+
         return {$fakerData};
     }
 }
@@ -699,11 +769,11 @@ EOT;
         $this->info("✅ Factory `{$modelName}Factory` created at `{$factoryFile}`.");
     }
 
-
     private function createTest($modelName, $tableName, $apiPath)
     {
         $testFile = base_path("tests/Feature/{$modelName}ApiTest.php");
-
+        $apiPath = trim($apiPath, '/');
+        $apiPath = '/' . $apiPath;
         $columns = $this->getTableColumns($tableName);
         if (empty($columns)) {
             $this->warn("⚠️ No columns found for table '{$tableName}'. Review test generation.");
@@ -751,23 +821,33 @@ class {$modelName}ApiTest extends TestCase
 
         \$response = \$this->withHeaders([
             'Authorization' => "Bearer {\$this->token}",
-        ])->getJson('/{$apiPath}');
+        ])->getJson('{$apiPath}');
 
         \$response->assertStatus(200);
     }
 
     public function test_can_create_{$modelName}()
     {
-        \$record = {$modelName}::factory()->create();
+        \$record = {$modelName}::factory()->make();
         \$data = \$record->toArray();
-        unset(\$data['id']);
 
         \$response = \$this->withHeaders([
             'Authorization' => "Bearer {\$this->token}",
-        ])->postJson('/{$apiPath}', \$data);
+        ])->postJson('{$apiPath}', \$data);
 
         \$response->assertStatus(201);
     }
+
+    public function test_can_view_{$modelName}()
+    {
+        \$record = {$modelName}::factory()->create();
+        \$response = \$this->withHeaders([
+            'Authorization' => "Bearer {\$this->token}",
+        ])->getJson('{$apiPath}/' . \$record->id);
+
+        \$response->assertStatus(200);
+    }
+
 
     public function test_can_update_{$modelName}()
     {
@@ -778,7 +858,7 @@ class {$modelName}ApiTest extends TestCase
         ];
         \$response = \$this->withHeaders([
             'Authorization' => "Bearer {\$this->token}",
-        ])->putJson('/{$apiPath}/' . \$record->id, \$updatedData);
+        ])->putJson('{$apiPath}/' . \$record->id, \$updatedData);
 
         \$response->assertStatus(200);
     }
@@ -788,7 +868,7 @@ class {$modelName}ApiTest extends TestCase
         \$record = {$modelName}::factory()->create();
         \$response = \$this->withHeaders([
             'Authorization' => "Bearer {\$this->token}",
-        ])->deleteJson('/{$apiPath}/' . \$record->id);
+        ])->deleteJson('{$apiPath}/' . \$record->id);
 
         \$response->assertStatus(204);
     }
@@ -808,46 +888,20 @@ EOT;
         }
     }
 
-    private function generateFakerData($columns)
-    {
-        $fakerFields = [];
+    function generateFakerData($columns)
+{
+    $fakerFields = [];
 
-        foreach ($columns as $column => $attributes) {
-            if (in_array($column, ['created_at', 'updated_at', 'deleted_at'])) {
-                continue;
-            }
+    foreach ($columns as $column => $attributes) {
+        if (in_array($column, ['created_at', 'updated_at', 'deleted_at'])) {
+            continue;
+        }
 
-            // Handle primary key
-            if ($attributes['is_primary']) {
-                if ($attributes['is_auto_increment']) {
-                    continue; // Skip auto-incrementing primary keys
-                } elseif (str_contains($attributes['type'], 'varchar') || str_contains($attributes['type'], 'char')) {
-                    $fakerFields[$column] = '(string) \Illuminate\Support\Str::uuid()';
-                }
-                continue;
-            }
 
-            // Handle foreign keys properly
-            if (isset($attributes['foreign_key'])) {
-                $relatedModel = ucfirst(\Str::camel($attributes['foreign_key']['table']));
-                if (class_exists("App\\Models\\{$relatedModel}")) {
-                    $relatedCount = \App\Models\\{$relatedModel}::count();
-                if ($relatedCount > 0) {
-                    $fakerFields[$column] = "\\App\\Models\\{$relatedModel}::inRandomOrder()->value('{$attributes['foreign_key']['column']}') ?? 1";
-                } else {
-                    $this->warn("⚠️ No data found in related table '{$attributes['foreign_key']['table']}'. Please create related data first.");
-                    $fakerFields[$column] = "1"; // Default to 1 if the related model is missing
-                }
-            } else {
-                    $this->warn("⚠️ Model for foreign key '{$attributes['foreign_key']['table']}' not found. Please review.");
-                    $fakerFields[$column] = "1"; // Default to 1 if the related model is missing
-                }
-                continue;
-            }
-
-            // Handle different column types with limitations
+        // Handle different column types with limitations
             $fakerFields[$column] = match (true) {
                 str_contains($attributes['type'], 'int') && preg_match('/\((\d+)\)/', $attributes['type'], $matches) => '$this->faker->numberBetween(0, ' . (10 ** $matches[1] - 1) . ')',
+                str_contains($attributes['type'], 'int') => '$this->faker->numberBetween(1, 1000)',
                 str_contains($attributes['type'], 'decimal') || str_contains($attributes['type'], 'float') => '$this->faker->randomFloat(2, 10, 1000)',
                 str_contains($attributes['type'], 'varchar') && preg_match('/\((\d+)\)/', $attributes['type'], $matches) => '$this->faker->lexify(str_repeat("?", ' . $matches[1] . '))',
                 str_contains($attributes['type'], 'text') => '$this->faker->text(50)',
@@ -856,25 +910,62 @@ EOT;
                 str_contains($attributes['type'], 'tinyint(1)') => '$this->faker->boolean',
                 default => '$this->faker->word()',
             };
-        }
-
-        // Convert array to executable code format
-        $output = "[\n";
-        foreach ($fakerFields as $key => $value) {
-            // Ensure Faker and Carbon values are not quoted
-            if (str_starts_with($value, '$this->faker') || str_starts_with($value, 'Carbon::now()') || str_starts_with($value, '\\App\\Models\\')) {
-                $output .= "    '{$key}' => {$value},\n";
+        // Handle primary key
+        if ($column == 'id' && empty($attributes['is_primary'])) {
+            if (str_contains($attributes['type'], 'int')) {
+                $fakerFields[$column] = '$this->faker->unique()->numberBetween(1, 1000)';
             } else {
-                $output .= "    '{$key}' => '{$value}',\n";
+                $fakerFields[$column] = '(string) \Illuminate\Support\Str::uuid()';
+        }
+            if ($column == 'id' && $attributes['is_primary']) {
+                if (str_contains($attributes['type'], 'int')) {
+                    continue; // Skip numeric primary keys (usually auto-incrementing)
+                } else {
+                    $fakerFields[$column] = '(string) \Illuminate\Support\Str::uuid()';
+                    continue;
+                }
             }
         }
-        $output .= "]";
 
-        return $output;
+        // Handle foreign keys properly
+        if (isset($attributes['foreign_key'])) {
+            $tableName = $attributes['foreign_key']['table'];
+            $relatedModel = Str::studly($tableName);
+            if (class_exists("\\App\\Models\\{$relatedModel}")) {
+                $fakerFields[$column] = "\\App\\Models\\{$relatedModel}::inRandomOrder()->value('{$attributes['foreign_key']['column']}') ?? 1";
+            } else {
+                $columnName = $attributes['foreign_key']['column'];
+                $relatedCount = \DB::table($tableName)->count();
+                if ($relatedCount > 0) {
+                    $fakerFields[$column] = "\\DB::table('{$tableName}')->inRandomOrder()->value('{$columnName}') ?? 1";
+                } else {
+                    $this->warn("⚠️ Model for foreign key '{$attributes['foreign_key']['table']}' not found. Please review.");
+                    $fakerFields[$column] = "1"; // Default to 1 if the related model is missing
+                }
+            }
+        }
+
     }
 
+    // Convert array to executable code format
+    $output = "[\n";
+    foreach ($fakerFields as $key => $value) {
+        // Ensure Faker and Carbon values are not quoted
+        if ($value === '(string) \Illuminate\Support\Str::uuid()') {
+            $output .= "    '{$key}' => {$value},\n";
+        } elseif (str_starts_with($value, '$this->faker')
+            || str_starts_with($value, 'Carbon::now()')
+            || str_starts_with($value, '\\App\\Models\\')) {
+            $output .= "    '{$key}' => {$value},\n";
+        } else {
+            $output .= "    '{$key}' => '{$value}',\n";
+        }
+    }
+    $output .= "]";
 
-    private function getTableColumns($tableName)
+    return $output;
+}
+    private function getTableColumns($tableName): array
     {
         $columns = \DB::select("SHOW COLUMNS FROM {$tableName}");
 

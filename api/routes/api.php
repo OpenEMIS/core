@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BaseApi\CrudApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,15 +15,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::group(['prefix' => 'v4'], function () {
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
 Route::post('login', 'Authentication\LoginController@login');
-
+});
 
 Route::group(
-    ["middleware" => "auth.jwt"],
+    ["middleware" => "auth.jwt",'prefix' => 'v4'],
     function () {
         //POCOR-7545 starts
         Route::get('institutions/{institutionId}/students/meals', 'InstitutionController@getStudentsMealsByInstitutionId');
@@ -575,15 +577,19 @@ Route::group(
         Route::get('users/email/{email}', 'UserController@getUserByEmail'); // POCOR-8912
         // POCOR-8912 end
 
-        // POCOR-8915 start
-        // should be always the last, as it is all-consuming
-        Route::group(
-            ['namespace' => 'BaseApi', 'middleware' => 'auth.jwt'],
-            function () {
-                Route::match(['GET', 'POST', 'PUT', 'DELETE'], '/{any}', [CrudApiController::class, 'common'])
-                    ->where('any', '.*');
-            });
-        // POCOR-8915 end
-
     }
 );
+
+Route::group(["middleware" => "auth.jwt", "prefix" => "v5"], function () {
+    // POCOR-8915 start
+    // should be always the last, as it is all-consuming
+    Route::group(
+        ['namespace' => 'BaseApi', 'middleware' => 'auth.jwt'],
+        function () {
+            Route::match(['GET', 'POST', 'PUT', 'DELETE'], '/{any}', [CrudApiController::class, 'common'])
+                ->where('any', '.*');
+        });
+    // POCOR-8915 end
+    // for v5 apis
+        //Route::match(['get', 'post', 'put', 'delete'], '{action}', [TestController::class, 'handle']);
+});

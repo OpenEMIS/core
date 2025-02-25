@@ -5,6 +5,7 @@ return [
         'resourceNotFound' => 404,
         'internalError' => 500,
         'success' => 200,
+        'createSuccess' => 201,
         'deleteError' => 403,
         'fieldNotFound' => 422
     ],
@@ -68,7 +69,7 @@ zECeE3WndcaYQmtr5oX8oczcGkkSHBUfC+TjIgYeOEBc5Sv7OEdIVgHAoMYGnL5K
 ZA+2wTKNehFHLFruHFUzxnE=
 -----END PRIVATE KEY-----',
 
-    
+
     'importExcelRules' => [
         'maxRows' => 2000,
     ],
