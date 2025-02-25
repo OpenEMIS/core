@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
+        'alerts-logs' => \App\Models\AlertsLogs::class,
         'workflows-filters' => \App\Models\WorkflowsFilters::class,
         'workflows' => \App\Models\Workflows::class,
         'workflow-transitions' => \App\Models\WorkflowTransitions::class,
@@ -1036,10 +1037,12 @@ class CrudApiController extends Controller
         } else {
             return response()->json(['error' => 'Invalid update identifier'], 400);
         }
-
+        if (!$record) {
+            return response()->json(['error' => 'Record not found'], 404);
+        }
         // Retrieve update data from the request.
         $data = $request->all();
-
+        Log::info('data: '.json_encode($data) .'; record ' . json_encode($record));
         // Update the record using the model's update method.
         try {
             $record->update($data);
