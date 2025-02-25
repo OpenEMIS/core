@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
+        'api-security-scopes' => \App\Models\ApiSecurityScopes::class,
         'alerts-logs' => \App\Models\AlertsLogs::class,
         'workflows-filters' => \App\Models\WorkflowsFilters::class,
         'workflows' => \App\Models\Workflows::class,
@@ -1042,7 +1043,7 @@ class CrudApiController extends Controller
         }
         // Retrieve update data from the request.
         $data = $request->all();
-        Log::info('data: '.json_encode($data) .'; record ' . json_encode($record));
+//        Log::info('data: '.json_encode($data) .'; record ' . json_encode($record));
         // Update the record using the model's update method.
         try {
             $record->update($data);
