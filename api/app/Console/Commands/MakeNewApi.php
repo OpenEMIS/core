@@ -668,8 +668,11 @@ class {$modelName} extends Model
     protected function getKeyForSaveQuery()
     {
         \$query = \$this->newQueryWithoutScopes();
-
-        foreach (\$this->getKeyName() as \$key) {
+        \$keyName = \$this->getKeyName();
+        if(!is_array(\$keyName)){
+            \$keyName = [\$keyName];;
+        }
+        foreach (\$keyName as \$key) {
             \$query->where(\$key, '=', \$this->getAttribute(\$key));
         }
 
@@ -679,7 +682,11 @@ class {$modelName} extends Model
     // Override setKeysForSaveQuery to handle composite keys
     protected function setKeysForSaveQuery(\$query)
     {
-        foreach (\$this->getKeyName() as \$key) {
+        \$keyName = \$this->getKeyName();
+        if(!is_array(\$keyName)){
+            \$keyName = [\$keyName];;
+        }
+        foreach (\$keyName as \$key) {
             \$query->where(\$key, '=', \$this->getAttribute(\$key));
         }
 
@@ -739,7 +746,7 @@ do {
         ->exists();
 } while (\$exists);
 EOT;
-            Log::info($primaryKeyCheck);
+//            Log::info($primaryKeyCheck);
         }
 
         $factoryStub = <<<EOT
@@ -905,8 +912,8 @@ EOT;
                 str_contains($attributes['type'], 'decimal') || str_contains($attributes['type'], 'float') => '$this->faker->randomFloat(2, 10, 1000)',
                 str_contains($attributes['type'], 'varchar') && preg_match('/\((\d+)\)/', $attributes['type'], $matches) => '$this->faker->lexify(str_repeat("?", ' . $matches[1] . '))',
                 str_contains($attributes['type'], 'text') => '$this->faker->text(50)',
-                str_contains($attributes['type'], 'datetime') || str_contains($attributes['type'], 'timestamp') => 'Carbon::now()->format("Y-m-d H:i:s")',
-                str_contains($attributes['type'], 'date') => 'Carbon::now()->format("Y-m-d")',
+                str_contains($attributes['type'], 'datetime') || str_contains($attributes['type'], 'timestamp') => '\Carbon\Carbon::now()->format("Y-m-d H:i:s")',
+                str_contains($attributes['type'], 'date') => '\Carbon\Carbon::now()->format("Y-m-d")',
                 str_contains($attributes['type'], 'tinyint(1)') => '$this->faker->boolean',
                 default => '$this->faker->word()',
             };
@@ -954,7 +961,7 @@ EOT;
         if ($value === '(string) \Illuminate\Support\Str::uuid()') {
             $output .= "    '{$key}' => {$value},\n";
         } elseif (str_starts_with($value, '$this->faker')
-            || str_starts_with($value, 'Carbon::now()')
+            || str_starts_with($value, '\\Carbon\\Carbon::now()')
             || str_starts_with($value, '\\App\\Models\\')) {
             $output .= "    '{$key}' => {$value},\n";
         } else {

@@ -5,10 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CompetencyPeriods extends Model
+class AreaAdministrativeLevels extends Model
 {
     use HasFactory;
-
-    public $timestamps = false;
-    protected $table = "competency_periods";
+    protected $table = "area_administrative_levels";
 }

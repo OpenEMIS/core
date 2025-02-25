@@ -5,6 +5,7 @@ namespace App\Http\Controllers\BaseApi;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 
 class CrudApiController extends Controller
 {
@@ -1082,8 +1083,11 @@ class CrudApiController extends Controller
         }
 
         // Case 1: Bulk deletion by comma-separated IDs (e.g., /appraisal-types/47,48)
-        if (count($segments) === 1 && strpos($segments[0], ',') !== false) {
+
+        if (count($segments) === 1
+            && strpos($segments[0], ',') !== false) {
             $ids = explode(',', $segments[0]);
+//            Log::info('segments: '.json_encode($ids));
 
             // Validate each ID.
             foreach ($ids as $id) {
@@ -1113,6 +1117,7 @@ class CrudApiController extends Controller
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             try {
                 $record = $model::where('id', $segments[0])->first();
+//                Log::info('record: '.json_encode($record));
 //                $record = $model::findOrFail($segments[0]);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 404);
@@ -1129,6 +1134,7 @@ class CrudApiController extends Controller
 
         // Case 3: Deletion by unique field (e.g., /resource/field/value)
         if (count($segments) >= 2) {
+//            Log::info('segments>2: '.json_encode($segments));
             $field = $segments[0];
             $value = $segments[1];
 
