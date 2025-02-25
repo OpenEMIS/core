@@ -17,7 +17,7 @@ use Illuminate\Routing\Controller as BaseController;
  *      @OA\License(
  *          name="GNU General Public License V3.0",
  *          url="https://www.gnu.org/licenses/gpl-3.0.en.html"
- *      ),  
+ *      ),
  *      @OA\Contact(
  *          email="support@openemis.org"
  *      ),
@@ -71,7 +71,7 @@ class Controller extends BaseController
 
     public function sendSuccessResponse($message, $data = [], $success=true)
     {
-        $message = "Successful.";
+        $message = $message ?? "Successful.";
         return response()->json(
             [
                 'message' => $message,
