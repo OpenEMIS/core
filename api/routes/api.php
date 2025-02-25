@@ -14,15 +14,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['prefix' => 'v4'], function () {
+    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    Route::post('login', 'Authentication\LoginController@login');
 });
 
-Route::post('login', 'Authentication\LoginController@login');
-
-
 Route::group(
-    ["middleware" => "auth.jwt"],
+    ["middleware" => "auth.jwt",'prefix' => 'v4'],
     function () {
         //POCOR-7545 starts
         Route::get('institutions/{institutionId}/students/meals', 'InstitutionController@getStudentsMealsByInstitutionId');
@@ -577,3 +578,8 @@ Route::group(
 
     }
 );
+
+Route::group(["middleware" => "auth.jwt", "prefix" => "v5"], function () {
+    // for v5 apis 
+        //Route::match(['get', 'post', 'put', 'delete'], '{action}', [TestController::class, 'handle']);
+});
