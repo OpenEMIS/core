@@ -34,7 +34,7 @@ while IFS= read -r API_PATH; do
     echo "Detected model: $modelName"
 
     # Run the test command and capture output
-    TEST_OUTPUT=$(php artisan test --filter="${modelName}ApiTest" --no-ansi 2>&1)
+    TEST_OUTPUT=$(php artisan test --filter="${modelName}ApiTest" 2>&1)
     TEST_EXIT_CODE=$?
 
     END_TIME=$(date +%s)
