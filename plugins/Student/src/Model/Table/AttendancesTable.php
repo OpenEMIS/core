@@ -98,7 +98,7 @@ class AttendancesTable extends ControllerActionTable
 
         $extra['elements']['controls'] = ['name' => 'Student.Attendances/controls', 'order' => 1];
 
-        $query = $this->setIndexQuery($query, $selectedMonth);
+        $query = $this->setIndexQuery($query, $selectedMonth, $selectedPeriod);
 
 
 //        dd($query);
@@ -245,7 +245,7 @@ class AttendancesTable extends ControllerActionTable
         }
         $absence_type_name = $Types->aliasField('name');
 
-        if (!$selectedMonth) {
+        if (!$selectedMonth || $selectedMonth < 1) {
             $joinConditions = [
                 'AttendanceMarkedRecords.institution_class_id = ' . $this->aliasField('institution_class_id'),
                 'AttendanceMarkedRecords.date BETWEEN InstitutionStudents.start_date AND IFNULL(InstitutionStudents.end_date, AttendanceMarkedRecords.date)',
@@ -326,12 +326,13 @@ class AttendancesTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $selectedMonth = $this->request->getQuery('month') ?? null;
+        $selectedPeriod = $this->request->getQuery('academic_period_id') ?? null;
         $student_id = $this->getQueryString('student_id');
 
         if (!$selectedMonth) {
             $event->stopPropagation();
         }
-        $query = $this->setIndexQuery($query, $selectedMonth);
+        $query = $this->setIndexQuery($query, $selectedMonth, $selectedPeriod);
         $query->contain(['Users','Institutions','AcademicPeriods','InstitutionClasses']);
         $query->select(['Users.first_name',
             'Users.last_name',
