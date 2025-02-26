@@ -651,7 +651,8 @@ class DashboardController extends AppController
             $key = "SystemUpdates";
             foreach ($data as $item) {
                 if ($item['id'] > $maxId) {
-                    $AlertsTable->triggerAlertFeatureShell($key);
+                    // $AlertsTable->triggerAlertFeatureShell($key);
+                    $AlertsTable->triggerSystemUpdateAlertFeatureShell($key, $item['version']);
                 }
             }
         }
