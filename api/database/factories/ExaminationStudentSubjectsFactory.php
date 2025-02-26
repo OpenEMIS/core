@@ -17,8 +17,8 @@ class ExaminationStudentSubjectsFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'examination_subject_id' => \App\Models\ExaminationSubjects::inRandomOrder()->value('id') ?? 1,
+    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'examination_subject_id' => \App\Models\ExaminationSubjects::inRandomOrder()->value('id') ?? \App\Models\ExaminationSubjects::factory()->create()->id,
 ];
     }
 }

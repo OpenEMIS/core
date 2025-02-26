@@ -24,7 +24,7 @@ class UserActivitiesFactory extends Factory
     'old_value' => $this->faker->lexify(str_repeat("?", 255)),
     'new_value' => $this->faker->lexify(str_repeat("?", 255)),
     'operation' => $this->faker->lexify(str_repeat("?", 10)),
-    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];

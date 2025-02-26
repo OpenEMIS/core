@@ -13,11 +13,11 @@ class CustomFormsFiltersFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'custom_form_id' => \App\Models\CustomForms::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'custom_form_id' => \App\Models\CustomForms::factory()->create()->id,
     'custom_filter_id' => $this->faker->numberBetween(1, 1000),
 ];
     }

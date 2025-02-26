@@ -16,7 +16,7 @@ class CustomFieldValuesFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'text_value' => $this->faker->lexify(str_repeat("?", 250)),
     'number_value' => $this->faker->numberBetween(1, 1000),
     'decimal_value' => $this->faker->lexify(str_repeat("?", 25)),
@@ -24,8 +24,8 @@ class CustomFieldValuesFactory extends Factory
     'date_value' => \Carbon\Carbon::now()->format("Y-m-d"),
     'time_value' => $this->faker->word(),
     'file' => $this->faker->word(),
-    'custom_field_id' => \App\Models\CustomFields::inRandomOrder()->value('id') ?? 1,
-    'custom_record_id' => \App\Models\CustomRecords::inRandomOrder()->value('id') ?? 1,
+    'custom_field_id' => \App\Models\CustomFields::factory()->create()->id,
+    'custom_record_id' => \App\Models\CustomRecords::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

@@ -17,8 +17,8 @@ class ReportCardExcludedSecurityRolesFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'report_card_id' => \App\Models\ReportCards::inRandomOrder()->value('id') ?? 1,
-    'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? 1,
+    'report_card_id' => \App\Models\ReportCards::inRandomOrder()->value('id') ?? \App\Models\ReportCards::factory()->create()->id,
+    'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? \App\Models\SecurityRoles::factory()->create()->id,
 ];
     }
 }

@@ -13,16 +13,16 @@ class StaffCustomFormsFieldsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'staff_custom_form_id' => \App\Models\StaffCustomForms::inRandomOrder()->value('id') ?? 1,
-    'staff_custom_field_id' => \App\Models\StaffCustomFields::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'staff_custom_form_id' => \App\Models\StaffCustomForms::factory()->create()->id,
+    'staff_custom_field_id' => \App\Models\StaffCustomFields::factory()->create()->id,
     'section' => $this->faker->lexify(str_repeat("?", 250)),
     'name' => $this->faker->lexify(str_repeat("?", 250)),
-    'is_mandatory' => $this->faker->numberBetween(1, 1000),
-    'is_unique' => $this->faker->numberBetween(1, 1000),
+    'is_mandatory' => $this->faker->numberBetween(0, 1),
+    'is_unique' => $this->faker->numberBetween(0, 1),
     'order' => $this->faker->numberBetween(1, 1000),
 ];
     }

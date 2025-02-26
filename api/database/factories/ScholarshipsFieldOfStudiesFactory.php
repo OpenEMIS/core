@@ -24,8 +24,8 @@ do {
 } while ($exists && $attempts < 5);
 
         return [
-    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? 1,
-    'education_field_of_study_id' => \App\Models\EducationFieldOfStudies::inRandomOrder()->value('id') ?? 1,
+    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? \App\Models\Scholarships::factory()->create()->id,
+    'education_field_of_study_id' => \App\Models\EducationFieldOfStudies::inRandomOrder()->value('id') ?? \App\Models\EducationFieldOfStudies::factory()->create()->id,
 ];
     }
 }

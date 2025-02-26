@@ -17,10 +17,10 @@ class InstitutionQualityRubricAnswersFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'institution_quality_rubric_id' => \App\Models\InstitutionQualityRubrics::inRandomOrder()->value('id') ?? 1,
-    'rubric_section_id' => \App\Models\RubricSections::inRandomOrder()->value('id') ?? 1,
-    'rubric_criteria_id' => \App\Models\RubricCriterias::inRandomOrder()->value('id') ?? 1,
-    'rubric_criteria_option_id' => \App\Models\RubricCriteriaOptions::inRandomOrder()->value('id') ?? 1,
+    'institution_quality_rubric_id' => \App\Models\InstitutionQualityRubrics::inRandomOrder()->value('id') ?? \App\Models\InstitutionQualityRubrics::factory()->create()->id,
+    'rubric_section_id' => \App\Models\RubricSections::inRandomOrder()->value('id') ?? \App\Models\RubricSections::factory()->create()->id,
+    'rubric_criteria_id' => \App\Models\RubricCriterias::inRandomOrder()->value('id') ?? \App\Models\RubricCriterias::factory()->create()->id,
+    'rubric_criteria_option_id' => \App\Models\RubricCriteriaOptions::inRandomOrder()->value('id') ?? \App\Models\RubricCriteriaOptions::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

@@ -16,8 +16,8 @@ class EducationGradesCumulativeGpaFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
-    'main_education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'main_education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? \App\Models\EducationGrades::factory()->create()->id,
     'education_grade_id' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

@@ -22,7 +22,7 @@ class UserHealthsFactory extends Factory
     'doctor_contact' => $this->faker->lexify(str_repeat("?", 11)),
     'medical_facility' => $this->faker->lexify(str_repeat("?", 200)),
     'health_insurance' => $this->faker->numberBetween(1, 1000),
-    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'file_name' => $this->faker->lexify(str_repeat("?", 250)),
     'file_content' => $this->faker->word(),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

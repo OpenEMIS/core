@@ -18,9 +18,9 @@ class AppraisalDropdownOptionsFactory extends Factory
         return [
     'id' => $this->model::max('id') + 1,
     'name' => $this->faker->lexify(str_repeat("?", 250)),
-    'is_default' => $this->faker->numberBetween(1, 1000),
+    'is_default' => $this->faker->numberBetween(0, 1),
     'order' => $this->faker->numberBetween(1, 1000),
-    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? 1,
+    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? \App\Models\AppraisalCriterias::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

@@ -25,8 +25,8 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'training_session_id' => \App\Models\TrainingSessions::inRandomOrder()->value('id') ?? 1,
-    'trainee_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'training_session_id' => \App\Models\TrainingSessions::inRandomOrder()->value('id') ?? \App\Models\TrainingSessions::factory()->create()->id,
+    'trainee_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'status' => $this->faker->numberBetween(1, 1000),
 ];
     }

@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\UuidId;
 
 class WorkflowStatusesSteps extends Model
 {
     use HasFactory;
+use UuidId;
 
     protected $table = 'workflow_statuses_steps';
 
@@ -21,6 +23,18 @@ class WorkflowStatusesSteps extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
+
+    public $incrementing = false;
+
+    public $casts = [
+        'id' => 'string',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        self::bootUuidId();
+    }
     
     
 

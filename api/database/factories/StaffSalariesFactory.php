@@ -21,7 +21,7 @@ class StaffSalariesFactory extends Factory
     'comment' => $this->faker->text(50),
     'gross_salary' => $this->faker->randomFloat(2, 10, 1000),
     'net_salary' => $this->faker->randomFloat(2, 10, 1000),
-    'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

@@ -19,7 +19,7 @@ class InstitutionScheduleTimeslotsFactory extends Factory
     'id' => $this->model::max('id') + 1,
     'interval' => $this->faker->numberBetween(1, 1000),
     'order' => $this->faker->numberBetween(1, 1000),
-    'institution_schedule_interval_id' => \App\Models\InstitutionScheduleIntervals::inRandomOrder()->value('id') ?? 1,
+    'institution_schedule_interval_id' => \App\Models\InstitutionScheduleIntervals::inRandomOrder()->value('id') ?? \App\Models\InstitutionScheduleIntervals::factory()->create()->id,
 ];
     }
 }

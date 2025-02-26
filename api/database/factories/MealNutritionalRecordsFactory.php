@@ -17,8 +17,8 @@ class MealNutritionalRecordsFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'meal_programmes_id' => \App\Models\MealProgrammes::inRandomOrder()->value('id') ?? 1,
-    'nutritional_content_id' => \App\Models\MealNutritions::inRandomOrder()->value('id') ?? 1,
+    'meal_programmes_id' => \App\Models\MealProgrammes::inRandomOrder()->value('id') ?? \App\Models\MealProgrammes::factory()->create()->id,
+    'nutritional_content_id' => \App\Models\MealNutritions::inRandomOrder()->value('id') ?? \App\Models\MealNutritions::factory()->create()->id,
 ];
     }
 }

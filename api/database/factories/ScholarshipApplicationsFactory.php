@@ -25,12 +25,12 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'applicant_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? 1,
+    'applicant_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? \App\Models\Scholarships::factory()->create()->id,
     'requested_amount' => $this->faker->randomFloat(2, 10, 1000),
     'comments' => $this->faker->text(50),
-    'status_id' => \App\Models\WorkflowSteps::inRandomOrder()->value('id') ?? 1,
-    'assignee_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'status_id' => \App\Models\WorkflowSteps::inRandomOrder()->value('id') ?? \App\Models\WorkflowSteps::factory()->create()->id,
+    'assignee_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

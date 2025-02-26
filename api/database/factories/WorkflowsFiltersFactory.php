@@ -13,11 +13,11 @@ class WorkflowsFiltersFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'workflow_id' => \App\Models\Workflows::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'workflow_id' => \App\Models\Workflows::inRandomOrder()->value('id') ?? \App\Models\Workflows::factory()->create()->id,
     'filter_id' => $this->faker->numberBetween(1, 1000),
 ];
     }

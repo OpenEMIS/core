@@ -21,7 +21,7 @@ class RubricTemplateOptionsFactory extends Factory
     'weighting' => $this->faker->numberBetween(1, 1000),
     'color' => $this->faker->lexify(str_repeat("?", 10)),
     'order' => $this->faker->numberBetween(1, 1000),
-    'rubric_template_id' => \App\Models\RubricTemplates::inRandomOrder()->value('id') ?? 1,
+    'rubric_template_id' => \App\Models\RubricTemplates::inRandomOrder()->value('id') ?? \App\Models\RubricTemplates::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

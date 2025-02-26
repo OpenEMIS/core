@@ -22,7 +22,7 @@ class AreasFactory extends Factory
     'parent_id' => $this->faker->numberBetween(1, 1000),
     'lft' => $this->faker->numberBetween(1, 1000),
     'rght' => $this->faker->numberBetween(1, 1000),
-    'area_level_id' => \App\Models\AreaLevels::inRandomOrder()->value('id') ?? 1,
+    'area_level_id' => \App\Models\AreaLevels::inRandomOrder()->value('id') ?? \App\Models\AreaLevels::factory()->create()->id,
     'order' => $this->faker->numberBetween(1, 1000),
     'visible' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

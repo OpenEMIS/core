@@ -16,7 +16,7 @@ class SingleLogoutFactory extends Factory
         
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'username' => $this->faker->lexify(str_repeat("?", 100)),
     'url' => $this->faker->lexify(str_repeat("?", 255)),
     'session_id' => $this->faker->lexify(str_repeat("?", 50)),

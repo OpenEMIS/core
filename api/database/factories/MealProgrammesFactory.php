@@ -17,7 +17,7 @@ class MealProgrammesFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'name' => $this->faker->lexify(str_repeat("?", 50)),
     'code' => $this->faker->lexify(str_repeat("?", 50)),
     'type' => $this->faker->numberBetween(1, 1000),

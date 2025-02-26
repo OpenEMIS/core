@@ -16,10 +16,10 @@ class TrainingSessionTrainersFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'name' => $this->faker->lexify(str_repeat("?", 250)),
-    'training_session_id' => \App\Models\TrainingSessions::inRandomOrder()->value('id') ?? 1,
-    'trainer_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'training_session_id' => \App\Models\TrainingSessions::inRandomOrder()->value('id') ?? \App\Models\TrainingSessions::factory()->create()->id,
+    'trainer_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

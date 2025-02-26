@@ -16,7 +16,7 @@ class ReportProgressFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'name' => $this->faker->lexify(str_repeat("?", 700)),
     'module' => $this->faker->lexify(str_repeat("?", 100)),
     'params' => $this->faker->text(50),

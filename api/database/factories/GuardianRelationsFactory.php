@@ -18,7 +18,7 @@ class GuardianRelationsFactory extends Factory
         return [
     'id' => $this->model::max('id') + 1,
     'name' => $this->faker->lexify(str_repeat("?", 50)),
-    'gender_id' => \App\Models\Genders::inRandomOrder()->value('id') ?? 1,
+    'gender_id' => \App\Models\Genders::inRandomOrder()->value('id') ?? \App\Models\Genders::factory()->create()->id,
     'order' => $this->faker->numberBetween(1, 1000),
     'visible' => $this->faker->numberBetween(1, 1000),
     'editable' => $this->faker->numberBetween(1, 1000),

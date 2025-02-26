@@ -24,9 +24,9 @@ do {
 } while ($exists && $attempts < 5);
 
         return [
-    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? 1,
-    'scholarship_attachment_type_id' => \App\Models\ScholarshipAttachmentTypes::inRandomOrder()->value('id') ?? 1,
-    'is_mandatory' => $this->faker->numberBetween(1, 1000),
+    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? \App\Models\Scholarships::factory()->create()->id,
+    'scholarship_attachment_type_id' => \App\Models\ScholarshipAttachmentTypes::inRandomOrder()->value('id') ?? \App\Models\ScholarshipAttachmentTypes::factory()->create()->id,
+    'is_mandatory' => $this->faker->numberBetween(0, 1),
 ];
     }
 }

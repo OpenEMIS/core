@@ -21,7 +21,7 @@ class UserHealthMedicationsFactory extends Factory
     'dosage' => $this->faker->lexify(str_repeat("?", 20)),
     'start_date' => \Carbon\Carbon::now()->format("Y-m-d"),
     'end_date' => \Carbon\Carbon::now()->format("Y-m-d"),
-    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'file_name' => $this->faker->lexify(str_repeat("?", 250)),
     'file_content' => $this->faker->word(),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

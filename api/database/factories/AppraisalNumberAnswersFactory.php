@@ -26,9 +26,9 @@ do {
 } while ($exists && $attempts < 5);
 
         return [
-    'appraisal_form_id' => \App\Models\AppraisalForms::inRandomOrder()->value('id') ?? 1,
-    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? 1,
-    'institution_staff_appraisal_id' => \App\Models\InstitutionStaffAppraisals::inRandomOrder()->value('id') ?? 1,
+    'appraisal_form_id' => \App\Models\AppraisalForms::inRandomOrder()->value('id') ?? \App\Models\AppraisalForms::factory()->create()->id,
+    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? \App\Models\AppraisalCriterias::factory()->create()->id,
+    'institution_staff_appraisal_id' => \App\Models\InstitutionStaffAppraisals::inRandomOrder()->value('id') ?? \App\Models\InstitutionStaffAppraisals::factory()->create()->id,
     'answer' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

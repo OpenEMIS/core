@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\UuidId;
 
 class StaffCustomFieldValues extends Model
 {
     use HasFactory;
+use UuidId;
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file', 'staff_custom_field_id', 'staff_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'staff_custom_field_id', 'staff_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps

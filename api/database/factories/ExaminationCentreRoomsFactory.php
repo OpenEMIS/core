@@ -20,7 +20,7 @@ class ExaminationCentreRoomsFactory extends Factory
     'name' => $this->faker->lexify(str_repeat("?", 100)),
     'size' => $this->faker->numberBetween(1, 1000),
     'number_of_seats' => $this->faker->numberBetween(1, 1000),
-    'examination_centre_id' => \App\Models\ExaminationCentres::inRandomOrder()->value('id') ?? 1,
+    'examination_centre_id' => \App\Models\ExaminationCentres::inRandomOrder()->value('id') ?? \App\Models\ExaminationCentres::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

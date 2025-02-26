@@ -27,7 +27,7 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'institution_case_id' => \App\Models\InstitutionCases::inRandomOrder()->value('id') ?? 1,
+    'institution_case_id' => \App\Models\InstitutionCases::inRandomOrder()->value('id') ?? \App\Models\InstitutionCases::factory()->create()->id,
     'record_id' => $this->faker->numberBetween(1, 1000),
     'feature' => $this->faker->lexify(str_repeat("?", 100)),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

@@ -26,14 +26,14 @@ do {
 } while ($exists && $attempts < 5);
 
         return [
-    'report_card_id' => \App\Models\ReportCards::inRandomOrder()->value('id') ?? 1,
-    'institution_class_id' => \App\Models\InstitutionClasses::inRandomOrder()->value('id') ?? 1,
-    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'report_card_id' => \App\Models\ReportCards::inRandomOrder()->value('id') ?? \App\Models\ReportCards::factory()->create()->id,
+    'institution_class_id' => \App\Models\InstitutionClasses::inRandomOrder()->value('id') ?? \App\Models\InstitutionClasses::factory()->create()->id,
+    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'status' => $this->faker->numberBetween(1, 1000),
     'error_message' => $this->faker->text(50),
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
-    'education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? 1,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
+    'education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? \App\Models\EducationGrades::factory()->create()->id,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

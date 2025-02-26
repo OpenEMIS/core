@@ -16,7 +16,7 @@ class FloorCustomFieldValuesFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'text_value' => $this->faker->lexify(str_repeat("?", 250)),
     'number_value' => $this->faker->numberBetween(1, 1000),
     'decimal_value' => $this->faker->lexify(str_repeat("?", 25)),
@@ -24,8 +24,8 @@ class FloorCustomFieldValuesFactory extends Factory
     'date_value' => \Carbon\Carbon::now()->format("Y-m-d"),
     'time_value' => $this->faker->word(),
     'file' => $this->faker->word(),
-    'infrastructure_custom_field_id' => \App\Models\InfrastructureCustomFields::inRandomOrder()->value('id') ?? 1,
-    'institution_floor_id' => \App\Models\InstitutionFloors::inRandomOrder()->value('id') ?? 1,
+    'infrastructure_custom_field_id' => \App\Models\InfrastructureCustomFields::factory()->create()->id,
+    'institution_floor_id' => \App\Models\InstitutionFloors::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

@@ -17,8 +17,8 @@ class InstitutionStaffShiftsFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'shift_id' => \App\Models\InstitutionShifts::inRandomOrder()->value('id') ?? 1,
+    'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'shift_id' => \App\Models\InstitutionShifts::inRandomOrder()->value('id') ?? \App\Models\InstitutionShifts::factory()->create()->id,
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];

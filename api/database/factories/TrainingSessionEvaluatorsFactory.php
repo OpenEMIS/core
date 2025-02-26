@@ -17,8 +17,8 @@ class TrainingSessionEvaluatorsFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'training_session_id' => \App\Models\TrainingSessions::inRandomOrder()->value('id') ?? 1,
-    'evaluator_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'training_session_id' => \App\Models\TrainingSessions::inRandomOrder()->value('id') ?? \App\Models\TrainingSessions::factory()->create()->id,
+    'evaluator_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

@@ -16,8 +16,8 @@ class InfrastructureCustomFormsFiltersFactory extends Factory
 
 
         return [
-//    'id' => $this->faker->word(),
-    'infrastructure_custom_form_id' => \App\Models\InfrastructureCustomForms::inRandomOrder()->value('id') ?? 1,
+//    // 'id' => $this->faker->word(),
+    'infrastructure_custom_form_id' => \App\Models\InfrastructureCustomForms::inRandomOrder()->value('id') ?? \App\Models\InfrastructureCustomForms::factory()->create()->id,
     'infrastructure_custom_filter_id' => $this->faker->numberBetween(1, 1000),
 ];
     }

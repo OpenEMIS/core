@@ -19,7 +19,7 @@ class AreaAdministrativeLevelsFactory extends Factory
     'id' => $this->model::max('id') + 1,
     'name' => $this->faker->lexify(str_repeat("?", 100)),
     'level' => $this->faker->numberBetween(1, 1000),
-    'area_administrative_id' => \App\Models\AreaAdministratives::inRandomOrder()->value('id') ?? 1,
+    'area_administrative_id' => \App\Models\AreaAdministratives::inRandomOrder()->value('id') ?? \App\Models\AreaAdministratives::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

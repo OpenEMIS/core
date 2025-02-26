@@ -22,7 +22,7 @@ class InstitutionProvidersFactory extends Factory
     'visible' => $this->faker->numberBetween(1, 1000),
     'editable' => $this->faker->numberBetween(1, 1000),
     'default' => $this->faker->numberBetween(1, 1000),
-    'institution_sector_id' => \App\Models\InstitutionSectors::inRandomOrder()->value('id') ?? 1,
+    'institution_sector_id' => \App\Models\InstitutionSectors::inRandomOrder()->value('id') ?? \App\Models\InstitutionSectors::factory()->create()->id,
     'international_code' => $this->faker->lexify(str_repeat("?", 50)),
     'national_code' => $this->faker->lexify(str_repeat("?", 50)),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

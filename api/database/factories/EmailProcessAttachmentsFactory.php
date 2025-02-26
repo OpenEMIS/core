@@ -19,7 +19,7 @@ class EmailProcessAttachmentsFactory extends Factory
     'id' => $this->model::max('id') + 1,
     'file_name' => $this->faker->lexify(str_repeat("?", 250)),
     'file_content' => $this->faker->word(),
-    'email_process_id' => \App\Models\EmailProcesses::inRandomOrder()->value('id') ?? 1,
+    'email_process_id' => \App\Models\EmailProcesses::inRandomOrder()->value('id') ?? \App\Models\EmailProcesses::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

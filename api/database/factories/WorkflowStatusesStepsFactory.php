@@ -13,12 +13,12 @@ class WorkflowStatusesStepsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'workflow_status_id' => \App\Models\WorkflowStatuses::inRandomOrder()->value('id') ?? 1,
-    'workflow_step_id' => \App\Models\WorkflowSteps::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'workflow_status_id' => \App\Models\WorkflowStatuses::inRandomOrder()->value('id') ?? \App\Models\WorkflowStatuses::factory()->create()->id,
+    'workflow_step_id' => \App\Models\WorkflowSteps::inRandomOrder()->value('id') ?? \App\Models\WorkflowSteps::factory()->create()->id,
 ];
     }
 }

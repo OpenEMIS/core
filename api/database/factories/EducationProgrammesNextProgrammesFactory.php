@@ -13,11 +13,11 @@ class EducationProgrammesNextProgrammesFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'education_programme_id' => \App\Models\EducationProgrammes::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'education_programme_id' => \App\Models\EducationProgrammes::inRandomOrder()->value('id') ?? \App\Models\EducationProgrammes::factory()->create()->id,
     'next_programme_id' => $this->faker->numberBetween(1, 1000),
 ];
     }

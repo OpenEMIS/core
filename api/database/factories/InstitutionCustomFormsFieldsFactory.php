@@ -13,16 +13,16 @@ class InstitutionCustomFormsFieldsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'institution_custom_form_id' => \App\Models\InstitutionCustomForms::inRandomOrder()->value('id') ?? 1,
-    'institution_custom_field_id' => \App\Models\InstitutionCustomFields::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'institution_custom_form_id' => \App\Models\InstitutionCustomForms::factory()->create()->id,
+    'institution_custom_field_id' => \App\Models\InstitutionCustomFields::factory()->create()->id,
     'section' => $this->faker->lexify(str_repeat("?", 250)),
     'name' => $this->faker->lexify(str_repeat("?", 250)),
-    'is_mandatory' => $this->faker->numberBetween(1, 1000),
-    'is_unique' => $this->faker->numberBetween(1, 1000),
+    'is_mandatory' => $this->faker->numberBetween(0, 1),
+    'is_unique' => $this->faker->numberBetween(0, 1),
     'order' => $this->faker->numberBetween(1, 1000),
 ];
     }

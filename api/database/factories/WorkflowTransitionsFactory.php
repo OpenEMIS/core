@@ -21,7 +21,7 @@ class WorkflowTransitionsFactory extends Factory
     'prev_workflow_step_name' => $this->faker->lexify(str_repeat("?", 100)),
     'workflow_step_name' => $this->faker->lexify(str_repeat("?", 100)),
     'workflow_action_name' => $this->faker->lexify(str_repeat("?", 100)),
-    'workflow_model_id' => \App\Models\WorkflowModels::inRandomOrder()->value('id') ?? 1,
+    'workflow_model_id' => \App\Models\WorkflowModels::inRandomOrder()->value('id') ?? \App\Models\WorkflowModels::factory()->create()->id,
     'model_reference' => $this->faker->word(),
     'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

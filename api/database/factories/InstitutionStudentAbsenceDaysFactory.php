@@ -17,9 +17,9 @@ class InstitutionStudentAbsenceDaysFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
-    'absence_type_id' => \App\Models\AbsenceTypes::inRandomOrder()->value('id') ?? 1,
+    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
+    'absence_type_id' => \App\Models\AbsenceTypes::inRandomOrder()->value('id') ?? \App\Models\AbsenceTypes::factory()->create()->id,
     'absent_days' => $this->faker->numberBetween(1, 1000),
     'start_date' => \Carbon\Carbon::now()->format("Y-m-d"),
     'end_date' => \Carbon\Carbon::now()->format("Y-m-d"),

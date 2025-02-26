@@ -16,9 +16,9 @@ class CustomRecordsFactory extends Factory
 
 
         return [
-    'id' => $this->model::max('id') + 1,
+//    'id' => $this->model::max('id') + 1,
     'name' => $this->faker->lexify(str_repeat("?", 250)),
-    'custom_form_id' => \App\Models\CustomForms::inRandomOrder()->value('id') ?? 1,
+    'custom_form_id' => \App\Models\CustomForms::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

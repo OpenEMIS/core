@@ -17,11 +17,11 @@ class InstitutionExpendituresFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'date' => \Carbon\Carbon::now()->format("Y-m-d"),
-    'budget_type_id' => \App\Models\BudgetTypes::inRandomOrder()->value('id') ?? 1,
-    'expenditure_type_id' => \App\Models\ExpenditureTypes::inRandomOrder()->value('id') ?? 1,
+    'budget_type_id' => \App\Models\BudgetTypes::inRandomOrder()->value('id') ?? \App\Models\BudgetTypes::factory()->create()->id,
+    'expenditure_type_id' => \App\Models\ExpenditureTypes::inRandomOrder()->value('id') ?? \App\Models\ExpenditureTypes::factory()->create()->id,
     'amount' => $this->faker->numberBetween(1, 1000),
     'file_name' => $this->faker->lexify(str_repeat("?", 250)),
     'file_content' => $this->faker->word(),

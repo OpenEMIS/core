@@ -18,7 +18,7 @@ class TransferLogsFactory extends Factory
         return [
     'id' => $this->model::max('id') + 1,
     'features' => $this->faker->lexify(str_repeat("?", 200)),
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'generated_on' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'completed_on' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'generated_by' => $this->faker->numberBetween(1, 1000),

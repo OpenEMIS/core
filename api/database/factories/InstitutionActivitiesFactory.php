@@ -24,7 +24,7 @@ class InstitutionActivitiesFactory extends Factory
     'old_value' => $this->faker->lexify(str_repeat("?", 255)),
     'new_value' => $this->faker->lexify(str_repeat("?", 255)),
     'operation' => $this->faker->lexify(str_repeat("?", 10)),
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
     'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];

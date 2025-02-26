@@ -25,7 +25,7 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'institution_trip_id' => \App\Models\InstitutionTrips::inRandomOrder()->value('id') ?? 1,
+    'institution_trip_id' => \App\Models\InstitutionTrips::inRandomOrder()->value('id') ?? \App\Models\InstitutionTrips::factory()->create()->id,
     'day' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

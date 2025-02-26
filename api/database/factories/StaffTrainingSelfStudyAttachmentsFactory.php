@@ -22,7 +22,7 @@ class StaffTrainingSelfStudyAttachmentsFactory extends Factory
     'file_name' => $this->faker->lexify(str_repeat("?", 250)),
     'file_content' => $this->faker->word(),
     'visible' => $this->faker->numberBetween(1, 1000),
-    'staff_training_self_study_id' => \App\Models\StaffTrainingSelfStudies::inRandomOrder()->value('id') ?? 1,
+    'staff_training_self_study_id' => \App\Models\StaffTrainingSelfStudies::inRandomOrder()->value('id') ?? \App\Models\StaffTrainingSelfStudies::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

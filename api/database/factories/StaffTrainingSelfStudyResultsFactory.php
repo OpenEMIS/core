@@ -17,7 +17,7 @@ class StaffTrainingSelfStudyResultsFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'staff_training_self_study_id' => \App\Models\StaffTrainingSelfStudies::inRandomOrder()->value('id') ?? 1,
+    'staff_training_self_study_id' => \App\Models\StaffTrainingSelfStudies::inRandomOrder()->value('id') ?? \App\Models\StaffTrainingSelfStudies::factory()->create()->id,
     'pass' => $this->faker->numberBetween(1, 1000),
     'result' => $this->faker->lexify(str_repeat("?", 10)),
     'training_status_id' => $this->faker->numberBetween(1, 1000),

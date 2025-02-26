@@ -16,7 +16,7 @@ class SystemErrorsFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'code' => $this->faker->lexify(str_repeat("?", 10)),
     'error_message' => $this->faker->text(50),
     'request_method' => $this->faker->lexify(str_repeat("?", 10)),

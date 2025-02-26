@@ -24,8 +24,8 @@ do {
 } while ($exists && $attempts < 5);
 
         return [
-    'appraisal_period_id' => \App\Models\AppraisalPeriods::inRandomOrder()->value('id') ?? 1,
-    'appraisal_type_id' => \App\Models\AppraisalTypes::inRandomOrder()->value('id') ?? 1,
+    'appraisal_period_id' => \App\Models\AppraisalPeriods::inRandomOrder()->value('id') ?? \App\Models\AppraisalPeriods::factory()->create()->id,
+    'appraisal_type_id' => \App\Models\AppraisalTypes::inRandomOrder()->value('id') ?? \App\Models\AppraisalTypes::factory()->create()->id,
 ];
     }
 }

@@ -24,7 +24,7 @@ class ExaminationGradingOptionsFactory extends Factory
     'max' => $this->faker->randomFloat(2, 10, 1000),
     'order' => $this->faker->numberBetween(1, 1000),
     'visible' => $this->faker->numberBetween(1, 1000),
-    'examination_grading_type_id' => \App\Models\ExaminationGradingTypes::inRandomOrder()->value('id') ?? 1,
+    'examination_grading_type_id' => \App\Models\ExaminationGradingTypes::inRandomOrder()->value('id') ?? \App\Models\ExaminationGradingTypes::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

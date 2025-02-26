@@ -19,7 +19,7 @@ class WorkflowRulesFactory extends Factory
     'id' => $this->model::max('id') + 1,
     'rule' => $this->faker->lexify(str_repeat("?", 255)),
     'feature' => $this->faker->lexify(str_repeat("?", 100)),
-    'workflow_id' => \App\Models\Workflows::inRandomOrder()->value('id') ?? 1,
+    'workflow_id' => \App\Models\Workflows::inRandomOrder()->value('id') ?? \App\Models\Workflows::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

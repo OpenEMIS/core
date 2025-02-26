@@ -21,7 +21,7 @@ class BankBranchesFactory extends Factory
     'code' => $this->faker->lexify(str_repeat("?", 50)),
     'order' => $this->faker->numberBetween(1, 1000),
     'visible' => $this->faker->numberBetween(1, 1000),
-    'bank_id' => \App\Models\Banks::inRandomOrder()->value('id') ?? 1,
+    'bank_id' => \App\Models\Banks::inRandomOrder()->value('id') ?? \App\Models\Banks::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

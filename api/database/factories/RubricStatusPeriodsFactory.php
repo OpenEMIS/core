@@ -13,12 +13,12 @@ class RubricStatusPeriodsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
-    'rubric_status_id' => \App\Models\RubricStatuses::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
+    'rubric_status_id' => \App\Models\RubricStatuses::inRandomOrder()->value('id') ?? \App\Models\RubricStatuses::factory()->create()->id,
 ];
     }
 }

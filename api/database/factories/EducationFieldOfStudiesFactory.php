@@ -20,7 +20,7 @@ class EducationFieldOfStudiesFactory extends Factory
     'name' => $this->faker->lexify(str_repeat("?", 150)),
     'order' => $this->faker->numberBetween(1, 1000),
     'visible' => $this->faker->numberBetween(1, 1000),
-    'education_programme_orientation_id' => \App\Models\EducationProgrammeOrientations::inRandomOrder()->value('id') ?? 1,
+    'education_programme_orientation_id' => \App\Models\EducationProgrammeOrientations::inRandomOrder()->value('id') ?? \App\Models\EducationProgrammeOrientations::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

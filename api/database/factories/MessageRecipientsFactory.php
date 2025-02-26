@@ -17,8 +17,8 @@ class MessageRecipientsFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'message_id' => \App\Models\Messaging::inRandomOrder()->value('id') ?? 1,
-    'recipient_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'message_id' => \App\Models\Messaging::inRandomOrder()->value('id') ?? \App\Models\Messaging::factory()->create()->id,
+    'recipient_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
 ];
     }
 }

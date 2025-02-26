@@ -20,7 +20,7 @@ class WorkflowModelsFactory extends Factory
             'name' => $this->faker->lexify(str_repeat("?", 100)),
     'model' => $this->faker->lexify(str_repeat("?", 200)),
     'filter' => $this->faker->lexify(str_repeat("?", 200)),
-    'is_school_based' => $this->faker->numberBetween(1, 1000),
+    'is_school_based' => $this->faker->numberBetween(0, 1),
     'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];

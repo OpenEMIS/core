@@ -24,7 +24,7 @@ class WorkflowActionsFactory extends Factory
     'comment_required' => $this->faker->numberBetween(1, 1000),
     'allow_by_assignee' => $this->faker->numberBetween(1, 1000),
     'event_key' => $this->faker->text(50),
-    'workflow_step_id' => \App\Models\WorkflowSteps::inRandomOrder()->value('id') ?? 1,
+    'workflow_step_id' => \App\Models\WorkflowSteps::inRandomOrder()->value('id') ?? \App\Models\WorkflowSteps::factory()->create()->id,
     'next_workflow_step_id' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
