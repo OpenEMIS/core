@@ -8,7 +8,222 @@ use Illuminate\Database\Eloquent\Model;
 class StaffPositionTitles extends Model
 {
     use HasFactory;
+    // ✅ Allow mass assignment
+    protected $fillable = ['id', 'name', 'type', 'staff_position_categories_id', 'security_role_id', 'file_name', 'file_content', 'order', 'visible', 'editable', 'default', 'international_code', 'national_code', 'modified_user_id', 'modified', 'created_user_id', 'created', 'staff_position_categories_id', 'security_role_id', 'modified_user_id', 'created_user_id'];
+    // ✅ Treat 'modified' and 'created' as timestamps
+    protected $dates = ['modified', 'created'];
 
     public $timestamps = false;
     protected $table = "staff_position_titles";
+
+
+/**
+ * @OA\PathItem(
+ *     path="/api/v5/staff-position-titles"
+ * )
+ */
+public function _swaggerPath() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/staff-position-titles",
+ *     summary="Get list of StaffPositionTitles",
+ *     tags={"StaffPositionTitles"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Successful."
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+                          @OA\Property(property="id", type="integer", example=null),
+                          @OA\Property(property="name", type="string", example=null),
+                          @OA\Property(property="type", type="integer", example=null),
+                          @OA\Property(property="staff_position_categories_id", type="integer", example=null),
+                          @OA\Property(property="security_role_id", type="integer", example=null),
+                          @OA\Property(property="file_name", type="string", example=null),
+                          @OA\Property(property="file_content", type="string", example=null),
+                          @OA\Property(property="order", type="integer", example=null),
+                          @OA\Property(property="visible", type="integer", example=null),
+                          @OA\Property(property="editable", type="integer", example=null),
+                          @OA\Property(property="default", type="integer", example=null),
+                          @OA\Property(property="international_code", type="string", example=null),
+                          @OA\Property(property="national_code", type="string", example=null),
+                          @OA\Property(property="modified_user_id", type="integer", example=null),
+                          @OA\Property(property="modified", type="string", format="date-time", example=null),
+                          @OA\Property(property="created_user_id", type="integer", example=null),
+                          @OA\Property(property="created", type="string", format="date-time", example=null)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerList() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/staff-position-titles/{id}",
+ *     summary="Get StaffPositionTitles by ID",
+ *     tags={"StaffPositionTitles"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the StaffPositionTitles",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Post(
+ *     path="/api/v5/staff-position-titles",
+ *     summary="Create a new StaffPositionTitles",
+ *     tags={"StaffPositionTitles"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="id", type="integer", example=null),
+                     @OA\Property(property="name", type="string", example=null),
+                     @OA\Property(property="type", type="integer", example=null),
+                     @OA\Property(property="staff_position_categories_id", type="integer", example=null),
+                     @OA\Property(property="security_role_id", type="integer", example=null),
+                     @OA\Property(property="file_name", type="string", example=null),
+                     @OA\Property(property="file_content", type="string", example=null),
+                     @OA\Property(property="order", type="integer", example=null),
+                     @OA\Property(property="visible", type="integer", example=null),
+                     @OA\Property(property="editable", type="integer", example=null),
+                     @OA\Property(property="default", type="integer", example=null),
+                     @OA\Property(property="international_code", type="string", example=null),
+                     @OA\Property(property="national_code", type="string", example=null),
+                     @OA\Property(property="modified_user_id", type="integer", example=null),
+                     @OA\Property(property="modified", type="string", format="date-time", example=null),
+                     @OA\Property(property="created_user_id", type="integer", example=null),
+                     @OA\Property(property="created", type="string", format="date-time", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Created successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerCreate() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/staff-position-titles/{id}",
+ *     summary="Update StaffPositionTitles",
+ *     tags={"StaffPositionTitles"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the StaffPositionTitles",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="id", type="integer", example=null),
+                     @OA\Property(property="name", type="string", example=null),
+                     @OA\Property(property="type", type="integer", example=null),
+                     @OA\Property(property="staff_position_categories_id", type="integer", example=null),
+                     @OA\Property(property="security_role_id", type="integer", example=null),
+                     @OA\Property(property="file_name", type="string", example=null),
+                     @OA\Property(property="file_content", type="string", example=null),
+                     @OA\Property(property="order", type="integer", example=null),
+                     @OA\Property(property="visible", type="integer", example=null),
+                     @OA\Property(property="editable", type="integer", example=null),
+                     @OA\Property(property="default", type="integer", example=null),
+                     @OA\Property(property="international_code", type="string", example=null),
+                     @OA\Property(property="national_code", type="string", example=null),
+                     @OA\Property(property="modified_user_id", type="integer", example=null),
+                     @OA\Property(property="modified", type="string", format="date-time", example=null),
+                     @OA\Property(property="created_user_id", type="integer", example=null),
+                     @OA\Property(property="created", type="string", format="date-time", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Updated successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerUpdate() {}
+
+/**
+ * @OA\Delete(
+ *     path="/api/v5/staff-position-titles/{id}",
+ *     summary="Delete StaffPositionTitles",
+ *     tags={"StaffPositionTitles"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the StaffPositionTitles",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Deleted successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerDelete() {}
+    public function _swaggerHelper() {
+        return;
+    }
 }
