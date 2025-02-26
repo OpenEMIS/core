@@ -36,9 +36,9 @@ do {
     'time_in' => $this->faker->word(),
     'time_out' => $this->faker->word(),
     'comment' => $this->faker->text(50),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'absence_type_id' => \App\Models\AbsenceTypes::inRandomOrder()->value('id') ?? 1,
 ];

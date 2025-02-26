@@ -21,9 +21,9 @@ class ApiCredentialsFactory extends Factory
     'client_id' => $this->faker->lexify(str_repeat("?", 100)),
     'public_key' => $this->faker->text(50),
     'api_key' => $this->faker->lexify(str_repeat("?", 200)),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

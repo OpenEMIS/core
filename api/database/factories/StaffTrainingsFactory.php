@@ -27,9 +27,9 @@ class StaffTrainingsFactory extends Factory
     'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
     'staff_training_category_id' => \App\Models\StaffTrainingCategories::inRandomOrder()->value('id') ?? 1,
     'training_field_of_study_id' => \App\Models\TrainingFieldOfStudies::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

@@ -13,7 +13,7 @@ class ScholarshipLoansFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
     'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? 1,
@@ -21,9 +21,9 @@ class ScholarshipLoansFactory extends Factory
     'interest_rate_type' => $this->faker->numberBetween(1, 1000),
     'loan_term' => $this->faker->numberBetween(1, 1000),
     'scholarship_payment_frequency_id' => \App\Models\ScholarshipPaymentFrequencies::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

@@ -23,7 +23,7 @@ class WorkflowTransitionsFactory extends Factory
     'workflow_action_name' => $this->faker->lexify(str_repeat("?", 100)),
     'workflow_model_id' => \App\Models\WorkflowModels::inRandomOrder()->value('id') ?? 1,
     'model_reference' => $this->faker->word(),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

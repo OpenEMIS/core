@@ -31,7 +31,7 @@ class StaffTrainingApplicationsApiTest extends TestCase
     public function test_can_list_StaffTrainingApplications()
     {
         if (StaffTrainingApplications::count() === 0) {
-            StaffTrainingApplications::factory()->count(3)->create();
+            StaffTrainingApplications::factory()->count(1)->create();
         }
 
         $response = $this->withHeaders([

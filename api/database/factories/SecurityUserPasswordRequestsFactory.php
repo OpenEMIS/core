@@ -13,13 +13,13 @@ class SecurityUserPasswordRequestsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
     'id' => $this->faker->lexify(str_repeat("?", 64)),
     'expiry_date' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

@@ -29,7 +29,7 @@ do {
     'reference_key' => $this->faker->text(50),
     'data' => $this->faker->text(50),
     'deleted_date' => $this->faker->numberBetween(1, 1000),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

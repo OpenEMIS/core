@@ -47,9 +47,9 @@ class InstitutionsFactory extends Factory
     'institution_provider_id' => \App\Models\InstitutionProviders::inRandomOrder()->value('id') ?? 1,
     'institution_gender_id' => \App\Models\InstitutionGenders::inRandomOrder()->value('id') ?? 1,
     'security_group_id' => \App\Models\SecurityGroups::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

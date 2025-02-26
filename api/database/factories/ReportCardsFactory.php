@@ -32,9 +32,9 @@ class ReportCardsFactory extends Factory
     'pdf_page_number' => $this->faker->numberBetween(1, 1000),
     'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
     'education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

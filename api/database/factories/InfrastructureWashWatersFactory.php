@@ -25,9 +25,9 @@ class InfrastructureWashWatersFactory extends Factory
     'infrastructure_wash_water_quantity_id' => \App\Models\InfrastructureWashWaterQuantities::inRandomOrder()->value('id') ?? 1,
     'infrastructure_wash_water_quality_id' => \App\Models\InfrastructureWashWaterQualities::inRandomOrder()->value('id') ?? 1,
     'infrastructure_wash_water_accessibility_id' => \App\Models\InfrastructureWashWaterAccessibilities::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }
