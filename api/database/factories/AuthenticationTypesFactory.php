@@ -16,7 +16,7 @@ class AuthenticationTypesFactory extends Factory
 
 
         return [
-    'id' => $this->model::max('id') + 1,
+    'id' => $this->model::getNextId(),
     'name' => $this->faker->lexify(str_repeat("?", 50)),
 ];
     }

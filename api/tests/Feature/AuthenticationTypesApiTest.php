@@ -68,7 +68,7 @@ class AuthenticationTypesApiTest extends TestCase
     {
         $record = AuthenticationTypes::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'name' => $this->faker->name(),
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
