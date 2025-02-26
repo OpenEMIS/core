@@ -16,7 +16,6 @@ class ExternalDataSourceAttributesFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
     'external_data_source_type' => $this->faker->lexify(str_repeat("?", 50)),
     'attribute_field' => $this->faker->lexify(str_repeat("?", 50)),
     'attribute_name' => $this->faker->lexify(str_repeat("?", 100)),

@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\UuidId;
 
 class InfrastructureCustomFormsFields extends Model
 {
     use HasFactory;
+    use UuidId;
 
     protected $table = 'infrastructure_custom_forms_fields';
 
@@ -21,8 +23,18 @@ class InfrastructureCustomFormsFields extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+    public $incrementing = false;
+
+    public $casts = [
+        'id' => 'string',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        self::bootUuidId();
+    }
 
      // Override getKeyForSaveQuery to handle composite keys
 /**

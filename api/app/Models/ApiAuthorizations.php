@@ -4,14 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class ApiAuthorizations extends Model
 {
     use HasFactory;
 
     protected $table = 'api_authorizations';
-
-    public $incrementing = false;
 
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'name', 'security_token', 'modified_user_id', 'modified', 'created_user_id', 'created'];
@@ -23,8 +22,20 @@ class ApiAuthorizations extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
+    public $incrementing = false;
 
-
+    public $casts = [
+        'id' => 'string',
+        'modified_user_id' => 'integer',
+        'created_user_id' => 'integer'
+    ];
+    public static function getNextId()
+    {
+        return \DB::transaction(function () {
+            $maxId = Str::uuid();
+            return (string) $maxId;
+        });
+    }
 
      // Override getKeyForSaveQuery to handle composite keys
 /**

@@ -16,7 +16,7 @@ class ApiAuthorizationsFactory extends Factory
 
 
         return [
-    'id' => (string) $this->faker->uuid(),
+    'id' => $this->model::getNextId(),
     'name' => $this->faker->lexify(str_repeat("?", 128)),
     'security_token' => $this->faker->word(),
     'modified_user_id' => $this->faker->numberBetween(1, 2),
