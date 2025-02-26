@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Log;
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
-        'api-security-scopes' => \App\Models\ApiSecurityScopes::class,
         'alerts-logs' => \App\Models\AlertsLogs::class,
         'workflows-filters' => \App\Models\WorkflowsFilters::class,
         'workflows' => \App\Models\Workflows::class,
@@ -1007,7 +1006,7 @@ class CrudApiController extends Controller
         if (empty($segments)) {
             return response()->json(['error' => 'Missing identifier for update'], 400);
         }
-
+        Log::info('request: '.json_encode($request->all()));
         // Determine the record to update based on the provided segments.
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             // Case 1: Update by numeric (or UUID) ID.
@@ -1018,22 +1017,27 @@ class CrudApiController extends Controller
                 return response()->json(['error' => $e->getMessage()], 404);
             }
         } elseif (count($segments) >= 2) {
-            // Case 2: Update by a unique field.
-            $field = $segments[0];
-            $value = $segments[1];
+            // Case 2: Update by multiple unique fields.
+            $conditions = [];
+            for ($i = 0; $i < count($segments); $i += 2) {
+                $field = $segments[$i];
+                $value = $segments[$i + 1];
 
-            if (!$this->isFieldUnique($model, $field)) {
-                return response()->json(['error' => __('The specified field is not unique.')], 404);
+//                if (!$this->isFieldUnique($model, $field)) {
+//                    return response()->json(['error' => __('The specified field is not unique.')], 404);
+//                }
+
+                $conditions[$field] = $value;
             }
 
             try {
-                $record = $model::where($field, $value)->first();
+                $record = $model::where($conditions)->first();
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 404);
             }
 
             if (!$record) {
-                return response()->json(['error' => 'Record not found'], 404);
+                return response()->json(['error' => __('Record not found.')], 404);
             }
         } else {
             return response()->json(['error' => 'Invalid update identifier'], 400);
@@ -1138,22 +1142,27 @@ class CrudApiController extends Controller
 
         // Case 3: Deletion by unique field (e.g., /resource/field/value)
         if (count($segments) >= 2) {
-//            Log::info('segments>2: '.json_encode($segments));
-            $field = $segments[0];
-            $value = $segments[1];
+            // Case 2: Update by multiple unique fields.
+            $conditions = [];
+            for ($i = 0; $i < count($segments); $i += 2) {
+                $field = $segments[$i];
+                $value = $segments[$i + 1];
 
-            if (!$this->isFieldUnique($model, $field)) {
-                return response()->json(['error' => __('The specified field is not unique.')], 400);
+//                if (!$this->isFieldUnique($model, $field)) {
+//                    return response()->json(['error' => __('The specified field is not unique.')], 404);
+//                }
+
+                $conditions[$field] = $value;
             }
 
             try {
-                $record = $model::where($field, $value)->first();
+                $record = $model::where($conditions)->first();
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 404);
             }
 
             if (!$record) {
-                return response()->json(['error' => 'Record not found'], 404);
+                return response()->json(['error' => __('Record not found.')], 404);
             }
 
             try {

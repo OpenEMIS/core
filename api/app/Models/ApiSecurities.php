@@ -17,12 +17,26 @@ class ApiSecurities extends Model
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
 
+    public $incrementing = false;
+
+    public $casts = [
+        'id' => 'integer',
+        'index' => 'integer',
+        'view' => 'integer',
+        'add' => 'integer',
+        'edit' => 'integer',
+        'delete' => 'integer',
+        'execute' => 'integer'
+    ];
     // ✅ Treat 'modified' and 'created' as timestamps
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+    public static function getNextId()
+    {
+        return (int) self::max('id') + 1;
+    }
 
      // Override getKeyForSaveQuery to handle composite keys
 /**

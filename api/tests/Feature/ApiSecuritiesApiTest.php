@@ -9,6 +9,7 @@ use App\Models\ApiSecurities;
 use App\Models\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ApiSecuritiesApiTest extends TestCase
 {
@@ -67,8 +68,9 @@ class ApiSecuritiesApiTest extends TestCase
     public function test_can_update_ApiSecurities()
     {
         $record = ApiSecurities::factory()->create();
+        Log::info($record);
         $updatedData = [
-            'id' => $record->id,
+            'name' => $this->faker->lexify(str_repeat("?", 255)),
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
