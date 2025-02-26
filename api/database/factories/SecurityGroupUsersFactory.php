@@ -1,0 +1,27 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\SecurityGroupUsers;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+
+class SecurityGroupUsersFactory extends Factory
+{
+    protected $model = SecurityGroupUsers::class;
+
+    public function definition(): array
+    {
+        
+
+        return [
+    'id' => $this->faker->word(),
+    'security_group_id' => $this->faker->numberBetween(1, 1000),
+    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? 1,
+    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
+];
+    }
+}
