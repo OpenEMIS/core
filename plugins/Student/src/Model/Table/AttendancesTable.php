@@ -81,7 +81,7 @@ class AttendancesTable extends ControllerActionTable
         extract($this->getAcademicPeriodOptions());
 
         // Get selected month from query params (default to current month if not set)
-        $selectedMonth = $this->request->getQuery('month') ?: array_key_first($monthOptions);
+        $selectedMonth = $this->request->getQuery('month') ?? null;
 
         // Store selected period and month in the request
         $this->request = $this->request->withQueryParams([
@@ -196,6 +196,18 @@ class AttendancesTable extends ControllerActionTable
         return $this->getShortComment($entity->comment);
     }
 
+    public function onGetPeriodName(Event $event, Entity $entity)
+    {
+        return __('Period {0}', $entity->period);
+//        return $this->getShortComment($entity->comment);
+    }
+
+    public function onExcelGetPeriodName(Event $event, Entity $entity)
+    {
+        return __('Period {0}', $entity->period);
+//        return $this->getShortComment($entity->comment);
+    }
+
 
     /**
      * Truncate a comment to a maximum length without breaking words,
@@ -225,12 +237,27 @@ class AttendancesTable extends ControllerActionTable
      * @param string $selectedMonth
      * @return Query $query
      */
-    private function setIndexQuery(Query $query, string $selectedMonth): Query
+    private function setIndexQuery(Query $query, string $selectedMonth = null, $selectedYear = null): Query
     {
         $Types = TableRegistry::get('Institution.AbsenceTypes');
-
+        if(!$selectedYear){
+            $selectedYear = $this->AcademicPeriods->getCurrent();
+        }
         $absence_type_name = $Types->aliasField('name');
 
+        if (!$selectedMonth) {
+            $joinConditions = [
+                'AttendanceMarkedRecords.institution_class_id = ' . $this->aliasField('institution_class_id'),
+                'AttendanceMarkedRecords.date BETWEEN InstitutionStudents.start_date AND IFNULL(InstitutionStudents.end_date, AttendanceMarkedRecords.date)',
+                'AttendanceMarkedRecords.academic_period_id = ' . $selectedYear
+            ];
+        } else {
+            $joinConditions = [
+                'AttendanceMarkedRecords.institution_class_id = ' . $this->aliasField('institution_class_id'),
+                'AttendanceMarkedRecords.date BETWEEN InstitutionStudents.start_date AND IFNULL(InstitutionStudents.end_date, AttendanceMarkedRecords.date)',
+                'DATE_FORMAT(AttendanceMarkedRecords.date, "%Y-%m") = ' => $selectedMonth, // Filters by YYYY-MM
+            ];
+        }
         $query
             ->select([
                 'student_id' => $this->aliasField('student_id'),
@@ -242,7 +269,7 @@ class AttendancesTable extends ControllerActionTable
                 'absence_type' => "COALESCE($absence_type_name, 'Present')",
                 'student_absence_reason_id' => 'Absences.student_absence_reason_id',
                 'absence_reason' => 'AbsenceReasons.name',
-                'period_name' => 'Periods.name',
+                'period_name' => 'AttendanceMarkedRecords.period',
                 'subject_name' => 'Subjects.name',
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('institution_id'),
@@ -259,11 +286,7 @@ class AttendancesTable extends ControllerActionTable
             )
             ->innerJoin(
                 ['AttendanceMarkedRecords' => 'student_attendance_marked_records'],
-                [
-                    'AttendanceMarkedRecords.institution_class_id = ' . $this->aliasField('institution_class_id'),
-                    'AttendanceMarkedRecords.date BETWEEN InstitutionStudents.start_date AND IFNULL(InstitutionStudents.end_date, AttendanceMarkedRecords.date)',
-                    'DATE_FORMAT(AttendanceMarkedRecords.date, "%Y-%m") = ' => $selectedMonth, // Filters by YYYY-MM
-                    ]
+                $joinConditions
             )
             ->leftJoin(
                 ['Absences' => 'institution_student_absence_details'],
@@ -278,12 +301,12 @@ class AttendancesTable extends ControllerActionTable
                     'Absences.student_absence_reason_id = AbsenceReasons.id'
                 ]
             )
-            ->leftJoin(
-                ['Periods' => 'student_attendance_per_day_periods'],
-                [
-                    'Absences.period = Periods.id'
-                ]
-            )
+//            ->leftJoin(
+//                ['Periods' => 'student_attendance_per_day_periods'],
+//                [
+//                    'AttendanceMarkedRecords.period = Periods.id'
+//                ]
+//            )
             ->leftJoin(
                 ['Subjects' => 'institution_subjects'],
                 [
@@ -295,7 +318,7 @@ class AttendancesTable extends ControllerActionTable
                 [
                     'Absences.absence_type_id = ' . $Types->aliasField('id')
                 ]
-            )
+            )->group(['AttendanceMarkedRecords.date', 'Absences.absence_type_id', 'Absences.student_absence_reason_id', 'Absences.period', 'Absences.subject_id']);
         ;
         return $query;
     }
