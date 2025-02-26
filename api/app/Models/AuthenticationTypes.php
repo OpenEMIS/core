@@ -16,13 +16,16 @@ class AuthenticationTypes extends Model
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
-
+    public $incrementing = false;
     // ✅ Treat 'modified' and 'created' as timestamps
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+    public static function getNextId()
+    {
+        return (int) self::max('id') + 1;
+    }
 
      // Override getKeyForSaveQuery to handle composite keys
 /**
