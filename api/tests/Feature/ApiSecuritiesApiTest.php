@@ -32,7 +32,7 @@ class ApiSecuritiesApiTest extends TestCase
     public function test_can_list_ApiSecurities()
     {
         if (ApiSecurities::count() === 0) {
-            ApiSecurities::factory()->count(1)->create();
+            ApiSecurities::factory()->count(3)->create();
         }
 
         $response = $this->withHeaders([

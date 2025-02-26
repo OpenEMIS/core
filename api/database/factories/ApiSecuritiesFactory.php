@@ -16,7 +16,7 @@ class ApiSecuritiesFactory extends Factory
 
 
         return [
-    'id' => ApiSecurities::getNextId(),
+    'id' => $this->model::getNextId(),
     'name' => $this->faker->lexify(str_repeat("?", 255)),
     'model' => $this->faker->lexify(str_repeat("?", 255)),
     'index' => $this->faker->numberBetween(0, 1),

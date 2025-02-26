@@ -21,10 +21,17 @@ class WorkflowModels extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+    public $incrementing = false;
 
-     // Override getKeyForSaveQuery to handle composite keys
+    public static function getNextId()
+    {
+        return \DB::transaction(function () {
+            $maxId = self::max('id');
+            return (int) $maxId + 1;
+        });
+    }
+
+    // Override getKeyForSaveQuery to handle composite keys
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();

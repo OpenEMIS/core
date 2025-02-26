@@ -16,8 +16,8 @@ class WorkflowModelsFactory extends Factory
 
 
         return [
-    'id' => $this->model::max('id') + 1,
-    'name' => $this->faker->lexify(str_repeat("?", 100)),
+            'id' => $this->model::getNextId(),
+            'name' => $this->faker->lexify(str_repeat("?", 100)),
     'model' => $this->faker->lexify(str_repeat("?", 200)),
     'filter' => $this->faker->lexify(str_repeat("?", 200)),
     'is_school_based' => $this->faker->numberBetween(1, 1000),
