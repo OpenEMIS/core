@@ -18,7 +18,7 @@ class RisksFactory extends Factory
         return [
     'id' => $this->model::max('id') + 1,
     'name' => $this->faker->lexify(str_repeat("?", 100)),
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

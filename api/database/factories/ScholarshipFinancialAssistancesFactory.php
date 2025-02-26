@@ -24,9 +24,9 @@ class ScholarshipFinancialAssistancesFactory extends Factory
     'default' => $this->faker->numberBetween(1, 1000),
     'international_code' => $this->faker->lexify(str_repeat("?", 50)),
     'national_code' => $this->faker->lexify(str_repeat("?", 50)),
-    'modified_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'modified_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'created_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

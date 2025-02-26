@@ -24,7 +24,7 @@ do {
 } while ($exists && $attempts < 5);
 
         return [
-    'staff_position_title_id' => \App\Models\StaffPositionTitles::inRandomOrder()->value('id') ?? 1,
+    'staff_position_title_id' => \App\Models\StaffPositionTitles::inRandomOrder()->value('id') ?? \App\Models\StaffPositionTitles::factory()->create()->id,
     'staff_position_grade_id' => $this->faker->numberBetween(1, 1000),
 ];
     }

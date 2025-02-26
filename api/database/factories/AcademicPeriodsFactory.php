@@ -29,7 +29,7 @@ class AcademicPeriodsFactory extends Factory
     'parent_id' => $this->faker->numberBetween(1, 1000),
     'lft' => $this->faker->numberBetween(1, 1000),
     'rght' => $this->faker->numberBetween(1, 1000),
-    'academic_period_level_id' => \App\Models\AcademicPeriodLevels::inRandomOrder()->value('id') ?? 1,
+    'academic_period_level_id' => \App\Models\AcademicPeriodLevels::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriodLevels::factory()->create()->id,
     'order' => $this->faker->numberBetween(1, 1000),
     'visible' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

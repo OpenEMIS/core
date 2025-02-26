@@ -17,11 +17,11 @@ class InstitutionStudentsGpaFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
-    'education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? 1,
-    'education_grades_gpa_id' => \App\Models\EducationGradesGpa::inRandomOrder()->value('id') ?? 1,
+    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
+    'education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? \App\Models\EducationGrades::factory()->create()->id,
+    'education_grades_gpa_id' => \App\Models\EducationGradesGpa::inRandomOrder()->value('id') ?? \App\Models\EducationGradesGpa::factory()->create()->id,
     'gpa' => $this->faker->randomFloat(2, 10, 1000),
     'cumulative_gpa' => $this->faker->randomFloat(2, 10, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

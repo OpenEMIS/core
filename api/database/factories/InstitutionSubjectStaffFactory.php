@@ -16,12 +16,12 @@ class InstitutionSubjectStaffFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'start_date' => \Carbon\Carbon::now()->format("Y-m-d"),
     'end_date' => \Carbon\Carbon::now()->format("Y-m-d"),
-    'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
-    'institution_subject_id' => \App\Models\InstitutionSubjects::inRandomOrder()->value('id') ?? 1,
+    'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
+    'institution_subject_id' => \App\Models\InstitutionSubjects::inRandomOrder()->value('id') ?? \App\Models\InstitutionSubjects::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

@@ -21,7 +21,7 @@ class EducationCyclesFactory extends Factory
     'admission_age' => $this->faker->numberBetween(1, 1000),
     'order' => $this->faker->numberBetween(1, 1000),
     'visible' => $this->faker->numberBetween(1, 1000),
-    'education_level_id' => \App\Models\EducationLevels::inRandomOrder()->value('id') ?? 1,
+    'education_level_id' => \App\Models\EducationLevels::inRandomOrder()->value('id') ?? \App\Models\EducationLevels::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

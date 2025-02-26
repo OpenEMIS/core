@@ -22,7 +22,7 @@ class AssetMakesFactory extends Factory
     'visible' => $this->faker->numberBetween(1, 1000),
     'editable' => $this->faker->numberBetween(1, 1000),
     'default' => $this->faker->numberBetween(1, 1000),
-    'asset_type_id' => \App\Models\AssetTypes::inRandomOrder()->value('id') ?? 1,
+    'asset_type_id' => \App\Models\AssetTypes::inRandomOrder()->value('id') ?? \App\Models\AssetTypes::factory()->create()->id,
     'international_code' => $this->faker->lexify(str_repeat("?", 50)),
     'national_code' => $this->faker->lexify(str_repeat("?", 50)),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

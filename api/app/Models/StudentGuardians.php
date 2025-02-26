@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\UuidId;
 
 class StudentGuardians extends Model
 {
     use HasFactory;
+use UuidId;
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'student_id', 'guardian_id', 'guardian_relation_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'student_id', 'guardian_id', 'guardian_relation_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps

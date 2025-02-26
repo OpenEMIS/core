@@ -21,7 +21,7 @@ class InstitutionCommitteeMeetingFactory extends Factory
     'start_time' => $this->faker->lexify(str_repeat("?", 255)),
     'end_time' => $this->faker->lexify(str_repeat("?", 255)),
     'comment' => $this->faker->lexify(str_repeat("?", 255)),
-    'institution_committee_id' => \App\Models\InstitutionCommittees::inRandomOrder()->value('id') ?? 1,
+    'institution_committee_id' => \App\Models\InstitutionCommittees::inRandomOrder()->value('id') ?? \App\Models\InstitutionCommittees::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];

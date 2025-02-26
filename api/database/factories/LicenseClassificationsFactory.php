@@ -24,7 +24,7 @@ class LicenseClassificationsFactory extends Factory
     'default' => $this->faker->numberBetween(1, 1000),
     'international_code' => $this->faker->lexify(str_repeat("?", 50)),
     'national_code' => $this->faker->lexify(str_repeat("?", 50)),
-    'license_type_id' => \App\Models\LicenseTypes::inRandomOrder()->value('id') ?? 1,
+    'license_type_id' => \App\Models\LicenseTypes::inRandomOrder()->value('id') ?? \App\Models\LicenseTypes::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

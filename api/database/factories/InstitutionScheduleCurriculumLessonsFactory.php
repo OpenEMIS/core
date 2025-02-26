@@ -18,8 +18,8 @@ class InstitutionScheduleCurriculumLessonsFactory extends Factory
         return [
     'id' => $this->model::max('id') + 1,
     'code_only' => $this->faker->numberBetween(1, 1000),
-    'institution_schedule_lesson_detail_id' => \App\Models\InstitutionScheduleLessonDetails::inRandomOrder()->value('id') ?? 1,
-    'institution_subject_id' => \App\Models\InstitutionSubjects::inRandomOrder()->value('id') ?? 1,
+    'institution_schedule_lesson_detail_id' => \App\Models\InstitutionScheduleLessonDetails::inRandomOrder()->value('id') ?? \App\Models\InstitutionScheduleLessonDetails::factory()->create()->id,
+    'institution_subject_id' => \App\Models\InstitutionSubjects::inRandomOrder()->value('id') ?? \App\Models\InstitutionSubjects::factory()->create()->id,
 ];
     }
 }

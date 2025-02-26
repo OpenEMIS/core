@@ -17,7 +17,7 @@ class ContactTypesFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'contact_option_id' => \App\Models\ContactOptions::inRandomOrder()->value('id') ?? 1,
+    'contact_option_id' => \App\Models\ContactOptions::inRandomOrder()->value('id') ?? \App\Models\ContactOptions::factory()->create()->id,
     'name' => $this->faker->lexify(str_repeat("?", 100)),
     'validation_pattern' => $this->faker->lexify(str_repeat("?", 100)),
     'order' => $this->faker->numberBetween(1, 1000),

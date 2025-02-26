@@ -17,11 +17,11 @@ class InstitutionScheduleTimetableCustomizesFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'institution_schedule_timetable_id' => \App\Models\InstitutionScheduleTimetables::inRandomOrder()->value('id') ?? 1,
+    'institution_schedule_timetable_id' => \App\Models\InstitutionScheduleTimetables::inRandomOrder()->value('id') ?? \App\Models\InstitutionScheduleTimetables::factory()->create()->id,
     'customize_key' => $this->faker->lexify(str_repeat("?", 100)),
     'customize_value' => $this->faker->lexify(str_repeat("?", 15)),
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
 ];
     }
 }

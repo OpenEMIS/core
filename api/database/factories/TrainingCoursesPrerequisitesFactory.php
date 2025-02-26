@@ -13,12 +13,12 @@ class TrainingCoursesPrerequisitesFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'training_course_id' => \App\Models\TrainingCourses::inRandomOrder()->value('id') ?? 1,
-    'prerequisite_training_course_id' => \App\Models\TrainingCourses::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'training_course_id' => \App\Models\TrainingCourses::inRandomOrder()->value('id') ?? \App\Models\TrainingCourses::factory()->create()->id,
+    'prerequisite_training_course_id' => \App\Models\TrainingCourses::inRandomOrder()->value('id') ?? \App\Models\TrainingCourses::factory()->create()->id,
 ];
     }
 }

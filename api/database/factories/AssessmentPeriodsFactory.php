@@ -25,7 +25,7 @@ class AssessmentPeriodsFactory extends Factory
     'date_disabled' => \Carbon\Carbon::now()->format("Y-m-d"),
     'weight' => $this->faker->randomFloat(2, 10, 1000),
     'academic_term' => $this->faker->lexify(str_repeat("?", 250)),
-    'assessment_id' => \App\Models\Assessments::inRandomOrder()->value('id') ?? 1,
+    'assessment_id' => \App\Models\Assessments::inRandomOrder()->value('id') ?? \App\Models\Assessments::factory()->create()->id,
     'editable_student_statuses' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

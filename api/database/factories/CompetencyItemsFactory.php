@@ -28,8 +28,8 @@ do {
         return [
     'id' => $this->model::max('id') + 1,
     'name' => $this->faker->lexify(str_repeat("?", 250)),
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
-    'competency_template_id' => \App\Models\CompetencyTemplates::inRandomOrder()->value('id') ?? 1,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
+    'competency_template_id' => \App\Models\CompetencyTemplates::inRandomOrder()->value('id') ?? \App\Models\CompetencyTemplates::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

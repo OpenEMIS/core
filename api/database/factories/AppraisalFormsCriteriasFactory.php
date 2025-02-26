@@ -25,10 +25,10 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'appraisal_form_id' => \App\Models\AppraisalForms::inRandomOrder()->value('id') ?? 1,
-    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? 1,
+    'appraisal_form_id' => \App\Models\AppraisalForms::inRandomOrder()->value('id') ?? \App\Models\AppraisalForms::factory()->create()->id,
+    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? \App\Models\AppraisalCriterias::factory()->create()->id,
     'section' => $this->faker->lexify(str_repeat("?", 250)),
-    'is_mandatory' => $this->faker->numberBetween(1, 1000),
+    'is_mandatory' => $this->faker->numberBetween(0, 1),
     'order' => $this->faker->numberBetween(1, 1000),
 ];
     }

@@ -25,8 +25,8 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'institution_fee_id' => \App\Models\InstitutionFees::inRandomOrder()->value('id') ?? 1,
-    'fee_type_id' => \App\Models\FeeTypes::inRandomOrder()->value('id') ?? 1,
+    'institution_fee_id' => \App\Models\InstitutionFees::inRandomOrder()->value('id') ?? \App\Models\InstitutionFees::factory()->create()->id,
+    'fee_type_id' => \App\Models\FeeTypes::inRandomOrder()->value('id') ?? \App\Models\FeeTypes::factory()->create()->id,
     'amount' => $this->faker->randomFloat(2, 10, 1000),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];

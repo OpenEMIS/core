@@ -16,7 +16,7 @@ class LabelsFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'module' => $this->faker->lexify(str_repeat("?", 100)),
     'field' => $this->faker->lexify(str_repeat("?", 100)),
     'module_name' => $this->faker->lexify(str_repeat("?", 100)),

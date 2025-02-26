@@ -17,7 +17,7 @@ class CalendarEventDatesFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'calendar_event_id' => \App\Models\CalendarEvents::inRandomOrder()->value('id') ?? 1,
+    'calendar_event_id' => \App\Models\CalendarEvents::inRandomOrder()->value('id') ?? \App\Models\CalendarEvents::factory()->create()->id,
     'date' => \Carbon\Carbon::now()->format("Y-m-d"),
 ];
     }

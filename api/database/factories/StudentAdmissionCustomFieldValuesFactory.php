@@ -13,10 +13,10 @@ class StudentAdmissionCustomFieldValuesFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'text_value' => $this->faker->lexify(str_repeat("?", 250)),
     'number_value' => $this->faker->numberBetween(1, 1000),
     'decimal_value' => $this->faker->lexify(str_repeat("?", 25)),
@@ -24,11 +24,11 @@ class StudentAdmissionCustomFieldValuesFactory extends Factory
     'date_value' => \Carbon\Carbon::now()->format("Y-m-d"),
     'time_value' => $this->faker->word(),
     'file' => $this->faker->word(),
-    'student_custom_field_id' => \App\Models\StudentCustomFields::inRandomOrder()->value('id') ?? 1,
-    'institution_student_admission_id' => \App\Models\InstitutionStudentAdmission::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'student_custom_field_id' => \App\Models\StudentCustomFields::factory()->create()->id,
+    'institution_student_admission_id' => \App\Models\InstitutionStudentAdmission::factory()->create()->id,
+    'modified_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'created_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

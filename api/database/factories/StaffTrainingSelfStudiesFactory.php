@@ -28,7 +28,7 @@ class StaffTrainingSelfStudiesFactory extends Factory
     'hours' => $this->faker->numberBetween(1, 1000),
     'credit_hours' => $this->faker->numberBetween(1, 1000),
     'training_status_id' => $this->faker->numberBetween(1, 1000),
-    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

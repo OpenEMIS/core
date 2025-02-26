@@ -16,7 +16,7 @@ class AppraisalNumbersFactory extends Factory
 
 
         return [
-    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? 1,
+    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? \App\Models\AppraisalCriterias::factory()->create()->id,
     'min_inclusive' => $this->faker->numberBetween(1, 1000),
     'max_inclusive' => $this->faker->numberBetween(1, 1000),
     'min_exclusive' => $this->faker->numberBetween(1, 1000),

@@ -24,8 +24,8 @@ do {
 } while ($exists && $attempts < 5);
 
         return [
-    'api_credential_id' => \App\Models\ApiCredentials::inRandomOrder()->value('id') ?? 1,
-    'api_scope_id' => \App\Models\ApiScopes::inRandomOrder()->value('id') ?? 1,
+    'api_credential_id' => \App\Models\ApiCredentials::inRandomOrder()->value('id') ?? \App\Models\ApiCredentials::factory()->create()->id,
+    'api_scope_id' => \App\Models\ApiScopes::inRandomOrder()->value('id') ?? \App\Models\ApiScopes::factory()->create()->id,
 ];
     }
 }

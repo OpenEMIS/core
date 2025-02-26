@@ -16,7 +16,7 @@ class SecurityRestSessionsFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'access_token' => $this->faker->word(),
     'refresh_token' => $this->faker->word(),
     'expiry_date' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

@@ -21,7 +21,7 @@ class StaffMembershipsFactory extends Factory
     'membership' => $this->faker->lexify(str_repeat("?", 100)),
     'expiry_date' => \Carbon\Carbon::now()->format("Y-m-d"),
     'comment' => $this->faker->text(50),
-    'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

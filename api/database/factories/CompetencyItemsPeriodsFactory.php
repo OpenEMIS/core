@@ -29,10 +29,10 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'competency_item_id' => \App\Models\CompetencyItems::inRandomOrder()->value('id') ?? 1,
-    'competency_period_id' => \App\Models\CompetencyPeriods::inRandomOrder()->value('id') ?? 1,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
-    'competency_template_id' => \App\Models\CompetencyTemplates::inRandomOrder()->value('id') ?? 1,
+    'competency_item_id' => \App\Models\CompetencyItems::inRandomOrder()->value('id') ?? \App\Models\CompetencyItems::factory()->create()->id,
+    'competency_period_id' => \App\Models\CompetencyPeriods::inRandomOrder()->value('id') ?? \App\Models\CompetencyPeriods::factory()->create()->id,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
+    'competency_template_id' => \App\Models\CompetencyTemplates::inRandomOrder()->value('id') ?? \App\Models\CompetencyTemplates::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

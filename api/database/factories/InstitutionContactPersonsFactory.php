@@ -25,7 +25,7 @@ class InstitutionContactPersonsFactory extends Factory
     'fax' => $this->faker->lexify(str_repeat("?", 30)),
     'email' => $this->faker->lexify(str_repeat("?", 100)),
     'preferred' => $this->faker->numberBetween(1, 1000),
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

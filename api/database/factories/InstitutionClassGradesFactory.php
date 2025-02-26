@@ -16,9 +16,9 @@ class InstitutionClassGradesFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
-    'institution_class_id' => \App\Models\InstitutionClasses::inRandomOrder()->value('id') ?? 1,
-    'education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'institution_class_id' => \App\Models\InstitutionClasses::inRandomOrder()->value('id') ?? \App\Models\InstitutionClasses::factory()->create()->id,
+    'education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? \App\Models\EducationGrades::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

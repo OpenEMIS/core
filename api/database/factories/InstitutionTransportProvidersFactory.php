@@ -23,7 +23,7 @@ class InstitutionTransportProvidersFactory extends Factory
     'contact_number' => $this->faker->lexify(str_repeat("?", 15)),
     'registration_number' => $this->faker->lexify(str_repeat("?", 50)),
     'comment' => $this->faker->text(50),
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

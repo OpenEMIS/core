@@ -20,7 +20,7 @@ class WorkflowsFactory extends Factory
     'code' => $this->faker->lexify(str_repeat("?", 60)),
     'name' => $this->faker->lexify(str_repeat("?", 100)),
     'message' => $this->faker->text(50),
-    'workflow_model_id' => \App\Models\WorkflowModels::inRandomOrder()->value('id') ?? 1,
+    'workflow_model_id' => \App\Models\WorkflowModels::inRandomOrder()->value('id') ?? \App\Models\WorkflowModels::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

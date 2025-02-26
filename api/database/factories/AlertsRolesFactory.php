@@ -25,8 +25,8 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'alert_rule_id' => \App\Models\AlertRules::inRandomOrder()->value('id') ?? 1,
-    'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? 1,
+    'alert_rule_id' => \App\Models\AlertRules::inRandomOrder()->value('id') ?? \App\Models\AlertRules::factory()->create()->id,
+    'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? \App\Models\SecurityRoles::factory()->create()->id,
 ];
     }
 }

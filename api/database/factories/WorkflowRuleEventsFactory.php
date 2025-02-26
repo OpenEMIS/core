@@ -24,7 +24,7 @@ do {
 } while ($exists && $attempts < 5);
 
         return [
-    'workflow_rule_id' => \App\Models\WorkflowRules::inRandomOrder()->value('id') ?? 1,
+    'workflow_rule_id' => \App\Models\WorkflowRules::inRandomOrder()->value('id') ?? \App\Models\WorkflowRules::factory()->create()->id,
     'event_key' => $this->faker->lexify(str_repeat("?", 45)),
 ];
     }

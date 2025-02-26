@@ -25,8 +25,8 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'institution_bus_id' => \App\Models\InstitutionBuses::inRandomOrder()->value('id') ?? 1,
-    'transport_feature_id' => \App\Models\TransportFeatures::inRandomOrder()->value('id') ?? 1,
+    'institution_bus_id' => \App\Models\InstitutionBuses::inRandomOrder()->value('id') ?? \App\Models\InstitutionBuses::factory()->create()->id,
+    'transport_feature_id' => \App\Models\TransportFeatures::inRandomOrder()->value('id') ?? \App\Models\TransportFeatures::factory()->create()->id,
 ];
     }
 }

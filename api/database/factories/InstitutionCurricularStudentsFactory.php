@@ -16,8 +16,8 @@ class InstitutionCurricularStudentsFactory extends Factory
 
 
         return [
-    'id' => $this->faker->lexify(str_repeat("?", 255)),
-    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+//    'id' => $this->faker->lexify(str_repeat("?", 255)),
+    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'institution_curricular_id' => $this->faker->numberBetween(1, 1000),
     'start_date' => \Carbon\Carbon::now()->format("Y-m-d"),
     'end_date' => \Carbon\Carbon::now()->format("Y-m-d"),

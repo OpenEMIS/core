@@ -25,8 +25,8 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'infrastructure_project_id' => \App\Models\InfrastructureProjects::inRandomOrder()->value('id') ?? 1,
-    'infrastructure_need_id' => \App\Models\InfrastructureNeeds::inRandomOrder()->value('id') ?? 1,
+    'infrastructure_project_id' => \App\Models\InfrastructureProjects::inRandomOrder()->value('id') ?? \App\Models\InfrastructureProjects::factory()->create()->id,
+    'infrastructure_need_id' => \App\Models\InfrastructureNeeds::inRandomOrder()->value('id') ?? \App\Models\InfrastructureNeeds::factory()->create()->id,
 ];
     }
 }

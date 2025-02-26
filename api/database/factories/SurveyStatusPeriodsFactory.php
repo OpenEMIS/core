@@ -13,12 +13,12 @@ class SurveyStatusPeriodsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
-    'survey_status_id' => \App\Models\SurveyStatuses::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
+    'survey_status_id' => \App\Models\SurveyStatuses::inRandomOrder()->value('id') ?? \App\Models\SurveyStatuses::factory()->create()->id,
 ];
     }
 }

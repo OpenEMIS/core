@@ -21,7 +21,7 @@ class RiskCriteriasFactory extends Factory
     'operator' => $this->faker->numberBetween(1, 1000),
     'threshold' => $this->faker->numberBetween(1, 1000),
     'risk_value' => $this->faker->numberBetween(1, 1000),
-    'risk_id' => \App\Models\Risks::inRandomOrder()->value('id') ?? 1,
+    'risk_id' => \App\Models\Risks::inRandomOrder()->value('id') ?? \App\Models\Risks::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

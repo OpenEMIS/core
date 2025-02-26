@@ -13,11 +13,11 @@ class InstitutionStudentsTmpFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'start_date' => \Carbon\Carbon::now()->format("Y-m-d"),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];

@@ -17,12 +17,12 @@ class StudentMealMarkedRecordsFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
-    'institution_class_id' => \App\Models\InstitutionClasses::inRandomOrder()->value('id') ?? 1,
-    'meal_programmes_id' => \App\Models\MealProgrammes::inRandomOrder()->value('id') ?? 1,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
+    'institution_class_id' => \App\Models\InstitutionClasses::inRandomOrder()->value('id') ?? \App\Models\InstitutionClasses::factory()->create()->id,
+    'meal_programmes_id' => \App\Models\MealProgrammes::inRandomOrder()->value('id') ?? \App\Models\MealProgrammes::factory()->create()->id,
     'date' => \Carbon\Carbon::now()->format("Y-m-d"),
-    'meal_benefit_id' => \App\Models\MealBenefits::inRandomOrder()->value('id') ?? 1,
+    'meal_benefit_id' => \App\Models\MealBenefits::inRandomOrder()->value('id') ?? \App\Models\MealBenefits::factory()->create()->id,
 ];
     }
 }

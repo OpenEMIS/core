@@ -18,7 +18,7 @@ class InstitutionScheduleNonCurriculumLessonsFactory extends Factory
         return [
     'id' => $this->model::max('id') + 1,
     'name' => $this->faker->lexify(str_repeat("?", 250)),
-    'institution_schedule_lesson_detail_id' => \App\Models\InstitutionScheduleLessonDetails::inRandomOrder()->value('id') ?? 1,
+    'institution_schedule_lesson_detail_id' => \App\Models\InstitutionScheduleLessonDetails::inRandomOrder()->value('id') ?? \App\Models\InstitutionScheduleLessonDetails::factory()->create()->id,
 ];
     }
 }

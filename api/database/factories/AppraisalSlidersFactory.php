@@ -13,10 +13,10 @@ class AppraisalSlidersFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? 1,
+    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? \App\Models\AppraisalCriterias::factory()->create()->id,
     'min' => $this->faker->randomFloat(2, 10, 1000),
     'max' => $this->faker->randomFloat(2, 10, 1000),
     'step' => $this->faker->randomFloat(2, 10, 1000),

@@ -24,8 +24,8 @@ do {
 } while ($exists && $attempts < 5);
 
         return [
-    'security_group_id' => \App\Models\SecurityGroups::inRandomOrder()->value('id') ?? 1,
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
+    'security_group_id' => \App\Models\SecurityGroups::inRandomOrder()->value('id') ?? \App\Models\SecurityGroups::factory()->create()->id,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
     'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];

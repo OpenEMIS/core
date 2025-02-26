@@ -20,7 +20,7 @@ class SurveyFormsFactory extends Factory
     'code' => $this->faker->lexify(str_repeat("?", 30)),
     'name' => $this->faker->lexify(str_repeat("?", 250)),
     'description' => $this->faker->text(50),
-    'custom_module_id' => \App\Models\CustomModules::inRandomOrder()->value('id') ?? 1,
+    'custom_module_id' => \App\Models\CustomModules::inRandomOrder()->value('id') ?? \App\Models\CustomModules::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

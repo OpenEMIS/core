@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\UuidId;
 
 class LandCustomFieldValues extends Model
 {
     use HasFactory;
+use UuidId;
 
     protected $table = 'land_custom_field_values';
 
@@ -21,6 +23,18 @@ class LandCustomFieldValues extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
+
+    public $incrementing = false;
+
+    public $casts = [
+        'id' => 'string',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        self::bootUuidId();
+    }
     
     
 

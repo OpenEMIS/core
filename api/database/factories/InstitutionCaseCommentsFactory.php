@@ -17,7 +17,7 @@ class InstitutionCaseCommentsFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'case_id' => \App\Models\InstitutionCases::inRandomOrder()->value('id') ?? 1,
+    'case_id' => \App\Models\InstitutionCases::inRandomOrder()->value('id') ?? \App\Models\InstitutionCases::factory()->create()->id,
     'comment' => $this->faker->text(50),
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

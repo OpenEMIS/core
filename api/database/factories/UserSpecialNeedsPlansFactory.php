@@ -21,7 +21,7 @@ class UserSpecialNeedsPlansFactory extends Factory
     'comment' => $this->faker->text(50),
     'file_name' => $this->faker->lexify(str_repeat("?", 250)),
     'file_content' => $this->faker->word(),
-    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'academic_period_id' => $this->faker->numberBetween(1, 1000),
     'special_needs_plan_types_id' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

@@ -20,7 +20,7 @@ class RubricCriteriasFactory extends Factory
     'name' => $this->faker->lexify(str_repeat("?", 250)),
     'order' => $this->faker->numberBetween(1, 1000),
     'type' => $this->faker->numberBetween(1, 1000),
-    'rubric_section_id' => \App\Models\RubricSections::inRandomOrder()->value('id') ?? 1,
+    'rubric_section_id' => \App\Models\RubricSections::inRandomOrder()->value('id') ?? \App\Models\RubricSections::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

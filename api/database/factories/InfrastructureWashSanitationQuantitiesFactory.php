@@ -20,7 +20,7 @@ class InfrastructureWashSanitationQuantitiesFactory extends Factory
     'gender_id' => $this->faker->lexify(str_repeat("?", 11)),
     'functional' => $this->faker->numberBetween(1, 1000),
     'value' => $this->faker->numberBetween(1, 1000),
-    'infrastructure_wash_sanitation_id' => \App\Models\InfrastructureWashSanitations::inRandomOrder()->value('id') ?? 1,
+    'infrastructure_wash_sanitation_id' => \App\Models\InfrastructureWashSanitations::inRandomOrder()->value('id') ?? \App\Models\InfrastructureWashSanitations::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

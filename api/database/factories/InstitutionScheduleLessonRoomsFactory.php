@@ -17,8 +17,8 @@ class InstitutionScheduleLessonRoomsFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'institution_schedule_lesson_detail_id' => \App\Models\InstitutionScheduleLessonDetails::inRandomOrder()->value('id') ?? 1,
-    'institution_room_id' => \App\Models\InstitutionRooms::inRandomOrder()->value('id') ?? 1,
+    'institution_schedule_lesson_detail_id' => \App\Models\InstitutionScheduleLessonDetails::inRandomOrder()->value('id') ?? \App\Models\InstitutionScheduleLessonDetails::factory()->create()->id,
+    'institution_room_id' => \App\Models\InstitutionRooms::inRandomOrder()->value('id') ?? \App\Models\InstitutionRooms::factory()->create()->id,
 ];
     }
 }

@@ -13,10 +13,10 @@ class IdpGoogleFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'system_authentication_id' => \App\Models\SystemAuthentications::inRandomOrder()->value('id') ?? 1,
+    'system_authentication_id' => \App\Models\SystemAuthentications::inRandomOrder()->value('id') ?? \App\Models\SystemAuthentications::factory()->create()->id,
     'client_id' => $this->faker->lexify(str_repeat("?", 150)),
     'client_secret' => $this->faker->lexify(str_repeat("?", 150)),
     'redirect_uri' => $this->faker->lexify(str_repeat("?", 150)),

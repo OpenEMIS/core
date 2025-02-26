@@ -16,9 +16,9 @@ class InfrastructureCustomFormsFieldsFactory extends Factory
 
 
         return [
-//    'id' => $this->faker->word(),
-    'infrastructure_custom_form_id' => \App\Models\InfrastructureCustomForms::inRandomOrder()->value('id') ?? 1,
-    'infrastructure_custom_field_id' => \App\Models\InfrastructureCustomFields::inRandomOrder()->value('id') ?? 1,
+//    // 'id' => $this->faker->word(),
+    'infrastructure_custom_form_id' => \App\Models\InfrastructureCustomForms::inRandomOrder()->value('id') ?? \App\Models\InfrastructureCustomForms::factory()->create()->id,
+    'infrastructure_custom_field_id' => \App\Models\InfrastructureCustomFields::inRandomOrder()->value('id') ?? \App\Models\InfrastructureCustomFields::factory()->create()->id,
     'section' => $this->faker->lexify(str_repeat("?", 250)),
     'name' => $this->faker->lexify(str_repeat("?", 250)),
     'is_mandatory' => $this->faker->numberBetween(0, 1),

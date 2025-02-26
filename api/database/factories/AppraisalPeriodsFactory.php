@@ -18,8 +18,8 @@ class AppraisalPeriodsFactory extends Factory
         return [
     'id' => $this->model::max('id') + 1,
     'name' => $this->faker->lexify(str_repeat("?", 250)),
-    'appraisal_form_id' => \App\Models\AppraisalForms::inRandomOrder()->value('id') ?? 1,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
+    'appraisal_form_id' => \App\Models\AppraisalForms::inRandomOrder()->value('id') ?? \App\Models\AppraisalForms::factory()->create()->id,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'date_enabled' => \Carbon\Carbon::now()->format("Y-m-d"),
     'date_disabled' => \Carbon\Carbon::now()->format("Y-m-d"),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

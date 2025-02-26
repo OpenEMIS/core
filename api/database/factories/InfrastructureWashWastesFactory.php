@@ -17,10 +17,10 @@ class InfrastructureWashWastesFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
-    'infrastructure_wash_waste_type_id' => \App\Models\InfrastructureWashWasteTypes::inRandomOrder()->value('id') ?? 1,
-    'infrastructure_wash_waste_functionality_id' => \App\Models\InfrastructureWashWasteFunctionalities::inRandomOrder()->value('id') ?? 1,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
+    'infrastructure_wash_waste_type_id' => \App\Models\InfrastructureWashWasteTypes::inRandomOrder()->value('id') ?? \App\Models\InfrastructureWashWasteTypes::factory()->create()->id,
+    'infrastructure_wash_waste_functionality_id' => \App\Models\InfrastructureWashWasteFunctionalities::inRandomOrder()->value('id') ?? \App\Models\InfrastructureWashWasteFunctionalities::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

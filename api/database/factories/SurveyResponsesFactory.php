@@ -16,7 +16,7 @@ class SurveyResponsesFactory extends Factory
         
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'response' => $this->faker->text(50),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];

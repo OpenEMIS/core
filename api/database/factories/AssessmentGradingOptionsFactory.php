@@ -25,7 +25,7 @@ class AssessmentGradingOptionsFactory extends Factory
     'point' => $this->faker->randomFloat(2, 10, 1000),
     'order' => $this->faker->numberBetween(1, 1000),
     'visible' => $this->faker->numberBetween(1, 1000),
-    'assessment_grading_type_id' => \App\Models\AssessmentGradingTypes::inRandomOrder()->value('id') ?? 1,
+    'assessment_grading_type_id' => \App\Models\AssessmentGradingTypes::inRandomOrder()->value('id') ?? \App\Models\AssessmentGradingTypes::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

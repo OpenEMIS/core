@@ -13,12 +13,12 @@ class WorkflowStepsRolesFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'workflow_step_id' => \App\Models\WorkflowSteps::inRandomOrder()->value('id') ?? 1,
-    'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'workflow_step_id' => \App\Models\WorkflowSteps::inRandomOrder()->value('id') ?? \App\Models\WorkflowSteps::factory()->create()->id,
+    'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? \App\Models\SecurityRoles::factory()->create()->id,
 ];
     }
 }

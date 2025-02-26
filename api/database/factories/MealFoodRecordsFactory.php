@@ -17,8 +17,8 @@ class MealFoodRecordsFactory extends Factory
 
         return [
     'id' => $this->model::max('id') + 1,
-    'meal_programmes_id' => \App\Models\MealProgrammes::inRandomOrder()->value('id') ?? 1,
-    'food_type_id' => \App\Models\FoodTypes::inRandomOrder()->value('id') ?? 1,
+    'meal_programmes_id' => \App\Models\MealProgrammes::inRandomOrder()->value('id') ?? \App\Models\MealProgrammes::factory()->create()->id,
+    'food_type_id' => \App\Models\FoodTypes::inRandomOrder()->value('id') ?? \App\Models\FoodTypes::factory()->create()->id,
 ];
     }
 }

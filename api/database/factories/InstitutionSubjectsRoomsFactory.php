@@ -13,12 +13,12 @@ class InstitutionSubjectsRoomsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
-    'institution_subject_id' => \App\Models\InstitutionSubjects::inRandomOrder()->value('id') ?? 1,
-    'institution_room_id' => \App\Models\InstitutionRooms::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'institution_subject_id' => \App\Models\InstitutionSubjects::inRandomOrder()->value('id') ?? \App\Models\InstitutionSubjects::factory()->create()->id,
+    'institution_room_id' => \App\Models\InstitutionRooms::inRandomOrder()->value('id') ?? \App\Models\InstitutionRooms::factory()->create()->id,
 ];
     }
 }

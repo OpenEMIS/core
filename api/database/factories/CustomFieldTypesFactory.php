@@ -22,8 +22,8 @@ class CustomFieldTypesFactory extends Factory
     'value' => $this->faker->lexify(str_repeat("?", 100)),
     'description' => $this->faker->text(50),
     'format' => $this->faker->lexify(str_repeat("?", 50)),
-    'is_mandatory' => $this->faker->numberBetween(1, 1000),
-    'is_unique' => $this->faker->numberBetween(1, 1000),
+    'is_mandatory' => $this->faker->numberBetween(0, 1),
+    'is_unique' => $this->faker->numberBetween(0, 1),
     'visible' => $this->faker->numberBetween(1, 1000),
 ];
     }

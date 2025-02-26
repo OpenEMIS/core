@@ -25,8 +25,8 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'staff_license_id' => \App\Models\StaffLicenses::inRandomOrder()->value('id') ?? 1,
-    'license_classification_id' => \App\Models\LicenseClassifications::inRandomOrder()->value('id') ?? 1,
+    'staff_license_id' => \App\Models\StaffLicenses::inRandomOrder()->value('id') ?? \App\Models\StaffLicenses::factory()->create()->id,
+    'license_classification_id' => \App\Models\LicenseClassifications::inRandomOrder()->value('id') ?? \App\Models\LicenseClassifications::factory()->create()->id,
 ];
     }
 }

@@ -20,7 +20,7 @@ class CustomTableRowsFactory extends Factory
     'name' => $this->faker->lexify(str_repeat("?", 250)),
     'order' => $this->faker->numberBetween(1, 1000),
     'visible' => $this->faker->numberBetween(1, 1000),
-    'custom_field_id' => \App\Models\CustomFields::inRandomOrder()->value('id') ?? 1,
+    'custom_field_id' => \App\Models\CustomFields::inRandomOrder()->value('id') ?? \App\Models\CustomFields::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

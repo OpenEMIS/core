@@ -24,10 +24,10 @@ do {
 } while ($exists && $attempts < 5);
 
         return [
-    'recipient_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? 1,
+    'recipient_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? \App\Models\Scholarships::factory()->create()->id,
     'approved_amount' => $this->faker->randomFloat(2, 10, 1000),
-    'scholarship_recipient_activity_status_id' => \App\Models\ScholarshipRecipientActivityStatuses::inRandomOrder()->value('id') ?? 1,
+    'scholarship_recipient_activity_status_id' => \App\Models\ScholarshipRecipientActivityStatuses::inRandomOrder()->value('id') ?? \App\Models\ScholarshipRecipientActivityStatuses::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

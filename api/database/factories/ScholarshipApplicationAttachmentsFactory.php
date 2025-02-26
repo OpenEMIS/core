@@ -16,12 +16,12 @@ class ScholarshipApplicationAttachmentsFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
+    // 'id' => $this->faker->word(),
     'file_name' => $this->faker->lexify(str_repeat("?", 250)),
     'file_content' => $this->faker->word(),
-    'scholarship_attachment_type_id' => \App\Models\ScholarshipAttachmentTypes::inRandomOrder()->value('id') ?? 1,
-    'applicant_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? 1,
+    'scholarship_attachment_type_id' => \App\Models\ScholarshipAttachmentTypes::inRandomOrder()->value('id') ?? \App\Models\ScholarshipAttachmentTypes::factory()->create()->id,
+    'applicant_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? \App\Models\Scholarships::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

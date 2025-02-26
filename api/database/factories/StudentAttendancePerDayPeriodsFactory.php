@@ -18,7 +18,7 @@ class StudentAttendancePerDayPeriodsFactory extends Factory
         return [
     'id' => $this->model::max('id') + 1,
     'name' => $this->faker->lexify(str_repeat("?", 255)),
-    'student_attendance_mark_type_id' => \App\Models\StudentAttendanceMarkTypes::inRandomOrder()->value('id') ?? 1,
+    'student_attendance_mark_type_id' => \App\Models\StudentAttendanceMarkTypes::inRandomOrder()->value('id') ?? \App\Models\StudentAttendanceMarkTypes::factory()->create()->id,
     'period' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

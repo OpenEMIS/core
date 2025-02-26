@@ -20,7 +20,7 @@ class InstitutionCurricularsFactory extends Factory
     'name' => $this->faker->lexify(str_repeat("?", 100)),
     'category' => $this->faker->numberBetween(1, 1000),
     'curricular_type_id' => $this->faker->numberBetween(1, 1000),
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
     'total_male_students' => $this->faker->numberBetween(1, 1000),
     'total_female_students' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

@@ -28,7 +28,7 @@ class SystemAuthenticationsFactory extends Factory
     'mapped_gender' => $this->faker->lexify(str_repeat("?", 50)),
     'mapped_role' => $this->faker->lexify(str_repeat("?", 50)),
     'mapped_email' => $this->faker->lexify(str_repeat("?", 50)),
-    'authentication_type_id' => \App\Models\AuthenticationTypes::inRandomOrder()->value('id') ?? 1,
+    'authentication_type_id' => \App\Models\AuthenticationTypes::inRandomOrder()->value('id') ?? \App\Models\AuthenticationTypes::factory()->create()->id,
 ];
     }
 }

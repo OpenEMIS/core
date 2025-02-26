@@ -23,9 +23,9 @@ class InstitutionScannedFactory extends Factory
     'longitude' => $this->faker->randomFloat(2, 10, 1000),
     'access' => $this->faker->lexify(str_repeat("?", 100)),
     'location' => $this->faker->lexify(str_repeat("?", 100)),
-    'modified_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'modified_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
+    'created_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

@@ -24,7 +24,7 @@ class ClassProfileTemplatesFactory extends Factory
     'generate_end_date' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'excel_template_name' => $this->faker->lexify(str_repeat("?", 250)),
     'excel_template' => $this->faker->word(),
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

@@ -18,8 +18,8 @@ class LocaleContentTranslationsFactory extends Factory
         return [
     'id' => $this->model::max('id') + 1,
     'translation' => $this->faker->text(50),
-    'locale_content_id' => \App\Models\LocaleContents::inRandomOrder()->value('id') ?? 1,
-    'locale_id' => \App\Models\Locales::inRandomOrder()->value('id') ?? 1,
+    'locale_content_id' => \App\Models\LocaleContents::inRandomOrder()->value('id') ?? \App\Models\LocaleContents::factory()->create()->id,
+    'locale_id' => \App\Models\Locales::inRandomOrder()->value('id') ?? \App\Models\Locales::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

@@ -29,9 +29,9 @@ do {
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
+    'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'date' => \Carbon\Carbon::now()->format("Y-m-d"),
     'time_in' => $this->faker->word(),
     'time_out' => $this->faker->word(),
@@ -40,7 +40,7 @@ do {
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'absence_type_id' => \App\Models\AbsenceTypes::inRandomOrder()->value('id') ?? 1,
+    'absence_type_id' => \App\Models\AbsenceTypes::inRandomOrder()->value('id') ?? \App\Models\AbsenceTypes::factory()->create()->id,
 ];
     }
 }

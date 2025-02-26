@@ -13,10 +13,10 @@ class IdpSamlFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'system_authentication_id' => \App\Models\SystemAuthentications::inRandomOrder()->value('id') ?? 1,
+    'system_authentication_id' => \App\Models\SystemAuthentications::inRandomOrder()->value('id') ?? \App\Models\SystemAuthentications::factory()->create()->id,
     'idp_entity_id' => $this->faker->lexify(str_repeat("?", 200)),
     'idp_sso' => $this->faker->lexify(str_repeat("?", 200)),
     'idp_sso_binding' => $this->faker->lexify(str_repeat("?", 100)),

@@ -22,7 +22,7 @@ class UserSpecialNeedsDiagnosticsFactory extends Factory
     'file_content' => $this->faker->word(),
     'comment' => $this->faker->text(50),
     'special_needs_diagnostics_type_id' => $this->faker->numberBetween(1, 1000),
-    'special_needs_diagnostics_degree_id' => \App\Models\SpecialNeedsDiagnosticsDegree::inRandomOrder()->value('id') ?? 1,
+    'special_needs_diagnostics_degree_id' => \App\Models\SpecialNeedsDiagnosticsDegree::inRandomOrder()->value('id') ?? \App\Models\SpecialNeedsDiagnosticsDegree::factory()->create()->id,
     'security_user_id' => $this->faker->numberBetween(1, 1000),
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

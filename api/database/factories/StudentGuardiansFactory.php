@@ -16,10 +16,10 @@ class StudentGuardiansFactory extends Factory
 
 
         return [
-    'id' => $this->faker->word(),
-    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'guardian_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'guardian_relation_id' => \App\Models\GuardianRelations::inRandomOrder()->value('id') ?? 1,
+    // 'id' => $this->faker->word(),
+    'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'guardian_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
+    'guardian_relation_id' => \App\Models\GuardianRelations::inRandomOrder()->value('id') ?? \App\Models\GuardianRelations::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

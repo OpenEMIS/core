@@ -20,7 +20,7 @@ class StaffPositionTitlesFactory extends Factory
     'name' => $this->faker->lexify(str_repeat("?", 50)),
     'type' => $this->faker->numberBetween(1, 1000),
     'staff_position_categories_id' => $this->faker->numberBetween(1, 1000),
-    'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? 1,
+    'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? \App\Models\SecurityRoles::factory()->create()->id,
     'file_name' => $this->faker->lexify(str_repeat("?", 250)),
     'file_content' => $this->faker->word(),
     'order' => $this->faker->numberBetween(1, 1000),

@@ -13,27 +13,27 @@ class SummaryAssessmentItemResultsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? 1,
+    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'academic_period_name' => $this->faker->lexify(str_repeat("?", 150)),
-    'assessment_id' => \App\Models\Assessments::inRandomOrder()->value('id') ?? 1,
+    'assessment_id' => \App\Models\Assessments::inRandomOrder()->value('id') ?? \App\Models\Assessments::factory()->create()->id,
     'assessment_code' => $this->faker->lexify(str_repeat("?", 150)),
     'assessment_name' => $this->faker->lexify(str_repeat("?", 150)),
-    'assessment_period_id' => \App\Models\AssessmentPeriods::inRandomOrder()->value('id') ?? 1,
+    'assessment_period_id' => \App\Models\AssessmentPeriods::inRandomOrder()->value('id') ?? \App\Models\AssessmentPeriods::factory()->create()->id,
     'assessment_period_name' => $this->faker->lexify(str_repeat("?", 150)),
     'academic_term' => $this->faker->lexify(str_repeat("?", 150)),
     'subject_id' => $this->faker->numberBetween(1, 1000),
     'subject_name' => $this->faker->lexify(str_repeat("?", 150)),
-    'education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? 1,
+    'education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? \App\Models\EducationGrades::factory()->create()->id,
     'education_grade' => $this->faker->lexify(str_repeat("?", 150)),
-    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? 1,
+    'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
     'institution_code' => $this->faker->lexify(str_repeat("?", 150)),
     'institution_name' => $this->faker->lexify(str_repeat("?", 150)),
-    'institution_provider_id' => \App\Models\InstitutionProviders::inRandomOrder()->value('id') ?? 1,
+    'institution_provider_id' => \App\Models\InstitutionProviders::inRandomOrder()->value('id') ?? \App\Models\InstitutionProviders::factory()->create()->id,
     'institution_provider' => $this->faker->lexify(str_repeat("?", 150)),
-    'area_id' => \App\Models\Areas::inRandomOrder()->value('id') ?? 1,
+    'area_id' => \App\Models\Areas::inRandomOrder()->value('id') ?? \App\Models\Areas::factory()->create()->id,
     'area_name' => $this->faker->lexify(str_repeat("?", 150)),
     'institution_class_id' => $this->faker->numberBetween(1, 1000),
     'institution_class_name' => $this->faker->lexify(str_repeat("?", 150)),
