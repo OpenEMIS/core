@@ -12,6 +12,7 @@ class POCOR8128 extends AbstractMigration
         $this->execute('START TRANSACTION;');
 
         try {
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
             // Create new tables
             $this->createNewTables();
 
@@ -22,10 +23,11 @@ class POCOR8128 extends AbstractMigration
             $this->makeAcademicPeriodForLeaveNullable();
             $this->addWorkflowSteps();
             $this->addSecurityFunctions();
-
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
             $this->execute('COMMIT;');
 
         } catch (\Exception $e) {
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
             $this->execute('ROLLBACK;');
             throw $e;  // Re-throw the exception to ensure error reporting
         }
