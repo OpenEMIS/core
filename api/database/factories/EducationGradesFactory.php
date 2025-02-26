@@ -24,9 +24,9 @@ class EducationGradesFactory extends Factory
     'visible' => $this->faker->numberBetween(1, 1000),
     'education_stage_id' => \App\Models\EducationStages::inRandomOrder()->value('id') ?? 1,
     'education_programme_id' => \App\Models\EducationProgrammes::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

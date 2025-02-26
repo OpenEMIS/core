@@ -31,7 +31,7 @@ class TrainingSessionTrainersApiTest extends TestCase
     public function test_can_list_TrainingSessionTrainers()
     {
         if (TrainingSessionTrainers::count() === 0) {
-            TrainingSessionTrainers::factory()->count(3)->create();
+            TrainingSessionTrainers::factory()->count(1)->create();
         }
 
         $response = $this->withHeaders([

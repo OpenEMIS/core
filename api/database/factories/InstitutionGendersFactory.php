@@ -20,7 +20,7 @@ class InstitutionGendersFactory extends Factory
     'name' => $this->faker->lexify(str_repeat("?", 10)),
     'code' => $this->faker->lexify(str_repeat("?", 10)),
     'order' => $this->faker->numberBetween(1, 1000),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

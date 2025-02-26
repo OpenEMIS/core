@@ -28,9 +28,9 @@ do {
     'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? 1,
     'approved_amount' => $this->faker->randomFloat(2, 10, 1000),
     'scholarship_recipient_activity_status_id' => \App\Models\ScholarshipRecipientActivityStatuses::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

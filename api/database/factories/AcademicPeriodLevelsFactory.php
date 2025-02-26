@@ -20,9 +20,9 @@ class AcademicPeriodLevelsFactory extends Factory
     'name' => $this->faker->lexify(str_repeat("?", 100)),
     'level' => $this->faker->numberBetween(1, 1000),
     'editable' => $this->faker->numberBetween(1, 1000),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

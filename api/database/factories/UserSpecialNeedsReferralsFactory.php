@@ -26,9 +26,9 @@ class UserSpecialNeedsReferralsFactory extends Factory
     'referrer_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
     'special_needs_referrer_type_id' => \App\Models\SpecialNeedsReferrerTypes::inRandomOrder()->value('id') ?? 1,
     'reason_type_id' => \App\Models\SpecialNeedTypes::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

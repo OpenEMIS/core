@@ -26,7 +26,7 @@ do {
         return [
     'security_group_id' => \App\Models\SecurityGroups::inRandomOrder()->value('id') ?? 1,
     'area_id' => \App\Models\Areas::inRandomOrder()->value('id') ?? 1,
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

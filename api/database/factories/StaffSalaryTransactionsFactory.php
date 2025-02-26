@@ -21,9 +21,9 @@ class StaffSalaryTransactionsFactory extends Factory
     'salary_addition_type_id' => \App\Models\SalaryAdditionTypes::inRandomOrder()->value('id') ?? 1,
     'salary_deduction_type_id' => \App\Models\SalaryDeductionTypes::inRandomOrder()->value('id') ?? 1,
     'staff_salary_id' => \App\Models\StaffSalaries::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

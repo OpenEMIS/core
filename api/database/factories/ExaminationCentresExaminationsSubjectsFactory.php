@@ -29,7 +29,7 @@ do {
     'examination_subject_id' => \App\Models\ExaminationSubjects::inRandomOrder()->value('id') ?? 1,
     'education_subject_id' => \App\Models\EducationSubjects::inRandomOrder()->value('id') ?? 1,
     'examination_id' => \App\Models\Examinations::inRandomOrder()->value('id') ?? 1,
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

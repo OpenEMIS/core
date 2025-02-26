@@ -26,9 +26,9 @@ class EducationProgrammesFactory extends Factory
     'education_cycle_id' => \App\Models\EducationCycles::inRandomOrder()->value('id') ?? 1,
     'education_certification_id' => \App\Models\EducationCertifications::inRandomOrder()->value('id') ?? 1,
     'same_grade_promotion' => $this->faker->numberBetween(1, 1000),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

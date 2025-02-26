@@ -20,7 +20,7 @@ class DataManagementCopyFactory extends Factory
     'from_academic_period' => $this->faker->numberBetween(1, 1000),
     'to_academic_period' => $this->faker->numberBetween(1, 1000),
     'features' => $this->faker->lexify(str_repeat("?", 200)),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d"),
 ];
     }

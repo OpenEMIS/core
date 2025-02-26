@@ -24,9 +24,9 @@ class InstitutionMealProgrammesFactory extends Factory
     'quantity_received' => $this->faker->numberBetween(1, 1000),
     'delivery_status_id' => \App\Models\MealStatusTypes::inRandomOrder()->value('id') ?? 1,
     'comment' => $this->faker->lexify(str_repeat("?", 50)),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'meal_rating_id' => \App\Models\MealRatings::inRandomOrder()->value('id') ?? 1,
 ];

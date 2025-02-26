@@ -13,14 +13,14 @@ class SecurityGroupUsersFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
     'id' => $this->faker->word(),
     'security_group_id' => $this->faker->numberBetween(1, 1000),
     'security_user_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
     'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? 1,
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

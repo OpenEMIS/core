@@ -23,9 +23,9 @@ class AssessmentItemStudentExemptionsFactory extends Factory
     'institution_class_id' => $this->faker->numberBetween(1, 1000),
     'education_grade_id' => $this->faker->numberBetween(1, 1000),
     'assessment_period_id' => $this->faker->numberBetween(1, 1000),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

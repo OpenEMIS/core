@@ -13,7 +13,7 @@ class StudentBehaviourAttachmentsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
     'id' => $this->faker->word(),
@@ -22,9 +22,9 @@ class StudentBehaviourAttachmentsFactory extends Factory
     'file_name' => $this->faker->lexify(str_repeat("?", 250)),
     'file_content' => $this->faker->word(),
     'student_behaviour_id' => \App\Models\StudentBehaviours::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

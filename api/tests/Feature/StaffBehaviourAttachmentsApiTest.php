@@ -31,7 +31,7 @@ class StaffBehaviourAttachmentsApiTest extends TestCase
     public function test_can_list_StaffBehaviourAttachments()
     {
         if (StaffBehaviourAttachments::count() === 0) {
-            StaffBehaviourAttachments::factory()->count(3)->create();
+            StaffBehaviourAttachments::factory()->count(1)->create();
         }
 
         $response = $this->withHeaders([

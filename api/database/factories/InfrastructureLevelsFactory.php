@@ -24,9 +24,9 @@ class InfrastructureLevelsFactory extends Factory
     'parent_id' => $this->faker->numberBetween(1, 1000),
     'lft' => $this->faker->numberBetween(1, 1000),
     'rght' => $this->faker->numberBetween(1, 1000),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

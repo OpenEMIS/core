@@ -21,9 +21,9 @@ class SurveyStatusesFactory extends Factory
     'date_disabled' => \Carbon\Carbon::now()->format("Y-m-d"),
     'survey_form_id' => \App\Models\SurveyForms::inRandomOrder()->value('id') ?? 1,
     'survey_filter_id' => $this->faker->numberBetween(1, 1000),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

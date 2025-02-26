@@ -13,7 +13,7 @@ class SystemErrorsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
     'id' => $this->faker->word(),
@@ -27,7 +27,7 @@ class SystemErrorsFactory extends Factory
     'triggered_from' => $this->faker->text(50),
     'stack_trace' => $this->faker->text(50),
     'server_info' => $this->faker->text(50),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

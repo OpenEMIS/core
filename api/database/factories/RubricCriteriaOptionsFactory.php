@@ -20,9 +20,9 @@ class RubricCriteriaOptionsFactory extends Factory
     'name' => $this->faker->lexify(str_repeat("?", 250)),
     'rubric_template_option_id' => \App\Models\RubricTemplateOptions::inRandomOrder()->value('id') ?? 1,
     'rubric_criteria_id' => \App\Models\RubricCriterias::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

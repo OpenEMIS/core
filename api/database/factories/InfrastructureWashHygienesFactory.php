@@ -25,9 +25,9 @@ class InfrastructureWashHygienesFactory extends Factory
     'infrastructure_wash_hygiene_total_male' => $this->faker->numberBetween(1, 1000),
     'infrastructure_wash_hygiene_total_female' => $this->faker->numberBetween(1, 1000),
     'infrastructure_wash_hygiene_total_mixed' => $this->faker->numberBetween(1, 1000),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

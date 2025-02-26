@@ -13,7 +13,7 @@ class AppraisalNumbersFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
     'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? 1,
@@ -22,9 +22,9 @@ class AppraisalNumbersFactory extends Factory
     'min_exclusive' => $this->faker->numberBetween(1, 1000),
     'max_exclusive' => $this->faker->numberBetween(1, 1000),
     'validation_rule' => $this->faker->lexify(str_repeat("?", 50)),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

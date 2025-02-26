@@ -28,9 +28,9 @@ class ConfigItemsFactory extends Factory
     'visible' => $this->faker->numberBetween(1, 1000),
     'field_type' => $this->faker->lexify(str_repeat("?", 50)),
     'option_type' => $this->faker->lexify(str_repeat("?", 50)),
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }

@@ -31,9 +31,9 @@ do {
     'comments' => $this->faker->text(50),
     'status_id' => \App\Models\WorkflowSteps::inRandomOrder()->value('id') ?? 1,
     'assignee_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? 1,
-    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
-    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created_user_id' => $this->faker->numberBetween(1, 2),
     'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
 ];
     }
