@@ -11,6 +11,8 @@ class ApiAuthorizations extends Model
 
     protected $table = 'api_authorizations';
 
+    public $incrementing = false;
+
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'name', 'security_token', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 
@@ -21,8 +23,8 @@ class ApiAuthorizations extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+
 
      // Override getKeyForSaveQuery to handle composite keys
 /**
