@@ -16,15 +16,15 @@ class ApiSecuritiesFactory extends Factory
 
 
         return [
-    'id' => $this->model::max('id') + 1,
+    'id' => ApiSecurities::getNextId(),
     'name' => $this->faker->lexify(str_repeat("?", 255)),
     'model' => $this->faker->lexify(str_repeat("?", 255)),
-    'index' => $this->faker->numberBetween(1, 1000),
-    'view' => $this->faker->numberBetween(1, 1000),
-    'add' => $this->faker->numberBetween(1, 1000),
-    'edit' => $this->faker->numberBetween(1, 1000),
-    'delete' => $this->faker->numberBetween(1, 1000),
-    'execute' => $this->faker->numberBetween(1, 1000),
+    'index' => $this->faker->numberBetween(0, 1),
+    'view' => $this->faker->numberBetween(0, 1),
+    'add' => $this->faker->numberBetween(0, 1),
+    'edit' => $this->faker->numberBetween(0, 1),
+    'delete' => $this->faker->numberBetween(0, 1),
+    'execute' => $this->faker->numberBetween(0, 1),
 ];
     }
 }

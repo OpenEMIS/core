@@ -58,7 +58,7 @@ class ApiSecuritiesScopesApiTest extends TestCase
         $record = ApiSecuritiesScopes::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/api-securities-scopes/' . $record->id);
+        ])->getJson('/api/v5/api-securities-scopes/api_security_id/' . $record->api_security_id . '/api_scope_id/' . $record->api_scope_id);
 
         $response->assertStatus(200);
     }
@@ -73,7 +73,7 @@ class ApiSecuritiesScopesApiTest extends TestCase
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/api-securities-scopes/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/api-securities-scopes/api_security_id/' . $record->api_security_id . '/api_scope_id/' . $record->api_scope_id, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +83,7 @@ class ApiSecuritiesScopesApiTest extends TestCase
         $record = ApiSecuritiesScopes::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/api-securities-scopes/' . $record->id);
+        ])->deleteJson('/api/v5/api-securities-scopes/api_security_id/' . $record->api_security_id . '/api_scope_id/' . $record->api_scope_id);
 
         $response->assertStatus(204);
     }

@@ -22,6 +22,7 @@ class ApiSecuritiesScopes extends Model
 
     // ✅ Define the primary key
     protected $primaryKey = ['api_security_id', 'api_scope_id'];
+
     public $incrementing = false;
 
      // Override getKeyForSaveQuery to handle composite keys
@@ -235,7 +236,7 @@ public function _swaggerDelete() {}
     {
         $keyName = $this->getKeyName();
         if(!is_array($keyName)){
-            $keyName = [$keyName];;
+            $keyName = [$keyName];
         }
         foreach ($keyName as $key) {
             $query->where($key, '=', $this->getAttribute($key));
