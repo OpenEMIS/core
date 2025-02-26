@@ -21,8 +21,14 @@ class StudentAttendanceTypes extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+    public $incrementing = false;
+    public static function getNextId()
+    {
+        return \DB::transaction(function () {
+            $maxId = self::max('id');
+            return (int) $maxId + 1;
+        });
+    }
 
      // Override getKeyForSaveQuery to handle composite keys
 /**

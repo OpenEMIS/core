@@ -16,8 +16,8 @@ class StudentAttendanceTypesFactory extends Factory
 
 
         return [
-    'id' => $this->model::max('id') + 1,
-    'code' => $this->faker->lexify(str_repeat("?", 25)),
+            'id' => $this->model::getNextId(),
+            'code' => $this->faker->lexify(str_repeat("?", 25)),
     'name' => $this->faker->lexify(str_repeat("?", 25)),
 ];
     }

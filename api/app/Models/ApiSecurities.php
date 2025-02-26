@@ -35,7 +35,10 @@ class ApiSecurities extends Model
 
     public static function getNextId()
     {
-        return (int) self::max('id') + 1;
+        return \DB::transaction(function () {
+            $maxId = self::max('id');
+            return (int) $maxId + 1;
+        });
     }
 
      // Override getKeyForSaveQuery to handle composite keys
