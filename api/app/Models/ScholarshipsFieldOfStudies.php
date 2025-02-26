@@ -1,0 +1,230 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class ScholarshipsFieldOfStudies extends Model
+{
+    use HasFactory;
+
+    protected $table = 'scholarships_field_of_studies';
+
+    // ✅ Allow mass assignment
+    protected $fillable = ['scholarship_id', 'education_field_of_study_id'];
+
+    // ✅ Disable Laravel's default timestamps
+    public $timestamps = false;
+
+    // ✅ Treat 'modified' and 'created' as timestamps
+    protected $dates = ['modified', 'created'];
+
+    // ✅ Define the primary key
+    protected $primaryKey = ['scholarship_id', 'education_field_of_study_id'];
+    public $incrementing = false;
+
+     // Override getKeyForSaveQuery to handle composite keys
+/**
+ * @OA\PathItem(
+ *     path="/api/v5/scholarships-field-of-studies"
+ * )
+ */
+public function _swaggerPath() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/scholarships-field-of-studies",
+ *     summary="Get list of ScholarshipsFieldOfStudies",
+ *     tags={"ScholarshipsFieldOfStudies"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Successful."
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+                          @OA\Property(property="scholarship_id", type="integer", example=null),
+                          @OA\Property(property="education_field_of_study_id", type="integer", example=null)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerList() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/scholarships-field-of-studies/{id}",
+ *     summary="Get ScholarshipsFieldOfStudies by ID",
+ *     tags={"ScholarshipsFieldOfStudies"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the ScholarshipsFieldOfStudies",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Post(
+ *     path="/api/v5/scholarships-field-of-studies",
+ *     summary="Create a new ScholarshipsFieldOfStudies",
+ *     tags={"ScholarshipsFieldOfStudies"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="scholarship_id", type="integer", example=null),
+                     @OA\Property(property="education_field_of_study_id", type="integer", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Created successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerCreate() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/scholarships-field-of-studies/{id}",
+ *     summary="Update ScholarshipsFieldOfStudies",
+ *     tags={"ScholarshipsFieldOfStudies"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the ScholarshipsFieldOfStudies",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="scholarship_id", type="integer", example=null),
+                     @OA\Property(property="education_field_of_study_id", type="integer", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Updated successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerUpdate() {}
+
+/**
+ * @OA\Delete(
+ *     path="/api/v5/scholarships-field-of-studies/{id}",
+ *     summary="Delete ScholarshipsFieldOfStudies",
+ *     tags={"ScholarshipsFieldOfStudies"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the ScholarshipsFieldOfStudies",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Deleted successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerDelete() {}
+    protected function getKeyForSaveQuery()
+    {
+        $query = $this->newQueryWithoutScopes();
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    // Override setKeysForSaveQuery to handle composite keys
+    protected function setKeysForSaveQuery($query)
+    {
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    public static function getValidationRules(): array
+    {
+        return [
+            // Add validation rules here
+        ];
+    }
+
+
+
+
+    public function _swaggerHelper() {
+        return;
+    }
+}

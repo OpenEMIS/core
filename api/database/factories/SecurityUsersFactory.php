@@ -1,0 +1,57 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\SecurityUsers;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+
+class SecurityUsersFactory extends Factory
+{
+    protected $model = SecurityUsers::class;
+
+    public function definition(): array
+    {
+
+
+        return [
+    'id' => $this->model::max('id') + 1,
+    'username' => $this->faker->lexify(str_repeat("?", 100)),
+    'password' => $this->faker->word(),
+    'openemis_no' => $this->faker->lexify(str_repeat("?", 100)),
+    'first_name' => $this->faker->lexify(str_repeat("?", 100)),
+    'middle_name' => $this->faker->lexify(str_repeat("?", 100)),
+    'third_name' => $this->faker->lexify(str_repeat("?", 100)),
+    'last_name' => $this->faker->lexify(str_repeat("?", 100)),
+    'preferred_name' => $this->faker->lexify(str_repeat("?", 100)),
+    'email' => $this->faker->lexify(str_repeat("?", 100)),
+    'mobile_number' => $this->faker->lexify(str_repeat("?", 200)),
+    'address' => $this->faker->text(50),
+    'postal_code' => $this->faker->lexify(str_repeat("?", 20)),
+    'address_area_id' => \App\Models\AreaAdministratives::inRandomOrder()->value('id') ?? 1,
+    'birthplace_area_id' => \App\Models\AreaAdministratives::inRandomOrder()->value('id') ?? 1,
+    'gender_id' => \App\Models\Genders::inRandomOrder()->value('id') ?? 1,
+    'date_of_birth' => \Carbon\Carbon::now()->format("Y-m-d"),
+    'date_of_death' => \Carbon\Carbon::now()->format("Y-m-d"),
+    'nationality_id' => \App\Models\Nationalities::inRandomOrder()->value('id') ?? 1,
+    'identity_type_id' => \App\Models\IdentityTypes::inRandomOrder()->value('id') ?? 1,
+    'identity_number' => $this->faker->lexify(str_repeat("?", 50)),
+    'external_reference' => $this->faker->lexify(str_repeat("?", 50)),
+    'super_admin' => $this->faker->numberBetween(1, 1000),
+    'status' => $this->faker->numberBetween(1, 1000),
+    'last_login' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
+    'failed_logins' => $this->faker->numberBetween(1, 1000),
+    'photo_name' => $this->faker->lexify(str_repeat("?", 250)),
+    'photo_content' => $this->faker->word(),
+    'preferred_language' => $this->faker->word(),
+    'is_student' => $this->faker->numberBetween(1, 1000),
+    'is_staff' => $this->faker->numberBetween(1, 1000),
+    'is_guardian' => $this->faker->numberBetween(1, 1000),
+    'modified_user_id' => $this->faker->numberBetween(1, 1000),
+    'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
+    'created_user_id' => $this->faker->numberBetween(1, 1000),
+    'created' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
+];
+    }
+}
