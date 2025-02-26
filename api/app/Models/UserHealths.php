@@ -25,6 +25,200 @@ class UserHealths extends Model
     
 
      // Override getKeyForSaveQuery to handle composite keys
+/**
+ * @OA\PathItem(
+ *     path="/api/v5/user-healths"
+ * )
+ */
+public function _swaggerPath() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/user-healths",
+ *     summary="Get list of UserHealths",
+ *     tags={"UserHealths"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Successful."
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+                          @OA\Property(property="id", type="integer", example=null),
+                          @OA\Property(property="blood_type", type="string", example=null),
+                          @OA\Property(property="doctor_name", type="string", example=null),
+                          @OA\Property(property="doctor_contact", type="string", example=null),
+                          @OA\Property(property="medical_facility", type="string", example=null),
+                          @OA\Property(property="health_insurance", type="integer", example=null),
+                          @OA\Property(property="security_user_id", type="integer", example=null),
+                          @OA\Property(property="file_name", type="string", example=null),
+                          @OA\Property(property="file_content", type="string", example=null),
+                          @OA\Property(property="modified_user_id", type="integer", example=null),
+                          @OA\Property(property="modified", type="string", format="date-time", example=null),
+                          @OA\Property(property="created_user_id", type="integer", example=null),
+                          @OA\Property(property="created", type="string", format="date-time", example=null)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerList() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/user-healths/{id}",
+ *     summary="Get UserHealths by ID",
+ *     tags={"UserHealths"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the UserHealths",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Post(
+ *     path="/api/v5/user-healths",
+ *     summary="Create a new UserHealths",
+ *     tags={"UserHealths"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="id", type="integer", example=null),
+                     @OA\Property(property="blood_type", type="string", example=null),
+                     @OA\Property(property="doctor_name", type="string", example=null),
+                     @OA\Property(property="doctor_contact", type="string", example=null),
+                     @OA\Property(property="medical_facility", type="string", example=null),
+                     @OA\Property(property="health_insurance", type="integer", example=null),
+                     @OA\Property(property="security_user_id", type="integer", example=null),
+                     @OA\Property(property="file_name", type="string", example=null),
+                     @OA\Property(property="file_content", type="string", example=null),
+                     @OA\Property(property="modified_user_id", type="integer", example=null),
+                     @OA\Property(property="modified", type="string", format="date-time", example=null),
+                     @OA\Property(property="created_user_id", type="integer", example=null),
+                     @OA\Property(property="created", type="string", format="date-time", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Created successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerCreate() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/user-healths/{id}",
+ *     summary="Update UserHealths",
+ *     tags={"UserHealths"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the UserHealths",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="id", type="integer", example=null),
+                     @OA\Property(property="blood_type", type="string", example=null),
+                     @OA\Property(property="doctor_name", type="string", example=null),
+                     @OA\Property(property="doctor_contact", type="string", example=null),
+                     @OA\Property(property="medical_facility", type="string", example=null),
+                     @OA\Property(property="health_insurance", type="integer", example=null),
+                     @OA\Property(property="security_user_id", type="integer", example=null),
+                     @OA\Property(property="file_name", type="string", example=null),
+                     @OA\Property(property="file_content", type="string", example=null),
+                     @OA\Property(property="modified_user_id", type="integer", example=null),
+                     @OA\Property(property="modified", type="string", format="date-time", example=null),
+                     @OA\Property(property="created_user_id", type="integer", example=null),
+                     @OA\Property(property="created", type="string", format="date-time", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Updated successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerUpdate() {}
+
+/**
+ * @OA\Delete(
+ *     path="/api/v5/user-healths/{id}",
+ *     summary="Delete UserHealths",
+ *     tags={"UserHealths"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the UserHealths",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Deleted successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerDelete() {}
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -61,4 +255,9 @@ class UserHealths extends Model
     }
 
 
+
+
+    public function _swaggerHelper() {
+        return;
+    }
 }

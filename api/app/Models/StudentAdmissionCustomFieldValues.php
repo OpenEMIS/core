@@ -25,6 +25,203 @@ class StudentAdmissionCustomFieldValues extends Model
     
 
      // Override getKeyForSaveQuery to handle composite keys
+/**
+ * @OA\PathItem(
+ *     path="/api/v5/student-admission-custom-field-values"
+ * )
+ */
+public function _swaggerPath() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/student-admission-custom-field-values",
+ *     summary="Get list of StudentAdmissionCustomFieldValues",
+ *     tags={"StudentAdmissionCustomFieldValues"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Successful."
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+                          @OA\Property(property="id", type="string", example=null),
+                          @OA\Property(property="text_value", type="string", example=null),
+                          @OA\Property(property="number_value", type="integer", example=null),
+                          @OA\Property(property="decimal_value", type="string", example=null),
+                          @OA\Property(property="textarea_value", type="string", example=null),
+                          @OA\Property(property="date_value", type="string", format="date", example=null),
+                          @OA\Property(property="time_value", type="string", example=null),
+                          @OA\Property(property="file", type="string", example=null),
+                          @OA\Property(property="student_custom_field_id", type="integer", example=null),
+                          @OA\Property(property="institution_student_admission_id", type="integer", example=null),
+                          @OA\Property(property="modified_user_id", type="integer", example=null),
+                          @OA\Property(property="modified", type="string", format="date-time", example=null),
+                          @OA\Property(property="created_user_id", type="integer", example=null),
+                          @OA\Property(property="created", type="string", format="date-time", example=null)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerList() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/student-admission-custom-field-values/{id}",
+ *     summary="Get StudentAdmissionCustomFieldValues by ID",
+ *     tags={"StudentAdmissionCustomFieldValues"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the StudentAdmissionCustomFieldValues",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Post(
+ *     path="/api/v5/student-admission-custom-field-values",
+ *     summary="Create a new StudentAdmissionCustomFieldValues",
+ *     tags={"StudentAdmissionCustomFieldValues"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="id", type="string", example=null),
+                     @OA\Property(property="text_value", type="string", example=null),
+                     @OA\Property(property="number_value", type="integer", example=null),
+                     @OA\Property(property="decimal_value", type="string", example=null),
+                     @OA\Property(property="textarea_value", type="string", example=null),
+                     @OA\Property(property="date_value", type="string", format="date", example=null),
+                     @OA\Property(property="time_value", type="string", example=null),
+                     @OA\Property(property="file", type="string", example=null),
+                     @OA\Property(property="student_custom_field_id", type="integer", example=null),
+                     @OA\Property(property="institution_student_admission_id", type="integer", example=null),
+                     @OA\Property(property="modified_user_id", type="integer", example=null),
+                     @OA\Property(property="modified", type="string", format="date-time", example=null),
+                     @OA\Property(property="created_user_id", type="integer", example=null),
+                     @OA\Property(property="created", type="string", format="date-time", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Created successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerCreate() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/student-admission-custom-field-values/{id}",
+ *     summary="Update StudentAdmissionCustomFieldValues",
+ *     tags={"StudentAdmissionCustomFieldValues"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the StudentAdmissionCustomFieldValues",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="id", type="string", example=null),
+                     @OA\Property(property="text_value", type="string", example=null),
+                     @OA\Property(property="number_value", type="integer", example=null),
+                     @OA\Property(property="decimal_value", type="string", example=null),
+                     @OA\Property(property="textarea_value", type="string", example=null),
+                     @OA\Property(property="date_value", type="string", format="date", example=null),
+                     @OA\Property(property="time_value", type="string", example=null),
+                     @OA\Property(property="file", type="string", example=null),
+                     @OA\Property(property="student_custom_field_id", type="integer", example=null),
+                     @OA\Property(property="institution_student_admission_id", type="integer", example=null),
+                     @OA\Property(property="modified_user_id", type="integer", example=null),
+                     @OA\Property(property="modified", type="string", format="date-time", example=null),
+                     @OA\Property(property="created_user_id", type="integer", example=null),
+                     @OA\Property(property="created", type="string", format="date-time", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Updated successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerUpdate() {}
+
+/**
+ * @OA\Delete(
+ *     path="/api/v5/student-admission-custom-field-values/{id}",
+ *     summary="Delete StudentAdmissionCustomFieldValues",
+ *     tags={"StudentAdmissionCustomFieldValues"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the StudentAdmissionCustomFieldValues",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Deleted successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerDelete() {}
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -61,4 +258,9 @@ class StudentAdmissionCustomFieldValues extends Model
     }
 
 
+
+
+    public function _swaggerHelper() {
+        return;
+    }
 }
