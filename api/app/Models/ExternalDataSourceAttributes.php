@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Support\Str;
+use App\Traits\UuidId;
 class ExternalDataSourceAttributes extends Model
 {
     use HasFactory;
+    use UuidId;
 
     protected $table = 'external_data_source_attributes';
 
@@ -21,10 +23,18 @@ class ExternalDataSourceAttributes extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+    public $incrementing = false;
 
-     // Override getKeyForSaveQuery to handle composite keys
+    public $casts = [
+        'id' => 'string',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        self::bootUuidId();
+    }
+    // Override getKeyForSaveQuery to handle composite keys
 /**
  * @OA\PathItem(
  *     path="/api/v5/external-data-source-attributes"

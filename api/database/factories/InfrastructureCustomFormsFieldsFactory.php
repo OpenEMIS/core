@@ -13,17 +13,17 @@ class InfrastructureCustomFormsFieldsFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'id' => $this->faker->word(),
+//    'id' => $this->faker->word(),
     'infrastructure_custom_form_id' => \App\Models\InfrastructureCustomForms::inRandomOrder()->value('id') ?? 1,
     'infrastructure_custom_field_id' => \App\Models\InfrastructureCustomFields::inRandomOrder()->value('id') ?? 1,
     'section' => $this->faker->lexify(str_repeat("?", 250)),
     'name' => $this->faker->lexify(str_repeat("?", 250)),
-    'is_mandatory' => $this->faker->numberBetween(1, 1000),
-    'is_unique' => $this->faker->numberBetween(1, 1000),
-    'order' => $this->faker->numberBetween(1, 1000),
+    'is_mandatory' => $this->faker->numberBetween(0, 1),
+    'is_unique' => $this->faker->numberBetween(0, 1),
+    'order' => $this->faker->numberBetween(1, 10),
 ];
     }
 }

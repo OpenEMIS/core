@@ -69,7 +69,6 @@ class ApiAuthorizationsApiTest extends TestCase
         $record = ApiAuthorizations::factory()->create();
         $updatedData = [
             'id' => $record->id,
-            'name' => $this->faker->word(),
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
