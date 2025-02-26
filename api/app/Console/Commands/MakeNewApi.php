@@ -740,13 +740,14 @@ EOT;
             $whereConditions = rtrim($whereConditions, ")\n                "); // Remove the trailing spaces and newline
 
             $primaryKeyCheck = <<<EOT
+\$attempts = 0;
 do {
     {$primaryKeyConditions}
     \$exists = {$modelName}::where({$whereConditions})
         ->exists();
-} while (\$exists);
+    \$attempts++;
+} while (\$exists && \$attempts < 5);
 EOT;
-//            Log::info($primaryKeyCheck);
         }
 
         $factoryStub = <<<EOT
@@ -786,8 +787,6 @@ EOT;
             $this->warn("⚠️ No columns found for table '{$tableName}'. Review test generation.");
             return;
         }
-
-        $fakerData = $this->generateFakerData($columns);
 
         $testStub = <<<EOT
 <?php
