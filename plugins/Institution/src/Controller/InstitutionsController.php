@@ -583,7 +583,26 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExpenditures']);
     }
+    //POCOR-8873
+    public function Consumable()
+    {
+        // echo "hi";die;
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionConsumables']);
+    }
 
+    public function Transactions()
+    {
+        // echo "hi";die;
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionConsumableTransactions']);
+    }
+
+    // public function Overview()
+    // {
+    //     // echo "hi";die;
+    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionConsumableOverview']);
+    // }
+    
+    //POCOR-8873
     public function StaffPositionProfiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']);

@@ -1066,6 +1066,18 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.StudentFees'],
             ],
 
+            'Institutions.Consumable.index' => [
+                'title' => 'Consumable',
+                'parent' => 'Institution.Finance',
+                'selected' => ['Institutions.Consumable','Institutions.Transactions'],
+            ],
+
+            // 'Institutions.Consumable.view' => [
+            //     'title' => 'Consumable',
+            //     'parent' => 'Institution.Finance',
+            //     'selected' => ['Institutions.Consumable'],
+            // ],
+
             'Infrastructures' => [
                 'title' => 'Infrastructures',
                 'parent' => 'Institutions.Institutions.index',
