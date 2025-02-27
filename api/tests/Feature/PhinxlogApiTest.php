@@ -58,7 +58,7 @@ class PhinxlogApiTest extends TestCase
         $record = Phinxlog::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/phinxlog/' . $record->id);
+        ])->getJson('/api/v5/phinxlog/' . $record->version);
 
         $response->assertStatus(200);
     }
@@ -68,12 +68,12 @@ class PhinxlogApiTest extends TestCase
     {
         $record = Phinxlog::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'version' => $record->version,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/phinxlog/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/phinxlog/' . $record->version, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +83,7 @@ class PhinxlogApiTest extends TestCase
         $record = Phinxlog::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/phinxlog/' . $record->id);
+        ])->deleteJson('/api/v5/phinxlog/' . $record->version);
 
         $response->assertStatus(204);
     }

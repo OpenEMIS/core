@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class CompetencyGradingtypes extends Model
 {
     use HasFactory;
-    
+    public $incrementing = true;
+    public $fillable = ['id', 'code', 'name', 'modified_user_id', 'modified', 'created_user_id', 'created'];
     public $timestamps = false;
     protected $table = "competency_grading_types";
-
+    protected $dates = ['modified', 'created'];
 
 /**
  * @OA\PathItem(

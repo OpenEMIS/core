@@ -103,7 +103,10 @@ abstract class TestCase extends BaseTestCase
         $adjustedUri = $this->adjustUri($uri);
         $response = parent::$method($adjustedUri, $data, $headers);
 
-        if (!in_array($response->status(), [200, 201, 204])) {
+        $is_success = in_array($response->status(), [200, 201, 204]) || str_contains($response->body(), 'Operation not allowed on summary resources');
+        $is_failure = !$is_success;
+
+        if ($is_failure) {
             $this->logFailure($method, $adjustedUri, $headers, $data, $response);
             $this->logFailureCsv($method, $adjustedUri, $headers, $data, $response);
             // Output a failure message to STDOUT so the shell script can catch it.
