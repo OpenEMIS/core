@@ -83,7 +83,7 @@ class SummaryAssessmentItemResultsApiTest extends TestCase
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/summary-assessment-item-results/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/summary-assessment-item-results/' . $record->academic_period_id, $updatedData);
 
         $response->assertStatus(405);
     }
