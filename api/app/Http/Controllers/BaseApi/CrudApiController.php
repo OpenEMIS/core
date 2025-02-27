@@ -802,11 +802,11 @@ class CrudApiController extends Controller
                 $page = $value;
                 continue;
             }
-            if ($key === '_orderby') {
+            if ($key === 'orderby') {
                 $orderColumnsPath[] = $value;
                 continue;
             }
-            if ($key === '_order') {
+            if ($key === 'order') {
                 $orderDirectionsPath[] = strtolower($value);
                 continue;
             }
