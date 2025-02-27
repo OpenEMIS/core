@@ -21,10 +21,13 @@ class SummaryAreaProviderGradeSubjectResults extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
 
-     // Override getKeyForSaveQuery to handle composite keys
+    // ✅ Define the primary key
+    public $incrementing = false;
+    protected $primaryKey = null;
+
+
+    // Override getKeyForSaveQuery to handle composite keys
 /**
  * @OA\PathItem(
  *     path="/api/v5/summary-area-provider-grade-subject-results"

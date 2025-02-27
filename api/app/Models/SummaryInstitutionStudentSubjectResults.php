@@ -21,10 +21,12 @@ class SummaryInstitutionStudentSubjectResults extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
 
-     // Override getKeyForSaveQuery to handle composite keys
+    public $incrementing = false;
+    protected $primaryKey = null;
+
+
+    // Override getKeyForSaveQuery to handle composite keys
 /**
  * @OA\PathItem(
  *     path="/api/v5/summary-institution-student-subject-results"

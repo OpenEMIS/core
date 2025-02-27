@@ -16,7 +16,7 @@ class ExaminationCentreRoomsExaminationsStudentsFactory extends Factory
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'examination_centre_room_id' => \App\Models\ExaminationCentreRooms::inRandomOrder()->value('id') ?? \App\Models\ExaminationCentreRooms::factory()->create()->id,
+    'examination_centre_room_id' =>  \App\Models\ExaminationCentreRooms::factory()->create()->id,
     'examination_id' => \App\Models\Examinations::inRandomOrder()->value('id') ?? \App\Models\Examinations::factory()->create()->id,
     'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'examination_centre_id' => \App\Models\ExaminationCentres::inRandomOrder()->value('id') ?? \App\Models\ExaminationCentres::factory()->create()->id,

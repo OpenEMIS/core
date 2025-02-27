@@ -59,6 +59,8 @@ class InstitutionStudentAbsenceDetailsApiTest extends TestCase
     public function test_can_view_InstitutionStudentAbsenceDetails()
     {
         $record = InstitutionStudentAbsenceDetails::factory()->create();
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->getJson('/api/v5/institution-student-absence-details' . $keyString);
@@ -71,9 +73,11 @@ class InstitutionStudentAbsenceDetailsApiTest extends TestCase
     {
         $record = InstitutionStudentAbsenceDetails::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'student_id' => $record->student_id,
             // Add at least one field from schema to update
         ];
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->putJson('/api/v5/institution-student-absence-details' . $keyString, $updatedData);
@@ -84,6 +88,8 @@ class InstitutionStudentAbsenceDetailsApiTest extends TestCase
     public function test_can_delete_InstitutionStudentAbsenceDetails()
     {
         $record = InstitutionStudentAbsenceDetails::factory()->create();
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/institution-student-absence-details' . $keyString);

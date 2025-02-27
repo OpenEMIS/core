@@ -8,204 +8,251 @@ use Illuminate\Database\Eloquent\Model;
 class InstitutionSurveyTableCells extends Model
 {
     use HasFactory;
-    // ✅ Allow mass assignment
-    protected $fillable = ['text_value', 'number_value', 'decimal_value', 'survey_question_id', 'survey_table_column_id', 'survey_table_row_id', 'institution_survey_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'survey_question_id', 'survey_table_column_id', 'survey_table_row_id', 'institution_survey_id', 'modified_user_id', 'created_user_id'];
-    // ✅ Treat 'modified' and 'created' as timestamps
-    protected $dates = ['modified', 'created'];
 
+    // ✅ Allow mass assignment
     public $timestamps = false;
+    public $incrementing = false;
+// ✅ Disable Laravel's default timestamps
+    protected $fillable = ['text_value', 'number_value', 'decimal_value', 'survey_question_id', 'survey_table_column_id', 'survey_table_row_id', 'institution_survey_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'survey_question_id', 'survey_table_column_id', 'survey_table_row_id', 'institution_survey_id', 'modified_user_id', 'created_user_id'];
+
+    // ✅ Treat 'modified' and 'created' as timestamps
     protected $table = "institution_survey_table_cells";
 
+    // ✅ Define the primary key
+    protected $dates = ['modified', 'created'];
+    protected $primaryKey = ["survey_question_id", "survey_table_column_id", "survey_table_row_id", "institution_survey_id"];
 
-/**
- * @OA\PathItem(
- *     path="/api/v5/institution-survey-table-cells"
- * )
- */
-public function _swaggerPath() {}
+    /**
+     * @OA\PathItem(
+     *     path="/api/v5/institution-survey-table-cells"
+     * )
+     */
+    public function _swaggerPath()
+    {
+    }
 
-/**
- * @OA\Get(
- *     path="/api/v5/institution-survey-table-cells",
- *     summary="Get list of InstitutionSurveyTableCells",
- *     tags={"InstitutionSurveyTableCells"},
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="Successful."
- *             ),
- *             @OA\Property(
- *                 property="data",
- *                 type="array",
- *                 @OA\Items(
- *                     type="object",
-                          @OA\Property(property="text_value", type="string", example=null),
-                          @OA\Property(property="number_value", type="integer", example=null),
-                          @OA\Property(property="decimal_value", type="string", example=null),
-                          @OA\Property(property="survey_question_id", type="integer", example=null),
-                          @OA\Property(property="survey_table_column_id", type="integer", example=null),
-                          @OA\Property(property="survey_table_row_id", type="integer", example=null),
-                          @OA\Property(property="institution_survey_id", type="integer", example=null),
-                          @OA\Property(property="modified_user_id", type="integer", example=null),
-                          @OA\Property(property="modified", type="string", format="date-time", example=null),
-                          @OA\Property(property="created_user_id", type="integer", example=null),
-                          @OA\Property(property="created", type="string", format="date-time", example=null)
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerList() {}
+    /**
+     * @OA\Get(
+     *     path="/api/v5/institution-survey-table-cells",
+     *     summary="Get list of InstitutionSurveyTableCells",
+     *     tags={"InstitutionSurveyTableCells"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Successful."
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+    @OA\Property(property="text_value", type="string", example=null),
+    @OA\Property(property="number_value", type="integer", example=null),
+    @OA\Property(property="decimal_value", type="string", example=null),
+    @OA\Property(property="survey_question_id", type="integer", example=null),
+    @OA\Property(property="survey_table_column_id", type="integer", example=null),
+    @OA\Property(property="survey_table_row_id", type="integer", example=null),
+    @OA\Property(property="institution_survey_id", type="integer", example=null),
+    @OA\Property(property="modified_user_id", type="integer", example=null),
+    @OA\Property(property="modified", type="string", format="date-time", example=null),
+    @OA\Property(property="created_user_id", type="integer", example=null),
+    @OA\Property(property="created", type="string", format="date-time", example=null)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
+    public function _swaggerList()
+    {
+    }
 
-/**
- * @OA\Get(
- *     path="/api/v5/institution-survey-table-cells/{id}",
- *     summary="Get InstitutionSurveyTableCells by ID",
- *     tags={"InstitutionSurveyTableCells"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionSurveyTableCells",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
+    /**
+     * @OA\Get(
+     *     path="/api/v5/institution-survey-table-cells/{id}",
+     *     summary="Get InstitutionSurveyTableCells by ID",
+     *     tags={"InstitutionSurveyTableCells"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the InstitutionSurveyTableCells",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not found"
+     *     )
+     * )
+     */
+    public function _swaggerView()
+    {
+    }
 
-/**
- * @OA\Post(
- *     path="/api/v5/institution-survey-table-cells",
- *     summary="Create a new InstitutionSurveyTableCells",
- *     tags={"InstitutionSurveyTableCells"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="text_value", type="string", example=null),
-                     @OA\Property(property="number_value", type="integer", example=null),
-                     @OA\Property(property="decimal_value", type="string", example=null),
-                     @OA\Property(property="survey_question_id", type="integer", example=null),
-                     @OA\Property(property="survey_table_column_id", type="integer", example=null),
-                     @OA\Property(property="survey_table_row_id", type="integer", example=null),
-                     @OA\Property(property="institution_survey_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Created successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerCreate() {}
+    /**
+     * @OA\Post(
+     *     path="/api/v5/institution-survey-table-cells",
+     *     summary="Create a new InstitutionSurveyTableCells",
+     *     tags={"InstitutionSurveyTableCells"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+    @OA\Property(property="text_value", type="string", example=null),
+    @OA\Property(property="number_value", type="integer", example=null),
+    @OA\Property(property="decimal_value", type="string", example=null),
+    @OA\Property(property="survey_question_id", type="integer", example=null),
+    @OA\Property(property="survey_table_column_id", type="integer", example=null),
+    @OA\Property(property="survey_table_row_id", type="integer", example=null),
+    @OA\Property(property="institution_survey_id", type="integer", example=null),
+    @OA\Property(property="modified_user_id", type="integer", example=null),
+    @OA\Property(property="modified", type="string", format="date-time", example=null),
+    @OA\Property(property="created_user_id", type="integer", example=null),
+    @OA\Property(property="created", type="string", format="date-time", example=null)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Created successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid data"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
+    public function _swaggerCreate()
+    {
+    }
 
-/**
- * @OA\Put(
- *     path="/api/v5/institution-survey-table-cells/{id}",
- *     summary="Update InstitutionSurveyTableCells",
- *     tags={"InstitutionSurveyTableCells"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionSurveyTableCells",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="text_value", type="string", example=null),
-                     @OA\Property(property="number_value", type="integer", example=null),
-                     @OA\Property(property="decimal_value", type="string", example=null),
-                     @OA\Property(property="survey_question_id", type="integer", example=null),
-                     @OA\Property(property="survey_table_column_id", type="integer", example=null),
-                     @OA\Property(property="survey_table_row_id", type="integer", example=null),
-                     @OA\Property(property="institution_survey_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Updated successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerUpdate() {}
+    /**
+     * @OA\Put(
+     *     path="/api/v5/institution-survey-table-cells/{id}",
+     *     summary="Update InstitutionSurveyTableCells",
+     *     tags={"InstitutionSurveyTableCells"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the InstitutionSurveyTableCells",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+    @OA\Property(property="text_value", type="string", example=null),
+    @OA\Property(property="number_value", type="integer", example=null),
+    @OA\Property(property="decimal_value", type="string", example=null),
+    @OA\Property(property="survey_question_id", type="integer", example=null),
+    @OA\Property(property="survey_table_column_id", type="integer", example=null),
+    @OA\Property(property="survey_table_row_id", type="integer", example=null),
+    @OA\Property(property="institution_survey_id", type="integer", example=null),
+    @OA\Property(property="modified_user_id", type="integer", example=null),
+    @OA\Property(property="modified", type="string", format="date-time", example=null),
+    @OA\Property(property="created_user_id", type="integer", example=null),
+    @OA\Property(property="created", type="string", format="date-time", example=null)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Updated successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid data"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not found"
+     *     )
+     * )
+     */
+    public function _swaggerUpdate()
+    {
+    }
 
-/**
- * @OA\Delete(
- *     path="/api/v5/institution-survey-table-cells/{id}",
- *     summary="Delete InstitutionSurveyTableCells",
- *     tags={"InstitutionSurveyTableCells"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionSurveyTableCells",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerDelete() {}
-    public function _swaggerHelper() {
+    /**
+     * @OA\Delete(
+     *     path="/api/v5/institution-survey-table-cells/{id}",
+     *     summary="Delete InstitutionSurveyTableCells",
+     *     tags={"InstitutionSurveyTableCells"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the InstitutionSurveyTableCells",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="Deleted successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not found"
+     *     )
+     * )
+     */
+    public function _swaggerDelete()
+    {
+    }
+
+    public function _swaggerHelper()
+    {
         return;
+    }
+
+    protected function getKeyForSaveQuery()
+    {
+        $query = $this->newQueryWithoutScopes();
+        $keyName = $this->getKeyName();
+        if (!is_array($keyName)) {
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    // Override setKeysForSaveQuery to handle composite keys
+    protected function setKeysForSaveQuery($query)
+    {
+        $keyName = $this->getKeyName();
+        if (!is_array($keyName)) {
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
     }
 }

@@ -15,8 +15,8 @@ class WebhookEventsFactory extends Factory
     {
 
         return [
-    'webhook_id' => \App\Models\Webhooks::inRandomOrder()->value('id') ?? \App\Models\Webhooks::factory()->create()->id,
-    'event_key' => $this->faker->lexify(str_repeat("?", 45)),
-];
+            'webhook_id' => \App\Models\Webhooks::factory()->create()->id,
+            'event_key' => $this->faker->lexify(str_repeat("?", 45)),
+        ];
     }
 }

@@ -704,6 +704,16 @@ class CrudApiController extends Controller
 
         $model = $this->allowedResources[$resource];
         $method = $request->method();
+        // For summary resources, disable PUT and DELETE operations,
+        // and also disable GET requests that include a resource identifier.
+        if (strpos($resource, 'summary') === 0) {
+            if (in_array($method, ['PUT', 'DELETE'])) {
+                return response()->json(['error' => 'Operation not allowed on summary resources'], 405);
+            }
+            if ($method === 'GET' && count($segments) === 1) {
+                return response()->json(['error' => 'Operation not allowed on summary resources'], 405);
+            }
+        }
 
         switch ($method) {
             case 'GET':

@@ -21,10 +21,12 @@ class SummaryProgrammeSectorSpecializationGenders extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
 
-     // Override getKeyForSaveQuery to handle composite keys
+    public $incrementing = false;
+    protected $primaryKey = null;
+
+
+    // Override getKeyForSaveQuery to handle composite keys
 /**
  * @OA\PathItem(
  *     path="/api/v5/summary-programme-sector-specialization-genders"

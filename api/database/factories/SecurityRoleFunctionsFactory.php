@@ -15,12 +15,12 @@ class SecurityRoleFunctionsFactory extends Factory
     {
 
         return [
-    '_view' => $this->faker->numberBetween(1, 1000),
-    '_edit' => $this->faker->numberBetween(1, 1000),
-    '_add' => $this->faker->numberBetween(1, 1000),
-    '_delete' => $this->faker->numberBetween(1, 1000),
-    '_execute' => $this->faker->numberBetween(1, 1000),
-    'security_role_id' => \App\Models\SecurityRoles::inRandomOrder()->value('id') ?? \App\Models\SecurityRoles::factory()->create()->id,
+    '_view' => $this->faker->boolean,
+    '_edit' => $this->faker->boolean,
+    '_add' => $this->faker->boolean,
+    '_delete' => $this->faker->boolean,
+    '_execute' => $this->faker->boolean,
+    'security_role_id' =>  \App\Models\SecurityRoles::factory()->create()->id,
     'security_function_id' => \App\Models\SecurityFunctions::inRandomOrder()->value('id') ?? \App\Models\SecurityFunctions::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

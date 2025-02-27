@@ -78,7 +78,6 @@ class ExaminationCentresExaminationsInstitutionsApiTest extends TestCase
             // Add at least one field from schema to update
         ];
         $keyString = $this->getPrimaryKeyString($record);
-        $keyString = $this->getPrimaryKeyString($record);
 
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
@@ -90,6 +89,7 @@ class ExaminationCentresExaminationsInstitutionsApiTest extends TestCase
     public function test_can_delete_ExaminationCentresExaminationsInstitutions()
     {
         $record = ExaminationCentresExaminationsInstitutions::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/examination-centres-examinations-institutions' . $keyString);

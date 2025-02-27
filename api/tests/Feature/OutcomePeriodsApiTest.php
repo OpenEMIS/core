@@ -59,6 +59,8 @@ class OutcomePeriodsApiTest extends TestCase
     public function test_can_view_OutcomePeriods()
     {
         $record = OutcomePeriods::factory()->create();
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->getJson('/api/v5/outcome-periods' . $keyString);
@@ -74,6 +76,8 @@ class OutcomePeriodsApiTest extends TestCase
             'id' => $record->id,
             // Add at least one field from schema to update
         ];
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->putJson('/api/v5/outcome-periods' . $keyString, $updatedData);
@@ -84,6 +88,8 @@ class OutcomePeriodsApiTest extends TestCase
     public function test_can_delete_OutcomePeriods()
     {
         $record = OutcomePeriods::factory()->create();
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/outcome-periods' . $keyString);
