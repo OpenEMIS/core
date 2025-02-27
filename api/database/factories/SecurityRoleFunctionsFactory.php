@@ -15,11 +15,11 @@ class SecurityRoleFunctionsFactory extends Factory
     {
 
         return [
-    '_view' => $this->faker->boolean,
-    '_edit' => $this->faker->boolean,
-    '_add' => $this->faker->boolean,
-    '_delete' => $this->faker->boolean,
-    '_execute' => $this->faker->boolean,
+    '_view' => $this->faker->boolean(),
+    '_edit' => $this->faker->boolean(),
+    '_add' => $this->faker->boolean(),
+    '_delete' => $this->faker->boolean(),
+    '_execute' => $this->faker->boolean(),
     'security_role_id' =>  \App\Models\SecurityRoles::factory()->create()->id,
     'security_function_id' => \App\Models\SecurityFunctions::inRandomOrder()->value('id') ?? \App\Models\SecurityFunctions::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
