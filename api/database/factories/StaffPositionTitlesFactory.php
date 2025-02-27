@@ -16,7 +16,7 @@ class StaffPositionTitlesFactory extends Factory
 
 
         return [
-    'id' => $this->faker->numberBetween(1, 1000),
+    'id' => $this->model::getNextId(),
     'name' => $this->faker->lexify(str_repeat("?", 50)),
     'type' => $this->faker->numberBetween(1, 1000),
     'staff_position_categories_id' => $this->faker->numberBetween(1, 1000),
