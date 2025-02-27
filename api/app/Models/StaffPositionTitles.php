@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\NumericId;
 
 class StaffPositionTitles extends Model
 {
     use HasFactory;
+    use NumericId;
 
     protected $table = 'staff_position_titles';
 
@@ -21,8 +23,22 @@ class StaffPositionTitles extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+    protected $primaryKey = 'id';
+    public $incrementing = false;
+    public static function getNextId()
+    {
+        return \DB::transaction(function () {
+            $maxId = self::max('id');
+            return (int) $maxId + 1;
+        });
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        self::bootNumericId();
+    }
 
      // Override getKeyForSaveQuery to handle composite keys
 /**
