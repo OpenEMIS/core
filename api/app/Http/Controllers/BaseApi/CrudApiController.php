@@ -1035,16 +1035,19 @@ class CrudApiController extends Controller
      */
     protected function handlePutRequest(Request $request, $model, array $segments)
     {
+//        Log::info('segments: '.json_encode($segments));
         if (empty($segments)) {
             return response()->json(['error' => 'Missing identifier for update'], 400);
         }
-        Log::info('request: '.json_encode($request->all()));
+//        Log::info('request: '.json_encode($request->all()));
         // Determine the record to update based on the provided segments.
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             // Case 1: Update by numeric (or UUID) ID.
             try {
                 $possibleIdField = $this->getPossibleIdField($model);
+//                Log::info('possibleIdField: '.json_encode($possibleIdField));
                 $record = $model::where($possibleIdField, $segments[0])->first();
+//                Log::info('$record: '.json_encode($record));
 //                $record = $model::findOrFail($segments[0]);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 404);
@@ -1118,6 +1121,10 @@ class CrudApiController extends Controller
      */
     protected function handleDeleteRequest(Request $request, $model, array $segments)
     {
+        if (is_string($model)) {
+            $model = new $model;
+        }
+
         // Check if segments are provided.
         if (empty($segments)) {
             return response()->json(['error' => 'Missing identifier for delete'], 400);
@@ -1144,8 +1151,9 @@ class CrudApiController extends Controller
                 foreach ($ids as $id) {
 //                    $record = $model::findOrFail($id);
                     $possibleId = $id;
-                    $record = $model::where($possibleIdField, $possibleId)->first();
-                    $record->delete();
+                    $record = $model->where($possibleIdField, $possibleId)->delete();
+//                    Log::info('record: '.json_encode($record));
+
                 }
                 \DB::commit();
             } catch (\Exception $e) {
@@ -1161,8 +1169,12 @@ class CrudApiController extends Controller
             try {
                 $possibleId = $segments[0];
                 $possibleIdField = $this->getPossibleIdField($model);
+//                Log::info('possibleIdField: '.$possibleIdField);
+//                Log::info('possibleId: '.$possibleId);
                 $record = $model::where($possibleIdField, $possibleId)->first();
+
 //                Log::info('record: '.json_encode($record));
+
 //                $record = $model::findOrFail($segments[0]);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 404);
@@ -1201,9 +1213,8 @@ class CrudApiController extends Controller
             if (!$record) {
                 return response()->json(['error' => __('Record not found.')], 404);
             }
-
             try {
-                $record->delete();
+                $model->where($conditions)->delete();
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 403);
             }
@@ -1231,6 +1242,9 @@ class CrudApiController extends Controller
             return true;
         }
         if (preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $id)) {
+            return true;
+        }
+        if (preg_match('/^(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[A-Za-z0-9]{15})$/', $id)) {
             return true;
         }
         return false;

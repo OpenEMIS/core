@@ -21,8 +21,9 @@ class AppraisalSliders extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+    protected $primaryKey = 'appraisal_criteria_id';
+    public $incrementing = false;
+
 
      // Override getKeyForSaveQuery to handle composite keys
 /**

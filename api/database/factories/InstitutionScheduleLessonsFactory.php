@@ -17,8 +17,8 @@ class InstitutionScheduleLessonsFactory extends Factory
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
     'day_of_week' => $this->faker->numberBetween(1, 1000),
-    'institution_schedule_timeslot_id' => \App\Models\InstitutionScheduleTimeslots::inRandomOrder()->value('id') ?? \App\Models\InstitutionScheduleTimeslots::factory()->create()->id,
-    'institution_schedule_timetable_id' => \App\Models\InstitutionScheduleTimetables::inRandomOrder()->value('id') ?? \App\Models\InstitutionScheduleTimetables::factory()->create()->id,
+    'institution_schedule_timeslot_id' =>  \App\Models\InstitutionScheduleTimeslots::factory()->create()->id,
+    'institution_schedule_timetable_id' => \App\Models\InstitutionScheduleTimetables::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

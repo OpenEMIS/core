@@ -9,6 +9,7 @@ use App\Models\SystemPatches;
 use App\Models\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class SystemPatchesApiTest extends TestCase
 {
@@ -58,7 +59,7 @@ class SystemPatchesApiTest extends TestCase
         $record = SystemPatches::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/system-patches/' . $record->id);
+        ])->getJson('/api/v5/system-patches/' . $record->issue);
 
         $response->assertStatus(200);
     }
@@ -68,13 +69,14 @@ class SystemPatchesApiTest extends TestCase
     {
         $record = SystemPatches::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'created' => $record->created,
             // Add at least one field from schema to update
         ];
+        Log::info($updatedData);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/system-patches/' . $record->id, $updatedData);
-
+        ])->putJson('/api/v5/system-patches/' . $record->issue, $updatedData);
+        Log::info($response->getContent());
         $response->assertStatus(200);
     }
 
@@ -83,7 +85,7 @@ class SystemPatchesApiTest extends TestCase
         $record = SystemPatches::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/system-patches/' . $record->id);
+        ])->deleteJson('/api/v5/system-patches/' . $record->issue);
 
         $response->assertStatus(204);
     }

@@ -16,7 +16,7 @@ class ScholarshipLoansFactory extends Factory
 
 
         return [
-    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? \App\Models\Scholarships::factory()->create()->id,
+    'scholarship_id' =>  \App\Models\Scholarships::factory()->create()->id,
     'interest_rate' => $this->faker->randomFloat(2, 10, 1000),
     'interest_rate_type' => $this->faker->numberBetween(1, 1000),
     'loan_term' => $this->faker->numberBetween(1, 1000),

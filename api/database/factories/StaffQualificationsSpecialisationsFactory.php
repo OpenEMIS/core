@@ -16,8 +16,8 @@ class StaffQualificationsSpecialisationsFactory extends Factory
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'staff_qualification_id' => \App\Models\StaffQualifications::inRandomOrder()->value('id') ?? \App\Models\StaffQualifications::factory()->create()->id,
-    'qualification_specialisation_id' => \App\Models\QualificationSpecialisations::inRandomOrder()->value('id') ?? \App\Models\QualificationSpecialisations::factory()->create()->id,
+    'staff_qualification_id' => \App\Models\StaffQualifications::factory()->create()->id,
+    'qualification_specialisation_id' => \App\Models\QualificationSpecialisations::factory()->create()->id,
 ];
     }
 }

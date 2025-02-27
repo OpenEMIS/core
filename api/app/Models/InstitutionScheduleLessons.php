@@ -16,6 +16,12 @@ class InstitutionScheduleLessons extends Model
     public $timestamps = false;
     protected $keyType = 'string';
 
+    protected $casts = [
+        'id' => 'string',
+    ];
+
+    public $incrementing = false;
+
     use \Awobaz\Compoships\Compoships;
 
 /**

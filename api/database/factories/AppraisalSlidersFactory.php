@@ -16,7 +16,7 @@ class AppraisalSlidersFactory extends Factory
 
 
         return [
-    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::inRandomOrder()->value('id') ?? \App\Models\AppraisalCriterias::factory()->create()->id,
+    'appraisal_criteria_id' => \App\Models\AppraisalCriterias::factory()->create()->id,
     'min' => $this->faker->randomFloat(2, 10, 1000),
     'max' => $this->faker->randomFloat(2, 10, 1000),
     'step' => $this->faker->randomFloat(2, 10, 1000),

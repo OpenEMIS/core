@@ -21,8 +21,9 @@ class AppraisalNumbers extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+    public $incrementing = false;
+    protected $primaryKey = 'appraisal_criteria_id';
 
      // Override getKeyForSaveQuery to handle composite keys
 /**

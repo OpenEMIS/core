@@ -58,7 +58,7 @@ class IdpOauthApiTest extends TestCase
         $record = IdpOauth::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/idp-oauth/' . $record->id);
+        ])->getJson('/api/v5/idp-oauth/' . $record->system_authentication_id);
 
         $response->assertStatus(200);
     }
@@ -73,7 +73,7 @@ class IdpOauthApiTest extends TestCase
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/idp-oauth/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/idp-oauth/' . $record->system_authentication_id, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +83,7 @@ class IdpOauthApiTest extends TestCase
         $record = IdpOauth::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/idp-oauth/' . $record->id);
+        ])->deleteJson('/api/v5/idp-oauth/' . $record->system_authentication_id);
 
         $response->assertStatus(204);
     }

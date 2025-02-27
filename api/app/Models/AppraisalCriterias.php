@@ -21,8 +21,8 @@ class AppraisalCriterias extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+
 
      // Override getKeyForSaveQuery to handle composite keys
 /**

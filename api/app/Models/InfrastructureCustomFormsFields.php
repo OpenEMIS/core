@@ -10,8 +10,7 @@ class InfrastructureCustomFormsFields extends Model
 {
     use HasFactory;
 use UuidId;
-use UuidId;
-    use UuidId;
+
 
     protected $table = 'infrastructure_custom_forms_fields';
 

@@ -73,7 +73,7 @@ class InstitutionSubjectStudentsApiTest extends TestCase
     {
         $record = InstitutionSubjectStudents::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'education_grade_id' => $record->education_grade_id,
             // Add at least one field from schema to update
         ];
 

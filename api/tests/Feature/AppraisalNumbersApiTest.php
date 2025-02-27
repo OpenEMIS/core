@@ -58,7 +58,7 @@ class AppraisalNumbersApiTest extends TestCase
         $record = AppraisalNumbers::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/appraisal-numbers/' . $record->id);
+        ])->getJson('/api/v5/appraisal-numbers/' . $record->appraisal_criteria_id);
 
         $response->assertStatus(200);
     }
@@ -68,12 +68,12 @@ class AppraisalNumbersApiTest extends TestCase
     {
         $record = AppraisalNumbers::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'min_inclusive' => $record->min_inclusive,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/appraisal-numbers/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/appraisal-numbers/' . $record->appraisal_criteria_id, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +83,7 @@ class AppraisalNumbersApiTest extends TestCase
         $record = AppraisalNumbers::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/appraisal-numbers/' . $record->id);
+        ])->deleteJson('/api/v5/appraisal-numbers/' . $record->appraisal_criteria_id);
 
         $response->assertStatus(204);
     }

@@ -16,8 +16,8 @@ class SurveyRulesFactory extends Factory
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'survey_form_id' => \App\Models\SurveyForms::inRandomOrder()->value('id') ?? \App\Models\SurveyForms::factory()->create()->id,
-    'survey_question_id' => \App\Models\SurveyQuestions::inRandomOrder()->value('id') ?? \App\Models\SurveyQuestions::factory()->create()->id,
+    'survey_form_id' =>  \App\Models\SurveyForms::factory()->create()->id,
+    'survey_question_id' =>  \App\Models\SurveyQuestions::factory()->create()->id,
     'dependent_question_id' => $this->faker->numberBetween(1, 1000),
     'show_options' => $this->faker->text(50),
     'enabled' => $this->faker->numberBetween(1, 1000),
