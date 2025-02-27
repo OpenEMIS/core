@@ -13,15 +13,6 @@ class SecurityGroupAreasFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $security_group_id = $this->faker->randomElement(\App\Models\SecurityGroupAreas::pluck('security_group_id')->toArray()) ?? 1;
-            $area_id = $this->faker->randomElement(\App\Models\SecurityGroupAreas::pluck('area_id')->toArray()) ?? 1;
-    $exists = SecurityGroupAreas::where('security_group_id', $security_group_id)
-                ->where('area_id', $area_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'security_group_id' => \App\Models\SecurityGroups::inRandomOrder()->value('id') ?? \App\Models\SecurityGroups::factory()->create()->id,

@@ -13,15 +13,6 @@ class ReportCardSubjectsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $report_card_id = $this->faker->randomElement(\App\Models\ReportCardSubjects::pluck('report_card_id')->toArray()) ?? 1;
-            $education_subject_id = $this->faker->randomElement(\App\Models\ReportCardSubjects::pluck('education_subject_id')->toArray()) ?? 1;
-    $exists = ReportCardSubjects::where('report_card_id', $report_card_id)
-                ->where('education_subject_id', $education_subject_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),

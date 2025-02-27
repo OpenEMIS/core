@@ -13,15 +13,6 @@ class StaffQualificationsSubjectsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $staff_qualification_id = $this->faker->randomElement(\App\Models\StaffQualificationsSubjects::pluck('staff_qualification_id')->toArray()) ?? 1;
-            $education_subject_id = $this->faker->randomElement(\App\Models\StaffQualificationsSubjects::pluck('education_subject_id')->toArray()) ?? 1;
-    $exists = StaffQualificationsSubjects::where('staff_qualification_id', $staff_qualification_id)
-                ->where('education_subject_id', $education_subject_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),

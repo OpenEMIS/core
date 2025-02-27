@@ -13,15 +13,6 @@ class InstitutionClassesSecondaryStaffFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $institution_class_id = $this->faker->randomElement(\App\Models\InstitutionClassesSecondaryStaff::pluck('institution_class_id')->toArray()) ?? 1;
-            $secondary_staff_id = $this->faker->randomElement(\App\Models\InstitutionClassesSecondaryStaff::pluck('secondary_staff_id')->toArray()) ?? 1;
-    $exists = InstitutionClassesSecondaryStaff::where('institution_class_id', $institution_class_id)
-                ->where('secondary_staff_id', $secondary_staff_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),

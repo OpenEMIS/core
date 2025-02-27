@@ -13,15 +13,6 @@ class DeletedRecordsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $id = $this->faker->randomElement(\App\Models\DeletedRecords::pluck('id')->toArray()) ?? 1;
-            $deleted_date = $this->faker->randomElement(\App\Models\DeletedRecords::pluck('deleted_date')->toArray()) ?? 1;
-    $exists = DeletedRecords::where('id', $id)
-                ->where('deleted_date', $deleted_date)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => $this->model::max('id') + 1,

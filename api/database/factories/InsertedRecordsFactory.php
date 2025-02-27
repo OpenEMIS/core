@@ -13,15 +13,6 @@ class InsertedRecordsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $id = $this->faker->randomElement(\App\Models\InsertedRecords::pluck('id')->toArray()) ?? 1;
-            $inserted_date = $this->faker->randomElement(\App\Models\InsertedRecords::pluck('inserted_date')->toArray()) ?? 1;
-    $exists = InsertedRecords::where('id', $id)
-                ->where('inserted_date', $inserted_date)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => $this->model::max('id') + 1,

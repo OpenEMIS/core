@@ -13,15 +13,6 @@ class SecurityRoleFunctionsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $security_role_id = $this->faker->randomElement(\App\Models\SecurityRoleFunctions::pluck('security_role_id')->toArray()) ?? 1;
-            $security_function_id = $this->faker->randomElement(\App\Models\SecurityRoleFunctions::pluck('security_function_id')->toArray()) ?? 1;
-    $exists = SecurityRoleFunctions::where('security_role_id', $security_role_id)
-                ->where('security_function_id', $security_function_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     '_view' => $this->faker->numberBetween(1, 1000),

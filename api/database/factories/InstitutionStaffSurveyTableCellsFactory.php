@@ -13,19 +13,6 @@ class InstitutionStaffSurveyTableCellsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $survey_question_id = $this->faker->randomElement(\App\Models\InstitutionStaffSurveyTableCells::pluck('survey_question_id')->toArray()) ?? 1;
-            $survey_table_column_id = $this->faker->randomElement(\App\Models\InstitutionStaffSurveyTableCells::pluck('survey_table_column_id')->toArray()) ?? 1;
-            $survey_table_row_id = $this->faker->randomElement(\App\Models\InstitutionStaffSurveyTableCells::pluck('survey_table_row_id')->toArray()) ?? 1;
-            $institution_staff_survey_id = $this->faker->randomElement(\App\Models\InstitutionStaffSurveyTableCells::pluck('institution_staff_survey_id')->toArray()) ?? 1;
-    $exists = InstitutionStaffSurveyTableCells::where('survey_question_id', $survey_question_id)
-                ->where('survey_table_column_id', $survey_table_column_id)
-                ->where('survey_table_row_id', $survey_table_row_id)
-                ->where('institution_staff_survey_id', $institution_staff_survey_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'text_value' => $this->faker->lexify(str_repeat("?", 250)),

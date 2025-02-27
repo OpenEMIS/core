@@ -13,15 +13,6 @@ class WebhookEventsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $webhook_id = $this->faker->randomElement(\App\Models\WebhookEvents::pluck('webhook_id')->toArray()) ?? 1;
-            $event_key = $this->faker->randomElement(\App\Models\WebhookEvents::pluck('event_key')->toArray()) ?? 1;
-    $exists = WebhookEvents::where('webhook_id', $webhook_id)
-                ->where('event_key', $event_key)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'webhook_id' => \App\Models\Webhooks::inRandomOrder()->value('id') ?? \App\Models\Webhooks::factory()->create()->id,

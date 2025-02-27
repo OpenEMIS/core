@@ -13,15 +13,6 @@ class InstitutionTextbooksFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $id = $this->faker->randomElement(\App\Models\InstitutionTextbooks::pluck('id')->toArray()) ?? 1;
-            $academic_period_id = $this->faker->randomElement(\App\Models\InstitutionTextbooks::pluck('academic_period_id')->toArray()) ?? 1;
-    $exists = InstitutionTextbooks::where('id', $id)
-                ->where('academic_period_id', $academic_period_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => $this->model::max('id') + 1,

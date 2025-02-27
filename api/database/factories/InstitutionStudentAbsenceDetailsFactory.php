@@ -13,25 +13,6 @@ class InstitutionStudentAbsenceDetailsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $student_id = $this->faker->randomElement(\App\Models\InstitutionStudentAbsenceDetails::pluck('student_id')->toArray()) ?? 1;
-            $institution_id = $this->faker->randomElement(\App\Models\InstitutionStudentAbsenceDetails::pluck('institution_id')->toArray()) ?? 1;
-            $academic_period_id = $this->faker->randomElement(\App\Models\InstitutionStudentAbsenceDetails::pluck('academic_period_id')->toArray()) ?? 1;
-            $institution_class_id = $this->faker->randomElement(\App\Models\InstitutionStudentAbsenceDetails::pluck('institution_class_id')->toArray()) ?? 1;
-            $date = $this->faker->randomElement(\App\Models\InstitutionStudentAbsenceDetails::pluck('date')->toArray()) ?? 1;
-            $period = $this->faker->randomElement(\App\Models\InstitutionStudentAbsenceDetails::pluck('period')->toArray()) ?? 1;
-            $subject_id = $this->faker->randomElement(\App\Models\InstitutionStudentAbsenceDetails::pluck('subject_id')->toArray()) ?? 1;
-    $exists = InstitutionStudentAbsenceDetails::where('student_id', $student_id)
-                ->where('institution_id', $institution_id)
-                ->where('academic_period_id', $academic_period_id)
-                ->where('institution_class_id', $institution_class_id)
-                ->where('date', $date)
-                ->where('period', $period)
-                ->where('subject_id', $subject_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,

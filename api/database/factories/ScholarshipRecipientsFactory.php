@@ -13,15 +13,6 @@ class ScholarshipRecipientsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $recipient_id = $this->faker->randomElement(\App\Models\ScholarshipRecipients::pluck('recipient_id')->toArray()) ?? 1;
-            $scholarship_id = $this->faker->randomElement(\App\Models\ScholarshipRecipients::pluck('scholarship_id')->toArray()) ?? 1;
-    $exists = ScholarshipRecipients::where('recipient_id', $recipient_id)
-                ->where('scholarship_id', $scholarship_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'recipient_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,

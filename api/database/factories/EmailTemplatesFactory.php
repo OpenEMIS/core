@@ -13,15 +13,6 @@ class EmailTemplatesFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $model_alias = $this->faker->randomElement(\App\Models\EmailTemplates::pluck('model_alias')->toArray()) ?? 1;
-            $model_reference = $this->faker->randomElement(\App\Models\EmailTemplates::pluck('model_reference')->toArray()) ?? 1;
-    $exists = EmailTemplates::where('model_alias', $model_alias)
-                ->where('model_reference', $model_reference)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'model_alias' => $this->faker->lexify(str_repeat("?", 50)),

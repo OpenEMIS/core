@@ -13,15 +13,6 @@ class CompetencyPeriodsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $id = $this->faker->randomElement(\App\Models\CompetencyPeriods::pluck('id')->toArray()) ?? 1;
-            $academic_period_id = $this->faker->randomElement(\App\Models\CompetencyPeriods::pluck('academic_period_id')->toArray()) ?? 1;
-    $exists = CompetencyPeriods::where('id', $id)
-                ->where('academic_period_id', $academic_period_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => $this->model::max('id') + 1,
@@ -31,8 +22,8 @@ do {
     'end_date' => \Carbon\Carbon::now()->format("Y-m-d"),
     'date_enabled' => \Carbon\Carbon::now()->format("Y-m-d"),
     'date_disabled' => \Carbon\Carbon::now()->format("Y-m-d"),
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
-    'competency_template_id' => \App\Models\CompetencyTemplates::inRandomOrder()->value('id') ?? \App\Models\CompetencyTemplates::factory()->create()->id,
+    'academic_period_id' => \App\Models\AcademicPeriods::factory()->create()->id,
+    'competency_template_id' =>  \App\Models\CompetencyTemplates::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

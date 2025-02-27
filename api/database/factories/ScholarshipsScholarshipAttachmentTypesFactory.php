@@ -13,15 +13,6 @@ class ScholarshipsScholarshipAttachmentTypesFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $scholarship_id = $this->faker->randomElement(\App\Models\ScholarshipsScholarshipAttachmentTypes::pluck('scholarship_id')->toArray()) ?? 1;
-            $scholarship_attachment_type_id = $this->faker->randomElement(\App\Models\ScholarshipsScholarshipAttachmentTypes::pluck('scholarship_attachment_type_id')->toArray()) ?? 1;
-    $exists = ScholarshipsScholarshipAttachmentTypes::where('scholarship_id', $scholarship_id)
-                ->where('scholarship_attachment_type_id', $scholarship_attachment_type_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? \App\Models\Scholarships::factory()->create()->id,

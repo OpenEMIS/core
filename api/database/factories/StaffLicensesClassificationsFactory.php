@@ -13,15 +13,6 @@ class StaffLicensesClassificationsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $staff_license_id = $this->faker->randomElement(\App\Models\StaffLicensesClassifications::pluck('staff_license_id')->toArray()) ?? 1;
-            $license_classification_id = $this->faker->randomElement(\App\Models\StaffLicensesClassifications::pluck('license_classification_id')->toArray()) ?? 1;
-    $exists = StaffLicensesClassifications::where('staff_license_id', $staff_license_id)
-                ->where('license_classification_id', $license_classification_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),

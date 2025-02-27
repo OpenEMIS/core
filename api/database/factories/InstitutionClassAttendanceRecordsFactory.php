@@ -13,19 +13,6 @@ class InstitutionClassAttendanceRecordsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $institution_class_id = $this->faker->randomElement(\App\Models\InstitutionClassAttendanceRecords::pluck('institution_class_id')->toArray()) ?? 1;
-            $academic_period_id = $this->faker->randomElement(\App\Models\InstitutionClassAttendanceRecords::pluck('academic_period_id')->toArray()) ?? 1;
-            $year = $this->faker->randomElement(\App\Models\InstitutionClassAttendanceRecords::pluck('year')->toArray()) ?? 1;
-            $month = $this->faker->randomElement(\App\Models\InstitutionClassAttendanceRecords::pluck('month')->toArray()) ?? 1;
-    $exists = InstitutionClassAttendanceRecords::where('institution_class_id', $institution_class_id)
-                ->where('academic_period_id', $academic_period_id)
-                ->where('year', $year)
-                ->where('month', $month)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'institution_class_id' => \App\Models\InstitutionClasses::inRandomOrder()->value('id') ?? \App\Models\InstitutionClasses::factory()->create()->id,

@@ -1,6 +1,8 @@
 <?php
 
 namespace Tests\Feature;
+use Tests\Traits\PrimaryKeyStringTrait;
+
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,6 +14,7 @@ use Carbon\Carbon;
 
 class ScholarshipApplicationsApiTest extends TestCase
 {
+    use PrimaryKeyStringTrait;
     use DatabaseTransactions, WithFaker;
 
     protected $token;
@@ -56,9 +59,11 @@ class ScholarshipApplicationsApiTest extends TestCase
     public function test_can_view_ScholarshipApplications()
     {
         $record = ScholarshipApplications::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
+
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/scholarship-applications/' . $record->id);
+        ])->getJson('/api/v5/scholarship-applications' . $keyString);
 
         $response->assertStatus(200);
     }
@@ -67,13 +72,15 @@ class ScholarshipApplicationsApiTest extends TestCase
     public function test_can_update_ScholarshipApplications()
     {
         $record = ScholarshipApplications::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
+
         $updatedData = [
             'id' => $record->id,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/scholarship-applications/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/scholarship-applications' . $keyString, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -81,9 +88,11 @@ class ScholarshipApplicationsApiTest extends TestCase
     public function test_can_delete_ScholarshipApplications()
     {
         $record = ScholarshipApplications::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
+
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/scholarship-applications/' . $record->id);
+        ])->deleteJson('/api/v5/scholarship-applications' . $keyString);
 
         $response->assertStatus(204);
     }

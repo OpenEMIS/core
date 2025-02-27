@@ -13,19 +13,6 @@ class CompetencyCriteriasFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $id = $this->faker->randomElement(\App\Models\CompetencyCriterias::pluck('id')->toArray()) ?? 1;
-            $academic_period_id = $this->faker->randomElement(\App\Models\CompetencyCriterias::pluck('academic_period_id')->toArray()) ?? 1;
-            $competency_item_id = $this->faker->randomElement(\App\Models\CompetencyCriterias::pluck('competency_item_id')->toArray()) ?? 1;
-            $competency_template_id = $this->faker->randomElement(\App\Models\CompetencyCriterias::pluck('competency_template_id')->toArray()) ?? 1;
-    $exists = CompetencyCriterias::where('id', $id)
-                ->where('academic_period_id', $academic_period_id)
-                ->where('competency_item_id', $competency_item_id)
-                ->where('competency_template_id', $competency_template_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => $this->model::max('id') + 1,
