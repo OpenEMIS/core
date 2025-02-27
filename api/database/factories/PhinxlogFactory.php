@@ -13,10 +13,10 @@ class PhinxlogFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
-    'version' => $this->faker->numberBetween(1, 1000),
+    'version' => $this->model::getNextId(),
     'migration_name' => $this->faker->lexify(str_repeat("?", 100)),
     'start_time' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'end_time' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),

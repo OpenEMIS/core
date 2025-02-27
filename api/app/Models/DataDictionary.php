@@ -21,8 +21,9 @@ class DataDictionary extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+    public $incrementing = false;
+    protected $primaryKey = null;
 
      // Override getKeyForSaveQuery to handle composite keys
 /**

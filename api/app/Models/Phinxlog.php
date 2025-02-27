@@ -21,9 +21,19 @@ class Phinxlog extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
 
+    protected $primaryKey = 'version';
+    public $incrementing = false;
+    protected $casts = [
+        'version' => 'integer'];
+
+    public static function getNextId()
+    {
+        return \DB::transaction(function () {
+            $maxId = self::max('version');
+            return (int) $maxId + 1;
+        });
+    }
      // Override getKeyForSaveQuery to handle composite keys
 /**
  * @OA\PathItem(

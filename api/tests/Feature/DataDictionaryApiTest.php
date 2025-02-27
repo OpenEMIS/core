@@ -53,16 +53,26 @@ class DataDictionaryApiTest extends TestCase
         $response->assertStatus(201);
     }
 
+
+    public function test_can_view_ByID_DataDictionary()
+    {
+        $record = DataDictionary::factory()->create();
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/data-dictionary/' . $record->database_name);
+
+        $response->assertStatus(405);
+    }
+
     public function test_can_view_DataDictionary()
     {
         $record = DataDictionary::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/data-dictionary/' . $record->id);
+        ])->getJson('/api/v5/data-dictionary/' . 'database_name/' . $record->database_name . '/created/' . $record->created);
 
         $response->assertStatus(200);
     }
-
 
     public function test_can_update_DataDictionary()
     {
@@ -73,9 +83,9 @@ class DataDictionaryApiTest extends TestCase
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/data-dictionary/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/data-dictionary/' . $record->database_name, $updatedData);
 
-        $response->assertStatus(200);
+        $response->assertStatus(405);
     }
 
     public function test_can_delete_DataDictionary()
@@ -83,8 +93,8 @@ class DataDictionaryApiTest extends TestCase
         $record = DataDictionary::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/data-dictionary/' . $record->id);
+        ])->deleteJson('/api/v5/data-dictionary/' . $record->database_name);
 
-        $response->assertStatus(204);
+        $response->assertStatus(405);
     }
 }

@@ -706,7 +706,7 @@ class CrudApiController extends Controller
         $method = $request->method();
         // For summary resources, disable PUT and DELETE operations,
         // and also disable GET requests that include a resource identifier.
-        if (strpos($resource, 'summary') === 0) {
+        if (strpos($resource, 'summary') === 0 || strpos($resource, 'data-dictionary') === 0) {
             if (in_array($method, ['PUT', 'DELETE'])) {
                 return response()->json(['error' => 'Operation not allowed on summary resources'], 405);
             }
@@ -727,6 +727,24 @@ class CrudApiController extends Controller
             default:
                 return response()->json(['error' => 'Invalid request'], 405);
         }
+    }
+
+    protected function getPossibleIdField($model)
+    {
+        if (is_string($model)) {
+            $model = new $model;
+        }
+
+        $primaryKey = $model->getKeyName();
+        $attributes = $model->getAttributes();
+
+        if (array_key_exists('id', $attributes)) {
+            return 'id';
+        } elseif (!is_array($primaryKey)) {
+            return $primaryKey;
+        }
+
+        return null; // Return null if neither condition is met
     }
 
     protected function handleGetRequest(Request $request, $model, array $segments)
@@ -755,7 +773,8 @@ class CrudApiController extends Controller
             $possibleId = array_shift($segments);
             if ($this->isValidIdentifier($possibleId)) {
                 try {
-                    $record = $model::where('id', $possibleId)->first();
+                    $possibleIdField = $this->getPossibleIdField($model);
+                    $record = $model::where($possibleIdField, $possibleId)->first();
                     return response()->json($record);
                 } catch (\Exception $e) {
                     return response()->json(['error' => $e->getMessage()], 404);
@@ -1021,7 +1040,8 @@ class CrudApiController extends Controller
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             // Case 1: Update by numeric (or UUID) ID.
             try {
-                $record = $model::where('id', $segments[0])->first();
+                $possibleIdField = $this->getPossibleIdField($model);
+                $record = $model::where($possibleIdField, $segments[0])->first();
 //                $record = $model::findOrFail($segments[0]);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 404);
@@ -1117,9 +1137,11 @@ class CrudApiController extends Controller
             // Use a transaction to ensure atomicity.
             \DB::beginTransaction();
             try {
+                $possibleIdField = $this->getPossibleIdField($model);
                 foreach ($ids as $id) {
 //                    $record = $model::findOrFail($id);
-                    $record = $model::where('id', $id)->first();
+                    $possibleId = $id;
+                    $record = $model::where($possibleIdField, $possibleId)->first();
                     $record->delete();
                 }
                 \DB::commit();
@@ -1134,7 +1156,9 @@ class CrudApiController extends Controller
         // Case 2: Deletion by a single identifier.
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             try {
-                $record = $model::where('id', $segments[0])->first();
+                $possibleId = $segments[0];
+                $possibleIdField = $this->getPossibleIdField($model);
+                $record = $model::where($possibleIdField, $possibleId)->first();
 //                Log::info('record: '.json_encode($record));
 //                $record = $model::findOrFail($segments[0]);
             } catch (\Exception $e) {
