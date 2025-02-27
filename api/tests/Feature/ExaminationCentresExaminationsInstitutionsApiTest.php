@@ -1,6 +1,8 @@
 <?php
 
 namespace Tests\Feature;
+use Tests\Traits\PrimaryKeyStringTrait;
+
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,6 +14,7 @@ use Carbon\Carbon;
 
 class ExaminationCentresExaminationsInstitutionsApiTest extends TestCase
 {
+    use PrimaryKeyStringTrait;
     use DatabaseTransactions, WithFaker;
 
     protected $token;
@@ -56,9 +59,12 @@ class ExaminationCentresExaminationsInstitutionsApiTest extends TestCase
     public function test_can_view_ExaminationCentresExaminationsInstitutions()
     {
         $record = ExaminationCentresExaminationsInstitutions::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
+
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/examination-centres-examinations-institutions/' . $record->id);
+
+        ])->getJson('/api/v5/examination-centres-examinations-institutions' . $keyString);
 
         $response->assertStatus(200);
     }
@@ -71,9 +77,12 @@ class ExaminationCentresExaminationsInstitutionsApiTest extends TestCase
             'id' => $record->id,
             // Add at least one field from schema to update
         ];
+        $keyString = $this->getPrimaryKeyString($record);
+        $keyString = $this->getPrimaryKeyString($record);
+
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/examination-centres-examinations-institutions/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/examination-centres-examinations-institutions' . $keyString, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +92,7 @@ class ExaminationCentresExaminationsInstitutionsApiTest extends TestCase
         $record = ExaminationCentresExaminationsInstitutions::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/examination-centres-examinations-institutions/' . $record->id);
+        ])->deleteJson('/api/v5/examination-centres-examinations-institutions' . $keyString);
 
         $response->assertStatus(204);
     }

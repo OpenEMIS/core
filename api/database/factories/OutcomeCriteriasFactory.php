@@ -13,21 +13,6 @@ class OutcomeCriteriasFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $id = $this->faker->randomElement(\App\Models\OutcomeCriterias::pluck('id')->toArray()) ?? 1;
-            $academic_period_id = $this->faker->randomElement(\App\Models\OutcomeCriterias::pluck('academic_period_id')->toArray()) ?? 1;
-            $outcome_template_id = $this->faker->randomElement(\App\Models\OutcomeCriterias::pluck('outcome_template_id')->toArray()) ?? 1;
-            $education_grade_id = $this->faker->randomElement(\App\Models\OutcomeCriterias::pluck('education_grade_id')->toArray()) ?? 1;
-            $education_subject_id = $this->faker->randomElement(\App\Models\OutcomeCriterias::pluck('education_subject_id')->toArray()) ?? 1;
-    $exists = OutcomeCriterias::where('id', $id)
-                ->where('academic_period_id', $academic_period_id)
-                ->where('outcome_template_id', $outcome_template_id)
-                ->where('education_grade_id', $education_grade_id)
-                ->where('education_subject_id', $education_subject_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => $this->model::max('id') + 1,

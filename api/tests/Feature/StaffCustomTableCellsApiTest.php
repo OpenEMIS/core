@@ -1,6 +1,8 @@
 <?php
 
 namespace Tests\Feature;
+use Tests\Traits\PrimaryKeyStringTrait;
+
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,6 +14,7 @@ use Carbon\Carbon;
 
 class StaffCustomTableCellsApiTest extends TestCase
 {
+    use PrimaryKeyStringTrait;
     use DatabaseTransactions, WithFaker;
 
     protected $token;
@@ -56,9 +59,10 @@ class StaffCustomTableCellsApiTest extends TestCase
     public function test_can_view_StaffCustomTableCells()
     {
         $record = StaffCustomTableCells::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/staff-custom-table-cells/' . $record->id);
+        ])->getJson('/api/v5/staff-custom-table-cells' . $keyString);
 
         $response->assertStatus(200);
     }
@@ -67,13 +71,14 @@ class StaffCustomTableCellsApiTest extends TestCase
     public function test_can_update_StaffCustomTableCells()
     {
         $record = StaffCustomTableCells::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $updatedData = [
-            'id' => $record->id,
+            'text_value' => $record->text_value,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/staff-custom-table-cells/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/staff-custom-table-cells' . $keyString, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -81,10 +86,26 @@ class StaffCustomTableCellsApiTest extends TestCase
     public function test_can_delete_StaffCustomTableCells()
     {
         $record = StaffCustomTableCells::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/staff-custom-table-cells/' . $record->id);
+        ])->deleteJson('/api/v5/staff-custom-table-cells' . $keyString);
 
         $response->assertStatus(204);
+    }
+
+    public function getPrimaryKeyString($record)
+    {
+        $primaryKeys = $record->getKeyName();
+        if (!is_array($primaryKeys)) {
+            $primaryKeys = [$primaryKeys];
+        }
+
+        $keyString = '';
+        foreach ($primaryKeys as $key) {
+            $keyString .= "/$key/" . $record->$key;
+        }
+
+        return $keyString;
     }
 }

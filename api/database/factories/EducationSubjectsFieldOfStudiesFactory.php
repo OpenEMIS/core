@@ -13,15 +13,6 @@ class EducationSubjectsFieldOfStudiesFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $education_subject_id = $this->faker->randomElement(\App\Models\EducationSubjectsFieldOfStudies::pluck('education_subject_id')->toArray()) ?? 1;
-            $education_field_of_study_id = $this->faker->randomElement(\App\Models\EducationSubjectsFieldOfStudies::pluck('education_field_of_study_id')->toArray()) ?? 1;
-    $exists = EducationSubjectsFieldOfStudies::where('education_subject_id', $education_subject_id)
-                ->where('education_field_of_study_id', $education_field_of_study_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),

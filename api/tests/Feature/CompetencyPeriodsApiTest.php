@@ -1,6 +1,8 @@
 <?php
 
 namespace Tests\Feature;
+use Tests\Traits\PrimaryKeyStringTrait;
+
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,6 +14,7 @@ use Carbon\Carbon;
 
 class CompetencyPeriodsApiTest extends TestCase
 {
+    use PrimaryKeyStringTrait;
     use DatabaseTransactions, WithFaker;
 
     protected $token;
@@ -56,9 +59,11 @@ class CompetencyPeriodsApiTest extends TestCase
     public function test_can_view_CompetencyPeriods()
     {
         $record = CompetencyPeriods::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
+
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/competency-periods/' . $record->id);
+        ])->getJson('/api/v5/competency-periods' . $keyString);
 
         $response->assertStatus(200);
     }
@@ -71,9 +76,11 @@ class CompetencyPeriodsApiTest extends TestCase
             'id' => $record->id,
             // Add at least one field from schema to update
         ];
+        $keyString = $this->getPrimaryKeyString($record);
+
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/competency-periods/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/competency-periods' . $keyString, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -81,9 +88,11 @@ class CompetencyPeriodsApiTest extends TestCase
     public function test_can_delete_CompetencyPeriods()
     {
         $record = CompetencyPeriods::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
+
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/competency-periods/' . $record->id);
+        ])->deleteJson('/api/v5/competency-periods' . $keyString);
 
         $response->assertStatus(204);
     }

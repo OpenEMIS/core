@@ -1,5 +1,6 @@
 <?php
 
+
 namespace Tests\Feature;
 
 use Tests\TestCase;
@@ -8,10 +9,12 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use App\Models\StudentCustomTableCells;
 use App\Models\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Tests\Traits\PrimaryKeyStringTrait;
 use Carbon\Carbon;
 
 class StudentCustomTableCellsApiTest extends TestCase
 {
+    use PrimaryKeyStringTrait;
     use DatabaseTransactions, WithFaker;
 
     protected $token;
@@ -56,9 +59,10 @@ class StudentCustomTableCellsApiTest extends TestCase
     public function test_can_view_StudentCustomTableCells()
     {
         $record = StudentCustomTableCells::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/student-custom-table-cells/' . $record->id);
+        ])->getJson('/api/v5/student-custom-table-cells' . $keyString);
 
         $response->assertStatus(200);
     }
@@ -67,13 +71,14 @@ class StudentCustomTableCellsApiTest extends TestCase
     public function test_can_update_StudentCustomTableCells()
     {
         $record = StudentCustomTableCells::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $updatedData = [
-            'id' => $record->id,
+            'text_value' => $record->text_value,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/student-custom-table-cells/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/student-custom-table-cells' . $keyString, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -81,10 +86,13 @@ class StudentCustomTableCellsApiTest extends TestCase
     public function test_can_delete_StudentCustomTableCells()
     {
         $record = StudentCustomTableCells::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/student-custom-table-cells/' . $record->id);
+        ])->deleteJson('/api/v5/student-custom-table-cells' . $keyString);
 
         $response->assertStatus(204);
     }
+
+
 }

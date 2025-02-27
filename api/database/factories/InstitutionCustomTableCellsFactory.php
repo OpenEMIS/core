@@ -13,19 +13,6 @@ class InstitutionCustomTableCellsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $institution_custom_field_id = $this->faker->randomElement(\App\Models\InstitutionCustomTableCells::pluck('institution_custom_field_id')->toArray()) ?? 1;
-            $institution_custom_table_column_id = $this->faker->randomElement(\App\Models\InstitutionCustomTableCells::pluck('institution_custom_table_column_id')->toArray()) ?? 1;
-            $institution_custom_table_row_id = $this->faker->randomElement(\App\Models\InstitutionCustomTableCells::pluck('institution_custom_table_row_id')->toArray()) ?? 1;
-            $institution_id = $this->faker->randomElement(\App\Models\InstitutionCustomTableCells::pluck('institution_id')->toArray()) ?? 1;
-    $exists = InstitutionCustomTableCells::where('institution_custom_field_id', $institution_custom_field_id)
-                ->where('institution_custom_table_column_id', $institution_custom_table_column_id)
-                ->where('institution_custom_table_row_id', $institution_custom_table_row_id)
-                ->where('institution_id', $institution_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'text_value' => $this->faker->lexify(str_repeat("?", 250)),

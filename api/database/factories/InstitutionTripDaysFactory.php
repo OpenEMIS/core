@@ -13,15 +13,6 @@ class InstitutionTripDaysFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $institution_trip_id = $this->faker->randomElement(\App\Models\InstitutionTripDays::pluck('institution_trip_id')->toArray()) ?? 1;
-            $day = $this->faker->randomElement(\App\Models\InstitutionTripDays::pluck('day')->toArray()) ?? 1;
-    $exists = InstitutionTripDays::where('institution_trip_id', $institution_trip_id)
-                ->where('day', $day)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),

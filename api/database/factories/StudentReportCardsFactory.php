@@ -13,19 +13,6 @@ class StudentReportCardsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $student_profile_template_id = $this->faker->randomElement(\App\Models\StudentReportCards::pluck('student_profile_template_id')->toArray()) ?? 1;
-            $student_id = $this->faker->randomElement(\App\Models\StudentReportCards::pluck('student_id')->toArray()) ?? 1;
-            $institution_id = $this->faker->randomElement(\App\Models\StudentReportCards::pluck('institution_id')->toArray()) ?? 1;
-            $academic_period_id = $this->faker->randomElement(\App\Models\StudentReportCards::pluck('academic_period_id')->toArray()) ?? 1;
-    $exists = StudentReportCards::where('student_profile_template_id', $student_profile_template_id)
-                ->where('student_id', $student_id)
-                ->where('institution_id', $institution_id)
-                ->where('academic_period_id', $academic_period_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),

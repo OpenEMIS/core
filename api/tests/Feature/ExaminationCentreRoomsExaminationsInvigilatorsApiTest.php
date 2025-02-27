@@ -1,6 +1,8 @@
 <?php
 
 namespace Tests\Feature;
+use Tests\Traits\PrimaryKeyStringTrait;
+
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,6 +14,7 @@ use Carbon\Carbon;
 
 class ExaminationCentreRoomsExaminationsInvigilatorsApiTest extends TestCase
 {
+    use PrimaryKeyStringTrait;
     use DatabaseTransactions, WithFaker;
 
     protected $token;
@@ -58,7 +61,7 @@ class ExaminationCentreRoomsExaminationsInvigilatorsApiTest extends TestCase
         $record = ExaminationCentreRoomsExaminationsInvigilators::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/examination-centre-rooms-examinations-invigilators/' . $record->id);
+        ])->getJson('/api/v5/examination-centre-rooms-examinations-invigilators' . $keyString);
 
         $response->assertStatus(200);
     }
@@ -73,7 +76,7 @@ class ExaminationCentreRoomsExaminationsInvigilatorsApiTest extends TestCase
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/examination-centre-rooms-examinations-invigilators/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/examination-centre-rooms-examinations-invigilators' . $keyString, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +86,7 @@ class ExaminationCentreRoomsExaminationsInvigilatorsApiTest extends TestCase
         $record = ExaminationCentreRoomsExaminationsInvigilators::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/examination-centre-rooms-examinations-invigilators/' . $record->id);
+        ])->deleteJson('/api/v5/examination-centre-rooms-examinations-invigilators' . $keyString);
 
         $response->assertStatus(204);
     }

@@ -13,15 +13,6 @@ class StaffReportCardProcessesFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $staff_profile_template_id = $this->faker->randomElement(\App\Models\StaffReportCardProcesses::pluck('staff_profile_template_id')->toArray()) ?? 1;
-            $staff_id = $this->faker->randomElement(\App\Models\StaffReportCardProcesses::pluck('staff_id')->toArray()) ?? 1;
-    $exists = StaffReportCardProcesses::where('staff_profile_template_id', $staff_profile_template_id)
-                ->where('staff_id', $staff_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'staff_profile_template_id' => \App\Models\StaffProfileTemplates::inRandomOrder()->value('id') ?? \App\Models\StaffProfileTemplates::factory()->create()->id,

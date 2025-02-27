@@ -13,21 +13,6 @@ class InstitutionCompetencyPeriodCommentsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $student_id = $this->faker->randomElement(\App\Models\InstitutionCompetencyPeriodComments::pluck('student_id')->toArray()) ?? 1;
-            $competency_template_id = $this->faker->randomElement(\App\Models\InstitutionCompetencyPeriodComments::pluck('competency_template_id')->toArray()) ?? 1;
-            $competency_period_id = $this->faker->randomElement(\App\Models\InstitutionCompetencyPeriodComments::pluck('competency_period_id')->toArray()) ?? 1;
-            $institution_id = $this->faker->randomElement(\App\Models\InstitutionCompetencyPeriodComments::pluck('institution_id')->toArray()) ?? 1;
-            $academic_period_id = $this->faker->randomElement(\App\Models\InstitutionCompetencyPeriodComments::pluck('academic_period_id')->toArray()) ?? 1;
-    $exists = InstitutionCompetencyPeriodComments::where('student_id', $student_id)
-                ->where('competency_template_id', $competency_template_id)
-                ->where('competency_period_id', $competency_period_id)
-                ->where('institution_id', $institution_id)
-                ->where('academic_period_id', $academic_period_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),

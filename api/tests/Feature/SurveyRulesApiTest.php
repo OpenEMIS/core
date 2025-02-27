@@ -1,6 +1,8 @@
 <?php
 
 namespace Tests\Feature;
+use Tests\Traits\PrimaryKeyStringTrait;
+
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,6 +14,7 @@ use Carbon\Carbon;
 
 class SurveyRulesApiTest extends TestCase
 {
+    use PrimaryKeyStringTrait;
     use DatabaseTransactions, WithFaker;
 
     protected $token;
@@ -58,7 +61,7 @@ class SurveyRulesApiTest extends TestCase
         $record = SurveyRules::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/survey-rules/' . $record->id);
+        ])->getJson('/api/v5/survey-rules' . $keyString);
 
         $response->assertStatus(200);
     }
@@ -73,7 +76,7 @@ class SurveyRulesApiTest extends TestCase
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/survey-rules/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/survey-rules' . $keyString, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +86,7 @@ class SurveyRulesApiTest extends TestCase
         $record = SurveyRules::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/survey-rules/' . $record->id);
+        ])->deleteJson('/api/v5/survey-rules' . $keyString);
 
         $response->assertStatus(204);
     }

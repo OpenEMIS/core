@@ -13,15 +13,6 @@ class InstitutionReportCardProcessesFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $report_card_id = $this->faker->randomElement(\App\Models\InstitutionReportCardProcesses::pluck('report_card_id')->toArray()) ?? 1;
-            $institution_id = $this->faker->randomElement(\App\Models\InstitutionReportCardProcesses::pluck('institution_id')->toArray()) ?? 1;
-    $exists = InstitutionReportCardProcesses::where('report_card_id', $report_card_id)
-                ->where('institution_id', $institution_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'report_card_id' => \App\Models\ProfileTemplates::inRandomOrder()->value('id') ?? \App\Models\ProfileTemplates::factory()->create()->id,

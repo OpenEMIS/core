@@ -13,15 +13,6 @@ class TrainingSessionsTraineesFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $training_session_id = $this->faker->randomElement(\App\Models\TrainingSessionsTrainees::pluck('training_session_id')->toArray()) ?? 1;
-            $trainee_id = $this->faker->randomElement(\App\Models\TrainingSessionsTrainees::pluck('trainee_id')->toArray()) ?? 1;
-    $exists = TrainingSessionsTrainees::where('training_session_id', $training_session_id)
-                ->where('trainee_id', $trainee_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),

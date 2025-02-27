@@ -13,15 +13,6 @@ class StudentReportCardProcessesFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $student_profile_template_id = $this->faker->randomElement(\App\Models\StudentReportCardProcesses::pluck('student_profile_template_id')->toArray()) ?? 1;
-            $student_id = $this->faker->randomElement(\App\Models\StudentReportCardProcesses::pluck('student_id')->toArray()) ?? 1;
-    $exists = StudentReportCardProcesses::where('student_profile_template_id', $student_profile_template_id)
-                ->where('student_id', $student_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'student_profile_template_id' => \App\Models\StudentProfileTemplates::inRandomOrder()->value('id') ?? \App\Models\StudentProfileTemplates::factory()->create()->id,

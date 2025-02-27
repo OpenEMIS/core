@@ -13,15 +13,6 @@ class SecurityUserLoginsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $id = $this->faker->randomElement(\App\Models\SecurityUserLogins::pluck('id')->toArray()) ?? 1;
-            $login_period = $this->faker->randomElement(\App\Models\SecurityUserLogins::pluck('login_period')->toArray()) ?? 1;
-    $exists = SecurityUserLogins::where('id', $id)
-                ->where('login_period', $login_period)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => $this->model::max('id') + 1,

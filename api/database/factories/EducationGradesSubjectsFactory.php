@@ -13,15 +13,6 @@ class EducationGradesSubjectsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $education_grade_id = $this->faker->randomElement(\App\Models\EducationGradesSubjects::pluck('education_grade_id')->toArray()) ?? 1;
-            $education_subject_id = $this->faker->randomElement(\App\Models\EducationGradesSubjects::pluck('education_subject_id')->toArray()) ?? 1;
-    $exists = EducationGradesSubjects::where('education_grade_id', $education_grade_id)
-                ->where('education_subject_id', $education_subject_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
@@ -29,7 +20,7 @@ do {
     'visible' => $this->faker->numberBetween(1, 1000),
     'auto_allocation' => $this->faker->numberBetween(1, 1000),
     'education_grade_id' => \App\Models\EducationGrades::inRandomOrder()->value('id') ?? \App\Models\EducationGrades::factory()->create()->id,
-    'education_subject_id' => \App\Models\EducationSubjects::inRandomOrder()->value('id') ?? \App\Models\EducationSubjects::factory()->create()->id,
+    'education_subject_id' =>  \App\Models\EducationSubjects::factory()->create()->id,
     'requirement' => $this->faker->lexify(str_repeat("?", 100)),
     'result_type' => $this->faker->lexify(str_repeat("?", 255)),
     'modified_user_id' => $this->faker->numberBetween(1, 2),

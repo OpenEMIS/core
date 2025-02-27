@@ -13,17 +13,6 @@ class ExaminationCentresExaminationsInstitutionsFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $examination_centre_id = $this->faker->randomElement(\App\Models\ExaminationCentresExaminationsInstitutions::pluck('examination_centre_id')->toArray()) ?? 1;
-            $examination_id = $this->faker->randomElement(\App\Models\ExaminationCentresExaminationsInstitutions::pluck('examination_id')->toArray()) ?? 1;
-            $institution_id = $this->faker->randomElement(\App\Models\ExaminationCentresExaminationsInstitutions::pluck('institution_id')->toArray()) ?? 1;
-    $exists = ExaminationCentresExaminationsInstitutions::where('examination_centre_id', $examination_centre_id)
-                ->where('examination_id', $examination_id)
-                ->where('institution_id', $institution_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),

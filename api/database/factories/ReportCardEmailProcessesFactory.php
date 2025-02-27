@@ -13,17 +13,6 @@ class ReportCardEmailProcessesFactory extends Factory
 
     public function definition(): array
     {
-        $attempts = 0;
-do {
-    $report_card_id = $this->faker->randomElement(\App\Models\ReportCardEmailProcesses::pluck('report_card_id')->toArray()) ?? 1;
-            $institution_class_id = $this->faker->randomElement(\App\Models\ReportCardEmailProcesses::pluck('institution_class_id')->toArray()) ?? 1;
-            $student_id = $this->faker->randomElement(\App\Models\ReportCardEmailProcesses::pluck('student_id')->toArray()) ?? 1;
-    $exists = ReportCardEmailProcesses::where('report_card_id', $report_card_id)
-                ->where('institution_class_id', $institution_class_id)
-                ->where('student_id', $student_id)
-        ->exists();
-    $attempts++;
-} while ($exists && $attempts < 5);
 
         return [
     'report_card_id' => \App\Models\ReportCards::inRandomOrder()->value('id') ?? \App\Models\ReportCards::factory()->create()->id,

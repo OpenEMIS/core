@@ -1,6 +1,8 @@
 <?php
 
 namespace Tests\Feature;
+use Tests\Traits\PrimaryKeyStringTrait;
+
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,6 +14,7 @@ use Carbon\Carbon;
 
 class ApiSecuritiesScopesApiTest extends TestCase
 {
+    use PrimaryKeyStringTrait;
     use DatabaseTransactions, WithFaker;
 
     protected $token;
@@ -68,7 +71,7 @@ class ApiSecuritiesScopesApiTest extends TestCase
     {
         $record = ApiSecuritiesScopes::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'api_security_id' => $record->api_security_id,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([

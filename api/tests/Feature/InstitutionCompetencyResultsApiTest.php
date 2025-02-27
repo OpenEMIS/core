@@ -1,6 +1,8 @@
 <?php
 
 namespace Tests\Feature;
+use Tests\Traits\PrimaryKeyStringTrait;
+
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,6 +14,7 @@ use Carbon\Carbon;
 
 class InstitutionCompetencyResultsApiTest extends TestCase
 {
+    use PrimaryKeyStringTrait;
     use DatabaseTransactions, WithFaker;
 
     protected $token;
@@ -56,9 +59,11 @@ class InstitutionCompetencyResultsApiTest extends TestCase
     public function test_can_view_InstitutionCompetencyResults()
     {
         $record = InstitutionCompetencyResults::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
+
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/institution-competency-results/' . $record->id);
+        ])->getJson('/api/v5/institution-competency-results' . $keyString);
 
         $response->assertStatus(200);
     }
@@ -67,13 +72,16 @@ class InstitutionCompetencyResultsApiTest extends TestCase
     public function test_can_update_InstitutionCompetencyResults()
     {
         $record = InstitutionCompetencyResults::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
+
         $updatedData = [
             'id' => $record->id,
             // Add at least one field from schema to update
         ];
+
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/institution-competency-results/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/institution-competency-results' . $keyString, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -81,9 +89,11 @@ class InstitutionCompetencyResultsApiTest extends TestCase
     public function test_can_delete_InstitutionCompetencyResults()
     {
         $record = InstitutionCompetencyResults::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
+
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/institution-competency-results/' . $record->id);
+        ])->deleteJson('/api/v5/institution-competency-results' . $keyString);
 
         $response->assertStatus(204);
     }
