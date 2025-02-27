@@ -8,11 +8,14 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\NumericId;
 
 class SecurityUsers extends Authenticatable implements JWTSubject
 {
-    //use HasFactory;
+    use HasFactory;
     use Notifiable;
+    use NumericId;
 
     public $timestamps = false;
     protected $casts = [
@@ -23,7 +26,35 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     protected $appends = ['full_name', 'name_with_id'];
 
 
+    protected $fillable = [
+        'id', 'username', 'password',
+        'openemis_no', 'first_name',
+        'middle_name', 'third_name',
+        'last_name', 'preferred_name', 'email',
+        'mobile_number', 'address', 'postal_code',
+        'address_area_id', 'birthplace_area',
+        'gender_id', 'date_of_birth',
+        'date_of_death', 'nationality_id',  'identity_type_id',
+        'identity_number', 'external_reference',
+        'super_admin', 'status', 'last_login',
+        'failed_logins', 'photo_name',
+        'photo_content', 'preferred_language',
+        'is_student', 'is_staff', 'is_guardian',
+        'modified_user_id', 'modified',
+        'created_user_id', 'created'
+    ];
+    protected $hidden = [
+        'password', 'remember_token',
+    ];
 
+    protected $primaryKey = 'id';
+    public $incrementing = false;
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        self::bootNumericId();
+    }
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      *
