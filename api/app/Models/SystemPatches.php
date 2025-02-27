@@ -21,8 +21,11 @@ class SystemPatches extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+    protected $primaryKey = 'issue';
+    protected $keyType = 'string';
+    public $incrementing = false;
+
+
 
      // Override getKeyForSaveQuery to handle composite keys
 /**
@@ -189,33 +192,6 @@ public function _swaggerUpdate() {}
  * )
  */
 public function _swaggerDelete() {}
-    protected function getKeyForSaveQuery()
-    {
-        $query = $this->newQueryWithoutScopes();
-        $keyName = $this->getKeyName();
-        if(!is_array($keyName)){
-            $keyName = [$keyName];;
-        }
-        foreach ($keyName as $key) {
-            $query->where($key, '=', $this->getAttribute($key));
-        }
-
-        return $query;
-    }
-
-    // Override setKeysForSaveQuery to handle composite keys
-    protected function setKeysForSaveQuery($query)
-    {
-        $keyName = $this->getKeyName();
-        if(!is_array($keyName)){
-            $keyName = [$keyName];;
-        }
-        foreach ($keyName as $key) {
-            $query->where($key, '=', $this->getAttribute($key));
-        }
-
-        return $query;
-    }
 
     public static function getValidationRules(): array
     {

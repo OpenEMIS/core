@@ -58,7 +58,7 @@ class AppraisalSlidersApiTest extends TestCase
         $record = AppraisalSliders::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/appraisal-sliders/' . $record->id);
+        ])->getJson('/api/v5/appraisal-sliders/' . $record->appraisal_criteria_id);
 
         $response->assertStatus(200);
     }
@@ -68,12 +68,12 @@ class AppraisalSlidersApiTest extends TestCase
     {
         $record = AppraisalSliders::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'min' => $record->min,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/appraisal-sliders/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/appraisal-sliders/' . $record->appraisal_criteria_id, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +83,7 @@ class AppraisalSlidersApiTest extends TestCase
         $record = AppraisalSliders::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/appraisal-sliders/' . $record->id);
+        ])->deleteJson('/api/v5/appraisal-sliders/' . $record->appraisal_criteria_id);
 
         $response->assertStatus(204);
     }

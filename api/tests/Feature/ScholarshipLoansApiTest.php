@@ -58,7 +58,7 @@ class ScholarshipLoansApiTest extends TestCase
         $record = ScholarshipLoans::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/scholarship-loans/' . $record->id);
+        ])->getJson('/api/v5/scholarship-loans/' . $record->scholarship_id);
 
         $response->assertStatus(200);
     }
@@ -68,12 +68,12 @@ class ScholarshipLoansApiTest extends TestCase
     {
         $record = ScholarshipLoans::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'scholarship_id' => $record->scholarship_id,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/scholarship-loans/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/scholarship-loans/' . $record->scholarship_id, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +83,7 @@ class ScholarshipLoansApiTest extends TestCase
         $record = ScholarshipLoans::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/scholarship-loans/' . $record->id);
+        ])->deleteJson('/api/v5/scholarship-loans/' . $record->scholarship_id);
 
         $response->assertStatus(204);
     }

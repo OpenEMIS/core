@@ -16,17 +16,17 @@ class StaffQualificationsFactory extends Factory
 
 
         return [
-    'id' => $this->model::max('id') + 1,
+    'id' => $this->model::getNextId(),
     'document_no' => $this->faker->lexify(str_repeat("?", 100)),
     'graduate_year' => $this->faker->numberBetween(1, 1000),
     'qualification_institution' => $this->faker->lexify(str_repeat("?", 255)),
     'gpa' => $this->faker->lexify(str_repeat("?", 5)),
     'file_name' => $this->faker->lexify(str_repeat("?", 250)),
     'file_content' => $this->faker->word(),
-    'education_field_of_study_id' => \App\Models\EducationFieldOfStudies::inRandomOrder()->value('id') ?? \App\Models\EducationFieldOfStudies::factory()->create()->id,
+    'education_field_of_study_id' =>  \App\Models\EducationFieldOfStudies::factory()->create()->id,
     'staff_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
-    'qualification_title_id' => \App\Models\QualificationTitles::inRandomOrder()->value('id') ?? \App\Models\QualificationTitles::factory()->create()->id,
-    'qualification_country_id' => \App\Models\Countries::inRandomOrder()->value('id') ?? \App\Models\Countries::factory()->create()->id,
+    'qualification_title_id' =>  \App\Models\QualificationTitles::factory()->create()->id,
+    'qualification_country_id' =>  \App\Models\Countries::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),

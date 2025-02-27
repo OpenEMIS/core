@@ -21,8 +21,9 @@ class ScholarshipLoans extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+    protected $primaryKey = 'scholarship_id';
+    public $incrementing = false;
 
      // Override getKeyForSaveQuery to handle composite keys
 /**

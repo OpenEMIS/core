@@ -58,7 +58,7 @@ class IdpGoogleApiTest extends TestCase
         $record = IdpGoogle::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/idp-google/' . $record->id);
+        ])->getJson('/api/v5/idp-google/' . $record->system_authentication_id);
 
         $response->assertStatus(200);
     }
@@ -68,12 +68,12 @@ class IdpGoogleApiTest extends TestCase
     {
         $record = IdpGoogle::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'client_secret' => $record->client_secret,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/idp-google/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/idp-google/' . $record->system_authentication_id, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +83,7 @@ class IdpGoogleApiTest extends TestCase
         $record = IdpGoogle::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/idp-google/' . $record->id);
+        ])->deleteJson('/api/v5/idp-google/' . $record->system_authentication_id);
 
         $response->assertStatus(204);
     }

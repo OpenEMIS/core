@@ -21,8 +21,9 @@ class IdpGoogle extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+    protected $primaryKey = 'system_authentication_id';
+    public $incrementing = false;
 
      // Override getKeyForSaveQuery to handle composite keys
 /**

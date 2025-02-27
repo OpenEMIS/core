@@ -58,7 +58,7 @@ class IdpSamlApiTest extends TestCase
         $record = IdpSaml::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/idp-saml/' . $record->id);
+        ])->getJson('/api/v5/idp-saml/' . $record->system_authentication_id);
 
         $response->assertStatus(200);
     }
@@ -68,12 +68,12 @@ class IdpSamlApiTest extends TestCase
     {
         $record = IdpSaml::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'system_authentication_id' => $record->system_authentication_id,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/idp-saml/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/idp-saml/' . $record->system_authentication_id, $updatedData);
 
         $response->assertStatus(200);
     }
@@ -83,7 +83,7 @@ class IdpSamlApiTest extends TestCase
         $record = IdpSaml::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/idp-saml/' . $record->id);
+        ])->deleteJson('/api/v5/idp-saml/' . $record->system_authentication_id);
 
         $response->assertStatus(204);
     }
