@@ -53,16 +53,26 @@ class SummaryGradeStatusGendersApiTest extends TestCase
         $response->assertStatus(201);
     }
 
+
+    public function test_can_view_ByID_SummaryGradeStatusGenders()
+    {
+        $record = SummaryGradeStatusGenders::factory()->create();
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/summary-grade-status-genders/' . $record->academic_period_id);
+
+        $response->assertStatus(405);
+    }
+
     public function test_can_view_SummaryGradeStatusGenders()
     {
         $record = SummaryGradeStatusGenders::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/summary-grade-status-genders/' . $record->id);
+        ])->getJson('/api/v5/summary-grade-status-genders/' . 'academic_period_id/' . $record->academic_period_id . '/created/' . $record->created);
 
         $response->assertStatus(200);
     }
-
 
     public function test_can_update_SummaryGradeStatusGenders()
     {
@@ -73,9 +83,9 @@ class SummaryGradeStatusGendersApiTest extends TestCase
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/summary-grade-status-genders/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/summary-grade-status-genders/' . $record->academic_period_id, $updatedData);
 
-        $response->assertStatus(200);
+        $response->assertStatus(405);
     }
 
     public function test_can_delete_SummaryGradeStatusGenders()
@@ -83,8 +93,8 @@ class SummaryGradeStatusGendersApiTest extends TestCase
         $record = SummaryGradeStatusGenders::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/summary-grade-status-genders/' . $record->id);
+        ])->deleteJson('/api/v5/summary-grade-status-genders/' . $record->academic_period_id);
 
-        $response->assertStatus(204);
+        $response->assertStatus(405);
     }
 }

@@ -53,16 +53,26 @@ class SummaryAreaProviderGradeSubjectResultsApiTest extends TestCase
         $response->assertStatus(201);
     }
 
+
+    public function test_can_view_ByID_SummaryAreaProviderGradeSubjectResults()
+    {
+        $record = SummaryAreaProviderGradeSubjectResults::factory()->create();
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/summary-area-provider-grade-subject-results/' . $record->academic_period_id);
+
+        $response->assertStatus(405);
+    }
+
     public function test_can_view_SummaryAreaProviderGradeSubjectResults()
     {
         $record = SummaryAreaProviderGradeSubjectResults::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/summary-area-provider-grade-subject-results/' . $record->id);
+        ])->getJson('/api/v5/summary-area-provider-grade-subject-results/' . 'academic_period_id/' . $record->academic_period_id . '/created/' . $record->created);
 
         $response->assertStatus(200);
     }
-
 
     public function test_can_update_SummaryAreaProviderGradeSubjectResults()
     {
@@ -73,9 +83,9 @@ class SummaryAreaProviderGradeSubjectResultsApiTest extends TestCase
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/summary-area-provider-grade-subject-results/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/summary-area-provider-grade-subject-results/' . $record->academic_period_id, $updatedData);
 
-        $response->assertStatus(200);
+        $response->assertStatus(405);
     }
 
     public function test_can_delete_SummaryAreaProviderGradeSubjectResults()
@@ -83,8 +93,8 @@ class SummaryAreaProviderGradeSubjectResultsApiTest extends TestCase
         $record = SummaryAreaProviderGradeSubjectResults::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/summary-area-provider-grade-subject-results/' . $record->id);
+        ])->deleteJson('/api/v5/summary-area-provider-grade-subject-results/' . $record->academic_period_id);
 
-        $response->assertStatus(204);
+        $response->assertStatus(405);
     }
 }

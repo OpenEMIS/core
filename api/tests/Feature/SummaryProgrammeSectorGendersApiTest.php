@@ -53,16 +53,26 @@ class SummaryProgrammeSectorGendersApiTest extends TestCase
         $response->assertStatus(201);
     }
 
+
+    public function test_can_view_ByID_SummaryProgrammeSectorGenders()
+    {
+        $record = SummaryProgrammeSectorGenders::factory()->create();
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/summary-programme-sector-genders/' . $record->academic_period_id);
+
+        $response->assertStatus(405);
+    }
+
     public function test_can_view_SummaryProgrammeSectorGenders()
     {
         $record = SummaryProgrammeSectorGenders::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/summary-programme-sector-genders/' . $record->id);
+        ])->getJson('/api/v5/summary-programme-sector-genders/' . 'academic_period_id/' . $record->academic_period_id . '/created/' . $record->created);
 
         $response->assertStatus(200);
     }
-
 
     public function test_can_update_SummaryProgrammeSectorGenders()
     {
@@ -73,9 +83,9 @@ class SummaryProgrammeSectorGendersApiTest extends TestCase
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/summary-programme-sector-genders/' . $record->id, $updatedData);
+        ])->putJson('/api/v5/summary-programme-sector-genders/' . $record->academic_period_id, $updatedData);
 
-        $response->assertStatus(200);
+        $response->assertStatus(405);
     }
 
     public function test_can_delete_SummaryProgrammeSectorGenders()
@@ -83,8 +93,8 @@ class SummaryProgrammeSectorGendersApiTest extends TestCase
         $record = SummaryProgrammeSectorGenders::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/summary-programme-sector-genders/' . $record->id);
+        ])->deleteJson('/api/v5/summary-programme-sector-genders/' . $record->academic_period_id);
 
-        $response->assertStatus(204);
+        $response->assertStatus(405);
     }
 }
