@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Log;
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
+        'staff-leave-entitlements' => \App\Models\StaffLeaveEntitlements::class,
+        'staff-leave-policies' => \App\Models\StaffLeavePolicies::class,
+        'staff-leave-policy-types' => \App\Models\StaffLeavePolicyTypes::class,
         'alerts-logs' => \App\Models\AlertsLogs::class,
         'workflows-filters' => \App\Models\WorkflowsFilters::class,
         'workflows' => \App\Models\Workflows::class,
