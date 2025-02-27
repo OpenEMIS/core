@@ -16,7 +16,7 @@ class InstitutionClassAttendanceRecordsFactory extends Factory
 
         return [
     'institution_class_id' => \App\Models\InstitutionClasses::inRandomOrder()->value('id') ?? \App\Models\InstitutionClasses::factory()->create()->id,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
+    'academic_period_id' =>  \App\Models\AcademicPeriods::factory()->create()->id,
     'year' => $this->faker->numberBetween(1, 1000),
     'month' => $this->faker->numberBetween(1, 1000),
     'day_1' => $this->faker->numberBetween(1, 1000),

@@ -59,6 +59,8 @@ class StudentAttendanceMarkedRecordsApiTest extends TestCase
     public function test_can_view_StudentAttendanceMarkedRecords()
     {
         $record = StudentAttendanceMarkedRecords::factory()->create();
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->getJson('/api/v5/student-attendance-marked-records' . $keyString);
@@ -71,9 +73,11 @@ class StudentAttendanceMarkedRecordsApiTest extends TestCase
     {
         $record = StudentAttendanceMarkedRecords::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'institution_id' => $record->institution_id,
             // Add at least one field from schema to update
         ];
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->putJson('/api/v5/student-attendance-marked-records' . $keyString, $updatedData);
@@ -84,6 +88,8 @@ class StudentAttendanceMarkedRecordsApiTest extends TestCase
     public function test_can_delete_StudentAttendanceMarkedRecords()
     {
         $record = StudentAttendanceMarkedRecords::factory()->create();
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/student-attendance-marked-records' . $keyString);

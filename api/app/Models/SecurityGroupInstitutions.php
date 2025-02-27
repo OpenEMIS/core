@@ -8,180 +8,226 @@ use Illuminate\Database\Eloquent\Model;
 class SecurityGroupInstitutions extends Model
 {
     use HasFactory;
+
     // ✅ Allow mass assignment
-    protected $fillable = ['security_group_id', 'institution_id', 'created_user_id', 'created', 'security_group_id', 'institution_id', 'created_user_id'];
-    // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
+    // ✅ Disable Laravel's default timestamps
+    public $incrementing = false;
+    protected $fillable = ['security_group_id', 'institution_id', 'created_user_id', 'created', 'security_group_id', 'institution_id', 'created_user_id'];
+    protected $table = 'security_group_institutions';
+    protected $primaryKey = ["security_group_id", "institution_id"];
+    protected $dates = ['modified', 'created'];
 
+    /**
+     * @OA\PathItem(
+     *     path="/api/v5/security-group-institutions"
+     * )
+     */
+    public function _swaggerPath()
+    {
+    }
 
-/**
- * @OA\PathItem(
- *     path="/api/v5/security-group-institutions"
- * )
- */
-public function _swaggerPath() {}
+    /**
+     * @OA\Get(
+     *     path="/api/v5/security-group-institutions",
+     *     summary="Get list of SecurityGroupInstitutions",
+     *     tags={"SecurityGroupInstitutions"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Successful."
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+    @OA\Property(property="security_group_id", type="integer", example=null),
+    @OA\Property(property="institution_id", type="integer", example=null),
+    @OA\Property(property="created_user_id", type="integer", example=null),
+    @OA\Property(property="created", type="string", format="date-time", example=null)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
+    public function _swaggerList()
+    {
+    }
 
-/**
- * @OA\Get(
- *     path="/api/v5/security-group-institutions",
- *     summary="Get list of SecurityGroupInstitutions",
- *     tags={"SecurityGroupInstitutions"},
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="Successful."
- *             ),
- *             @OA\Property(
- *                 property="data",
- *                 type="array",
- *                 @OA\Items(
- *                     type="object",
-                          @OA\Property(property="security_group_id", type="integer", example=null),
-                          @OA\Property(property="institution_id", type="integer", example=null),
-                          @OA\Property(property="created_user_id", type="integer", example=null),
-                          @OA\Property(property="created", type="string", format="date-time", example=null)
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerList() {}
+    /**
+     * @OA\Get(
+     *     path="/api/v5/security-group-institutions/{id}",
+     *     summary="Get SecurityGroupInstitutions by ID",
+     *     tags={"SecurityGroupInstitutions"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the SecurityGroupInstitutions",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not found"
+     *     )
+     * )
+     */
+    public function _swaggerView()
+    {
+    }
 
-/**
- * @OA\Get(
- *     path="/api/v5/security-group-institutions/{id}",
- *     summary="Get SecurityGroupInstitutions by ID",
- *     tags={"SecurityGroupInstitutions"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the SecurityGroupInstitutions",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
+    /**
+     * @OA\Post(
+     *     path="/api/v5/security-group-institutions",
+     *     summary="Create a new SecurityGroupInstitutions",
+     *     tags={"SecurityGroupInstitutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+    @OA\Property(property="security_group_id", type="integer", example=null),
+    @OA\Property(property="institution_id", type="integer", example=null),
+    @OA\Property(property="created_user_id", type="integer", example=null),
+    @OA\Property(property="created", type="string", format="date-time", example=null)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Created successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid data"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
+    public function _swaggerCreate()
+    {
+    }
 
-/**
- * @OA\Post(
- *     path="/api/v5/security-group-institutions",
- *     summary="Create a new SecurityGroupInstitutions",
- *     tags={"SecurityGroupInstitutions"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="security_group_id", type="integer", example=null),
-                     @OA\Property(property="institution_id", type="integer", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Created successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerCreate() {}
+    /**
+     * @OA\Put(
+     *     path="/api/v5/security-group-institutions/{id}",
+     *     summary="Update SecurityGroupInstitutions",
+     *     tags={"SecurityGroupInstitutions"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the SecurityGroupInstitutions",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+    @OA\Property(property="security_group_id", type="integer", example=null),
+    @OA\Property(property="institution_id", type="integer", example=null),
+    @OA\Property(property="created_user_id", type="integer", example=null),
+    @OA\Property(property="created", type="string", format="date-time", example=null)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Updated successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid data"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not found"
+     *     )
+     * )
+     */
+    public function _swaggerUpdate()
+    {
+    }
 
-/**
- * @OA\Put(
- *     path="/api/v5/security-group-institutions/{id}",
- *     summary="Update SecurityGroupInstitutions",
- *     tags={"SecurityGroupInstitutions"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the SecurityGroupInstitutions",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="security_group_id", type="integer", example=null),
-                     @OA\Property(property="institution_id", type="integer", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Updated successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerUpdate() {}
+    /**
+     * @OA\Delete(
+     *     path="/api/v5/security-group-institutions/{id}",
+     *     summary="Delete SecurityGroupInstitutions",
+     *     tags={"SecurityGroupInstitutions"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the SecurityGroupInstitutions",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="Deleted successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not found"
+     *     )
+     * )
+     */
+    public function _swaggerDelete()
+    {
+    }
 
-/**
- * @OA\Delete(
- *     path="/api/v5/security-group-institutions/{id}",
- *     summary="Delete SecurityGroupInstitutions",
- *     tags={"SecurityGroupInstitutions"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the SecurityGroupInstitutions",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerDelete() {}
-    public function _swaggerHelper() {
+    public function _swaggerHelper()
+    {
         return;
+    }
+
+    protected function getKeyForSaveQuery()
+    {
+        $query = $this->newQueryWithoutScopes();
+        $keyName = $this->getKeyName();
+        if (!is_array($keyName)) {
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    // Override setKeysForSaveQuery to handle composite keys
+    protected function setKeysForSaveQuery($query)
+    {
+        $keyName = $this->getKeyName();
+        if (!is_array($keyName)) {
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
     }
 }

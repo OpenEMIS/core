@@ -73,7 +73,7 @@ class EmailTemplatesApiTest extends TestCase
     {
         $record = EmailTemplates::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'subject' => $record->subject,
             // Add at least one field from schema to update
         ];
         $keyString = $this->getPrimaryKeyString($record);
@@ -88,6 +88,7 @@ class EmailTemplatesApiTest extends TestCase
     public function test_can_delete_EmailTemplates()
     {
         $record = EmailTemplates::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/email-templates' . $keyString);

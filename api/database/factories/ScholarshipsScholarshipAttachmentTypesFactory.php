@@ -15,8 +15,8 @@ class ScholarshipsScholarshipAttachmentTypesFactory extends Factory
     {
 
         return [
-    'scholarship_id' => \App\Models\Scholarships::inRandomOrder()->value('id') ?? \App\Models\Scholarships::factory()->create()->id,
-    'scholarship_attachment_type_id' => \App\Models\ScholarshipAttachmentTypes::inRandomOrder()->value('id') ?? \App\Models\ScholarshipAttachmentTypes::factory()->create()->id,
+    'scholarship_id' =>  \App\Models\Scholarships::factory()->create()->id,
+    'scholarship_attachment_type_id' => \App\Models\ScholarshipAttachmentTypes::factory()->create()->id,
     'is_mandatory' => $this->faker->numberBetween(0, 1),
 ];
     }

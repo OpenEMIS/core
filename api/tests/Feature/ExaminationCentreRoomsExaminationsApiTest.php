@@ -59,6 +59,7 @@ class ExaminationCentreRoomsExaminationsApiTest extends TestCase
     public function test_can_view_ExaminationCentreRoomsExaminations()
     {
         $record = ExaminationCentreRoomsExaminations::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->getJson('/api/v5/examination-centre-rooms-examinations' . $keyString);
@@ -70,6 +71,7 @@ class ExaminationCentreRoomsExaminationsApiTest extends TestCase
     public function test_can_update_ExaminationCentreRoomsExaminations()
     {
         $record = ExaminationCentreRoomsExaminations::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $updatedData = [
             'id' => $record->id,
             // Add at least one field from schema to update
@@ -84,6 +86,7 @@ class ExaminationCentreRoomsExaminationsApiTest extends TestCase
     public function test_can_delete_ExaminationCentreRoomsExaminations()
     {
         $record = ExaminationCentreRoomsExaminations::factory()->create();
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/examination-centre-rooms-examinations' . $keyString);

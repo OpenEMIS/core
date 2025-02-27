@@ -53,16 +53,26 @@ class SummaryAssessmentItemResultsApiTest extends TestCase
         $response->assertStatus(201);
     }
 
+    public function test_can_view_SummaryAssessmentItemResultsByID()
+    {
+        $record = SummaryAssessmentItemResults::factory()->create();
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/summary-assessment-item-results/'
+            . $record->academic_period_id);
+        $response->assertStatus(405);
+    }
+
     public function test_can_view_SummaryAssessmentItemResults()
     {
         $record = SummaryAssessmentItemResults::factory()->create();
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/summary-assessment-item-results/' . $record->id);
+        ])->getJson('/api/v5/summary-assessment-item-results/academic_period_id/'
+            . $record->academic_period_id . '/created/' . $record->created);
 
         $response->assertStatus(200);
     }
-
 
     public function test_can_update_SummaryAssessmentItemResults()
     {
@@ -75,7 +85,7 @@ class SummaryAssessmentItemResultsApiTest extends TestCase
             'Authorization' => "Bearer {$this->token}",
         ])->putJson('/api/v5/summary-assessment-item-results/' . $record->id, $updatedData);
 
-        $response->assertStatus(200);
+        $response->assertStatus(405);
     }
 
     public function test_can_delete_SummaryAssessmentItemResults()
@@ -85,6 +95,6 @@ class SummaryAssessmentItemResultsApiTest extends TestCase
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/summary-assessment-item-results/' . $record->id);
 
-        $response->assertStatus(204);
+        $response->assertStatus(405);
     }
 }

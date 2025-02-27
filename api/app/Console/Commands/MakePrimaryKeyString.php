@@ -162,38 +162,101 @@ class MakePrimaryKeyString extends Command
         $originalLines = $lines; // Keep a copy for change detection
 
         $changesMade = false;
+        $add_to_test_can_view = false;
+        $found_test_can_view = false;
+        $add_to_test_can_update = false;
+        $found_test_can_update = false;
+        $add_to_test_can_delete = false;
+        $found_test_can_delete = false;
 
         foreach ($lines as $index => $line) {
-            $trimmedLine = trim($line);
+            $trimLine = trim($line);
+            $trimmLine = preg_replace('/\s+/', ' ', $trimLine);
+            $trimmeLine = preg_replace('/\s+/', ' ', $trimmLine); // Replace multiple spaces with single space
+            $trimmedLine = str_replace(["\t", "\r", "\x0B", "\0"], '', $trimmeLine); // Remove hidden characters
 
             // Check for view function
-            if (str_contains($trimmedLine, 'public function test_can_view_') && str_contains($lines[$index + 1], 'factory()->create();')) {
-                $lines[$index + 2] = "        \$keyString = \$this->getPrimaryKeyString(\$record);\n" . $lines[$index + 2];
-                $changesMade = true;
+            if (str_contains($trimmedLine, 'public function test_can_view_')) {
+                $found_test_can_view = true;
+                $this->info("Found test_can_view_ function");
+            }
+            if ($found_test_can_view) {
+                if (str_contains($trimmedLine, 'record =')) {
+                    $add_to_test_can_view = true;
+                    $this->info("Found add_to_test_can_view");
+                }
+            }
+            if ($add_to_test_can_view) {
+                if (str_contains($trimmedLine, 'keyString = ')) {
+                    $add_to_test_can_view = false;
+                    $this->info("Found keyString = ");
+                }
+            }
+            if ($add_to_test_can_view) {
+                if (str_contains($trimmedLine, ". \$keyString")) {
+                    $originalLines[$index - 2] = "\\\\ change is made \n        \$keyString = \$this->getPrimaryKeyString(\$record);\n" . $originalLines[$index - 2];
+                    $this->info("added keyString");
+                    $add_to_test_can_view = false;
+                    $changesMade = true;
+                }
             }
 
             // Check for update function
-            if (str_contains($trimmedLine, 'public function test_can_update_') && str_contains($lines[$index + 1], 'factory()->create();')) {
-                $lines[$index + 2] = "        \$keyString = \$this->getPrimaryKeyString(\$record);\n" . $lines[$index + 2];
-                $changesMade = true;
+            if (str_contains($trimmedLine, 'public function test_can_update_')) {
+                $found_test_can_update = true;
+                $this->info("Found test_can_update_ function");
+            }
+            if ($found_test_can_update) {
+                if (str_contains($trimmedLine, 'record =')) {
+                    $add_to_test_can_update = true;
+                    $this->info("Found add_to_test_can_update");
+                }
+            }
+            if ($add_to_test_can_update) {
+                if (str_contains($trimmedLine, 'keyString = ')) {
+                    $add_to_test_can_update = false;
+                    $this->info("Found keyString = ");
+                }
+            }
+            if ($add_to_test_can_update) {
+                if (str_contains($trimmedLine, ". \$keyString")) {
+                    $originalLines[$index - 2] = "\\\\ change is made \n        \$keyString = \$this->getPrimaryKeyString(\$record);\n" . $originalLines[$index - 2];
+                    $this->info("added keyString");
+                    $add_to_test_can_update = false;
+                    $changesMade = true;
+                }
             }
 
             // Check for delete function
-            if (str_contains($trimmedLine, 'public function test_can_delete_') && str_contains($lines[$index + 1], 'factory()->create();')) {
-                $lines[$index + 2] = "        \$keyString = \$this->getPrimaryKeyString(\$record);\n" . $lines[$index + 2];
-                $changesMade = true;
+            if (str_contains($trimmedLine, 'public function test_can_delete_')) {
+                $found_test_can_delete = true;
+                $this->info("Found test_can_delete_ function");
             }
-
-            // Replace $record->id with $keyString
-            if (str_contains($trimmedLine, '. $record->id')) {
-                $lines[$index] = str_replace('. $record->id', '. $keyString', $lines[$index]);
-                $changesMade = true;
+            if ($found_test_can_delete) {
+                if (str_contains($trimmedLine, 'record =')) {
+                    $add_to_test_can_delete = true;
+                    $this->info("Found add_to_test_can_delete");
+                }
+            }
+            if ($add_to_test_can_delete) {
+                if (str_contains($trimmedLine, 'keyString = ')) {
+                    $add_to_test_can_delete = false;
+                    $this->info("Found keyString = ");
+                }
+            }
+            if ($add_to_test_can_delete) {
+                if (str_contains($trimmedLine, ". \$keyString")) {
+                    $originalLines[$index - 2] = "\\\\ change is made \n        \$keyString = \$this->getPrimaryKeyString(\$record);\n" . $originalLines[$index - 2];
+                    $this->info("added keyString");
+                    $add_to_test_can_delete = false;
+                    $changesMade = true;
+                }
             }
         }
 
         // Write changes back to the file if any changes were made
         if ($changesMade) {
-            file_put_contents($testFile, implode("\n", $lines));
+            file_put_contents($testFile, implode("\n", $originalLines));
             $this->info("Modified functions in {$testFile}");
         } else {
             $this->info("No changes made to {$testFile}");

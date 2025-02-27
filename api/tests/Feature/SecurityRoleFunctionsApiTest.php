@@ -75,7 +75,7 @@ class SecurityRoleFunctionsApiTest extends TestCase
         $keyString = $this->getPrimaryKeyString($record);
 
         $updatedData = [
-            'id' => $record->id,
+            'security_role_id' => $record->security_role_id,
             // Add at least one field from schema to update
         ];
         $response = $this->withHeaders([

@@ -14,6 +14,14 @@ class SummaryInstitutionGradeNationalities extends Model
     public $timestamps = false;
     protected $table = "summary_institution_grade_nationalities";
 
+    // ✅ Treat 'modified' and 'created' as timestamps
+    protected $dates = ['modified', 'created'];
+
+    // ✅ Define the primary key
+
+    // ✅ Define the primary key
+    public $incrementing = false;
+    protected $primaryKey = null;
 
 /**
  * @OA\PathItem(

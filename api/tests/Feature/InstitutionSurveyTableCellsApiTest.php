@@ -59,6 +59,8 @@ class InstitutionSurveyTableCellsApiTest extends TestCase
     public function test_can_view_InstitutionSurveyTableCells()
     {
         $record = InstitutionSurveyTableCells::factory()->create();
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->getJson('/api/v5/institution-survey-table-cells' . $keyString);
@@ -71,9 +73,11 @@ class InstitutionSurveyTableCellsApiTest extends TestCase
     {
         $record = InstitutionSurveyTableCells::factory()->create();
         $updatedData = [
-            'id' => $record->id,
+            'survey_question_id' => $record->survey_question_id,
             // Add at least one field from schema to update
         ];
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->putJson('/api/v5/institution-survey-table-cells' . $keyString, $updatedData);
@@ -84,6 +88,8 @@ class InstitutionSurveyTableCellsApiTest extends TestCase
     public function test_can_delete_InstitutionSurveyTableCells()
     {
         $record = InstitutionSurveyTableCells::factory()->create();
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/institution-survey-table-cells' . $keyString);

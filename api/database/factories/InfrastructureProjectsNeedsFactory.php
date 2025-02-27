@@ -16,7 +16,7 @@ class InfrastructureProjectsNeedsFactory extends Factory
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'infrastructure_project_id' => \App\Models\InfrastructureProjects::inRandomOrder()->value('id') ?? \App\Models\InfrastructureProjects::factory()->create()->id,
+    'infrastructure_project_id' =>  \App\Models\InfrastructureProjects::factory()->create()->id,
     'infrastructure_need_id' => \App\Models\InfrastructureNeeds::inRandomOrder()->value('id') ?? \App\Models\InfrastructureNeeds::factory()->create()->id,
 ];
     }

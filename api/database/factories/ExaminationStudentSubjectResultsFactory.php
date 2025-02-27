@@ -17,11 +17,11 @@ class ExaminationStudentSubjectResultsFactory extends Factory
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
     'marks' => $this->faker->randomFloat(2, 10, 1000),
-    'examination_subject_id' => \App\Models\ExaminationSubjects::inRandomOrder()->value('id') ?? \App\Models\ExaminationSubjects::factory()->create()->id,
+    'examination_subject_id' => \App\Models\ExaminationSubjects::factory()->create()->id,
     'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'examination_id' => \App\Models\Examinations::inRandomOrder()->value('id') ?? \App\Models\Examinations::factory()->create()->id,
-    'examination_centre_id' => \App\Models\ExaminationCentres::inRandomOrder()->value('id') ?? \App\Models\ExaminationCentres::factory()->create()->id,
+    'examination_centre_id' =>  \App\Models\ExaminationCentres::factory()->create()->id,
     'education_subject_id' => \App\Models\EducationSubjects::inRandomOrder()->value('id') ?? \App\Models\EducationSubjects::factory()->create()->id,
     'examination_grading_option_id' => \App\Models\ExaminationGradingOptions::inRandomOrder()->value('id') ?? \App\Models\ExaminationGradingOptions::factory()->create()->id,
     'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,

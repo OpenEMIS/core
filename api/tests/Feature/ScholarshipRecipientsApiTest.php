@@ -59,6 +59,8 @@ class ScholarshipRecipientsApiTest extends TestCase
     public function test_can_view_ScholarshipRecipients()
     {
         $record = ScholarshipRecipients::factory()->create();
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->getJson('/api/v5/scholarship-recipients' . $keyString);
@@ -74,6 +76,8 @@ class ScholarshipRecipientsApiTest extends TestCase
             'id' => $record->id,
             // Add at least one field from schema to update
         ];
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->putJson('/api/v5/scholarship-recipients' . $keyString, $updatedData);
@@ -84,6 +88,8 @@ class ScholarshipRecipientsApiTest extends TestCase
     public function test_can_delete_ScholarshipRecipients()
     {
         $record = ScholarshipRecipients::factory()->create();
+
+        $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/scholarship-recipients' . $keyString);

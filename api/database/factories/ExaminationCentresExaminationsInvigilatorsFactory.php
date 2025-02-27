@@ -16,7 +16,7 @@ class ExaminationCentresExaminationsInvigilatorsFactory extends Factory
 
         return [
     'id' => (string) \Illuminate\Support\Str::uuid(),
-    'examination_centre_id' => \App\Models\ExaminationCentres::inRandomOrder()->value('id') ?? \App\Models\ExaminationCentres::factory()->create()->id,
+    'examination_centre_id' =>  \App\Models\ExaminationCentres::factory()->create()->id,
     'examination_id' => \App\Models\Examinations::inRandomOrder()->value('id') ?? \App\Models\Examinations::factory()->create()->id,
     'invigilator_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'created_user_id' => $this->faker->numberBetween(1, 2),
