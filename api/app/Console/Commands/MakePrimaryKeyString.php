@@ -186,13 +186,7 @@ class MakePrimaryKeyString extends Command
                     $this->info("Found add_to_test_can_view");
                 }
             }
-            if ($add_to_test_can_view) {
-                if (str_contains($trimmedLine, 'keyString = ')) {
-                    $add_to_test_can_view = false;
-                    $this->info("Found keyString = ");
-                }
-            }
-            if ($add_to_test_can_view) {
+            if ($add_to_test_can_view && !str_contains($trimmedLine, 'keyString = ')) {
                 if (str_contains($trimmedLine, ". \$keyString")) {
                     $originalLines[$index - 2] = "\\\\ change is made \n        \$keyString = \$this->getPrimaryKeyString(\$record);\n" . $originalLines[$index - 2];
                     $this->info("added keyString");
@@ -212,13 +206,7 @@ class MakePrimaryKeyString extends Command
                     $this->info("Found add_to_test_can_update");
                 }
             }
-            if ($add_to_test_can_update) {
-                if (str_contains($trimmedLine, 'keyString = ')) {
-                    $add_to_test_can_update = false;
-                    $this->info("Found keyString = ");
-                }
-            }
-            if ($add_to_test_can_update) {
+            if ($add_to_test_can_update && !str_contains($trimmedLine, 'keyString = ')) {
                 if (str_contains($trimmedLine, ". \$keyString")) {
                     $originalLines[$index - 2] = "\\\\ change is made \n        \$keyString = \$this->getPrimaryKeyString(\$record);\n" . $originalLines[$index - 2];
                     $this->info("added keyString");
@@ -238,13 +226,7 @@ class MakePrimaryKeyString extends Command
                     $this->info("Found add_to_test_can_delete");
                 }
             }
-            if ($add_to_test_can_delete) {
-                if (str_contains($trimmedLine, 'keyString = ')) {
-                    $add_to_test_can_delete = false;
-                    $this->info("Found keyString = ");
-                }
-            }
-            if ($add_to_test_can_delete) {
+            if ($add_to_test_can_delete && !str_contains($trimmedLine, 'keyString = ')) {
                 if (str_contains($trimmedLine, ". \$keyString")) {
                     $originalLines[$index - 2] = "\\\\ change is made \n        \$keyString = \$this->getPrimaryKeyString(\$record);\n" . $originalLines[$index - 2];
                     $this->info("added keyString");
