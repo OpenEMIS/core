@@ -22,7 +22,7 @@ class POCOR8689 extends AbstractMigration
 
         
         $this->execute("INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
-        ('Automated Student Enrollment', 'student_automated_enrollment', 'Student Settings', 'Automated Student Enrollment', '0', '', '0', '1', '1', 'Dropdown', 'automated_enrollment_type', '2', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP)");
+        ('Automated Student Enrollment', 'student_automated_enrollment', 'Student Settings', 'Automated Student Enrollment', '0', '', '0', '1', '1', 'Dropdown', 'graduate_type', '2', CURRENT_TIMESTAMP, '1', CURRENT_TIMESTAMP)");
 
         $this->execute("INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES 
         ('Default Institutions for Automated Student Enrolment', 'default_automated_student_enrollment', 'Default Institutions for Automated Student Enrolment', 'Default Institutions for Automated Student Enrolment Enabled', '0', '', '0', '1', '1', '', '', NULL, NULL, '1',
