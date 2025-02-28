@@ -566,5 +566,14 @@ Route::group(
         Route::get('users/username/{username}', 'UserController@getUserByUsername')->where('username', '[^\s]+'); // POCOR-8862
         // POCOR8862 end
 
+        // POCOR-8896 start
+        Route::match(['post', 'patch', 'put'], 'users/openemisId/{openemis_no}', 'UserController@updateUserByOpenemisId')
+            ->where('openemis_no', '[\pL0-9]+');
+        // POCOR-8896 end
+
+        // POCOR-8912 start
+        Route::get('users/email/{email}', 'UserController@getUserByEmail'); // POCOR-8912
+        // POCOR-8912 end
+
     }
 );

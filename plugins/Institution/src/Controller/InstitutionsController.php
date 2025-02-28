@@ -994,15 +994,22 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatuses()
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $classId = $this->request->getQuery('class_id');
         $academicPeriodId = $this->request->getQuery('academic_period_id');
         $reportCardId = $this->request->getQuery('report_card_id');
 
         if (!empty($classId) && $classId == 'all') {
-            return $this->redirect(['action' => 'ReportCardStatusProgress',
-                'class_id' => $classId,
-                'academic_period_id' => $academicPeriodId,
-                'report_card_id' => $reportCardId
+            return  $this->redirect([
+                'action' => 'ReportCardStatusProgress',
+                '0' => 'index',
+                '1' => $encodedQueryString,
+                '?' => [ //POCOR-8773
+                    'class_id' => $classId,
+                    'academic_period_id' => $academicPeriodId,
+                    'report_card_id' => $reportCardId
+                ]
             ]);
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
@@ -1011,15 +1018,20 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatusProgress()
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $classId = $this->request->getQuery('class_id');
         $academicPeriodId = $this->request->getQuery('academic_period_id');
         $reportCardId = $this->request->getQuery('report_card_id');
-
         if (!empty($classId) && $classId <> 'all') {
             return $this->redirect(['action' => 'ReportCardStatuses',
-                'class_id' => $classId,
-                'academic_period_id' => $academicPeriodId,
-                'report_card_id' => $reportCardId
+                '0' => 'index',
+                '1' => $encodedQueryString,
+                '?' => [ //POCOR-8773
+                    'class_id' => $classId,
+                    'academic_period_id' => $academicPeriodId,
+                    'report_card_id' => $reportCardId
+                ]
             ]);
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatusProgress']);
