@@ -416,4 +416,54 @@ class UserService extends Controller
     }
 
     //POCOR-8139 Ends
+
+    //POCOR-8896 starts
+    /**
+     * Updates user data after validation and processing.
+     *
+     * @param array $userData User update data
+     * @return mixed JSON response or repository result
+     */
+    public function patchUser(array $userData)
+    {
+        try {
+            // Validate required fields before updating
+
+            // Process sensitive data before saving (e.g., password hashing)
+
+            // Update the user in the repository
+            return $this->userRepository->patchUser($userData);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'User update failed.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User update failed.');
+        }
+    }
+
+
+
+    // POCOR-8896 end
+
+
+    //POCOR-8912 start
+    public function getUserIdByEmail(string $email)
+    {
+        try {
+            $user_id = $this->userRepository->getUserIdByEmail($email);
+
+            return $user_id;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+    //POCOR-8912 end
 }
