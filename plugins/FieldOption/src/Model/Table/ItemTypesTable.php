@@ -2,6 +2,7 @@
 
 namespace FieldOption\Model\Table;
 
+//POCOR-8873
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
@@ -19,7 +20,12 @@ class ItemTypesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('StockUnit', ['className' => 'FieldOption.StockUnits']);
-
+        $this->hasMany('InstitutionConsumable', [
+            'className' => 'Institution.InstitutionConsumables',
+            'foreignKey' => 'item_type_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
         $this->addBehavior('FieldOption.FieldOption');
 
         // $this->addBehavior('Restful.RestfulAccessControl', [
@@ -47,7 +53,6 @@ class ItemTypesTable extends ControllerActionTable
         $this->setFieldOrder(['visible', 'default', 'editable', 'name', 'stock_unit_id', 'international_code', 'national_code']);
     }
 
-    //POCOR-7980
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
@@ -77,5 +82,4 @@ class ItemTypesTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    //POCOR-7980
 }
