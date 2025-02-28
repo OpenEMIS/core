@@ -31,6 +31,11 @@ class ConfigurationsController extends AppController
         $this->set('contentHeader', __($header));
     }
 
+    public function AutomatedStudentEnrollment() //POCOR-8689
+    { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAutomatedStudentEnrollments']);
+    }
+
     public function Webhooks()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigWebhooks']);
