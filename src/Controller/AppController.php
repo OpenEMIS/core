@@ -978,7 +978,7 @@ class AppController extends Controller
             if ($params !== null) {
                 $this->log(print_r($params,true), 'debug');
             }
-            $this->Alert->warning('general.notAccess');
+            //$this->Alert->warning('general.notAccess'); //tmp solution 
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
         }
     }
