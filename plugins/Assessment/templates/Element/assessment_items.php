@@ -215,25 +215,26 @@
 <?php endif ?>
 <!--POCOR-8889-->
 <script>
-   document.addEventListener("DOMContentLoaded", function () {
-    // Function to append the error message
-    function appendErrorMessage(newMessage) {
-        let errorAlert = document.querySelector(".alert.alert-danger");
+document.addEventListener("DOMContentLoaded", function () {
+    let errorAlert = document.querySelector(".alert.alert-danger");
+    let assessmentError = document.getElementById("assessments-education-grade-id-error");
 
-        if (errorAlert) {
-            let errorText = errorAlert.innerHTML;
+    if (errorAlert) {
+        let errorText = errorAlert.innerHTML;
+        let hasAddError = errorText.includes("The record is not added due to errors encountered");
+        let hasUpdateError = errorText.includes("The record is not updated due to errors encountered");
+        let hasAssessmentError = assessmentError !== null && assessmentError.innerHTML.includes("Assessment already created for the selected grade.");
+        let weightErrorMessage = "Please check weight value. Value must be positive and less than 2.0";
 
-            // Only append the new message if it's not already present
-            if (errorText.includes("The record is not added due to errors encountered") && !errorText.includes(newMessage)) {
-                errorAlert.innerHTML += " " + newMessage;
-            }
-            if (errorText.includes("The record is not updated due to errors encountered") && !errorText.includes(newMessage)) {
-                errorAlert.innerHTML += " " + newMessage;
-            }
+        if ((hasAddError && hasAssessmentError) || (hasUpdateError && hasAssessmentError)) {
+            errorAlert.innerHTML = hasAddError 
+                ? "The record is not added due to errors encountered" 
+                : "The record is not updated due to errors encountered";
+
+        } else if ((hasAddError || hasUpdateError || hasAssessmentError) && !errorText.includes(weightErrorMessage)) {
+            errorAlert.innerHTML += " " + weightErrorMessage;
         }
     }
-
-    // Check for the specific message and append additional error
-    appendErrorMessage("Please check weight value.Value must be positive and less than 2.0");
 });
 </script>
+

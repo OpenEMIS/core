@@ -100,7 +100,6 @@ class SystemUpdatesTable extends ControllerActionTable
         if ($get_response->getStatusCode() == 200) {
             // $jsonResponse = json_decode($response->body(), true);
             $jsonResponse = json_decode($response, true);
-            // echo "<pre>";print_r($jsonResponse);die;
             $data = array_reverse($jsonResponse['data']);
             foreach ($data as $item) {
                 if ($item['id'] > $maxId) {
@@ -130,9 +129,9 @@ class SystemUpdatesTable extends ControllerActionTable
             if (!is_null($entity)) {
                 $this->updateAll(
                     [
-                        'date_approved' => $entity->date_released,
-                        'approved_by' => 1,
-                        'status' => 2
+                        'date_approved' => null, //POCOR-8940
+                        'approved_by' => 0, //POCOR-8940
+                        'status' => 1
                     ], [
                         'id <=' => $entity->id,
                         'status' => 1
@@ -186,7 +185,7 @@ class SystemUpdatesTable extends ControllerActionTable
             $query->order([$this->aliasField('date_released') => 'DESC', $this->aliasField('version') => 'DESC']);
         }
 
-        // if ($this->exists(['status' => 1])) { // POCOR-8891 already handle in update action
+        if ($this->exists(['status' => 1])) {
             $updateBtn = $this->getButtonTemplate();
 
             $updateBtn['attr']['title'] = __('Update');
@@ -194,7 +193,7 @@ class SystemUpdatesTable extends ControllerActionTable
             $updateBtn['url'] = ['controller' => $this->controller->getName(), 'action' => 'Updates', 'updates'];
 
             $extra['toolbarButtons']['update'] = $updateBtn;
-        // }
+        }
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
