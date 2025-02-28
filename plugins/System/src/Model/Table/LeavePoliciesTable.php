@@ -17,7 +17,7 @@ use Cake\ORM\Exception\PersistenceFailedException;
 
 class LeavePoliciesTable extends ControllerActionTable
 {
-    private $fieldsOrder = ['created', 'name'];
+    private $fieldsOrder = ['name'];
     public function initialize(array $config): void
     {
         $this->setTable('staff_leave_policies');
@@ -98,7 +98,13 @@ class LeavePoliciesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+
         $this->setupFields($entity);
+        $this->field('created_user_id', ['visible' => true]);
+        $this->field('created', ['visible' => true, 'sort' => true]);
+        $this->field('modified_user_id', ['visible' => true, 'enable' => false]);
+        $this->field('modified', ['visible' => true, 'sort' => true]);
+
         $action = 'view';
         $entity->staff_leave_types = $this->getStaffLeaveTypesElement($entity, $action);
     }
