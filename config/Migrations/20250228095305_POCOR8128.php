@@ -333,7 +333,7 @@ class POCOR8128 extends AbstractMigration
         $current_time = date('Y-m-d H:i:s');
         $data = [[
             'name' => 'Staff Leave Policies',
-            'controller' => 'System',
+            'controller' => 'Systems',
             'module' => 'Administration',
             'category' => 'Staff Leave',
             'parent_id' => 5000,
@@ -348,7 +348,7 @@ class POCOR8128 extends AbstractMigration
             'created' => $current_time
         ], [
             'name' => 'Staff Entitlements',
-            'controller' => 'System',
+            'controller' => 'Systems',
             'module' => 'Administration',
             'category' => 'Staff Leave',
             'parent_id' => 5000,
