@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\I18n\FrozenTime;
 use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
@@ -1932,7 +1933,7 @@ class InstitutionsTable extends AppTable
                     if ($selectedAcademicPeriodId == $AcademicPeriods->getCurrent()) {
                         $attr['value'] = $reportEndDate;
                     } else {
-                        $attr['value'] = Time::now();
+                        $attr['value'] = FrozenTime::now();  // POCOR-8902 change Time to FrozenTime due to deprecation error
                     }
                     $attr['value'] = $reportEndDate;
                 }
@@ -1955,7 +1956,7 @@ class InstitutionsTable extends AppTable
                 if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
                     $attr['value'] = $selectedPeriod->end_date;
                 } else {
-                    $attr['value'] = Time::now();
+                    $attr['value'] = FrozenTime::now();  // POCOR-8902 change Time to FrozenTime due to deprecation error
                 }
                 //POCOR-5907[START]
                 $attr['value'] = $selectedPeriod->end_date;
