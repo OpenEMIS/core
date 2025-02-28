@@ -19,8 +19,24 @@ class POCOR8873 extends AbstractMigration
     $this->execute("INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`,`parent_id`,`_view`,`_edit`,`_add`,`_delete`,`_execute`,`order`,`visible`,`description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
     ('Consumables', 'Institutions', 'Institutions','Finance',8,'Consumable.index|Consumable.view','Consumable.edit','Consumable.add','Consumable.remove',NULL,567,1,NULL,NULL,NULL,1, NOW())");
 
+    $this->execute("CREATE TABLE `stock_units` (
+      `id` int AUTO_INCREMENT PRIMARY KEY NOT NULL,
+      `name` varchar(50) NOT NULL,
+      `order` int NOT NULL,
+      `visible` int NOT NULL DEFAULT '1',
+      `editable` int NOT NULL DEFAULT '1',
+      `default` int NOT NULL DEFAULT '0',
+      `international_code` varchar(50) DEFAULT NULL,
+      `national_code` varchar(50) DEFAULT NULL,
+      `modified_user_id` int DEFAULT NULL,
+      `modified` datetime DEFAULT NULL,
+      `created_user_id` int NOT NULL,
+      `created` datetime NOT NULL
+    )");
+
     $this->execute("CREATE TABLE `item_types` (
             `id` int AUTO_INCREMENT PRIMARY KEY NOT NULL,
+            `stock_unit_id` int NOT NULL,
             `name` varchar(50) NOT NULL,
             `order` int NOT NULL,
             `visible` int NOT NULL DEFAULT '1',
@@ -31,23 +47,9 @@ class POCOR8873 extends AbstractMigration
             `modified_user_id` int DEFAULT NULL,
             `modified` datetime DEFAULT NULL,
             `created_user_id` int NOT NULL,
-            `created` datetime NOT NULL
+            `created` datetime NOT NULL,
+      CONSTRAINT `fk_item_stock_unit_id` FOREIGN KEY (`stock_unit_id`) REFERENCES `stock_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
           ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='This table contains the list of items chargable to individual students'");
-
-    $this->execute("CREATE TABLE `stock_units` (
-            `id` int AUTO_INCREMENT PRIMARY KEY NOT NULL,
-            `name` varchar(50) NOT NULL,
-            `order` int NOT NULL,
-            `visible` int NOT NULL DEFAULT '1',
-            `editable` int NOT NULL DEFAULT '1',
-            `default` int NOT NULL DEFAULT '0',
-            `international_code` varchar(50) DEFAULT NULL,
-            `national_code` varchar(50) DEFAULT NULL,
-            `modified_user_id` int DEFAULT NULL,
-            `modified` datetime DEFAULT NULL,
-            `created_user_id` int NOT NULL,
-            `created` datetime NOT NULL
-          )");
 
     $this->execute("CREATE TABLE `institution_consumables` (
       `id` int AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -60,9 +62,9 @@ class POCOR8873 extends AbstractMigration
       `modified` datetime DEFAULT NULL,
       `created_user_id` int NOT NULL,
       `created` datetime NOT NULL,
-      CONSTRAINT `fk_item_type_id` FOREIGN KEY (`item_type_id`) REFERENCES `item_types`(`id`),
-      CONSTRAINT `fk_stock_unit_id` FOREIGN KEY (`stock_unit_id`) REFERENCES `stock_units`(`id`),
-      CONSTRAINT `fk_institution_id` FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`),
+      CONSTRAINT `fk_item_type_id` FOREIGN KEY (`item_type_id`) REFERENCES `item_types`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT `fk_stock_unit_id` FOREIGN KEY (`stock_unit_id`) REFERENCES `stock_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT `fk_institution_id` FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
       CONSTRAINT `fk_modified_user_id` FOREIGN KEY (`modified_user_id`) REFERENCES `security_users`(`id`),
       CONSTRAINT `fk_created_user_id`  FOREIGN KEY (`created_user_id`) REFERENCES `security_users`(`id`)
   );
@@ -79,7 +81,7 @@ class POCOR8873 extends AbstractMigration
       `modified` datetime DEFAULT NULL,
       `created_user_id` int NOT NULL,
       `created` datetime NOT NULL,
-      CONSTRAINT `fk_institution_consumable_id` FOREIGN KEY (`institution_consumable_id`) REFERENCES `institution_consumables`(`id`),
+      CONSTRAINT `fk_institution_consumable_id` FOREIGN KEY (`institution_consumable_id`) REFERENCES `institution_consumables`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
       CONSTRAINT `fk_trans_modified_user_id` FOREIGN KEY (`modified_user_id`) REFERENCES `security_users`(`id`),
       CONSTRAINT `fk_trans_created_user_id`  FOREIGN KEY (`created_user_id`) REFERENCES `security_users`(`id`)
     );");
