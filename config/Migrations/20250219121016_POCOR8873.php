@@ -14,6 +14,11 @@ class POCOR8873 extends AbstractMigration
         ('Item Types', 'Others', 'item_types', 144, NULL, NULL, 1, NOW()),
         ('Stock Units', 'Others', 'stock_units', 145, NULL, NULL, 1, NOW())");
 
+    $this->execute('CREATE TABLE `z_8873_security_functions` LIKE `security_functions`');
+    $this->execute('INSERT INTO `z_8873_security_functions` SELECT * FROM `security_functions`');
+    $this->execute("INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`,`parent_id`,`_view`,`_edit`,`_add`,`_delete`,`_execute`,`order`,`visible`,`description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+    ('Consumables', 'Institutions', 'Institutions','Finance',8,'Consumable.index|Consumable.view','Consumable.edit','Consumable.add','Consumable.remove',NULL,567,1,NULL,NULL,NULL,1, NOW())");
+
     $this->execute("CREATE TABLE `item_types` (
             `id` int AUTO_INCREMENT PRIMARY KEY NOT NULL,
             `name` varchar(50) NOT NULL,
@@ -63,29 +68,32 @@ class POCOR8873 extends AbstractMigration
   );
   ");
 
-        $this->execute("CREATE TABLE `institution_consumable_transactions` (
+    $this->execute("CREATE TABLE `institution_consumable_transactions` (
       `id` int AUTO_INCREMENT PRIMARY KEY NOT NULL,
       `institution_consumable_id` int NOT NULL,
       `date` date NOT NULL,
       `received` int NOT NULL,
       `issued` int NOT NULL,
       `balance` int NOT NULL,
-      `init` int NOT NULL,
       `modified_user_id` int DEFAULT NULL,
       `modified` datetime DEFAULT NULL,
       `created_user_id` int NOT NULL,
       `created` datetime NOT NULL,
-      CONSTRAINT `fk_institution_consumable_id` FOREIGN KEY (`institution_consumable_id`) REFERENCES `institution_consumables`(`id`)
+      CONSTRAINT `fk_institution_consumable_id` FOREIGN KEY (`institution_consumable_id`) REFERENCES `institution_consumables`(`id`),
+      CONSTRAINT `fk_trans_modified_user_id` FOREIGN KEY (`modified_user_id`) REFERENCES `security_users`(`id`),
+      CONSTRAINT `fk_trans_created_user_id`  FOREIGN KEY (`created_user_id`) REFERENCES `security_users`(`id`)
     );");
-
-    // $this->execute("CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(50) NOT NULL,order int NOT NULL,visible int NOT NULL DEFAULT 1,editable int NOT NULL DEFAULT 1,default int NOT NULL DEFAULT 0,international_code varchar(50),national_code varchar(50),modified_user_id int,modified datetime,created_user_id int NOT NULL,created datetime DEFAULT CURRENT_TIMESTAMP);");
   }
 
   public function down()
   {
     $this->execute('DROP TABLE IF EXISTS `field_options`');
     $this->execute('RENAME TABLE `z_8873_field_options` TO `field_options`');
+    $this->execute('DROP TABLE IF EXISTS `security_functions`');
+    $this->execute('RENAME TABLE `z_8873_security_functions` TO `security_functions`');
     $this->execute('DROP TABLE stock_units');
     $this->execute('DROP TABLE item_types');
+    $this->execute('DROP TABLE institution_consumables');
+    $this->execute('DROP TABLE institution_consumable_transactions');
   }
 }

@@ -41,6 +41,8 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
         // ]);
 
         // $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->toggle('edit', false);
+        $this->toggle('remove', false);
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Consumables' => ['id']]
         ]);
