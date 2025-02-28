@@ -2647,6 +2647,7 @@ trait MessagesTrait
             'genralerror' => 'To and from academic period can not be same.',
             'alreadyexist' => 'There are existing data in the selected To Academic Period.',
             'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'invalidDate' => 'From academic period cannot be greater than to academic period.',
             'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
         ],
         'UserNationalities' => [
