@@ -62,7 +62,7 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', [
                 'ruleUniqueCode' => [
@@ -71,14 +71,14 @@ class AssessmentsTable extends ControllerActionTable {
                 ]
             ])
             ->requirePresence('assessment_items')
-            // ->add('education_grade_id', [
-            //     'ruleAssessmentExistByGradeAcademicPeriod' => [ //validate so only 1 assessment for each grade per academic period
-            //         'rule' => ['assessmentExistByGradeAcademicPeriod'],
-            //         'on' => function ($context) {
-            //             return $this->action == 'add';
-            //         }
-            //     ]
-            // ])
+            ->add('education_grade_id', [
+                'ruleAssessmentExistByGradeAcademicPeriod' => [ //validate so only 1 assessment for each grade per academic period
+                    'rule' => ['assessmentExistByGradeAcademicPeriod'],
+                    'on' => function ($context) {
+                        return $this->action == 'add';
+                    }
+                ]
+            ])
             ->allowEmpty('excel_template');
     }
 
@@ -301,6 +301,9 @@ class AssessmentsTable extends ControllerActionTable {
                     $floatValue =  '0.00';
                 }
                 $weight =  number_format((float)$floatValue, 2, '.', '');
+                if(!empty($weight) && $weight > 2){
+                    $weight = 0.00;
+                }
                 if (!$is_new) {
                     $assessmentData = $assessmentItems->
                     find()
