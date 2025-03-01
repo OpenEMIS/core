@@ -13,8 +13,6 @@ class SecurityUsersFactory extends Factory
 
     public function definition(): array
     {
-
-
         return [
     'id' => $this->model::getNextId(),
     'username' => $this->faker->lexify(str_repeat("?", 100)),
@@ -29,8 +27,8 @@ class SecurityUsersFactory extends Factory
     'mobile_number' => $this->faker->phoneNumber(),
     'address' => $this->faker->text(50),
     'postal_code' => $this->faker->lexify(str_repeat("?", 20)),
-    'address_area_id' => \App\Models\AreaAdministratives::factory()->create()->id,
-    'birthplace_area_id' =>  \App\Models\AreaAdministratives::factory()->create()->id,
+    'address_area_id' => \App\Models\AreaAdministratives::inRandomOrder()->value('id') ?? \App\Models\AreaAdministratives::factory()->create()->id,
+    'birthplace_area_id' =>  \App\Models\AreaAdministratives::inRandomOrder()->value('id') ?? \App\Models\AreaAdministratives::factory()->create()->id,
     'gender_id' => \App\Models\Genders::inRandomOrder()->value('id') ?? \App\Models\Genders::factory()->create()->id,
     'date_of_birth' => \Carbon\Carbon::now()->format("Y-m-d"),
     'date_of_death' => \Carbon\Carbon::now()->format("Y-m-d"),
