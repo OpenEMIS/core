@@ -16,11 +16,11 @@ use App\Http\Controllers\BaseApi\CrudApiController;
 */
 
 Route::group(['prefix' => 'v4'], function () {
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        return $request->user();
+    });
 
-Route::post('login', 'Authentication\LoginController@login');
+    Route::post('login', 'Authentication\LoginController@login');
 });
 
 Route::group(

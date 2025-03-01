@@ -1,3 +1,15 @@
+### [4.13.0] - 2025-02-28
+- Implemented: Develop Automated Enrolment Feature
+- Implemented: Add Export button to Student > Academic features
+- Implemented: Develop changes to individual student attendance / absence
+- Implemented: Develop changes to the Laravel API routes file to add both /api/v4 and /api/v5
+- Implemented: Develop Student Behaviour Report
+- Bug Fixed: Running command to generate swagger documentation generates error
+- Bug Fixed: Administration > Performance > Report Cards: Report card template is not showing even though there is a report card template attached
+- Bug Fixed: Administration>Update: Update button should be hidden if the version is the latest
+- Bug Fixed: Administration > Performance > Assessments > Templates > Add:User is able to create more than 1 assessment template for one grade
+- Bug Fixed: Institutions > Attendance > Staff: When marking attendance for staff on mobile phones, the circle hamburger option is not showing to select the filter (like dates, time eg)
+
 ### [4.12.0] - 2025-02-25
 - Implemented: Develop Users feature APIs by OpenEMIS ID - part 2
 - Bug Fixed: Institutions > Students > Undo: There is an error when undoing graduation, the systems navigate to a blank page with the message "beforeFilter:2764For Developer: You should put institution_id into query string first"
