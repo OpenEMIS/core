@@ -14,15 +14,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['prefix' => 'v4'], function () {
+    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    Route::post('login', 'Authentication\LoginController@login');
 });
 
-Route::post('login', 'Authentication\LoginController@login');
-
-
 Route::group(
-    ["middleware" => "auth.jwt"],
+    ["middleware" => "auth.jwt",'prefix' => 'v4'],
     function () {
         //POCOR-7545 starts
         Route::get('institutions/{institutionId}/students/meals', 'InstitutionController@getStudentsMealsByInstitutionId');
@@ -566,5 +567,19 @@ Route::group(
         Route::get('users/username/{username}', 'UserController@getUserByUsername')->where('username', '[^\s]+'); // POCOR-8862
         // POCOR8862 end
 
+        // POCOR-8896 start
+        Route::match(['post', 'patch', 'put'], 'users/openemisId/{openemis_no}', 'UserController@updateUserByOpenemisId')
+            ->where('openemis_no', '[\pL0-9]+');
+        // POCOR-8896 end
+
+        // POCOR-8912 start
+        Route::get('users/email/{email}', 'UserController@getUserByEmail'); // POCOR-8912
+        // POCOR-8912 end
+
     }
 );
+
+Route::group(["middleware" => "auth.jwt", "prefix" => "v5"], function () {
+    // for v5 apis 
+    //Route::match(['get', 'post', 'put', 'delete'], '{action}', [TestController::class, 'handle']);
+});
