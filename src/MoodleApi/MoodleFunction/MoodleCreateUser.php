@@ -18,7 +18,7 @@ class MoodleCreateUser extends MoodleFunction
 {
     protected static $functionParam = "core_user_create_users";
 
-    protected static $userAllowedParams
+    protected static $allowedParams  //POCOR-8706
         = [
             "username",
             "password",
@@ -42,7 +42,7 @@ class MoodleCreateUser extends MoodleFunction
             "alternatename"
         ];
 
-    protected static $userMandatoryParams
+    protected static $mandatoryParams //POCOR-8706
         = [
             "username",
             "firstname",
