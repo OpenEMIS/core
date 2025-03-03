@@ -1669,4 +1669,23 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         }
     }
 
+    /**
+     * Checks if a specific grade exists in an institution for a given academic period.
+     *
+     * @param int $nextGradeId The ID of the next grade to check.
+     * @param int $nextPeriodId The ID of the next academic period to check.
+     * @param int $institutionId The ID of the institution to check.
+     * @return int The count of records that match the given criteria.
+     * POCOR-8689
+     */
+    public function checkGradeInInstitution($nextGradeId, $nextPeriodId, $institutionId) {
+        $query = $this->find()
+        ->where([
+            $this->aliasField('education_grade_id') => $nextGradeId,
+            $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('academic_period_id') => $nextPeriodId
+        ]);
+        return $query->count();
+    }
+
 }
