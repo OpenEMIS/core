@@ -855,6 +855,9 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+        $key = "StudentAdmission";
+        $AlertsTable->triggerAlertFeatureShell($key);
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
@@ -1310,5 +1313,24 @@ class StudentAdmissionTable extends ControllerActionTable
         $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
         return $newEntity;
     }
+
+     //POCOR-7642 start
+     public function getModelAlertData($threshold)
+     {
+         $dayBefore = $threshold['value'];
+         $workflowCategory = $threshold['workflow_steps'];
+         $sqlConditions = [
+             1 => ('DATEDIFF( NOW(),InstitutionCases.created)' . '>' . $dayBefore), // before
+         ];
+         $caseResults = $this->find()
+             ->contain(['Institutions', 'Assignees', 'Statuses'])
+             ->where([
+                 $this->Statuses->aliasField('id In') => $workflowCategory,
+                 $this->aliasField('modified is null'),
+                 $this->aliasField('modified_user_id is null'),
+                 $sqlConditions
+             ]);
+         return $caseResults->toArray();
+     }
 
 }
