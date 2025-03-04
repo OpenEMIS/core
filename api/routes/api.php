@@ -16,6 +16,30 @@ use App\Http\Controllers\BaseApi\CrudApiController;
 */
 
 Route::group(['prefix' => 'v4'], function () {
+    Route::get(
+        'clear-cache',
+        function () {
+            Artisan::call('route:clear');
+            Artisan::call('clear-compiled');
+            Artisan::call('config:cache');
+            Artisan::call('cache:clear');
+            return "Cache is cleared";
+        }
+    );
+});
+Route::group(['prefix' => 'v5'], function () {
+    Route::get(
+        'clear-cache',
+        function () {
+            Artisan::call('route:clear');
+            Artisan::call('clear-compiled');
+            Artisan::call('config:cache');
+            Artisan::call('cache:clear');
+            return "Cache is cleared";
+        }
+    );
+});
+Route::group(['prefix' => 'v4'], function () {
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         return $request->user();
     });

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\PermissionService;
 
 class Institutions extends Model
 {
@@ -340,6 +341,41 @@ public function _swaggerDelete() {}
 
     public function getCodeNameAttribute()
     {
-        return $this->attributes['code']. ' - ' .$this->attributes['name'];
+        if(isset($this->attributes['code']) && isset($this->attributes['name'])) {
+            return $this->attributes['code']. ' - ' .$this->attributes['name'];
+        }
+        if(isset($this->attributes['code']) && !isset($this->attributes['name'])) {
+            return $this->attributes['code'];
+        }
+        if(isset($this->attributes['name']) && !isset($this->attributes['code'])) {
+            return $this->attributes['name'];
+        }
+        return 'not selected';
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope('institutionAccess', function (Builder $query) {
+            $user = JWTAuth::user();
+
+            if (!$user) {
+                return;
+            }
+
+            // Check if user is a super admin (no restrictions)
+            if ($user->super_admin ?? 0) {
+                return;
+            }
+
+            $permissionService = app(PermissionService::class);
+            $allowedInstitutions = $permissionService->getInstitutionIds();
+
+            // Apply institution filter only if the user does not have access to all institutions
+            if (!$permissionService->getAllowAllInstitutions()) {
+                $query->whereIn('institution_id', $allowedInstitutions);
+            }
+        });
     }
 }
