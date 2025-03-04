@@ -138,6 +138,12 @@ class ConfigItemsBehavior extends Behavior
         //POCOR-7531 start
          // End POCOR-7507
 
+        // Start POCOR-8689
+         if($typeValue == 'DefaultInstitutionsForAutomatedStudentEnrolme'){
+            $typeValue = 'AutomatedStudentEnrollment';
+        }
+        // Start POCOR-8689
+
         if (method_exists($this->model->controller, $typeValue) && $action != $typeValue) {
            
             $url['action'] = $typeValue;

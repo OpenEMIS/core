@@ -1138,10 +1138,6 @@ class UserController extends Controller
      *         description="The OpenEMIS number of the user",
      *         @OA\Schema(type="string")
      *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
-     *     ),
      *     @OA\Response(response=200, description="User data updated successfully."),
      *     @OA\Response(response=403, description="Unauthorized access."),
      *     @OA\Response(response=404, description="User not found."),
@@ -1163,10 +1159,6 @@ class UserController extends Controller
      *         description="The OpenEMIS number of the user",
      *         @OA\Schema(type="string")
      *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
-     *     ),
      *     @OA\Response(response=200, description="User data updated successfully."),
      *     @OA\Response(response=403, description="Unauthorized access."),
      *     @OA\Response(response=404, description="User not found."),
@@ -1187,10 +1179,6 @@ class UserController extends Controller
      *         required=true,
      *         description="The OpenEMIS number of the user",
      *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
      *     ),
      *     @OA\Response(response=200, description="User data updated successfully."),
      *     @OA\Response(response=403, description="Unauthorized access."),
