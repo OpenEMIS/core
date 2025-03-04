@@ -1,3 +1,6 @@
+### [4.13.1] - 2025-03-04
+- Bug Fixed: Login : 404 error when logged in through SAML
+
 ### [4.13.0] - 2025-02-28
 - Implemented: Develop Automated Enrolment Feature
 - Implemented: Add Export button to Student > Academic features

@@ -6,6 +6,7 @@ use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\ORM\TableRegistry;
 use OneLogin_Saml2_Auth;
+use OneLogin\Saml2\Auth;
 
 class SamlAuthenticate extends BaseAuthenticate
 {
@@ -36,7 +37,7 @@ class SamlAuthenticate extends BaseAuthenticate
             ],
         ];
         $this->addCertFingerPrintInformation($setting, $samlAttributes);
-        $saml = $this->saml = new OneLogin_Saml2_Auth($setting);
+        $saml = $this->saml = new Auth($setting);
         $saml->processResponse();
         $userAttribute = $saml->getAttributes();
         if ($userAttribute) {
