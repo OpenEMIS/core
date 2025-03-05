@@ -1514,7 +1514,8 @@ class ReportCardsTable extends AppTable
                     'start_date >=' => $extra['report_card_start_date'],
                     'end_date <=' => $extra['report_card_end_date']
                 ])
-                ->order(['start_date']);
+                ->order(['start_date'])
+                ->enableHydration(false); //POCOR-8798
             $results = $query->toArray();
 
             if (!empty($results)) {
