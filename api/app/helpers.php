@@ -1,5 +1,5 @@
 <?php
-	
+
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Models\Areas;
@@ -40,14 +40,14 @@ use Illuminate\Database\Query\Builder;
 
 				$securityGroupUsers = SecurityGroupUsers::with(
 						'securityGroup',
-						'securityGroup.institutions', 
+						'securityGroup.institutions',
 					)
 					->where('security_user_id', $userId)
 					->groupby('security_group_users.security_role_id')
 					->groupby('security_group_users.security_group_id')
 					->get()
 					->toArray();
-				
+
 				foreach ($securityGroupUsers as $key => $sGU) {
 					array_push($groupIds, $sGU['security_group_id']);
 					array_push($roleIds, $sGU['security_role_id']);
@@ -64,17 +64,17 @@ use Illuminate\Database\Query\Builder;
 
 				//For POCOR-8077 Start...
 				$groupAreaInstitutions = getGroupAreaInstitutions($groupIds);
-				
+
 				$allowAllInstitutions = $groupAreaInstitutions['allowAllInstitutions']??0;
 				$otherInstitutionIds = $groupAreaInstitutions['institutionIds']??[];
 
 				$institutionIds = array_merge($institutionIds, $otherInstitutionIds);
-				
+
 				//For POCOR-8077 End...
 
 
 				$institutionIds = array_unique($institutionIds);
-				
+
 				$roleFunctions = SecurityRoleFunction::join('security_functions', 'security_functions.id', '=', 'security_role_functions.security_function_id')
 					->select(
 						'security_role_functions._view',
@@ -97,48 +97,77 @@ use Illuminate\Database\Query\Builder;
 					->whereIn('security_role_id', $roleIds)
 					->get()
 					->toArray();
-				
+
 				$accessArray = [];
 				if(count($roleFunctions) > 0){
 					foreach($roleFunctions as $key => $func){
 						$controller = $func['controller'];
-						
+                        // POCOR-8953 start
+                        $roleId = $func['security_role_id'];
 
-						$secFuncView = $func['security_function_view'];
-						if($secFuncView != ""){
-
-							$accessArray = getRoleAccess($controller, $secFuncView, $func['_view'], $func['security_role_id'], $accessArray);
-
+						$accessModules = $func['security_function_view'];
+                        if($accessModules != ""){
+                            $hasPermission = $func['_view'];
+                            $accessArray = getRoleAccess(
+                                $controller,
+                                $accessModules,
+                                $roleId,
+                                $accessArray,
+                                $hasPermission,
+                                );
 						}
 
-						$secFuncAdd = $func['security_function_add'];
-						if($secFuncAdd != ""){
-							$accessArray = getRoleAccess($controller, $secFuncAdd, $func['_add'], $func['security_role_id'], $accessArray);
+                        $accessModules = $func['security_function_add'];
+						if($accessModules != ""){
+                            $hasPermission = $func['_add'];
+                            $accessArray = getRoleAccess(
+                                $controller,
+                                $accessModules,
+                                $roleId,
+                                $accessArray,
+                                $hasPermission,
+                            );
 						}
 
 
-						$secFuncEdit = $func['security_function_edit'];
-						if($secFuncEdit != ""){
-							$accessArray = getRoleAccess($controller, $secFuncEdit, $func['_edit'], $func['security_role_id'], $accessArray);
+                        $accessModules = $func['security_function_edit'];
+						if($accessModules != ""){
+                            $hasPermission = $func['_edit'];
+                            $accessArray = getRoleAccess(
+                                $controller,
+                                $accessModules,
+                                $roleId,
+                                $accessArray,
+                                $hasPermission,
+                            );
 						}
 
-
-						$secFuncDelete = $func['security_function_delete'];
-						if($secFuncDelete != ""){
-							$accessArray = getRoleAccess($controller, $secFuncDelete, $func['_delete'], $func['security_role_id'], $accessArray);
-						}
-
-
-						$secFuncExecute = $func['security_function_execute'];
-						if($secFuncExecute != ""){
-							$accessArray = getRoleAccess($controller, $secFuncExecute, $func['_execute'], $func['security_role_id'], $accessArray);
-						}
-						
+                        $accessModules = $func['security_function_delete'];
+                        if($accessModules != ""){
+                            $hasPermission = $func['_delete'];
+                            $accessArray = getRoleAccess(
+                                $controller,
+                                $accessModules,
+                                $roleId,
+                                $accessArray,
+                                $hasPermission,
+                            );
+                        }
+                        $accessModules = $func['security_function_execute'];
+                        if($accessModules != ""){
+                            $hasPermission = $func['_execute'];
+                            $accessArray = getRoleAccess(
+                                $controller,
+                                $accessModules,
+                                $roleId,
+                                $accessArray,
+                                $hasPermission,
+                            );
+                        }
+                        // POCOR-8953 end
 					}
-
-					
 				}
-					
+
 				if(count($additionalParam) > 0){
 					if(isset($additionalParam['institution_id'])){
 						if(!in_array($additionalParam['institution_id'], $institutionIds)){
@@ -146,10 +175,10 @@ use Illuminate\Database\Query\Builder;
 						}
 					}
 				}
-				
+
 
 				//$permissions = session()->all();
-				
+
 				$data['userId'] = $userId;
 				$data['super_admin'] = $super_admin;
 				$data['groupIds'] = $groupIds;
@@ -176,63 +205,72 @@ use Illuminate\Database\Query\Builder;
 			}
 		}
 	}
-	
+
 	if(!function_exists('getRoleAccess')){
-		function getRoleAccess($controller, $accessType, $roleId, $accessArray, $action = 0)
+        // POCOR-8953 refactured
+		function getRoleAccess($controller,
+                               $accessModules,
+                               $roleId,
+                               $accessArray = [],
+                               $hasPermission = 0)
 		{
-			$accessArr = explode("|", $accessType);
-						
-			if(count($accessArr) > 1){
-				
-				foreach($accessArr as $access){
-					
+			$modulesArray = explode("|", $accessModules);
+
+			if(count($modulesArray) > 1){
+
+				foreach($modulesArray as $access){
+
 					$arr = explode(".", $access);
 					//dd($vAArr);
 					if(count($arr) > 1){
-						
-						if($action == 1){
+
+						if($hasPermission == 1){
 							$accessArray[$controller][$arr[0]][$arr[1]][] = $roleId;
 						}
-						
+
 					} else {
-						if($action == 1){
+						if($hasPermission == 1){
 							$accessArray[$controller][$arr[0]][] = $roleId;
 						}
 					}
 				}
 			} else {
-				$access = $accessArr[0];
+				$access = $modulesArray[0];
 				$arr = explode(".", $access);
 				if(count($arr) > 1){
-					if($action == 1){
+					if($hasPermission == 1){
 						$accessArray[$controller][$arr[0]][$arr[1]][] = $roleId;
 					}
 				} else {
-					if($action == 1){
+					if($hasPermission == 1){
 						$accessArray[$controller][$arr[0]][] = $roleId;
 					}
 				}
-				
+
 			}
 
 			return $accessArray;
 		}
 	}
-	
+
 	if(!function_exists('checkPermission')){
+        // POCOR-8953 refactured
 		function checkPermission($params = [], $additionalParams = []){
 			$loggedInUser = JWTAuth::user();
-			
-			$permissions = checkAccess($params); //Fetching role and permissions.
-			
+            if($loggedInUser['super_admin'] == 1){
+                return true;
+            }
+			$accessArray = checkAccess($params); //Fetching role and permissions.
+            $permissions = $accessArray['permissions']??[];
+            Log::info(print_r(['permissions' => $permissions],true));
             if($loggedInUser['super_admin'] != 1){ //Checking if not admin.
-            	
+
                 if($permissions){
-                    if(isset($permissions['permissions'][$params[0]])){
-                    	if(isset($permissions['permissions'][$params[0]][$params[1]])){
-                    		
-                    		if(isset($permissions['permissions'][$params[0]][$params[1]][$params[2]]) && isset($params[2])){
-                    			
+                    if(isset($permissions[$params[0]])){
+                    	if(isset($permissions[$params[0]][$params[1]])){
+
+                    		if(isset($permissions[$params[0]][$params[1]][$params[2]]) && isset($params[2])){
+
 
                     			if(count($additionalParams) > 0) {
                     				if(isset($additionalParams['institution_id'])){
@@ -250,7 +288,7 @@ use Illuminate\Database\Query\Builder;
                     					} else {
                     						return false;
                     					}
-                    					
+
                     				} else {
                     					return false;
                     				}
@@ -260,12 +298,12 @@ use Illuminate\Database\Query\Builder;
                     		}
                     	}
                     }
-                    
+
                     return false;
                 } else {
-                	
+
                     return false;
-                }  
+                }
             } else {
             	return true;
             }
@@ -279,7 +317,7 @@ use Illuminate\Database\Query\Builder;
 		function removeNonColumnFields($params = [], $table = ""){
 			try {
 				$cols = Schema::getColumnListing($table);
-				
+
 				$values = [];
 				if(count($cols) > 0){
 					foreach ($params as $key => $param) {
@@ -297,7 +335,7 @@ use Illuminate\Database\Query\Builder;
 	                'Failed to get columns listing from helper funtion.',
 	                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
 	            );
-	            
+
 	            return false;
 			}
 		}
@@ -309,15 +347,15 @@ use Illuminate\Database\Query\Builder;
 		function paramsEncode($params = []){
 			try {
 				$session_id = \Session::getId();
-				
+
 
 
 				$sessionId = hashing('session_id', 'sha256');
-				
+
 		        $jsonParam = json_encode($params);
-		        
+
 		        $base64Param = urlsafeB64Encode($jsonParam);
-		        
+
 		        $params[$sessionId] = $session_id??"";
 		        $jsonParamWithSessionTocken = json_encode($params);
 		        $signature = hashing($jsonParamWithSessionTocken, 'sha256', true);
@@ -328,7 +366,7 @@ use Illuminate\Database\Query\Builder;
 	                'Failed to generate URL dats from helper funtion.',
 	                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
 	            );
-	            
+
 	            return false;
 			}
 		}
@@ -344,7 +382,7 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('hashing')){
 		function hashing($string, $type = null, $salt = false){
-			
+
 			if (empty($type)) {
 	            $type = 'sha1';
 	        }
@@ -373,7 +411,7 @@ use Illuminate\Database\Query\Builder;
 				$allowAllInstitutions = 0;
 				if(!empty($groupIds)){
 					$groupAreas = SecurityGroupAreas::whereIn('security_group_id', $groupIds)->pluck('area_id')->toArray();
-					
+
 				}
 
 				if(!empty($groupAreas)){
@@ -389,22 +427,22 @@ use Illuminate\Database\Query\Builder;
 					}
 
 					$allAreas = Areas::select('id', 'parent_id')->with('allChildren:id,parent_id')->whereIn('id', $groupAreas)->get()->toArray();
-					
+
 					getChildrenId($allAreas, $areaIdArray);
 
 					if(!empty($areaIdArray)){
 						$institutionIds = Institutions::whereIn('area_id', $areaIdArray)->pluck('id')->toArray();
 						$resp['allowAllInstitutions'] = 0;
 						$resp['institutionIds'] = $institutionIds;
-						
+
 					}
-					
+
 				}
 				return $resp;
 			} catch (\Exception $e) {
 				return false;
 			}
-			
+
 		}
 	}
 
@@ -471,7 +509,7 @@ use Illuminate\Database\Query\Builder;
                 $newOpenemisNo=$prefix.$newOpenemisNo;
 
                 $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
-                
+
                 if(empty($resultOpenemisTemps->openemis_no)){
                     $storeOpenemisTemp = OpenemisTemp::insert([
                         'openemis_no' => $newOpenemisNo,
@@ -504,9 +542,9 @@ use Illuminate\Database\Query\Builder;
 	//For POCOR-8348 Start...
 	if(!function_exists('getClassStudents')){
 		function getClassStudents($institution_id, $institution_class_id)
-		{	
+		{
 		    $getClassStudents = getInstutionClassStudentData($institution_id, $institution_class_id);
-	    	
+
 	    	$resp = [];
 		    foreach($getClassStudents as $k => $student){
 		    	$resp[$k]['Name'] = $student['first_name']. ' '.$student['last_name'];
@@ -519,10 +557,10 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('getMealProgrammes')){
 		function getMealProgrammes()
-		{	
+		{
 			$currentAcademicYear = AcademicPeriod::where('current', 1)->first();
 		    $getMealProgrammes = MealProgrammes::where('academic_period_id', $currentAcademicYear->id??0)->get()->toArray();
-	    	
+
 	    	$resp = [];
 		    foreach($getMealProgrammes as $k => $mealProgramme){
 		    	$resp[$k]['Name'] = $mealProgramme['name'];
@@ -534,9 +572,9 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('getMealReceived')){
 		function getMealReceived()
-		{	
+		{
 		    $getMealReceived = MealReceived::get()->toArray();
-	    	
+
 	    	$resp = [];
 		    foreach($getMealReceived as $k => $mealReceived){
 		    	$resp[$k]['Name'] = $mealReceived['name'];
@@ -548,9 +586,9 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('getMealBenefits')){
 		function getMealBenefits()
-		{	
+		{
 		    $getMealBenefits = MealBenefits::where('visible', 1)->orderBy('order', 'ASC')->get()->toArray();
-	    	
+
 	    	$resp = [];
 		    foreach($getMealBenefits as $k => $mealReceived){
 		    	$resp[$k]['Name'] = $mealReceived['name'];
@@ -563,9 +601,9 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('getStudentAttendanceType')){
 		function getStudentAttendanceType()
-		{	
+		{
 		    $getStudentAttendanceType = StudentAttendanceType::get()->toArray();
-	    	
+
 	    	$resp = [];
 		    foreach($getStudentAttendanceType as $k => $attendanceType){
 		    	$resp[$k]['Name'] = $attendanceType['name'];
@@ -578,7 +616,7 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('getNumberOfPeriods')){
 		function getNumberOfPeriods()
-		{	
+		{
 	    	$resp[] = [
 	    		'Number Of Periods' => "Period 1",
 	    		'Id' => "1",
@@ -591,13 +629,13 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('getInstutionClassSubject')){
 		function getInstutionClassSubject($institution_id, $institution_class_id)
-		{	
+		{
 		    $getInstutionClassSubject = InstitutionClassSubjects::select('institution_subjects.*')
 		    		->join('institution_subjects', 'institution_subjects.id', '=', 'institution_class_subjects.institution_subject_id')
 		    		->where('institution_class_subjects.institution_class_id', $institution_class_id)
 		    		->get()
 		    		->toArray();
-	    	
+
 	    	$resp = [];
 		    foreach($getInstutionClassSubject as $k => $subject){
 		    	$resp[$k]['Subject'] = $subject['name'];
@@ -610,7 +648,7 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('getInstutionClassStudent')){
 		function getInstutionClassStudent($institution_id, $institution_class_id)
-		{	
+		{
 		    $results = getInstutionClassStudentData($institution_id, $institution_class_id);
 	    	$resp = [];
 		    foreach($results as $k => $result){
@@ -627,11 +665,11 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('getInstutionClassStudentData')){
 		function getInstutionClassStudentData($institution_id, $institution_class_id)
-		{	
+		{
 		    $getClassStudents = InstitutionClassStudents::select(
-			    		'security_users.first_name', 
-			    		'security_users.last_name', 
-			    		'security_users.openemis_no', 
+			    		'security_users.first_name',
+			    		'security_users.last_name',
+			    		'security_users.openemis_no',
 			    		'academic_periods.name as academic_period_year',
 			    		'education_grades.name as education_grade_name',
 			    		'institutions.name as institution_name',
@@ -651,7 +689,7 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('getAbsenceTypes')){
 		function getAbsenceTypes()
-		{	
+		{
 		    $getAbsenceTypes = AbsenceTypes::get()->toArray();
 		    $resp = [];
 
@@ -667,7 +705,7 @@ use Illuminate\Database\Query\Builder;
 
 	if(!function_exists('getStudentAbsenceReason')){
 		function getStudentAbsenceReason()
-		{	
+		{
 		    $getStudentAbsenceReason = StudentAbsenceReason::get()->toArray();
 		    $resp = [];
 
@@ -685,7 +723,7 @@ use Illuminate\Database\Query\Builder;
 	//For POCOR-7429 Start...
 	if(!function_exists('getPrimaryKey')){
 		function getPrimaryKey($table)
-		{	
+		{
 			try {
 				$cols = Schema::getColumnListing($table);
 				$primaryKey = "";
