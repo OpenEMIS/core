@@ -1234,7 +1234,7 @@ class UserController extends Controller
         $openemisNo = $userData['openemis_no'];
         $requestedUserID = $this->userService->getUserIdByOpenemisNo($openemisNo);
         $permissions = [];
-        if($loggedUserID != $requestedUserID) {
+        if($loggedUserID !== $requestedUserID) {
             if ($this->hasAny($userData, ['first_name', 'last_name', 'middle_name',
                 'third_name', 'preferred_name', 'gender_id', 'date_of_birth',
                 'address', 'postal_code', 'address_area_id', 'birthplace_area_id'])) {
@@ -1257,7 +1257,7 @@ class UserController extends Controller
                 $permissions[] = ['Directories', 'Contacts', 'edit'];
             }
         }
-        if($loggedUserID == $requestedUserID){
+        if($loggedUserID === $requestedUserID){
             if ($this->hasAny($userData, ['first_name', 'last_name', 'middle_name',
                 'third_name', 'preferred_name', 'gender_id', 'date_of_birth',
                 'address', 'postal_code', 'address_area_id', 'birthplace_area_id'])) {
