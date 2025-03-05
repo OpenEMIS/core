@@ -262,7 +262,6 @@ use Illuminate\Database\Query\Builder;
             }
 			$accessArray = checkAccess($params); //Fetching role and permissions.
             $permissions = $accessArray['permissions']??[];
-            Log::info(print_r(['permissions' => $permissions],true));
             if($loggedInUser['super_admin'] != 1){ //Checking if not admin.
 
                 if($permissions){
