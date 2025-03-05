@@ -18,7 +18,8 @@ namespace OneLogin\Saml2;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 
 use Exception;
-
+//This class need to be updated
+//remove unwanted code
 /**
  * Main class of OneLogin's PHP Toolkit
  */
@@ -185,7 +186,6 @@ class Auth
      */
     public function getSettings()
     {
-        echo "<pre>";print_r("2");die;
         return $this->_settings;
     }
 
@@ -278,7 +278,6 @@ class Auth
      */
     public function processSLO($keepLocalSession = false, $requestId = null, $retrieveParametersFromServer = false, $cbDeleteSession = null, $stay = false)
     {
-        echo "<pre>";print_r("4");die;
         $this->_errors = array();
         $this->_lastError = $this->_lastErrorException = null;
         if (isset($_GET['SAMLResponse'])) {
@@ -375,7 +374,6 @@ class Auth
      */
     public function isAuthenticated()
     {
-        echo "<pre>";print_r("5");die;
         return $this->_authenticated;
     }
 
