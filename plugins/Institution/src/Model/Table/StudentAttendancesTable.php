@@ -127,7 +127,7 @@ class StudentAttendancesTable extends ControllerActionTable
         } else {
             $findDay = $day;
         }
-        if ($subjectId != 0) {
+        if ($subjectId != 0 || $attendanceBy == 'subject') {
             $query
                 ->select([
                     $this->aliasField('academic_period_id'),
