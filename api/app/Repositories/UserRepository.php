@@ -2164,7 +2164,7 @@ class UserRepository extends Controller
                 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name',
                 'gender_id', 'date_of_birth', 'identity_number', 'nationality_id', 'username',
                 'password', 'postal_code', 'address', 'birthplace_area_id', 'address_area_id',
-                'identity_type_id'
+                'identity_type_id', 'email' // POCOR-8953
             ];
 
             // Filter and process update data
