@@ -468,8 +468,14 @@ function InstitutionStudentAttendancesController(
                 vm.gridOptions.context.subject_id = vm.selectedSubject;
             }
         } else {
-            // vm.selectedSubject = 0;
-            vm.selectedSubject = subjectListOptions[0].id; //POCOR-8874
+            //POCOR-8874 start
+            if (subjectListOptions.length > 0) {
+                vm.selectedSubject = subjectListOptions[0].id;
+            }
+            else{
+                vm.selectedSubject = 0;
+            }
+            //POCOR-8874 end
             vm.gridOptions.context.subject_id = vm.selectedSubject;
         }
     };
