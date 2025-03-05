@@ -1,3 +1,7 @@
+### [4.13.2] - 2025-03-05
+- Bug Fixed: Unable to login through SAML
+- Bug Fixed: Institutions > Performance > Report Cards: Report card is stuck in progress and then it went to error status
+
 ### [4.13.1] - 2025-03-04
 - Bug Fixed: Login : 404 error when logged in through SAML
 
