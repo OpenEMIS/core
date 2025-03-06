@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\InstitutionScope;
 
 class SummaryInstitutionNationalities extends Model
 {
     use HasFactory;
+use InstitutionScope;
     // ✅ Allow mass assignment
     protected $fillable = ['academic_period_id', 'academic_period_name', 'institution_id', 'institution_code', 'nationality_id', 'nationality_name', 'total_students', 'total_students_female', 'total_students_male', 'academic_period_id', 'institution_id', 'nationality_id'];
 

@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\InstitutionScope;
 use App\Traits\UuidId;
 
 class InstitutionStudents extends Model
 {
     use HasFactory;
+use InstitutionScope;
 use UuidId;
 
     protected $table = 'institution_students';

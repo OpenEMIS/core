@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\InstitutionScope;
 
 class StudentBehaviours extends Model
 {
     use HasFactory;
+use InstitutionScope;
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'description', 'action', 'date_of_behaviour', 'time_of_behaviour', 'academic_period_id', 'student_id', 'institution_id', 'status_id', 'student_behaviour_category_id', 'assignee_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'student_behaviour_classification_id', 'academic_period_id', 'student_id', 'institution_id', 'status_id', 'student_behaviour_category_id', 'assignee_id', 'modified_user_id', 'created_user_id', 'student_behaviour_classification_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
