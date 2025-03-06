@@ -1,10 +1,26 @@
 <?php
 namespace App\Model\Traits;
+use Cake\ORM\TableRegistry;
+use Cake\Collection\Collection;
 
 trait OptionsTrait
 {
     public function getSelectOptions($code)
     {
+        // $WorkFlows = TableRegistry::get("WorkFlow.WorkFlows" );
+        // $WorkFlowData = $WorkFlows->find('all')->where(['code' => "STUDENT-ADMISSION-1001"])->extract('id')->first();
+        // $WorkFlowSteps = TableRegistry::get('WorkFlow.WorkFlowSteps');
+        // $WorkFlowStepData = $WorkFlowSteps->find('all')->where(['workflow_id' => $WorkFlowData])->toArray();
+        // $workflowStepsDataArr = (new Collection($WorkFlowStepData))
+        //                     ->combine('id', 'name')
+        //                     ->toArray();
+
+        // $workflowDataSelected = [];
+        // foreach ($workflowStepsDataArr as $key => $value) {
+        //     if ($value === 'Approved') {
+        //         $workflowDataSelected[$key] =$value;
+        //     }
+        // }
         $options = [
             'general' => [
                 'active' => [1 => __('Active'), 0 => __('Inactive')],
@@ -222,6 +238,20 @@ trait OptionsTrait
                         ]
                     ],
                 //POCOR-7462 end
+                
+                //POCOR-8869 start
+                'StudentAdmission' => [
+                    'workflow_steps' => [
+                        1 => __('Approved'),
+                    ]
+                ],
+                'StudentAdmissionStatus' => [
+                    'status' => [
+                        0 => __('disable'),
+                        1 => __('enable'),
+                    ]
+                ],
+                //POCOR-8869 end
             ],
             
         ];
