@@ -174,7 +174,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
     {
         // sort
         $sortList = ['Examinations.name'];
-        if (array_key_exists('sortWhitelist', $extra['options'])) {
+        if (isset($extra['options']['sortWhitelist']) && is_array($extra['options']['sortWhitelist'])) { //POCOR-8800
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
@@ -320,8 +320,9 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
 
     public function addOnChangeLinkAllExaminationCentres(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
-            if (array_key_exists('examination_centres', $data[$this->getAlias()])) {
+        if (isset($data[$this->getAlias()])) { //POCOR-8800
+            // Check if 'examination_centres' is set within the alias section
+            if (isset($data[$this->getAlias()]['examination_centres'])) {
                 $data[$this->getAlias()]['examination_centres'] = '';
             }
         }

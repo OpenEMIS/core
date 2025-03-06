@@ -791,6 +791,8 @@ class AppController extends Controller
                 'postForgotUsername',
                 'forgotPassword',
                 'postForgotPassword',
+                'resetPassword', //POCOR-8806
+                'postResetPassword',
                 'verifyOtp'
             ])
         ) {
@@ -976,7 +978,7 @@ class AppController extends Controller
             if ($params !== null) {
                 $this->log((string)$params, 'debug');
             }
-            $this->Alert->warning('general.notAccess');
+            //$this->Alert->warning('general.notAccess'); //tmp solution 
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
         }
     }

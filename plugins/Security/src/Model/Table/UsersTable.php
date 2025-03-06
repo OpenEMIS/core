@@ -801,15 +801,12 @@ class UsersTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
-    //POCOR-8341[START]
-    public function findEmailList(Query $query, array $options) {
+    public function findSystemUpdateEmailList(Query $query, array $options) {
         $conditions = [
-            $this->aliasField('id') => $options['id']
+            $this->aliasField('id') => $options['securityRoleId']
         ];
-
-        return $query
-                ->where($conditions);
+        
+        return $query->where($conditions);
     }
-    //POCOR-8341[START]
 
 }

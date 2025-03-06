@@ -20,7 +20,8 @@ class ConfigItemsBehavior extends Behavior
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
-        if ($this->isCAv4()) {
+        $events['Model.custom.onUpdateToolbarButtons'] =  ['callable' => 'onUpdateToolbarButtons'];//POCOR-8751
+        if ($this->isCAv4()) {          
             $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
         }
         return $events;
@@ -68,17 +69,37 @@ class ConfigItemsBehavior extends Behavior
                 unset($typeOptions[$key]);
             }
         }
+        //POCOR-8883 code logic change start
         $selectedType = $this->model->queryString('type', $typeOptions);
         $this->selectedType = $selectedType;
         $typeValue = $typeOptions[$selectedType];
-        $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
+        if(empty($typeValue)){
+           $typeValue = $this->model->request->getQueryParams()['type'];
+        }
+        if($typeValue !== 'Custom Validation'){
+            $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
 
-        $this->model->advancedSelectOptions($typeOptions, $selectedType);
-        $this->model->controller->set('typeOptions', $typeOptions);
-        $controlElement = $toolbarElements[0];
-        $controlElement['data'] = ['typeOptions' => $typeOptions];
-        $controlElement['order'] = 1;
-        return $controlElement;
+            $this->model->advancedSelectOptions($typeOptions, $selectedType);
+            $this->model->controller->set('typeOptions', $typeOptions);
+            $controlElement = $toolbarElements[0];
+            $controlElement['data'] = ['typeOptions' => $typeOptions];
+            $controlElement['order'] = 1;
+            return $controlElement;
+        }else{
+            if ($typeValue !== null) {
+                $queryParams = $this->model->request->getQueryParams();
+                $queryParams['type'] = $selectedType;
+                $queryParams['type_value'] = $typeValue;
+                $this->model->request = $this->model->request->withQueryParams($queryParams);
+            }
+            $this->model->advancedSelectOptions($typeOptions, $selectedType);
+            $this->model->controller->set('typeOptions', $typeOptions);
+            $controlElement = $toolbarElements[0];
+            $controlElement['data'] = ['typeOptions' => $typeOptions];
+            $controlElement['order'] = 1;
+            return $controlElement;
+            //POCOR-8883 end
+        }
     }
 
     public function checkController()
@@ -117,6 +138,12 @@ class ConfigItemsBehavior extends Behavior
         //POCOR-7531 start
          // End POCOR-7507
 
+        // Start POCOR-8689
+         if($typeValue == 'DefaultInstitutionsForAutomatedStudentEnrolme'){
+            $typeValue = 'AutomatedStudentEnrollment';
+        }
+        // Start POCOR-8689
+
         if (method_exists($this->model->controller, $typeValue) && $action != $typeValue) {
            
             $url['action'] = $typeValue;
@@ -127,7 +154,8 @@ class ConfigItemsBehavior extends Behavior
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
                 'action' => 'index',
-                'type' => $this->selectedType]);
+                '?' => ['type' => $this->selectedType] //POCOR-8883
+            ]);
         }
     }
     public function beforeAction(Event $event, $extra)
@@ -145,4 +173,33 @@ class ConfigItemsBehavior extends Behavior
             $this->checkController();
         }
     }
+    //POCOR-8751 start
+    /**
+     * Handles updating the toolbar buttons during the action.
+     *
+     * @param Event $event The event triggered during the action.
+     * @param ArrayObject $buttons The existing buttons for the action.
+     * @param ArrayObject $toolbarButtons The toolbar buttons that will be modified.
+     * @param array $attr Additional attributes or options for the action.
+     * @param string $action The action being performed (e.g., 'view', 'edit').
+     * @param bool $isFromModel Flag indicating if the action is originating from a model.
+     */
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        if ($this->_table->action == 'view') {
+            $session = $this->_table->request->getSession();
+            $key = $session->read('Configuration.ConfigItems.primaryKey.id');
+            $entity =  TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->get($key);
+            if($entity->code=="edition" && $entity->type=="System"){
+                if (isset($toolbarButtons['edit'])) {
+                    unset($toolbarButtons['edit']);
+                }
+            }  
+        }
+        
+    } 
+     //POCOR-8751 end
+
 }
+

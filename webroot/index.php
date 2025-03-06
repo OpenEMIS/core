@@ -37,27 +37,13 @@ $server = new Server(new Application(dirname(__DIR__) . '/config'));
 // Run the request/response through the application
 // and emit the response.
 
-//POCOR-8676
-try 
-{
-    $response = $server->run();
-    $statusCode = $response->getStatusCode();
-    if ($statusCode == 500) {
-        $ErrorTable = TableRegistry::getTableLocator()->get('System.SystemErrors');
-        if (isset($ex) && $ex instanceof Exception) {
-            $ErrorTable->insertError($ex);
-        } else {
-            $ErrorTable->insertError(new Exception('An unknown error occurred'));
-        }
-        Log::write('error', $ex); // Log the exception
-    } else {
-        $server->emit($response); 
-    }
-}catch (Exception $ex) {
-    //If an exception occurs, log it and insert it into the error table
-    $ErrorTable = TableRegistry::getTableLocator()->get('System.SystemErrors');
-    $ErrorTable->insertError($ex);  
-    Log::write('error', $ex);     
-    throw $ex;                   
+//POCOR-8789
+try {
+    $server->emit($server->run());
+} catch (Exception $ex) {
+    $ErrorTable = TableRegistry::get('System.SystemErrors');
+    $ErrorTable->insertError($ex);
+    Log::write('error', $ex);
+    throw $ex;
 }
 

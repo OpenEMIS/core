@@ -835,9 +835,10 @@ class ImportStudentAdmissionTable extends AppTable
      */
     private function getTimeZone()
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $setTimeZone = $ConfigItems->value("time_zone");
-        $timeZone = !empty($setTimeZone) ? $setTimeZone : 'UTC'; //POCOR-6732
+        $configItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');//POCOR-8847
+        $setTimeZone = $configItemsTable->value("time_zone");//POCOR-8847
+        $setTimeZone = ($setTimeZone === "(GMT 00:00)") ? 'GMT' : $setTimeZone;//POCOR-8847
+        $timeZone = !empty($setTimeZone) ? $setTimeZone : 'UTC';//POCOR-8847
         date_default_timezone_set($timeZone);
         return $timeZone;
     }

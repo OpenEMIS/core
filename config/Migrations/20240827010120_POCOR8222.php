@@ -7,6 +7,7 @@ class POCOR8222 extends AbstractMigration
 {
     public function up()
     {
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         // Backup the existing table
         $this->execute('CREATE TABLE `z_8222_institution_students_report_cards` LIKE `institution_students_report_cards`');
         $this->execute('INSERT INTO `z_8222_institution_students_report_cards` SELECT * FROM `institution_students_report_cards`');
@@ -203,15 +204,16 @@ class POCOR8222 extends AbstractMigration
             }
         }
 
-        if (!empty($dataToSave)) {
-            $StudentsGpa->connection()->transactional(function () use ($StudentsGpa, $dataToSave) {
-                if ($StudentsGpa->saveMany($dataToSave)) {
-                    // Success handling
-                } else {
-                    // Failure handling
-                }
-            });
-        }
+      if (!empty($dataToSave)) {
+		    $StudentsGpa->getConnection()->transactional(function () use ($StudentsGpa, $dataToSave) {
+		        if ($StudentsGpa->saveMany($dataToSave)) {
+		            // Success handling
+		        } else {
+		            // Failure handling
+		        }
+		    });
+		}
+
         // Drop the gpa column
         $this->execute('ALTER TABLE `institution_students_report_cards` DROP COLUMN `gpa`');
 

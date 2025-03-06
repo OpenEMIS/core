@@ -698,4 +698,81 @@ class ReportCardRepository extends Controller
     }
     //For pocor-8270 end...
 
+
+
+    //For POCOR-8617 Start...
+    public function studentReportCardPdfDownload($params, $institutionId, $classId, $studentId)
+    {
+        try {
+            $reportCard = ReportCard::where('id', $params['report_card_id'])->first();
+            $file_list = [];
+
+            $instStudentReportCard = InstitutionStudentReportCard::where('student_id', $studentId)
+                    ->where('institution_id', $institutionId)
+                    ->where('academic_period_id', $params['academic_period_id'])
+                    ->where('report_card_id', $params['report_card_id'])
+                    ->where('education_grade_id', $reportCard->education_grade_id??0)
+                    ->where('institution_class_id', $classId)
+                    ->whereIn('status', [3,4])
+                    ->first();
+
+            
+            if($instStudentReportCard){
+                $file_list['id'] = $instStudentReportCard['id'];
+                $file_name = $instStudentReportCard['file_name'];
+                $file_name = explode(".", $instStudentReportCard['file_name'])[0];
+                $file_name = $file_name.".pdf";
+                
+                $file_list['file_name'] = $file_name;
+                $file_list['file_content'] = base64_encode($instStudentReportCard['file_content_pdf']);
+            }
+            
+            return $file_list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card in PDF.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card in PDF.');
+        }
+    }
+
+
+    public function studentReportCardExcelDownload($params, $institutionId, $classId, $studentId)
+    {
+        try {
+            $reportCard = ReportCard::where('id', $params['report_card_id'])->first();
+            $file_list = [];
+
+            $instStudentReportCard = InstitutionStudentReportCard::where('student_id', $studentId)
+                    ->where('institution_id', $institutionId)
+                    ->where('academic_period_id', $params['academic_period_id'])
+                    ->where('report_card_id', $params['report_card_id'])
+                    ->where('education_grade_id', $reportCard->education_grade_id??0)
+                    ->where('institution_class_id', $classId)
+                    ->whereIn('status', [3,4])
+                    ->first();
+
+            
+            if($instStudentReportCard){
+                $file_list['id'] = $instStudentReportCard['id'];
+                $file_name = $instStudentReportCard['file_name'];
+                
+                $file_list['file_name'] = $file_name;
+                $file_list['file_content'] = base64_encode($instStudentReportCard['file_content']);
+            }
+            
+            return $file_list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card in excel.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card in excel.');
+        }
+    }
+    //For POCOR-8617 End...
+
 }

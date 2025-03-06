@@ -97,19 +97,22 @@ class AlertShell extends Shell
         return $emailList;
     }
 
-    //POCOR-8341[START]
-    public function getRoleAssociatedEmailList($securityRoleRecords)
+    public function getSystemUpdateEmailList($securityRoleRecords, $institutionId = null)
     {
         $emailList = [];
 
         foreach ($securityRoleRecords as $securityRolesObj) {
             $options = [
-                'id' => $securityRolesObj->id
+                'securityRoleId' => $securityRolesObj->id
             ];
+
+            // all staff within securityRole and institution
             $emailListResult = $this->Users
-                ->find('emailList', $options)
-                ->toArray();
-              
+                ->find('systemUpdateEmailList', $options)
+                ->toArray()
+            ;
+
+            // combine all email to the email list
             if (!empty($emailListResult)) {
                 foreach ($emailListResult as $obj) {
                     if (!empty($obj->email)) {
@@ -124,5 +127,4 @@ class AlertShell extends Shell
 
         return $emailList;
     }
-    //POCOR-8341[END]
 }

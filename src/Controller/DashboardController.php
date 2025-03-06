@@ -12,6 +12,8 @@ use Cake\I18n\Time;
 use App\Model\Table\AlertsTable;
 use Cake\Controller\Controller;
 use Cake\Event\EventInterface;
+use Cake\Http\Client;
+use Cake\Http\Response;
 
 class DashboardController extends AppController
 {
@@ -32,7 +34,7 @@ class DashboardController extends AppController
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
         //$this->callAlerts(); //POCOR-7558
-
+        $this->sendSystemUpdateAlerts(); //POCOR-7559
     }
 
     // CAv4
@@ -59,9 +61,9 @@ class DashboardController extends AppController
         parent::beforeFilter($event);
 
         $user = $this->Auth->user();
-
-        if (is_array($user) && isset($user['last_login']) && is_null($user['last_login'])) {
-            $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user['id']);
+        if (is_array($user)&& ($user['last_login'] === null || $user['last_login'] === '')) {
+            
+            $userInfo = TableRegistry::get('User.Users')->get($user['id']);
             if ($userInfo->password) {
                 $this->Alert->warning('security.login.changePassword');
                 $lastLogin = $userInfo->last_login;
@@ -70,6 +72,7 @@ class DashboardController extends AppController
             }
 
         }
+      
         $header = __('Home Page');
         $this->set('contentHeader', $header);
 
@@ -622,4 +625,36 @@ class DashboardController extends AppController
         }
     }
     //POCOR-7558 end
+
+    //[POCOR-7559]
+    private function sendSystemUpdateAlerts()
+    {
+        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+        $this->loadModel('System.SystemUpdates');
+        $latestVersion = $this->SystemUpdates->find()
+            ->order([$this->SystemUpdates->aliasField('id') => 'desc'])
+            ->first();
+        $maxId = $latestVersion->id;
+
+        //code to get the latest version[POCOR-7559]
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $domain = $ConfigItems->value('version_api_domain');
+        $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
+
+        $http = new Client();
+        $response = $http->get($api);
+        $response = $response->getBody()->getContents();
+        //code to get the latest version[POCOR-7559]
+        $get_response = new Response();
+        if ($get_response->getStatusCode() == 200) {
+            $jsonResponse = json_decode($response, true);
+            $data = array_reverse($jsonResponse['data']);
+            $key = "SystemUpdates";
+            foreach ($data as $item) {
+                if ($item['id'] > $maxId) {
+                    $AlertsTable->triggerAlertFeatureShell($key);
+                }
+            }
+        }
+    }
 }
