@@ -1734,6 +1734,7 @@ class ImportBehavior extends Behavior
                 $registryAlias = $lookupPlugin . '.' . $lookupModel;
                 if (!empty($this->directTables) && isset($this->directTables[$registryAlias])) {
                     $excelLookupModel = $this->directTables[$registryAlias]['excelLookupModel'];
+                    dd($registryAlias);
                 } else {
                     $excelLookupModel = TableRegistry::get($registryAlias);
                     $this->directTables[$registryAlias] = ['excelLookupModel' => $excelLookupModel];
