@@ -25,6 +25,7 @@ class POCOR8864 extends AbstractMigration
 
     public function down()
     {
+        $this->execute('ALTER TABLE `appraisal_criterias` DROP COLUMN IF EXISTS `description`');
         $this->execute('DROP TABLE IF EXISTS `appraisal_criterias`');
         $this->execute('RENAME TABLE `z_8864_appraisal_criterias` TO `appraisal_criterias`');
     }
