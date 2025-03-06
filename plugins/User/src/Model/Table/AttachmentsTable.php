@@ -367,6 +367,9 @@ class AttachmentsTable extends ControllerActionTable
                 'name', 'student_attachment_type_id', 'description', 'date_on_file', 'file_content'
             ]);
             $this->field('staff_attachment_type_id', ['visible' => false]);
+        } else {
+            $this->field('student_attachment_type_id', ['visible' => false]);
+            $this->field('staff_attachment_type_id', ['visible' => false]);
         }
         $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
     }

@@ -1439,8 +1439,14 @@ class Validation
         if ($file === false) {
             return false;
         }
+        //POCOR
+        if (is_string($file)){
+            list($width, $height) = getimagesizefromstring($file);
+        }
+        else{
+            [$width, $height] = getimagesize($file);
+        }
 
-        [$width, $height] = getimagesize($file);
         $validHeight = null;
         $validWidth = null;
 

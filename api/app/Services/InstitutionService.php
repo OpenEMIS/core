@@ -790,7 +790,6 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getInstitutionStaffList($request, $institutionId);
-            
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
@@ -850,6 +849,10 @@ class InstitutionService extends Controller
                     $list[$k]['institution_name'] = $d['institution']['name']??"";
                     $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_position_name'] = $d['institution_position']['staff_position_title']['name']??"";
+                    $list[$k]['staff_position_type'] = (isset($d['institution_position']['staff_position_title']['type']) && $d['institution_position']['staff_position_title']['type'] == 1) 
+                                    ? 'Teaching' 
+                                    : 'Non-teaching'; //POCOR-8601
+
                 }
             }
             

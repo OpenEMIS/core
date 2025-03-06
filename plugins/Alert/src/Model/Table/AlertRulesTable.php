@@ -13,6 +13,7 @@ use Cake\Log\Log;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
+use Cake\Datasource\ConnectionManager;
 
 class AlertRulesTable extends ControllerActionTable
 {
@@ -50,6 +51,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleScholarshipApplication');
         $this->addBehavior('Alert.AlertRuleScholarshipDisbursement');
         $this->addBehavior('Alert.AlertRuleCaseEscalation');//POCOR-7642
+        $this->addBehavior('Alert.AlertRuleSystemUpdates');//POCOR-7642
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -469,11 +471,10 @@ class AlertRulesTable extends ControllerActionTable
         if (is_array($thresholdArray)) {
             $alertTypeDetails = $this->getAlertTypeDetailsByFeature($entity->feature);
             $thresholdConfig = $alertTypeDetails[$entity->feature]['threshold'];
-
             foreach ($thresholdArray as $field => $value) {
                 $entity->{$field} = $value;
 
-                if (array_key_exists($field, $thresholdConfig) && isset($thresholdConfig[$field]['type'])) {
+                if (array_key_exists($field, (array)$thresholdConfig) && isset($thresholdConfig[$field]['type'])) {
                     $fieldType = $thresholdConfig[$field]['type'];
                     // for threshold with type chosenSelect type
                     if ($fieldType == 'chosenSelect') {
@@ -508,6 +509,10 @@ class AlertRulesTable extends ControllerActionTable
     }
      //POCOR-7558 start
     public function getLastRunDate(){
+        //POCOR-8575[START]
+        $connection = ConnectionManager::get('default');
+        $connection->execute("DELETE FROM system_processes WHERE `status` = 3;");
+        //POCOR-8575[END]
         $systemProcess = TableRegistry::get('SystemProcesses');
         $data=$systemProcess->find()->select([
              'name'=> $systemProcess->aliasField('name'),

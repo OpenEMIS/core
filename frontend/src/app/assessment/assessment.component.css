@@ -24,3 +24,7 @@
         min-height: 1000px !important;
     }
 }
+
+::ng-deep .form-buttons {
+    display: none !important;
+}
