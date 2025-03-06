@@ -724,14 +724,14 @@ class CrudApiController extends Controller
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
-        Log::info("User authorized for {$model}:{$action}");
+//        Log::info("User authorized for {$model}:{$action}");
 
         // Handle the request based on method
         return $this->handleRequestByMethod($request, $model, $segments, $method);
 
     }
 
-    private function mapHttpMethodToAction($method)
+    private function mapHttpMethodToAction($method): string
     {
         return match ($method) {
             'GET'    => 'view',

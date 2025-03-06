@@ -361,7 +361,7 @@ use InstitutionScope;
     {
         parent::boot();
 
-        static::addGlobalScope('institutionAccess', function (Builder $query) {
+        static::addGlobalScope('userInstitutionAccess', function (Builder $query) {
             $user = JWTAuth::user();
 
             if (!$user) {
