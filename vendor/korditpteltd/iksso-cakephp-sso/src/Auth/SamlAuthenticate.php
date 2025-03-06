@@ -2,17 +2,18 @@
 namespace SSO\Auth;
 
 use Cake\Auth\BaseAuthenticate;
-use Cake\Network\Request;
-use Cake\Network\Response;
+use Cake\Http\ServerRequest;
+use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 use OneLogin_Saml2_Auth;
+use OneLogin\Saml2\Auth;
 
 class SamlAuthenticate extends BaseAuthenticate
 {
-    public function authenticate(Request $request, Response $response)
+    public function authenticate(ServerRequest $request, Response $response)
     {
-        $session = $request->session();
-        $samlAttributes = $this->config('authAttribute');
+        $session = $request->getSession();
+        $samlAttributes = $this->getConfig('authAttribute');
         $setting['sp'] = [
             'entityId' => $samlAttributes['sp_entity_id'],
             'assertionConsumerService' => [
@@ -36,11 +37,11 @@ class SamlAuthenticate extends BaseAuthenticate
             ],
         ];
         $this->addCertFingerPrintInformation($setting, $samlAttributes);
-        $saml = $this->saml = new OneLogin_Saml2_Auth($setting);
+        $saml = $this->saml = new Auth($setting);
         $saml->processResponse();
         $userAttribute = $saml->getAttributes();
         if ($userAttribute) {
-            $fields = $this->config('mappedFields');
+            $fields = $this->getConfig('mappedFields');
             if (isset($fields['mapped_username'])) {
                 $userNameField = $fields['mapped_username'];
             } else {
@@ -51,7 +52,7 @@ class SamlAuthenticate extends BaseAuthenticate
             if ($isFound) {
                 return $isFound;
             } else {
-                if ($this->config('createUser')) {
+                if ($this->getConfig('createUser')) {
                     $userInfo = [
                         'firstName' => isset($userAttribute[$fields['mapped_first_name']][0]) ? $userAttribute[$fields['mapped_first_name']][0] : ' - ',
                         'lastName' => isset($userAttribute[$fields['mapped_last_name']][0]) ? $userAttribute[$fields['mapped_last_name']][0] : ' - ',
@@ -63,10 +64,10 @@ class SamlAuthenticate extends BaseAuthenticate
 
                     $User = TableRegistry::get($this->_config['userModel']);
                     $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
-                    if ($event->result === false) {
+                    if ($event->getResult() === false) {
                         return false;
                     } else {
-                        return $this->_findUser($event->result);
+                        return $this->_findUser($event->getResult());
                     }
                 } else {
                     return false;
