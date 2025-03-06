@@ -12,6 +12,8 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use OneLogin_Saml2_Error;
 use OneLogin_Saml2_Settings;
+use OneLogin\Saml2\Settings;
+use OneLogin\Saml2\Error;
 use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
@@ -141,16 +143,16 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
     {
         try {
             // Now we only validate SP settings
-            $settings = new OneLogin_Saml2_Settings($settingsInfo, true);
+            $settings = new Settings($settingsInfo, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
                 header('Content-Type: text/xml');
                 return $metadata;
             } else {
-                throw new OneLogin_Saml2_Error(
+                throw new Error(
                     'Invalid SP metadata: '.implode(', ', $errors),
-                    OneLogin_Saml2_Error::METADATA_SP_INVALID
+                    Error::METADATA_SP_INVALID
                 );
             }
         } catch (Exception $e) {
