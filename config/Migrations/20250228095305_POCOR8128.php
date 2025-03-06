@@ -381,49 +381,118 @@ class POCOR8128 extends AbstractMigration
 
     public function down()
     {
-        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        $this->execute('START TRANSACTION;');
 
-        $exists = $this->hasTable('z_8128_security_functions');
-        if ($exists) {
-            $this->execute('DROP TABLE IF EXISTS `security_functions`;');
-            $this->execute('RENAME TABLE `z_8128_security_functions` TO `security_functions`;');
+        try {
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+
+            // Step 1: Remove foreign keys
+            $this->removeForeignKeys();
+
+            // Step 2: Restore backup tables and track which ones were restored
+            $restoredTables = $this->restoreBackupTables();
+
+            // Step 3: Remove inserted data only if the corresponding table was NOT restored
+            $this->rollbackInsertedData($restoredTables);
+
+            // Step 4: Drop newly created tables
+            $this->dropNewTables();
+
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+            $this->execute('COMMIT;');
+
+        } catch (\Exception $e) {
+            $this->execute('ROLLBACK;');
+            throw $e;
         }
-        $exists = $this->hasTable('z_8128_workflow_actions');
-        if ($exists) {
-            $this->execute('DROP TABLE IF EXISTS `workflow_actions`;');
-            $this->execute('RENAME TABLE `z_8128_workflow_actions` TO `workflow_actions`;');
+    }
+
+    /**
+     * Remove foreign keys that were added in up()
+     */
+    private function removeForeignKeys(): void
+    {
+        $foreignKeys = [
+            'ALTER TABLE `staff_leave_policy_types` DROP FOREIGN KEY `fk_staff_leave_policy_types_policy_id`;',
+            'ALTER TABLE `staff_leave_policy_types` DROP FOREIGN KEY `fk_staff_leave_policy_types_type_id`;',
+            'ALTER TABLE `staff_leave_entitlements` DROP FOREIGN KEY `fk_staff_leave_entitlements_staff_id`;',
+            'ALTER TABLE `staff_leave_entitlements` DROP FOREIGN KEY `fk_staff_leave_entitlements_leave_type_id`;',
+            'ALTER TABLE `institution_staff_leave_entitlements` DROP FOREIGN KEY `fk_inst_staff_leave_staff_id`;',
+            'ALTER TABLE `institution_staff_leave_entitlements` DROP FOREIGN KEY `fk_inst_staff_leave_institution_id`;',
+            'ALTER TABLE `institution_staff_leave_entitlements` DROP FOREIGN KEY `fk_inst_staff_leave_position_id`;',
+            'ALTER TABLE `institution_staff_leave_entitlements` DROP FOREIGN KEY `fk_inst_staff_leave_policy_id`;',
+            'ALTER TABLE `institution_staff_leave_entitlements` DROP FOREIGN KEY `fk_inst_staff_leave_type_id`;',
+            'ALTER TABLE `staff_position_titles` DROP FOREIGN KEY `fk_staff_position_titles_policy_id`;'
+        ];
+
+        foreach ($foreignKeys as $query) {
+            $this->execute($query);
+        }
+    }
+
+    /**
+     * Restore backup tables if they exist and return a list of restored tables
+     * @return array
+     */
+    private function restoreBackupTables(): array
+    {
+        $backupTables = [
+            'security_functions',
+            'workflow_actions',
+            'workflow_steps',
+            'institution_staff_leave',
+            'staff_position_titles',
+            'staff_leave_types'
+        ];
+
+        $restoredTables = [];
+
+        foreach ($backupTables as $table) {
+            $backupTable = 'z_8128_' . $table;
+            if ($this->hasTable($backupTable)) {
+                $this->execute("DROP TABLE IF EXISTS `$table`;");
+                $this->execute("RENAME TABLE `$backupTable` TO `$table`;");
+                $restoredTables[] = $table;
+            }
         }
 
-        $exists = $this->hasTable('z_8128_workflow_steps');
-        if ($exists) {
-            $this->execute('DROP TABLE IF EXISTS `workflow_steps`;');
-            $this->execute('RENAME TABLE `z_8128_workflow_steps` TO `workflow_steps`;');
+        return $restoredTables;
+    }
+
+    /**
+     * Roll back inserted or updated data only for tables that were NOT restored
+     * @param array $restoredTables
+     */
+    private function rollbackInsertedData(array $restoredTables): void
+    {
+        if (!in_array('workflow_steps', $restoredTables)) {
+            $this->execute("DELETE FROM `workflow_steps` WHERE `name` = 'Pending for Recommendation';");
         }
 
-        $exists = $this->hasTable('z_8128_institution_staff_leave');
-        if ($exists) {
-            $this->execute('DROP TABLE IF EXISTS `institution_staff_leave`;');
-            $this->execute('RENAME TABLE `z_8128_institution_staff_leave` TO `institution_staff_leave`;');
+        if (!in_array('workflow_actions', $restoredTables)) {
+            $this->execute("DELETE FROM `workflow_actions` WHERE `name` = 'Submit for Recommendation';");
         }
-        $exists = $this->hasTable('z_8128_staff_position_titles');
-        if ($exists) {
-            $this->execute('ALTER TABLE `staff_position_titles`
-DROP FOREIGN KEY `fk_staff_position_titles_policy_id`,
-DROP INDEX idx_staff_leave_policy_id,
-DROP COLUMN staff_leave_policy_id;');
-            $this->execute('DROP TABLE IF EXISTS `z_8128_staff_position_titles`;');
-        }
-        $exists = $this->hasTable('z_8128_staff_leave_types');
-        if ($exists) {
-            $this->execute('DROP TABLE IF EXISTS `staff_leave_types`;');
-            $this->execute('RENAME TABLE `z_8128_staff_leave_types` TO `staff_leave_types`;');
-        }
-        $this->execute('DROP TABLE IF EXISTS `institution_staff_leave_entitlements`;');
-        $this->execute('DROP TABLE IF EXISTS `staff_leave_entitlements`;');
-        $this->execute('DROP TABLE IF EXISTS `staff_leave_policy_types`;');
-        $this->execute('DROP TABLE IF EXISTS `staff_leave_policies`;');
 
-        $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+        if (!in_array('staff_leave_types', $restoredTables)) {
+            $this->execute('UPDATE `staff_leave_types` SET `national_code` = NULL WHERE `national_code` IS NOT NULL;');
+        }
+    }
+
+    /**
+     * Drop the newly created tables
+     */
+    private function dropNewTables(): void
+    {
+        $newTables = [
+            'staff_leave_policies',
+            'staff_leave_policy_types',
+            'staff_leave_entitlements',
+            'institution_staff_leave_entitlements'
+        ];
+
+        foreach ($newTables as $table) {
+            $this->execute("DROP TABLE IF EXISTS `$table`;");
+        }
     }
 
     /**
