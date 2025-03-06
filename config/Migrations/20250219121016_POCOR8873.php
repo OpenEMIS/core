@@ -89,13 +89,29 @@ class POCOR8873 extends AbstractMigration
 
   public function down()
   {
+    // Restore data in field_options and security_functions by removing inserted record
+    $this->execute('DELETE FROM field_options WHERE `name` IN ("Item Types", "Stock Units")');
+    $this->execute('DELETE FROM security_functions WHERE `name` = "Consumables"');
+
+    // Ensure FKs are dropped before dropping tables to avoid lock issues
+    $this->execute('ALTER TABLE institution_consumable_transactions DROP FOREIGN KEY IF EXISTS fk_institution_consumable_id');
+    $this->execute('ALTER TABLE institution_consumable_transactions DROP FOREIGN KEY IF EXISTS fk_trans_modified_user_id');
+    $this->execute('ALTER TABLE institution_consumable_transactions DROP FOREIGN KEY IF EXISTS fk_trans_created_user_id');
+    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS fk_item_type_id');
+    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS fk_stock_unit_id');
+    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS fk_institution_id');
+    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS fk_created_user_id');
+    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS fk_modified_user_id');
+    $this->execute('ALTER TABLE item_types DROP FOREIGN KEY IF EXISTS fk_item_stock_unit_id');
+
+    // Drop the tables
     $this->execute('DROP TABLE IF EXISTS `field_options`');
     $this->execute('RENAME TABLE `z_8873_field_options` TO `field_options`');
     $this->execute('DROP TABLE IF EXISTS `security_functions`');
     $this->execute('RENAME TABLE `z_8873_security_functions` TO `security_functions`');
-    $this->execute('DROP TABLE stock_units');
-    $this->execute('DROP TABLE item_types');
-    $this->execute('DROP TABLE institution_consumables');
-    $this->execute('DROP TABLE institution_consumable_transactions');
+    $this->execute('DROP TABLE IF EXISTS stock_units');
+    $this->execute('DROP TABLE IF EXISTS item_types');
+    $this->execute('DROP TABLE IF EXISTS institution_consumables');
+    $this->execute('DROP TABLE IF EXISTS institution_consumable_transactions');
   }
 }
