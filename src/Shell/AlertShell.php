@@ -127,4 +127,34 @@ class AlertShell extends Shell
 
         return $emailList;
     }
+
+    //POCOR-8341[START]
+    public function getRoleAssociatedEmailList($securityRoleRecords)
+    {
+        $emailList = [];
+
+        foreach ($securityRoleRecords as $securityRolesObj) {
+            $options = [
+                'id' => $securityRolesObj->id
+            ];
+            $emailListResult = $this->Users
+                ->find('emailList', $options)
+                ->toArray();
+              
+            if (!empty($emailListResult)) {
+                foreach ($emailListResult as $obj) {
+                    if (!empty($obj->email)) {
+                        $recipient = $obj->name . ' <' . $obj->email . '>';
+                        if (!in_array($recipient, $emailList)) {
+                            $emailList[] = $recipient;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $emailList;
+    }
+    //POCOR-8341[END]
+
 }
