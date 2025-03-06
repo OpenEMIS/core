@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\InstitutionScope;
 
 class StaffReportCardEmailProcesses extends Model
 {
     use HasFactory;
+use InstitutionScope;
 
     protected $table = 'staff_report_card_email_processes';
 

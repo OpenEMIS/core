@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\InstitutionScope;
 
 class SummaryInstitutionRoomTypes extends Model
 {
     use HasFactory;
+use InstitutionScope;
     // ✅ Allow mass assignment
     protected $fillable = ['academic_period_id', 'academic_period_name', 'institution_id', 'institution_code', 'room_type', 'total_rooms', 'academic_period_id', 'institution_id'];
 

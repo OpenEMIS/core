@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\InstitutionScope;
 use App\Traits\UuidId;
 
 class InstitutionSubjectStudents extends Model
 {
     use UuidId;
     use HasFactory;
+use InstitutionScope;
     // ✅ Allow mass assignment
     protected $fillable = ['id',
         'total_mark',

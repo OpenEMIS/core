@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\InstitutionScope;
 
 class InstitutionScheduleTimetables extends Model
 {
     use HasFactory;
+use InstitutionScope;
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'name', 'status', 'academic_period_id', 'institution_class_id', 'institution_id', 'institution_schedule_interval_id', 'institution_schedule_term_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'academic_period_id', 'institution_class_id', 'institution_id', 'institution_schedule_interval_id', 'institution_schedule_term_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps

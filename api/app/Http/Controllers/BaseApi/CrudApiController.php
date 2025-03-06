@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
+use App\Services\PermissionService;
 
 class CrudApiController extends Controller
 {
@@ -684,6 +685,10 @@ class CrudApiController extends Controller
         //...
     ];
 
+    public function __construct(PermissionService $permissionService)
+    {
+        $this->permissionService = $permissionService;
+    }
     /**
      * Common entry point for all CRUD operations.
      *
@@ -695,7 +700,7 @@ class CrudApiController extends Controller
      * @param string                   $any     The remaining URL segments.
      * @return \Illuminate\Http\JsonResponse
      */
-    public function common(Request $request, $any)
+    public function common(Request $request, $any): \Illuminate\Http\JsonResponse
     {
         $segments = explode('/', $any);
         // Extract resource key (first segment)
@@ -707,29 +712,58 @@ class CrudApiController extends Controller
 
         $model = $this->allowedResources[$resource];
         $method = $request->method();
-        // For summary resources, disable PUT and DELETE operations,
-        // and also disable GET requests that include a resource identifier.
-        if (strpos($resource, 'summary') === 0 || strpos($resource, 'data-dictionary') === 0) {
-            if (in_array($method, ['PUT', 'DELETE'])) {
-                return response()->json(['error' => 'Operation not allowed on summary resources'], 405);
-            }
-            if ($method === 'GET' && count($segments) === 1) {
-                return response()->json(['error' => 'Operation not allowed on summary resources'], 405);
-            }
+        $action = $this->mapHttpMethodToAction($method);
+
+        // Restrict summary resources
+        if ($this->isSummaryResource($resource, $method, $segments)) {
+            return response()->json(['error' => 'Operation not allowed on summary resources'], 405);
         }
 
-        switch ($method) {
-            case 'GET':
-                return $this->handleGetRequest($request, $model, $segments);
-            case 'POST':
-                return $this->handlePostRequest($request, $model);
-            case 'PUT':
-                return $this->handlePutRequest($request, $model, $segments);
-            case 'DELETE':
-                return $this->handleDeleteRequest($request, $model, $segments);
-            default:
-                return response()->json(['error' => 'Invalid request'], 405);
+        // Check Permissions
+        if (!$this->permissionService->checkPermission($model, $action)) {
+            return response()->json(['error' => 'Forbidden'], 403);
         }
+
+        Log::info("User authorized for {$model}:{$action}");
+
+        // Handle the request based on method
+        return $this->handleRequestByMethod($request, $model, $segments, $method);
+
+    }
+
+    private function mapHttpMethodToAction($method)
+    {
+        return match ($method) {
+            'GET'    => 'view',
+            'POST'   => 'add',
+            'PUT'    => 'edit',
+            'DELETE' => 'delete',
+            default  => 'unknown',
+        };
+    }
+
+    private function isSummaryResource($resource, $method, $segments): bool
+    {
+        if (str_starts_with($resource, 'summary') || str_starts_with($resource, 'data-dictionary')) {
+            if (in_array($method, ['PUT', 'DELETE'])) {
+                return true;
+            }
+            if ($method === 'GET' && count($segments) === 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function handleRequestByMethod($request, $model, $segments, $method): \Illuminate\Http\JsonResponse
+    {
+        return match ($method) {
+            'GET'    => $this->handleGetRequest($request, $model, $segments),
+            'POST'   => $this->handlePostRequest($request, $model),
+            'PUT'    => $this->handlePutRequest($request, $model, $segments),
+            'DELETE' => $this->handleDeleteRequest($request, $model, $segments),
+            default  => response()->json(['error' => 'Invalid request'], 405),
+        };
     }
 
     protected function getPossibleIdField($model)

@@ -5,38 +5,99 @@ namespace App\Services;
 use App\Models\SecurityGroupUsers;
 use App\Models\SecurityRoleFunction;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+
+
 
 class PermissionService
 {
-    /**
-     * Check if the user has permission to access the given action
-     *
-     * @param string $modelName
-     * @param string $action
-     * @return bool
-     */
-    public function checkPermission($modelName, $action): bool
+    protected $user;
+    protected $roleIds = [];
+    protected $institutionIds = [];
+    protected $allowAllInstitutions = 0;
+    private array $commonViewModules = [
+        'Areas',
+        'Genders',
+        'AreaAdministratives',
+        'AreaLevels',
+        'AcademicPeriods',
+        'AcademicPeriodLevels',
+        'ContactTypes'
+        // Add more modules that should be always viewable
+    ];
+
+    public function __construct()
+    {
+        $this->user = JWTAuth::user();
+        if ($this->user) {
+            $this->loadUserPermissions();
+        }
+    }
+
+    private function loadUserPermissions()
+    {
+        $userId = $this->user->id;
+        $this->roleIds = SecurityGroupUsers::where('security_user_id', $userId)
+            ->pluck('security_role_id')
+            ->unique()
+            ->toArray();
+
+        $securityGroupUsers = SecurityGroupUsers::with('securityGroup', 'securityGroup.institutions')
+            ->where('security_user_id', $userId)
+            ->get();
+
+        foreach ($securityGroupUsers as $sGU) {
+            foreach ($sGU->securityGroup->institutions as $institution) {
+                $this->institutionIds[] = $institution->institution_id;
+            }
+        }
+
+        // Ensure uniqueness
+        $this->institutionIds = array_unique($this->institutionIds);
+
+        // Fetch additional institution permissions
+        $groupAreaInstitutions = $this->getGroupAreaInstitutions($this->roleIds);
+        $this->allowAllInstitutions = $groupAreaInstitutions['allowAllInstitutions'] ?? 0;
+        $this->institutionIds = array_unique(array_merge($this->institutionIds, $groupAreaInstitutions['institutionIds'] ?? []));
+
+        // If user is super admin, override permissions
+        if ($this->user->super_admin ?? 0) {
+            $this->allowAllInstitutions = 1;
+        }
+    }
+
+    public function checkPermission($modelName, $action)
     {
         $user = JWTAuth::user();
         if (!$user) {
-            return false; // No user found, deny access
+            return false;
         }
 
         if ($user->super_admin ?? 0) {
             return true; // Super admin has all permissions
         }
 
-        $userId = $user->id;
+        $cacheKey = "permissions:user:{$user->id}";
+
+        // Attempt to get cached permissions
+        $permissions = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
+            return $this->loadPermissionsFromDb($user->id);
+        });
+
+        return $this->hasPermission($permissions, $modelName, $action);
+    }
+
+    private function loadPermissionsFromDb($userId): array
+    {
         $roleIds = SecurityGroupUsers::where('security_user_id', $userId)
             ->pluck('security_role_id')
             ->unique()
             ->toArray();
 
         if (empty($roleIds)) {
-            return false; // User has no roles assigned
+            return [];
         }
-        $requiredPermission = "$modelName.$action";
+
         $roleFunctions = SecurityRoleFunction::join('security_functions', 'security_functions.id', '=', 'security_role_functions.security_function_id')
             ->select(
                 'security_role_functions._view',
@@ -44,95 +105,71 @@ class PermissionService
                 'security_role_functions._add',
                 'security_role_functions._delete',
                 'security_role_functions._execute',
-                'security_role_id',
-                'security_function_id',
-                'security_functions.name',
-                'security_functions.controller',
-                'security_functions.module',
-                'security_functions.category',
-                'security_functions._view as security_function_view',
-                'security_functions._edit as security_function_edit',
-                'security_functions._add as security_function_add',
-                'security_functions._delete as security_function_delete',
-                'security_functions._execute as security_function_execute'
+                'security_functions.module'
             )
             ->whereIn('security_role_id', $roleIds)
-            ->where(function ($query) use ($modelName, $action) {
-                $query->where('security_functions.controller', $modelName)
-                    ->where(function ($query) use ($action) {
-                        $query->where('security_functions._view', "$action")
-                            ->orWhere('security_functions._edit', "$action")
-                            ->orWhere('security_functions._add', "$action")
-                            ->orWhere('security_functions._delete', "$action")
-                            ->orWhere('security_functions._execute', "$action")
-                            ->orWhere('security_functions._view', 'LIKE', "%|$action")
-                            ->orWhere('security_functions._edit', 'LIKE', "%|$action")
-                            ->orWhere('security_functions._add', 'LIKE', "%|$action")
-                            ->orWhere('security_functions._delete', 'LIKE', "%|$action")
-                            ->orWhere('security_functions._execute', 'LIKE', "%|$action")
-                            ->orWhere('security_functions._view', 'LIKE', "%|$action|%")
-                            ->orWhere('security_functions._edit', 'LIKE', "%|$action|%")
-                            ->orWhere('security_functions._add', 'LIKE', "%|$action|%")
-                            ->orWhere('security_functions._delete', 'LIKE', "%|$action|%")
-                            ->orWhere('security_functions._execute', 'LIKE', "%|$action|%")
-                            ->orWhere('security_functions._view', 'LIKE', "$action|%")
-                            ->orWhere('security_functions._edit', 'LIKE', "$action|%")
-                            ->orWhere('security_functions._add', 'LIKE', "$action|%")
-                            ->orWhere('security_functions._delete', 'LIKE', "$action|%")
-                            ->orWhere('security_functions._execute', 'LIKE', "$action|%")
-                        ;
-                    })
-                    ->orWhere(function ($query) use ($modelName, $action) {
-                        $query->where('security_functions._view', 'LIKE', "%$modelName.$action%")
-                            ->orWhere('security_functions._edit', 'LIKE', "%$modelName.$action%")
-                            ->orWhere('security_functions._add', 'LIKE', "%$modelName.$action%")
-                            ->orWhere('security_functions._delete', 'LIKE', "%$modelName.$action%")
-                            ->orWhere('security_functions._execute', 'LIKE', "%$modelName.$action%");
-                    });
-            })
-            ->get()
-            ->toArray();
-        Log::info("Role functions: " . print_r($roleFunctions,true));
-        // Normalize and filter the array in PHP
+            ->get();
+
+        $permissions = [];
         foreach ($roleFunctions as $roleFunction) {
-            $actions = [
-                'security_function_view',
-                'security_function_edit',
-                'security_function_add',
-                'security_function_delete',
-                'security_function_execute'
-            ];
-
-            foreach ($actions as $actionType) {
-                if (!isset($roleFunction[$actionType])) {
-                    continue;
-                }
-
-//                Log::info("Checking $actionType: " . $roleFunction[$actionType]);
-
-                // Normalize permission string into an array
-                $permissions = array_map('trim', explode('|', $roleFunction[$actionType]));
-//                Log::info("Permissions: " . json_encode($permissions));
-
-                // Check exact match
-                if (in_array($action, $permissions, true) || in_array("$modelName.$action", $permissions, true)) {
-//                    Log::info("Access granted for $modelName:$action");
-                    return true;
-                }
-
-                // Additional check: Sometimes `controller` field might be a better match
-                if (isset($roleFunction['controller'])) {
-                    $controller = $roleFunction['controller'];
-                    if (in_array("$controller.$action", $permissions, true)) {
-//                        Log::info("Access granted for $controller:$action");
-                        return true;
-                    }
+            foreach (['_view', '_edit', '_add', '_delete', '_execute'] as $perm) {
+                if (!empty($roleFunction->$perm)) {
+                    $permissions[$roleFunction->module][$perm] = explode('|', $roleFunction->$perm);
                 }
             }
+        }
 
-//            Log::info("Access denied for $modelName:$action");
-            return false;
-        };
+        return $permissions;
+    }
+
+    private function hasPermission($permissions, $modelName, $action): bool
+    {
+        if ($action === 'view' && in_array($modelName, $this->commonViewModules, true)) {
+            return true;
+        }
+        foreach ($permissions as $module => $permTypes) {
+            foreach (['_view', '_edit', '_add', '_delete', '_execute'] as $perm) {
+                if (isset($permTypes[$perm])) {
+                    $permValues = $permTypes[$perm];
+
+                    // 🔹 Check for general permission like "Institutions.view"
+                    if (in_array("$module.$action", $permValues, true)) {
+                        return true;
+                    }
+
+                    // 🔹 Check for specific model-based permission like "InstitutionStudents.view"
+                    if (in_array("$modelName.$action", $permValues, true)) {
+                        return true;
+                    }
+
+                    // 🔹 Check if only "view", "edit", etc. exists (without module prefix)
+//                    if (in_array($action, $permValues, true)) {
+//                        return true;
+//                    }
+                }
+            }
+        }
+
         return false;
+    }
+
+
+    public function getInstitutionIds()
+    {
+        return $this->institutionIds;
+    }
+
+    public function getAllowAllInstitutions()
+    {
+        return $this->allowAllInstitutions;
+    }
+
+    private function getGroupAreaInstitutions($roleIds)
+    {
+        // Your logic to fetch group area institutions based on role IDs
+        return [
+            'allowAllInstitutions' => 0,
+            'institutionIds' => [] // Replace with actual logic
+        ];
     }
 }

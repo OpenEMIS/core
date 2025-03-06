@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\InstitutionScope;
 
 class InstitutionPositions extends Model
 {
     use HasFactory;
+use InstitutionScope;
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'status_id', 'position_no', 'staff_position_title_id', 'institution_id', 'assignee_id', 'shift_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'status_id', 'staff_position_title_id', 'institution_id', 'assignee_id', 'shift_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps

@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\InstitutionScope;
 
 class SummaryInstitutionStudentAbsences extends Model
 {
     use HasFactory;
+use InstitutionScope;
 
     protected $table = 'summary_institution_student_absences';
 
