@@ -9,18 +9,21 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest; //POCOR-8886
 use DateTime;
 use PHPExcel_Worksheet;
 
 class ImportStudentAttendancesTable extends AppTable {
     private $institutionId = false;
 
-    public function initialize(array $config) {
-        $this->table('import_mapping');
+    public function initialize(array $config):void {
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'StudentAbsencesPeriodDetails']);
+        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'StudentAbsencesPeriodDetails',
+            'backUrl' => ['plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentAttendances']]); //POCOR-8886
         $this->StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $this->Institutions = TableRegistry::get('Institution.Institutions');
         $this->Students = TableRegistry::get('Institution.Students');
@@ -33,14 +36,15 @@ class ImportStudentAttendancesTable extends AppTable {
     }
 
     public function beforeAction($event) {
-        $session = $this->request->session();
+        /*$session = $this->request->session();
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
-        }
+        }*/
+         $this->institutionId = $this->ControllerAction->getQueryString('institution_id'); //POCOR-8886
         $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
@@ -62,7 +66,7 @@ class ImportStudentAttendancesTable extends AppTable {
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         $request = $this->request;
-        if (empty($request->query('class'))) {
+        if (empty($request->getQuery('class'))) {
             unset($buttons[0]);
             unset($buttons[1]);
         }
@@ -70,8 +74,10 @@ class ImportStudentAttendancesTable extends AppTable {
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
-        $request = $this->request;
-        unset($request->query['class']);
+        $request = $this->request->withQueryParams(
+            array_diff_key($this->request->getQuery(), ['class' => ''])
+        ); //POCOR-8886
+
     }
 
     public function addAfterAction(Event $event, Entity $entity)
@@ -86,31 +92,35 @@ class ImportStudentAttendancesTable extends AppTable {
         //Assumption - onChangeReload must be named in this format: change<field_name>. E.g changeClass
         $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
 
-        if (isset($this->request->data[$this->alias()])) {
+        if (isset($this->request->getData()[$this->getAlias()])) {
 
             $unsetFlag = false;
-            $aryRequestData = $this->request->data[$this->alias()];
+            $aryRequestData = $this->request->getData()[$this->getAlias()]; //POCOR-8886
 
             foreach ($aryRequestData as $requestData => $value) {
                 if (isset($this->dependency[$requestData]) && $value) {
                     $aryDependencies = $this->dependency[$requestData];
                     foreach ($aryDependencies as $dependency) {
-                        $this->request->query = $this->request->data[$this->alias()];
-                        $this->ControllerAction->field($dependency, ['visible' => true]);
-                    }
+                    $queryParams = $this->request->getQueryParams(); 
+                    $queryParams = array_merge($queryParams, $this->request->getData($this->getAlias())); 
+                    $this->request = $this->request->withQueryParams($queryParams); // Update request object
+
+                    $this->ControllerAction->field($dependency, ['visible' => true]);
+                }
+
                 }
             }
         }
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
-        $crumbTitle = $this->getHeader($this->alias());
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona): void {
+        $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
     public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
 
-            $tempRow['entity'] = $this->StudentAbsencesPeriodDetails->newEntity();
+            $tempRow['entity'] = $this->StudentAbsencesPeriodDetails->newEntity([]);
            
     }
 
@@ -120,7 +130,7 @@ class ImportStudentAttendancesTable extends AppTable {
      * Currently only populates students based on current academic period
      */
     public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $currentPeriodId = $this->AcademicPeriods->getCurrent();
         if (!$currentPeriodId) {
             $array = $this->AcademicPeriods->getAvailableAcademicPeriods();
@@ -128,7 +138,7 @@ class ImportStudentAttendancesTable extends AppTable {
             $currentPeriodId = key($array);
         }
 
-        $classId = (!empty($this->request->query('class'))) ? $this->request->query('class') : '';
+        $classId = (!empty($this->request->getQuery('class'))) ? $this->request->getQuery('class') : '';
 
         if (!empty($classId)) {
             //Query to find all students from the selected classes in the institutions and academic period for absentee
@@ -234,9 +244,10 @@ class ImportStudentAttendancesTable extends AppTable {
     }
 
     public function onImportPopulateInstitutionSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
-        $classId = !empty($this->request->query('class')) ? $this->request->query('class') : '';
-
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $request = $this->request;
+        $selectedClass = $request->getQuery('class');
+        $classId = !empty($this->request->getQuery('class')) ? $this->request->getQuery('class') : '';
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $modelData = $InstitutionSubjects->getSubjectsByClass($classId);
 
         $nameHeader = $this->getExcelLabel($InstitutionSubjects, 'Subject');
@@ -305,7 +316,7 @@ class ImportStudentAttendancesTable extends AppTable {
 
     public function onImportPopulatePeriodData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 
-        $classId = !empty($this->request->query('class')) ? $this->request->query('class') : '';
+        $classId = !empty($this->request->getQuery('class')) ? $this->request->getQuery('class') : '';
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
 
         //Get the attendance per day that class needs to mark
@@ -341,7 +352,8 @@ class ImportStudentAttendancesTable extends AppTable {
 
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
-    
+        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $this->institutionId = $institutionId;
         if (empty($tempRow['student_id'])) {
             $rowInvalidCodeCols['student_id'] = __('OpenEMIS ID was not defined');
             return false;
@@ -356,7 +368,7 @@ class ImportStudentAttendancesTable extends AppTable {
         $tempRow['institution_id'] = $this->institutionId;
         $currentPeriodId = $this->AcademicPeriods->getCurrent();
         $tempRow['academic_period_id'] = $currentPeriodId;
-        $classId = $this->request->query('class');
+        $classId = $this->request->getQuery('class');
         $tempRow['institution_class_id'] = $classId;
        
         if (empty($tempRow['date'])) {
@@ -444,7 +456,7 @@ class ImportStudentAttendancesTable extends AppTable {
             'subject_id'           => 0,
         ]);
 //        $this->log($markRecord, 'debug');
-        if (!$markRecord->errors()) {
+        if (!$markRecord->getErrors()) {
             $StudentAttendanceMarkedRecords->save($markRecord);
         }
 
@@ -463,11 +475,13 @@ class ImportStudentAttendancesTable extends AppTable {
         $tempPassedRecord['data'][$key] = $original[$key];
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldClass(Event $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
-
+            $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+            if(empty($institutionId)){
+                $institutionId = $this->ControllerAction->getQueryString('institution_id');
+            }
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
 
@@ -506,7 +520,7 @@ class ImportStudentAttendancesTable extends AppTable {
 
             $attr['options'] = $classOptions;
             // useing onChangeReload to do visible
-            $attr['onChangeReload'] = 'changeClass';
+            $attr['onChangeReload'] = true;
         }
 
         return $attr;

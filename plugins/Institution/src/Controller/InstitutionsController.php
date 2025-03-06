@@ -1505,12 +1505,23 @@ class InstitutionsController extends AppController
                 $this->ControllerAction->paramsEncode(['institution_id' => $institutionId])
             ];
 
+            /*$importUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'ImportStudentAttendances',
+                0 => 'add',
+                1 => $this->ControllerAction->paramsEncode(['id' => $institutionId,'institution_id' => $institutionId]),
+            ];*/
             $importUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'ImportStudentAttendances',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'add'
+                0 => 'add',
+                1 => $this->ControllerAction->paramsEncode([
+                    'id' => $institutionId,
+                    'institution_id' => $institutionId
+                ]),
+                '?' => ['class' => '591'] // Add dynamic class as query string
             ];
 
             $archiveUrl = $this->ControllerAction->url('index');
