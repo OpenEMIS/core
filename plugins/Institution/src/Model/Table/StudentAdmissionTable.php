@@ -855,9 +855,6 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-        $key = "StudentAdmission";
-        $AlertsTable->triggerAlertFeatureShell($key);
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
@@ -915,6 +912,11 @@ class StudentAdmissionTable extends ControllerActionTable
                 }
             }
         }
+        //POCOR-8869[START] // to send alert on student admission approved 
+        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+        $key = "StudentAdmission";
+        $AlertsTable->triggerAlertFeatureShell($key);
+        //POCOR-8869[END]
     }
 
     public function findWorkbench(Query $query, array $options)
@@ -1314,8 +1316,7 @@ class StudentAdmissionTable extends ControllerActionTable
         return $newEntity;
     }
 
-     //POCOR-7642 start
-     public function getModelAlertData($threshold)
+    public function getModelAlertData($threshold)
      {
          $dayBefore = $threshold['value'];
          $workflowCategory = $threshold['workflow_steps'];

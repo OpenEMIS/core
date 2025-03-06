@@ -17,24 +17,17 @@ class AlertRuleStudentAdmissionBehavior extends AlertRuleBehavior
         'name' => 'Student Admission',
         'method' => 'Email',
         'threshold' => [
-            'value' => [
-                'type' => 'integer',
-                'after' => 'security_roles',
-                'attr' => [
-                    'min' => 1,
-                    'max' => 30,
-                    'required' => true
-                ],
-                'tooltip' => [
-                    'label' => 'Value',
-                    'sprintf' => [1, 30]
-                ]
-                ],
                 'workflow_steps' => [
                     'type' => 'chosenSelect',
                     'select' => false,
                     'after' => 'security_roles',
                     'options' =>'StudentAdmission.workflow_steps'
+                ],
+                'status' => [
+                    'type' => 'chosenSelect',
+                    'select' => false,
+                    'after' => 'workflow_steps',
+                    'options' =>'StudentAdmissionStatus.status'
                 ],
         ],
         'placeholder' => [
