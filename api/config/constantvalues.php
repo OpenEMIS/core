@@ -5,7 +5,7 @@ return [
         'resourceNotFound' => 404,
         'internalError' => 500,
         'success' => 200,
-        'createSuccess' => 201,
+        'createSuccess' => 201, // POCOR-8915
         'deleteError' => 403,
         'fieldNotFound' => 422
     ],

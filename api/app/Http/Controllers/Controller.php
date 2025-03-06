@@ -71,7 +71,7 @@ class Controller extends BaseController
 
     public function sendSuccessResponse($message, $data = [], $success=true)
     {
-        $message = $message ?? "Successful.";
+        $message = $message ?? "Successful."; // POCOR-8915
         return response()->json(
             [
                 'message' => $message,
@@ -82,6 +82,7 @@ class Controller extends BaseController
         );
     }
 
+    // POCOR-8915 start
     public function sendCreateSuccessResponse($message, $data = [], $success=true)
     {
         $message = $message ?? "Successful.";
@@ -94,6 +95,7 @@ class Controller extends BaseController
             config('constantvalues.statusCodes.createSuccess')
         );
     }
+    // POCOR-8915 end
 
 
     public function changeDateFormat($date)

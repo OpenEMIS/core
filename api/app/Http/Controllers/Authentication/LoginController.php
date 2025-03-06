@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
-
+    
 
     /**
      * @OA\Post(

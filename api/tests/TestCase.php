@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
-
+// POCOR-8915 start
     private function adjustUri($uri)
     {
 
@@ -176,4 +176,5 @@ abstract class TestCase extends BaseTestCase
     {
         return url($this->adjustUri($path));
     }
+    // POCOR-8915 end
 }

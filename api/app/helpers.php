@@ -23,9 +23,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Database\Query\Builder;
+// POCOR-8915 start
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 
-
+// POCOR-8915 start
 //	if(!function_exists('checkAccess')){
 //		function checkAccess($additionalParam = [])
 //		{
@@ -273,7 +275,6 @@ use Illuminate\Database\Query\Builder;
 //	}
 //
 
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 if (!function_exists('checkAccess')) {
     function checkAccess(array $additionalParam = []): array|bool
@@ -465,7 +466,7 @@ if (!function_exists('getChildrenIdFromDb')) {
         return array_unique($areaIds);
     }
 }
-
+// POCOR-8915 end
 
 	if(!function_exists('removeNonColumnFields')){
 		function removeNonColumnFields($params = [], $table = ""){
@@ -554,6 +555,7 @@ if (!function_exists('getChildrenIdFromDb')) {
 	}
 
 
+// POCOR-8915 start
 	//For POCOR-8077 Start...
 //	if(!function_exists('getGroupAreaInstitutions')){
 //		function getGroupAreaInstitutions($groupIds){
@@ -614,7 +616,7 @@ if (!function_exists('getChildrenIdFromDb')) {
 //	}
 
 	//For POCOR-8077 End...
-
+// POCOR-8915 end
 
 	//For POCOR-8104 Start...
 	if(!function_exists('getNewOpenemisNo')){
