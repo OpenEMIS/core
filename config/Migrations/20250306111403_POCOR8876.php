@@ -15,11 +15,10 @@ class POCOR8876 extends AbstractMigration
      */
     public function up(): void
     {
-        // Backup locale_contents table
+        // Backup outcome_criterias table
         $this->execute('CREATE TABLE `z_8876_outcome_criterias` LIKE `outcome_criterias`');
         $this->execute('INSERT INTO `z_8876_outcome_criterias` SELECT * FROM `outcome_criterias`');
 
-        //Insert Data into labels tables
         $this->execute("ALTER TABLE `outcome_criterias` CHANGE `code` `code` TEXT NULL");
     }
 
