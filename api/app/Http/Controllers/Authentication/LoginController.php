@@ -63,7 +63,7 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         try {
-z
+
             $userCheck = SecurityUsers::where('username', $request->username)->first();
 
             if (isset($userCheck)) {
