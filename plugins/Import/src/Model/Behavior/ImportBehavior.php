@@ -11,7 +11,7 @@ use InvalidArgumentException;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -1734,10 +1734,17 @@ class ImportBehavior extends Behavior
                 $registryAlias = $lookupPlugin . '.' . $lookupModel;
                 if (!empty($this->directTables) && isset($this->directTables[$registryAlias])) {
                     $excelLookupModel = $this->directTables[$registryAlias]['excelLookupModel'];
-                    dd($registryAlias);
                 } else {
-                    $excelLookupModel = TableRegistry::get($registryAlias);
-                    $this->directTables[$registryAlias] = ['excelLookupModel' => $excelLookupModel];
+
+                    if ($registryAlias == '.InstitutionSubjects' && $mappingModel == 'Institution.StudentAbsencesPeriodDetails'){
+                        $registryAlias = 'Institution.InstitutionSubjects';
+                        $excelLookupModel = TableRegistry::get($registryAlias);
+                        $this->directTables[$registryAlias] = ['excelLookupModel' => $excelLookupModel];
+                    }else{
+                        $excelLookupModel = TableRegistry::get($registryAlias);
+                        $this->directTables[$registryAlias] = ['excelLookupModel' => $excelLookupModel];
+                    }
+                    
                 }
                 $excludeValidation = false;
                 if (!empty($cellValue)) {
@@ -1866,6 +1873,7 @@ class ImportBehavior extends Behavior
         return $rowPass;
     }
 
+    
 
     protected function getFormattedCellValue($cell)
     {

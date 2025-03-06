@@ -121,7 +121,6 @@ class ImportStudentAttendancesTable extends AppTable {
     public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
 
             $tempRow['entity'] = $this->StudentAbsencesPeriodDetails->newEntity([]);
-           
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
@@ -137,9 +136,11 @@ class ImportStudentAttendancesTable extends AppTable {
             reset($array);
             $currentPeriodId = key($array);
         }
-
         $classId = (!empty($this->request->getQuery('class'))) ? $this->request->getQuery('class') : '';
 
+        if(empty($classId)){
+            $classId = $this->request->getSession()->read('class_id');
+        }
         if (!empty($classId)) {
             //Query to find all students from the selected classes in the institutions and academic period for absentee
             $currentPeriod = $this->AcademicPeriods->get($currentPeriodId);
@@ -247,6 +248,10 @@ class ImportStudentAttendancesTable extends AppTable {
         $request = $this->request;
         $selectedClass = $request->getQuery('class');
         $classId = !empty($this->request->getQuery('class')) ? $this->request->getQuery('class') : '';
+
+        if(empty($classId)){
+            $classId = $this->request->getSession()->read('class_id');
+        }
         $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $modelData = $InstitutionSubjects->getSubjectsByClass($classId);
 
@@ -317,13 +322,15 @@ class ImportStudentAttendancesTable extends AppTable {
     public function onImportPopulatePeriodData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 
         $classId = !empty($this->request->getQuery('class')) ? $this->request->getQuery('class') : '';
+
+        if(empty($classId)){
+            $classId = $this->request->getSession()->read('class_id');
+        }
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
 
         //Get the attendance per day that class needs to mark
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($classId,$academicPeriodId);
-
-        
 
         $nameHeader = $this->getExcelLabel($StudentAttendanceMarkTypes, 'Number of Periods');
         $columnHeader = $this->getExcelLabel($StudentAttendanceMarkTypes, 'Id');
@@ -477,6 +484,7 @@ class ImportStudentAttendancesTable extends AppTable {
 
     public function onUpdateFieldClass(Event $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
+            $classId  = $this->request->getData()[$this->getAlias()]['class'];
             $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
             $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
             if(empty($institutionId)){
@@ -520,10 +528,19 @@ class ImportStudentAttendancesTable extends AppTable {
 
             $attr['options'] = $classOptions;
             // useing onChangeReload to do visible
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = 'ChangeClassName';
         }
 
         return $attr;
+    }
+    public function addEditOnChangeClassName(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $alias = $this->getAlias();
+        $classId = $data[$alias]['class_name'];
+        $data['class_id'] = $classId;
+        $classId = $data['ImportStudentAttendances']['class'] ?? null;
+        $this->request->getSession()->write('class_id', $classId);
+        $this->request = $this->request->withQueryParams(['class_id' => $classId]);
     }
 
 }
