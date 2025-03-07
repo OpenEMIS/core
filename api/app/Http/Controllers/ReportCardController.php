@@ -464,7 +464,7 @@ class ReportCardController extends Controller
     //For POCOR-8617 Start...
     /**
      * @OA\Get(
-     *     path="/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf",
+     *     path="/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf",
      *     summary="Get a student's report card in PDF format",
      *     description="Retrieve a student's report card for a specific academic period and report card ID in PDF format.",
      *     tags={"Report card"},
@@ -548,7 +548,7 @@ class ReportCardController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls",
+     *     path="/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls",
      *     summary="Get a student's report card in excel format",
      *     description="Retrieve a student's report card for a specific academic period and report card ID in excel format.",
      *     tags={"Report card"},
