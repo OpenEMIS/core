@@ -10,6 +10,7 @@ use App\Http\Requests\SaveStaffDataRequest;
 use App\Http\Requests\SaveGuardianDataRequest;
 use App\Http\Requests\UsersAddRequest;
 use App\Http\Requests\ExternalDataSourceRequest;
+use Tymon\JWTAuth\Facades\JWTAuth; // POCOR-8953
 
 class UserController extends Controller
 {
@@ -1190,26 +1191,23 @@ class UserController extends Controller
     {
         try {
             // Determine required permissions
-            $requiredPermissions = $this->determinePermissionsToUpdateUser($request->all());
-
-            // Check all required permissions
-            if (!$this->hasAllPermissions($requiredPermissions)) {
-                return $this->sendAuthorizationErrorResponse();
-            }
-
             // Filter and process user data
             $userData = $request->only([
                 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name',
                 'gender_id', 'date_of_birth', 'identity_number', 'nationality_id', 'username',
                 'password', 'postal_code', 'address', 'birthplace_area_id', 'address_area_id',
-                'identity_type_id', 'identity_type_name'
+                'email', 'identity_type_id', 'identity_type_name'
             ]);
+            $userData['openemis_no'] = $openemis_no;
+            $requiredPermissions = $this->determinePermissionsToUpdateUser($userData);
+            // Check all required permissions
+            if (!$this->hasAllPermissions($requiredPermissions)) {
+                return $this->sendAuthorizationErrorResponse();
+            }
 
             if (empty($userData)) {
                 return $this->sendErrorResponse("Invalid user data.");
             }
-
-            $userData['openemis_no'] = $openemis_no;
 
             // Call service to update user
             return $this->userService->patchUser($userData);
@@ -1226,34 +1224,61 @@ class UserController extends Controller
 
     /**
      * Determines the permissions required to update a user.
-     *
-     * @param array $requestData
+     * POCOR-8953 refactured
+     * @param array $userData
      * @return array
      */
-    private function determinePermissionsToUpdateUser(array $requestData): array
+    private function determinePermissionsToUpdateUser(array $userData): array
     {
+        $loggedUserID = JWTAuth::user()->id;
+        $openemisNo = $userData['openemis_no'];
+        $requestedUserID = $this->userService->getUserIdByOpenemisNo($openemisNo);
         $permissions = [];
+        if($loggedUserID !== $requestedUserID) {
+            if ($this->hasAny($userData, ['first_name', 'last_name', 'middle_name',
+                'third_name', 'preferred_name', 'gender_id', 'date_of_birth',
+                'address', 'postal_code', 'address_area_id', 'birthplace_area_id'])) {
+                $permissions[] = ['Directories', 'Directories', 'edit'];
+            }
 
-        if ($this->hasAny($requestData, ['first_name', 'last_name', 'middle_name',
-            'third_name', 'preferred_name', 'gender_id', 'date_of_birth',
-            'address', 'postal_code', 'address_area_id', 'birthplace_area_id'])) {
-            $permissions[] = ['Directories', 'Overview', 'edit'];
+            if ($this->hasAny($userData, ['username', 'password'])) {
+                $permissions[] = ['Directories', 'Accounts', 'edit'];
+            }
+
+            if ($this->hasAny($userData, ['identity_type_id', 'identity_number'])) {
+                $permissions[] = ['Directories', 'Identities', 'edit'];
+            }
+
+            if ($this->hasAny($userData, ['nationality_id'])) {
+                $permissions[] = ['Directories', 'Nationalities', 'edit'];
+            }
+
+            if ($this->hasAny($userData, ['email'])) {
+                $permissions[] = ['Directories', 'Contacts', 'edit'];
+            }
         }
+        if($loggedUserID === $requestedUserID){
+            if ($this->hasAny($userData, ['first_name', 'last_name', 'middle_name',
+                'third_name', 'preferred_name', 'gender_id', 'date_of_birth',
+                'address', 'postal_code', 'address_area_id', 'birthplace_area_id'])) {
+                $permissions[] = ['Profiles', 'Personal', 'edit'];
+            }
 
-        if ($this->hasAny($requestData, ['username', 'password'])) {
-            $permissions[] = ['Directories', 'Accounts', 'edit'];
-        }
+            if ($this->hasAny($userData, ['username', 'password'])) {
+                $permissions[] = ['Profiles', 'Accounts', 'edit'];
+            }
 
-        if ($this->hasAny($requestData, ['identity_type_id', 'identity_number'])) {
-            $permissions[] = ['Directories', 'Identities', 'edit'];
-        }
+            if ($this->hasAny($userData, ['identity_type_id', 'identity_number'])) {
+                $permissions[] = ['Profiles', 'Identities', 'edit'];
+            }
 
-        if ($this->hasAny($requestData, ['nationality_id'])) {
-            $permissions[] = ['Directories', 'Nationalities', 'edit'];
-        }
+            if ($this->hasAny($userData, ['nationality_id'])) {
+                $permissions[] = ['Profiles', 'Nationalities', 'edit'];
+            }
 
-        if ($this->hasAny($requestData, ['email'])) {
-            $permissions[] = ['Directories', 'Contacts', 'edit'];
+            if ($this->hasAny($userData, ['email'])) {
+                $permissions[] = ['Profiles', 'Contacts', 'edit'];
+            }
         }
 
         return $permissions;
