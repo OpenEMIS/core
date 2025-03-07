@@ -2614,13 +2614,16 @@ class InstitutionsController extends AppController
     function setInstitutionStaffAttendancesImport($institutionId)
     {
         $_import = $this->AccessControl->check(['Institutions', 'ImportStaffAttendances', 'add']);
+        // POCOR-8944 start
         $importUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'ImportStaffAttendances',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'add'
+            0 => 'add',
+            1 => $this->ControllerAction->paramsEncode(['id' => $institutionId,
+        'institution_id' => $institutionId]),
         ];
+        // POCOR-8944 end
         $this->set('importUrl', Router::url($importUrl));
         $this->set('_import', $_import);
     }
@@ -6608,7 +6611,7 @@ class InstitutionsController extends AppController
         }
         //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
         $securityUsers->addBehavior('User.MoodleCreateUser');
-        
+
         try {
             return $securityUsers->save($entity);
         } catch (\Exception $e) {
