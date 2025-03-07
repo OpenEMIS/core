@@ -62,11 +62,11 @@ class POCOR8873 extends AbstractMigration
       `modified` datetime DEFAULT NULL,
       `created_user_id` int NOT NULL,
       `created` datetime NOT NULL,
-      CONSTRAINT `fk_item_type_id` FOREIGN KEY (`item_type_id`) REFERENCES `item_types`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-      CONSTRAINT `fk_stock_unit_id` FOREIGN KEY (`stock_unit_id`) REFERENCES `stock_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-      CONSTRAINT `fk_institution_id` FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-      CONSTRAINT `fk_modified_user_id` FOREIGN KEY (`modified_user_id`) REFERENCES `security_users`(`id`),
-      CONSTRAINT `fk_created_user_id`  FOREIGN KEY (`created_user_id`) REFERENCES `security_users`(`id`)
+      CONSTRAINT `inst_consumables_fk_item_type_id` FOREIGN KEY (`item_type_id`) REFERENCES `item_types`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT `inst_consumables_fk_stock_unit_id` FOREIGN KEY (`stock_unit_id`) REFERENCES `stock_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT `inst_consumables_fk_institution_id` FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT `inst_consumables_fk_modified_user_id` FOREIGN KEY (`modified_user_id`) REFERENCES `security_users`(`id`),
+      CONSTRAINT `inst_consumables_fk_created_user_id`  FOREIGN KEY (`created_user_id`) REFERENCES `security_users`(`id`)
   );
   ");
 
@@ -97,11 +97,11 @@ class POCOR8873 extends AbstractMigration
     $this->execute('ALTER TABLE institution_consumable_transactions DROP FOREIGN KEY IF EXISTS fk_institution_consumable_id');
     $this->execute('ALTER TABLE institution_consumable_transactions DROP FOREIGN KEY IF EXISTS fk_trans_modified_user_id');
     $this->execute('ALTER TABLE institution_consumable_transactions DROP FOREIGN KEY IF EXISTS fk_trans_created_user_id');
-    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS fk_item_type_id');
-    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS fk_stock_unit_id');
-    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS fk_institution_id');
-    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS fk_created_user_id');
-    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS fk_modified_user_id');
+    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS inst_consumables_fk_item_type_id');
+    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS inst_consumables_fk_stock_unit_id');
+    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS inst_consumables_fk_institution_id');
+    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS inst_consumables_fk_created_user_id');
+    $this->execute('ALTER TABLE institution_consumables DROP FOREIGN KEY IF EXISTS inst_consumables_fk_modified_user_id');
     $this->execute('ALTER TABLE item_types DROP FOREIGN KEY IF EXISTS fk_item_stock_unit_id');
 
     // Drop the tables
