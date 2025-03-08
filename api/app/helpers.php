@@ -468,95 +468,95 @@ if (!function_exists('getChildrenIdFromDb')) {
 }
 // POCOR-8915 end
 
-	if(!function_exists('removeNonColumnFields')){
-		function removeNonColumnFields($params = [], $table = ""){
-			try {
-				$cols = Schema::getColumnListing($table);
+if(!function_exists('removeNonColumnFields')){
+    function removeNonColumnFields($params = [], $table = ""){
+        try {
+            $cols = Schema::getColumnListing($table);
 
-				$values = [];
-				if(count($cols) > 0){
-					foreach ($params as $key => $param) {
-						if(in_array($key, $cols)){
-							$values[$key] = $param;
-						}
-					}
-				} else {
-					$values = $params;
-				}
-				return $values;
+            $values = [];
+            if(count($cols) > 0){
+                foreach ($params as $key => $param) {
+                    if(in_array($key, $cols)){
+                        $values[$key] = $param;
+                    }
+                }
+            } else {
+                $values = $params;
+            }
+            return $values;
 
-			} catch (\Exception $e) {
-				Log::error(
-	                'Failed to get columns listing from helper funtion.',
-	                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-	            );
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get columns listing from helper funtion.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
 
-	            return false;
-			}
-		}
-	}
-
-
-
-	if(!function_exists('paramsEncode')){
-		function paramsEncode($params = []){
-			try {
-				$session_id = \Session::getId();
+            return false;
+        }
+    }
+}
 
 
 
-				$sessionId = hashing('session_id', 'sha256');
-
-		        $jsonParam = json_encode($params);
-
-		        $base64Param = urlsafeB64Encode($jsonParam);
-
-		        $params[$sessionId] = $session_id??"";
-		        $jsonParamWithSessionTocken = json_encode($params);
-		        $signature = hashing($jsonParamWithSessionTocken, 'sha256', true);
-		        $base64Signature = urlsafeB64Encode($signature);
-		        return "$base64Param.$base64Signature";
-			} catch (\Exception $e) {
-				Log::error(
-	                'Failed to generate URL dats from helper funtion.',
-	                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-	            );
-
-	            return false;
-			}
-		}
-	}
+if(!function_exists('paramsEncode')){
+    function paramsEncode($params = []){
+        try {
+            $session_id = \Session::getId();
 
 
-	if(!function_exists('urlsafeB64Encode')){
-		function urlsafeB64Encode($input){
-			return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
-		}
-	}
+
+            $sessionId = hashing('session_id', 'sha256');
+
+            $jsonParam = json_encode($params);
+
+            $base64Param = urlsafeB64Encode($jsonParam);
+
+            $params[$sessionId] = $session_id??"";
+            $jsonParamWithSessionTocken = json_encode($params);
+            $signature = hashing($jsonParamWithSessionTocken, 'sha256', true);
+            $base64Signature = urlsafeB64Encode($signature);
+            return "$base64Param.$base64Signature";
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate URL dats from helper funtion.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
+    }
+}
 
 
-	if(!function_exists('hashing')){
-		function hashing($string, $type = null, $salt = false){
+if(!function_exists('urlsafeB64Encode')){
+    function urlsafeB64Encode($input){
+        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
+    }
+}
 
-			if (empty($type)) {
-	            $type = 'sha1';
-	        }
-	        $type = strtolower($type);
 
-	        if ($salt) {
-	            if (!is_string($salt)) {
-	                $salt = config('constantvalues.SALT');
-	            }
-	            $string = $salt . $string;
-	        }
+if(!function_exists('hashing')){
+    function hashing($string, $type = null, $salt = false){
 
-	        return hash($type, $string);
-		}
-	}
+        if (empty($type)) {
+            $type = 'sha1';
+        }
+        $type = strtolower($type);
+
+        if ($salt) {
+            if (!is_string($salt)) {
+                $salt = config('constantvalues.SALT');
+            }
+            $string = $salt . $string;
+        }
+
+        return hash($type, $string);
+    }
+}
 
 
 // POCOR-8915 start
-	//For POCOR-8077 Start...
+//For POCOR-8077 Start...
 //	if(!function_exists('getGroupAreaInstitutions')){
 //		function getGroupAreaInstitutions($groupIds){
 //			try {
@@ -615,285 +615,285 @@ if (!function_exists('getChildrenIdFromDb')) {
 //		}
 //	}
 
-	//For POCOR-8077 End...
+//For POCOR-8077 End...
 // POCOR-8915 end
 
-	//For POCOR-8104 Start...
-	if(!function_exists('getNewOpenemisNo')){
-		function getNewOpenemisNo()
-		{
-		    $configItem = ConfigItem::where('code', 'openemis_id_prefix')->first();
-            if($configItem){
-                $value = $configItem->value;
-                $prefix = explode(",", $value);
-                if($prefix[1] > 0){
-                    $prefix = $prefix[1];
-                } else {
-                    $prefix = '';
-                }
-
-                $latest = SecurityUsers::orderBy('id', 'DESC')->first();
-                $latestOpenemisNo = $latest->openemis_no;
-
-
-                if (empty($prefix)) {
-                    $latestDbStamp = $latestOpenemisNo;
-                } else {
-                    $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
-                }
-
-                $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
-
-
-                $currentStamp = time();
-                if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
-                    $newStamp = $latestDbStamp + 1;
-                } else {
-                    $newStamp = $currentStamp;
-                }
-                $newOpenemisNo = $prefix.$newStamp;
-
-                $resultOpenemisTemp = OpenemisTemp::orderBy('id', 'DESC')->first();
-
-                if(strlen($resultOpenemisTemp->openemis_no) < 5){
-                    $resultOpenemisTemp = SecurityUsers::orderBy('id', 'DESC')->first();
-                }
-
-                $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
-
-                $newOpenemisNo = $resultOpenemisNoTemp+1;
-                $newOpenemisNo=$prefix.$newOpenemisNo;
-
-                $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
-
-                if(empty($resultOpenemisTemps->openemis_no)){
-                    $storeOpenemisTemp = OpenemisTemp::insert([
-                        'openemis_no' => $newOpenemisNo,
-                        'ip_address' => $_SERVER['REMOTE_ADDR'],
-                        'created' => Carbon::now()->toDateTimeString()
-                    ]);
-                }
-
-                return $newOpenemisNo;
+//For POCOR-8104 Start...
+if(!function_exists('getNewOpenemisNo')){
+    function getNewOpenemisNo()
+    {
+        $configItem = ConfigItem::where('code', 'openemis_id_prefix')->first();
+        if($configItem){
+            $value = $configItem->value;
+            $prefix = explode(",", $value);
+            if($prefix[1] > 0){
+                $prefix = $prefix[1];
+            } else {
+                $prefix = '';
             }
-		}
-	}
+
+            $latest = SecurityUsers::orderBy('id', 'DESC')->first();
+            $latestOpenemisNo = $latest->openemis_no;
 
 
-	//For POCOR-8104 End...
+            if (empty($prefix)) {
+                $latestDbStamp = $latestOpenemisNo;
+            } else {
+                $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
+            }
+
+            $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
 
 
-	//For POCOR-8205 Start...
-	if(!function_exists('currentAcademicYear')){
-		function currentAcademicYear()
-		{
-		    $currentAcademicYear = AcademicPeriod::where("current", 1)->first()->toArray();
+            $currentStamp = time();
+            if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
+                $newStamp = $latestDbStamp + 1;
+            } else {
+                $newStamp = $currentStamp;
+            }
+            $newOpenemisNo = $prefix.$newStamp;
 
-		    return $currentAcademicYear;
-		}
-	}
-	//For POCOR-8208 End...
+            $resultOpenemisTemp = OpenemisTemp::orderBy('id', 'DESC')->first();
 
+            if(strlen($resultOpenemisTemp->openemis_no) < 5){
+                $resultOpenemisTemp = SecurityUsers::orderBy('id', 'DESC')->first();
+            }
 
-	//For POCOR-8348 Start...
-	if(!function_exists('getClassStudents')){
-		function getClassStudents($institution_id, $institution_class_id)
-		{
-		    $getClassStudents = getInstutionClassStudentData($institution_id, $institution_class_id);
+            $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
 
-	    	$resp = [];
-		    foreach($getClassStudents as $k => $student){
-		    	$resp[$k]['Name'] = $student['first_name']. ' '.$student['last_name'];
-		    	$resp[$k]['OpenEMIS ID'] = $student['openemis_no'];
-		    }
-		    return $resp;
-		}
-	}
+            $newOpenemisNo = $resultOpenemisNoTemp+1;
+            $newOpenemisNo=$prefix.$newOpenemisNo;
 
+            $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
 
-	if(!function_exists('getMealProgrammes')){
-		function getMealProgrammes()
-		{
-			$currentAcademicYear = AcademicPeriod::where('current', 1)->first();
-		    $getMealProgrammes = MealProgrammes::where('academic_period_id', $currentAcademicYear->id??0)->get()->toArray();
+            if(empty($resultOpenemisTemps->openemis_no)){
+                $storeOpenemisTemp = OpenemisTemp::insert([
+                    'openemis_no' => $newOpenemisNo,
+                    'ip_address' => $_SERVER['REMOTE_ADDR'],
+                    'created' => Carbon::now()->toDateTimeString()
+                ]);
+            }
 
-	    	$resp = [];
-		    foreach($getMealProgrammes as $k => $mealProgramme){
-		    	$resp[$k]['Name'] = $mealProgramme['name'];
-		    	$resp[$k]['Code'] = $mealProgramme['code'];
-		    }
-		    return $resp;
-		}
-	}
-
-	if(!function_exists('getMealReceived')){
-		function getMealReceived()
-		{
-		    $getMealReceived = MealReceived::get()->toArray();
-
-	    	$resp = [];
-		    foreach($getMealReceived as $k => $mealReceived){
-		    	$resp[$k]['Name'] = $mealReceived['name'];
-		    	$resp[$k]['Code'] = $mealReceived['code'];
-		    }
-		    return $resp;
-		}
-	}
-
-	if(!function_exists('getMealBenefits')){
-		function getMealBenefits()
-		{
-		    $getMealBenefits = MealBenefits::where('visible', 1)->orderBy('order', 'ASC')->get()->toArray();
-
-	    	$resp = [];
-		    foreach($getMealBenefits as $k => $mealReceived){
-		    	$resp[$k]['Name'] = $mealReceived['name'];
-		    	$resp[$k]['Id'] = $mealReceived['id'];
-		    }
-		    return $resp;
-		}
-	}
+            return $newOpenemisNo;
+        }
+    }
+}
 
 
-	if(!function_exists('getStudentAttendanceType')){
-		function getStudentAttendanceType()
-		{
-		    $getStudentAttendanceType = StudentAttendanceType::get()->toArray();
-
-	    	$resp = [];
-		    foreach($getStudentAttendanceType as $k => $attendanceType){
-		    	$resp[$k]['Name'] = $attendanceType['name'];
-		    	$resp[$k]['Code'] = $attendanceType['code'];
-		    }
-		    return $resp;
-		}
-	}
+//For POCOR-8104 End...
 
 
-	if(!function_exists('getNumberOfPeriods')){
-		function getNumberOfPeriods()
-		{
-	    	$resp[] = [
-	    		'Number Of Periods' => "Period 1",
-	    		'Id' => "1",
-	    	];
+//For POCOR-8205 Start...
+if(!function_exists('currentAcademicYear')){
+    function currentAcademicYear()
+    {
+        $currentAcademicYear = AcademicPeriod::where("current", 1)->first()->toArray();
 
-	    	return $resp;
-		}
-	}
-
-
-	if(!function_exists('getInstutionClassSubject')){
-		function getInstutionClassSubject($institution_id, $institution_class_id)
-		{
-		    $getInstutionClassSubject = InstitutionClassSubjects::select('institution_subjects.*')
-		    		->join('institution_subjects', 'institution_subjects.id', '=', 'institution_class_subjects.institution_subject_id')
-		    		->where('institution_class_subjects.institution_class_id', $institution_class_id)
-		    		->get()
-		    		->toArray();
-
-	    	$resp = [];
-		    foreach($getInstutionClassSubject as $k => $subject){
-		    	$resp[$k]['Subject'] = $subject['name'];
-		    	$resp[$k]['Id'] = $subject['id'];
-		    }
-		    return $resp;
-		}
-	}
+        return $currentAcademicYear;
+    }
+}
+//For POCOR-8208 End...
 
 
-	if(!function_exists('getInstutionClassStudent')){
-		function getInstutionClassStudent($institution_id, $institution_class_id)
-		{
-		    $results = getInstutionClassStudentData($institution_id, $institution_class_id);
-	    	$resp = [];
-		    foreach($results as $k => $result){
-		    	$resp[$k]['Institution'] = $result['institution_name'];
-		    	$resp[$k]['Academic Period'] = $result['academic_period_year'];
-		    	$resp[$k]['Education Grade'] = $result['education_grade_name'];
-		    	$resp[$k]['Name'] = $result['first_name']. " ".$result['last_name'];
-		    	$resp[$k]['OpenEMIS ID'] = $result['openemis_no'];
-		    }
-		    return $resp;
-		}
-	}
+//For POCOR-8348 Start...
+if(!function_exists('getClassStudents')){
+    function getClassStudents($institution_id, $institution_class_id)
+    {
+        $getClassStudents = getInstutionClassStudentData($institution_id, $institution_class_id);
+
+        $resp = [];
+        foreach($getClassStudents as $k => $student){
+            $resp[$k]['Name'] = $student['first_name']. ' '.$student['last_name'];
+            $resp[$k]['OpenEMIS ID'] = $student['openemis_no'];
+        }
+        return $resp;
+    }
+}
 
 
-	if(!function_exists('getInstutionClassStudentData')){
-		function getInstutionClassStudentData($institution_id, $institution_class_id)
-		{
-		    $getClassStudents = InstitutionClassStudents::select(
-			    		'security_users.first_name',
-			    		'security_users.last_name',
-			    		'security_users.openemis_no',
-			    		'academic_periods.name as academic_period_year',
-			    		'education_grades.name as education_grade_name',
-			    		'institutions.name as institution_name',
-		    		)
-		    		->join('security_users', 'security_users.id', '=', 'institution_class_students.student_id')
-		    		->join('academic_periods', 'academic_periods.id', '=', 'institution_class_students.academic_period_id')
-		    		->join('education_grades', 'education_grades.id', '=', 'institution_class_students.education_grade_id')
-		    		->join('institutions', 'institutions.id', '=', 'institution_class_students.institution_id')
-		    		->where("institution_id", $institution_id)
-		    		->where('institution_class_id', $institution_class_id)
-		    		->get()
-		    		->toArray();
-		    return $getClassStudents;
-		}
-	}
+if(!function_exists('getMealProgrammes')){
+    function getMealProgrammes()
+    {
+        $currentAcademicYear = AcademicPeriod::where('current', 1)->first();
+        $getMealProgrammes = MealProgrammes::where('academic_period_id', $currentAcademicYear->id??0)->get()->toArray();
+
+        $resp = [];
+        foreach($getMealProgrammes as $k => $mealProgramme){
+            $resp[$k]['Name'] = $mealProgramme['name'];
+            $resp[$k]['Code'] = $mealProgramme['code'];
+        }
+        return $resp;
+    }
+}
+
+if(!function_exists('getMealReceived')){
+    function getMealReceived()
+    {
+        $getMealReceived = MealReceived::get()->toArray();
+
+        $resp = [];
+        foreach($getMealReceived as $k => $mealReceived){
+            $resp[$k]['Name'] = $mealReceived['name'];
+            $resp[$k]['Code'] = $mealReceived['code'];
+        }
+        return $resp;
+    }
+}
+
+if(!function_exists('getMealBenefits')){
+    function getMealBenefits()
+    {
+        $getMealBenefits = MealBenefits::where('visible', 1)->orderBy('order', 'ASC')->get()->toArray();
+
+        $resp = [];
+        foreach($getMealBenefits as $k => $mealReceived){
+            $resp[$k]['Name'] = $mealReceived['name'];
+            $resp[$k]['Id'] = $mealReceived['id'];
+        }
+        return $resp;
+    }
+}
 
 
-	if(!function_exists('getAbsenceTypes')){
-		function getAbsenceTypes()
-		{
-		    $getAbsenceTypes = AbsenceTypes::get()->toArray();
-		    $resp = [];
+if(!function_exists('getStudentAttendanceType')){
+    function getStudentAttendanceType()
+    {
+        $getStudentAttendanceType = StudentAttendanceType::get()->toArray();
 
-		    foreach ($getAbsenceTypes as $key => $absenceType) {
-		    	$resp[$key]['Name'] = $absenceType['name'];
-		    	$resp[$key]['Code'] = $absenceType['code'];
-		    }
-
-		    return $resp;
-		}
-	}
-
-
-	if(!function_exists('getStudentAbsenceReason')){
-		function getStudentAbsenceReason()
-		{
-		    $getStudentAbsenceReason = StudentAbsenceReason::get()->toArray();
-		    $resp = [];
-
-		    foreach ($getStudentAbsenceReason as $key => $studentAbsenceReason) {
-		    	$resp[$key]['Name'] = $studentAbsenceReason['name'];
-		    	$resp[$key]['National Code'] = $studentAbsenceReason['id'];
-		    }
-
-		    return $resp;
-		}
-	}
-	//For POCOR-8348 End...
+        $resp = [];
+        foreach($getStudentAttendanceType as $k => $attendanceType){
+            $resp[$k]['Name'] = $attendanceType['name'];
+            $resp[$k]['Code'] = $attendanceType['code'];
+        }
+        return $resp;
+    }
+}
 
 
-	//For POCOR-7429 Start...
-	if(!function_exists('getPrimaryKey')){
-		function getPrimaryKey($table)
-		{
-			try {
-				$cols = Schema::getColumnListing($table);
-				$primaryKey = "";
+if(!function_exists('getNumberOfPeriods')){
+    function getNumberOfPeriods()
+    {
+        $resp[] = [
+            'Number Of Periods' => "Period 1",
+            'Id' => "1",
+        ];
 
-				foreach ($cols as  $col) {
-					//dd($table,$col);
-					$columnType = \Schema::getColumnType($table, $col, true);
-					dd("columnType: ", $columnType);
-				}
-			} catch (\Exception $e) {
-				dd($e);
-			}
-		}
-	}
-	//For POCOR-7429 End...
+        return $resp;
+    }
+}
+
+
+if(!function_exists('getInstutionClassSubject')){
+    function getInstutionClassSubject($institution_id, $institution_class_id)
+    {
+        $getInstutionClassSubject = InstitutionClassSubjects::select('institution_subjects.*')
+            ->join('institution_subjects', 'institution_subjects.id', '=', 'institution_class_subjects.institution_subject_id')
+            ->where('institution_class_subjects.institution_class_id', $institution_class_id)
+            ->get()
+            ->toArray();
+
+        $resp = [];
+        foreach($getInstutionClassSubject as $k => $subject){
+            $resp[$k]['Subject'] = $subject['name'];
+            $resp[$k]['Id'] = $subject['id'];
+        }
+        return $resp;
+    }
+}
+
+
+if(!function_exists('getInstutionClassStudent')){
+    function getInstutionClassStudent($institution_id, $institution_class_id)
+    {
+        $results = getInstutionClassStudentData($institution_id, $institution_class_id);
+        $resp = [];
+        foreach($results as $k => $result){
+            $resp[$k]['Institution'] = $result['institution_name'];
+            $resp[$k]['Academic Period'] = $result['academic_period_year'];
+            $resp[$k]['Education Grade'] = $result['education_grade_name'];
+            $resp[$k]['Name'] = $result['first_name']. " ".$result['last_name'];
+            $resp[$k]['OpenEMIS ID'] = $result['openemis_no'];
+        }
+        return $resp;
+    }
+}
+
+
+if(!function_exists('getInstutionClassStudentData')){
+    function getInstutionClassStudentData($institution_id, $institution_class_id)
+    {
+        $getClassStudents = InstitutionClassStudents::select(
+            'security_users.first_name',
+            'security_users.last_name',
+            'security_users.openemis_no',
+            'academic_periods.name as academic_period_year',
+            'education_grades.name as education_grade_name',
+            'institutions.name as institution_name',
+        )
+            ->join('security_users', 'security_users.id', '=', 'institution_class_students.student_id')
+            ->join('academic_periods', 'academic_periods.id', '=', 'institution_class_students.academic_period_id')
+            ->join('education_grades', 'education_grades.id', '=', 'institution_class_students.education_grade_id')
+            ->join('institutions', 'institutions.id', '=', 'institution_class_students.institution_id')
+            ->where("institution_id", $institution_id)
+            ->where('institution_class_id', $institution_class_id)
+            ->get()
+            ->toArray();
+        return $getClassStudents;
+    }
+}
+
+
+if(!function_exists('getAbsenceTypes')){
+    function getAbsenceTypes()
+    {
+        $getAbsenceTypes = AbsenceTypes::get()->toArray();
+        $resp = [];
+
+        foreach ($getAbsenceTypes as $key => $absenceType) {
+            $resp[$key]['Name'] = $absenceType['name'];
+            $resp[$key]['Code'] = $absenceType['code'];
+        }
+
+        return $resp;
+    }
+}
+
+
+if(!function_exists('getStudentAbsenceReason')){
+    function getStudentAbsenceReason()
+    {
+        $getStudentAbsenceReason = StudentAbsenceReason::get()->toArray();
+        $resp = [];
+
+        foreach ($getStudentAbsenceReason as $key => $studentAbsenceReason) {
+            $resp[$key]['Name'] = $studentAbsenceReason['name'];
+            $resp[$key]['National Code'] = $studentAbsenceReason['id'];
+        }
+
+        return $resp;
+    }
+}
+//For POCOR-8348 End...
+
+
+//For POCOR-7429 Start...
+if(!function_exists('getPrimaryKey')){
+    function getPrimaryKey($table)
+    {
+        try {
+            $cols = Schema::getColumnListing($table);
+            $primaryKey = "";
+
+            foreach ($cols as  $col) {
+                //dd($table,$col);
+                $columnType = \Schema::getColumnType($table, $col, true);
+                dd("columnType: ", $columnType);
+            }
+        } catch (\Exception $e) {
+            dd($e);
+        }
+    }
+}
+//For POCOR-7429 End...
 
 
