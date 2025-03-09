@@ -1339,6 +1339,7 @@ class UserController extends Controller
      */
     private function hasAllPermissions(array $permissions): bool
     {
+        Log::debug(print_r(['permissions' => $permissions], true));
         foreach ($permissions as $permission) {
             if (!checkPermission($permission)) {
                 return false;

@@ -25,6 +25,7 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Query\Builder;
 // POCOR-8915 start
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Cache;
 
 
 // POCOR-8915 start
@@ -277,7 +278,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 
 if (!function_exists('checkAccess')) {
-    function checkAccess(array $additionalParam = []): array|bool
+    function checkAccess(): array|bool
     {
         try {
             $user = JWTAuth::user();
@@ -352,9 +353,7 @@ if (!function_exists('checkAccess')) {
             }
 
             // 🔹 If additional institution checks are needed
-            if (!empty($additionalParam['institution_id']) && !in_array($additionalParam['institution_id'], $institutionIds)) {
-                return false;
-            }
+
 
             // 🔹 Prepare final data structure
             $all_permissions = [
@@ -397,21 +396,31 @@ if (!function_exists('getRoleAccess')) {
 if (!function_exists('checkPermission')) {
     function checkPermission(array $params, array $additionalParams = []): bool
     {
-        $user = JWTAuth::user();
-        $permissions = checkAccess($params);
 
-        // 🔹 Super admin bypasses all checks
+
+        $user = JWTAuth::user();
+
+        // Cache key based on user ID
+        $cacheKey = "user_permissions_{$user->id}";
+
+        // Cache permissions for a certain time (e.g., 10 minutes)
+        $permissions = Cache::remember($cacheKey, now()->addMinutes(10), function () {
+            return checkAccess();
+        });
+
+
+        // Super admin bypasses all checks
         if ($user['super_admin'] == 1) {
             return true;
+        }
+        // Log::info("Permissions: " . print_r($permissions,true));
+        // If institution ID is required, check it
+        if (!empty($params['institution_id'])) {
+            return $permissions['allowAllInstitutions'] == 1 || in_array($params['institution_id'], $permissions['institutionIds']);
         }
 
         if (!$permissions || !isset($permissions['permissions'][$params[0]][$params[1]][$params[2]])) {
             return false;
-        }
-
-        // 🔹 If institution ID is required, check it
-        if (!empty($additionalParams['institution_id'])) {
-            return $permissions['allowAllInstitutions'] == 1 || in_array($additionalParams['institution_id'], $permissions['institutionIds']);
         }
 
         return true;
