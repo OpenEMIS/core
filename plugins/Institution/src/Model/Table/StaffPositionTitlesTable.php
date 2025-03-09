@@ -349,7 +349,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	{
 		$this->setAllPositionGrades($entity);
 
-		if (!$entity->isNew() && $entity->isDirty('security_role_id')) { // POCOR-8128
+		if (!$entity->isNew() && $entity->isDirty('security_role_id')) {
 			$oldRoleId = $entity->getOriginal('security_role_id');
 			$newRoleId = $entity->security_role_id;
 			$titleId = $entity->id;
@@ -540,7 +540,6 @@ class StaffPositionTitlesTable extends ControllerActionTable
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
-
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
