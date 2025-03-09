@@ -640,6 +640,12 @@ class StudentsTable extends AppTable
 
          $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
+                 // POCOR-8934 start
+                 if ($row['date_of_birth'] instanceof \Cake\I18n\FrozenDate) {
+                    $row['date_of_birth'] = $row['date_of_birth']->format('Y-m-d'); // Change format as needed
+                } 
+                // POCOR-8934 end
+
                 // POCOR-6338 starts
                 
                 $Users = TableRegistry::getTableLocator()->get('security_users');
@@ -819,7 +825,7 @@ class StudentsTable extends AppTable
         $extraField[] = [
             'key' => 'Students.date_of_birth',
             'field' => 'date_of_birth',
-            'type' => 'date',
+            'type' => 'string',
             'label' => 'Date Of Birth',
         ];
 
