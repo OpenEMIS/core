@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BaseApi\CrudApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,6 +15,30 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::group(['prefix' => 'v4'], function () {
+    Route::get(
+        'clear-cache',
+        function () {
+            Artisan::call('route:clear');
+            Artisan::call('clear-compiled');
+            Artisan::call('config:cache');
+            Artisan::call('cache:clear');
+            return "Cache is cleared";
+        }
+    );
+});
+Route::group(['prefix' => 'v5'], function () {
+    Route::get(
+        'clear-cache',
+        function () {
+            Artisan::call('route:clear');
+            Artisan::call('clear-compiled');
+            Artisan::call('config:cache');
+            Artisan::call('cache:clear');
+            return "Cache is cleared";
+        }
+    );
+});
 Route::group(['prefix' => 'v4'], function () {
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         return $request->user();
@@ -580,6 +605,15 @@ Route::group(
 );
 
 Route::group(["middleware" => "auth.jwt", "prefix" => "v5"], function () {
-    // for v5 apis 
-    //Route::match(['get', 'post', 'put', 'delete'], '{action}', [TestController::class, 'handle']);
+    // POCOR-8915 start
+    // should be always the last, as it is all-consuming
+    Route::group(
+        ['namespace' => 'BaseApi', 'middleware' => 'auth.jwt'],
+        function () {
+            Route::match(['GET', 'POST', 'PUT', 'DELETE'], '/{any}', [CrudApiController::class, 'common'])
+                ->where('any', '.*');
+        });
+    // POCOR-8915 end
+    // for v5 apis
+        //Route::match(['get', 'post', 'put', 'delete'], '{action}', [TestController::class, 'handle']);
 });
