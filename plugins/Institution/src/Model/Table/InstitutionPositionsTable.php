@@ -666,6 +666,21 @@ class InstitutionPositionsTable extends ControllerActionTable
                 } else {
                     $staffId = $singleCurrentStaff->user->id;
                 }
+                // POCOR-8908 start
+                if($staffId){
+                $whereStaff = [
+                    $Staff->aliasField('institution_id') => $this->getInstitutionID(),
+                    $Staff->aliasField('institution_position_id') => $id,
+                    $Staff->aliasField('staff_id') => $staffId
+                ];
+                }else{
+                    $whereStaff = [
+                        $Staff->aliasField('institution_id') => $this->getInstitutionID(),
+                        $Staff->aliasField('institution_position_id') => $id,
+                        $Staff->aliasField('staff_id') => 0
+                    ];
+                }
+                // POCOR-8908 end
                 $currentStaff = $Staff
                     ->find()
                     ->select([
@@ -677,11 +692,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                         [
                             $StaffPositionGrades->aliasField('id') . ' = ' . $Staff->aliasField('staff_position_grade_id')
                         ])
-                    ->where([
-                        $Staff->aliasField('institution_id') => $this->getInstitutionID(),
-                        $Staff->aliasField('institution_position_id') => $id,
-                        $Staff->aliasField('staff_id') => $staffId
-                    ])->first();
+                    ->where($whereStaff)->first(); // POCOR-8908
                 if (!empty($currentStaff)) {
                     $value .= $currentStaff->staff_position_grade_name;
                 }
@@ -708,17 +719,28 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
                 } else {
                     $staffId = $singleCurrentStaff->user->id;
                 }
+                // POCOR-8908 start
+                if($staffId){
+                    $whereStaff = [
+                        $Staff->aliasField('institution_id') => $this->getInstitutionID(),
+                        $Staff->aliasField('institution_position_id') => $id,
+                        $Staff->aliasField('staff_id') => $staffId
+                    ];
+                }else{
+                    $whereStaff = [
+                        $Staff->aliasField('institution_id') => $this->getInstitutionID(),
+                        $Staff->aliasField('institution_position_id') => $id,
+                        $Staff->aliasField('staff_id') => 0
+                    ];
+                }
+                // POCOR-8908 end
                 $currentStaff = $Staff
                     ->find()
                     ->select([
                         'staff_id' => $Staff->aliasField('id'),
                         'is_homeroom' => $Staff->aliasField('is_homeroom'),
                     ])
-                    ->where([
-                        $Staff->aliasField('institution_id') => $this->getInstitutionID(),
-                        $Staff->aliasField('institution_position_id') => $id,
-                        $Staff->aliasField('staff_id') => $staffId
-                    ])->first();
+                    ->where($whereStaff)->first(); // POCOR-8908
                 if (!empty($currentStaff)) {
                     $isHomeroom = $currentStaff->is_homeroom;
                     $value .= $this->getSelectOptions('general.yesno')[$isHomeroom];
@@ -946,7 +968,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
          $editCheck = $WorkflowSteps->find()
                          ->where([$WorkflowSteps->aliasField('id') => $statusId])
                          ->first();
-                         
+
                          if (!empty($editCheck)) {
                              $isEditable = $editCheck->is_editable;
                              $isRemovable = $editCheck->is_removable;
@@ -968,7 +990,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
                                  ];
                                  foreach ($extraButtons as $key => $attr) {
                                      if ($this->AccessControl->check($attr['permission'])) {
-                                        
+
                                          $button = [
                                              'type' => 'hidden',
                                              'attr' => $btnAttr,
