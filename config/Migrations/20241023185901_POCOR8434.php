@@ -15,7 +15,9 @@ class POCOR8434 extends AbstractMigration
      * @return void
      */
     public function up()
-    {
+    {   
+
+        $this->execute('SET FOREIGN_KEY_CHECKS = 0;');
         //Backup `workflow_models` table 
         $this->execute('CREATE TABLE `z_8434_workflow_models` LIKE `workflow_models`');
         $this->execute('INSERT INTO `z_8434_workflow_models` SELECT * FROM `workflow_models`');
