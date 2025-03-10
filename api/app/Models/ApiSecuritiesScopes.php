@@ -1,0 +1,261 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class ApiSecuritiesScopes extends Model
+{
+    use HasFactory;
+
+    protected $table = 'api_securities_scopes';
+
+    // ✅ Allow mass assignment
+    protected $fillable = ['api_security_id', 'api_scope_id', 'index', 'view', 'add', 'edit', 'delete', 'execute', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+
+    // ✅ Disable Laravel's default timestamps
+    public $timestamps = false;
+
+    // ✅ Treat 'modified' and 'created' as timestamps
+    protected $dates = ['modified', 'created'];
+
+    // ✅ Define the primary key
+    protected $primaryKey = ['api_security_id', 'api_scope_id'];
+
+    public $incrementing = false;
+
+     // Override getKeyForSaveQuery to handle composite keys
+/**
+ * @OA\PathItem(
+ *     path="/api/v5/api-securities-scopes"
+ * )
+ */
+public function _swaggerPath() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/api-securities-scopes",
+ *     summary="Get list of ApiSecuritiesScopes",
+ *     tags={"ApiSecuritiesScopes"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Successful."
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+                          @OA\Property(property="api_security_id", type="integer", example=null),
+                          @OA\Property(property="api_scope_id", type="integer", example=null),
+                          @OA\Property(property="index", type="integer", example=null),
+                          @OA\Property(property="view", type="integer", example=null),
+                          @OA\Property(property="add", type="integer", example=null),
+                          @OA\Property(property="edit", type="integer", example=null),
+                          @OA\Property(property="delete", type="integer", example=null),
+                          @OA\Property(property="execute", type="integer", example=null),
+                          @OA\Property(property="modified_user_id", type="integer", example=null),
+                          @OA\Property(property="modified", type="string", format="date-time", example=null),
+                          @OA\Property(property="created_user_id", type="integer", example=null),
+                          @OA\Property(property="created", type="string", format="date-time", example=null)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerList() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/api-securities-scopes/{id}",
+ *     summary="Get ApiSecuritiesScopes by ID",
+ *     tags={"ApiSecuritiesScopes"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the ApiSecuritiesScopes",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Post(
+ *     path="/api/v5/api-securities-scopes",
+ *     summary="Create a new ApiSecuritiesScopes",
+ *     tags={"ApiSecuritiesScopes"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="api_security_id", type="integer", example=null),
+                     @OA\Property(property="api_scope_id", type="integer", example=null),
+                     @OA\Property(property="index", type="integer", example=null),
+                     @OA\Property(property="view", type="integer", example=null),
+                     @OA\Property(property="add", type="integer", example=null),
+                     @OA\Property(property="edit", type="integer", example=null),
+                     @OA\Property(property="delete", type="integer", example=null),
+                     @OA\Property(property="execute", type="integer", example=null),
+                     @OA\Property(property="modified_user_id", type="integer", example=null),
+                     @OA\Property(property="modified", type="string", format="date-time", example=null),
+                     @OA\Property(property="created_user_id", type="integer", example=null),
+                     @OA\Property(property="created", type="string", format="date-time", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Created successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerCreate() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/api-securities-scopes/{id}",
+ *     summary="Update ApiSecuritiesScopes",
+ *     tags={"ApiSecuritiesScopes"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the ApiSecuritiesScopes",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="api_security_id", type="integer", example=null),
+                     @OA\Property(property="api_scope_id", type="integer", example=null),
+                     @OA\Property(property="index", type="integer", example=null),
+                     @OA\Property(property="view", type="integer", example=null),
+                     @OA\Property(property="add", type="integer", example=null),
+                     @OA\Property(property="edit", type="integer", example=null),
+                     @OA\Property(property="delete", type="integer", example=null),
+                     @OA\Property(property="execute", type="integer", example=null),
+                     @OA\Property(property="modified_user_id", type="integer", example=null),
+                     @OA\Property(property="modified", type="string", format="date-time", example=null),
+                     @OA\Property(property="created_user_id", type="integer", example=null),
+                     @OA\Property(property="created", type="string", format="date-time", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Updated successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerUpdate() {}
+
+/**
+ * @OA\Delete(
+ *     path="/api/v5/api-securities-scopes/{id}",
+ *     summary="Delete ApiSecuritiesScopes",
+ *     tags={"ApiSecuritiesScopes"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the ApiSecuritiesScopes",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Deleted successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerDelete() {}
+    protected function getKeyForSaveQuery()
+    {
+        $query = $this->newQueryWithoutScopes();
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    // Override setKeysForSaveQuery to handle composite keys
+    protected function setKeysForSaveQuery($query)
+    {
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    public static function getValidationRules(): array
+    {
+        return [
+            // Add validation rules here
+        ];
+    }
+
+
+
+
+    public function _swaggerHelper() {
+        return;
+    }
+}

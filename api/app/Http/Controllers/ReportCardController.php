@@ -147,9 +147,9 @@ class ReportCardController extends Controller
     {
         try {
             $data = $this->reportCardService->getReportCardStudents($request);
-            
+
             return $this->sendSuccessResponse("Report card student list found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list.',
@@ -231,9 +231,9 @@ class ReportCardController extends Controller
     {
         try {
             $data = $this->reportCardService->getReportCardSubjects($request);
-            
+
             return $this->sendSuccessResponse("Report card subject list found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list.',
@@ -246,7 +246,7 @@ class ReportCardController extends Controller
 
     //pocor-7856 ends
 
-    
+
     //For pocor-8260 start...
 
     /**
@@ -314,9 +314,9 @@ class ReportCardController extends Controller
         try {
             $params = $request->all();
             $data = $this->reportCardService->getReportCardCommentCodes($params);
-            
+
             return $this->sendSuccessResponse("Report card comment codes list found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list.',
@@ -377,9 +377,9 @@ class ReportCardController extends Controller
         try {
             $params = $request->all();
             $data = $this->reportCardService->getSecurityRoleData($params, $roleId);
-            
+
             return $this->sendSuccessResponse("Security role data found.", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data.',
@@ -446,9 +446,9 @@ class ReportCardController extends Controller
         try {
             $params = $request->all();
             $data = $this->reportCardService->getReportCardData($params, $reportCardId);
-            
+
             return $this->sendSuccessResponse("Report card data found.", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data.',
@@ -534,8 +534,8 @@ class ReportCardController extends Controller
             } else {
                 return $this->sendErrorResponse('Report card pdf file not found.');
             }
-            
-            
+
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to generate student report card in PDF.',
@@ -618,8 +618,8 @@ class ReportCardController extends Controller
             } else {
                 return $this->sendErrorResponse('Report card excel file not found.');
             }
-            
-            
+
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to generate student report card in excel.',
