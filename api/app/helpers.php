@@ -23,299 +23,459 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Database\Query\Builder;
+// POCOR-8915 start
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Cache;
 
 
-if(!function_exists('checkAccess')){
-    function checkAccess($additionalParam = [])
+// POCOR-8915 start
+//	if(!function_exists('checkAccess')){
+//		function checkAccess($additionalParam = [])
+//		{
+//			try {
+//				$user = JWTAuth::user();
+//				$userId = $user->id;
+//				$super_admin = $user->super_admin??0;
+//				//$userId = 8813;
+//				$groupIds = [];
+//				$roleIds = [];
+//				$institutionIds = [];
+//
+//				$securityGroupUsers = SecurityGroupUsers::with(
+//						'securityGroup',
+//						'securityGroup.institutions',
+//					)
+//					->where('security_user_id', $userId)
+//					->groupby('security_group_users.security_role_id')
+//					->groupby('security_group_users.security_group_id')
+//					->get()
+//					->toArray();
+//
+//				foreach ($securityGroupUsers as $key => $sGU) {
+//					array_push($groupIds, $sGU['security_group_id']);
+//					array_push($roleIds, $sGU['security_role_id']);
+//					foreach($sGU['security_group']['institutions'] as $institution){
+//						array_push($institutionIds, $institution['institution_id']);
+//					}
+//				}
+//
+//
+//
+//				$groupIds = array_unique($groupIds);
+//				$roleIds = array_unique($roleIds);
+//
+//
+//				//For POCOR-8077 Start...
+//				$groupAreaInstitutions = getGroupAreaInstitutions($groupIds);
+//
+//				$allowAllInstitutions = $groupAreaInstitutions['allowAllInstitutions']??0;
+//				$otherInstitutionIds = $groupAreaInstitutions['institutionIds']??[];
+//
+//				$institutionIds = array_merge($institutionIds, $otherInstitutionIds);
+//
+//				//For POCOR-8077 End...
+//
+//
+//				$institutionIds = array_unique($institutionIds);
+//
+//				$roleFunctions = SecurityRoleFunction::join('security_functions', 'security_functions.id', '=', 'security_role_functions.security_function_id')
+//					->select(
+//						'security_role_functions._view',
+//						'security_role_functions._edit',
+//						'security_role_functions._add',
+//						'security_role_functions._delete',
+//						'security_role_functions._execute',
+//						'security_role_id',
+//						'security_function_id',
+//						'security_functions.name',
+//						'security_functions.controller',
+//						'security_functions.module',
+//						'security_functions.category',
+//						'security_functions._view as security_function_view',
+//						'security_functions._edit as security_function_edit',
+//						'security_functions._add as security_function_add',
+//						'security_functions._delete as security_function_delete',
+//						'security_functions._execute as security_function_execute',
+//					)
+//					->whereIn('security_role_id', $roleIds)
+//					->get()
+//					->toArray();
+//
+//				$accessArray = [];
+//				if(count($roleFunctions) > 0){
+//					foreach($roleFunctions as $key => $func){
+//						$controller = $func['controller'];
+//
+//
+//						$secFuncView = $func['security_function_view'];
+//						if($secFuncView != ""){
+//
+//							$accessArray = getRoleAccess($controller, $secFuncView, $func['_view'], $func['security_role_id'], $accessArray);
+//
+//						}
+//
+//						$secFuncAdd = $func['security_function_add'];
+//						if($secFuncAdd != ""){
+//							$accessArray = getRoleAccess($controller, $secFuncAdd, $func['_add'], $func['security_role_id'], $accessArray);
+//						}
+//
+//
+//						$secFuncEdit = $func['security_function_edit'];
+//						if($secFuncEdit != ""){
+//							$accessArray = getRoleAccess($controller, $secFuncEdit, $func['_edit'], $func['security_role_id'], $accessArray);
+//						}
+//
+//
+//						$secFuncDelete = $func['security_function_delete'];
+//						if($secFuncDelete != ""){
+//							$accessArray = getRoleAccess($controller, $secFuncDelete, $func['_delete'], $func['security_role_id'], $accessArray);
+//						}
+//
+//
+//						$secFuncExecute = $func['security_function_execute'];
+//						if($secFuncExecute != ""){
+//							$accessArray = getRoleAccess($controller, $secFuncExecute, $func['_execute'], $func['security_role_id'], $accessArray);
+//						}
+//
+//					}
+//
+//
+//				}
+//
+//				if(count($additionalParam) > 0){
+//					if(isset($additionalParam['institution_id'])){
+//						if(!in_array($additionalParam['institution_id'], $institutionIds)){
+//							return 0;
+//						}
+//					}
+//				}
+//
+//
+//				//$permissions = session()->all();
+//
+//				$data['userId'] = $userId;
+//				$data['super_admin'] = $super_admin;
+//				$data['groupIds'] = $groupIds;
+//				$data['roleIds'] = $roleIds;
+//				$data['institutionIds'] = $institutionIds;
+//				$data['permissions'] = $accessArray;
+//
+//				//For POCOR-8077 Start...
+//				if($super_admin == 1){
+//					$data['allowAllInstitutions'] = 1;
+//				} else {
+//					$data['allowAllInstitutions'] = $allowAllInstitutions??0;
+//				}
+//				//For POCOR-8077 End...
+//				//$setSession = session(['Permissions' => $data]);
+//				return $data;
+//				//return true;
+//			} catch (\Exception $e) {
+//				Log::error(
+//	                'Failed to set permissions in session.',
+//	                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+//	            );
+//	            return 0;
+//			}
+//		}
+//	}
+//
+//	if(!function_exists('getRoleAccess')){
+//		function getRoleAccess($controller, $accessType, $roleId, $accessArray, $action = 0)
+//		{
+//			$accessArr = explode("|", $accessType);
+//
+//			if(count($accessArr) > 1){
+//
+//				foreach($accessArr as $access){
+//
+//					$arr = explode(".", $access);
+//					//dd($vAArr);
+//					if(count($arr) > 1){
+//
+//						if($action == 1){
+//							$accessArray[$controller][$arr[0]][$arr[1]][] = $roleId;
+//						}
+//
+//					} else {
+//						if($action == 1){
+//							$accessArray[$controller][$arr[0]][] = $roleId;
+//						}
+//					}
+//				}
+//			} else {
+//				$access = $accessArr[0];
+//				$arr = explode(".", $access);
+//				if(count($arr) > 1){
+//					if($action == 1){
+//						$accessArray[$controller][$arr[0]][$arr[1]][] = $roleId;
+//					}
+//				} else {
+//					if($action == 1){
+//						$accessArray[$controller][$arr[0]][] = $roleId;
+//					}
+//				}
+//
+//			}
+//
+//			return $accessArray;
+//		}
+//	}
+//
+//	if(!function_exists('checkPermission')){
+//		function checkPermission($params = [], $additionalParams = []){
+//			$loggedInUser = JWTAuth::user();
+//
+//			$permissions = checkAccess($params); //Fetching role and permissions.
+//
+//            if($loggedInUser['super_admin'] != 1){ //Checking if not admin.
+//
+//                if($permissions){
+//                    if(isset($permissions['permissions'][$params[0]])){
+//                    	if(isset($permissions['permissions'][$params[0]][$params[1]])){
+//
+//                    		if(isset($permissions['permissions'][$params[0]][$params[1]][$params[2]]) && isset($params[2])){
+//
+//
+//                    			if(count($additionalParams) > 0) {
+//                    				if(isset($additionalParams['institution_id'])){
+//
+//                    					//FOR POCOR-8077 Start...
+//                    					if($permissions['allowAllInstitutions'] == 1){
+//                    						return true;
+//                    					}
+//                    					//FOR POCOR-8077 End...
+//
+//
+//
+//                    					if(in_array($additionalParams['institution_id'], $permissions['institutionIds'])){
+//                    						return true;
+//                    					} else {
+//                    						return false;
+//                    					}
+//
+//                    				} else {
+//                    					return false;
+//                    				}
+//                    			} else {
+//                    				return true;
+//                    			}
+//                    		}
+//                    	}
+//                    }
+//
+//                    return false;
+//                } else {
+//
+//                    return false;
+//                }
+//            } else {
+//            	return true;
+//            }
+//		}
+//	}
+//
+
+
+if (!function_exists('checkAccess')) {
+    function checkAccess(): array|bool
     {
         try {
             $user = JWTAuth::user();
+            if (!$user) return false;
+
             $userId = $user->id;
-            $super_admin = $user->super_admin??0;
-            //$userId = 8813;
-            $groupIds = [];
-            $roleIds = [];
-            $institutionIds = [];
+            $superAdmin = $user->super_admin ?? 0;
 
-            $securityGroupUsers = SecurityGroupUsers::with(
-                'securityGroup',
-                'securityGroup.institutions',
-            )
-                ->where('security_user_id', $userId)
-                ->groupby('security_group_users.security_role_id')
-                ->groupby('security_group_users.security_group_id')
-                ->get()
-                ->toArray();
+            // 🔹 Fetch security groups and roles in one query
+            $securityData = DB::table('security_group_users')
+                ->join('security_groups', 'security_groups.id', '=', 'security_group_users.security_group_id')
+                ->leftJoin('security_group_institutions', 'security_group_institutions.security_group_id', '=', 'security_groups.id')
+                ->where('security_group_users.security_user_id', $userId)
+                ->select(
+                    'security_group_users.security_group_id',
+                    'security_group_users.security_role_id',
+                    'security_group_institutions.institution_id'
+                )
+                ->get();
 
-            foreach ($securityGroupUsers as $key => $sGU) {
-                array_push($groupIds, $sGU['security_group_id']);
-                array_push($roleIds, $sGU['security_role_id']);
-                foreach($sGU['security_group']['institutions'] as $institution){
-                    array_push($institutionIds, $institution['institution_id']);
-                }
-            }
+            // 🔹 Extract group IDs, role IDs, and institution IDs
+            $groupIds = $securityData->pluck('security_group_id')->unique()->toArray();
+            $roleIds = $securityData->pluck('security_role_id')->unique()->toArray();
+            $institutionIds = $securityData->pluck('institution_id')->filter()->unique()->toArray();
 
-
-
-            $groupIds = array_unique($groupIds);
-            $roleIds = array_unique($roleIds);
-
-
-            //For POCOR-8077 Start...
+            // 🔹 Fetch institution permissions for group areas
             $groupAreaInstitutions = getGroupAreaInstitutions($groupIds);
+            $allowAllInstitutions = $groupAreaInstitutions['allowAllInstitutions'] ?? 0;
+            $institutionIds = array_unique(array_merge($institutionIds, $groupAreaInstitutions['institutionIds'] ?? []));
 
-            $allowAllInstitutions = $groupAreaInstitutions['allowAllInstitutions']??0;
-            $otherInstitutionIds = $groupAreaInstitutions['institutionIds']??[];
-
-            $institutionIds = array_merge($institutionIds, $otherInstitutionIds);
-
-            //For POCOR-8077 End...
-
-
-            $institutionIds = array_unique($institutionIds);
-
-            $roleFunctions = SecurityRoleFunction::join('security_functions', 'security_functions.id', '=', 'security_role_functions.security_function_id')
+            // 🔹 Fetch role-based permissions
+            $roleFunctions = DB::table('security_role_functions')
+                ->join('security_functions', 'security_functions.id', '=', 'security_role_functions.security_function_id')
                 ->select(
                     'security_role_functions._view',
                     'security_role_functions._edit',
                     'security_role_functions._add',
                     'security_role_functions._delete',
                     'security_role_functions._execute',
-                    'security_role_id',
-                    'security_function_id',
-                    'security_functions.name',
                     'security_functions.controller',
                     'security_functions.module',
-                    'security_functions.category',
                     'security_functions._view as security_function_view',
                     'security_functions._edit as security_function_edit',
                     'security_functions._add as security_function_add',
                     'security_functions._delete as security_function_delete',
-                    'security_functions._execute as security_function_execute',
+                    'security_functions._execute as security_function_execute'
                 )
-                ->whereIn('security_role_id', $roleIds)
-                ->get()
-                ->toArray();
+                ->whereIn('security_role_functions.security_role_id', $roleIds)
+                ->where(function ($query) {
+                    $query->where('security_role_functions._view', 1)
+                        ->orWhere('security_role_functions._edit', 1)
+                        ->orWhere('security_role_functions._add', 1)
+                        ->orWhere('security_role_functions._delete', 1)
+                        ->orWhere('security_role_functions._execute', 1);
+                })
+                ->get()->toArray();
 
+            // 🔹 Process role permissions
             $accessArray = [];
-            if(count($roleFunctions) > 0){
-                foreach($roleFunctions as $key => $func){
-                    $controller = $func['controller'];
-                    // POCOR-8953 start
-                    $roleId = $func['security_role_id'];
-
-                    $accessModules = $func['security_function_view'];
-                    if($accessModules != ""){
-                        $hasPermission = $func['_view'];
+            foreach ($roleFunctions as $func) {
+                $func = (array)$func;
+                foreach (['_view', '_edit', '_add', '_delete', '_execute'] as $perm) {
+                    if ($func["$perm"]) {
                         $accessArray = getRoleAccess(
-                            $controller,
-                            $accessModules,
-                            $roleId,
-                            $accessArray,
-                            $hasPermission,
+                            $func["controller"],
+                            $func["security_function$perm"] ?? "",
+                            $func["$perm"],
+                            $accessArray
                         );
-                    }
-
-                    $accessModules = $func['security_function_add'];
-                    if($accessModules != ""){
-                        $hasPermission = $func['_add'];
-                        $accessArray = getRoleAccess(
-                            $controller,
-                            $accessModules,
-                            $roleId,
-                            $accessArray,
-                            $hasPermission,
-                        );
-                    }
-
-
-                    $accessModules = $func['security_function_edit'];
-                    if($accessModules != ""){
-                        $hasPermission = $func['_edit'];
-                        $accessArray = getRoleAccess(
-                            $controller,
-                            $accessModules,
-                            $roleId,
-                            $accessArray,
-                            $hasPermission,
-                        );
-                    }
-
-                    $accessModules = $func['security_function_delete'];
-                    if($accessModules != ""){
-                        $hasPermission = $func['_delete'];
-                        $accessArray = getRoleAccess(
-                            $controller,
-                            $accessModules,
-                            $roleId,
-                            $accessArray,
-                            $hasPermission,
-                        );
-                    }
-                    $accessModules = $func['security_function_execute'];
-                    if($accessModules != ""){
-                        $hasPermission = $func['_execute'];
-                        $accessArray = getRoleAccess(
-                            $controller,
-                            $accessModules,
-                            $roleId,
-                            $accessArray,
-                            $hasPermission,
-                        );
-                    }
-                    // POCOR-8953 end
-                }
-            }
-
-            if(count($additionalParam) > 0){
-                if(isset($additionalParam['institution_id'])){
-                    if(!in_array($additionalParam['institution_id'], $institutionIds)){
-                        return 0;
                     }
                 }
             }
 
+            // 🔹 If additional institution checks are needed
 
-            //$permissions = session()->all();
 
-            $data['userId'] = $userId;
-            $data['super_admin'] = $super_admin;
-            $data['groupIds'] = $groupIds;
-            $data['roleIds'] = $roleIds;
-            $data['institutionIds'] = $institutionIds;
-            $data['permissions'] = $accessArray;
-
-            //For POCOR-8077 Start...
-            if($super_admin == 1){
-                $data['allowAllInstitutions'] = 1;
-            } else {
-                $data['allowAllInstitutions'] = $allowAllInstitutions??0;
-            }
-            //For POCOR-8077 End...
-            //$setSession = session(['Permissions' => $data]);
-            return $data;
-            //return true;
+            // 🔹 Prepare final data structure
+            $all_permissions = [
+                'userId' => $userId,
+                'super_admin' => $superAdmin,
+                'groupIds' => $groupIds,
+                'roleIds' => $roleIds,
+                'institutionIds' => $institutionIds,
+                'permissions' => $accessArray,
+                'allowAllInstitutions' => $superAdmin ? 1 : $allowAllInstitutions
+            ];
+//            Log::info("Permissions: " . print_r($all_permissions,true));
+            return $all_permissions;
         } catch (\Exception $e) {
-            Log::error(
-                'Failed to set permissions in session.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-            return 0;
+            Log::error("Error in checkAccess: " . $e->getMessage());
+            return false;
         }
     }
 }
 
-if(!function_exists('getRoleAccess')){
-    // POCOR-8953 refactured
-    function getRoleAccess($controller,
-                           $accessModules,
-                           $roleId,
-                           $accessArray = [],
-                           $hasPermission = 0)
+if (!function_exists('getRoleAccess')) {
+    function getRoleAccess(string $controller, string $accessType, int $roleId, array $accessArray): array
     {
-        $modulesArray = explode("|", $accessModules);
+        // 🔹 Convert permissions into an array
+        $accessList = array_filter(array_map('trim', explode('|', $accessType)));
 
-        if(count($modulesArray) > 1){
-
-            foreach($modulesArray as $access){
-
-                $arr = explode(".", $access);
-                //dd($vAArr);
-                if(count($arr) > 1){
-
-                    if($hasPermission == 1){
-                        $accessArray[$controller][$arr[0]][$arr[1]][] = $roleId;
-                    }
-
-                } else {
-                    if($hasPermission == 1){
-                        $accessArray[$controller][$arr[0]][] = $roleId;
-                    }
-                }
-            }
-        } else {
-            $access = $modulesArray[0];
-            $arr = explode(".", $access);
-            if(count($arr) > 1){
-                if($hasPermission == 1){
-                    $accessArray[$controller][$arr[0]][$arr[1]][] = $roleId;
-                }
+        foreach ($accessList as $access) {
+            $parts = explode('.', $access);
+            if (count($parts) > 1) {
+                $accessArray[$controller][$parts[0]][$parts[1]][] = $roleId;
             } else {
-                if($hasPermission == 1){
-                    $accessArray[$controller][$arr[0]][] = $roleId;
-                }
+                $accessArray[$controller][$parts[0]][] = $roleId;
             }
-
         }
 
         return $accessArray;
     }
 }
 
-if(!function_exists('checkPermission')){
-    // POCOR-8953 refactured
-    function checkPermission($params = [], $additionalParams = []){
-        $loggedInUser = JWTAuth::user();
-        if($loggedInUser['super_admin'] === 1){
+if (!function_exists('checkPermission')) {
+    function checkPermission(array $params, array $additionalParams = []): bool
+    {
+
+
+        $user = JWTAuth::user();
+
+        // Cache key based on user ID
+        $cacheKey = "user_permissions_{$user->id}";
+
+        // Cache permissions for a certain time (e.g., 10 minutes)
+        $permissions = Cache::remember($cacheKey, now()->addMinutes(10), function () {
+            return checkAccess();
+        });
+
+
+        // Super admin bypasses all checks
+        if ($user['super_admin'] == 1) {
             return true;
         }
-        $userId = $loggedInUser->id;
-        $cacheKey = "user_permissions_{$userId}";
-        // Retrieve cached permissions if they exist
-        $accessArray = Cache::remember($cacheKey, 60, function() use ($params) {
-            return checkAccess($params); // Fetching role and permissions
-        });
-        $permissions = $accessArray['permissions']??[];
-        if($loggedInUser['super_admin'] != 1){ //Checking if not admin.
+        // Log::info("Permissions: " . print_r($permissions,true));
+        // If institution ID is required, check it
+        if (!empty($params['institution_id'])) {
+            return $permissions['allowAllInstitutions'] == 1 || in_array($params['institution_id'], $permissions['institutionIds']);
+        }
 
-            if($permissions){
-                if(isset($permissions[$params[0]])){
-                    if(isset($permissions[$params[0]][$params[1]])){
+        if (!$permissions || !isset($permissions['permissions'][$params[0]][$params[1]][$params[2]])) {
+            return false;
+        }
 
-                        if(isset($permissions[$params[0]][$params[1]][$params[2]]) && isset($params[2])){
+        return true;
+    }
+}
 
+if (!function_exists('getGroupAreaInstitutions')) {
+    function getGroupAreaInstitutions(array $groupIds): array
+    {
+        try {
+            if (empty($groupIds)) return ['allowAllInstitutions' => 0, 'institutionIds' => []];
 
-                            if(count($additionalParams) > 0) {
-                                if(isset($additionalParams['institution_id'])){
+            $groupAreas = DB::table('security_group_areas')
+                ->whereIn('security_group_id', $groupIds)
+                ->pluck('area_id')
+                ->toArray();
 
-                                    //FOR POCOR-8077 Start...
-                                    if($permissions['allowAllInstitutions'] == 1){
-                                        return true;
-                                    }
-                                    //FOR POCOR-8077 End...
-
-
-
-                                    if(in_array($additionalParams['institution_id'], $permissions['institutionIds'])){
-                                        return true;
-                                    } else {
-                                        return false;
-                                    }
-
-                                } else {
-                                    return false;
-                                }
-                            } else {
-                                return true;
-                            }
-                        }
-                    }
-                }
-
-                return false;
-            } else {
-
-                return false;
+            if (in_array(1, $groupAreas, true)) {
+                return ['allowAllInstitutions' => 1, 'institutionIds' => []];
             }
-        } else {
-            return true;
+
+            $areaIds = getChildrenIdFromDb($groupAreas);
+
+            $institutionIds = DB::table('institutions')
+                ->whereIn('area_id', $areaIds)
+                ->pluck('id')
+                ->toArray();
+
+            return ['allowAllInstitutions' => 0, 'institutionIds' => $institutionIds];
+        } catch (\Exception $e) {
+            Log::error("Error in getGroupAreaInstitutions: " . $e->getMessage());
+            return ['allowAllInstitutions' => 0, 'institutionIds' => []];
         }
     }
 }
 
+if (!function_exists('getChildrenIdFromDb')) {
+    function getChildrenIdFromDb(array $parentAreaIds): array
+    {
+        $areaIds = $parentAreaIds;
 
+        do {
+            $newAreas = DB::table('areas')
+                ->whereIn('parent_id', $areaIds)
+                ->pluck('id')
+                ->toArray();
 
+            $newCount = count($newAreas);
+            $areaIds = array_merge($areaIds, $newAreas);
+        } while ($newCount > 0);
+
+        return array_unique($areaIds);
+    }
+}
+// POCOR-8915 end
 
 if(!function_exists('removeNonColumnFields')){
     function removeNonColumnFields($params = [], $table = ""){
@@ -404,67 +564,68 @@ if(!function_exists('hashing')){
 }
 
 
+// POCOR-8915 start
 //For POCOR-8077 Start...
-if(!function_exists('getGroupAreaInstitutions')){
-    function getGroupAreaInstitutions($groupIds){
-        try {
-            $resp = [];
-            $groupAreas = [];
-            $areas = [];
-            $areaIdArray = [];
-            $allowAllInstitutions = 0;
-            if(!empty($groupIds)){
-                $groupAreas = SecurityGroupAreas::whereIn('security_group_id', $groupIds)->pluck('area_id')->toArray();
-
-            }
-
-            if(!empty($groupAreas)){
-
-                if(in_array(1, $groupAreas)){ //1 for all areas...
-                    $allowAllInstitutions = 1;
-                }
-                //$allowAllInstitutions = 1;
-                if($allowAllInstitutions == 1){
-                    $resp['allowAllInstitutions'] = $allowAllInstitutions;
-                    $resp['institutionIds'] = [];
-                    return $resp;
-                }
-
-                $allAreas = Areas::select('id', 'parent_id')->with('allChildren:id,parent_id')->whereIn('id', $groupAreas)->get()->toArray();
-
-                getChildrenId($allAreas, $areaIdArray);
-
-                if(!empty($areaIdArray)){
-                    $institutionIds = Institutions::whereIn('area_id', $areaIdArray)->pluck('id')->toArray();
-                    $resp['allowAllInstitutions'] = 0;
-                    $resp['institutionIds'] = $institutionIds;
-
-                }
-
-            }
-            return $resp;
-        } catch (\Exception $e) {
-            return false;
-        }
-
-    }
-}
-
-
-if(!function_exists('getChildrenId')){
-    function getChildrenId($array, &$result)
-    {
-        foreach ($array as $item) {
-            $result[] = $item['id'];
-            if (!empty($item['all_children'])) {
-                getChildrenId($item['all_children'], $result);
-            }
-        }
-    }
-}
+//	if(!function_exists('getGroupAreaInstitutions')){
+//		function getGroupAreaInstitutions($groupIds){
+//			try {
+//				$resp = [];
+//				$groupAreas = [];
+//				$areas = [];
+//				$areaIdArray = [];
+//				$allowAllInstitutions = 0;
+//				if(!empty($groupIds)){
+//					$groupAreas = SecurityGroupAreas::whereIn('security_group_id', $groupIds)->pluck('area_id')->toArray();
+//
+//				}
+//
+//				if(!empty($groupAreas)){
+//
+//					if(in_array(1, $groupAreas)){ //1 for all areas...
+//						$allowAllInstitutions = 1;
+//					}
+//					//$allowAllInstitutions = 1;
+//					if($allowAllInstitutions == 1){
+//						$resp['allowAllInstitutions'] = $allowAllInstitutions;
+//						$resp['institutionIds'] = [];
+//						return $resp;
+//					}
+//
+//					$allAreas = Areas::select('id', 'parent_id')->with('allChildren:id,parent_id')->whereIn('id', $groupAreas)->get()->toArray();
+//
+//					getChildrenId($allAreas, $areaIdArray);
+//
+//					if(!empty($areaIdArray)){
+//						$institutionIds = Institutions::whereIn('area_id', $areaIdArray)->pluck('id')->toArray();
+//						$resp['allowAllInstitutions'] = 0;
+//						$resp['institutionIds'] = $institutionIds;
+//
+//					}
+//
+//				}
+//				return $resp;
+//			} catch (\Exception $e) {
+//				return false;
+//			}
+//
+//		}
+//	}
+//
+//
+//	if(!function_exists('getChildrenId')){
+//		function getChildrenId($array, &$result)
+//		{
+//		    foreach ($array as $item) {
+//		        $result[] = $item['id'];
+//		        if (!empty($item['all_children'])) {
+//		            getChildrenId($item['all_children'], $result);
+//		        }
+//		    }
+//		}
+//	}
 
 //For POCOR-8077 End...
-
+// POCOR-8915 end
 
 //For POCOR-8104 Start...
 if(!function_exists('getNewOpenemisNo')){

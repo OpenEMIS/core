@@ -10,14 +10,14 @@ use Illuminate\Routing\Controller as BaseController;
 
 /**
  * @OA\Info(
- *     title="OpenEMIS Core",
+ *     title="OpenEMIS Core API V4",
  *     description="The [OpenEMIS](https://www.openemis.org/) initiative aims to deploy a high-quality Education Management Information System (EMIS) designed to collect and report data on schools, students, teachers and staff. The system was conceived by `UNESCO` to be a royalty-free system that can be easily customized to meet the specific needs of member countries.",
  *     termsOfService="https://www.openemis.org/terms-of-service/",
  *     version="4.0.0",
  *      @OA\License(
  *          name="GNU General Public License V3.0",
  *          url="https://www.gnu.org/licenses/gpl-3.0.en.html"
- *      ),  
+ *      ),
  *      @OA\Contact(
  *          email="support@openemis.org"
  *      ),
@@ -71,7 +71,7 @@ class Controller extends BaseController
 
     public function sendSuccessResponse($message, $data = [], $success=true)
     {
-        $message = "Successful.";
+        $message = $message ?? "Successful."; // POCOR-8915
         return response()->json(
             [
                 'message' => $message,
@@ -81,6 +81,21 @@ class Controller extends BaseController
             config('constantvalues.statusCodes.success')
         );
     }
+
+    // POCOR-8915 start
+    public function sendCreateSuccessResponse($message, $data = [], $success=true)
+    {
+        $message = $message ?? "Successful.";
+        return response()->json(
+            [
+                'message' => $message,
+                'data' => $data,
+                //'success' => $success
+            ],
+            config('constantvalues.statusCodes.createSuccess')
+        );
+    }
+    // POCOR-8915 end
 
 
     public function changeDateFormat($date)
