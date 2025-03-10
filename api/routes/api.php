@@ -47,6 +47,14 @@ Route::group(['prefix' => 'v4'], function () {
     Route::post('login', 'Authentication\LoginController@login');
 });
 
+Route::group(['prefix' => 'v5'], function () {
+    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    Route::post('login', 'Authentication\LoginController@login');
+});
+
 Route::group(
     ["middleware" => "auth.jwt",'prefix' => 'v4'],
     function () {
