@@ -74,7 +74,7 @@ class PermissionsTable extends ControllerActionTable
         $this->field('_delete', $checkboxOptions);
         $this->field('_execute', $checkboxOptions);
 
-        $modules = ['Institutions', 'Directory', 'Reports', 'Administration', 'Personal', 'Guardian'];
+        $modules = ['Institutions', 'Directory', 'Reports', 'Administration', 'Personal', 'Guardian', 'API'];
         $this->setupTabElements($modules);
 
         $module = $this->request->getQuery('module');
