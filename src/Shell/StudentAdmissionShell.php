@@ -22,29 +22,34 @@ class StudentAdmissionShell extends AlertShell
     {
         $processName = $this->processName;
         $feature = $this->featureName;
+        
+        // Assign default values if arguments are missing
+        $school_name = !empty($this->args[0]) ? $this->args[0] : '';
+        $student_name = !empty($this->args[1]) ? $this->args[1] : '';
+        $academic_year = !empty($this->args[2]) ? $this->args[2] : '';
+        $grade_name = !empty($this->args[3]) ? $this->args[3] : '';
+        $gaurdiand_data = !empty($this->args[4]) ? $this->args[4] : '';
+        $gaurdiand_data = json_decode($gaurdiand_data);
+
         $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => Time::now()], ['process_name' => $processName]);
 
-        // $dir = new Folder(ROOT . DS . 'tmp'); // path to tmp folder
+        $rules = $this->getAlertRules($feature);
+        foreach ($rules as $rule) {
+            if (!empty($rule['security_roles'])) {
+                $emailList = $this->getStudentAdmissionEmailList($gaurdiand_data);
+                $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
 
-        // do {
-            $rules = $this->getAlertRules($feature);
-            foreach ($rules as $rule) {
-                if (!empty($rule['security_roles'])) { //check if the alertRule have security role
-                    $emailList = $this->getStudentAdmissionEmailList($rule['security_roles']);
+                // Prepare replacements
+                $placeholders = ['${school_name}', '${student_name}', '${academic_year}', '${grade_name}'];
+                $values = [$school_name, $student_name, $academic_year, $grade_name];
 
-                    $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
+                // Replace all placeholders in subject and message
+                $subject = str_replace($placeholders, $values, $rule->subject);
+                $message = str_replace($placeholders, $values, $rule->message);
 
-                    // subject and message for alert email
-                    $subject = $rule->subject;
-                    $message = $rule->message;
-                    // insert record to  the alertLog
-                    $this->AlertLogs->insertStudentAdmissionAlertLog($rule->method, $rule->feature, $email, $subject, $message);
-                }
+                // Insert into alert log
+                $this->AlertLogs->insertStudentAdmissionAlertLog($rule->method, $rule->feature, $email, $subject, $message);
             }
-
-            // $filesArray = $dir->find($processName . '.stop');
-        // } while (empty($filesArray));
-       
-
+        }
     }
 }
