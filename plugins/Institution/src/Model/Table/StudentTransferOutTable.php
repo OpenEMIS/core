@@ -337,7 +337,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $statusId = $entity['status']->id;
         $session = $this->request->getSession();
         $institutionId = $this->request->getParam('pass')[1];
-        $WorkflowSteps = self::getDynamicTableInstance('Workflow.WorkflowSteps');
+        $WorkflowSteps = self::getDynamicTableInstance('Workflow.WorkflowSteps'); // POCOR-8946
         $editCheck = $WorkflowSteps->find()
             ->where([$WorkflowSteps->aliasField('id') => $statusId])
             ->first();
@@ -435,7 +435,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             ];
             $extra['toolbarButtons']['back']['url'] = $extra['redirect'];
 
-            $Students = self::getDynamicTableInstance('Institution.Students');
+            $Students = self::getDynamicTableInstance('Institution.Students'); // POCOR-8946
             $institutionStudentEntity = $Students->get($studentId, [
                 'contain' => ['Users', 'Institutions', 'EducationGrades', 'AcademicPeriods']
             ]);
@@ -477,8 +477,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
             } else {
                 // check pending withdraw
-                $StudentWithdrawTable = self::getDynamicTableInstance('Institution.StudentWithdraw');
-                $WorkflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
+                $StudentWithdrawTable = self::getDynamicTableInstance('Institution.StudentWithdraw'); // POCOR-8946
+                $WorkflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels'); // POCOR-8946
                 $pendingWithdrawStatus = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
 
                 $conditions = [
@@ -682,8 +682,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     $enrolledStudent = true;
                 } else {
                     // using institution_student_transfer entity
-                    $Students = self::getDynamicTableInstance('Institution.Students');
-                    $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
+                    $Students = self::getDynamicTableInstance('Institution.Students'); // POCOR-8946
+                    $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses'); // POCOR-8946
                     $statuses = $StudentStatuses->findCodeList();
 
                     $studentEntity = $Students->find()
@@ -765,11 +765,12 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $next_grade_id = $entity->education_grade_id;
         $institution_id = $entity->institution_id;
         if (in_array($action, ['add', 'edit', 'approve'])) {
+            // POCOR-8943 start
             $Areas = self::getDynamicTableInstance('Area.Areas');
             $Institutions = self::getDynamicTableInstance('Institution.Institutions');
             $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
             $InstitutionStatuses = self::getDynamicTableInstance('Institution.Statuses');
-
+            // POCOR-8943 end
             if ($action == 'add') {
                 // using institution_student entity
                 $today = Date::now()->format('Y-m-d');
@@ -827,9 +828,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         //single student
+        // POCOR-8946 start
         $student_id = $this->getQueryString('student_id');
         $student_gender_id = $this->Users->get($student_id)->gender_id;
-//        dd($student);
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
             $next_period_id = $entity->academic_period_id;
@@ -893,6 +894,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     $institutionOptions = $institutionQuery->toArray();
                 }
 
+                // POCOR-8946 end
                 $attr['attr']['label'] = __('Institution');
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
@@ -1081,9 +1083,11 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         if (in_array($action, ['edit', 'add', 'approve'])) { // POCOR-8411 start
             $workflowModel = 'Institutions > Student Transfer > Sending';
+            // POCOR-8946 start
             $workflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
             $workflowStepsTable = self::getDynamicTableInstance('Workflow.WorkflowSteps');
             $Workflows = self::getDynamicTableInstance('Workflow.Workflows');
+            // POCOR-8946 end
             $workModelId = $Workflows
                 ->find()
                 ->select(['id' => $workflowModelsTable->aliasField('id'),
@@ -1113,12 +1117,12 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = self::getDynamicTableInstance('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = self::getDynamicTableInstance('Workflow.WorkflowStepsRoles'); // POCOR-8946 end
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = self::getDynamicTableInstance('Security.SecurityGroupUsers');
-                    $Areas = self::getDynamicTableInstance('Area.Areas');
-                    $Institutions = self::getDynamicTableInstance('Institution.Institutions');
+                    $SecurityGroupUsers = self::getDynamicTableInstance('Security.SecurityGroupUsers'); // POCOR-8946 end
+                    $Areas = self::getDynamicTableInstance('Area.Areas'); // POCOR-8946 end
+                    $Institutions = self::getDynamicTableInstance('Institution.Institutions'); // POCOR-8946 end
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
@@ -1228,7 +1232,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     public function getReceivingInstList($params) {
         $receivingOptions = [];
 
-        $StudentTransferOut = self::getDynamicTableInstance('Institution.StudentTransferOut');
+        $StudentTransferOut = self::getDynamicTableInstance('Institution.StudentTransferOut'); // POCOR-8946 end
 
         $receivingOptions = $StudentTransferOut->find()
             ->select(['institution_id'])
