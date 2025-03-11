@@ -399,6 +399,7 @@ if (!function_exists('checkPermission')) {
 
         $user = JWTAuth::user();
 
+        // POCOR-8965
         // Super admin bypasses all checks
         if ($user['super_admin'] == 1) {
             return true;
@@ -411,17 +412,17 @@ if (!function_exists('checkPermission')) {
             return checkAccess();
         });
 
-
+        // POCOR-8965 start
         // If institution ID is required, check it
         $institutionId = $params['institution_id'] ?? ($additionalParams['institution_id'] ?? null);
         if (!empty($institutionId)) {
 
             $permission = $permissions['allowAllInstitutions'] == 1 || in_array($institutionId, $permissions['institutionIds']);
-            Log::info("$permission ID: $permission");
             if(!$permission){
                 return false;
             }
         }
+        // POCOR-8965 end
 
         if (!$permissions || !isset($permissions['permissions'][$params[0]][$params[1]][$params[2]])) {
             return false;
