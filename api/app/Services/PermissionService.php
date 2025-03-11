@@ -16,17 +16,7 @@ class PermissionService
     protected $roleIds = [];
     protected $institutionIds = [];
     protected $allowAllInstitutions = 0;
-    private array $commonViewModules = [
-        'Areas',
-        'Genders',
-        'AreaAdministratives',
-        'AreaLevels',
-        'AcademicPeriods',
-        'AcademicPeriodLevels',
-        'ContactTypes'
-        // Add more modules that should be always viewable
-    ];
-
+    // POCOR-8966 common modules removed
     public function __construct()
     {
         $this->user = JWTAuth::user();
@@ -88,7 +78,6 @@ class PermissionService
             return $this->loadPermissionsFromDb($user->id);
         });
 //        $permissions = $this->loadPermissionsFromDb($user->id);
-
 
         return $this->hasPermission($permissions, $modelName, $action);
     }
@@ -157,31 +146,18 @@ class PermissionService
 
     private function hasPermission($permissions, $modelName, $action): bool
     {
-        if ($action === 'view' && in_array($modelName, $this->commonViewModules, true)) {
-            return true;
-        }
-//        Log::info("Checking permission: $modelName.$action");
-//        Log::info("Permissions: " . print_r($permissions,true));
+// POCOR-8966 start
         foreach ($permissions as $module => $permTypes) {
             foreach (['_view', '_edit', '_add', '_delete', '_execute'] as $perm) {
                 if (isset($permTypes[$perm])) {
                     $permValues = $permTypes[$perm];
-//                    Log::info("Checking permission: $module.$action");
-                    // 🔹 Check for general permission like "Institutions.view"
-                    if (in_array("$module.$action", $permValues, true)) {
-                        return true;
-                    }
-
                     // 🔹 Check for specific model-based permission like "InstitutionStudents.view"
                     if (in_array("$modelName.$action", $permValues, true)) {
                         return true;
                     }
 
-                    // 🔹 Check if only "view", "edit", etc. exists (without module prefix)
-//                    if (in_array($action, $permValues, true)) {
-//                        return true;
-//                    }
                 }
+                // POCOR-8966 end
             }
         }
 

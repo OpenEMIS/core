@@ -679,9 +679,15 @@ class POCOR8966 extends AbstractMigration
             $this->execute('CREATE TABLE `z_8966_security_functions` LIKE `security_functions`');
             $this->execute('INSERT INTO `z_8966_security_functions` SELECT * FROM `security_functions`');
         }
+        if (!$this->hasTable('z_8966_security_role_functions')) {
+            $this->execute('CREATE TABLE `z_8966_security_role_functions` LIKE `security_role_functions`');
+            $this->execute('INSERT INTO `z_8966_security_role_functions` SELECT * FROM `security_role_functions`');
+        }
 
         // --- Update security_functions table based on new module rules ---
-        $i = 10000;
+        $maxOrder = $this->fetchRow("SELECT  max(`order`) FROM `security_functions`");
+        $i = $maxOrder[0] + 1;
+        natsort($api_tables);
         foreach ($api_tables as $table) {
             $humanName = Inflector::humanize(trim($table));
             $modelName = Inflector::camelize(trim($table));
@@ -720,9 +726,18 @@ class POCOR8966 extends AbstractMigration
     public function down()
     {
         // --- Rollback: If the backup table exists, drop the current table and rename the backup ---
+
+        if ($this->hasTable('z_8966_security_role_functions')) {
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+            $this->execute('DROP TABLE IF EXISTS `security_role_functions`');
+            $this->execute('RENAME TABLE `z_8966_security_role_functions` TO `security_role_functions`');
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+        }
         if ($this->hasTable('z_8966_security_functions')) {
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
             $this->execute('DROP TABLE IF EXISTS `security_functions`');
             $this->execute('RENAME TABLE `z_8966_security_functions` TO `security_functions`');
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
     }
 }

@@ -719,10 +719,12 @@ class CrudApiController extends Controller
             return response()->json(['error' => 'Operation not allowed on summary resources'], 405);
         }
 
-        // Check Permissions
-        if (!$this->permissionService->checkPermission($model, $action)) {
+        // Check Permissions // POCOR-8966 start
+        $modelName = basename(str_replace('\\', '/', $model));
+        if (!$this->permissionService->checkPermission($modelName, $action)) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
+        // POCOR-8966 start
 
 //        Log::info("User authorized for {$model}:{$action}");
 
