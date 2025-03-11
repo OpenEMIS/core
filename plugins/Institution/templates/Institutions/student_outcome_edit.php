@@ -17,11 +17,13 @@ $this->start('panelBody');
         max-height:400px;
         width:auto !important;
     }
-    .ag-floating-bottom-viewport 
+    .ag-floating-bottom-viewport
     .ag-floating-bottom-container .ag-row{min-height:110px;}
     .sg-theme .ag-cell{border-bottom: 1px solid #DDD;
         white-space: normal !important; /* POCOR-8877 */
         overflow-wrap: break-word !important; /* POCOR-8877 */
+        overflow-x:scroll;  /* POCOR-8877 */
+        overflow-y:scroll; /* POCOR-8877 */
     }
 </style>
 <form accept-charset="utf-8" id="content-main-form" class="ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionStudentOutcomesCtrl as InstitutionStudentOutcomesController" ng-init="InstitutionStudentOutcomesController.classId=<?= $classId ?>; InstitutionStudentOutcomesController.outcomeTemplateId=<?= $outcomeTemplateId ?>;">

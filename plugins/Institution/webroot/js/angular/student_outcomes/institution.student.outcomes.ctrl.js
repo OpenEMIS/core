@@ -76,7 +76,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
             .then(function (outcomeTemplate) {
                 Controller.outcomeTemplateName = outcomeTemplate.code_name;
                 Controller.educationGradeId = outcomeTemplate.education_grade_id;
-                Controller.selectedStudent = Controller.studentOptions[0].student_id; //6198 studentId 
+                Controller.selectedStudent = Controller.studentOptions[0].student_id; //6198 studentId
 
                 Controller.periodOptions = outcomeTemplate.periods;
                 if (Controller.periodOptions.length > 0) {
@@ -86,16 +86,16 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     AlertSvc.warning(Controller, "Please setup outcome periods for the selected template");
                 }
                 //POCOR-8435 start
-                if (outcomeTemplate && 
-                    outcomeTemplate.outcome_grading_type && 
-                    outcomeTemplate.outcome_grading_type_id != null && 
-                    Array.isArray(outcomeTemplate.outcome_grading_type.grading_options) && 
+                if (outcomeTemplate &&
+                    outcomeTemplate.outcome_grading_type &&
+                    outcomeTemplate.outcome_grading_type_id != null &&
+                    Array.isArray(outcomeTemplate.outcome_grading_type.grading_options) &&
                     outcomeTemplate.outcome_grading_type.grading_options.length > 0) {
-                
+
                     Controller.finalGradingOptions = outcomeTemplate.outcome_grading_type.grading_options;
                 }
                 //POCOR-8435 end
-                return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId, Controller.selectedStudent); //6198 studentId 
+                return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId, Controller.selectedStudent); //6198 studentId
             }, function (error) {
                 console.log(error);
             })
@@ -271,7 +271,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                             period_editable: selectedPeriodStatus,
                             education_subject_id: subject,
                             outcome_criteria_name: "Final Result",
-                            final_garding_options: finalGradingOptions, 
+                            final_garding_options: finalGradingOptions,
                             result:  Controller.outcomeFinalResult,
                             save_error: {
                                 result: false
@@ -369,7 +369,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
             // 6198 starts
             return InstitutionStudentOutcomesSvc.getSubjectOptions(Controller.classId, Controller.institutionId, Controller.academicPeriodId, Controller.educationGradeId, Controller.selectedStudent)
             .then(function (subjectOptions){
-                console.log(subjectOptions);    
+                console.log(subjectOptions);
                 if (subjectOptions.length > 0) {
                         var options = [];
                     for (var i = 0; i < subjectOptions.length; ++i) {
@@ -379,7 +379,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                     Controller.subjectOptions = options;
                     Controller.selectedSubject = subjectOptions[0].education_subject.id;
                 }
-                
+
             });// 6198 ends
         }, function (error) {
         });
@@ -399,7 +399,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                 columnDefs: [],
                 rowData: [],
                 headerHeight: 38,
-                rowHeight: 40,
+                rowHeight: 70,  /* POCOR-8877 */
                 minColWidth: 100,
                 enableColResize: true,
                 enableSorting: false,
