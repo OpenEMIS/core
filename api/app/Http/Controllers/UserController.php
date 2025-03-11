@@ -10,6 +10,7 @@ use App\Http\Requests\SaveStaffDataRequest;
 use App\Http\Requests\SaveGuardianDataRequest;
 use App\Http\Requests\UsersAddRequest;
 use App\Http\Requests\ExternalDataSourceRequest;
+use Tymon\JWTAuth\Facades\JWTAuth; // POCOR-8953
 
 class UserController extends Controller
 {
@@ -1103,27 +1104,6 @@ class UserController extends Controller
 
     // POCOR-8896 start
     /**
-     * @OA\Schema(
-     *     schema="UserUpdateRequest",
-     *     @OA\Property(property="first_name", type="string", example="Test"),
-     *     @OA\Property(property="middle_name", type="string", example=""),
-     *     @OA\Property(property="third_name", type="string", example=""),
-     *     @OA\Property(property="last_name", type="string", example="User"),
-     *     @OA\Property(property="preferred_name", type="string", example=""),
-     *     @OA\Property(property="gender_id", type="integer", example=1),
-     *     @OA\Property(property="date_of_birth", type="string", format="date", example="2011-01-01"),
-     *     @OA\Property(property="username", type="string", example="TestUser101"),
-     *     @OA\Property(property="password", type="string", example="TestUser101"),
-     *     @OA\Property(property="postal_code", type="string", example="12233"),
-     *     @OA\Property(property="address", type="string", example=""),
-     *     @OA\Property(property="birthplace_area_id", type="integer", example=2),
-     *     @OA\Property(property="address_area_id", type="integer", example=2),
-     *     @OA\Property(property="nationality_id", type="integer", example=2),
-     *     @OA\Property(property="identity_type_id", type="integer", example=160),
-     *     @OA\Property(property="identity_number", type="string", example="54542"),
-     * )
-     */
-    /**
      * Updates a user's details using their OpenEMIS ID.
      *
      * @OA\Post(
@@ -1140,7 +1120,25 @@ class UserController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="first_name", type="string", example="Test"),
+     *             @OA\Property(property="middle_name", type="string", example=""),
+     *             @OA\Property(property="third_name", type="string", example=""),
+     *             @OA\Property(property="last_name", type="string", example="User"),
+     *             @OA\Property(property="preferred_name", type="string", example=""),
+     *             @OA\Property(property="gender_id", type="integer", example=1),
+     *             @OA\Property(property="date_of_birth", type="string", format="date", example="2011-01-01"),
+     *             @OA\Property(property="username", type="string", example="TestUser101"),
+     *             @OA\Property(property="password", type="string", example="TestUser101"),
+     *             @OA\Property(property="postal_code", type="string", example="12233"),
+     *             @OA\Property(property="address", type="string", example=""),
+     *             @OA\Property(property="birthplace_area_id", type="integer", example=2),
+     *             @OA\Property(property="address_area_id", type="integer", example=2),
+     *             @OA\Property(property="nationality_id", type="integer", example=2),
+     *             @OA\Property(property="identity_type_id", type="integer", example=160),
+     *             @OA\Property(property="identity_number", type="string", example="54542")
+     *         )
      *     ),
      *     @OA\Response(response=200, description="User data updated successfully."),
      *     @OA\Response(response=403, description="Unauthorized access."),
@@ -1148,6 +1146,7 @@ class UserController extends Controller
      *     @OA\Response(response=500, description="Internal server error.")
      * )
      */
+
     /**
      * Updates a user's details using their OpenEMIS ID.
      *
@@ -1165,7 +1164,25 @@ class UserController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="first_name", type="string", example="Test"),
+     *             @OA\Property(property="middle_name", type="string", example=""),
+     *             @OA\Property(property="third_name", type="string", example=""),
+     *             @OA\Property(property="last_name", type="string", example="User"),
+     *             @OA\Property(property="preferred_name", type="string", example=""),
+     *             @OA\Property(property="gender_id", type="integer", example=1),
+     *             @OA\Property(property="date_of_birth", type="string", format="date", example="2011-01-01"),
+     *             @OA\Property(property="username", type="string", example="TestUser101"),
+     *             @OA\Property(property="password", type="string", example="TestUser101"),
+     *             @OA\Property(property="postal_code", type="string", example="12233"),
+     *             @OA\Property(property="address", type="string", example=""),
+     *             @OA\Property(property="birthplace_area_id", type="integer", example=2),
+     *             @OA\Property(property="address_area_id", type="integer", example=2),
+     *             @OA\Property(property="nationality_id", type="integer", example=2),
+     *             @OA\Property(property="identity_type_id", type="integer", example=160),
+     *             @OA\Property(property="identity_number", type="string", example="54542")
+     *         )
      *     ),
      *     @OA\Response(response=200, description="User data updated successfully."),
      *     @OA\Response(response=403, description="Unauthorized access."),
@@ -1173,6 +1190,7 @@ class UserController extends Controller
      *     @OA\Response(response=500, description="Internal server error.")
      * )
      */
+
     /**
      * Updates a user's details using their OpenEMIS ID.
      *
@@ -1190,7 +1208,25 @@ class UserController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/UserUpdateRequest")
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="first_name", type="string", example="Test"),
+     *             @OA\Property(property="middle_name", type="string", example=""),
+     *             @OA\Property(property="third_name", type="string", example=""),
+     *             @OA\Property(property="last_name", type="string", example="User"),
+     *             @OA\Property(property="preferred_name", type="string", example=""),
+     *             @OA\Property(property="gender_id", type="integer", example=1),
+     *             @OA\Property(property="date_of_birth", type="string", format="date", example="2011-01-01"),
+     *             @OA\Property(property="username", type="string", example="TestUser101"),
+     *             @OA\Property(property="password", type="string", example="TestUser101"),
+     *             @OA\Property(property="postal_code", type="string", example="12233"),
+     *             @OA\Property(property="address", type="string", example=""),
+     *             @OA\Property(property="birthplace_area_id", type="integer", example=2),
+     *             @OA\Property(property="address_area_id", type="integer", example=2),
+     *             @OA\Property(property="nationality_id", type="integer", example=2),
+     *             @OA\Property(property="identity_type_id", type="integer", example=160),
+     *             @OA\Property(property="identity_number", type="string", example="54542")
+     *         )
      *     ),
      *     @OA\Response(response=200, description="User data updated successfully."),
      *     @OA\Response(response=403, description="Unauthorized access."),
@@ -1202,26 +1238,23 @@ class UserController extends Controller
     {
         try {
             // Determine required permissions
-            $requiredPermissions = $this->determinePermissionsToUpdateUser($request->all());
-
-            // Check all required permissions
-            if (!$this->hasAllPermissions($requiredPermissions)) {
-                return $this->sendAuthorizationErrorResponse();
-            }
-
             // Filter and process user data
             $userData = $request->only([
                 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name',
                 'gender_id', 'date_of_birth', 'identity_number', 'nationality_id', 'username',
                 'password', 'postal_code', 'address', 'birthplace_area_id', 'address_area_id',
-                'identity_type_id', 'identity_type_name'
+                'email', 'identity_type_id', 'identity_type_name'
             ]);
+            $userData['openemis_no'] = $openemis_no;
+            $requiredPermissions = $this->determinePermissionsToUpdateUser($userData);
+            // Check all required permissions
+            if (!$this->hasAllPermissions($requiredPermissions)) {
+                return $this->sendAuthorizationErrorResponse();
+            }
 
             if (empty($userData)) {
                 return $this->sendErrorResponse("Invalid user data.");
             }
-
-            $userData['openemis_no'] = $openemis_no;
 
             // Call service to update user
             return $this->userService->patchUser($userData);
@@ -1238,34 +1271,61 @@ class UserController extends Controller
 
     /**
      * Determines the permissions required to update a user.
-     *
-     * @param array $requestData
+     * POCOR-8953 refactured
+     * @param array $userData
      * @return array
      */
-    private function determinePermissionsToUpdateUser(array $requestData): array
+    private function determinePermissionsToUpdateUser(array $userData): array
     {
+        $loggedUserID = JWTAuth::user()->id;
+        $openemisNo = $userData['openemis_no'];
+        $requestedUserID = $this->userService->getUserIdByOpenemisNo($openemisNo);
         $permissions = [];
+        if($loggedUserID !== $requestedUserID) {
+            if ($this->hasAny($userData, ['first_name', 'last_name', 'middle_name',
+                'third_name', 'preferred_name', 'gender_id', 'date_of_birth',
+                'address', 'postal_code', 'address_area_id', 'birthplace_area_id'])) {
+                $permissions[] = ['Directories', 'Directories', 'edit'];
+            }
 
-        if ($this->hasAny($requestData, ['first_name', 'last_name', 'middle_name',
-            'third_name', 'preferred_name', 'gender_id', 'date_of_birth',
-            'address', 'postal_code', 'address_area_id', 'birthplace_area_id'])) {
-            $permissions[] = ['Directories', 'Overview', 'edit'];
+            if ($this->hasAny($userData, ['username', 'password'])) {
+                $permissions[] = ['Directories', 'Accounts', 'edit'];
+            }
+
+            if ($this->hasAny($userData, ['identity_type_id', 'identity_number'])) {
+                $permissions[] = ['Directories', 'Identities', 'edit'];
+            }
+
+            if ($this->hasAny($userData, ['nationality_id'])) {
+                $permissions[] = ['Directories', 'Nationalities', 'edit'];
+            }
+
+            if ($this->hasAny($userData, ['email'])) {
+                $permissions[] = ['Directories', 'Contacts', 'edit'];
+            }
         }
+        if($loggedUserID === $requestedUserID){
+            if ($this->hasAny($userData, ['first_name', 'last_name', 'middle_name',
+                'third_name', 'preferred_name', 'gender_id', 'date_of_birth',
+                'address', 'postal_code', 'address_area_id', 'birthplace_area_id'])) {
+                $permissions[] = ['Profiles', 'Personal', 'edit'];
+            }
 
-        if ($this->hasAny($requestData, ['username', 'password'])) {
-            $permissions[] = ['Directories', 'Accounts', 'edit'];
-        }
+            if ($this->hasAny($userData, ['username', 'password'])) {
+                $permissions[] = ['Profiles', 'Accounts', 'edit'];
+            }
 
-        if ($this->hasAny($requestData, ['identity_type_id', 'identity_number'])) {
-            $permissions[] = ['Directories', 'Identities', 'edit'];
-        }
+            if ($this->hasAny($userData, ['identity_type_id', 'identity_number'])) {
+                $permissions[] = ['Profiles', 'Identities', 'edit'];
+            }
 
-        if ($this->hasAny($requestData, ['nationality_id'])) {
-            $permissions[] = ['Directories', 'Nationalities', 'edit'];
-        }
+            if ($this->hasAny($userData, ['nationality_id'])) {
+                $permissions[] = ['Profiles', 'Nationalities', 'edit'];
+            }
 
-        if ($this->hasAny($requestData, ['email'])) {
-            $permissions[] = ['Directories', 'Contacts', 'edit'];
+            if ($this->hasAny($userData, ['email'])) {
+                $permissions[] = ['Profiles', 'Contacts', 'edit'];
+            }
         }
 
         return $permissions;
@@ -1279,6 +1339,7 @@ class UserController extends Controller
      */
     private function hasAllPermissions(array $permissions): bool
     {
+        Log::debug(print_r(['permissions' => $permissions], true));
         foreach ($permissions as $permission) {
             if (!checkPermission($permission)) {
                 return false;

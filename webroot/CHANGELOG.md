@@ -1,3 +1,40 @@
+### [4.15.0] - 2025-03-10
+- Implemented: Develop standard OpenEMIS Core v5 APIs based on database tables
+
+### [4.14.0] - 2025-03-07
+- Implemented: Develop a function to allow institutions to take attendance by both period and subject
+- Implemented: Develop a function to add System Updates emails to Alerts
+- Implemented: Develop changes to the student programmes page to add the Candidate Number field
+- Bug Fixed: Api: When user logins as non superadmin, user does not have permission to edit
+- Bug Fixed: Administration > Performance > GPA > Add: Start and end date disappear even after inputting
+- Bug Fixed: Institutions > Attendance > Staff > Import: When importing staff attendance, the page gives an error
+- Bug Fixed: Reports > Students > Students: When exporting Students report, the date of birth column is not showing any data
+- Bug Fixed: Administration > System Setup > Field Options > Staff Positions Titles: When editing Staff Position Titles and upon saving, the page gives a 404 error
+- Bug Fixed: Institutions > Survey > Forms > Export:When exporting a selected survey, the data in survey is showing all answers for all surveys and all institutions
+- Bug Fixed: Swagger: Incorrect API naming standards
+- Bug Fixed: Develop changes to the education structure and student subjects page
+- Bug Fixed: Reports > Staff > Qualifications: The report goes to Status error
+- Bug Fixed: Institutions > Dashboard: When users role are given permission to view Institution Profile Completeness, the Institution Profile Completeness did not appear under their account
+
+### [4.13.2] - 2025-03-05
+- Bug Fixed: Unable to login through SAML
+- Bug Fixed: Institutions > Performance > Report Cards: Report card is stuck in progress and then it went to error status
+
+### [4.13.1] - 2025-03-04
+- Bug Fixed: Login : 404 error when logged in through SAML
+
+### [4.13.0] - 2025-02-28
+- Implemented: Develop Automated Enrolment Feature
+- Implemented: Add Export button to Student > Academic features
+- Implemented: Develop changes to individual student attendance / absence
+- Implemented: Develop changes to the Laravel API routes file to add both /api/v4 and /api/v5
+- Implemented: Develop Student Behaviour Report
+- Bug Fixed: Running command to generate swagger documentation generates error
+- Bug Fixed: Administration > Performance > Report Cards: Report card template is not showing even though there is a report card template attached
+- Bug Fixed: Administration>Update: Update button should be hidden if the version is the latest
+- Bug Fixed: Administration > Performance > Assessments > Templates > Add:User is able to create more than 1 assessment template for one grade
+- Bug Fixed: Institutions > Attendance > Staff: When marking attendance for staff on mobile phones, the circle hamburger option is not showing to select the filter (like dates, time eg)
+
 ### [4.12.0] - 2025-02-25
 - Implemented: Develop Users feature APIs by OpenEMIS ID - part 2
 - Bug Fixed: Institutions > Students > Undo: There is an error when undoing graduation, the systems navigate to a blank page with the message "beforeFilter:2764For Developer: You should put institution_id into query string first"
