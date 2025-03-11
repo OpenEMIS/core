@@ -780,14 +780,52 @@ class StudentTransferTable extends ControllerActionTable
         //$nextEducationGradeId = $request->getQuery('next_education_grade_id');
         $selectedGrade = !empty($request->getQuery('education_grade_id')) ? $request->getQuery('education_grade_id') : $request->getData('StudentTransfer.education_grade_id');
         $selectedClass = !empty($request->getQuery('institution_class')) ? $request->getQuery('institution_class') : $request->getData('StudentTransfer.class');
-        $nextEducationGradeId = !empty($request->getQuery('next_education_grade_id')) ? $request->getQuery('next_education_grade_id') : $request->getData('StudentTransfer.next_education_grade_id');
+        $selectedInstitution = !empty($request->getQuery('next_institution_id')) ? $request->getQuery('next_institution_id') : $request->getData('StudentTransfer.next_institution_id');
+
+        $selectedInstitution = (int)$selectedInstitution;
+        if (!empty($selectedInstitution)) {
+            $institutionGender = $this->Institutions
+                ->find()
+                ->contain('Genders')
+                ->where([
+                    $this->Institutions->aliasField('id') => $selectedInstitution
+                ])
+                ->select([
+                    'Genders.code',
+                    'Genders.name'
+                ])
+                ->first();
+            $attr['nextInstitutionGender'] = $institutionGender->Genders->name;
+            $attr['nextInstitutionGenderCode'] = $institutionGender->Genders->code;
+            $instituitionGenderCode = $attr['nextInstitutionGenderCode'];
+            dd($institutionGender);
+        }
+
 
         $students = [];
-        if (!empty($selectedGrade) && !is_null($this->currentPeriod)) {
+        if (!empty($selectedGrade)
+            && !is_null($this->currentPeriod) &&
+            !empty($instituitionGenderCode)
+        ) {
+
             $selectedPeriod = $this->currentPeriod->id;
             $GradeStudents = $this->GradeStudents;
             $statuses = $this->statuses;
-
+            if ($instituitionGenderCode != 'X') {
+                $whereInstitution = [
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('education_grade_id') => $selectedGrade,
+                    'Users.Genders.code' => $instituitionGenderCode
+                ];
+            }
+            if($instituitionGenderCode == 'X'){
+            $whereInstitution = [
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $selectedPeriod,
+                $this->aliasField('education_grade_id') => $selectedGrade,
+            ];
+            }
             $studentQuery = $this
                 ->find('byNoExistingTransferRequest')
                 //->find('byNoEnrolledRecord')
@@ -796,11 +834,7 @@ class StudentTransferTable extends ControllerActionTable
                 ->find('studentClasses', ['institution_class_id' => $selectedClass])
                 ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
                 ->matching('Users.Genders')
-                ->where([
-                    $this->aliasField('institution_id') => $institutionId,
-                    $this->aliasField('academic_period_id') => $selectedPeriod,
-                    $this->aliasField('education_grade_id') => $selectedGrade
-                ])
+                ->where($whereInstitution)
                 ->group($this->aliasField('student_id'))
                 ->order(['Users.first_name'])
                 //POCOR-6982 Starts
@@ -850,22 +884,7 @@ class StudentTransferTable extends ControllerActionTable
             }
         }
 
-        if (!empty($request->getData()[$this->getAlias()]['next_institution_id'])) {
-            $nextInstitutionId = $request->getData()[$this->getAlias()]['next_institution_id'];
-            $institutionGender = $this->Institutions
-                ->find()
-                ->contain('Genders')
-                ->where([
-                    $this->Institutions->aliasField('id') => $nextInstitutionId
-                ])
-                ->select([
-                    'Genders.code',
-                    'Genders.name'
-                ])
-                ->first();
-            $attr['nextInstitutionGender'] = $institutionGender->Genders->name;
-            $attr['nextInstitutionGenderCode'] = $institutionGender->Genders->code;
-        }
+
 
         $statusOptions = $this->StudentStatuses->find('list')->toArray();
         $attr['type'] = 'element';
@@ -1029,14 +1048,14 @@ class StudentTransferTable extends ControllerActionTable
         if ($this->request->is(['post', 'put'])) {
             //POCOR-8624
             $dataArray = $this->request->getData();
-        
+
             if (array_key_exists($this->getAlias(), $dataArray)) {
                 if (array_key_exists('education_grade_id', $dataArray[$this->getAlias()])) {
                     $this->request = $this->request->withQueryParams(['education_grade_id' => $dataArray[$this->getAlias()]['education_grade_id']]);
                 }
             }
         }
-        
+
     }
 
     public function addOnChangeNextPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
