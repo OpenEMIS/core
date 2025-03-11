@@ -10,7 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Cake\Utility\Security;
 use App\Model\Table\AppTable;
-use Cake\I18n\Time;//POCOR-7319
+use Cake\I18n\FrozenTime;//POCOR-7319
 use Cake\Http\Session;
 use Cake\Datasource\ConnectionManager;
 
@@ -245,7 +245,7 @@ class ReportCardsTable extends AppTable
         if (!empty($ReportCardProcessesData)) {
 
             foreach ($ReportCardProcessesData as $key => $val) {
-                $todayDate = Time::parse('now');
+                $todayDate = FrozenTime::parse('now');
                 $_now = $todayDate->i18nFormat('yyyy-MM-dd HH:mm:ss');
                 $status = $ReportCardProcesses::COMPLETED;
                 $modified = $_now;
@@ -1207,7 +1207,7 @@ class ReportCardsTable extends AppTable
                 ]);
 
             if ($entity->count() > 0) {
-                $extra['competency_periods_ids'] = $entity->extract('id')->toArray();
+                $extra['competency_periods_ids'] = $entity->all()->extract('id')->toArray();
             }
             $AbsenceTypeExcused = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
             $AbsenceTypeUnexcused = $AbsenceTypesTable->find()->where(['code' => 'UNEXCUSED'])->first();
@@ -1324,7 +1324,7 @@ class ReportCardsTable extends AppTable
                 ]);
 
             if ($entity->count() > 0) {
-                $extra['competency_periods_ids'] = $entity->extract('id')->toArray();
+                $extra['competency_periods_ids'] = $entity->all()->extract('id')->toArray();
             }
             return $entity->toArray();
         }
@@ -1514,7 +1514,8 @@ class ReportCardsTable extends AppTable
                     'start_date >=' => $extra['report_card_start_date'],
                     'end_date <=' => $extra['report_card_end_date']
                 ])
-                ->order(['start_date']);
+                ->order(['start_date'])
+                ->enableHydration(false); //POCOR-8798
             $results = $query->toArray();
 
             if (!empty($results)) {
@@ -1672,7 +1673,17 @@ class ReportCardsTable extends AppTable
             } else {
                 $extra['assessment_id'] = NULL;
             }
-            $subjectList = $AssessmentItems
+
+            //POCOR-8798
+            if ($extra['assessment_id'] === null) {
+                $subjectList = $AssessmentItems
+                    ->find('list', [
+                        'keyField' => 'education_subject_id',
+                        'valueField' => 'education_subject_id'
+                    ])
+                    ->toArray();
+            } else {
+                $subjectList = $AssessmentItems
                 ->find('list', [
                     'keyField' => 'education_subject_id',
                     'valueField' => 'education_subject_id'
@@ -1682,13 +1693,26 @@ class ReportCardsTable extends AppTable
                     'class_id' => $params['institution_class_id']
                 ])
                 ->toArray();
+            }
+
 
             // to only process the query if the class has subjects
             $conditions = [];
             if (!empty($subjectList)) {
+                //POCOR-8798
+                if ($extra['assessment_id'] === null) {
+                    $conditions[$AssessmentItemResults->aliasField('assessment_id IS')] = null;  // Handle null explicitly
+                } else {
+                    $conditions[$AssessmentItemResults->aliasField('assessment_id')] = $extra['assessment_id']; // Regular condition
+                }
+
+                if(isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids'])) {
+                    $conditions[$AssessmentItemResults->aliasField('assessment_period_id IN')] = $extra['assessment_period_ids'];
+                }
+
                 $conditions = [
-                    $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
-                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
+                    //$AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
+                    //$AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
                     $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
                     $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
                     $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
@@ -1934,7 +1958,7 @@ class ReportCardsTable extends AppTable
                 ->group($OutcomeTemplates->aliasField('id'));
 
             if ($entity->count() > 0) {
-                $extra['outcome_templates_ids'] = $entity->extract('id')->toArray();
+                $extra['outcome_templates_ids'] = $entity->all()->extract('id')->toArray();
             }
             return $entity->toArray();
         }
@@ -1954,7 +1978,7 @@ class ReportCardsTable extends AppTable
                 ]);
 
             if ($entity->count() > 0) {
-                $extra['outcome_periods_ids'] = $entity->extract('id')->toArray();
+                $extra['outcome_periods_ids'] = $entity->all()->extract('id')->toArray();
             }
             return $entity->toArray();
         }
@@ -2405,9 +2429,18 @@ class ReportCardsTable extends AppTable
          $institutionsPositions = TableRegistry::get('Institution.InstitutionPosition');//POCOR-8093
          $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
          $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+         //POCOR-8798
+         if(!empty($staffPosnId)){
+            $condition = [
+                'InstitutionPositions.staff_position_title_id' => $staffPosnId
+            ];
+        } else {
+            $condition = [];
+        }
          $where = [
              $Staff->aliasField('institution_id') => $institutionId,
-             'InstitutionPositions.staff_position_title_id' => $staffPosnId, //POCOR-8193
+             $condition,//POCOR-8798
+             //'InstitutionPositions.staff_position_title_id' => $staffPosnId, //POCOR-8193
              'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
              $Staff->aliasField('staff_status_id') => $assignedStatus
          ];

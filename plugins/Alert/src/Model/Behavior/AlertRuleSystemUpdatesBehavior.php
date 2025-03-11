@@ -38,7 +38,7 @@ class AlertRuleSystemUpdatesBehavior extends AlertRuleBehavior
             // ]
         ],
         'placeholder' => [
-            '${verson}' => 'System Version.',
+            '${version}' => 'System Version.',
         ]
     ];
 

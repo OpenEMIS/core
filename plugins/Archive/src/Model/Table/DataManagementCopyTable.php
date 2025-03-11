@@ -43,6 +43,7 @@ class DataManagementCopyTable extends ControllerActionTable
     const PERFORMANCE_COMPETENCIES = 'Performance Competencies';
     const PERFORMANCE_ASSESSMENTS = 'Performance Assessments';
     const PERFORMANCE_OUTCOMES = 'Institution Performance Outcomes';
+    const MASS_STUDENT_GRAD = 'Mass Student Graduation';
     //POCOR-7924:end
 
     /**
@@ -825,6 +826,58 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->log(' <<<<<<<<<<======== After triggerPerformanceOutcomesShell', 'debug');
         }
         // End POCOR-6425
+
+        // Start POCOR-8689
+        if ($entity->features == self::MASS_STUDENT_GRAD) {
+            $copyFrom = $entity->from_academic_period;
+            $copyTo = $entity->to_academic_period;
+
+            if($entity->from_academic_period == $entity->to_academic_period){
+                $this->Alert->error('CopyData.genralerror', ['reset' => true]);
+                return false;
+            }
+            if($entity->from_academic_period > $entity->to_academic_period){
+                $this->Alert->error('CopyData.invalidDate', ['reset' => true]);
+                return false;
+            }
+
+            $finalGradeIdsQuery = "
+            SELECT DISTINCT eg.id AS education_grade_id
+            FROM education_systems es
+            JOIN education_levels el ON es.id = el.education_system_id
+            JOIN education_cycles ec ON el.id = ec.education_level_id
+            JOIN education_programmes ep ON ec.id = ep.education_cycle_id
+            JOIN education_grades eg ON ep.id = eg.education_programme_id
+            WHERE es.academic_period_id = :copyFrom
+            AND eg.order = (
+                SELECT MAX(eg2.order)
+                FROM education_grades eg2
+                WHERE eg2.education_programme_id = ep.id
+            )";
+            
+        // Execute the final grade query and fetch the result
+            $finalGradeIds = $connection->execute($finalGradeIdsQuery, ['copyFrom' => $copyFrom])->fetchAll('assoc');
+            $finalGradeIds = array_column($finalGradeIds, 'education_grade_id');
+            $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+            $studentIdsQuery = $InstitutionStudents->find()
+                ->select(['student_id'])
+                ->where([
+                    'student_status_id' => 1, // Enrolled students
+                    'academic_period_id' => $copyFrom,
+                    'education_grade_id IN' => $finalGradeIds // Use IN for filtering final grades
+                ])
+                ->toArray();
+            if(empty($studentIdsQuery)){
+                $this->Alert->error('CopyData.nodataexist', ['reset' => true]);
+                return false;
+            } else {
+                $this->log('=======>Before triggerCopyMassGraduation', 'debug');
+                $this->triggerCopyShell('CopyMassGraduation', $copyFrom, $copyTo);
+                $this->log(' <<<<<<<<<<======== After triggerCopyMassGraduation', 'debug');
+            } 
+        }
+        // End POCOR-8689
+
     }
 
 
@@ -859,8 +912,8 @@ class DataManagementCopyTable extends ControllerActionTable
             self::PERFORMANCE_COMPETENCIES => __(self::PERFORMANCE_COMPETENCIES),
             self::PERFORMANCE_OUTCOMES => __('Performance Outcomes'),
             self::PERFORMANCE_ASSESSMENTS => __('Institution Performance Assessments'), // POCOR-6423
-            self::REPORT_CARDS => __(self::REPORT_CARDS) // POCOR-7764 // POCOR-7924: end
-
+            self::REPORT_CARDS => __(self::REPORT_CARDS), // POCOR-7764 // POCOR-7924: end
+            self::MASS_STUDENT_GRAD => __(self::MASS_STUDENT_GRAD) // POCOR-8689
         ];
         return $options;
     }
