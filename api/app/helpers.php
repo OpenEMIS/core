@@ -397,9 +397,12 @@ if (!function_exists('checkPermission')) {
     function checkPermission(array $params, array $additionalParams = []): bool
     {
 
-
         $user = JWTAuth::user();
 
+        // Super admin bypasses all checks
+        if ($user['super_admin'] == 1) {
+            return true;
+        }
         // Cache key based on user ID
         $cacheKey = "user_permissions_{$user->id}";
 
@@ -409,14 +412,15 @@ if (!function_exists('checkPermission')) {
         });
 
 
-        // Super admin bypasses all checks
-        if ($user['super_admin'] == 1) {
-            return true;
-        }
-        // Log::info("Permissions: " . print_r($permissions,true));
         // If institution ID is required, check it
-        if (!empty($params['institution_id'])) {
-            return $permissions['allowAllInstitutions'] == 1 || in_array($params['institution_id'], $permissions['institutionIds']);
+        $institutionId = $params['institution_id'] ?? ($additionalParams['institution_id'] ?? null);
+        if (!empty($institutionId)) {
+
+            $permission = $permissions['allowAllInstitutions'] == 1 || in_array($institutionId, $permissions['institutionIds']);
+            Log::info("$permission ID: $permission");
+            if(!$permission){
+                return false;
+            }
         }
 
         if (!$permissions || !isset($permissions['permissions'][$params[0]][$params[1]][$params[2]])) {
