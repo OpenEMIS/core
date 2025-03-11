@@ -15,8 +15,8 @@ use Cake\I18n\Date;
 use App\Model\Table\ControllerActionTable;
 use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Log\Log;
-use Cake\Datasource\ResultSetInterface;
-use Cake\ORM\Table;
+use Cake\Datasource\ResultSetInterface; // POCOR-8946 end
+use Cake\ORM\Table; // POCOR-8946 end
 
 //POCOR-6982
 
@@ -88,12 +88,12 @@ class StudentTransferTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->Grades = TableRegistry::get('Institution.InstitutionGrades');
-        $this->GradeStudents = TableRegistry::get('Institution.StudentTransfer');
-        $this->StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
-        $this->Students = TableRegistry::get('Institution.Students');
+        $this->Grades = self::getDynamicTableInstance('Institution.InstitutionGrades');
+        $this->GradeStudents = self::getDynamicTableInstance('Institution.StudentTransfer');
+        $this->StudentTransfers = self::getDynamicTableInstance('Institution.InstitutionStudentTransfers');
+        $this->Students = self::getDynamicTableInstance('Institution.Students');
 
-        $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
+        $institutionClassTable = self::getDynamicTableInstance('Institution.InstitutionClasses');
         $this->institutionId = $this->getInstitutionID();
         $this->institutionClasses = $institutionClassTable->find('list')
             ->where([$institutionClassTable->aliasField('institution_id') => $this->institutionId])
@@ -196,7 +196,7 @@ class StudentTransferTable extends ControllerActionTable
                 && !empty($studentTransferReasonId)
                 && !empty($currentEducationGradeId)) {
                 if (array_key_exists('students', $requestData[$this->getAlias()])) {
-                    $StudentTransferOut = TableRegistry::get('Institution.StudentTransferOut');
+                    $StudentTransferOut = self::getDynamicTableInstance('Institution.StudentTransferOut');
                     $institutionId = $requestData[$this->getAlias()]['institution_id'];
 
                     $tranferCount = 0;
@@ -659,9 +659,9 @@ class StudentTransferTable extends ControllerActionTable
         $areaOptions = [];
 
         if ((!empty($next_period_id) && !is_null($next_period_id)) && !is_null($next_grade_id)) {
-            $Institutions = TableRegistry::get('Institution.Institutions');
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-            $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
+            $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
+            $InstitutionStatuses = self::getDynamicTableInstance('Institution.Statuses');
             $activeId = $InstitutionStatuses->getIdByCode('ACTIVE');
             $institution_id = $this->institutionId;
 
@@ -718,8 +718,8 @@ class StudentTransferTable extends ControllerActionTable
         $next_grade_id = !empty($request->getQuery('next_education_grade_id')) ? $request->getQuery('next_education_grade_id') : $request->getData('StudentTransfer.next_education_grade_id');
         //$next_period_id = $request->getQuery('next_academic_period_id');
         //$next_grade_id = $request->getQuery('next_education_grade_id');
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
+        $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
+        $InstitutionStatuses = self::getDynamicTableInstance('Institution.Statuses');
 
         $institution_id = $this->institutionId;
 
@@ -777,7 +777,7 @@ class StudentTransferTable extends ControllerActionTable
 
     public function onUpdateFieldStudentTransferReasonId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $StudentTransferReasons = TableRegistry::get('Student.StudentTransferReasons');
+        $StudentTransferReasons = self::getDynamicTableInstance('Student.StudentTransferReasons');
         $attr['options'] = $StudentTransferReasons->getList()->toArray();
         return $attr;
     }
@@ -790,6 +790,7 @@ class StudentTransferTable extends ControllerActionTable
         //$nextEducationGradeId = $request->getQuery('next_education_grade_id');
         $selectedGrade = !empty($request->getQuery('education_grade_id')) ? $request->getQuery('education_grade_id') : $request->getData('StudentTransfer.education_grade_id');
         $selectedClass = !empty($request->getQuery('institution_class')) ? $request->getQuery('institution_class') : $request->getData('StudentTransfer.class');
+        // POCOR-8946 start
         $selectedInstitution = !empty($request->getQuery('next_institution_id')) ? $request->getQuery('next_institution_id') : $request->getData('StudentTransfer.next_institution_id');
         $InstitutionGenders = self::getDynamicTableInstance('institution_genders');
 
@@ -854,6 +855,7 @@ class StudentTransferTable extends ControllerActionTable
                 ->select(['institution_class_id' => 'InstitutionClassStudents.institution_class_id'])
                 ->matching('Users.Genders')
                 ->where($whereInstitution)
+                // POCOR-8946 end
                 ->group($this->aliasField('student_id'))
                 ->order(['Users.first_name'])
                 //POCOR-6982 Starts
@@ -862,7 +864,7 @@ class StudentTransferTable extends ControllerActionTable
                         $studentId = $row->student_id;
                         $institutionId = $row->institution_id;
                         $academicPeriodId = $row->academic_period_id;
-                        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+                        $InstitutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
                         $StudentRecords = $InstitutionStudents
                             ->find()
                             ->where([
@@ -914,6 +916,7 @@ class StudentTransferTable extends ControllerActionTable
     }
 
     /**
+     * POCOR-8946
      * @param string $tableName
      * @return Table
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
@@ -966,7 +969,7 @@ class StudentTransferTable extends ControllerActionTable
         $attr['options'] = [];
 
         if (!is_null($this->currentPeriod)) {
-            $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
+            $institutionClass = self::getDynamicTableInstance('Institution.InstitutionClasses');
             $institutionId = $this->institutionId;
             $selectedPeriod = $this->currentPeriod->id;
             //$educationGradeId = $request->getQuery('education_grade_id');
@@ -1142,8 +1145,6 @@ class StudentTransferTable extends ControllerActionTable
         }
     }
 
-    //POCOR-6925
-
     public function addOnChangeNextGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         unset($this->request->getQuery['next_education_grade_id']);
@@ -1159,13 +1160,14 @@ class StudentTransferTable extends ControllerActionTable
         }
     }
 
+    //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Student Transfer > Sending';
-            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
+            $workflowStepsTable = self::getDynamicTableInstance('Workflow.WorkflowSteps');
+            $Workflows = self::getDynamicTableInstance('Workflow.Workflows');
             $workModelId = $Workflows
                 ->find()
                 ->select(['id' => $workflowModelsTable->aliasField('id'),
@@ -1191,15 +1193,14 @@ class StudentTransferTable extends ControllerActionTable
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
-            $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = self::getDynamicTableInstance('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = self::getDynamicTableInstance('Security.SecurityGroupUsers');
+                    $Areas = self::getDynamicTableInstance('Area.Areas');
+                    $Institutions = self::getDynamicTableInstance('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
