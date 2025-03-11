@@ -245,12 +245,6 @@ trait OptionsTrait
                         1 => __('Approved'),
                     ]
                 ],
-                'StudentAdmissionStatus' => [
-                    'status' => [
-                        0 => __('disable'),
-                        1 => __('enable'),
-                    ]
-                ],
                 //POCOR-8869 end
             ],
             

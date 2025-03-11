@@ -23,18 +23,12 @@ class AlertRuleStudentAdmissionBehavior extends AlertRuleBehavior
                     'after' => 'security_roles',
                     'options' =>'StudentAdmission.workflow_steps'
                 ],
-                'status' => [
-                    'type' => 'chosenSelect',
-                    'select' => false,
-                    'after' => 'workflow_steps',
-                    'options' =>'StudentAdmissionStatus.status'
-                ],
         ],
         'placeholder' => [
-            // '${threshold.value}' => 'Threshold value.',
-            // '${case_number}'=>'Case Number.',
-            // '${assignee.openemis_no}'=>'Assignee OpenEMIS ID.',
-            // '${assignee.first_name}'=>'Assignee First Name.',
+            '${school_name}' => 'School Name.',
+            '${student_name}'=>'Student Number.',
+            '${academic_year}'=>'Academic Year.',
+            '${grade_name}'=>'Grade Level/Program Name.',
             // '${assignee.middle_name}'=>'Assignee Middle Name.',
             // '${assignee.third_name}'=>'Assignee Third Name.',
             // '${assignee.last_name}'=>'Assignee Last Name.',
