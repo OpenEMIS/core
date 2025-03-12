@@ -61,18 +61,24 @@ class DashboardController extends AppController
         parent::beforeFilter($event);
 
         $user = $this->Auth->user();
-        if (is_array($user)&& ($user['last_login'] === null || $user['last_login'] === '')) {
-            
+//        dd($user);
+        if (is_array($user) && (empty($user['last_login']))) {
+            $header = __('Mome Page');
+            $this->set('contentHeader', $header);
             $userInfo = TableRegistry::get('User.Users')->get($user['id']);
             if ($userInfo->password) {
                 $this->Alert->warning('security.login.changePassword');
                 $lastLogin = $userInfo->last_login;
                 $this->request->getSession()->write('Auth.User.last_login', $lastLogin);
-                $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Accounts', 'edit', $this->ControllerAction->paramsEncode(['id' => $user['id']])]);
+                $this->redirect(['plugin' => 'Profile',
+                    'controller' => 'Profiles',
+                    'action' => 'Accounts',
+                    '0' => 'edit',
+                    '1' => $this->ControllerAction->paramsEncode(['id' => $user['id']])]);
             }
 
         }
-      
+
         $header = __('Home Page');
         $this->set('contentHeader', $header);
 
