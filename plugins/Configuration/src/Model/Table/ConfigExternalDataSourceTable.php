@@ -575,7 +575,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             'username', 'password', 'api_url', 'api_key', 'first_name_mapping', 'middle_name_mapping',
             'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping', 'external_reference_mapping',
             'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping',
-            'address_mapping', 'postal_mapping', 'private_key', 'public_key', 'secret_code', 'application_id'
+            'address_mapping', 'postal_mapping', 'private_key', 'public_key', 'secret_code', 'application_id',
+            'gender_id_mapping', 'openemis_no_mapping'
         ];
 
         foreach ($fields as $field) {
