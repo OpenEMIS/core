@@ -34,38 +34,64 @@ class POCOR8911 extends AbstractMigration
 
         Log::write('debug', 'Unique constraints removed on email and mobile_number');
 
+        // Archive new records added after migration
+        $this->execute('CREATE TABLE `archived_new_users` AS 
+            SELECT * FROM `security_users` 
+            WHERE id NOT IN (SELECT id FROM `zz_8911_security_users`)');
+
         // Drop modified table and restore from backup
         $this->execute('DROP TABLE IF EXISTS `security_users`');
         $this->execute('RENAME TABLE `zz_8911_security_users` TO `security_users`');
+
+        // Merge archived new records if any exist
+        $this->execute('INSERT IGNORE INTO `security_users` 
+            SELECT * FROM `archived_new_users`');
+        $this->execute('DROP TABLE `archived_new_users`');
 
         Log::write('debug', 'Restored security_users table from backup');
     }
 
     private function batchUpdateDuplicates($column)
     {
+        // Get the database connection
+        $connection = \Cake\Datasource\ConnectionManager::get('default');
+
         do {
-            $this->execute("
-                UPDATE security_users 
-                SET $column = NULL
-                WHERE id IN (
-                    SELECT id FROM (
-                        SELECT id FROM security_users 
-                        WHERE $column IN (
-                            SELECT $column FROM security_users 
-                            GROUP BY $column HAVING COUNT($column) > 1
-                        )
-                        AND id NOT IN (
-                            SELECT MIN(id) FROM security_users GROUP BY $column HAVING COUNT($column) > 1
-                        )
-                        LIMIT {$this->batchSize}
-                    ) AS batch
-                )
-            ");
+            // Start the transaction
+            $connection->begin();
+            try {
+                $this->execute("
+                    UPDATE security_users 
+                    SET $column = NULL
+                    WHERE id IN (
+                        SELECT id FROM (
+                            SELECT id FROM security_users 
+                            WHERE $column IN (
+                                SELECT $column FROM security_users 
+                                GROUP BY $column HAVING COUNT($column) > 1
+                            )
+                            AND id NOT IN (
+                                SELECT MIN(id) FROM security_users GROUP BY $column HAVING COUNT($column) > 1
+                            )
+                            LIMIT {$this->batchSize}
+                        ) AS batch
+                    )
+                ");
 
-            $affectedRows = $this->getAdapter()->fetchRow("SELECT ROW_COUNT() AS affected")['affected'];
+                $affectedRows = $connection->execute("SELECT ROW_COUNT() AS affected")->fetch('assoc')['affected'];
 
-            // Log batch update results
-            Log::write('debug', "$affectedRows rows updated for column: $column");
+                // Log batch update results
+                Log::write('debug', "$affectedRows rows updated for column: $column");
+
+                // Commit transaction
+                $connection->commit();
+            } catch (\Exception $e) {
+                // Rollback on error
+                $connection->rollback();
+                Log::write('error', "Batch update failed for $column: " . $e->getMessage());
+                break; // Exit the loop on failure
+            }
         } while ($affectedRows > 0);
     }
+
 }
