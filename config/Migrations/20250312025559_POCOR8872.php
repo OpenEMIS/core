@@ -132,21 +132,23 @@ class POCOR8872 extends AbstractMigration
             ['api_key', 'api_key', 'apikeytest'],
 
             // Identity Mappings
+            ['external_reference_mapping', 'external_reference_mapping', 'id'],
+            ['openemis_no_mapping', 'openemis_no_mapping', 'openemis_no'],
             ['first_name_mapping', 'first_name_mapping', 'first_name'],
             ['middle_name_mapping', 'middle_name_mapping', 'middle_name'],
             ['last_name_mapping', 'last_name_mapping', 'last_name'],
             ['third_name_mapping', 'third_name_mapping', 'third_name'],
             ['date_of_birth_mapping', 'date_of_birth_mapping', 'date_of_birth'],
-            ['gender_mapping', 'gender_mapping', 'gender.name'],
-            ['nationality_mapping', 'nationality_mapping', 'main_nationality.name'],
-            ['identity_number_mapping', 'identity_number_mapping', 'identity_number'],
-            ['identity_type_mapping', 'identity_type_mapping', 'main_identity_type.name'],
-            ['external_reference_mapping', 'external_reference_mapping', 'id'],
+            ['gender_id_mapping', 'gender_id_mapping', 'gender_id'],
+//            ['nationality_mapping', 'nationality_mapping', 'main_nationality.name'],
+//            ['identity_number_mapping', 'identity_number_mapping', 'identity_number'],
+//            ['identity_type_mapping', 'identity_type_mapping', 'main_identity_type.name'],
+
 
             // Address Mappings
-            ['emal_mapping', 'email_mapping', 'email'],
-            ['address_mapping', 'address_mapping', 'address'],
-            ['postal_mapping', 'postal_mapping', 'postal_code']
+//            ['emal_mapping', 'email_mapping', 'email'],
+//            ['address_mapping', 'address_mapping', 'address'],
+//            ['postal_mapping', 'postal_mapping', 'postal_code']
         ];
 
         $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('OpenEMIS Core', ...$attr), $attributes);

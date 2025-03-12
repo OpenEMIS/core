@@ -1929,6 +1929,7 @@ class DirectoriesController extends AppController
     {
         $requestInput = $this->getRequestData();
         $params = $requestInput['params'];
+        Log::debug(print_r(['directoryExternalSearch' => $params], true));
         $firstName = $params['first_name'] ?? null;
         $lastName = $params['last_name'] ?? null;
         $openemisNo = $params['openemis_no'] ?? null;
@@ -1956,10 +1957,14 @@ class DirectoriesController extends AppController
 
         $noData = json_encode(['data' => [], 'total' => 0]);
         try {
-            if ($searchType !== 'UNHCR') {
-                $response = $this->getTokenedData($attributes, $identityNumber, $noData, $id);
-            } else {
+            if ($searchType === 'UNHCR') {
                 $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
+            }elseif ($searchType === 'OpenEMIS Core') {
+                $response = ['data' => ['first_name' => 'Pablo']];
+
+//                $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
+            } else {
+                $response = $this->getTokenedData($attributes, $identityNumber, $noData, $id);
             }
         } catch (\Exception $exception) {
             return $this->sendJsonResponse(['error' => $exception->getMessage()]);
