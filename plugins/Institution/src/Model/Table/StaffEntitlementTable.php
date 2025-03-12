@@ -121,7 +121,7 @@ class StaffEntitlementTable extends ControllerActionTable
                 ]), // Days taken
                 'position_name' => 'StaffPositionTitles.name', // Position name
                 'staff_leave_policy_id' => 'StaffPositionTitles.staff_leave_policy_id', // Leave policy ID
-                'days_total' => $query->func()->coalesce(['StaffLeavePolicyTypes.days' => 'literal', 28]), // Default to 28 if NULL
+                'days_total' => $query->func()->coalesce(['StaffLeavePolicyTypes.days' => 'literal', 0]), // Default to 0 if NULL
                 'entitlements_adjustment' => $query->func()->coalesce(['SUM(StaffLeaveEntitlements.adjustment)' => 'literal', 0]), // Leave entitlements adjustment
                 'days_total_adjusted' => $query->newExpr()->add([
                     'COALESCE(StaffLeavePolicyTypes.days, 28) + COALESCE(SUM(StaffLeaveEntitlements.adjustment), 0)'
