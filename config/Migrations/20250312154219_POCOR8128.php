@@ -64,7 +64,7 @@ class POCOR8128 extends AbstractMigration
             $this->execute("
                 INSERT INTO `staff_leave_policy_types`
                     (`id`, `staff_leave_policy_id`, `staff_leave_type_id`, `days`, `rollover`)
-                VALUES ('{$uuid}', {$gpPolicyId}, {$type['id']}, NULL, 1)
+                VALUES ('{$uuid}', {$gpPolicyId}, {$type['id']}, 0, 1)
                 ON DUPLICATE KEY UPDATE `id` = `id`;
             ");
         }
