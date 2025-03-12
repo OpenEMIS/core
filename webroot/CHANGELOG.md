@@ -1,3 +1,21 @@
+### [4.15.0] - 2025-03-10
+- Implemented: Develop standard OpenEMIS Core v5 APIs based on database tables
+
+### [4.14.0] - 2025-03-07
+- Implemented: Develop a function to allow institutions to take attendance by both period and subject
+- Implemented: Develop a function to add System Updates emails to Alerts
+- Implemented: Develop changes to the student programmes page to add the Candidate Number field
+- Bug Fixed: Api: When user logins as non superadmin, user does not have permission to edit
+- Bug Fixed: Administration > Performance > GPA > Add: Start and end date disappear even after inputting
+- Bug Fixed: Institutions > Attendance > Staff > Import: When importing staff attendance, the page gives an error
+- Bug Fixed: Reports > Students > Students: When exporting Students report, the date of birth column is not showing any data
+- Bug Fixed: Administration > System Setup > Field Options > Staff Positions Titles: When editing Staff Position Titles and upon saving, the page gives a 404 error
+- Bug Fixed: Institutions > Survey > Forms > Export:When exporting a selected survey, the data in survey is showing all answers for all surveys and all institutions
+- Bug Fixed: Swagger: Incorrect API naming standards
+- Bug Fixed: Develop changes to the education structure and student subjects page
+- Bug Fixed: Reports > Staff > Qualifications: The report goes to Status error
+- Bug Fixed: Institutions > Dashboard: When users role are given permission to view Institution Profile Completeness, the Institution Profile Completeness did not appear under their account
+
 ### [4.13.2] - 2025-03-05
 - Bug Fixed: Unable to login through SAML
 - Bug Fixed: Institutions > Performance > Report Cards: Report card is stuck in progress and then it went to error status

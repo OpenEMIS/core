@@ -327,7 +327,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	{
 		$this->setAllPositionGrades($entity);
 
-		if (!$entity->isNew() && $entity->dirty('security_role_id')) {
+		if (!$entity->isNew() && $entity->isDirty('security_role_id')) {
 			$oldRoleId = $entity->getOriginal('security_role_id');
 			$newRoleId = $entity->security_role_id;
 			$titleId = $entity->id;
