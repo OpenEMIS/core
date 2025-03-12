@@ -25,10 +25,8 @@ class AlertRetirementWarningShell extends AlertShell
         $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => Time::now()], ['process_name' => $processName]);
 
         $dir = new Folder(ROOT . DS . 'tmp'); // path to tmp folder
-
-        do {
+        // do {
             $rules = $this->getAlertRules($feature);
-
             foreach ($rules as $rule) {
                 $threshold = $rule->threshold;
                 $thresholdArray = json_decode($threshold, true);
@@ -83,7 +81,7 @@ class AlertRetirementWarningShell extends AlertShell
             sleep(10);
 
             $filesArray = $dir->find($processName . '.stop');
-        } while (empty($filesArray));
+        // } while (empty($filesArray));
 
         $this->Alerts->updateAll(['process_id' => NULL, 'modified' => Time::now()], ['process_name' => $processName]);
     }
