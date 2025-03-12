@@ -15,18 +15,19 @@ class POCOR8864 extends AbstractMigration
      */
     public function up()
     {
+
         $this->execute('CREATE TABLE `z_8864_appraisal_criterias` LIKE `appraisal_criterias`');
         $this->execute('INSERT INTO `z_8864_appraisal_criterias` SELECT * FROM `appraisal_criterias`');
-
         $this->execute("ALTER TABLE `appraisal_criterias` 
-            ADD `description` VARCHAR(255) DEFAULT NULL 
-            AFTER `name`");
+                ADD `description` VARCHAR(255) DEFAULT NULL 
+                AFTER `name`");
     }
 
     public function down()
     {
-        $this->execute('ALTER TABLE `appraisal_criterias` DROP COLUMN IF EXISTS `description`');
+
         $this->execute('DROP TABLE IF EXISTS `appraisal_criterias`');
         $this->execute('RENAME TABLE `z_8864_appraisal_criterias` TO `appraisal_criterias`');
+        $this->execute('ALTER TABLE `appraisal_criterias` DROP COLUMN IF EXISTS `description`');
     }
 }
