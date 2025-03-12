@@ -83,7 +83,8 @@ class StudentAttendanceTypesTable extends ControllerActionTable
             $query
                 ->select([
                     'id' => $this->aliasField('id'),
-                    'code' => $this->aliasField('code')
+                    'code' => $this->aliasField('code'),
+                    $StudentAttendanceMarkTypes->aliasField('code'), //POCOR-8874
                 ])
                 ->leftJoin(
                     [$StudentAttendanceMarkTypes->getAlias() => $StudentAttendanceMarkTypes->getTable()],
@@ -117,6 +118,7 @@ class StudentAttendanceTypesTable extends ControllerActionTable
 
                 ])
                 ->group([$InstitutionClassGrades->aliasField('institution_class_id')]);
+                
             return $query;
         } else {
             $query

@@ -2154,21 +2154,27 @@ class UserRepository extends Controller
 
         try {
             // Get the user ID based on ID or OpenEMIS number
-            $security_user_id = $this->getUserId($data);
-            if (!$security_user_id) {
-                return response()->json(['error' => 'User not found.'], 404);
-            }
+
 
             // Define allowed fields
             $allowedFields = [
                 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name',
                 'gender_id', 'date_of_birth', 'identity_number', 'nationality_id', 'username',
                 'password', 'postal_code', 'address', 'birthplace_area_id', 'address_area_id',
-                'identity_type_id'
+                'identity_type_id', 'email' // POCOR-8953
             ];
 
             // Filter and process update data
             $updateData = array_intersect_key($data, array_flip($allowedFields));
+
+            if (empty($updateData)) {
+                return response()->json(['error' => 'No updatable fields provided.'], 400);
+            }
+
+            $security_user_id = $this->getUserId($data);
+            if (!$security_user_id) {
+                return response()->json(['error' => 'User not found.'], 404);
+            }
             $updateData = $this->setUserPassword($updateData);
 
             // Add modification metadata
@@ -2193,6 +2199,8 @@ class UserRepository extends Controller
             // Mask password field if it was changed
             if (isset($updateData['password'])) {
                 $updatedUser['password'] = 'New Password';
+            }else{
+                $updatedUser['password'] = 'Old Password';
             }
 
             DB::commit();
