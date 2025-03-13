@@ -376,6 +376,9 @@ class ImportStudentAttendancesTable extends AppTable {
         $currentPeriodId = $this->AcademicPeriods->getCurrent();
         $tempRow['academic_period_id'] = $currentPeriodId;
         $classId = $this->request->getQuery('class');
+        if(empty($classId)){
+            $classId = $this->request->getSession()->read('class_id');
+        }
         $tempRow['institution_class_id'] = $classId;
        
         if (empty($tempRow['date'])) {
@@ -426,7 +429,7 @@ class ImportStudentAttendancesTable extends AppTable {
             //check if period within options
             $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
             $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($classId,$currentPeriodId);
-
+//dd($attendancePerDay);
             if ($tempRow['period'] > $attendancePerDay || $tempRow['period'] < 1) {
                 $rowInvalidCodeCols['period'] = __('Selected Period does not exists');
                 return false;
@@ -442,9 +445,9 @@ class ImportStudentAttendancesTable extends AppTable {
             $tempRow['subject_id'] = 0;
         }
 
-         $GradeId = TableRegistry::get('institution_class_grades');
+         $GradeId = TableRegistry::get('Institution.InstitutionClassGrades');
          $educationGradeId = $GradeId->find()->where([
-            'institution_class_id' => $tempRow['institution_class_id']
+            'institution_class_id IS' => $tempRow['institution_class_id']
         ])->first();
 
         //add identifier that later will be used on StudentAbsencesPeriodDetails
@@ -452,7 +455,7 @@ class ImportStudentAttendancesTable extends AppTable {
         $tempRow['record_source'] = 'import_student_attendances';
          $tempRow['education_grade_id'] = $educationGradeId['education_grade_id'];
 
-         $StudentAttendanceMarkedRecords = TableRegistry::get('StudentAttendanceMarkedRecords');
+         $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
         $markRecord = $StudentAttendanceMarkedRecords->newEntity([
             'institution_id'       => $tempRow['institution_id'],
             'academic_period_id'   => $tempRow['academic_period_id'],
@@ -462,7 +465,7 @@ class ImportStudentAttendancesTable extends AppTable {
             'period'               => $tempRow['period'],
             'subject_id'           => 0,
         ]);
-//        $this->log($markRecord, 'debug');
+
         if (!$markRecord->getErrors()) {
             $StudentAttendanceMarkedRecords->save($markRecord);
         }
