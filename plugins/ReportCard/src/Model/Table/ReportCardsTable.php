@@ -38,15 +38,15 @@ class ReportCardsTable extends ControllerActionTable
             'allowable_file_types' => 'document',
             'useDefaultName' => true
         ]);
-        $this->behaviors()->get('Download')->getConfig(
+        $this->behaviors()->get('Download')->setConfig(
             'name',
             'excel_template_name'
         );
-        $this->behaviors()->get('Download')->getConfig(
+        $this->behaviors()->get('Download')->setConfig(
             'content',
             'excel_template'
         );
-        $this->behaviors()->get('ControllerAction')->getConfig(
+        $this->behaviors()->get('ControllerAction')->setConfig(
             'actions.download.show',
             true
         );
@@ -306,8 +306,20 @@ class ReportCardsTable extends ControllerActionTable
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
-        } else {
-            // attr for template download button
+        } elseif($action == 'edit') { //POCOR-8903
+            $requestId = $this->request->getParam('pass')[1]; 
+            $paramsDecode = $this->paramsDecode($requestId);
+            $recordId = $paramsDecode['id']; // Added semicolon
+
+            $record = $this->find()
+                ->where([$this->aliasField('id') => $recordId])
+                ->first();
+            $excelName = $record ? $record->excel_template_name : null;
+            $attr['startWithOneLeftButton'] = 'download';
+            $attr['type'] = 'binary';
+            $attr['value'] = $excelName;
+            $attr['attr']['value'] = $excelName;
+        }else{
             $attr['startWithOneLeftButton'] = 'download';
             $attr['type'] = 'binary';
         }

@@ -94,7 +94,7 @@ class SurveyFiltersTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Survey.filter_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
         $this->controller->set(compact('surveyFormOptions'));
 
-        $tableProvider = TableRegistry::get('Survey.SurveyFilterInstitutionProviders');
+        $surveyFilterInstitutionProviders = TableRegistry::get('Survey.SurveyFilterInstitutionProviders'); // POCOR-8921
         $institutionType = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');
         $areaEducation = TableRegistry::get('Survey.SurveyFilterAreas');
         $provider = TableRegistry::get('Institution.InstitutionProviders');
@@ -106,8 +106,8 @@ class SurveyFiltersTable extends ControllerActionTable
         if($surveyFormId == -1 && $moduleId == 1)
         {
             $query->select([$this->aliasField('id'), $this->aliasField('name'), $survey_forms->aliasField('name')])
-                    ->leftJoin([$tableProvider->getAlias() => $tableProvider->getTable()],
-                        [$tableProvider->aliasField('survey_filter_id').'='.$this->aliasField('id')])
+                    ->leftJoin([$surveyFilterInstitutionProviders->getAlias() => $surveyFilterInstitutionProviders->getTable()], // POCOR-8921
+                        [$surveyFilterInstitutionProviders->aliasField('survey_filter_id').'='.$this->aliasField('id')])
                     ->leftJoin([$institutionType->getAlias() => $institutionType->getTable()],
                         [$institutionType->aliasField('survey_filter_id').'='.$this->aliasField('id')])
                     ->leftJoin([$areaEducation->getAlias() => $areaEducation->getTable()],
@@ -115,20 +115,21 @@ class SurveyFiltersTable extends ControllerActionTable
                     ->leftJoin([$survey_forms->getAlias() => $survey_forms->getTable()],
                         [$survey_forms->aliasField('id').'='.$this->aliasField('survey_form_id')])
                    ->where([$this->aliasField('name IS NOT') => ''])
-                   ->group([$tableProvider->aliasField('survey_filter_id'),$institutionType->aliasField('survey_filter_id'),$areaEducation->aliasField('survey_filter_id')]);
-
+                   ->group([$surveyFilterInstitutionProviders->aliasField('survey_filter_id'),$institutionType->aliasField('survey_filter_id'),
+                       $areaEducation->aliasField('survey_filter_id')]); // POCOR-8921
         }else{
             $query->select([$this->aliasField('id'), $this->aliasField('name'), $survey_forms->aliasField('name')])
-                    ->leftJoin([$tableProvider->getAlias() => $tableProvider->getAlias()],
-                        [$tableProvider->aliasField('survey_filter_id').'='.$this->aliasField('id')])
-                    ->leftJoin([$institutionType->getAlias() => $institutionType->getAlias()],
+                    ->leftJoin([$surveyFilterInstitutionProviders->getAlias() => $surveyFilterInstitutionProviders->getTable()], // POCOR-8921
+                        [$surveyFilterInstitutionProviders->aliasField('survey_filter_id').'='.$this->aliasField('id')])
+                    ->leftJoin([$institutionType->getAlias() => $institutionType->getTable()],
                         [$institutionType->aliasField('survey_filter_id').'='.$this->aliasField('id')])
-                    ->leftJoin([$areaEducation->getAlias() => $areaEducation->getAlias()],
+                    ->leftJoin([$areaEducation->getAlias() => $areaEducation->getTable()], // POCOR-8921
                         [$areaEducation->aliasField('survey_filter_id').'='.$this->aliasField('id')])
-                    ->leftJoin([$survey_forms->getAlias() => $survey_forms->getAlias()],
+                    ->leftJoin([$survey_forms->getAlias() => $survey_forms->getTable()], // POCOR-8921
                         [$survey_forms->aliasField('id').'='.$this->aliasField('survey_form_id')])
                     ->where([$this->aliasField('survey_form_id') => $surveyFormId,$this->aliasField('name IS NOT') => ''])
-                    ->group([$tableProvider->aliasField('survey_filter_id'),$institutionType->aliasField('survey_filter_id'),$areaEducation->aliasField('survey_filter_id')]);
+                    ->group([$surveyFilterInstitutionProviders->aliasField('survey_filter_id'), // POCOR-8921
+                        $institutionType->aliasField('survey_filter_id'),$areaEducation->aliasField('survey_filter_id')]);
 
         }
 

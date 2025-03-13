@@ -18,6 +18,7 @@ use App\Model\Table\ControllerActionTable;
 use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Log\Log;
 use Cake\Utility\Text;
+use Cake\Routing\Router;
 
 class StudentAdmissionTable extends ControllerActionTable
 {
@@ -40,7 +41,14 @@ class StudentAdmissionTable extends ControllerActionTable
             'description' => 'Performing this action will remove the student from the institution.',
             'method' => 'onCancel',
             'unique' => true
-        ]
+        ],//POCOR-8434 starts
+        [
+            'value' => 'Workflow.onTriggerPendingEnrolment',
+            'text' => 'Trigger Pending Enrolment Workflow',
+            'description' => 'Performing this action will system will trigger pending enrolment workflow for the student.',
+            'method' => 'onTriggerPendingEnrolment',
+            'unique' => true
+        ]//POCOR-8434 ends        
     ];
 
     public function initialize(array $config): void
@@ -64,6 +72,47 @@ class StudentAdmissionTable extends ControllerActionTable
             'Students' => ['index', 'add']
         ]);
 
+        //$this->hasMany('StudentCustomFieldValues', ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_student_admission_id']);
+        $this->hasMany('AdmissionStudentCustomFieldValues', [
+            'className' => 'StudentCustomField.StudentAdmissionCustomFieldValues',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+            'foreignKey' => 'institution_student_admission_id'
+        ]);
+        //$this->hasMany('CustomFieldValues', ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'foreignKey' => 'institution_student_admission_id']);
+        $this->hasMany('AdmissionCustomFieldValues', [
+            'className' => 'StudentCustomField.StudentAdmissionCustomFieldValues',
+            'foreignKey' => 'institution_student_admission_id'
+        ]);
+        //$this->hasMany('StudentCustomFields', ['className' => 'StudentCustomField.StudentCustomFields', 'foreignKey' => 'student_id']);
+
+        //POCOR-8434 add custome fileds record in pending admission starts
+        $request = Router::getRequest();
+        if (
+            $request !== null &&
+            ($param = $request->getParam('pass')[0] ?? null) !== 'excel' &&
+            !in_array($request->getParam('action'), ['saveStudentData', 'Promotion', 'Transfer', 'Undo', 'ImportUsers', 'ImportStudentAdmission'])
+        ) {    
+            $this->addBehavior('CustomField.Record', [
+                'model' => 'Institution.StudentAdmission',
+                'behavior' => 'Student',
+                'fieldKey' => 'student_custom_field_id',
+                'tableColumnKey' => 'student_custom_table_column_id',
+                'tableRowKey' => 'student_custom_table_row_id',
+                'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
+                'formKey' => 'student_custom_form_id',
+                'filterKey' => 'student_custom_filter_id',
+                'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+                // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+                'recordKey' => 'institution_student_admission_id',
+                //'recordKey' => 'student_id',
+                //'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],//old
+                'fieldValueClass' => ['className' => 'StudentCustomField.StudentAdmissionCustomFieldValues', 'foreignKey' => 'institution_student_admission_id', 'dependent' => true, 'cascadeCallbacks' => true],
+                //'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+                'tableCellClass' => null
+            ]);//POCOR-8434 ends
+        }
+        
         $this->toggle('add', true);
         $this->addBehavior('Institution.InstitutionTab',
             ['appliedAction' => ['StudentAdmission' => ['id']]
@@ -342,6 +391,55 @@ class StudentAdmissionTable extends ControllerActionTable
             $Students->delete($newStudentRecord);
         }
     }
+
+    //POCOR-8434 Starts
+    public function onTriggerPendingEnrolment(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        // add student into institution_students_enrolment
+        $entity = $this->get($id);
+        $this->triggerPendingEnrolmentForStudent($entity);
+    }
+
+    public function triggerPendingEnrolmentForStudent(Entity $entity)
+    {
+        $WorkflowsTbl = TableRegistry::get('Workflow.Workflows');
+        $WorkflowStepsTbl = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowsRes = $WorkflowStepsTbl
+                            ->find()
+                            ->innerJoin([$WorkflowsTbl->getAlias() => $WorkflowsTbl->getTable()], 
+                            [
+                                $WorkflowsTbl->aliasField('id = ') . $WorkflowStepsTbl->aliasField('workflow_id')
+                            ])
+                            ->where([
+                                $WorkflowsTbl->aliasField('code') => 'STUDENT-Enrolment-1001',
+                                $WorkflowStepsTbl->aliasField('name') => 'Open'
+                            ])->first();
+                                
+        $StudentEnrolments = TableRegistry::get('Institution.StudentEnrolment');
+        
+        $enrolmentArr = [
+            'start_date' => $entity->start_date,
+            'end_date' => $entity->end_date,
+            'student_id' => $entity->student_id,
+            'status_id' => $WorkflowsRes->id,
+            'assignee_id' => $this->Auth->user('id'),
+            'institution_id' => $entity->institution_id,
+            'academic_period_id' => $entity->academic_period_id,
+            'education_grade_id' => $entity->education_grade_id,
+            'test_score' => '',
+            'interview_score' => '',
+            'comment' => '',
+        ];
+        if (!empty($entity->institution_class_id)) {
+            $enrolmentArr['institution_class_id'] = $entity->institution_class_id;
+        }else{
+            $enrolmentArr['institution_class_id'] = 'NULL';
+        }
+        
+        $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
+        $StudentEnrolments->save($newEntity);
+    }
+    //POCOR-8434 Ends
 
     public function addInstitutionStudent(Entity $entity)
     {

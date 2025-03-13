@@ -110,7 +110,7 @@ class InstitutionsTable extends AppTable
 
 
         $feature = $this->request->getData($this->getAlias())['feature'];//POCOR-6333
-        if (in_array($feature, ['Report.Institutions', 'Report.StaffBehaviours', 'Report.StudentAbsencesPerDays'])) {
+        if (in_array($feature, ['Report.Institutions', 'Report.StaffBehaviours', 'Report.StudentAbsencesPerDays','Report.StudentBehaviours',])) {
             $validator = $validator
                 ->notEmpty('area_level_id')
                 ->notEmpty('area_education_id');
@@ -623,6 +623,13 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'attendance_type';
                     $fieldsOrder[] = 'format';
                     break;
+                case 'Report.StudentBehaviours': //POCOR-7517
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'format';
+                    break;
                 default:
                     break;
             }
@@ -1014,6 +1021,7 @@ class InstitutionsTable extends AppTable
                         'Report.InstitutionPositionsSummaries',
                         'Report.StudentAbsencesPerDays', //POCOR-7276
                         'Report.InstitutionInfrastructureSummaryReport',
+                        'Report.StudentBehaviours'
 
 
                     ]
@@ -1048,7 +1056,7 @@ class InstitutionsTable extends AppTable
 
         if (isset($data['feature'])) {
             $feature = $data['feature'];
-
+            
             if ((in_array($feature, ['Report.Institutions',
                 'Report.InstitutionAssociations',
                 'Report.InstitutionPositions',
@@ -1081,7 +1089,8 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionPositionsSummaries',
                 'Report.StudentAbsencesPerDays',
                 'Report.StaffBehaviours', //POCOR-7276
-                'Report.InstitutionInfrastructureSummaryReport'
+                'Report.InstitutionInfrastructureSummaryReport',
+                'Report.StudentBehaviours'//POCOR-7517
             ]))) {
                 $Areas = self::getDynamicTableInstance('Area.AreaLevels');
                 $entity = $attr['entity'];
@@ -1149,7 +1158,8 @@ class InstitutionsTable extends AppTable
                     'Report.InstitutionPositionsSummaries',
                     'Report.StudentAbsencesPerDays',
                     'Report.StaffBehaviours',//POCOR-7276
-                    'Report.InstitutionInfrastructureSummaryReport'
+                    'Report.InstitutionInfrastructureSummaryReport',
+                    'Report.StudentBehaviours'//POCOR-7517
                 ]))) {
                 $Areas = self::getDynamicTableInstance('Area.Areas');
                 $entity = $attr['entity'];
@@ -1547,7 +1557,8 @@ class InstitutionsTable extends AppTable
                 'Report.ClassAttendanceMarkedSummaryReport',
                 'Report.InstitutionPositionsSummaries',
                 'Report.StudentAbsencesPerDays', //POCOR-7276
-                'Report.InstitutionInfrastructureSummaryReport'
+                'Report.InstitutionInfrastructureSummaryReport',
+                'Report.StudentBehaviours' //POCOR-7517
             ];
 
 
@@ -2106,13 +2117,13 @@ class InstitutionsTable extends AppTable
                                 'valueField' => 'name'
                             ])
                         ->leftJoin(
-                            [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                            [$StudentMarkTypeStatuses->getAlias() => $StudentMarkTypeStatuses->getTable()],
                             [
                                 $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id') . ' = ' . $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
                             ]
                         )
                         ->leftJoin(
-                            [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                            [$StudentMarkTypeStatusGrades->getAlias() => $StudentMarkTypeStatusGrades->getTable()],
                             [
                                 $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id') . ' = ' . $StudentMarkTypeStatuses->aliasField('id')
                             ]
@@ -2369,19 +2380,19 @@ class InstitutionsTable extends AppTable
                         $workflowModelsTable->aliasField('model')
                     ])
                     ->LeftJoin(
-                        [$institutionStaffLeave->alias() => $institutionStaffLeave->table()],
+                        [$institutionStaffLeave->getAlias() => $institutionStaffLeave->getTable()],
                         [
                             $institutionStaffLeave->aliasField('status_id') . ' = ' . $workflowStepsTable->aliasField('id')
                         ]
                     )
                     ->LeftJoin(
-                        [$workflowsTable->alias() => $workflowsTable->table()],
+                        [$workflowsTable->getAlias() => $workflowsTable->getTable()],
                         [
                             $workflowsTable->aliasField('id') . ' = ' . $workflowStepsTable->aliasField('workflow_id')
                         ]
                     )
                     ->LeftJoin(
-                        [$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                        [$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                         [
                             $workflowModelsTable->aliasField('id') . ' = ' . $workflowsTable->aliasField('workflow_model_id')
                         ]
@@ -2483,7 +2494,7 @@ class InstitutionsTable extends AppTable
                         $staffPositionTitlesTable->aliasField('name')
                     ])
                     ->RightJoin(
-                        [$staffPositionTitlesTable->alias() => $staffPositionTitlesTable->table()],
+                        [$staffPositionTitlesTable->getAlias() => $staffPositionTitlesTable->getTable()],
                         [
                             $institutionPositionsTable->aliasField('staff_position_title_id') . ' = ' . $staffPositionTitlesTable->aliasField('id')
                         ]
