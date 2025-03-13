@@ -527,7 +527,7 @@ class StudentTransferTable extends ControllerActionTable
         //POCOR-6230 Starts
         $nexteducationgradeforenrolledStatus= false;
         $selectedStudentStatusId = $this->request->getData('StudentTransfer.student_status_id');
-        if($selectedStudentStatus == 1){
+        if ((int)$selectedStudentStatusId === 1) { //POCOR-8841
             $nexteducationgradeforenrolledStatus= true;
         }//POCOR-6230 Ends
 

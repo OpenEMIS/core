@@ -62,7 +62,7 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', [
                 'ruleUniqueCode' => [
@@ -71,14 +71,14 @@ class AssessmentsTable extends ControllerActionTable {
                 ]
             ])
             ->requirePresence('assessment_items')
-            // ->add('education_grade_id', [
-            //     'ruleAssessmentExistByGradeAcademicPeriod' => [ //validate so only 1 assessment for each grade per academic period
-            //         'rule' => ['assessmentExistByGradeAcademicPeriod'],
-            //         'on' => function ($context) {
-            //             return $this->action == 'add';
-            //         }
-            //     ]
-            // ])
+            ->add('education_grade_id', [
+                'ruleAssessmentExistByGradeAcademicPeriod' => [ //validate so only 1 assessment for each grade per academic period
+                    'rule' => ['assessmentExistByGradeAcademicPeriod'],
+                    'on' => function ($context) {
+                        return $this->action == 'add';
+                    }
+                ]
+            ])
             ->allowEmpty('excel_template');
     }
 
@@ -293,6 +293,17 @@ class AssessmentsTable extends ControllerActionTable {
                 $classification = $assessment_item['classification'];
                 $is_new = $assessment_item['id_check'];
                 $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+                $weight = preg_replace('/\.(?=.*\.)/', '', $weight);
+
+                $floatValue = filter_var($weight, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                
+                if ($floatValue === false || $floatValue === '') {
+                    $floatValue =  '0.00';
+                }
+                $weight =  number_format((float)$floatValue, 2, '.', '');
+                if(!empty($weight) && $weight > 2){
+                    $weight = 0.00;
+                }
                 if (!$is_new) {
                     $assessmentData = $assessmentItems->
                     find()
@@ -304,7 +315,7 @@ class AssessmentsTable extends ControllerActionTable {
                         ->toArray();
                     $assessment_item_id = $assessmentData[0]['id'];
                     $assesmentItem = $assessmentItems->updateAll(
-                        ['weight' => $weight,
+                        ['weight' => is_null($weight) ? 0.00 : $weight,
                             'classification' => $classification],    //field
                         ['id' => $assessment_item_id,
                         ] //condition
@@ -315,7 +326,7 @@ class AssessmentsTable extends ControllerActionTable {
                     $assessmenItemId = Text::uuid();
                     $assessment_data = [
                         'id' => $assessmenItemId,
-                        'weight' => $weight,
+                        'weight' => is_null($weight) ? 0.00 : $weight,
                         'classification' => $classification,
                         'assessment_id' => $assessment_id,
                         'education_subject_id' => $is_new,
@@ -373,7 +384,7 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
             $this->AssessmentItems->getAlias(),
-            $this->GradingTypes->getAlias()
+            //$this->GradingTypes->getAlias()
         ];
     }
 
@@ -390,11 +401,24 @@ class AssessmentsTable extends ControllerActionTable {
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
-        } else {
-            // attr for template download button
+        } elseif($action == 'edit') {
+            $requestId = $this->request->getParam('pass')[1]; 
+            $paramsDecode = $this->paramsDecode($requestId);
+            $recordId = $paramsDecode['id']; // Added semicolon
+
+            $record = $this->find()
+                ->where([$this->aliasField('id') => $recordId])
+                ->first();
+            $excelName = $record ? $record->excel_template_name : null;
+            $attr['startWithOneLeftButton'] = 'download';
+            $attr['type'] = 'binary';
+            $attr['value'] = $excelName;
+            $attr['attr']['value'] = $excelName;
+        }else{
             $attr['startWithOneLeftButton'] = 'download';
             $attr['type'] = 'binary';
         }
+
         return $attr;
     }
 
@@ -704,8 +728,9 @@ class AssessmentsTable extends ControllerActionTable {
     {
 
         $associatedRecordsExist = 
-            $this->AssessmentPeriods->exists(['assessment_id' => $entity->id]) ||
-            $this->AssessmentItems->exists(['assessment_id' => $entity->id]);
+            $this->AssessmentPeriods->exists(['assessment_id' => $entity->id]) ;
+
+            //|| $this->AssessmentItems->exists(['assessment_id' => $entity->id]);
 
         if ($associatedRecordsExist) { 
                 $message = __('Delete operation is not allowed as there are other information linked to this record.');

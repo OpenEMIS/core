@@ -1,0 +1,27 @@
+@media only screen and (min-width: 1025px) {
+    ::ng-deep .kdx-table.full-grid .kdx-ag-grid-wrapper {
+        top: 102px !important;
+        margin: 15px;
+    }
+}
+
+/* ----------------- To display table ----------------- */
+@media only screen and (min-width: 1025px) {
+  .student-table-data {
+      position: unset !important;
+      height: 100vh !important;
+  }
+  
+}
+
+::ng-deep .kdx-filter .form-horizontal-wrapper {
+    margin-right: 14px !important;
+}
+
+::ng-deep .form-horizontal {
+    margin: 8px 0px;
+}
+
+::ng-deep .kdx.kdx-ag-grid-wrapper{
+    margin-top: 42px !important;
+}

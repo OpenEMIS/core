@@ -61,6 +61,7 @@ class SystemUpdatesTable extends ControllerActionTable
             ->first();
 
         $maxId = $latestVersion->id;
+        
         if ($latestVersion->status == 2) {
             $this->updateAll(
                 [
@@ -96,19 +97,17 @@ class SystemUpdatesTable extends ControllerActionTable
         $get_response = new Response();
         $host = $request->getUri()->getHost();
         $subject = 'Core Upgrade Request Failed - ' . $host;
-
         if ($get_response->getStatusCode() == 200) {
             // $jsonResponse = json_decode($response->body(), true);
             $jsonResponse = json_decode($response, true);
-            // echo "<pre>";print_r($jsonResponse);die;
             $data = array_reverse($jsonResponse['data']);
-
             foreach ($data as $item) {
                 if ($item['id'] > $maxId) {
                     $entity = $this->newEntity([
                         'id' => $item['id'],
                         'version' => $item['version'],
                         'date_released' => $item['date_released'],
+                        'status' => 1, //POCOR-8891
                         'created' => Time::now(),
                     ]);
                     $result = $this->save($entity);
@@ -127,13 +126,12 @@ class SystemUpdatesTable extends ControllerActionTable
 
             $version = trim(file_get_contents(WWW_ROOT . 'version'));
             $entity = $this->find()->where(['version' => $version])->first();
-
             if (!is_null($entity)) {
                 $this->updateAll(
                     [
-                        'date_approved' => $entity->date_released,
-                        'approved_by' => 1,
-                        'status' => 2
+                        'date_approved' => null, //POCOR-8940
+                        'approved_by' => 0, //POCOR-8940
+                        'status' => 1
                     ], [
                         'id <=' => $entity->id,
                         'status' => 1

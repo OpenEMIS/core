@@ -581,7 +581,13 @@ trait MessagesTrait
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
             'savingError' => 'Some selected students record were not updated succesfully',
-        ],
+        ],//POCOR-8434 starts
+        'BulkStudentEnrolment' => [
+            'success' => 'Bulk students admission successful',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],//POCOR-8434 ends
         'BulkStudentTransferIn' => [
             'success' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution',
             'reconfirm' => 'Please review the information before proceeding with the operation',
@@ -1130,7 +1136,7 @@ trait MessagesTrait
                     'ruleCheckFTE' => 'No available FTE.',
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleStaffExistWithinPeriod' => 'This staff member is already assigned within the selected dates. Please choose a different period.',
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
@@ -1218,7 +1224,7 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleStaffExistWithinPeriod' => 'This staff member is already assigned within the selected dates. Please choose a different period.',
                     'ruleInAllPeriod' => 'Staff start date must be within all academic period range'
                 ],
                 'end_date' => [
@@ -2641,6 +2647,7 @@ trait MessagesTrait
             'genralerror' => 'To and from academic period can not be same.',
             'alreadyexist' => 'There are existing data in the selected To Academic Period.',
             'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'invalidDate' => 'From academic period cannot be greater than to academic period.',
             'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
         ],
         'UserNationalities' => [
@@ -2670,7 +2677,7 @@ trait MessagesTrait
                         'ruleIsDecimal' => 'Value is not a valid decimal',
                         'ruleRange' => 'Mark entered exceeds system limit'
                     ],
-            ], 
+            ],
 
             'GradingOptions' => [
                 'code' => [

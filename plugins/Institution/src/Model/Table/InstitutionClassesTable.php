@@ -1050,6 +1050,10 @@ class InstitutionClassesTable extends ControllerActionTable
                 'created',
                 'education_stage_order' => $query->func()->min('EducationStages.order')
             ])
+            ->contain([//POCOR-8852
+                'Staff',
+                'ClassesSecondaryStaff.SecondaryStaff'
+            ])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
             ->group([$this->aliasField('id')]);
 
@@ -1060,7 +1064,6 @@ class InstitutionClassesTable extends ControllerActionTable
                     $this->aliasField('name') => 'ASC'
                 ]);
         }
-
     }
 
 
@@ -1681,7 +1684,13 @@ class InstitutionClassesTable extends ControllerActionTable
         } else {
             if ($entity->has('staff')) {
                 return $entity->staff->name_with_id;
-            } else {
+            } //POCOR-8852
+            else if($entity->has('staff_id')&& $entity->staff_id > 0){
+                $Staff = TableRegistry::getTableLocator()->get('Staff.Staff');
+                $staffEntity = $Staff->get($entity->staff_id);
+                return $staffEntity->name_with_id;
+            }
+            else {
                 return $this->getMessage($this->aliasField('noTeacherAssigned'));
             }
         }
