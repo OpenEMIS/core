@@ -1928,7 +1928,7 @@ class DirectoriesController extends AppController
     public function directoryExternalSearch(): Response
     {
         $requestInput = $this->getRequestData();
-        $params = $requestInput['params'];
+        $params = $requestInput['params'] ?? $requestInput;
         Log::debug(print_r(['directoryExternalSearch' => $params], true));
         $firstName = $params['first_name'] ?? null;
         $lastName = $params['last_name'] ?? null;
