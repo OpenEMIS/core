@@ -1,6 +1,5 @@
 <!-- File: src/Template/Element/user_details_basic_information.php -->
 <div name="UserDetailsBasicInformation">
-    {{ error }}
     <div class="row section-header header-space-lg"><?= __('Search By Basic Information') ?></div>
     <div class="input string" ng-class="{'required': basicFieldsRequired}">
         <label><?= __('First Name') ?></label>
