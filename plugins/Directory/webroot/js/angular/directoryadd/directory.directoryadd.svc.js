@@ -191,6 +191,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         return this.getGenders()
             .then(resp => {
                 scope.genderOptions = resp.data;
+                scope.basicFieldsRequired = true;
             });
     }
 
@@ -382,7 +383,12 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 scope.isExternalSearchEnable = resp.showExternalSearch;
                 // console.log(resp);
                 scope.externalSearchSourceName = resp.value;
-
+                if(scope.externalSearchSourceName === 'OpenEMIS Core') {
+                    scope.basicFieldsRequired = false;
+                }
+                if(scope.externalSearchSourceName === 'UNHCR') {
+                    scope.basicFieldsRequired = false;
+                }
                 UtilsSvc.isAppendLoader(false);
             })
             .catch((error) => {
@@ -489,6 +495,16 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     function goToExternalSearch(scope) {
         UtilsSvc.isAppendLoader(true);
+        var externalSearchParams = {
+            first_name: scope.selectedUserData.first_name,
+            last_name: scope.selectedUserData.last_name,
+            date_of_birth: scope.selectedUserData.date_of_birth,
+            identity_number: scope.selectedUserData.identity_number,
+            openemis_no: scope.selectedUserData.openemis_no,
+            nationality_id: scope.selectedUserData.nationality_id,
+            search_type: scope.externalSearchSourceName,
+        }
+        console.log(externalSearchParams);
         AggridLocaleSvc.getTranslatedGridLocale()
             .then(function (localeText) {
                 scope.externalGridOptions = {
@@ -571,9 +587,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 setTimeout(function () {
                     // scope.getExternalSearchData();
                     if (scope.externalSearchSourceName === 'Jordan CSPD') {
-                        getCSPDSearchData();
+                        scope.getCSPDSearchData();
                     } else {
-                        getExternalSearchData();
+                        setExternalSearchData(scope);
                     }
                 }, 1500);
             }, function (error) {
@@ -656,9 +672,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 };
                 setTimeout(function () {
                     if (scope.externalSearchSourceName === 'Jordan CSPD') {
-                        getCSPDSearchData();
+                        scope.getCSPDSearchData();
                     } else {
-                        getExternalSearchData();
+                        setExternalSearchData(scope);
                     }
                 }, 1500);
             });
@@ -917,6 +933,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             nationality_id,
             identity_type_name
         } = scope.selectedUserData;
+        const externalSearchSourceName = scope.externalSearchSourceName;
         const user_exists = await checkUserAlreadyExistByIdentity(scope);
 
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth);
@@ -939,6 +956,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
         if (isSkipableForIdentity) {
             if (user_exists === true) {
+                return ['Identity', false];
+            }
+            if (externalSearchSourceName === 'OpenEMIS Core') {
                 return ['Identity', false];
             }
         }
@@ -1061,8 +1081,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 getExternalSearchData(param)
                     .then(function (response) {
                         var gridData = response.data.data;
-                        if (!gridData) {
-                            gridData = [];
+                        console.log(gridData);
+                        if (!Array.isArray(gridData)) {
+                            gridData = gridData ? [gridData] : [];
                         }
                         if (scope.externalSearchSourceName === 'UNHCR') {
                             scope.selectedUserData.identity_number = null;

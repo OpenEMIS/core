@@ -473,7 +473,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 userSvc.getExternalSearchData(param)
                     .then(function (response) {
                         let gridData = response.data.data || [];
-
                         if (externalSearchSourceName === 'UNHCR') {
                             userCtrl.selectedUserData.identity_number = null;
                         }

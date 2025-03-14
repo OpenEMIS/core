@@ -10,6 +10,7 @@ class POCOR8872 extends AbstractMigration
     public function up()
     {
 
+
         $this->backupTables();
 //
         $this->insertNewExternalDataSourceAttributes();
