@@ -1106,7 +1106,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                                 data.preferred_name = scope.selectedUserData.preferred_name;
                                 data.date_of_birth = scope.selectedUserData.date_of_birth;
                             } else  if (scope.externalSearchSourceName === 'OpenEMIS Core') {
-                                console.log(scope.genderOptions);
+
                                 scope.selectedUserData.identity_number = null;
                                 data.name = data['full_name'];
                                 data.gender_id = data['gender_id'];

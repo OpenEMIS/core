@@ -1929,7 +1929,6 @@ class DirectoriesController extends AppController
     {
         $requestInput = $this->getRequestData();
         $params = $requestInput['params'] ?? $requestInput;
-        Log::debug(print_r(['directoryExternalSearch' => $params], true));
         $firstName = $params['first_name'] ?? null;
         $lastName = $params['last_name'] ?? null;
         $openemisNo = $params['openemis_no'] ?? null;
@@ -1963,7 +1962,6 @@ class DirectoriesController extends AppController
 //                $response = ['data' => ['first_name' => 'Pablo']];
 
                 $response = $this->getOECoreData($attributes, $noData, $identityNumber);
-                Log::debug(print_r(['directoryExternalSearch' => $response], true));
             } else {
                 $response = $this->getTokenedData($attributes, $identityNumber, $noData, $id);
             }
@@ -2082,7 +2080,6 @@ class DirectoriesController extends AppController
 
         if ($response->isOk() && isset($decodedResponse['data']['token'])) {
             $token = $decodedResponse['data']['token'];
-            Log::debug(print_r(['getOECoreToken' => $token], true));
             $headers = [
                 'authorization' => "Bearer " . $token,
                 'type' => 'application/json'
@@ -2102,6 +2099,7 @@ class DirectoriesController extends AppController
                 if (!empty($decodedResponse['data'])) {
                     $data = $decodedResponse['data'][0];
                     $data['identity_number'] = $identityNumber;
+                    unset($data['openemis_no']);
                     $responseData = ['data' => [$data]];
                 }
 
