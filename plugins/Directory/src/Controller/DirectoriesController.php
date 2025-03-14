@@ -2089,20 +2089,20 @@ class DirectoriesController extends AppController
             ];
 //            Log::debug(print_r(['getOECoreHeaders' => $headers], true));
             $userDataUri = $userDataEndpoint . $identityNumber;
-            $userDataUri = $userDataUri . "/_fields/first_name,middle_name,third_name,last_name,identity_number,date_of_birth,gender_id";
+            $userDataUri = $userDataUri . "/_fields/first_name,middle_name,third_name,last_name,identity_number,date_of_birth,gender_id,openemis_no";
 
             $response = $http->get($userDataUri, [], [
                 'headers' => $headers
             ]);
 
             $decodedResponse = $response->getJson();
-            Log::debug(print_r([$userDataUri => $decodedResponse], true));
+            Log::debug(print_r([$response->isOk() => $decodedResponse['data']], true));
             if ($response->isOk() && isset($decodedResponse['data'])) {
-                $answer = [];
-                if (!empty($response['data'])) {
-                    $data = $response['data'];
-                    Log::debug(print_r([$userDataUri => $answer], true));
-                    $responseData = ['data' => $data];
+                $data = [];
+                if (!empty($decodedResponse['data'])) {
+                    $data = $decodedResponse['data'][0];
+                    $data['identity_number'] = $identityNumber;
+                    $responseData = ['data' => [$data]];
                 }
 
             } else {
