@@ -217,7 +217,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             return userSvc.getAcademicPeriods()
                 .then(resp => {
                     userCtrl.academicPeriodOptions = resp.data;
-                    console.log(userCtrl.academicPeriodOptions);
+                    // console.log(userCtrl.academicPeriodOptions);
                     // Iterate over the array to find the current academic period
                     for (const period of resp.data) {
                         if (period.current === 1) {
@@ -1654,7 +1654,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     userCtrl.selectStudentFromExternalSearch = function (id) {
-        userCtrl.selectedStudent = id;
+        userCtrl.selectedUserID = id;
+        userCtrl.isInternalSearchSelected = false;
+        userCtrl.isExternalSearchSelected = true;
+        userCtrl.getStudentData();
+        userCtrl.disableFields = {
+            username: false,
+            password: false
+        }
+    }
+
+    userCtrl.selectUserFromExternalSearch = function (id) {
+        userCtrl.selectedUserID = id;
         userCtrl.isInternalSearchSelected = false;
         userCtrl.isExternalSearchSelected = true;
         userCtrl.getStudentData();
@@ -1671,11 +1682,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 userCtrl.userData = value;
                 if (userCtrl.isInternalSearchSelected) {
                     userCtrl.userData.currentlyAllocatedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
-                    userCtrl.setUserData(value);
+
                 }
-                if (userCtrl.isExternalSearchSelected) {
-                    userCtrl.setUserDataFromExternalSearchData(value);
-                }
+                userCtrl.setUserData(value);
             }
         }, log);
     }
@@ -2436,8 +2445,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             'nationality_id': userData.nationality_id,
         });
         // StudentController.error.nationality_id = "";
-        userCtrl.error.identity_type_id = ""
-        userCtrl.error.identity_number = "";
+        userCtrl.unsetError('identity_type_id');
+        userCtrl.unsetError('identity_number');
 
         if (result.data.user_exist === 1) {
             userCtrl.messageClass = 'alert-warning';
@@ -2449,7 +2458,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             userCtrl.messageClass = '';
             userCtrl.message = '';
             userCtrl.isIdentityUserExist = false;
-            userCtrl.error.identity_number == ""
+            userCtrl.unsetError('identity_number');
         }
         return false;
     }

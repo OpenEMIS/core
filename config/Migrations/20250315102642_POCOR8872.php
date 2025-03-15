@@ -103,11 +103,11 @@ class POCOR8872 extends AbstractMigration
     {
         $table = $this->table('external_data_source_attributes');
         $password = 'demo';
-        $password = (new DefaultPasswordHasher)->hash($password);
+//        $password = (new DefaultPasswordHasher)->hash($password);
 
         $attributes = [
             // API Credentials
-            ['api_url', 'api_url', 'https://demo.openemis.org/api/v5'],
+            ['api_url', 'api_url', 'https://demo.openemis.org/core/api/v5'],
             ['username', 'username', 'admin'],
             ['password', 'password', $password],
             ['api_key', 'api_key', 'apikeytest'],
