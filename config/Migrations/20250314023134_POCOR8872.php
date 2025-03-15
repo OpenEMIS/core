@@ -64,26 +64,6 @@ class POCOR8872 extends AbstractMigration
         }
     }
 
-    /**
-     * @return void
-     */
-    public function renameExternalDataSourceAttributes()
-    {
-//        $this->execute("UPDATE external_data_source_attributes SET
-//                        external_data_source_type='OpenEMIS Core'
-//                    WHERE external_data_source_type='OpenEMIS Identity'");
-////        $this->execute("UPDATE external_data_source_attributes SET
-////                        name='Infrastructure Land',
-////                        label='Infrastructure Land',
-////                        code='infrastructure_land'
-////                    WHERE external_data_source_type='OpenEMIS Identity'
-////                      AND code='infrastructure'");
-//        $this->execute("UPDATE config_items SET
-//                        type='Personal Data Completeness',
-//                        code=CONCAT('personal_', `code`)
-//                    WHERE type='User Data Completeness'");
-    }
-
     function generateConfigData($name, $code, $type, $label) {
         return [
             'id' => NULL,
@@ -132,24 +112,6 @@ class POCOR8872 extends AbstractMigration
             ['password', 'password', $password],
             ['api_key', 'api_key', 'apikeytest'],
 
-            // Identity Mappings
-            ['external_reference_mapping', 'external_reference_mapping', 'id'],
-            ['openemis_no_mapping', 'openemis_no_mapping', 'openemis_no'],
-            ['first_name_mapping', 'first_name_mapping', 'first_name'],
-            ['middle_name_mapping', 'middle_name_mapping', 'middle_name'],
-            ['last_name_mapping', 'last_name_mapping', 'last_name'],
-            ['third_name_mapping', 'third_name_mapping', 'third_name'],
-            ['date_of_birth_mapping', 'date_of_birth_mapping', 'date_of_birth'],
-            ['gender_id_mapping', 'gender_id_mapping', 'gender_id'],
-//            ['nationality_mapping', 'nationality_mapping', 'main_nationality.name'],
-//            ['identity_number_mapping', 'identity_number_mapping', 'identity_number'],
-//            ['identity_type_mapping', 'identity_type_mapping', 'main_identity_type.name'],
-
-
-            // Address Mappings
-//            ['emal_mapping', 'email_mapping', 'email'],
-//            ['address_mapping', 'address_mapping', 'address'],
-//            ['postal_mapping', 'postal_mapping', 'postal_code']
         ];
 
         $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('OpenEMIS Core', ...$attr), $attributes);
