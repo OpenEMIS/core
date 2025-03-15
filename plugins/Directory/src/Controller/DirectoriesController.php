@@ -2057,9 +2057,8 @@ class DirectoriesController extends AppController
         $password = $attributes['password'];
         $apiKey = $attributes['api_key'];
         $url = $attributes['api_url'];
-        $tokenUri = $url . "v5/login";
-//        $userDataEndpoint = $url . "v5/security-users/openemis_no/";
-        $userDataEndpoint = $url . "v5/security-users/openemis_no/";
+        $tokenUri = $url . "/login";
+        $userDataEndpoint = $url . "/security-users/openemis_no/";
 
 
         $tokenRequestBody = [
@@ -2077,6 +2076,8 @@ class DirectoriesController extends AppController
         $decodedResponse = $response->getJson();
 //        Log::debug(print_r(['getOECoreData' => $decodedResponse], true));
         $responseData = json_decode($noData, true);
+//        Log::debug(print_r([$response->isOk() => $decodedResponse['data'],
+//            $tokenUri => $tokenRequestBody], true));
 
         if ($response->isOk() && isset($decodedResponse['data']['token'])) {
             $token = $decodedResponse['data']['token'];
@@ -2093,18 +2094,19 @@ class DirectoriesController extends AppController
             ]);
 
             $decodedResponse = $response->getJson();
-            Log::debug(print_r([$response->isOk() => $decodedResponse['data']], true));
-            if ($response->isOk() && isset($decodedResponse['data'])) {
-                $data = [];
-                if (!empty($decodedResponse['data'])) {
-                    $data = $decodedResponse['data'][0];
-                    $data['identity_number'] = $identityNumber;
-                    unset($data['openemis_no']);
-                    $responseData = ['data' => [$data]];
+            $decodedData = $decodedResponse['data'] ?? [];
+            if ($response->isOk() && isset($decodedData)) {
+                $responseData = ['data' => [], 'total' => 0];
+                if (!empty($decodedData)) {
+                    foreach ($decodedData as &$answer) {
+                        $answer['identity_number'] = $answer['openemis_no'];
+                        unset($answer['openemis_no']);
+                    }
+                    $responseData = ['data' => $decodedData, 'total' => count($decodedData)];
                 }
 
             } else {
-                $responseData = ['data' => []];
+                $responseData = ['data' => [], 'total' => 0];
             }
         }
 
