@@ -1104,27 +1104,6 @@ class UserController extends Controller
 
     // POCOR-8896 start
     /**
-     * @OA\Schema(
-     *     schema="UserUpdateRequest",
-     *     @OA\Property(property="first_name", type="string", example="Test"),
-     *     @OA\Property(property="middle_name", type="string", example=""),
-     *     @OA\Property(property="third_name", type="string", example=""),
-     *     @OA\Property(property="last_name", type="string", example="User"),
-     *     @OA\Property(property="preferred_name", type="string", example=""),
-     *     @OA\Property(property="gender_id", type="integer", example=1),
-     *     @OA\Property(property="date_of_birth", type="string", format="date", example="2011-01-01"),
-     *     @OA\Property(property="username", type="string", example="TestUser101"),
-     *     @OA\Property(property="password", type="string", example="TestUser101"),
-     *     @OA\Property(property="postal_code", type="string", example="12233"),
-     *     @OA\Property(property="address", type="string", example=""),
-     *     @OA\Property(property="birthplace_area_id", type="integer", example=2),
-     *     @OA\Property(property="address_area_id", type="integer", example=2),
-     *     @OA\Property(property="nationality_id", type="integer", example=2),
-     *     @OA\Property(property="identity_type_id", type="integer", example=160),
-     *     @OA\Property(property="identity_number", type="string", example="54542"),
-     * )
-     */
-    /**
      * Updates a user's details using their OpenEMIS ID.
      *
      * @OA\Post(
@@ -1139,12 +1118,35 @@ class UserController extends Controller
      *         description="The OpenEMIS number of the user",
      *         @OA\Schema(type="string")
      *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="first_name", type="string", example="Test"),
+     *             @OA\Property(property="middle_name", type="string", example=""),
+     *             @OA\Property(property="third_name", type="string", example=""),
+     *             @OA\Property(property="last_name", type="string", example="User"),
+     *             @OA\Property(property="preferred_name", type="string", example=""),
+     *             @OA\Property(property="gender_id", type="integer", example=1),
+     *             @OA\Property(property="date_of_birth", type="string", format="date", example="2011-01-01"),
+     *             @OA\Property(property="username", type="string", example="TestUser101"),
+     *             @OA\Property(property="password", type="string", example="TestUser101"),
+     *             @OA\Property(property="postal_code", type="string", example="12233"),
+     *             @OA\Property(property="address", type="string", example=""),
+     *             @OA\Property(property="birthplace_area_id", type="integer", example=2),
+     *             @OA\Property(property="address_area_id", type="integer", example=2),
+     *             @OA\Property(property="nationality_id", type="integer", example=2),
+     *             @OA\Property(property="identity_type_id", type="integer", example=160),
+     *             @OA\Property(property="identity_number", type="string", example="54542")
+     *         )
+     *     ),
      *     @OA\Response(response=200, description="User data updated successfully."),
      *     @OA\Response(response=403, description="Unauthorized access."),
      *     @OA\Response(response=404, description="User not found."),
      *     @OA\Response(response=500, description="Internal server error.")
      * )
      */
+
     /**
      * Updates a user's details using their OpenEMIS ID.
      *
@@ -1160,12 +1162,35 @@ class UserController extends Controller
      *         description="The OpenEMIS number of the user",
      *         @OA\Schema(type="string")
      *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="first_name", type="string", example="Test"),
+     *             @OA\Property(property="middle_name", type="string", example=""),
+     *             @OA\Property(property="third_name", type="string", example=""),
+     *             @OA\Property(property="last_name", type="string", example="User"),
+     *             @OA\Property(property="preferred_name", type="string", example=""),
+     *             @OA\Property(property="gender_id", type="integer", example=1),
+     *             @OA\Property(property="date_of_birth", type="string", format="date", example="2011-01-01"),
+     *             @OA\Property(property="username", type="string", example="TestUser101"),
+     *             @OA\Property(property="password", type="string", example="TestUser101"),
+     *             @OA\Property(property="postal_code", type="string", example="12233"),
+     *             @OA\Property(property="address", type="string", example=""),
+     *             @OA\Property(property="birthplace_area_id", type="integer", example=2),
+     *             @OA\Property(property="address_area_id", type="integer", example=2),
+     *             @OA\Property(property="nationality_id", type="integer", example=2),
+     *             @OA\Property(property="identity_type_id", type="integer", example=160),
+     *             @OA\Property(property="identity_number", type="string", example="54542")
+     *         )
+     *     ),
      *     @OA\Response(response=200, description="User data updated successfully."),
      *     @OA\Response(response=403, description="Unauthorized access."),
      *     @OA\Response(response=404, description="User not found."),
      *     @OA\Response(response=500, description="Internal server error.")
      * )
      */
+
     /**
      * Updates a user's details using their OpenEMIS ID.
      *
@@ -1180,6 +1205,28 @@ class UserController extends Controller
      *         required=true,
      *         description="The OpenEMIS number of the user",
      *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="first_name", type="string", example="Test"),
+     *             @OA\Property(property="middle_name", type="string", example=""),
+     *             @OA\Property(property="third_name", type="string", example=""),
+     *             @OA\Property(property="last_name", type="string", example="User"),
+     *             @OA\Property(property="preferred_name", type="string", example=""),
+     *             @OA\Property(property="gender_id", type="integer", example=1),
+     *             @OA\Property(property="date_of_birth", type="string", format="date", example="2011-01-01"),
+     *             @OA\Property(property="username", type="string", example="TestUser101"),
+     *             @OA\Property(property="password", type="string", example="TestUser101"),
+     *             @OA\Property(property="postal_code", type="string", example="12233"),
+     *             @OA\Property(property="address", type="string", example=""),
+     *             @OA\Property(property="birthplace_area_id", type="integer", example=2),
+     *             @OA\Property(property="address_area_id", type="integer", example=2),
+     *             @OA\Property(property="nationality_id", type="integer", example=2),
+     *             @OA\Property(property="identity_type_id", type="integer", example=160),
+     *             @OA\Property(property="identity_number", type="string", example="54542")
+     *         )
      *     ),
      *     @OA\Response(response=200, description="User data updated successfully."),
      *     @OA\Response(response=403, description="Unauthorized access."),
@@ -1292,6 +1339,7 @@ class UserController extends Controller
      */
     private function hasAllPermissions(array $permissions): bool
     {
+        Log::debug(print_r(['permissions' => $permissions], true));
         foreach ($permissions as $permission) {
             if (!checkPermission($permission)) {
                 return false;

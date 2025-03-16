@@ -1,3 +1,6 @@
+### [4.15.0] - 2025-03-10
+- Implemented: Develop standard OpenEMIS Core v5 APIs based on database tables
+
 ### [4.14.0] - 2025-03-07
 - Implemented: Develop a function to allow institutions to take attendance by both period and subject
 - Implemented: Develop a function to add System Updates emails to Alerts
