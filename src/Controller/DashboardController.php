@@ -61,24 +61,35 @@ class DashboardController extends AppController
         parent::beforeFilter($event);
 
         $user = $this->Auth->user();
-//        dd($user);
+//      POCOR-8972 start
         if (is_array($user) && (empty($user['last_login']))) {
-            $header = __('Mome Page');
+
+            $header = __('Home Page');
             $this->set('contentHeader', $header);
-            $userInfo = TableRegistry::get('User.Users')->get($user['id']);
+            $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user['id']);
             if ($userInfo->password) {
-                $this->Alert->warning('security.login.changePassword');
-                $lastLogin = $userInfo->last_login;
-                $this->request->getSession()->write('Auth.User.last_login', $lastLogin);
-                $this->redirect(['plugin' => 'Profile',
+                $changePasswordUrl = ['plugin' => 'Profile',
                     'controller' => 'Profiles',
                     'action' => 'Accounts',
                     '0' => 'edit',
-                    '1' => $this->ControllerAction->paramsEncode(['id' => $user['id']])]);
+                    '1' => $this->ControllerAction->paramsEncode(['id' => $user['id']])];
+                $check = $this->AccessControl->check($changePasswordUrl);
+                $lastLogin = $userInfo->last_login;
+                $this->request->getSession()->write('Auth.User.last_login', $lastLogin);
+                if ($check) {
+                    Log::debug('Redirecting to change password page');
+                    $this->Alert->warning('security.login.changePassword');
+                    $this->redirect($changePasswordUrl);
+                }else{
+//                    Log::debug('No rights to Redirecting to change password page');
+                }
+            }else{
+//                Log::debug('No password to Redirecting to change password page');
             }
-
+        }else{
+//            Log::debug('No user or user has logged to Redirecting to change password page');
         }
-
+//      POCOR-8972 end
         $header = __('Home Page');
         $this->set('contentHeader', $header);
 
