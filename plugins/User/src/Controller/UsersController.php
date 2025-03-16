@@ -832,7 +832,7 @@ class UsersController extends AppController
                         } else {
                             $message = __('Incorrect OTP code entered. Please try again.');
                             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $this->request->getParam('pass')[0]]);
+                            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $this->request->getParam('pass')[0]]); // POCOR-8972 getPass
                         }
                     }
                 }
