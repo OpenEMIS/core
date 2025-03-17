@@ -56,10 +56,11 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     }
                 ]
             ])
-            ->add('institution_id', 'rulecompareStudentGenderWithInstitution', [
-                'rule' => ['compareStudentGenderWithInstitution'],
-                'on' => 'create'
-            ])
+// POCOR-8946
+//            ->add('institution_id', 'rulecompareStudentGenderWithInstitution', [
+//                'rule' => ['compareStudentGenderWithInstitution'],
+//                'on' => 'create'
+//            ])
             ->add('student_id', [
                 'ruleNoNewWithdrawRequestInGradeAndInstitution' => [
                     'rule' => ['noNewWithdrawRequestInGradeAndInstitution'],
@@ -829,9 +830,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         //single student
         // POCOR-8946 start
-        $student_id = $this->getQueryString('student_id');
-        $student_gender_id = $this->Users->get($student_id)->gender_id;
         if (in_array($action, ['add', 'edit', 'approve'])) {
+            $student_id = $this->getQueryString('student_id');
+            $student_gender_id = $this->Users->get($student_id)->gender_id;
             $entity = $attr['entity'];
             $next_period_id = $entity->academic_period_id;
             $next_grade_id = $entity->education_grade_id;
