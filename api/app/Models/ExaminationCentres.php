@@ -14,6 +14,7 @@ use InstitutionScope;
     protected $table = 'examination_centres';
 
     // ✅ Allow mass assignment
+    // POCOR-8919 removed academic period
     protected $fillable = ['id', 'name', 'code', 'address', 'postal_code',
         'contact_person', 'telephone', 'fax', 'email', 'website',
         'institution_id', 'area_id',
