@@ -1,7 +1,7 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/comments/institutions.comments.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/comments/institutions.comments.ctrl', ['block' => true]); ?>
-
+<?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js', ['block' => true]); ?>
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
@@ -45,6 +45,7 @@ $paramsQuery = json_decode($jsonData, true);
 $classId = $paramsQuery['institution_class_id'];
 $reportCardId = $paramsQuery['report_card_id'];
 $institutionId = $paramsQuery['institution_id'];
+$loginUserId = $_SESSION['Auth']['User']['id'];
 ?>
     <div class="alert {{InstitutionCommentsController.class}}" ng-hide="InstitutionCommentsController.message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionCommentsController.message}}
@@ -91,6 +92,9 @@ $institutionId = $paramsQuery['institution_id'];
             border: 1px solid #CCC;
         }
     </style>
+    <script>
+        localStorage.setItem('login_user_id', '<?php echo $loginUserId;?>');
+    </script>
 
 <?php
 $this->end();
