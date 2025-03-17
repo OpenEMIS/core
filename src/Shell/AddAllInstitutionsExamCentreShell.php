@@ -20,14 +20,14 @@ class AddAllInstitutionsExamCentreShell extends Shell {
             $pid = getmypid();
             $SystemProcesses = TableRegistry::get('SystemProcesses');
             $systemProcessId = !empty($this->args[0]) ? $this->args[0] : 0;
-            $institutionTypeId = !empty($this->args[1]) ? $this->args[1] : 0;
+            $institutionTypeId = !empty($this->args[1]) ? $this->args[1] : 0; // POCOR-8919
 
             $executedCount = 0;
             $this->out($pid.': Initialize Add All Institutions As Exam Centres ('. Time::now() .')');
             $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, $executedCount);
 
             $obj = [];
-
+// POCOR-8919
             // get special needs from SystemProcesses params
             if (!empty($systemProcessId)) {
                 $SystemProcesses->updatePid($systemProcessId, $pid);
@@ -50,6 +50,7 @@ class AddAllInstitutionsExamCentreShell extends Shell {
             }
 
             // get all institutions based on type (if type is selected)
+            // POCOR-8919
             $institutionQuery = $this->Institutions->find('NotExamCentres');
             if (!empty($institutionTypeId)) {
                 $institutionQuery->where([$this->Institutions->aliasField('institution_type_id') => $institutionTypeId]);
@@ -74,6 +75,7 @@ class AddAllInstitutionsExamCentreShell extends Shell {
                         $existingExamCentre = $this->ExaminationCentres->find()
                             ->where([
                                 $this->ExaminationCentres->aliasField('institution_id') => $institution->id,
+// POCOR-8919
                             ])
                             ->first();
 
