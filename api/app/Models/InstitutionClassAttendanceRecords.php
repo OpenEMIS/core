@@ -1,0 +1,329 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class InstitutionClassAttendanceRecords extends Model
+{
+    use HasFactory;
+
+    protected $table = 'institution_class_attendance_records';
+
+    // ✅ Allow mass assignment
+    protected $fillable = ['institution_class_id', 'academic_period_id', 'year', 'month', 'day_1', 'day_2', 'day_3', 'day_4', 'day_5', 'day_6', 'day_7', 'day_8', 'day_9', 'day_10', 'day_11', 'day_12', 'day_13', 'day_14', 'day_15', 'day_16', 'day_17', 'day_18', 'day_19', 'day_20', 'day_21', 'day_22', 'day_23', 'day_24', 'day_25', 'day_26', 'day_27', 'day_28', 'day_29', 'day_30', 'day_31'];
+
+    // ✅ Disable Laravel's default timestamps
+    public $timestamps = false;
+
+    // ✅ Treat 'modified' and 'created' as timestamps
+    protected $dates = ['modified', 'created'];
+
+    // ✅ Define the primary key
+    protected $primaryKey = ['institution_class_id', 'academic_period_id', 'year', 'month'];
+    public $incrementing = false;
+
+     // Override getKeyForSaveQuery to handle composite keys
+/**
+ * @OA\PathItem(
+ *     path="/api/v5/institution-class-attendance-records"
+ * )
+ */
+public function _swaggerPath() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/institution-class-attendance-records",
+ *     summary="Get list of InstitutionClassAttendanceRecords",
+ *     tags={"InstitutionClassAttendanceRecords"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Successful."
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+                          @OA\Property(property="institution_class_id", type="integer", example=null),
+                          @OA\Property(property="academic_period_id", type="integer", example=null),
+                          @OA\Property(property="year", type="integer", example=null),
+                          @OA\Property(property="month", type="integer", example=null),
+                          @OA\Property(property="day_1", type="integer", example=null),
+                          @OA\Property(property="day_2", type="integer", example=null),
+                          @OA\Property(property="day_3", type="integer", example=null),
+                          @OA\Property(property="day_4", type="integer", example=null),
+                          @OA\Property(property="day_5", type="integer", example=null),
+                          @OA\Property(property="day_6", type="integer", example=null),
+                          @OA\Property(property="day_7", type="integer", example=null),
+                          @OA\Property(property="day_8", type="integer", example=null),
+                          @OA\Property(property="day_9", type="integer", example=null),
+                          @OA\Property(property="day_10", type="integer", example=null),
+                          @OA\Property(property="day_11", type="integer", example=null),
+                          @OA\Property(property="day_12", type="integer", example=null),
+                          @OA\Property(property="day_13", type="integer", example=null),
+                          @OA\Property(property="day_14", type="integer", example=null),
+                          @OA\Property(property="day_15", type="integer", example=null),
+                          @OA\Property(property="day_16", type="integer", example=null),
+                          @OA\Property(property="day_17", type="integer", example=null),
+                          @OA\Property(property="day_18", type="integer", example=null),
+                          @OA\Property(property="day_19", type="integer", example=null),
+                          @OA\Property(property="day_20", type="integer", example=null),
+                          @OA\Property(property="day_21", type="integer", example=null),
+                          @OA\Property(property="day_22", type="integer", example=null),
+                          @OA\Property(property="day_23", type="integer", example=null),
+                          @OA\Property(property="day_24", type="integer", example=null),
+                          @OA\Property(property="day_25", type="integer", example=null),
+                          @OA\Property(property="day_26", type="integer", example=null),
+                          @OA\Property(property="day_27", type="integer", example=null),
+                          @OA\Property(property="day_28", type="integer", example=null),
+                          @OA\Property(property="day_29", type="integer", example=null),
+                          @OA\Property(property="day_30", type="integer", example=null),
+                          @OA\Property(property="day_31", type="integer", example=null)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerList() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/institution-class-attendance-records/{id}",
+ *     summary="Get InstitutionClassAttendanceRecords by ID",
+ *     tags={"InstitutionClassAttendanceRecords"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the InstitutionClassAttendanceRecords",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Post(
+ *     path="/api/v5/institution-class-attendance-records",
+ *     summary="Create a new InstitutionClassAttendanceRecords",
+ *     tags={"InstitutionClassAttendanceRecords"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="institution_class_id", type="integer", example=null),
+                     @OA\Property(property="academic_period_id", type="integer", example=null),
+                     @OA\Property(property="year", type="integer", example=null),
+                     @OA\Property(property="month", type="integer", example=null),
+                     @OA\Property(property="day_1", type="integer", example=null),
+                     @OA\Property(property="day_2", type="integer", example=null),
+                     @OA\Property(property="day_3", type="integer", example=null),
+                     @OA\Property(property="day_4", type="integer", example=null),
+                     @OA\Property(property="day_5", type="integer", example=null),
+                     @OA\Property(property="day_6", type="integer", example=null),
+                     @OA\Property(property="day_7", type="integer", example=null),
+                     @OA\Property(property="day_8", type="integer", example=null),
+                     @OA\Property(property="day_9", type="integer", example=null),
+                     @OA\Property(property="day_10", type="integer", example=null),
+                     @OA\Property(property="day_11", type="integer", example=null),
+                     @OA\Property(property="day_12", type="integer", example=null),
+                     @OA\Property(property="day_13", type="integer", example=null),
+                     @OA\Property(property="day_14", type="integer", example=null),
+                     @OA\Property(property="day_15", type="integer", example=null),
+                     @OA\Property(property="day_16", type="integer", example=null),
+                     @OA\Property(property="day_17", type="integer", example=null),
+                     @OA\Property(property="day_18", type="integer", example=null),
+                     @OA\Property(property="day_19", type="integer", example=null),
+                     @OA\Property(property="day_20", type="integer", example=null),
+                     @OA\Property(property="day_21", type="integer", example=null),
+                     @OA\Property(property="day_22", type="integer", example=null),
+                     @OA\Property(property="day_23", type="integer", example=null),
+                     @OA\Property(property="day_24", type="integer", example=null),
+                     @OA\Property(property="day_25", type="integer", example=null),
+                     @OA\Property(property="day_26", type="integer", example=null),
+                     @OA\Property(property="day_27", type="integer", example=null),
+                     @OA\Property(property="day_28", type="integer", example=null),
+                     @OA\Property(property="day_29", type="integer", example=null),
+                     @OA\Property(property="day_30", type="integer", example=null),
+                     @OA\Property(property="day_31", type="integer", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Created successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerCreate() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/institution-class-attendance-records/{id}",
+ *     summary="Update InstitutionClassAttendanceRecords",
+ *     tags={"InstitutionClassAttendanceRecords"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the InstitutionClassAttendanceRecords",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="institution_class_id", type="integer", example=null),
+                     @OA\Property(property="academic_period_id", type="integer", example=null),
+                     @OA\Property(property="year", type="integer", example=null),
+                     @OA\Property(property="month", type="integer", example=null),
+                     @OA\Property(property="day_1", type="integer", example=null),
+                     @OA\Property(property="day_2", type="integer", example=null),
+                     @OA\Property(property="day_3", type="integer", example=null),
+                     @OA\Property(property="day_4", type="integer", example=null),
+                     @OA\Property(property="day_5", type="integer", example=null),
+                     @OA\Property(property="day_6", type="integer", example=null),
+                     @OA\Property(property="day_7", type="integer", example=null),
+                     @OA\Property(property="day_8", type="integer", example=null),
+                     @OA\Property(property="day_9", type="integer", example=null),
+                     @OA\Property(property="day_10", type="integer", example=null),
+                     @OA\Property(property="day_11", type="integer", example=null),
+                     @OA\Property(property="day_12", type="integer", example=null),
+                     @OA\Property(property="day_13", type="integer", example=null),
+                     @OA\Property(property="day_14", type="integer", example=null),
+                     @OA\Property(property="day_15", type="integer", example=null),
+                     @OA\Property(property="day_16", type="integer", example=null),
+                     @OA\Property(property="day_17", type="integer", example=null),
+                     @OA\Property(property="day_18", type="integer", example=null),
+                     @OA\Property(property="day_19", type="integer", example=null),
+                     @OA\Property(property="day_20", type="integer", example=null),
+                     @OA\Property(property="day_21", type="integer", example=null),
+                     @OA\Property(property="day_22", type="integer", example=null),
+                     @OA\Property(property="day_23", type="integer", example=null),
+                     @OA\Property(property="day_24", type="integer", example=null),
+                     @OA\Property(property="day_25", type="integer", example=null),
+                     @OA\Property(property="day_26", type="integer", example=null),
+                     @OA\Property(property="day_27", type="integer", example=null),
+                     @OA\Property(property="day_28", type="integer", example=null),
+                     @OA\Property(property="day_29", type="integer", example=null),
+                     @OA\Property(property="day_30", type="integer", example=null),
+                     @OA\Property(property="day_31", type="integer", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Updated successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerUpdate() {}
+
+/**
+ * @OA\Delete(
+ *     path="/api/v5/institution-class-attendance-records/{id}",
+ *     summary="Delete InstitutionClassAttendanceRecords",
+ *     tags={"InstitutionClassAttendanceRecords"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the InstitutionClassAttendanceRecords",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Deleted successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerDelete() {}
+    protected function getKeyForSaveQuery()
+    {
+        $query = $this->newQueryWithoutScopes();
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    // Override setKeysForSaveQuery to handle composite keys
+    protected function setKeysForSaveQuery($query)
+    {
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    public static function getValidationRules(): array
+    {
+        return [
+            // Add validation rules here
+        ];
+    }
+
+
+
+
+    public function _swaggerHelper() {
+        return;
+    }
+}

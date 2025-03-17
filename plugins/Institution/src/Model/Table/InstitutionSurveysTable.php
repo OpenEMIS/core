@@ -86,10 +86,32 @@ class InstitutionSurveysTable extends ControllerActionTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
-    {
+    { //POCOR-8926 start
+        $pass = $this->request->getAttribute('params')['pass'][1] ?? null;
+
+        if ($pass) {
+            $params = $this->paramsDecode($pass);
+            $id = $params['id'] ?? null;
+        }
+
         $query
-            ->select(['id','code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
-            ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
+            ->select([
+                'id',
+                'code' => 'Institutions.code',
+                'description' => 'SurveyForms.description',
+                'area_id' => 'Areas.name',
+                'area_administrative_id' => 'AreaAdministratives.name'
+            ])
+            ->contain([
+                'Institutions.Areas',
+                'Institutions.AreaAdministratives',
+                'SurveyForms'
+            ]);
+
+        if (!empty($id)) {
+            $query->where([$this->aliasField('id') => $id]);
+        }
+        //POCOR-8926  end
     }
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
