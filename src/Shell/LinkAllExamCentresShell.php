@@ -24,13 +24,14 @@ class LinkAllExamCentresShell extends Shell {
             $SystemProcesses = TableRegistry::get('SystemProcesses');
             $systemProcessId = !empty($args[0]) ? $args[0] : 0;
             $examinationId = !empty($args[1]) ? $args[1] : 0;
-            $examCentreTypeId = !empty($args[2]) ? $args[2] : 0;
+            $examCentreTypeId = !empty($args[2]) ? $args[2] : 0; // POCOR-8919
 
             $executedCount = 0;
             $this->out($pid.': Initialize Link All Exam Centres to Exam ('. Time::now() .')');
             $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, $executedCount);
 
             $obj = [];
+            // POCOR-8919
             $obj['examination_id'] = $examinationId;
 
             // get subjects from SystemProcesses params
@@ -59,7 +60,7 @@ class LinkAllExamCentresShell extends Shell {
 
             // get all exam centres based on type (if type is selected)
             $examCentreQuery = $this->ExaminationCentres
-                ->find('NotLinkedExamCentres', ['examination_id' => $examinationId,
+                ->find('NotLinkedExamCentres', ['examination_id' => $examinationId, // POCOR-8919
                     'examination_centre_type' => $examCentreTypeId])
                 ->order([$this->ExaminationCentres->aliasField('code')]);
 

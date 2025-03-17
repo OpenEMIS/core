@@ -132,11 +132,11 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'view' || $this->action == 'edit') {
-            $examCentreId = $this->ControllerAction->getQueryString['examination_centre_id'];
+            $examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
             if($examCentreId==null){
                 $examCentreId = 1;
             }
-            $this->request->getAttribute('Params')['pass'][1] = $this->paramsEncode(['id' => $examCentreId]);
+            $this->request = $this->request->withParam('pass.1', $this->paramsEncode(['id' => $examCentreId]));
             $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'ExamCentres', 'index'];
             $this->examCentreName = $this->get($examCentreId)->name;
         }
@@ -203,11 +203,16 @@ class ExaminationCentresTable extends ControllerActionTable {
         // Examination filter
         $examinationOptions = $this->Examinations->getExaminationOptions();
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $selectedExamination = !is_null($serverRequest->getQuery('examination_id')) ? $serverRequest->getQuery('examination_id') : -1;
+        $selectedExamination = $serverRequest->getQuery('examination_id') ?? -1;
+        if($selectedExamination == -1){
+            $selectedExamination = $this->ControllerAction->getQueryString('examination_id') ?? -1;
+        }
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
             $query->matching('Examinations');
             $where[$this->Examinations->aliasField('id')] = $selectedExamination;
+        }else{
+
         }
 
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];

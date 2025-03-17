@@ -1384,6 +1384,8 @@ class InstitutionsTable extends ControllerActionTable
         //webhook event
         $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
         if ($this->Auth->user()) {
+            $user = $this->Auth->user();
+            $username = $user['username']; // POCOR-8919
             $Webhooks->triggerShell('institutions_delete', ['username' => $username], $body);
         }
     }
@@ -2192,13 +2194,14 @@ class InstitutionsTable extends ControllerActionTable
 
     public function findNotExamCentres(Query $query, array $options)
     {
+        // POCOR-8919start
             $query
                 ->leftJoinWith('ExaminationCentres')
                 ->where([
                     'ExaminationCentres.institution_id IS NULL'
                 ]);
             return $query;
-
+// POCOR-8919 end
     }
 
     public function findMap(Query $query, array $options)
@@ -2715,6 +2718,8 @@ class InstitutionsTable extends ControllerActionTable
             if ($this->webhookAction == 'add') {
                 $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                 if ($this->Auth->user()) {
+                    $user = $this->Auth->user();
+                    $username = $user['username']; // POCOR-8919
                     $Webhooks->triggerShell($event_name, ['username' => $username], $body);
                 }
             }

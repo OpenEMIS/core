@@ -57,6 +57,7 @@ class ExaminationResultsTable extends AppTable
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
+            // POCOR-8919
             'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
@@ -153,6 +154,7 @@ class ExaminationResultsTable extends AppTable
 
         foreach ($examItems as $item) {
             $examItemId = $item->id;
+// POCOR-8919
             $examItemCodeName = $item->code_name ?? 'No Code Name';
             $weight = $item->weight;
 

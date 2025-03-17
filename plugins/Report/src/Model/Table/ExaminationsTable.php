@@ -132,6 +132,7 @@ class ExaminationsTable extends AppTable
 
     public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+        // POCOR-8919 start
         $alias = $this->getAlias();
         if (isset($data[$alias])) {
             if (isset($data[$alias]['examination_id'])) {
@@ -144,12 +145,13 @@ class ExaminationsTable extends AppTable
                 unset($data[$alias]['institution_id']);
             }
         }
+        // POCOR-8919 end
     }
 
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-
+// POCOR-8919
             $examinationOptions = $this->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'code_name'
@@ -158,6 +160,7 @@ class ExaminationsTable extends AppTable
                     'id',
                     'code_name' => $this->find()->func()->concat(['code' => 'literal', ' - ', 'name' => 'literal'])
                 ])
+// POCOR-8919
                 ->toArray();
 
             if (!(isset($this->request->getData($this->getAlias())['examination_id']))) {
@@ -218,6 +221,7 @@ class ExaminationsTable extends AppTable
             $this->ControllerAction->setFieldOrder($fieldsOrder);
         }else{
             $fieldsOrder = ['feature'];
+// POCOR-8919
             $fieldsOrder[] = 'examination_centre_id';
             $fieldsOrder[] = 'examination_id';
             $fieldsOrder[] = 'institution_id';
@@ -246,6 +250,7 @@ class ExaminationsTable extends AppTable
                         ->matching('Examinations')
                         ->where([
                             $this->aliasField('id') => $examinationId,
+// POCOR-8919
                         ])
                         ->order([$this->ExaminationCentres->aliasField('code')])
                         ->toArray();

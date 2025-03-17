@@ -8,8 +8,8 @@
             ]);
             $template = $this->ControllerAction->getFormTemplate();
             $this->Form->templates($template);
-        ?>
-
+        // POCOR-8919
+            ?>
 
         <div class="input select">
             <div class="input-select-wrapper">
