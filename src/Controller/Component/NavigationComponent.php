@@ -1066,6 +1066,14 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.StudentFees'],
             ],
 
+            // POCOR-8873 start
+            'Institutions.Consumable.index' => [
+                'title' => 'Consumable',
+                'parent' => 'Institution.Finance',
+                'selected' => ['Institutions.Consumable','Institutions.Transactions'],
+            ],
+            // POCOR-8873 end
+
             'Infrastructures' => [
                 'title' => 'Infrastructures',
                 'parent' => 'Institutions.Institutions.index',
