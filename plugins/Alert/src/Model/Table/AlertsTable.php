@@ -227,7 +227,6 @@ class AlertsTable extends ControllerActionTable
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
-        echo "<pre>";print_r($shellCmd);die;
         exec($shellCmd);
         Log::write('debug', $shellCmd);
     }
@@ -261,29 +260,14 @@ class AlertsTable extends ControllerActionTable
 
     public function onUpdateFieldFrequency(Event $event, array $attr, $action)
     {
-        $urlParams = $this->request->getAttribute('params')['pass'][1];
-        $urlParamsData = explode(".", $urlParams);
-        $requestData = base64_decode($urlParamsData[0]);
-        $requestData = json_decode($requestData);
-        $AlertsTable = TableRegistry::get('Alert.Alerts');
-        if(isset($requestData->id)){
-            $AlertData = $AlertsTable->find('all', ['conditions' => ['id' => $requestData->id]])->first();
-        }
-        if(!empty($AlertData) && $AlertData['name'] == 'RetirementWarning'){
-            $freqOptions=[
-                "Never" => __("Never"),
-                "Once" => __("Once")
-            ];
-        }else{
-            $freqOptions=[
-                "Never" => __("Never"), // POCOR-8533
-                "Daily" => __("Daily"),
-                "Weekly" => __("Weekly"),
-                "Monthly" => __("Monthly"),
-                "Yearly" => __("Yearly"),
-                "Once" => __("Once")
-            ];
-        }
+        $freqOptions=[
+            "Never" => __("Never"), // POCOR-8533
+            "Daily" => __("Daily"),
+            "Weekly" => __("Weekly"),
+            "Monthly" => __("Monthly"),
+            "Yearly" => __("Yearly"),
+            "Once" => __("Once")
+        ];
         $attr['type'] = 'select';
         $attr['attr']['options'] = $freqOptions;
 	    $attr['onChangeReload'] = true;
