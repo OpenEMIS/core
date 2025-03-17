@@ -46,7 +46,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
             mkdir($folder, 0777);
         }
 
-        $pages = $this->setConfig('pages');
+        $pages = $this->getConfig('pages'); // POCOR-8981
         if ($pages !== false && empty($pages)) {
             $this->setConfig('pages', ['index', 'view']);
         }
