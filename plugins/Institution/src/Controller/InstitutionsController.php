@@ -1519,10 +1519,9 @@ class InstitutionsController extends AppController
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'ImportStudentAttendances',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'add'
+                0 => 'add',
+                1 => $this->ControllerAction->paramsEncode(['id' => $institutionId,'institution_id' => $institutionId]), //POCOR-8886
             ];
-
             $archiveUrl = $this->ControllerAction->url('index');
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
