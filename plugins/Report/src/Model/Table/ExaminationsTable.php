@@ -132,15 +132,16 @@ class ExaminationsTable extends AppTable
 
     public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
-            if (array_key_exists('examination_id', $data[$this->getAlias()])) {
-                unset($data[$this->getAlias()]['examination_id']);
+        $alias = $this->getAlias();
+        if (isset($data[$alias])) {
+            if (isset($data[$alias]['examination_id'])) {
+                unset($data[$alias]['examination_id']);
             }
-            if (array_key_exists('examination_centre_id', $data[$this->getAlias()])) {
-                unset($data[$this->getAlias()]['examination_centre_id']);
+            if (isset($data[$alias]['examination_centre_id'])) {
+                unset($data[$alias]['examination_centre_id']);
             }
-            if (array_key_exists('institution_id', $data[$this->getAlias()])) {
-                unset($data[$this->getAlias()]['institution_id']);
+            if (isset($data[$alias]['institution_id'])) {
+                unset($data[$alias]['institution_id']);
             }
         }
     }
@@ -148,7 +149,6 @@ class ExaminationsTable extends AppTable
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $selectedAcademicPeriod = !empty($this->request->getData($this->getAlias())['academic_period_id']) ? $this->request->getData($this->getAlias())['academic_period_id']: $this->AcademicPeriods->getCurrent();
 
             $examinationOptions = $this->find('list', [
                     'keyField' => 'id',
@@ -158,7 +158,6 @@ class ExaminationsTable extends AppTable
                     'id',
                     'code_name' => $this->find()->func()->concat(['code' => 'literal', ' - ', 'name' => 'literal'])
                 ])
-                ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod])
                 ->toArray();
 
             if (!(isset($this->request->getData($this->getAlias())['examination_id']))) {
@@ -192,7 +191,7 @@ class ExaminationsTable extends AppTable
             $feature = $entity->feature;
 
             $fieldsOrder = ['feature'];
-            switch ($feature) { 
+            switch ($feature) {
                 case 'Report.RegisteredStudentsExaminationCentre':
                     $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'examination_id';
@@ -206,7 +205,7 @@ class ExaminationsTable extends AppTable
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'format';
                     break;
-                case 'Report.ExaminationResults': 
+                case 'Report.ExaminationResults':
                     $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'examination_id';
                     $fieldsOrder[] = 'institution_id';
@@ -219,7 +218,6 @@ class ExaminationsTable extends AppTable
             $this->ControllerAction->setFieldOrder($fieldsOrder);
         }else{
             $fieldsOrder = ['feature'];
-            $fieldsOrder[] = 'academic_period_id';
             $fieldsOrder[] = 'examination_centre_id';
             $fieldsOrder[] = 'examination_id';
             $fieldsOrder[] = 'institution_id';
@@ -248,7 +246,6 @@ class ExaminationsTable extends AppTable
                         ->matching('Examinations')
                         ->where([
                             $this->aliasField('id') => $examinationId,
-                            $this->ExaminationCentres->aliasField('academic_period_id') => $selectedAcademicPeriod
                         ])
                         ->order([$this->ExaminationCentres->aliasField('code')])
                         ->toArray();

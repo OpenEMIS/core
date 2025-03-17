@@ -355,11 +355,15 @@ class ExaminationsTable extends ControllerActionTable {
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    public function getExaminationOptions($selectedAcademicPeriod)
+    public function getExaminationOptions($selectedAcademicPeriod = null)
     {
+        $where = [];
+        if($selectedAcademicPeriod) {
+            $where = [$this->aliasField('academic_period_id') => $selectedAcademicPeriod];
+        }
         $examinationOptions = $this
             ->find('list')
-            ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod])
+            ->where($where)
             ->toArray();
 
         return $examinationOptions;

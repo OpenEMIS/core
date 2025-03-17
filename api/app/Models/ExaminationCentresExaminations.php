@@ -12,7 +12,10 @@ class ExaminationCentresExaminations extends Model
     protected $table = 'examination_centres_examinations';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'total_registered', 'examination_centre_id', 'examination_id', 'created_user_id', 'created'];
+    // POCOR-8919 removed academic period
+    protected $fillable = ['id', 'total_registered',
+        'examination_centre_id', 'examination_id',
+        'created_user_id', 'created'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
