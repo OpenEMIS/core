@@ -20,7 +20,7 @@ class POCOR8875 extends AbstractMigration
         $this->execute('INSERT INTO `z_8875_labels` SELECT * FROM `labels`');
 
         //Insert Data into labels tables
-        $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, code, name, visible, created_user_id, created) VALUES (uuid(), 'OutcomeCriterias', 'code', 'Outcome -> Criterias', 'Code/Element', NULL, NULL, 1, 1, NOW())");
+        $this->execute("INSERT INTO labels (id, module, field, module_name, field_name, code, name, visible, created_user_id, created) VALUES (uuid(), 'OutcomeCriterias', 'code', 'Outcome -> Criterias', 'Code', NULL, NULL, 1, 1, NOW())");
     }
 
     public function down()
