@@ -35,7 +35,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
+        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes'))); // POCOR-8981
         if (!isset($config['filename'])) {
             $this->setConfig('filename', $this->_table->getAlias());
         }
