@@ -668,13 +668,12 @@ class ReportCardsTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        // POCOR-8969 start
-        $entity->generate_start_date = (new FrozenTime($this->request->getData('ReportCards.generate_start_date')))->format('Y-m-d H:i:s');
-        $entity->generate_end_date = (new FrozenTime($this->request->getData('ReportCards.generate_end_date')))->format('Y-m-d H:i:s');
-        // POCOR-8969 end
-    }
+// POCOR-8969
+//    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+//    {
+//        $entity->generate_start_date =  (new Date($this->request->getData('ReportCards')['generate_start_date']))->modify('+1 day')->format('Y-m-d H:i:s');
+//        $entity->generate_end_date =  (new Date($this->request->getData('ReportCards')['generate_end_date']))->modify('+1 day')->format('Y-m-d H:i:s');
+//    }
 
     /**
      * * POCOR-6916
