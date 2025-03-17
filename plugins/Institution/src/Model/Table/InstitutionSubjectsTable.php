@@ -2209,6 +2209,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function getSubjectsByClass($classId)
     {
+
         $classSubjects = $this->ClassSubjects
             ->find()
             ->contain(['InstitutionSubjects'])
