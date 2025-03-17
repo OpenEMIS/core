@@ -815,7 +815,7 @@ class RegistrationRepository extends Controller
         try {
             $param = $request->all();
             
-            $customFields = $this->getStudentCustomFields();
+            $customFields = $this->getStudentCustomFields($param);
 
             $requiredCfArray = [];
             $requiredCfIds = [];

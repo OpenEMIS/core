@@ -144,8 +144,9 @@ class StudentAbsencesTable extends AppTable
                 'default_identity_type'=> "(SELECT IFNULL(student_identities.identity_type, ''))",   
                 'identity_number'=> "(SELECT IFNULL(student_identities.identity_number, ''))",   
                 'address'=> "(SELECT IFNULL(Users.address, ''))",   
-                'contacts'=> "(SELECT IFNULL(contact_info.contacts, ''))",   
-                'period_name'=> "(SELECT IF(InstitutionSubjects.name IS NOT NULL, '', IFNULL(period_info.period_name, '')))",   
+                'contacts'=> "(SELECT IFNULL(contact_info.contacts, ''))",
+                'period_name' => "(SELECT IF(InstitutionSubjects.name IS NOT NULL, '', IFNULL(period_info.period_name, CONCAT('Period ', " . $this->aliasField('period') . "))))", // POCOR-8902   
+                // 'period_name'=> "(SELECT IF(InstitutionSubjects.name IS NOT NULL, '', IFNULL(period_info.period_name, '')))",   
                 'subject_name' =>"(SELECT IFNULL(InstitutionSubjects.name, ''))",
                 'education_grade_name'=> $grades->aliasField('name'),
                 'academic_period' => $academicPeriod->aliasField('name'),
