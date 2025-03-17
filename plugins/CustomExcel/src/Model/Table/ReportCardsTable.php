@@ -304,6 +304,17 @@ class ReportCardsTable extends AppTable
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $dateFormat = $ConfigItems->value('date_format');
 
+            //POCOR-8967 -- START
+            $entityGPA = $StudentsGpa->find()
+                ->select(['gpa' =>$StudentsGpa->aliasField('gpa')])
+                ->where([
+                    $StudentsGpa->aliasField('student_id') => $params['student_id'],
+                    $StudentsGpa->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $StudentsGpa->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $StudentsGpa->aliasField('institution_id') => $params['institution_id']
+                ])
+                ->first();
+            //POCOR-8967 -- END
             $entity = $StudentsReportCards
                 ->find()
                 ->select([
@@ -411,6 +422,14 @@ class ReportCardsTable extends AppTable
                 // end POCOR-4156 body masses data
                 $entity->generated_date = date('m-d-Y');
             }
+            //POCOR-8967 -- START
+            if (!empty($entityGPA) && !empty($entity)) {
+                // Add GPA value to the student entity
+                $entity->gpa = $entityGPA->gpa;
+            } else {
+                $entity->gpa = null;
+            }
+            //POCOR-8967 -- END
             return $entity;
         }
     }
