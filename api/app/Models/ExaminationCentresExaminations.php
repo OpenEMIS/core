@@ -12,7 +12,7 @@ class ExaminationCentresExaminations extends Model
     protected $table = 'examination_centres_examinations';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'total_registered', 'examination_centre_id', 'examination_id', 'academic_period_id', 'created_user_id', 'created'];
+    protected $fillable = ['id', 'total_registered', 'examination_centre_id', 'examination_id', 'created_user_id', 'created'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
@@ -56,7 +56,6 @@ public function _swaggerPath() {}
                           @OA\Property(property="total_registered", type="integer", example=null),
                           @OA\Property(property="examination_centre_id", type="integer", example=null),
                           @OA\Property(property="examination_id", type="integer", example=null),
-                          @OA\Property(property="academic_period_id", type="integer", example=null),
                           @OA\Property(property="created_user_id", type="integer", example=null),
                           @OA\Property(property="created", type="string", format="date-time", example=null)
  *                 )
@@ -108,7 +107,6 @@ public function _swaggerView() {}
                      @OA\Property(property="total_registered", type="integer", example=null),
                      @OA\Property(property="examination_centre_id", type="integer", example=null),
                      @OA\Property(property="examination_id", type="integer", example=null),
-                     @OA\Property(property="academic_period_id", type="integer", example=null),
                      @OA\Property(property="created_user_id", type="integer", example=null),
                      @OA\Property(property="created", type="string", format="date-time", example=null)
  *         )
@@ -149,7 +147,6 @@ public function _swaggerCreate() {}
                      @OA\Property(property="total_registered", type="integer", example=null),
                      @OA\Property(property="examination_centre_id", type="integer", example=null),
                      @OA\Property(property="examination_id", type="integer", example=null),
-                     @OA\Property(property="academic_period_id", type="integer", example=null),
                      @OA\Property(property="created_user_id", type="integer", example=null),
                      @OA\Property(property="created", type="string", format="date-time", example=null)
  *         )
