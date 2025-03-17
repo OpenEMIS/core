@@ -252,114 +252,225 @@ GROUP BY month_generator.year_name
     ]; 
 
 
+/* POCOR-8902 start
+Change: Converted INNER JOIN to LEFT JOIN while fetching period_counter data to ensure the query does not exclude rows 
+when there is no matching data in period_counter.
+*/
 
-
+//     $join['absence_info'] = [
+//     'type' => 'left',
+//     'table' => "(SELECT attend_info.academic_period_id
+//     ,attend_info.institution_id
+//     ,attend_info.education_grade_id
+//     ,attend_info.institution_class_id
+//     ,attend_info.student_id
+//     ,YEAR(attend_info.absence_date) absent_year
+//     ,MONTH(attend_info.absence_date) absent_month
+//     ,COUNT(*) absence_counter
+// FROM 
+// (
+//     SELECT institution_student_absence_details.academic_period_id
+//         ,institution_student_absence_details.institution_id
+//         ,institution_student_absence_details.education_grade_id
+//         ,institution_student_absence_details.institution_class_id
+//         ,institution_student_absence_details.student_id
+//         ,institution_student_absence_details.date absence_date
+//         ,institution_student_absence_details.subject_id
+//         ,period_counter.attendance_per_day period_attendance_per_day
+//         ,subject_counter.subjects_taken
+//         ,attendance_type.value 
+//     FROM institution_student_absence_details
+//     INNER JOIN 
+//     (
+//         SELECT student_mark_type_status_grades.education_grade_id
+//             ,student_mark_type_statuses.academic_period_id
+//             ,student_attendance_mark_types.attendance_per_day
+//         FROM student_mark_type_status_grades
+//         INNER JOIN student_mark_type_statuses
+//         ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
+//         INNER JOIN student_attendance_mark_types
+//         ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
+//         GROUP BY student_mark_type_status_grades.education_grade_id
+//             ,student_mark_type_statuses.academic_period_id
+//     ) period_counter
+//     ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id
+//     AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id
+//     LEFT JOIN 
+//     (
+//         SELECT institution_subject_students.academic_period_id
+//             ,institution_subject_students.institution_id
+//             ,institution_subject_students.education_grade_id
+//             ,institution_subject_students.institution_class_id
+//             ,institution_subject_students.student_id
+//             ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken
+//         FROM institution_subject_students
+//         INNER JOIN academic_periods
+//         ON academic_periods.id = institution_subject_students.academic_period_id
+//         WHERE institution_subject_students.academic_period_id = $academicPeriodId
+//         AND institution_subject_students.institution_id = $institutionId
+//         AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+//         GROUP BY institution_subject_students.academic_period_id
+//             ,institution_subject_students.institution_id
+//             ,institution_subject_students.education_grade_id
+//             ,institution_subject_students.institution_class_id
+//             ,institution_subject_students.student_id
+//     ) subject_counter
+//     ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id
+//     AND subject_counter.institution_id = institution_student_absence_details.institution_id
+//     AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id
+//     AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id
+//     AND subject_counter.student_id = institution_student_absence_details.student_id
+//     CROSS JOIN
+//     (
+//         SELECT config_items.value
+//         FROM config_items
+//         WHERE config_items.code LIKE 'calculate_daily_attendance'
+//     ) attendance_type
+//     WHERE institution_student_absence_details.academic_period_id = $academicPeriodId
+//     AND institution_student_absence_details.institution_id = $institutionId
+//     AND institution_student_absence_details.absence_type_id != 3
+//     GROUP BY institution_student_absence_details.academic_period_id
+//         ,institution_student_absence_details.institution_id
+//         ,institution_student_absence_details.education_grade_id
+//         ,institution_student_absence_details.institution_class_id
+//         ,institution_student_absence_details.student_id
+//         ,institution_student_absence_details.date
+//     HAVING 
+//         CASE 
+//             WHEN attendance_type.value = 1 
+//             THEN COUNT(*) >= 1 
+//             ELSE 
+//                 CASE WHEN institution_student_absence_details.subject_id = 0 
+//                 THEN COUNT(*) >= period_counter.attendance_per_day
+//                 ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
+//                 END
+//         END
+// ) attend_info
+// GROUP BY attend_info.academic_period_id
+//     ,attend_info.institution_id
+//     ,attend_info.education_grade_id
+//     ,attend_info.institution_class_id
+//     ,attend_info.student_id
+//     ,YEAR(attend_info.absence_date)
+//     ,MONTH(attend_info.absence_date))",
+//     'conditions'=>[ 
+//         'absence_info.academic_period_id = students_data.academic_period_id',
+//         'absence_info.institution_id = students_data.institution_id',
+//         'absence_info.education_grade_id = students_data.education_grade_id',
+//         'absence_info.institution_class_id = students_data.institution_class_id',
+//         'absence_info.student_id = students_data.student_id',
+//         'absence_info.absent_year = attendance_info.year_name',
+//         'absence_info.absent_month = attendance_info.month_id',
+//     ]
+//     ];
+    
     $join['absence_info'] = [
-    'type' => 'left',
-    'table' => "(SELECT attend_info.academic_period_id
-    ,attend_info.institution_id
-    ,attend_info.education_grade_id
-    ,attend_info.institution_class_id
-    ,attend_info.student_id
-    ,YEAR(attend_info.absence_date) absent_year
-    ,MONTH(attend_info.absence_date) absent_month
-    ,COUNT(*) absence_counter
-FROM 
-(
-    SELECT institution_student_absence_details.academic_period_id
-        ,institution_student_absence_details.institution_id
-        ,institution_student_absence_details.education_grade_id
-        ,institution_student_absence_details.institution_class_id
-        ,institution_student_absence_details.student_id
-        ,institution_student_absence_details.date absence_date
-        ,institution_student_absence_details.subject_id
-        ,period_counter.attendance_per_day period_attendance_per_day
-        ,subject_counter.subjects_taken
-        ,attendance_type.value 
-    FROM institution_student_absence_details
-    INNER JOIN 
+        'type' => 'left',
+        'table' => "(SELECT attend_info.academic_period_id
+        ,attend_info.institution_id
+        ,attend_info.education_grade_id
+        ,attend_info.institution_class_id
+        ,attend_info.student_id
+        ,YEAR(attend_info.absence_date) absent_year
+        ,MONTH(attend_info.absence_date) absent_month
+        ,COUNT(*) absence_counter
+    FROM 
     (
-        SELECT student_mark_type_status_grades.education_grade_id
-            ,student_mark_type_statuses.academic_period_id
-            ,student_attendance_mark_types.attendance_per_day
-        FROM student_mark_type_status_grades
-        INNER JOIN student_mark_type_statuses
-        ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
-        INNER JOIN student_attendance_mark_types
-        ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
-        GROUP BY student_mark_type_status_grades.education_grade_id
-            ,student_mark_type_statuses.academic_period_id
-    ) period_counter
-    ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id
-    AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id
-    LEFT JOIN 
-    (
-        SELECT institution_subject_students.academic_period_id
-            ,institution_subject_students.institution_id
-            ,institution_subject_students.education_grade_id
-            ,institution_subject_students.institution_class_id
-            ,institution_subject_students.student_id
-            ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken
-        FROM institution_subject_students
-        INNER JOIN academic_periods
-        ON academic_periods.id = institution_subject_students.academic_period_id
-        WHERE institution_subject_students.academic_period_id = $academicPeriodId
-        AND institution_subject_students.institution_id = $institutionId
-        AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
-        GROUP BY institution_subject_students.academic_period_id
-            ,institution_subject_students.institution_id
-            ,institution_subject_students.education_grade_id
-            ,institution_subject_students.institution_class_id
-            ,institution_subject_students.student_id
-    ) subject_counter
-    ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id
-    AND subject_counter.institution_id = institution_student_absence_details.institution_id
-    AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id
-    AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id
-    AND subject_counter.student_id = institution_student_absence_details.student_id
-    CROSS JOIN
-    (
-        SELECT config_items.value
-        FROM config_items
-        WHERE config_items.code LIKE 'calculate_daily_attendance'
-    ) attendance_type
-    WHERE institution_student_absence_details.academic_period_id = $academicPeriodId
-    AND institution_student_absence_details.institution_id = $institutionId
-    AND institution_student_absence_details.absence_type_id != 3
-    GROUP BY institution_student_absence_details.academic_period_id
-        ,institution_student_absence_details.institution_id
-        ,institution_student_absence_details.education_grade_id
-        ,institution_student_absence_details.institution_class_id
-        ,institution_student_absence_details.student_id
-        ,institution_student_absence_details.date
-    HAVING 
-        CASE 
-            WHEN attendance_type.value = 1 
-            THEN COUNT(*) >= 1 
-            ELSE 
-                CASE WHEN institution_student_absence_details.subject_id = 0 
-                THEN COUNT(*) >= period_counter.attendance_per_day
-                ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
-                END
-        END
-) attend_info
-GROUP BY attend_info.academic_period_id
-    ,attend_info.institution_id
-    ,attend_info.education_grade_id
-    ,attend_info.institution_class_id
-    ,attend_info.student_id
-    ,YEAR(attend_info.absence_date)
-    ,MONTH(attend_info.absence_date))",
-    'conditions'=>[ 
-        'absence_info.academic_period_id = students_data.academic_period_id',
-        'absence_info.institution_id = students_data.institution_id',
-        'absence_info.education_grade_id = students_data.education_grade_id',
-        'absence_info.institution_class_id = students_data.institution_class_id',
-        'absence_info.student_id = students_data.student_id',
-        'absence_info.absent_year = attendance_info.year_name',
-        'absence_info.absent_month = attendance_info.month_id',
-    ]
-    ]; 
+        SELECT institution_student_absence_details.academic_period_id
+            ,institution_student_absence_details.institution_id
+            ,institution_student_absence_details.education_grade_id
+            ,institution_student_absence_details.institution_class_id
+            ,institution_student_absence_details.student_id
+            ,institution_student_absence_details.date absence_date
+            ,institution_student_absence_details.subject_id
+            ,period_counter.attendance_per_day period_attendance_per_day
+            ,subject_counter.subjects_taken
+            ,attendance_type.value 
+        FROM institution_student_absence_details
+        LEFT JOIN 
+        (
+            SELECT student_mark_type_status_grades.education_grade_id
+                ,student_mark_type_statuses.academic_period_id
+                ,student_attendance_mark_types.attendance_per_day
+            FROM student_mark_type_status_grades
+            INNER JOIN student_mark_type_statuses
+            ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
+            INNER JOIN student_attendance_mark_types
+            ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
+            GROUP BY student_mark_type_status_grades.education_grade_id
+                ,student_mark_type_statuses.academic_period_id
+        ) period_counter
+        ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id
+        AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id
+        LEFT JOIN 
+        (
+            SELECT institution_subject_students.academic_period_id
+                ,institution_subject_students.institution_id
+                ,institution_subject_students.education_grade_id
+                ,institution_subject_students.institution_class_id
+                ,institution_subject_students.student_id
+                ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken
+            FROM institution_subject_students
+            INNER JOIN academic_periods
+            ON academic_periods.id = institution_subject_students.academic_period_id
+            WHERE institution_subject_students.academic_period_id = $academicPeriodId
+            AND institution_subject_students.institution_id = $institutionId
+            AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+            GROUP BY institution_subject_students.academic_period_id
+                ,institution_subject_students.institution_id
+                ,institution_subject_students.education_grade_id
+                ,institution_subject_students.institution_class_id
+                ,institution_subject_students.student_id
+        ) subject_counter
+        ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id
+        AND subject_counter.institution_id = institution_student_absence_details.institution_id
+        AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id
+        AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id
+        AND subject_counter.student_id = institution_student_absence_details.student_id
+        CROSS JOIN
+        (
+            SELECT config_items.value
+            FROM config_items
+            WHERE config_items.code LIKE 'calculate_daily_attendance'
+        ) attendance_type
+        WHERE institution_student_absence_details.academic_period_id = $academicPeriodId
+        AND institution_student_absence_details.institution_id = $institutionId
+        AND institution_student_absence_details.absence_type_id != 3
+        GROUP BY institution_student_absence_details.academic_period_id
+            ,institution_student_absence_details.institution_id
+            ,institution_student_absence_details.education_grade_id
+            ,institution_student_absence_details.institution_class_id
+            ,institution_student_absence_details.student_id
+            ,institution_student_absence_details.date
+        HAVING 
+            CASE 
+                WHEN attendance_type.value = 1 
+                THEN COUNT(*) >= 1 
+                ELSE 
+                    CASE WHEN institution_student_absence_details.subject_id = 0 
+                    THEN COUNT(*) >= period_counter.attendance_per_day
+                    ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
+                    END
+            END
+    ) attend_info
+    GROUP BY attend_info.academic_period_id
+        ,attend_info.institution_id
+        ,attend_info.education_grade_id
+        ,attend_info.institution_class_id
+        ,attend_info.student_id
+        ,YEAR(attend_info.absence_date)
+        ,MONTH(attend_info.absence_date))",
+        'conditions'=>[ 
+            'absence_info.academic_period_id = students_data.academic_period_id',
+            'absence_info.institution_id = students_data.institution_id',
+            'absence_info.education_grade_id = students_data.education_grade_id',
+            'absence_info.institution_class_id = students_data.institution_class_id',
+            'absence_info.student_id = students_data.student_id',
+            'absence_info.absent_year = attendance_info.year_name',
+            'absence_info.absent_month = attendance_info.month_id',
+        ]
+        ];
+        //POCOR-8902 end
  
     $query
         ->select([
