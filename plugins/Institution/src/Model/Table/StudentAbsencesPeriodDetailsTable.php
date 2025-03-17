@@ -54,7 +54,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     {
         //For Import StudentAbsenceExcel only. Insert into student_attendace_mark_records once import sucessfully as attendance is counted as marked
         if ($entity->has('record_source') && $entity->record_source == 'import_student_attendances') {
-            $StudentAttendanceMarkedRecords = TableRegistry::get('StudentAttendanceMarkedRecords');
+            $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
 
             $date = $entity->date->i18nFormat('YYY-MM-dd');
 
@@ -69,7 +69,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             ];
 
             $markRecord = $StudentAttendanceMarkedRecords->newEntity($markRecordsData);
-            if (!$markRecord->errors()) {
+            if (!$markRecord->getErrors()) {
                 $StudentAttendanceMarkedRecords->save($markRecord);
             }
         }

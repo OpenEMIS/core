@@ -229,10 +229,10 @@ class AppController extends Controller
         if (!is_string($rgb) || empty($rgb)) {
             return '#000000'; // Return a default color if $rgb is invalid
         }
-        
+
         $hash = (strpos($rgb, '#') !== false) ? '#' : '';
         $rgb = (strlen($rgb) == 7) ? str_replace('#', '', $rgb) : ((strlen($rgb) == 6) ? $rgb : false);
-        
+
         if ($rgb === false || strlen($rgb) != 6) {
             return $hash . '000000'; // Return black if the format is invalid
         }
@@ -976,7 +976,7 @@ class AppController extends Controller
         if (!$check && $params['plugin'] != 'GuardianNav') { //POCOR-8596
             $this->log(__FUNCTION__, 'debug');
             if ($params !== null) {
-                $this->log((string)$params, 'debug');
+                $this->log(print_r($params,true), 'debug');
             }
             //$this->Alert->warning('general.notAccess'); //tmp solution 
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
