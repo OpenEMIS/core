@@ -80,18 +80,18 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getSubjectOptions(classId, institutionId, academicPeriodId, gradeId, studentId) { //6198 studentId 
-        var success = function(response, deferred) { 
+    function getSubjectOptions(classId, institutionId, academicPeriodId, gradeId, studentId) { //6198 studentId
+        var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        
+
         return InstitutionSubjects
             .find('bySubjectsInClass', {
                 institution_class_id: classId,
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId,
                 education_grade_id: gradeId,
-                student_id : studentId //6198 studentId 
+                student_id : studentId //6198 studentId
             })
             .ajax({success: success, defer: true});
     }
@@ -177,7 +177,11 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             field: "outcome_criteria_name",
             filterParams: filterParams,
             menuTabs: menuTabs,
-            filter: 'text'
+            filter: 'text',  /* POCOR-8877 start */
+            cellClass: { whiteSpace: "normal", lineHeight: "1.2" },
+            autoHeight: true,  // Ensures row height adjusts to content
+            wrapText: true,
+            /* POCOR-8877 end */
         });
 
         var columnDef = {
@@ -344,7 +348,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                             defaultOption.value = ""; // Default value
                             defaultOption.text = "-- Select --"; // Default display text
                             selectInput.appendChild(defaultOption);
-                        
+
                             // Populate the dropdown with gradingOptions
                             gradingOptions.forEach(function(option) {
                                 var optionElement = document.createElement("option");
@@ -352,11 +356,11 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                                 optionElement.text = option.name; // Set option text
                                 selectInput.appendChild(optionElement);
                             });
-                        
+
                             // Set the initial value of the dropdown
                             selectInput.value = oldValue;
                             eCell.appendChild(selectInput);
-                        
+
                             // Add event listener for the dropdown change event
                             selectInput.addEventListener('change', function() {
                                 var newValue = selectInput.value;
@@ -365,7 +369,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                                     params.data[params.colDef.field] = newValue;
                                     oldValue = newValue;
                                     var controller = params.context._controller;
-                        
+
                                     // Save the new value asynchronously
                                     vm.saveOutcomeFinalResult(params)
                                         .then(function(response) {
@@ -374,7 +378,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                                                 controller,
                                                 "Changes will be automatically saved when any value is changed"
                                             );
-                        
+
                                             // Refresh the cell to reflect changes
                                             params.api.refreshCells({
                                                 rowNodes: [params.node],
@@ -388,7 +392,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                                                 controller,
                                                 "There was an error when saving the results"
                                             );
-                        
+
                                             // Refresh the cell to reflect the error
                                             params.api.refreshCells({
                                                 rowNodes: [params.node],
@@ -399,7 +403,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                                 }
                             });
                         } else {
-                        //POCOR-8435 end   
+                        //POCOR-8435 end
                         var oldValue = params.value;
                         var eCell = document.createElement('div');
                         var textInput = document.createElement('textarea');
@@ -420,7 +424,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                             var controller = params.context._controller;
                             if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
                                 params.data[params.colDef.field] = newValue;
-                                
+
                                 var newVal = newValue;
                                 var format = /[ `/'"=%]/;
                                 if(format.test(newVal.charAt(0))) {
@@ -428,8 +432,8 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                                     return false
                                 } else {
                                     AlertSvc.info(controller, 'Changes will be automatically saved when any value is changed');
-                                } 
-                                
+                                }
+
                                 vm.saveOutcomeComments(params)
                                 .then(function(response) {
                                     params.data.save_error[params.colDef.field] = false;
@@ -577,7 +581,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
     //POCOR-8435 start
     // Function to save the outcome final result
     function saveOutcomeFinalResult(params) {
-        
+
         var studentId = params.data.student_id;
         var educationGradeId = params.context.education_grade_id;
         var educationSubjectId = params.data.education_subject_id;
@@ -611,16 +615,16 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         };
 
         return StudentSubject
-            .find('studentSubjectOutcomeResult', options) 
+            .find('studentSubjectOutcomeResult', options)
             .ajax({
-                success: success, 
-                defer: true        
+                success: success,
+                defer: true
             });
     }
 
     // Function to get the student's outcome final result
     function getStudentOutcomeFinalResult(studentId, gradeId, subjectId, institutionId, academicPeriodId) {
-        
+
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -634,8 +638,8 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                 academic_period_id: academicPeriodId
             })
             .ajax({
-                success: success,  
-                defer: true         
+                success: success,
+                defer: true
             });
     }
     //POCOR-8435 end
