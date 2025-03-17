@@ -28,7 +28,6 @@ class ExaminationCentresFactory extends Factory
     'website' => $this->faker->lexify(str_repeat("?", 100)),
     'institution_id' => $this->faker->numberBetween(1, 1000),
     'area_id' => \App\Models\Areas::inRandomOrder()->value('id') ?? \App\Models\Areas::factory()->create()->id,
-    'academic_period_id' => \App\Models\AcademicPeriods::inRandomOrder()->value('id') ?? \App\Models\AcademicPeriods::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
     'created_user_id' => $this->faker->numberBetween(1, 2),
