@@ -1,3 +1,7 @@
+### [4.16.1] - 2025-03-17
+- Bug Fixes: Administration > Performance > Report Cards: When selecting the generate start and generate end dates to, the system adds one extra day to the selected dates
+- Bug Fixed: Institutions>Report Card>Comments: Revert angular 11 changes
+
 ### [4.16.0] - 2025-03-17
 - Implemented: Change the Criteria field to wrap the text so that the competencies can be fully displayed for users in the Outcome feature
 - Implemented: Develop functions for Staff Leave
