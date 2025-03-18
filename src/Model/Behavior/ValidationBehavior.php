@@ -565,12 +565,12 @@ class ValidationBehavior extends Behavior
             ->first();
         if ($checkRecord && $checkRecord->value == 1) {
             // If validation is enabled, return false if special characters are found
-            $specialCharPattern = '/[^a-zA-Z0-9\s]/';  
+            $specialCharPattern = '/[^a-zA-Z0-9\s]/';
             $containsSpecialChar = preg_match($specialCharPattern, $check);
             if ($containsSpecialChar) {
-                return false; 
+                return false;
             }
-            return true; 
+            return true;
         } else {
             // Validation is disabled, so allow any string
             return true;
@@ -1110,10 +1110,17 @@ class ValidationBehavior extends Behavior
     {
         if (array_key_exists($academicFieldName, $globalData['data'])) {
             $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-            $periodObj = $AcademicPeriods
-                    ->findById($globalData['data'][$academicFieldName])
+            // POCOR-8128 start
+            $selectedAcademicPeriod = $globalData['data'][$academicFieldName] != "" ? $globalData['data'][$academicFieldName] : null;
+            $periodObj = null;
+            if ($selectedAcademicPeriod) {
+                $periodObj = $AcademicPeriods
+                    ->findById($selectedAcademicPeriod)
                     ->first();
-
+            } else {
+                return true;
+            }
+            // POCOR-8128 end
             if (!empty($periodObj)) {
                 $excludeFirstDay = isset($options['excludeFirstDay']) ? $options['excludeFirstDay'] : null;
                 $excludeLastDay = isset($options['excludeLastDay']) ? $options['excludeLastDay'] : null;
