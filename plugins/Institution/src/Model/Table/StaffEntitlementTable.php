@@ -115,20 +115,17 @@ class StaffEntitlementTable extends ControllerActionTable
                 'staff_id' => $this->aliasField('staff_id'),
                 'staff_leave_type_id' => $this->aliasField('staff_leave_type_id'),
                 'year' => $query->func()->year([$this->aliasField('date_from') => 'identifier']), // Extract year from date_from
-                'days_taken' => $query->func()->datediff([
-                    $this->aliasField('date_to') => 'identifier',
-                    $this->aliasField('date_from') => 'identifier'
-                ]), // Days taken
+                'days_taken' => '(DATEDIFF(' . $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ') + 1)', // Days taken including 1 day // POCOR-8975
                 'position_name' => 'StaffPositionTitles.name', // Position name
                 'staff_leave_policy_id' => 'StaffPositionTitles.staff_leave_policy_id', // Leave policy ID
                 'days_total' => $query->func()->coalesce(['StaffLeavePolicyTypes.days' => 'literal', 0]), // Default to 0 if NULL
                 'entitlements_adjustment' => $query->func()->coalesce(['SUM(StaffLeaveEntitlements.adjustment)' => 'literal', 0]), // Leave entitlements adjustment
                 'days_total_adjusted' => $query->newExpr()->add([
-                    'COALESCE(StaffLeavePolicyTypes.days, 28) + COALESCE(SUM(StaffLeaveEntitlements.adjustment), 0)'
+                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(SUM(StaffLeaveEntitlements.adjustment), 0)' // POCOR-8975
                 ]), // Adjusted total days
                 'days_balance' => $query->newExpr()->add([
-                    'COALESCE(StaffLeavePolicyTypes.days, 28) + COALESCE(SUM(StaffLeaveEntitlements.adjustment), 0) - DATEDIFF(' .
-                    $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ')'
+                    'COALESCE(StaffLeavePolicyTypes.days, 0) + COALESCE(SUM(StaffLeaveEntitlements.adjustment), 0) - (DATEDIFF(' . // POCOR-8975
+                    $this->aliasField('date_to') . ', ' . $this->aliasField('date_from') . ') +1)'
                 ]) // Balance calculation
             ])
             ->join([
