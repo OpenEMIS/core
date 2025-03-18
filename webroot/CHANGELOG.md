@@ -1,3 +1,18 @@
+### [4.16.1] - 2025-03-17
+- Bug Fixes: Administration > Performance > Report Cards: When selecting the generate start and generate end dates to, the system adds one extra day to the selected dates
+- Bug Fixed: Institutions>Report Card>Comments: Revert angular 11 changes
+
+### [4.16.0] - 2025-03-17
+- Implemented: Change the Criteria field to wrap the text so that the competencies can be fully displayed for users in the Outcome feature
+- Implemented: Develop functions for Staff Leave
+- Implemented: Increase the character limit count for ‚ÄúCode‚Äù field in the Outcome feature
+- Implemented: Develop reports for institutions to take attendance by both period and subject
+- Implemented: Develop a new feature in OpenEMIS Core called Consumables
+- Bug Fixed: API: Student Admission is not working
+- Bug Fixed: Institutions>Survey>Forms: Make the height longer and change back the width
+- Bug Fixed: Administration > Performance > Report Cards breadcrumb: When clicking on the "report cards" link at the top menu, the page gives a 404 error
+- Bug Fixed: Institutions>Attendance>Students: Import is not working
+
 ### [4.15.0] - 2025-03-10
 - Implemented: Develop standard OpenEMIS Core v5 APIs based on database tables
 
