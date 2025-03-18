@@ -1377,6 +1377,7 @@ class InstitutionsController extends AppController
         if(empty($timetableId)) {
             $timetableId = $params['id'];
         }
+
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $params['id'] = $timetableId;
         $encodedQueryString = $this->ControllerAction->paramsEncode($params);
@@ -1390,10 +1391,15 @@ class InstitutionsController extends AppController
 
         $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
-
         $this->set('_action', $action);
         // POCOR-8985 start only can edit can edit
-        $edit = $this->AccessControl->check(['Institutions', 'ScheduleTimetable', 'view']);
+        $roles = [];
+        if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+
+        }
+        $edit = $this->AccessControl->check(['Institutions', 'ScheduleTimetableOverview', 'edit'], $roles);
         $this->set('_edit', $edit);
         // POCOR-8985 end
         $this->set('_back', Router::url($backUrl));
