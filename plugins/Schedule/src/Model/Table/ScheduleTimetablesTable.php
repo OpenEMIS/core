@@ -91,6 +91,14 @@ class ScheduleTimetablesTable extends ControllerActionTable
                 },
                 'message' => __('There is existing published timetable for the class.')
             ]);
+         $validator
+             ->notEmptyString('name')
+             ->notEmptyString('institution_schedule_term_id')
+             ->notEmptyString('institution_class_id')
+             ->notEmptyString('shift')
+             ->notEmptyString('grade')
+             ->notEmptyString('institution_schedule_interval_id')
+         ;
         return $validator;
     }
 
@@ -303,13 +311,13 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id', ['type' => 'select']);
-        $this->field('institution_schedule_term_id', ['type' => 'select']);
-        $this->field('name');
-        $this->field('education_grade_id');
-        $this->field('institution_class_id');
-        $this->field('shift');
-        $this->field('institution_schedule_interval_id');
+        $this->field('academic_period_id', ['type' => 'select', 'attr' => ['required' => true]]);
+        $this->field('institution_schedule_term_id', ['type' => 'select', 'attr' => ['required' => true]]);
+        $this->field('name', ['attr' => ['required' => true]]);
+        $this->field('education_grade_id', ['attr' => ['required' => true]]);
+        $this->field('institution_class_id', ['attr' => ['required' => true]]);
+        $this->field('shift', ['attr' => ['required' => true]]);
+        $this->field('institution_schedule_interval_id', ['attr' => ['required' => true]]);
         $this->field('status');
         $this->setFieldOrder(['academic_period_id', 'institution_schedule_term_id', 'name', 'education_grade_id', 'institution_class_id', 'shift', 'institution_schedule_interval_id', 'status']);
     }
@@ -496,7 +504,8 @@ class ScheduleTimetablesTable extends ControllerActionTable
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
             $educationGradeId = $this->extractRequestData($request, 'education_grade_id');
-
+            $attr['onChangeReload'] = true;
+            $attr['attr']['required'] = true;
             $attr['type'] = 'select';
             $attr['options'] = $this->getInstitutionClassOptions($academicPeriodId, $educationGradeId);
         }
@@ -525,6 +534,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
             $attr['attr']['label'] = __('Interval');
             $attr['type'] = 'select';
+            $attr['attr']['required'] = true;
             $attr['options'] = $this->getScheduleIntervalOptions($academicPeriodId, $shiftId);
 
         }
