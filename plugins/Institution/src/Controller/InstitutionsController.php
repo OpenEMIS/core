@@ -1392,7 +1392,7 @@ class InstitutionsController extends AppController
         $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
         $this->set('_action', $action);
-        // POCOR-8985 start only can edit can edit
+        // POCOR-8985 start only
         $roles = [];
         if (!$this->AccessControl->isAdmin()) {
             $userId = $this->Auth->user('id');
