@@ -35,7 +35,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
+        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes'))); // POCOR-8981
         if (!isset($config['filename'])) {
             $this->setConfig('filename', $this->_table->getAlias());
         }
@@ -46,7 +46,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
             mkdir($folder, 0777);
         }
 
-        $pages = $this->setConfig('pages');
+        $pages = $this->getConfig('pages'); // POCOR-8981
         if ($pages !== false && empty($pages)) {
             $this->setConfig('pages', ['index', 'view']);
         }
