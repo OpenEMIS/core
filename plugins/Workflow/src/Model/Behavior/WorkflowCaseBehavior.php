@@ -2171,7 +2171,7 @@ class WorkflowCaseBehavior extends Behavior
             } elseif ($action == 'view') {
                 //POCOR-7613 start
                 if($this->_table->request->getParam('controller')=="Profiles"&& $this->_table->request->getParam('action')=="Cases"){
-                            if(isset($_SESSION['Permissions']['Profiles']['Cases']['view']) && isset($_SESSION['Permissions']['Profiles']['Cases']['add'])){
+                        //if(isset($_SESSION['Permissions']['Profiles']['Cases']['view']) && isset($_SESSION['Permissions']['Profiles']['Cases']['add'])){ //POCOR-8155
                             unset($toolbarButtons['list']);
                             $addButtonAttr = [
                                 'escapeTitle' => false,
@@ -2199,7 +2199,29 @@ class WorkflowCaseBehavior extends Behavior
 
                                     $this->_table->controller->set('modals', $modals);
                                 }
-                            }}
+                            }
+                            // POCOR-8155 Start
+                            $model = $this->_table;
+                            if (!$model->AccessControl->isAdmin()) {
+                                $workflowStep = $this->getWorkflowStep($entity);
+                                $isEditable = false;
+                                $isDeletable = false;
+                                if (!empty($workflowStep)) {
+                                    $isEditable = $workflowStep->is_editable == 1 ? true : false;
+                                    $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+                                }
+                                if (isset($toolbarButtons['add']) && !$isEditable) {
+                                    unset($toolbarButtons['add']);
+                                }
+                                if (isset($toolbarButtons['edit']) && !$isEditable) {
+                                    unset($toolbarButtons['edit']);
+                                }
+                                
+                                if (isset($toolbarButtons['remove']) && !$isDeletable) {
+                                    unset($toolbarButtons['remove']);
+                                }
+                            } // POCOR-8155 Start
+                        //}
             }
                 //POCOR-7613 end
 	        else{

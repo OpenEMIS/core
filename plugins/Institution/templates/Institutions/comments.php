@@ -1,28 +1,24 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/comments/institutions.comments.svc', ['block' => true]); ?>
 <?= $this->Html->script('Institution.angular/comments/institutions.comments.ctrl', ['block' => true]); ?>
-
+<?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js', ['block' => true]); ?>
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
-<script>
-    localStorage.setItem('login_user_id', '<?php echo $loginUserId;?>');
-</script>
     <?php
         $backUrl = [
             'plugin' => $this->request->getAttribute('params')['plugin'],
             'controller' => $this->request->getAttribute('params')['controller'],
             'action' => 'ReportCardComments',
-            '0' => 'index',
-            '1' => $queryString
+            'index'
         ];
         echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
     ?>
     <?php if ($_edit) : ?>
         <!-- Show buttons when action is view: -->
         <!-- POCOR-6800: added ng-show="action == 'view' && checkaction == 1" || initial value ng-show="action == 'view'" -->
-         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && (checkEditAction == 1 || checkPrincipalEditAction == 1 || checkHomeroomTeacherEditAction == 1 || checkMyTeacherEditAction == 1)" ng-click="InstitutionCommentsController.onEditClick()">
+         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && (checkEditAction == 1 || checkPrincipalEditAction == 1 || checkHomeroomTeacherEditAction == 1 || checkMyTeacherEditAction == 1|| isHomeRoomClass == 1 || subjectIsEditable == 1)" ng-click="InstitutionCommentsController.onEditClick()">
              <i class="fa kd-edit"></i>
          </button>
         <!-- End -->
@@ -49,7 +45,7 @@ $paramsQuery = json_decode($jsonData, true);
 $classId = $paramsQuery['institution_class_id'];
 $reportCardId = $paramsQuery['report_card_id'];
 $institutionId = $paramsQuery['institution_id'];
-
+$loginUserId = $_SESSION['Auth']['User']['id'];
 ?>
     <div class="alert {{InstitutionCommentsController.class}}" ng-hide="InstitutionCommentsController.message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionCommentsController.message}}
@@ -96,6 +92,9 @@ $institutionId = $paramsQuery['institution_id'];
             border: 1px solid #CCC;
         }
     </style>
+    <script>
+        localStorage.setItem('login_user_id', '<?php echo $loginUserId;?>');
+    </script>
 
 <?php
 $this->end();

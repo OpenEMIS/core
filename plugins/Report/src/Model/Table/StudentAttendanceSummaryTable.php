@@ -25,7 +25,7 @@ class StudentAttendanceSummaryTable extends AppTable
 
     public function initialize(array $config): void
     {
-        $this->setTable('report_student_attendance_summary');
+        $this->setTable('summary_student_attendances');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -162,6 +162,12 @@ class StudentAttendanceSummaryTable extends AppTable
             /*POCOR-6439 ends*/
             ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
+                    // POCOR-8902 start
+                    if ($row->date instanceof \Cake\I18n\FrozenDate) {
+                        $row->date = $row->date->format('Y-m-d'); // Change format as needed
+                    } 
+                    // POCOR-8902 end
+
                     if ($row->total_female_students == 0) {
                         $row->total_female_students = '-';
                     }

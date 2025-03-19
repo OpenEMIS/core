@@ -257,10 +257,17 @@ class FieldOptionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
     }
 
-    public function BehaviourClassifications()
+    //POCOR-8147 Start
+    /*public function BehaviourClassifications()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
+    }*/
+
+    public function StaffBehaviourClassifications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
     }
+    //POCOR-8147 End
 
     public function StudentBehaviourCategories()
     {
@@ -811,4 +818,14 @@ class FieldOptionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
     }
     //POCOR-7613 end
+    //POCOR-8873 start
+    public function ItemTypes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
+    }
+    public function StockUnits()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
+    }
+    //POCOR-8873 end
 }

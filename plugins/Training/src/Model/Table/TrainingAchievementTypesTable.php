@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class TrainingAchievementTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('training_achievement_types');
+        $this->setTable('training_achievement_types');
         parent::initialize($config);
 
         $this->hasMany('Achievements', ['className' => 'Staff.Achievements', 'foreignKey' => 'training_achievement_type_id']);

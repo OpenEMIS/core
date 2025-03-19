@@ -77,18 +77,18 @@ class WorkflowActionsTable extends AppTable
         $where[$this->aliasField('workflow_step_id')] = -1;
 
         $modelOptions = $this->getWorkflowModelOptions();
-        $selectedModel = $this->setQueryString('model', $modelOptions);
+        $selectedModel = $this->queryString('model', $modelOptions);
         $this->advancedSelectOptions($modelOptions, $selectedModel);
 
         $workflowOptions = $this->getWorkflowOptions($selectedModel);
         if (!empty($workflowOptions)) {
-            $selectedWorkflow = $this->setQueryString('workflow', $workflowOptions);
+            $selectedWorkflow = $this->queryString('workflow', $workflowOptions);
             $this->advancedSelectOptions($workflowOptions, $selectedWorkflow);
 
             $workflowStepOptions = $this->getWorkflowStepOptions($selectedWorkflow);
 
             if (!empty($workflowStepOptions)) {
-                $selectedWorkflowStep = $this->setQueryString('workflow_step', $workflowStepOptions);
+                $selectedWorkflowStep = $this->queryString('workflow_step', $workflowStepOptions);
                 $this->advancedSelectOptions($workflowStepOptions, $selectedWorkflowStep);
 
                 $where[$this->aliasField('workflow_step_id')] = $selectedWorkflowStep;
@@ -125,6 +125,10 @@ class WorkflowActionsTable extends AppTable
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
+        // POCOR-8128
+        if (!property_exists($this, 'request') || !$this->request) {
+            return;
+        }
         $queryParams = $this->request->getQuery();
         unset($queryParams['model']);
         unset($queryParams['workflow']);
@@ -150,6 +154,10 @@ class WorkflowActionsTable extends AppTable
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
         if (!$isDeletable) {
+            // POCOR-8128
+            if (!property_exists($this, 'request') || !$this->request) {
+                return;
+            }
             $session = $this->request->getSession();
             $sessionKey = $this->getRegistryAlias() . '.warning';
             $session->write($sessionKey, $this->aliasField('restrictDelete'));
@@ -302,7 +310,6 @@ class WorkflowActionsTable extends AppTable
             $eventOptions = $this->getEvents($selectedWorkflow, true);
             $attr['attr']['eventOptions'] = $eventOptions;
             $eventSelectOptions = $this->getEvents($selectedWorkflow, true, true);
-
             $selectedEventKeys = [];
             if ($request->is(['get'])) {
                 if ($action == 'edit') {
@@ -310,15 +317,32 @@ class WorkflowActionsTable extends AppTable
                     $selectedEventKeys = $this->convertEventKeysToEvents($entity);
                 }
             } else if ($request->is(['post', 'put'])) {
-                $requestData = $request->getData();
+                //POCOR-8605[START]
+                $methodKey = $request->getData()['WorkflowActions']['event_method_key'];
+                if (!empty($methodKey)) {
+                    $data = $request->getData();
+                    // Ensure 'post_events' exists in the 'WorkflowActions' array
+                    if (!isset($data['WorkflowActions']['post_events'])) {
+                        $data['WorkflowActions']['post_events'] = [];
+                    }
 
+                    // Add new event data to the 'post_events' array
+                    $data['WorkflowActions']['post_events'][] = [
+                        'event_key' => $methodKey
+                    ];
+                    $data['WorkflowActions']['event_method_key'] = '';
+
+                    // Update the request object with the new 'WorkflowActions' data
+                    $request = $request->withData('WorkflowActions', $data['WorkflowActions']);
+                }
+                //POCOR-8605[END]
+                $requestData = $request->getData();
                 if (array_key_exists($this->getAlias(), $requestData)) {
                     if (array_key_exists('post_events', $requestData[$this->getAlias()])) {
                         $postEvents = $requestData[$this->getAlias()]['post_events'];
                         if (count($postEvents) > 1) {
                             $this->Alert->clear();
                             $this->Alert->error('WorkflowActions.no_two_post_event');
-
                             // Getting the first selected post event that is selected
                             $postEventSelectedElementValue = $postEvents[0]['event_key'];
 
@@ -349,6 +373,10 @@ class WorkflowActionsTable extends AppTable
 
     public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+        // POCOR-8128
+        if (!property_exists($this, 'request') || !$this->request) {
+            return;
+        }
         $request = $this->request;
         $queryParams = $request->getQuery();
         unset($queryParams['model']);
@@ -371,6 +399,10 @@ class WorkflowActionsTable extends AppTable
 
     public function addEditOnChangeWorkflow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+        // POCOR-8128
+        if (!property_exists($this, 'request') || !$this->request) {
+            return;
+        }
         $request = $this->request;
         $queryParams = $request->getQuery();
         unset($queryParams['workflow']);
@@ -392,6 +424,10 @@ class WorkflowActionsTable extends AppTable
 
     public function addEditOnChangeWorkflowStep(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+        // POCOR-8128
+        if (!property_exists($this, 'request') || !$this->request) {
+            return;
+        }
         $request = $this->request;
         $queryParams = $request->getQuery();
         unset($queryParams['workflow_step']);
@@ -412,7 +448,7 @@ class WorkflowActionsTable extends AppTable
 
     public function addEditOnAddEvent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
+        if (array_key_exists($this->getAlias(), (array)$data)) {
             if (array_key_exists('event_method_key', $data[$this->getAlias()])) {
                 $methodKey = $data[$this->getAlias()]['event_method_key'];
                 if (!empty($methodKey)) {
@@ -427,6 +463,15 @@ class WorkflowActionsTable extends AppTable
 
     private function setupFields(Entity $entity)
     {
+        //POCOR-8605[START]
+        if(isset($entity->event_method_key)){
+            $entity->post_events = [
+                [
+                    'event_key' => $entity->event_method_key
+                ]
+            ];
+        }
+        //POCOR-8605[END]
         $this->ControllerAction->field('workflow_model_id');
         $this->ControllerAction->field('workflow_id');
         $this->ControllerAction->field('workflow_step_id', [
@@ -585,7 +630,7 @@ class WorkflowActionsTable extends AppTable
             }
             //POCOR-7016 end
             if ($subjectEvent->isStopped()) {
-                return $subjectEvent->result;
+                return $subjectEvent->getResult(); // POCOR-8128
             }
 
             $events = $eventsObject;
@@ -593,7 +638,6 @@ class WorkflowActionsTable extends AppTable
                 return $emptyOptions;
             } else {
                 $eventOptions = [];
-
                 if ($listOnly) {
                     $eventOptions = [
                         0 => __('-- Select Event --')
@@ -633,7 +677,7 @@ class WorkflowActionsTable extends AppTable
     private function convertEventsToEventKeys($data)
     {
         $eventKeys = [];
-        if (array_key_exists($this->getAlias(), $data)) {
+        if (array_key_exists($this->getAlias(), (array)$data)) {
             if (array_key_exists('post_events', $data[$this->getAlias()])) {
                 $eventKeys = [];
                 foreach ($data[$this->getAlias()]['post_events'] as $key => $event) {
@@ -671,6 +715,22 @@ class WorkflowActionsTable extends AppTable
 
         return ($existingEventCount == 0);
     }
-
-
+    //POCOR-8434 starts
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+        // POCOR-8128
+        if (!property_exists($this, 'request') || !$this->getRequest()) {
+            return;
+        }
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $url = ['plugin' => 'Workflow',
+                'controller' => 'Workflows',
+                'action' => 'Actions',
+                '0' => 'view',
+            ];
+        $url['1'] = $encodedQueryString;
+        $url['?'] = $this->request->getQuery();
+        $event->stopPropagation();
+        return $this->controller->redirect($url);
+    }//POCOR-8434 ends
 }

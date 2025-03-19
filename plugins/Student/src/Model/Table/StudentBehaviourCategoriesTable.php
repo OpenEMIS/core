@@ -20,7 +20,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
 
         $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_behaviour_category_id']);
 
-        $this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
+        // $this->belongsTo('BehaviourClassifications', ['className' => 'Student.StudentBehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);//POCOR-8866
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -29,38 +29,41 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
     }
+    //POCOR-8866 start
 
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('behaviour_classification_id', ['after' => 'editable', 'type' => 'select']);
-    }
+    // public function beforeAction(Event $event, ArrayObject $extra)
+    // {
+    //    $this->field('behaviour_classification_id', ['after' => 'editable', 'type' => 'select']);
+    // }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('behaviour_classification_id', ['after' => 'name']);
-    }
+    // public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    // {
+    //     $this->field('behaviour_classification_id', ['after' => 'name']);
+    // }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('behaviour_classification_id', ['after' => 'name']);
-    }
+    // public function viewBeforeAction(Event $event, ArrayObject $extra)
+    // {
+    //     $this->field('behaviour_classification_id', ['after' => 'name']);
+    // }
 
+    //POCOR-8866 end
     public function getUnusedStudentBehaviourCategories($id)
     {
-        if (!empty($id)) {
-            $where = [
-                'OR' => [
-                    [$this->aliasField('behaviour_classification_id') => $id],
-                    [$this->aliasField('behaviour_classification_id') => 0]
-                ]
-            ];
-        } else {
-            $where = [$this->aliasField('behaviour_classification_id') => 0];
-        }
-
+        //POCOR-8866 start
+        // if (!empty($id)) {
+        //     $where = [
+        //         'OR' => [
+        //             [$this->aliasField('behaviour_classification_id') => $id],
+        //             [$this->aliasField('behaviour_classification_id') => 0]
+        //         ]
+        //     ];
+        // } else {
+        //     $where = [$this->aliasField('behaviour_classification_id') => 0];
+        // }
+        //POCOR-8866 end
         $unusedList = $this
             ->find('list')
-            ->where($where)
+            // ->where($where)
             ->order('order')
             ->toArray();
 
@@ -101,6 +104,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+        $connection->execute('SET FOREIGN_KEY_CHECKS = 0');
     }
 
     public function beforeDelete(Event $event, Entity $entity)
@@ -132,8 +136,8 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
                 return __('Editable');
             case 'default': 
                 return __('Default');
-            case 'behaviour_classification_id': 
-                return __('Behaviour Classification');
+            // case 'behaviour_classification_id': POCOR-8866
+            //     return __('Behaviour Classification');
             default:
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

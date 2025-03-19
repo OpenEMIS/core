@@ -100,7 +100,11 @@ class TransitionTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //POCOR-8713 Start
+		$tabElements = $this->getAcademicTabElements($options);
+		if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}  //POCOR-8713 End
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
@@ -142,7 +146,7 @@ class TransitionTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'edit', $this->paramsEncode(['id' => $entity->id]),
+                    'url' => [0 => 'edit', $this->paramsEncode(['id' => $entity->id,'institution_id' => $entity->institution_id, 'student_id'=>$entity->student_id]),
                 'institution_id' => $entity->institution->id]
                 ];
                 $button['url']['action'] = $attr['action'];
@@ -174,7 +178,8 @@ class TransitionTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'index'] 
+                    'url' => [0 => 'index', $this->paramsEncode(['institution_id' => $entity->institution_id, 'student_id'=>$entity->student_id])]
+                   // 'url' => [0 => 'index'] 
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
@@ -254,12 +259,15 @@ class TransitionTable extends ControllerActionTable
     public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['programme']);
-
+        $queryParams = $request->getQueryParams();
+        unset($queryParams['programme']);
+        $request = $request->withQueryParams($queryParams);
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_programme_id', $request->getData()[$this->getAlias()])) {
+                    $selectedGrade = $request->getData()[$this->getAlias()]['education_programme_id'];
+                    $queryParams['programme'] = $selectedGrade;
+                    $request = $request->withQueryParams($queryParams);
                 }
             }
         }
@@ -282,12 +290,13 @@ class TransitionTable extends ControllerActionTable
                     ])->enableHydration(false)->toArray();
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-        $selectedProgramme = $EducationProgrammes
-                             ->find()
-                            //  ->where([$EducationProgrammes->aliasField('id') => $request['data']['Transition']['education_programme_id']])->first()->id;
-                             ->where([$EducationProgrammes->aliasField('id') => $request->getData('Transition.education_programme_id')])->first()->id;
-        if (!empty($request['data'])) {//die("if");
-            $programmeId = $request['data']['Transition']['education_programme_id'];
+        // $selectedProgramme = $EducationProgrammes
+        //                      ->find()
+        //                     //  ->where([$EducationProgrammes->aliasField('id') => $request['data']['Transition']['education_programme_id']])->first()->id;
+        //                      ->where([$EducationProgrammes->aliasField('id') => $request->getData('Transition.education_programme_id')])->first()->id;
+        $requestData = $request->getData(); //POCOR-8713
+        if (!empty($requestData)) {//die("if");
+            $programmeId = $requestData['Transition']['education_programme_id'];
             $gradeOptions = $EducationGrades
                         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                         ->contain(['EducationProgrammes'])
@@ -388,7 +397,7 @@ class TransitionTable extends ControllerActionTable
                 $button = [
                     'type' => 'hidden',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'index'] 
+                    'url' =>  [0 => 'index', $this->paramsEncode(['institution_id' => $entity->institution_id, 'student_id'=>$entity->student_id])]//[0 => 'index'] 
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
@@ -419,7 +428,7 @@ class TransitionTable extends ControllerActionTable
                 $button = [
                     'type' => 'button',
                     'attr' => $btnAttr,
-                    'url' => [0 => 'index'] 
+                    'url' =>  [0 => 'index', $this->paramsEncode(['institution_id' => $entity->institution_id, 'student_id'=>$entity->student_id])]//[0 => 'index'] 
                 ];
                 $button['url']['action'] = $attr['action'];
                 $button['attr']['title'] = $attr['title'];
@@ -447,6 +456,16 @@ class TransitionTable extends ControllerActionTable
             $startDate =  date("Y-m-d", strtotime($requestData['Transition']['start_date']));
             $endDate = date("Y-m-d", strtotime($requestData['Transition']['end_date']));
             $previousYearId = $AcademicPeriod->find()->where(['id' => $AcademicPeriodsId-1])->first()->id;
+            //POCOR-8788 START
+            if(empty($previousYearId)) {
+                $previousYearId = $AcademicPeriod->find()
+                    ->select(['id'])
+                    ->where(['id <' => $AcademicPeriodsId])
+                    ->order(['id' => 'DESC'])
+                    ->limit(1)
+                    ->first()->id;
+            }
+            //POCOR-8788 END
             //set student status "Transferred"                    
             $transferStatus = $InstitutionStudents->find()
                             ->select([

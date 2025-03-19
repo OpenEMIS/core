@@ -324,7 +324,7 @@ class StudentsTable extends ControllerActionTable
     {
         // Convert ArrayObject to an array
         $toolbarButtons = (array)$extra['toolbarButtons'];
-        if (array_key_exists('add', $toolbarButtons)) {
+        if (isset($toolbarButtons['add'])) { // POCOR-8415
             $extra['toolbarButtons']['add']['type'] = 'hidden';
         }
         $this->field('academic_period_id', ['visible' => false]);
@@ -391,7 +391,7 @@ class StudentsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
+        $this->field('photo_content', ['type' => 'hidden', 'before' => 'openemis_no']);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
         $this->fields['student_id']['order'] = 10;
         $extra['toolbarButtons']['back']['url']['action'] = 'StudentProgrammes';
@@ -685,7 +685,9 @@ class StudentsTable extends ControllerActionTable
                     ])
                     ->where([
                     $studentCustomFieldValues->aliasField('student_id') => $user_id,
-                    ])->hydrate(false)->toArray();
+                    ])
+                ->disableHydration() // POCOR-8533
+                ->toArray();
             $custom_field = array();
             $count = 0;
             if(!empty($studentCustomData)){
@@ -917,7 +919,7 @@ class StudentsTable extends ControllerActionTable
 
             $studentEducationGrade = $EducationGrades
                 ->find()
-                ->where([$EducationGrades->aliasField($EducationGrades->primaryKey()) => $gradeId])
+                ->where([$EducationGrades->aliasField($EducationGrades->getPrimaryKey()) => $gradeId])
                 ->first();
 
             $currentProgrammeGrades = $EducationGrades
@@ -1129,7 +1131,7 @@ class StudentsTable extends ControllerActionTable
                 ->where($queryCondition)
                 ->group(['gender_name', $this->aliasField('academic_period_id')])
                 ->order('AcademicPeriods.order DESC')
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray()
                 ;
 

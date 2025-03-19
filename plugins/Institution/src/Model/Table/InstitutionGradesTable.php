@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\Utility\Text;
 use App\Model\Table\ControllerActionTable;
+use Cake\I18n\FrozenTime;
 
 class InstitutionGradesTable extends ControllerActionTable
 {
@@ -271,7 +272,7 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                             $lastInsertId = $result['id'];
                             //echo "<pre>";print_r($lastInsertId);die;
                             // POCOR 5001
-                            if (count($data['grades']['education_grade_subject_id']) > 0) {
+                            if (!empty($data['grades']['education_grade_subject_id']) && count($data['grades']['education_grade_subject_id']) > 0) {
                                 $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
                                 $createdUserId = $this->Session->read('Auth.User.id');
                                 $institutionProgramGradeSubjectID = [];
@@ -846,7 +847,7 @@ public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     $institution = $Institution->find()->where([$Institution->aliasField($Institution->getPrimaryKey()) => $institutionId])->first();
 
     if (empty($institution->date_opened)) {
-        $institution->date_opened = new Time('01-01-1970');
+        $institution->date_opened = new FrozenTime('01-01-1970'); // POCOR-8902 change Time to FrozenTime due to deprecation error
         $Institution->save($institution);
     }
 
@@ -861,14 +862,14 @@ public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
         if ($yearOpened != $year) {
             $month = $dateOpened->format('m');
             $day = $dateOpened->format('d');
-            $dateOpened = new Time($yearOpened.'-'.$month.'-'.$day);
+            $dateOpened = new FrozenTime($yearOpened.'-'.$month.'-'.$day); // POCOR-8902 change Time to FrozenTime due to deprecation error
             $institution->date_opened = $dateOpened;
             $Institution->save($institution);
         }
 
         $formatDate = $dateOpened->format('d-m-Y');
     } catch (\Exception $e) {
-        $institution->date_opened = new Time('01-01-1970');
+        $institution->date_opened = new FrozenTime('01-01-1970'); // POCOR-8902 change Time to FrozenTime due to deprecation error
         $Institution->save($institution);
         $dateOpened = $institution->date_opened;
     }
@@ -973,7 +974,7 @@ public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action
     return $attr;
 }
 
-public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerRequest $request)
+public function onUpdateFieldLevelOld(Event $event, array $attr, $action, ServerRequest $request)
 {
     if ($action == 'add') {
         $academicPeriodId = $request->getData($this->aliasField('academic_period_id'));
@@ -992,6 +993,46 @@ public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerReq
         $attr['empty'] = true;
         $attr['options'] = $levelOptions;
         $attr['onChangeReload'] = 'changeLevel';
+    } else if ($action == 'edit') {
+        $attr['type'] = 'readonly';
+    }
+    return $attr;
+}
+
+public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerRequest $request)
+{
+    if ($action == 'add') {
+        $academicPeriodId = $request->getData($this->aliasField('academic_period_id'));
+        //POCOR-8735 -- Copy Education structure changes
+        if (!empty($academicPeriodId)) {
+            $condition = ['EducationSystems.academic_period_id' => $academicPeriodId];
+            $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
+            
+            // Check if there are matching records for EducationSystems
+            $educationSystemsCount = $EducationLevels->EducationSystems->find()
+                ->where($condition)
+                ->count();
+
+            if ($educationSystemsCount > 0) {
+                // Proceed with the original query
+                $levelOptions = $EducationLevels->find('list', ['valueField' => 'system_level_name'])
+                    ->find('visible')
+                    ->find('order')
+                    ->contain(['EducationSystems'])
+                    ->where($condition)
+                    ->toArray();
+                $attr['empty'] = true;
+                $attr['options'] = $levelOptions;
+                $attr['onChangeReload'] = 'changeLevel';
+            } else {
+                $attr['options'] = [];
+                $attr['empty'] = 'No records found';
+            }
+        } else {
+            // If academicPeriodId is empty, handle accordingly
+            $attr['options'] = [];
+            $attr['empty'] = 'Invalid academic period';
+        }
     } else if ($action == 'edit') {
         $attr['type'] = 'readonly';
     }
@@ -1068,7 +1109,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
         if ($request->is(['post', 'put'])) {
 
             $educationGradeId = $request->getData($this->aliasField('grades.education_grade_id'));
-
+            $subjectOptions = [];
             if (!empty($educationGradeId)) {
 
                 $existingSubjectsInGrade =
@@ -1090,9 +1131,10 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
                     $subjectQuery->where([
                         'EducationSubjects.id IN ' => $existingSubjectsInGrade
                     ]);
+                    $subjectOptions = $subjectQuery->toArray();
                 }
 
-                $subjectOptions = $subjectQuery->toArray();
+            
             }
 
             $attr['data'] = $subjectOptions;
@@ -1225,7 +1267,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
          */
 
         // Get the current time.
-        $currTime = Time::now();
+        $currTime = FrozenTime::now(); // POCOR-8902 change Time to FrozenTime due to deprecation error
 
         $query = $this->find('all')
         ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
@@ -1626,6 +1668,25 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    /**
+     * Checks if a specific grade exists in an institution for a given academic period.
+     *
+     * @param int $nextGradeId The ID of the next grade to check.
+     * @param int $nextPeriodId The ID of the next academic period to check.
+     * @param int $institutionId The ID of the institution to check.
+     * @return int The count of records that match the given criteria.
+     * POCOR-8689
+     */
+    public function checkGradeInInstitution($nextGradeId, $nextPeriodId, $institutionId) {
+        $query = $this->find()
+        ->where([
+            $this->aliasField('education_grade_id') => $nextGradeId,
+            $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('academic_period_id') => $nextPeriodId
+        ]);
+        return $query->count();
     }
 
 }

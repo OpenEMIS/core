@@ -24,7 +24,9 @@ use ControllerAction\Model\Traits\UtilityTrait;
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Event\EventInterface;
+use Cake\Auth\DefaultPasswordHasher;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Cake\I18n\Time;
 
 //POCOR-5672
 
@@ -35,7 +37,16 @@ class InstitutionsController extends AppController
 {
     use OptionsTrait;
     use UtilityTrait;
-
+    // POCOR-8231 start
+    const STUDENT = 1;
+    const STAFF = 2;
+    const GUARDIAN = 3;
+    const OTHER = 4;
+    public $savingDirectoryData = 0;
+    public $savingGuardianData = 0;
+    public $savingStudentData = 0;
+    public $savingStaffData = 0;
+    // POCOR-8231 end
     public $activeInstitution = null;
 
     private $features = [
@@ -173,7 +184,7 @@ class InstitutionsController extends AppController
         // End
 
         parent::initialize();
-
+        $this->loadComponent('Cookie'); //POCOR-8551
         $data = $this->loadModel('Calendars');
         // $this->viewBuilder()->setHelpers(['HtmlField']);
 
@@ -234,10 +245,20 @@ class InstitutionsController extends AppController
 
         $this->attachAngularModulesForDirectory();
         $this->loadModel('Institution.StaffBodyMasses');
-        //POCOR-5672 it is used for removing csrf token mismatch condition in save student Api
-        if ($this->request->getParam('action') == 'saveStudentData' || $this->request->getParam('action') == 'saveStaffData' || $this->request->getParam('action') == 'saveGuardianData' || $this->request->getParam('action') == 'saveDirectoryData') {
+// POCOR-5672: Removing CSRF token mismatch condition for specific actions in the save APIs
+        $csrfExemptActions = [
+            'saveStudentData',
+            'saveStaffData',
+            'saveGuardianData',
+            'saveDirectoryData',
+            'saveAssessmentItemExemptions' // POCOR-8224
+        ];
+
+        $action = $this->request->getParam('action');
+        if (in_array($action, $csrfExemptActions, true)) {
             $this->getEventManager()->off($this->Csrf);
-        }//POCOR-5672 ends
+        }
+// End of POCOR-5672
     }
 
     private
@@ -290,6 +311,15 @@ class InstitutionsController extends AppController
                     'institutions.results.svc'
                 ]);
                 break;
+            // POCOR-8224 start
+            case 'AssessmentItemExemptions':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'assessment.item.exemptions.ctrl',
+                    'assessment.item.exemptions.svc'
+                ]);
+                break;
+            // POCOR-8224 end
             case 'AssessmentItemResultsArchived':
                 $this->Angular->addModules([
                     'alert.svc',
@@ -443,7 +473,7 @@ class InstitutionsController extends AppController
             case 'Addguardian':
                 $this->Angular->addModules([
                     'directory.directoryaddguardian.ctrl',
-                    'directory.directoryaddguardian.svc'
+                    'directory.directoryadd.svc'
                 ]);
                 break;
         }
@@ -553,7 +583,17 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExpenditures']);
     }
+    //POCOR-8873 start
+    public function Consumable()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionConsumables']);
+    }
 
+    public function Transactions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionConsumableTransactions']);
+    }
+    //POCOR-8873 end
     public function StaffPositionProfiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']);
@@ -945,15 +985,22 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatuses()
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $classId = $this->request->getQuery('class_id');
         $academicPeriodId = $this->request->getQuery('academic_period_id');
         $reportCardId = $this->request->getQuery('report_card_id');
 
         if (!empty($classId) && $classId == 'all') {
-            return $this->redirect(['action' => 'ReportCardStatusProgress',
-                'class_id' => $classId,
-                'academic_period_id' => $academicPeriodId,
-                'report_card_id' => $reportCardId
+            return  $this->redirect([
+                'action' => 'ReportCardStatusProgress',
+                '0' => 'index',
+                '1' => $encodedQueryString,
+                '?' => [ //POCOR-8773
+                    'class_id' => $classId,
+                    'academic_period_id' => $academicPeriodId,
+                    'report_card_id' => $reportCardId
+                ]
             ]);
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
@@ -962,15 +1009,20 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatusProgress()
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $classId = $this->request->getQuery('class_id');
         $academicPeriodId = $this->request->getQuery('academic_period_id');
         $reportCardId = $this->request->getQuery('report_card_id');
-
         if (!empty($classId) && $classId <> 'all') {
             return $this->redirect(['action' => 'ReportCardStatuses',
-                'class_id' => $classId,
-                'academic_period_id' => $academicPeriodId,
-                'report_card_id' => $reportCardId
+                '0' => 'index',
+                '1' => $encodedQueryString,
+                '?' => [ //POCOR-8773
+                    'class_id' => $classId,
+                    'academic_period_id' => $academicPeriodId,
+                    'report_card_id' => $reportCardId
+                ]
             ]);
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatusProgress']);
@@ -1020,6 +1072,17 @@ class InstitutionsController extends AppController
     }
 
     //POCOR-6028 ends
+    //POCOR-8434 start
+    public function StudentEnrolment()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentEnrolment']);
+    }
+
+    public function BulkStudentEnrolment()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.BulkStudentEnrolment']);
+    }
+    //POCOR-8434 Ends
 
     public function StudentTransferIn()
     {
@@ -1367,12 +1430,12 @@ class InstitutionsController extends AppController
             ];
             // POCOR-7895: start
             if ($_excel) {
-                if ($_archive_1 or $_archive_2 or $_archive_3) {
-                    $_excel = $_archive_1;
-                } else {
+//                if ($_archive_1 or $_archive_2 or $_archive_3) {
+//                    $_excel = $_archive_1;
+//                } else {
                     $_excel = false;
                     $excelUrl = null;
-                }
+//                }
             }
             // POCOR-7895: end
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
@@ -1395,7 +1458,7 @@ class InstitutionsController extends AppController
     private
     function getInstitutionClasses($institutionId)
     {
-        $tableClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $tableClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
         $distinctClasses = $tableClasses->find('all')
             ->where(['institution_id' => $institutionId])
             ->select(['id'])
@@ -1408,6 +1471,14 @@ class InstitutionsController extends AppController
 
     public function StudentAttendances($pass = '')
     {
+        $institutionId = $this->getInstitutionId();
+        $institutionName = $this->Institutions->get($institutionId)->name;
+        $url = $_SERVER['REQUEST_URI'];
+        $startPos = strpos($url, '/Institution/Institutions/StudentAttendances/index') + strlen('/Institution/Institutions/StudentAttendances/index');
+        $encodedPart = substr($url, $startPos);
+        $endPos = ltrim($encodedPart,'/');
+        $baseUrl = Router::fullBaseUrl();
+
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
         } else {
@@ -1419,7 +1490,7 @@ class InstitutionsController extends AppController
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
             //POCOR-8148:Start Check if institution is active
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
             $data = $Institutions->find()
             ->where(['id' => $institutionId])
             ->first();
@@ -1448,10 +1519,9 @@ class InstitutionsController extends AppController
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'ImportStudentAttendances',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'add'
+                0 => 'add',
+                1 => $this->ControllerAction->paramsEncode(['id' => $institutionId,'institution_id' => $institutionId]), //POCOR-8886
             ];
-
             $archiveUrl = $this->ControllerAction->url('index');
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
@@ -1471,6 +1541,10 @@ class InstitutionsController extends AppController
             $this->set('importUrl', Router::url($importUrl));
             $this->set('archiveUrl', Router::url($archiveUrl));
             $this->set('institution_id', $institutionId);
+            $this->set('encoded_url', $endPos);
+            $this->set('baseUrl', $baseUrl);
+            $this->set('institutionName', $institutionName);
+
             $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
 
             // Start POCOR-5188
@@ -1512,7 +1586,7 @@ class InstitutionsController extends AppController
              $encodedPart = substr($url, $startPos);
 
              //POCOR-8051 end
-             
+
             $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
             $_excel = $this->AccessControl->check(['Institutions', 'StudentMeals', 'excel']);
             $_import = $this->AccessControl->check(['Institutions', 'ImportStudentMeals', 'add']);
@@ -1540,7 +1614,11 @@ class InstitutionsController extends AppController
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
 
             $this->Navigation->addCrumb($crumbTitle);
-
+            //POCOR-8500 do not remove it. used in angular start
+            $user = $this->getRequest()->getSession()->read('sbn');
+            $pass = $this->getRequest()->getSession()->read('nbn');
+            $pass = $this->paramsEncode([$pass]);
+            //end
             $this->set('_edit', $_edit);
             $this->set('_excel', $_excel);
             $this->set('_import', $_import);
@@ -1552,6 +1630,8 @@ class InstitutionsController extends AppController
             $this->set('institutionDashborad', $institutionDashborad);
             $this->set('institutionIndexUrl', $institutionIndex);
             $this->set('baseUrl', $baseUrl);
+            $this->set('user', $user);
+            $this->set('pass', $pass);
             $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
         }
 
@@ -1621,6 +1701,22 @@ class InstitutionsController extends AppController
         $url['controller'] = 'Institutions';
         $url['action'] = 'resultsExport';
         $url['?'] = ['queryString' => $queryString];
+        // POCOR-8224  start
+        if ($isActive) {
+            $_exempt = $this->AccessControl->check(['Institutions', 'AssessmentItemExemptions', 'edit'], $roles);
+        } else {
+            $_exempt = false;
+        }
+        $this->set('_exempt', $_exempt);
+        if($_exempt){
+            $exemptUrl = $this->ControllerAction->url('edit');
+            unset($exemptUrl['?']);
+            $exemptUrl['action'] = 'AssessmentItemExemptions';
+            $exemptUrl['0'] = 'edit';
+            $exemptUrl['1'] = $queryString;
+            $this->set('exemptUrl', Router::url($exemptUrl));
+        }
+        // POCOR-8224 end
 
         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
@@ -1644,10 +1740,118 @@ class InstitutionsController extends AppController
             $exportPDF_Url['?'] = ['queryString' => $queryString];
             $this->set('exportPDF', Router::url($exportPDF_Url));
         }
+        //POCOR-8146 Start
+        $labelsTable = self::getDynamicTableInstance('labels');
+        $labelsData = $labelsTable->find()->where([
+            $labelsTable->aliasField('module') => 'Institution Assessments',
+            $labelsTable->aliasField('field') => 'total_mark'])->first();
+        $dynamicTotalMarkHeader = $labelsData->name;
+        if(empty($dynamicTotalMarkHeader)) {
+            $dynamicTotalMarkHeader = $labelsData->code;
+        }
+        $this->set('dynamicTotalMarkHeader', $dynamicTotalMarkHeader);
+        //POCOR-8146 End
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
+        $this->render('results');
+
     }
 
+    // POCOR-8224 start
+    public function AssessmentItemExemptions($subaction = 'index', $institutionSubjectId = null)
+    {
+        $AssessmentItemExemptions = self::getDynamicTableInstance('Institution.AssessmentItemStudentExemptions');
+//        Log::debug('1');
+        if ($subaction == 'edit') {
+            $queryString = $this->getQueryString();
+
+            // Institution Class Details
+            $institution_class_id = $queryString['class_id'] ?? null;
+            $institution_id = $queryString['institution_id'] ?? null;
+            if (!is_numeric($institution_class_id) || $institution_class_id < 0) {
+                return;
+            }
+            $institution_class = $AssessmentItemExemptions::getInstitutionClassDetails($institution_class_id);
+            $this->set('institution_class_name', $institution_class->name);
+            $this->set('institution_class_id', $institution_class_id);
+            // Assessment Details
+            $assessment_id = $queryString['assessment_id'] ?? null;
+            if (!is_numeric($assessment_id) || $assessment_id < 0) {
+                return;
+            }
+            $assessment = $AssessmentItemExemptions::getAssessmentDetails($assessment_id);
+            $this->set('assessment_name', $assessment->name);
+            $this->set('assessment_id', $assessment_id);
+
+            // Education Grade Details
+            $education_grade_id = $assessment->education_grade_id;
+            $education_grade = $AssessmentItemExemptions::getEducationGradeDetails($education_grade_id);
+            $this->set('education_grade_name', $education_grade->name);
+            $this->set('education_grade_id', $education_grade_id);
+            // Academic Period Details
+            $academic_period_id = $queryString['academic_period_id'] ?? null;
+            if (!is_numeric($academic_period_id) || $academic_period_id < 0) {
+                return;
+            }
+            $academic_period = $AssessmentItemExemptions::getAcademicPeriodDetails($academic_period_id);
+            $this->set('academic_period_name', $academic_period->name);
+            $this->set('academic_period_id', $academic_period_id);
+
+            // Institution Details
+            $institution_id = $queryString['institution_id'] ?? null;
+            if (!is_numeric($institution_id) || $institution_id < 0) {
+                return;
+            }
+            $institution = $AssessmentItemExemptions::getInstitutionDetails($institution_id);
+            $this->set('institution_name', $institution->name);
+            $this->set('institution_id', $institution_id);
+
+            // Assessment Items
+            $assessment_items = $AssessmentItemExemptions::getAssessmentItems($assessment_id);
+            $this->set('assessment_items', $assessment_items);
+
+            // Assessment Periods
+            $assessment_periods = $AssessmentItemExemptions::getAssessmentPeriods($assessment_id);
+            $this->set('assessment_periods', $assessment_periods);
+
+            // View-related settings
+            $this->set('ngController', 'AssessmentItemExemptionsCtrl as AssessmentItemExemptionsController');
+            $backUrl = $this->referer();
+            $this->set('backUrl', $backUrl);
+            $this->Navigation->addCrumb(__('Assessments'), ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institution_id])]);
+            $this->Navigation->addCrumb(__('Results'), $backUrl);
+            $this->render('assessment_item_exemptions_edit');
+        } else {
+            // Handle other actions
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemStudentExemptions']);
+        }
+    }
+
+    public function saveAssessmentItemExemptions(){
+        $userId = $this->Auth->user('id');
+        $this->autoRender = false;
+        $Exemptions = self::getDynamicTableInstance('Institution.AssessmentItemStudentExemptions');
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        $requestDataParams = $requestData['params'];
+        $requestDataParams['created_user_id'] = $userId;
+//        Log::debug($requestDataParams);
+        $assessment_item_ids = empty($requestDataParams['assessment_item_ids']) ? [$requestDataParams['assessment_item_id']] : $requestDataParams['assessment_item_ids'];
+//        Log::debug($assessment_item_ids);
+        // If multiple assessment period IDs exist, loop through each one
+        foreach ($assessment_item_ids as $assessment_item_id) {
+//            Log::debug($assessment_item_id);
+            // Add exempt students for each assessment period
+            $requestDataParams['assessment_item_id'] = $assessment_item_id;
+            $Exemptions::saveExemptions($requestDataParams);
+            $Exemptions::removeExemptions($requestDataParams);
+
+        }
+        echo json_encode(['status' => 'success']);
+        die;
+
+    }
+    // POCOR-8224 end
     public function reportCardGenerate()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardGenerate']);
@@ -1656,7 +1860,12 @@ class InstitutionsController extends AppController
     public function Comments()
     {
         // POCOR-3983 check institution status
+        $baseUrl = Router::fullBaseUrl();
         $institutionId = $this->getQueryString('institution_id');
+        $institutionClassId = $this->getQueryString('institution_class_id');
+        $reportCardId = $this->getQueryString('report_card_id');
+        $encodedUrl = $this->request->getParam('pass')[0];
+        $institutionName = $this->Institutions->get($institutionId)->name;
 
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
@@ -1673,6 +1882,12 @@ class InstitutionsController extends AppController
         $this->set('loginUserId', $userId);
         $this->set('queryString', $queryString);
         $this->set('_edit', $_edit);
+        $this->set('encodedUrl', $encodedUrl);
+        $this->set('institutionClassId', $institutionClassId);
+        $this->set('reportCardId', $reportCardId);
+        $this->set('institutionName', $institutionName);
+        $this->set('institutionId', $institutionId);
+        $this->set('baseUrl', $baseUrl);
         $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
 
@@ -1884,7 +2099,10 @@ class InstitutionsController extends AppController
                     return $this->redirect($url);
                 }
             }
-            $queryString = $this->ControllerAction->getQueryString();
+            //POCOR-8566[START]
+            // $queryString = $this->ControllerAction->getQueryString();
+            $queryString = $this->getQueryString();
+            //POCOR-8566[END]
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'StudentOutcomes';
             $viewUrl[0] = 'view';
@@ -1951,7 +2169,7 @@ class InstitutionsController extends AppController
             //$viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId]);//POCOR-8323
             $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId, 'institution_class_id' => $classId['id']]);//POCOR-8323
             //POCOR-8107
-            $configItems = TableRegistry::get('Configuration.ConfigItems');
+            $configItems = self::getDynamicTableInstance('Configuration.ConfigItems');
             $configItemsData = $configItems->find()->where(['type' => 'Fields for Institutions Classes Details Page'])->toArray();
             foreach ($configItemsData as $configItemsData1) {
                 if (($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)) {
@@ -2073,7 +2291,7 @@ class InstitutionsController extends AppController
             $session->write('Institution.Institutions.id', $institutionId);
             $institutionName = $this->Institutions->get($institutionId)->name;
             if (!$this->AccessControl->isAdmin()) {
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = self::getDynamicTableInstance('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
             $this->set('institutionId', $institutionId);
             $this->set('institutionName', $institutionName);
@@ -2087,6 +2305,19 @@ class InstitutionsController extends AppController
             if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
                 $externalDataSource = true;
             }
+            //POCOR-8646 Start
+            $labelsTable = self::getDynamicTableInstance('labels');
+            $labelsData = $labelsTable->find()->where(
+                [$labelsTable->aliasField('module') => 'InstitutionStudentAdd',
+                    $labelsTable->aliasField('field') => 'openemis_no'])
+                ->first();
+            $dynamicCol = $labelsData->name;
+            if(empty($dynamicCol)) {
+                $dynamicCol = $labelsData->code;
+            }
+
+            $this->set('dynamicOpenemisNoHeader', $dynamicCol);
+            //POCOR-8646 End
             $this->set('externalDataSource', $externalDataSource);
 
             $this->render('studentAdd');
@@ -2110,13 +2341,23 @@ class InstitutionsController extends AppController
             $session->write('Institution.Institutions.id', $institutionId);
             $institutionName = $this->Institutions->get($institutionId)->name;
             if (!$this->AccessControl->isAdmin()) {
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = self::getDynamicTableInstance('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
             $this->set('institutionId', $institutionId);
             $this->set('institutionName', $institutionName);
             $this->set('loginUserId', $userId);
             //POCOR-7485 ends
-
+            //POCOR-8646 Start
+            $labelsTable = self::getDynamicTableInstance('labels');
+            $labelsData = $labelsTable->find()->where(
+                [$labelsTable->aliasField('module') => 'InstitutionStaffAdd',
+                    $labelsTable->aliasField('field') => 'openemis_no'])
+                ->first();$dynamicCol = $labelsData->name;
+            if(empty($dynamicCol)) {
+                $dynamicCol = $labelsData->code;
+            }
+            $this->set('dynamicOpenemisNoHeader', $dynamicCol);
+            //POCOR-8646 End
             $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
             $this->set('_createNewStaff', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
@@ -2382,13 +2623,16 @@ class InstitutionsController extends AppController
     function setInstitutionStaffAttendancesImport($institutionId)
     {
         $_import = $this->AccessControl->check(['Institutions', 'ImportStaffAttendances', 'add']);
+        // POCOR-8944 start
         $importUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'ImportStaffAttendances',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'add'
+            0 => 'add',
+            1 => $this->ControllerAction->paramsEncode(['id' => $institutionId,
+        'institution_id' => $institutionId]),
         ];
+        // POCOR-8944 end
         $this->set('importUrl', Router::url($importUrl));
         $this->set('_import', $_import);
     }
@@ -2463,6 +2707,11 @@ class InstitutionsController extends AppController
         if ($this->request->getParam('action') == 'studentCustomFields') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'studentCustomFields';
         }
+        //POCOR-8538 start
+        if ($this->request->getParam('action') == 'classCustomFields') {
+            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'classCustomFields';
+        }
+        //POCOR-8538 end
         if ($this->request->getParam('action') == 'staffCustomFields') {
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'staffCustomFields';
         }
@@ -2506,7 +2755,14 @@ class InstitutionsController extends AppController
         if ($this->request->getParam('action') == 'getStudentAdmissionStatus') {//POCOR-7716
             $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStudentAdmissionStatus';
         }
+        // POCOR-8224 start
+        if ($this->request->getParam('action') == 'saveAssessmentItemExemptions') {
+            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveAssessmentItemExemptions';
+        }
+        // POCOR-8224 end
+
         //for api purpose POCOR-5672 ends
+
         return $events;
     }
 
@@ -2542,6 +2798,12 @@ class InstitutionsController extends AppController
 
     public function beforeFilter(EventInterface $event)
     {
+        //POCOR-8587 start
+        $session = $this->getRequest()->getSession();
+        if (!$session->check('Auth.User.id')) {
+            // Session has expired or user is not logged in
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        } //POCOR-8587 end
         parent::beforeFilter($event);
         $header = __('Institutions');
         $indexUrl = ['plugin' => 'Institution',
@@ -2619,12 +2881,30 @@ class InstitutionsController extends AppController
         }
 
         if ($action == 'dashboard') {
-            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $institutionId);
-            $havePermissionToViewCompleteness = $this->AccessControl->check([
+            $roles = self::getDynamicTableInstance('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $institutionId);
+            /*$havePermissionToViewCompleteness = $this->AccessControl->check([
                 'Institutions',
                 'InstitutionProfileCompletness',
                 'view'],
-                $roles);
+                $roles);*/
+            //POCOR-8827 start    
+            $roles = array_values($roles);
+            $roles = $roles[0];
+            $havePermissionToViewCompleteness = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()              
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityFunctions.name' => 'Institution Profile Completeness',
+                    'SecurityRoleFunctions.security_role_id IS'=> $roles,
+                    'SecurityRoleFunctions._view' => 1,
+                ])
+                ->toArray();
+                //POCOR-8827 end
+
             if ($havePermissionToViewCompleteness) {
                 $header = $institutionName . ' - ' . __('Institution Data Completeness');//POCOR-6022
             } else {
@@ -2635,7 +2915,7 @@ class InstitutionsController extends AppController
         //POCOR-8333 starts
         if ($action == 'StudentHistories') {
             $queryString = $this->getQueryString();
-            $studentId = $queryString['security_user_id'];
+            $studentId = $queryString['security_user_id'] ?? $queryString['student_id'];
             $Students = TableRegistry::getTableLocator()->get('Security.Users');
             $activeStudent = $Students->get($studentId);
             $studentName = $activeStudent->name;
@@ -2680,12 +2960,33 @@ class InstitutionsController extends AppController
 //            $plugin,
 //            $furtherAction],
 //            true));
-        if ($action == 'checkUserAlreadyExistByIdentity'
-           || $action == 'saveGuardianData'
-           || $furtherAction == 'removeReport'
-        ) {
+// POCOR-8224 start
+        $primaryActions = [
+            'checkUserAlreadyExistByIdentity',
+            'saveGuardianData',
+            'saveStudentData',
+            'saveStaffData',
+            'saveDirectoryData',
+            'saveAssessmentItemExemptions',
+            'classCustomFields', //POCOR-8538,
+            'ImportInstitutions', // POCOR-8683
+            'importInstitutions', // POCOR-8683
+            'checkConfigurationForExternalSearch',
+            'studentCustomFields',
+            'staffCustomFields'
+        ];
+
+        $furtherActions = [
+            'removeReport',
+            'downloadFailed',
+            'downloadPassed'
+        ];
+
+        if (in_array($action, $primaryActions) || in_array($furtherAction, $furtherActions)) {
             return true;
         }
+        // POCOR-8224 end
+
         if (($furtherAction == 'index'
                 || $furtherAction == 'add'
                 || $furtherAction == 'import'
@@ -2707,7 +3008,7 @@ class InstitutionsController extends AppController
             return true;
         }
         if (($furtherAction == 'view'
-                || $furtherAction == 'edit')
+                || $furtherAction == 'edit' || $furtherAction =='remove')
             && $action == 'Institutions'
             && $plugin == 'Institution'
             && $controller == 'Institutions') {
@@ -2716,6 +3017,14 @@ class InstitutionsController extends AppController
         if ($furtherAction == 'image' || $furtherAction == 'download') {
             return true;
         }
+        // POCOR-8683 start
+        if (($furtherAction == 'add'
+                || $furtherAction == 'template'
+                ||  $furtherAction == 'results')
+            && $action == 'ComponentAction') {
+            return true;
+        }
+        // POCOR-8683 end
         if ($furtherAction == 'add'
             && $action == 'ImportInstitutions') {
             return true;
@@ -2723,6 +3032,14 @@ class InstitutionsController extends AppController
         if ($furtherAction == 'ajaxInstitutionsAutocomplete') {
             return true;
         }
+        // POCOR-7799 start
+        if ($furtherAction == 'downloadPassed' ) {
+            return true;
+        }
+        if ($furtherAction == 'downloadFailed') {
+            return true;
+        }
+        // POCOR-7799 end
 //        $this->log(print_r($request,true), debug);
         return false;
     }
@@ -2810,7 +3127,7 @@ class InstitutionsController extends AppController
     function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
-
+        $alias = $model->getAlias();
         if ($isInstitutionIndex) {
             return;
         }
@@ -2837,7 +3154,7 @@ class InstitutionsController extends AppController
         }
         $isDownload = $action == 'downloadFile' ? true : false;
 
-        $alias = $model->alias;
+
         $humanTitle = __(Inflector::humanize(Inflector::underscore($alias)));
         //POCOR-8333 starts
         if ($alias == 'StudentHistories') {
@@ -2866,7 +3183,7 @@ class InstitutionsController extends AppController
             'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
         ];
 
-        if (array_key_exists($alias, $studentModels)) {
+        if (isset($studentModels[$alias])) {
             $studentID = $this->getStudentID(__FUNCTION__ . __LINE__);
             $Students = TableRegistry::getTableLocator()->get('Security.Users');
 
@@ -3064,7 +3381,19 @@ class InstitutionsController extends AppController
                 } elseif (in_array($alias, ['FeederOutgoingInstitutions'])) {
                     $params = [];
                     $params[$model->aliasField('feeder_institution_id')] = $institutionID;
-                    $exists = $model->exists($params);
+
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] == 'add') {//POCOR-8691
+                        $exists = true;
+                    } else {
+                        $exists = $model->exists($params);
+                    }
+                }elseif (in_array($alias, ['InstitutionAssociations'])) { //POCOR-8556
+                    $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+                    $activeInstitution = $this->Institutions->get($institutionId);
+                    $institutionName = $activeInstitution->name;
+                    $header = $institutionName.''.$header;
+                } elseif (in_array($alias, ['InstitutionAttachments'])) { //POCOR-8695
+                    $exists = true;
                 } else {
                     $params = [];
                     $checkExists = function ($model, $params) {
@@ -3093,7 +3422,9 @@ class InstitutionsController extends AppController
 
                 // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                 if (!$exists && !$isDownload) {
-                    $this->Alert->warning('general.notExists');
+                    if(isset($this->request->getParam('pass')['0']) && $this->request->getParam('pass')['0'] != 'add') {//POCOR-8691
+                        $this->Alert->info('general.notExists');//POCOR-8691
+                    }
                     //                    die('Entity of ' . $alias . ' with shown params ' . print_r($params, true) . 'does not exist');
                     //                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                 }
@@ -3299,10 +3630,33 @@ class InstitutionsController extends AppController
 
         if (!$this->AccessControl->isAdmin()) {
             $userId = $this->Auth->user('id');
-            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionID);
+            $roles = self::getDynamicTableInstance('Institution.Institutions')->getInstitutionRoles($userId, $institutionID);
+            //POCOR-8827 start
+            $roles = array_values($roles);
+            $roles = $roles[0];
             $isActive = $Institutions->isActive($institutionID);
             if ($isActive) {
-                $this->set('haveProfilePermission', $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles));
+                $havePermissionToViewCompleteness = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()              
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityFunctions.name' => 'Institution Profile Completeness',
+                    'SecurityRoleFunctions.security_role_id IS'=> $roles,
+                    'SecurityRoleFunctions._view' => 1,
+                ])
+                ->toArray();
+                if(!empty($havePermissionToViewCompleteness)){
+                    $havePermissionToViewCompleteness = true;
+                }else{
+                     $havePermissionToViewCompleteness = false;
+                }
+                //$this->set('haveProfilePermission', $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles));
+                $this->set('haveProfilePermission', $havePermissionToViewCompleteness);
+                //POCOR-8827 end
             } else {
                 $this->set('haveProfilePermission', false);
             }
@@ -4073,7 +4427,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Shifts
-        $institutionShifts = TableRegistry::getTableLocator()->get('institution_shifts');
+        $institutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
         $institutionShiftsData = $institutionShifts->find()
             ->select([
                 'created' => 'institution_shifts.created',
@@ -4915,14 +5269,19 @@ class InstitutionsController extends AppController
         $academic_periods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academic_periods_result = $academic_periods
             ->find()
-            ->select(['id', 'name', 'current'])
+            ->select(['id', 'name', 'current','start_date','end_date', 'start_year', 'end_year'])//POCOR-8434
             ->where(['code !=' => 'All', 'visible' => 1])
             ->order([$academic_periods->aliasField('id DESC')])
             ->toArray();
         foreach ($academic_periods_result as $result) {
             $result_array[] = array("id" => $result['id'],
                 "name" => $result['name'],
-                "current" => $result['current']);
+                "current" => $result['current'],
+                "start_date" => $result['start_date'],//POCOR-8434
+                "end_date" => $result['end_date'],//POCOR-8434
+                "start_year" => $result['start_year'],//POCOR-8434
+                "end_year" => $result['end_year']//POCOR-8434
+            );
         }
         echo json_encode($result_array);
         die;
@@ -5296,7 +5655,7 @@ class InstitutionsController extends AppController
     /**
      * Retrieves institution positions based on the request data. POCOR-8231
      *
-     * @return void
+
      * @throws \Exception If there is an error in decoding the request data
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
@@ -5384,7 +5743,7 @@ class InstitutionsController extends AppController
 //        Log::debug('$expectedStaffStatuses');
 //        Log::debug(print_r($expectedStaffStatuses, true));
 
-        if (!empty($expectedStaffStatuses)) {
+        if (!empty($expectedStaffStatuses && !empty($staffUserPriId))) {//POCOR-8613
             $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id') . ' NOT IN '] = $expectedStaffStatuses;
         }
 
@@ -5477,7 +5836,7 @@ class InstitutionsController extends AppController
         $alreadyAssignedStaffs = $StaffTable->find()->select([
             'institution_position_id' => $StaffTable->aliasField('institution_position_id'),
             'status_id' => $institutionPositionsTable->aliasField('status_id'),
-            'staff_position_title_id' => $institutionPositionsTable->aliasField('staff_position_title_id')
+            'staff_position_title_id' => $institutionPositionsTable->aliasField('staff_position_title_id')//POCOR-8613
         ])->innerJoin([$institutionPositionsTable->getAlias() => $institutionPositionsTable->getTable()], [
             $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
         ])->where([
@@ -5515,6 +5874,7 @@ class InstitutionsController extends AppController
                     'id' => 'Positions.id',
                     'institution_id' => 'Positions.institution_id',
                     'status_id' => 'Positions.status_id',
+                    'position_no' => 'Positions.position_no',
                     'security_role_id' => 'SecurityRoles.id',
                     'security_role_name' => 'SecurityRoles.name',
                     'staff_position_tytle_id' => 'StaffPositionTitles.id',
@@ -5562,7 +5922,8 @@ class InstitutionsController extends AppController
             ->contain(['Users'])
             ->where([
                 $StaffTable->aliasField('institution_id') => $institutionId,
-                'Users.openemis_no' => $openemisNo
+                'Users.openemis_no' => $openemisNo,
+                 $StaffTable->aliasField('end_date') . ' IS NULL'
             ])
             ->disableHydration();
 
@@ -5586,7 +5947,7 @@ class InstitutionsController extends AppController
         $options = [];
         foreach ($staffPositionsOptions as $key => $position) {
 //        Log::debug(print_r($position, true));
-            $name = $position['position_name'];
+            $name = $position['position_no'] . ' - ' . $position['position_name'];
             $type = $types[$position['type']] ? $types[$position['type']] : "";
             $options[] = [
                 'value' => $position['id'],
@@ -5680,7 +6041,11 @@ class InstitutionsController extends AppController
             ->where(['id' => $academicPeriodId])
             ->toArray();
         foreach ($academic_periods_result as $result) {
-            $result_array[] = array("id" => $result['id'], "name" => $result['name'], "start_date" => date('Y-m-d', strtotime($result['start_date'])), "start_year" => $result['start_year'], "end_date" => date('Y-m-d', strtotime($result['end_date'])), "end_year" => $result['end_year']);
+            $result_array[] = array("id" => $result['id'], "name" => $result['name'],
+                "start_date" => date('Y-m-d', strtotime($result['start_date'])),
+                "start_year" => $result['start_year'] ?? date('Y', strtotime($result['start_date'])),
+                "end_date" => date('Y-m-d', strtotime($result['end_date'])),
+                "end_year" => $result['end_date'] ? ($result['end_year'] ?? date('Y', strtotime($result['end_date']))) : null);
         }
         echo json_encode($result_array);
         die;
@@ -5717,7 +6082,7 @@ class InstitutionsController extends AppController
 
         $sections = $this->getSections($tables["{$prefix}CustomForms"], $tables["{$prefix}CustomFormsFields"], $customModuleId, $prefix);
 
-        $fieldsArr = $this->getFieldsData($sections, $tables, $studentId, ['COORDINATES', 'TABLE'], $prefix);
+        $fieldsArr = $this->getFieldsData($sections, $tables, $studentId, ['COORDINATES', 'TABLE'], $prefix, $customModuleId); // POCOR-8917
         foreach ($fieldsArr as &$item) {
             $item[$this->getPrefixedFieldName($prefix, 'custom_form_id')] = $item['custom_form_id'];
             $item[$this->getPrefixedFieldName($prefix, 'custom_field_id')] = $item['custom_field_id'];
@@ -5729,15 +6094,66 @@ class InstitutionsController extends AppController
         die;
     }
 
+    /**
+     * POCOR-8538
+     * @return void
+     * @throws Exception
+     */
+    public
+    function classCustomFields()
+    {
+        $this->autoRender = false;
+        $requestData = $this->getRequestData();
+        $prefix = 'InstitutionClasses';
+        $tables = $this->getTables($prefix);
+        $customModuleId = $this->getCustomModuleId('Institution > Classes');
+        $sections = $this->getSections($tables["{$prefix}CustomForms"], $tables["{$prefix}CustomFormsFields"], $customModuleId, $prefix);
+        $classId = $this->getValue($requestData, 'class_id', 0) ?? 0;
+        $fieldsArr = $this->getFieldsData($sections, $tables, $classId, ['COORDINATES', 'TABLE'], $prefix, $customModuleId);
+
+        foreach ($fieldsArr as &$item) {
+
+            $item[$this->getPrefixedFieldName($prefix, 'custom_form_id')] = $item['custom_form_id'];
+            $item[$this->getPrefixedFieldName($prefix, 'custom_field_id')] = $item['custom_field_id'];
+            if($item['section'] === ""){
+                $item['section'] = __('Additional Information');
+            }
+            if(empty($item['section'])){
+                $item['section'] = __('Additional Information');
+            }
+            if($item['section'] === null){
+                $item['section'] = __('Additional Information');
+            }
+        }
+        unset($item); // Unset reference to avoid potential issues
+
+        echo json_encode($fieldsArr);
+        die;
+    }
+
     private function getTables($prefix)
     {
+        //POCOR-8538 start
+
+        if ($prefix != "InstitutionClasses") {
+            return [
+                "{$prefix}CustomForms" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomForms"),
+                "{$prefix}CustomFormsFields" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomFormsFields"),
+                "{$prefix}CustomFields" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomFields"),
+                "{$prefix}CustomFieldOptions" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomFieldOptions"),
+                "{$prefix}CustomFieldValues" => self::getDynamicTableInstance("{$prefix}CustomField.{$prefix}CustomFieldValues"),
+            ];
+        }
+        $overallPrefix = "Institution";
         return [
-            "{$prefix}CustomForms" => TableRegistry::getTableLocator()->get("{$prefix}CustomField.{$prefix}CustomForms"),
-            "{$prefix}CustomFormsFields" => TableRegistry::getTableLocator()->get("{$prefix}CustomField.{$prefix}CustomFormsFields"),
-            "{$prefix}CustomFields" => TableRegistry::getTableLocator()->get("{$prefix}CustomField.{$prefix}CustomFields"),
-            "{$prefix}CustomFieldOptions" => TableRegistry::getTableLocator()->get("{$prefix}CustomField.{$prefix}CustomFieldOptions"),
-            "{$prefix}CustomFieldValues" => TableRegistry::getTableLocator()->get("{$prefix}CustomField.{$prefix}CustomFieldValues"),
+            "{$prefix}CustomForms" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$overallPrefix}CustomForms"),
+            "{$prefix}CustomFormsFields" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$overallPrefix}CustomFormsFields"),
+            "{$prefix}CustomFields" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$overallPrefix}CustomFields"),
+            "{$prefix}CustomFieldOptions" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$overallPrefix}CustomFieldOptions"),
+            "{$prefix}CustomFieldValues" => self::getDynamicTableInstance("{$overallPrefix}CustomField.{$prefix}CustomFieldValues"),
         ];
+        //POCOR-8538 end
+
     }
 
     private function getCustomModuleId($moduleCode)
@@ -5772,64 +6188,110 @@ class InstitutionsController extends AppController
     private function getPrefixedFieldName($prefix, $fieldName)
     {
         $_prefix = strtolower($prefix);
+        //POCOR-8538 start
+        if($prefix == "InstitutionClasses"){
+            $_prefix = "institution";
+        }
+        //POCOR-8538 end
         return "{$_prefix}_{$fieldName}";
     }
 
-    private function getFieldsData($sections, $tables, $entityId, $excludeFieldTypes, $prefix)
+    //POCOR-8538 start
+    private function getFieldsData($sections,
+                                   $tables,
+                                   $entityId,
+                                   $excludeFieldTypes,
+                                   $prefix,
+                                   $customModuleId)
     {
         $fieldsArr = [];
         foreach ($sections as $section) {
-            $fields = $this->getCustomFields($tables["{$prefix}CustomFormsFields"], $tables["{$prefix}CustomFields"], $section->section, $excludeFieldTypes, $prefix);
+            $fields = $this->getCustomFields(
+                $tables["{$prefix}CustomFormsFields"],
+                $tables["{$prefix}CustomFields"],
+                $section->section,
+                $excludeFieldTypes,
+                $prefix,
+                $tables["{$prefix}CustomForms"],
+                $customModuleId);
             foreach ($fields as $field) {
-                $fieldData = $this->getFieldData($field, $tables["{$prefix}CustomFieldOptions"], $tables["{$prefix}CustomFieldValues"], $entityId, $prefix);
+                $fieldData = $this->getFieldData($field,
+                    $tables["{$prefix}CustomFieldOptions"],
+                    $tables["{$prefix}CustomFieldValues"],
+                    $entityId,
+                    $prefix);
+
                 $fieldsArr[] = $fieldData;
             }
         }
         return $fieldsArr;
     }
 
-    private function getCustomFields($customFormsFieldsTable, $customFieldsTable, $section, $excludeFieldTypes, $prefix)
+    private function getCustomFields($customFormsFieldsTable,
+                                     $customFieldsTable,
+                                     $section,
+                                     $excludeFieldTypes,
+                                     $prefix,
+                                     $customFormsTable,
+                                     $customModuleId)
     {
         $result = [];
         if ($section) {
-            $result = $customFormsFieldsTable->find()
-                ->select([
-                    'custom_form_id' => $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_form_id')),
-                    'custom_field_id' => $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_field_id')),
-                    'section' => $customFormsFieldsTable->aliasField('section'),
-                    'name' => $customFormsFieldsTable->aliasField('name'),
-                    'field_order' => $customFormsFieldsTable->aliasField('order'), // Change alias here
-                    'description' => $customFieldsTable->aliasField('description'),
-                    'field_type' => $customFieldsTable->aliasField('field_type'),
-                    'is_mandatory' => $customFieldsTable->aliasField('is_mandatory'),
-                    'is_unique' => $customFieldsTable->aliasField('is_unique'),
-                    'params' => $customFieldsTable->aliasField('params'),
-                ])
-                ->leftJoin([$customFieldsTable->getAlias() => $customFieldsTable->getTable()], [
-                    $customFieldsTable->aliasField('id =') . $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_field_id')),
-                ])
-                ->where([
-                    $customFormsFieldsTable->aliasField('section') => $section,
-                    $customFieldsTable->aliasField('field_type NOT IN') => $excludeFieldTypes,
-                ])
-                ->order([$customFormsFieldsTable->aliasField('order') => 'ASC'])
-                ->toArray();
-
-            // Change 'field_order' back to 'order' in the resulting array
-            $result = array_map(function ($item) {
-                $item['order'] = $item['field_order'];
-                unset($item['field_order']);
-                return $item;
-            }, $result);
+            $where = [
+                $customFormsTable->aliasField('custom_module_id') => $customModuleId,
+                $customFormsFieldsTable->aliasField('section') => $section,
+                $customFieldsTable->aliasField('field_type NOT IN') => $excludeFieldTypes,
+            ];
+        } else {
+            $where = [
+                $customFormsTable->aliasField('custom_module_id') => $customModuleId,
+                $customFormsFieldsTable->aliasField('section') => "",
+                $customFieldsTable->aliasField('field_type NOT IN') => $excludeFieldTypes,
+            ];
         }
+        $result = $customFormsFieldsTable->find()
+            ->select([
+                'custom_form_id' => $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_form_id')),
+                'custom_field_id' => $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_field_id')),
+                'section' => $customFormsFieldsTable->aliasField('section'),
+                'name' => $customFormsFieldsTable->aliasField('name'),
+                'field_order' => $customFormsFieldsTable->aliasField('order'), // Change alias here
+                'description' => $customFieldsTable->aliasField('description'),
+                'field_type' => $customFieldsTable->aliasField('field_type'),
+                'is_mandatory' => $customFieldsTable->aliasField('is_mandatory'),
+                'is_unique' => $customFieldsTable->aliasField('is_unique'),
+                'params' => $customFieldsTable->aliasField('params'),
+            ])
+            ->leftJoin([$customFieldsTable->getAlias() => $customFieldsTable->getTable()], [
+                $customFieldsTable->aliasField('id =') . $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_field_id')),
+            ])
+            ->innerJoin([$customFormsTable->getAlias() => $customFormsTable->getTable()], [
+                $customFormsTable->aliasField('id =') . $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_form_id')),
+            ])
+            ->where($where)
+            ->order([$customFormsFieldsTable->aliasField('order') => 'ASC']);
+//        Log::debug($result->sql());
+        $result = $result->toArray();
+
+        // Change 'field_order' back to 'order' in the resulting array
+        $result = array_map(function ($item) {
+            $item['order'] = $item['field_order'];
+            unset($item['field_order']);
+            return $item;
+        }, $result);
+
         return $result;
     }
+    //POCOR-8538 end
+
 
 
 
 
     private function getFieldData($field, $customFieldOptionsTable, $customFieldValuesTable, $entityId, $prefix)
     {
+        //POCOR-8538 start
+        $fieldValues = $this->getFieldValues($field, $customFieldValuesTable, $entityId, $prefix);
         $fieldData = [
             'custom_form_id' => $field->custom_form_id,
             'custom_field_id' => $field->custom_field_id,
@@ -5841,8 +6303,9 @@ class InstitutionsController extends AppController
             'is_mandatory' => $field->is_mandatory,
             'is_unique' => $field->is_unique,
             'params' => $field->params,
-            'values' => $this->getFieldValues($field, $customFieldValuesTable, $entityId, $prefix),
+            'values' => $fieldValues,
         ];
+        //POCOR-8538 end
 
         if (in_array($field->field_type, ['DROPDOWN', 'CHECKBOX'])) {
             $fieldData['option'] = $this->getFieldOptions($field->custom_field_id, $customFieldOptionsTable, $prefix);
@@ -5856,16 +6319,34 @@ class InstitutionsController extends AppController
         if (empty($entityId)) {
             return '';
         }
+        //POCOR-8538 end
+        $fieldNameId = $this->getPrefixedFieldName($prefix, 'id');
+        if ($prefix == 'InstitutionClasses') {
+            $fieldNameId = 'institution_class_id';
+        }
+        $prefixedFieldNameId = $this->getPrefixedFieldName($prefix, 'custom_field_id');
+        $where = [
+            $prefixedFieldNameId => $field->custom_field_id,
+            $fieldNameId => $entityId,
+        ];
+        $select = [
+            'text_value',
+            'number_value',
+            'decimal_value',
+            'textarea_value',
+            'date_value',
+            'time_value',
+            $prefixedFieldNameId,
+            $fieldNameId
+        ];
+
 
         $fieldValues = $customFieldValuesTable->find()
-            ->select([
-                'text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', $this->getPrefixedFieldName($prefix, 'custom_field_id'), $this->getPrefixedFieldName($prefix, 'id')
-            ])
-            ->where([
-                $this->getPrefixedFieldName($prefix, 'custom_field_id') => $field->custom_field_id,
-                $this->getPrefixedFieldName($prefix, 'id') => $entityId,
-            ])
-            ->toArray();
+            ->select($select)
+            ->where($where);
+
+        $fieldValues = $fieldValues->toArray();
+        //POCOR-8538 end
 
         if (empty($fieldValues)) {
             return '';
@@ -5900,10 +6381,17 @@ class InstitutionsController extends AppController
 
     private function getFieldOptions($fieldId, $customFieldOptionsTable, $prefix)
     {
-        $options = $customFieldOptionsTable->find()
-            ->select(['option_id' => 'id', 'option_name' => 'name', 'is_default', 'visible', 'option_order' => 'order'])
-            ->where([$this->getPrefixedFieldName($prefix, 'custom_field_id') => $fieldId])
-            ->toArray();
+        $prefixedFieldName = $this->getPrefixedFieldName($prefix, 'custom_field_id');
+        $optionsQuery = $customFieldOptionsTable->find()
+            ->select(['option_id' => $customFieldOptionsTable->aliasField('id'),
+                'option_name' => $customFieldOptionsTable->aliasField('name'),
+                'is_default' => $customFieldOptionsTable->aliasField('is_default'),
+                'visible' => $customFieldOptionsTable->aliasField('visible'),
+                'option_order' => $customFieldOptionsTable->aliasField('order')])
+            ->where([$customFieldOptionsTable->aliasField($prefixedFieldName) => $fieldId]);
+//        Log::debug(print_r(['$fieldId' => $fieldId], true));
+//        Log::debug(print_r(['sql' => $optionsQuery->sql()], true));
+        $options = $optionsQuery->toArray();
 
         return array_map(function ($option) {
             return [
@@ -5965,7 +6453,7 @@ class InstitutionsController extends AppController
 
         $sections = $this->getSections($tables["{$prefix}CustomForms"], $tables["{$prefix}CustomFormsFields"], $customModuleId, $prefix);
 //        Log::debug(print_r($sections, true));
-        $fieldsArr = $this->getFieldsData($sections, $tables, $staffId, ['COORDINATES', 'TABLE'], $prefix);
+        $fieldsArr = $this->getFieldsData($sections, $tables, $staffId, ['COORDINATES', 'TABLE'], $prefix, $customModuleId); // POCOR-8917
 //        Log::debug(print_r($fieldsArr, true));
         foreach ($fieldsArr as &$item) {
             $item[$this->getPrefixedFieldName($prefix, 'custom_form_id')] = $item['custom_form_id'];
@@ -5984,9 +6472,52 @@ class InstitutionsController extends AppController
      * @return \Cake\Http\Response|null
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
+    public function saveDirectoryData()
+    {
+
+        if($this->savingDirectoryData > 0) {
+            return;
+        }
+        $this->savingDirectoryData = $this->savingDirectoryData + 1;
+        $requestData = $this->getRequestData();
+        $userType = $requestData['user_type'];
+
+        if($userType === self::STUDENT){
+            return $this->saveStudentData();
+        }
+        if($userType === self::GUARDIAN){
+            return $this->saveGuardianData();
+        }
+        if($userType === self::OTHER){
+            return $this->saveOtherData();
+        }
+        if($userType === self::STAFF){
+            return $this->saveStaffData();
+        }
+        if (empty($requestData)) {
+            return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
+        }
+        return;
+    }
+
+    /**
+     * Saves student data. POCOR-8231
+     *
+     * @return \Cake\Http\Response|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function saveStudentData()
     {
+
+        if($this->savingStudentData > 0) {
+            self::debug('>0');
+            return;
+        }
+        $this->savingStudentData = $this->savingStudentData + 1;
+
         $requestData = $this->getRequestData();
+//        Log::debug(__FUNCTION__);
+//        self::debug($requestData);
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
@@ -5996,7 +6527,7 @@ class InstitutionsController extends AppController
         if ($requestData['is_diff_school'] == 1) {
             $userRecordId = $requestData['student_id'];
             $result = $this->handleStudentTransfer($requestData, $userRecordId, $userId);
-            return $this->sendJsonResponse(['message' => 'success'], 200);
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
         $securityUserResult = $this->saveSecurityUser($studentData);
         if ($securityUserResult) {
@@ -6005,14 +6536,61 @@ class InstitutionsController extends AppController
             $this->handleIdentities($requestData, $userRecordId, $userId);
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
-            if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {
-                $this->handleInstitutionData($requestData, $userRecordId, $userId);
-            }
+            //if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {//POCOR-8434
+                $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
+            //}//POCOR-8434
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
-            return $this->sendJsonResponse(['message' => 'success'], 200);
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId, 'saved_student' => $saved_student], 200);
         } else {
 //            Log::debug(print_r($studentData,true));
+            return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
+            }
+    }
+
+    /**
+     * Saves staff data. POCOR-8231
+     *
+     * @return \Cake\Http\Response|null
+     * @throws Exception
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function saveStaffData()
+    {
+
+        if($this->savingStaffData > 0) {
+            return;
+        }
+        $this->savingStaffData = $this->savingStaffData + 1;
+
+        $requestData = $this->getRequestData();
+        if (empty($requestData)) {
+            return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
+        }
+//        Log::debug(print_r($requestData, true));
+        $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+        $staffData = $this->extractSecurityUserData($requestData, $userId, false,true);
+
+        if ($requestData['is_diff_school'] == 1) {
+            $userRecordId = $requestData['staff_id'];
+            $result = $this->handleStaffTransfer($requestData, $userRecordId, $userId);
+            return $this->sendJsonResponse(['message' => 'success', 'staff' => $result], 200);
+        }
+        $securityUserResult = $this->saveSecurityUser($staffData);
+        if ($securityUserResult) {
+            $userRecordId = $securityUserResult->id;
+            $this->handleNationalities($requestData, $userRecordId, $userId);
+            $this->handleIdentities($requestData, $userRecordId, $userId);
+            $this->handleContacts($requestData, $userRecordId, $userId);
+            $this->handleCustomFields('staff', $requestData, $userRecordId, $userId);
+            $staff = $this->handleStaffInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
+            $this->handleShifts($requestData, $userRecordId);
+            $this->triggerWebhooks($userRecordId, $requestData);
+//            Log::debug(print_r($staff,true)); // POCOR-8532
+//            Log::debug(print_r($staffData,true)); // POCOR-8532
+            return $this->sendJsonResponse(['message' => 'success', 'staff' => $staff->toArray()], 200);
+        } else {
+//            Log::debug(print_r($staffData,true));
             return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
         }
     }
@@ -6071,9 +6649,9 @@ class InstitutionsController extends AppController
      */
     private function saveSecurityUser($userData)
     {
-        $securityUsers = self::getDynamicTableInstance('security_users');
+        $securityUsers = self::getDynamicTableInstance('User.Users');//POCOR-8706
         $checkStudentExist = $securityUsers->find()->where(['openemis_no' => $userData['openemis_no']])->first();
-
+//        self::debug($userData);
         if ($checkStudentExist) {
             $userData['id'] = $checkStudentExist->id;
             unset($userData['username'], $userData['password']);
@@ -6081,10 +6659,14 @@ class InstitutionsController extends AppController
         } else {
             $entity = $securityUsers->newEntity($userData);
         }
+        //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
+        $securityUsers->addBehavior('User.MoodleCreateUser');
 
         try {
             return $securityUsers->save($entity);
         } catch (\Exception $e) {
+            Log::debug(__FUNCTION__);
+
             Log::debug('Error: ' . $e->getMessage());
 //            Log::debug($entity);
             return false;
@@ -6142,6 +6724,8 @@ class InstitutionsController extends AppController
         try {
             return $nationalitiesTbl->save($entityNationalityData);
         } catch (\Exception $e) {
+            Log::debug(__FUNCTION__);
+
             Log::debug('Error  create nationality1: ' . $e->getMessage());
             return false;
         }
@@ -6187,6 +6771,8 @@ class InstitutionsController extends AppController
             try {
                 $userNationalities->save($entityNationalData);
             } catch (\Exception $e) {
+                Log::debug(__FUNCTION__);
+
                 Log::debug('Error create nationality: ' . $e->getMessage());
             }
         }
@@ -6230,6 +6816,8 @@ class InstitutionsController extends AppController
                     try {
                         return $userIdentities->save($entityIdentitiesData, ['associated' => false]);
                     } catch (\Exception $e) {
+                        Log::debug(__FUNCTION__);
+
                         Log::debug('Error: ' . $e->getMessage());
                         return $e;
                     }
@@ -6306,6 +6894,8 @@ class InstitutionsController extends AppController
             try {
                 return $userContacts->save($presentContact);
             } catch (\Exception $e) {
+                Log::debug(__FUNCTION__);
+
                 Log::debug('Error: ' . $e->getMessage());
                 return $e;
             }
@@ -6369,12 +6959,21 @@ class InstitutionsController extends AppController
 
                 // Only create and save the entity if at least one relevant field has a value
                 if ($hasValue) {
+                    if (isset($fieldData['custom_field_id'])) {
+                        // Copy the value from 'custom_field_id' to 'student_custom_field_id'
+                        $fieldData[$userType . '_custom_field_id'] = $fieldData['custom_field_id'];
+                        // Remove the old 'custom_field_id' key
+                        unset($fieldData['custom_field_id']);
+                    }
+
 //                    Log::debug(print_r($fieldData, true));
                     $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
                     try {
                         $cv[] = $customFieldValuesTable->save($fieldEntity);
 
                     } catch (\Exception $e) {
+                        Log::debug(__FUNCTION__);
+
                         Log::debug('Error: ' . $e->getMessage());
                     }
                 }
@@ -6412,7 +7011,7 @@ class InstitutionsController extends AppController
      * @param int $userId
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function handleInstitutionData(array $requestData, $userRecordId, $userId)
+    private function handleStudentInstitutionData(array $requestData, $userRecordId, $userId)
     {
         $institutionId = $requestData['institution_id'] ?? null;
         $institutionClassId = $requestData['institution_class_id'] ?? null;
@@ -6420,31 +7019,158 @@ class InstitutionsController extends AppController
         $academicPeriodId = $requestData['academic_period_id'] ?? null;
         $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
         $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
+        //POCOR-8434 starts
+        $studentAdmissionStatus = !empty($requestData['student_admission_status']) ? $requestData['student_admission_status'] : null;//POCOR-7716
+        $studentAdmissionStatusValue = !empty($requestData['student_admission_status_value']) ? $requestData['student_admission_status_value'] : null;//POCOR-7716
+        //POCOR-8434 ends
+        $saved_student = [];
+        if ($studentAdmissionStatusValue == 0 || strtolower($studentAdmissionStatus) == "enrolled") {//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
+            if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId) && !empty($startDate) && !empty($endDate)) {
+                $institutionStudents = self::getDynamicTableInstance('institution_students');
+                $entityStudentsData = [
+                    'id' => Text::uuid(),
+                    'student_status_id' => $requestData['student_status_id'] ?? null,
+                    'student_id' => $userRecordId,
+                    'education_grade_id' => $educationGradeId,
+                    'academic_period_id' => $academicPeriodId,
+                    'start_date' => $startDate,
+                    'start_year' => date('Y', strtotime($startDate)),
+                    'end_date' => $endDate,
+                    'end_year' => date('Y', strtotime($endDate)),
+                    'institution_id' => $institutionId,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                $entityStudentsData = $institutionStudents->newEntity($entityStudentsData);
+                try {
+                    $saved_student['institution_student'] = $institutionStudents->save($entityStudentsData)->toArray();
+                } catch (\Exception $exception) {
+                    Log::debug(__FUNCTION__);
 
-        if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId) && !empty($startDate) && !empty($endDate)) {
-            $institutionStudents = self::getDynamicTableInstance('institution_students');
-            $entityStudentsData = [
-                'id' => Text::uuid(),
-                'student_status_id' => $requestData['student_status_id'] ?? null,
-                'student_id' => $userRecordId,
-                'education_grade_id' => $educationGradeId,
-                'academic_period_id' => $academicPeriodId,
-                'start_date' => $startDate,
-                'start_year' => date('Y', strtotime($startDate)),
-                'end_date' => $endDate,
-                'end_year' => date('Y', strtotime($endDate)),
-                'institution_id' => $institutionId,
-                'created_user_id' => $userId,
-                'created' => date('Y-m-d H:i:s')
-            ];
-            $entityStudentsData = $institutionStudents->newEntity($entityStudentsData);
-            try {
-                $institutionStudents->save($entityStudentsData);
-            } catch (\Exception $exception) {
-                Log::debug('Error: ' . $exception->getMessage());
+                    Log::debug('Error: ' . $exception->getMessage());
+                }
             }
         }
+        //POCOR-8434 starts
+        if (!empty($institutionId) && $studentAdmissionStatusValue == 0 && strtolower($studentAdmissionStatus) == "enrolled") {
+            $workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowResults = $workflows->find()
+                ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
+                ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
+                    $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                    $workflowSteps->aliasField('name') => 'Approved'
+                ])
+                ->where([
+                    $workflows->aliasField('name') => 'Student Enrolment'
+                ])
+                ->first();
+            $workflowStepId = $workflowResults->workflowSteps_id;
 
+            if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($workflowResults)) {
+                $institutionStudentEnrolment = TableRegistry::get('Institution.StudentEnrolment');
+                $entityEnrolmentData = [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'student_id' => $userRecordId,
+                    'status_id' => $workflowStepId,
+                    'assignee_id' => $this->Auth->user('id'),
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_class_id' => $institutionClassId,
+                    'test_score' => '',
+                    'interview_score' => '',
+                    'comment' => '',
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                //save in institution_student_enrolment table
+                $entityEnrolmentData = $institutionStudentEnrolment->newEntity($entityEnrolmentData);
+                $InstitutionEnrolmentResult = $institutionStudentEnrolment->save($entityEnrolmentData);
+                unset($entityEnrolmentData);
+                unset($InstitutionEnrolmentResult);
+            }
+        } else if(!empty($institutionId)) {
+            $workflowStepId = $studentAdmissionStatusValue;
+
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowStepData = $workflowStepsTable->find()->contain('Workflows')
+                ->where([
+                    $workflowStepsTable->aliasField('id') => $workflowStepId
+                    ])->first();
+
+            if($workflowStepData->workflow->name == 'Student Admission'){
+                if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
+                    $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+                    $entityAdmissionData = [
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'student_id' => $userRecordId,
+                        'status_id' => $workflowStepId,//POCOR-7716
+                        'assignee_id' => $this->Auth->user('id'), //POCOR7080
+                        'institution_id' => $institutionId,
+                        'academic_period_id' => $academicPeriodId,
+                        'education_grade_id' => $educationGradeId,
+                        'institution_class_id' => $institutionClassId,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in institution_student_admission table
+                    $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
+                    $InstitutionAdmissionResult = $institutionStudentAdmission->save($entityAdmissionData);
+                    unset($entityAdmissionData);//POCOR-7716
+                    unset($InstitutionAdmissionResult);//POCOR-7716
+                }
+            } else if($workflowStepData->workflow->name == 'Student Enrolment') {
+                if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
+                    $institutionStudentEnrolment = TableRegistry::get('Institution.StudentEnrolment');
+                    $entityEnrolmentData = [
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'student_id' => $userRecordId,
+                        'status_id' => $workflowStepId,
+                        'assignee_id' => $this->Auth->user('id'),
+                        'institution_id' => $institutionId,
+                        'academic_period_id' => $academicPeriodId,
+                        'education_grade_id' => $educationGradeId,
+                        'institution_class_id' => $institutionClassId,
+                        'test_score' => '',
+                        'interview_score' => '',
+                        'comment' => '',
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in institution_student_enrolment table
+                    $entityEnrolmentData = $institutionStudentEnrolment->newEntity($entityEnrolmentData);
+                    $InstitutionEnrolmentResult = $institutionStudentEnrolment->save($entityEnrolmentData);
+                    unset($entityEnrolmentData);
+                    unset($InstitutionEnrolmentResult);
+                }
+            }
+        }
+        //previous code commented by Abhinav
+        // $workflows = TableRegistry::get('Workflow.Workflows');
+        // $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        // $workflowResults = $workflows->find()
+        //     ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
+        //     ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
+        //         $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+        //         $workflowSteps->aliasField('name') => 'Approved'
+        //     ])
+        //     ->where([
+        //         $workflows->aliasField('name') => 'Student Admission'
+        //     ])
+        //     ->first();
+
+        //POCOR-7716 start
+        //$workflowStepId = $workflowResults->workflowSteps_id;
+        // if ($studentAdmissionStatusValue !== 0 && strtolower($studentAdmissionStatus) !== "enrolled") {
+        //     $workflowStepId = $studentAdmissionStatusValue;
+        // }
+        //POCOR-7716 end
+
+        //POCOR-8434 ends
         if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)) {
             $studentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
             $statuses = $studentStatuses->findCodeList();
@@ -6462,11 +7188,234 @@ class InstitutionsController extends AppController
             ];
             $entityClassData = $institutionClassStudents->newEntity($entityClassData);
             try {
-                $institutionClassStudents->save($entityClassData);
+                $saved_student['institution_class_student'] = $institutionClassStudents->save($entityClassData)->toArray();
             } catch (\Exception $exception) {
+                Log::debug(__FUNCTION__);
                 Log::debug('Error: ' . $exception->getMessage());
             }
+            self::assignStudentSubject($institutionClassId, $academicPeriodId, $userRecordId, $educationGradeId, $institutionId, $statuses['CURRENT'], $userId); // POCOR-8779
         }
+        if (!empty($institutionId)) {
+            self::assignStudentRoleGroup($institutionId, $userRecordId);//POCOR-8559
+        }
+
+        return $saved_student;
+    }
+
+    /**
+     * POCOR-7146
+     * POCOR-7224 refactored
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * assign Role and group to student while creating student
+     **/
+    private
+    static function assignStudentRoleGroup($institution_id, $student_id)
+    {
+        $student_role_id = self::getStudentSecurityRoleId();
+        $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
+        //check student already exist
+        $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
+        //check that the student is not in other groups
+        if (sizeof($student_security_groups) == 0) {
+            self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+            return;
+        }
+        //update user's security_group_id in security_group_users table
+        $previous_security_group_id = self::getPreviousSecurityGroupId($institution_id, $student_id);
+        //check that the student is should be transferred
+        if (in_array($previous_security_group_id, $student_security_groups)) {
+            $security_group = self::makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id);
+            return;
+        }
+        //if he/she is not transferred - create new security group
+        $security_group = self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+        return ;
+
+    }
+
+
+    /**
+     * @return int
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function getStudentSecurityRoleId(): int
+    {
+        $securityRolesTbl = self::getDynamicTableInstance('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'STUDENT',
+            ])->first();
+        $student_role_id = $securityRoles->id;
+        return $student_role_id;
+    }
+
+    // POCOR-8853
+    private
+    static function getHomeroomTeacherSecurityRoleId(): int
+    {
+        $securityRolesTbl = self::getDynamicTableInstance('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'HOMEROOM_TEACHER',
+            ])->first();
+        $security_role_id = $securityRoles->id;
+        return $security_role_id;
+    }
+
+    /**
+     * @param $institutionId
+     * @return integer
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function getInstitutionSecurityGroupId($institutionId)
+    {
+        $institutionTbl = self::getDynamicTableInstance('institutions');
+        $security_group_id = null;
+        $institutions = $institutionTbl->find()
+            ->where([
+                $institutionTbl->aliasField('id') => $institutionId
+            ])->first();
+        if (!empty($institutions)) {
+            $security_group_id = $institutions->security_group_id;
+        }
+        if ($security_group_id != null) {
+            $securityGroupInstitutionsTbl = self::getDynamicTableInstance('security_group_institutions');
+            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
+                ->where([
+                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
+                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
+                ])
+                ->first();
+            //save security group for institution
+            if (empty($securityGroupInstitutions)) {
+                $security_group_ins_data = [
+                    'security_group_id' => $security_group_id,
+                    'institution_id' => $institutionId,
+                    'created_user_id' => 1,
+                    'created' => new Time('NOW')
+                ];
+                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
+                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
+            }
+        }
+        return $security_group_id;
+    }
+
+    /**
+     * @param $student_id
+     * @param $student_role_id
+     * @return array
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function getStudentSecurityGroups($student_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = self::getDynamicTableInstance('security_group_users');
+        $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
+            ->select('security_group_id')
+            ->where([
+                $securityGroupUsersTbl->aliasField('security_user_id') => $student_id,
+                $securityGroupUsersTbl->aliasField('security_role_id') => $student_role_id
+            ])
+            ->extract('security_group_id')
+            ->toArray();
+        return $countSecurityGroupStudent;
+    }
+
+    /**
+     * @param $student_id
+     * @param $security_group_id
+     * @param $student_role_id
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
+    {
+        $id = Text::uuid();
+        $securityGroupUsersTbl = self::getDynamicTableInstance('security_group_users');
+        $security_group_data = [
+            'id' => $id,
+            'security_group_id' => $security_group_id,
+            'security_user_id' => $student_id,
+            'security_role_id' => $student_role_id,
+            'created_user_id' => 1,
+            'created' => new Time('NOW')
+        ];
+        $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
+        $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
+        return $newEntity;
+    }
+
+    /**
+     * @param $institution_id
+     * @param $student_id
+     * @param $institutionTbl
+     * @return mixed
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function getPreviousSecurityGroupId($institution_id, $student_id)
+    {
+        $previous_security_group_id = 0;
+        $institutionTbl = self::getDynamicTableInstance('institutions');
+        $InstitutionStudentsTbl = self::getDynamicTableInstance('institution_students');
+        $TransfersTbl = self::getDynamicTableInstance('institution_student_transfers');
+        $StudentTransfers = $InstitutionStudentsTbl
+            ->find()
+            ->select([
+                $InstitutionStudentsTbl->aliasField('student_id'),
+                $TransfersTbl->aliasField('institution_id'),
+                $TransfersTbl->aliasField('previous_institution_id')
+            ])
+            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+                [
+                    $TransfersTbl->aliasField('student_id') . '=' . $student_id,
+                    $TransfersTbl->aliasField('institution_id') => $institution_id
+                ]
+            )
+            ->where([
+                $InstitutionStudentsTbl->aliasField('student_id') => $student_id,
+                $InstitutionStudentsTbl->aliasField('institution_id') => $institution_id,
+                $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
+            ])
+            ->first();
+        if (!empty($StudentTransfers)) {
+            if (!empty($StudentTransfers->institution_student_transfers['previous_institution_id'])) {
+                $PreviousInstitutions = $institutionTbl->find()
+                    ->where([
+                        $institutionTbl->aliasField('id') => $StudentTransfers->institution_student_transfers['previous_institution_id']
+                    ])
+                    ->first();
+                $previous_security_group_id = $PreviousInstitutions->security_group_id;
+            }
+        }
+        return $previous_security_group_id;
+    }
+
+    /**
+     * @param $student_id
+     * @param $security_group_id
+     * @param $previous_security_group_id
+     * @param $student_role_id
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private
+    static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = self::getDynamicTableInstance('security_group_users');
+        $securityGroupUsersTbl->updateAll(
+            [
+                'security_group_id' => $security_group_id,
+                'created' => new Time('NOW')
+            ],
+            [
+                'security_group_id' => $previous_security_group_id,
+                'security_user_id' => $student_id,
+                'security_role_id' => $student_role_id
+            ]
+        );
     }
 
     /**
@@ -6519,6 +7468,8 @@ class InstitutionsController extends AppController
 
             if ($existingTransfer) {
                 // Record already exists, handle accordingly
+                Log::debug(__FUNCTION__);
+
                 Log::debug('Student transfer record already exists.');
                 return ['error' => 'Student transfer record already exists.'];
 
@@ -6539,10 +7490,101 @@ class InstitutionsController extends AppController
                 try {
                     return $institutionStudentTransfers->save($entity1);
                 } catch (\Exception $exception) {
+                    Log::debug(__FUNCTION__);
+
                     Log::debug('Error in Transfer: ' . $exception->getMessage());
                 }
             }
         }
+    }
+
+    /**
+     * Handles staff transfer between institutions.
+     *
+     * @param array $requestData
+     * @param int $userRecordId
+     * @param int $userId
+     * @return array|null
+     */
+    private function handleStaffTransfer(array $requestData, $userRecordId, $userId)
+    {
+        if ($requestData['is_diff_school'] == 1) {
+            $institutionId = $requestData['institution_id'] ?? null;
+            $institutionPositionId = $requestData['institution_position_id'] ?? null;
+            $staffTypeId = $requestData['staff_type_id'] ?? null;
+            $previousInstitutionId = $requestData['previous_institution_id'] ?? null;
+            $previousInstitutionStaffId = $requestData['previous_institution_staff_id'] ?? "";
+            $staffTransferReasonId = $requestData['staff_transfer_reason_id'] ?? null;
+            $is_homeroom =$requestData['is_homeroom'] ?? null; // POCOR-8532
+            $fte =$requestData['fte'] ?? null; // POCOR-8532
+            if (!$previousInstitutionId) {
+                return ['error' => 'no previous_institution_id'];
+            }
+
+            $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
+            $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
+
+            $institutionStaffTransfers = self::getDynamicTableInstance('institution_staff_transfers');
+            $datatocheck = [
+                'new_start_date' => $startDate,
+                'staff_id' => $userRecordId,
+                'status_id' => $this->getWorkflowStepId('Staff Transfer - Receiving', 'Open'),
+                'new_institution_id' => $institutionId,
+                'new_institution_position_id' => $institutionPositionId,
+                'new_staff_type_id' => $staffTypeId,
+                'previous_institution_id' => $previousInstitutionId,
+//                'previous_institution_staff_id' => $previousInstitutionStaffId,
+            ];
+
+            $existingTransfer = $institutionStaffTransfers->find()
+                ->where($datatocheck)
+                ->first();
+
+            if ($existingTransfer) {
+                Log::debug(__FUNCTION__);
+                Log::debug('Staff transfer record already exists.');
+                return ['error' => 'Staff transfer record already exists.'];
+            } else {
+
+                $entityTransferData = array_merge($datatocheck, [
+                    'assignee_id' => $this->Auth->user('id'), //POCOR-7080
+                    'new_institution_position_id' => $institutionPositionId,
+                    'new_staff_type_id' => $staffTypeId,
+                    'new_FTE' => $fte ?? 1, // POCOR-8532
+                    'is_homeroom' => $is_homeroom ?? 0, // POCOR-7870
+                    'new_start_date' => $startDate,
+                    'new_end_date' => $endDate,
+                    'previous_institution_staff_id' => '',
+                    'previous_staff_type_id' => '',
+                    'previous_FTE' => '',
+                    'previous_end_date' => '',
+                    'previous_effective_date' => '',
+                    'previous_institution_staff_id' => '',
+                    'requested_date' => null,
+                    'assignee_id' => $userId,
+                    'comment' => $requestData['comment'] ?? '',
+                    'transfer_type' => 0,
+                    'all_visible' => 1,
+                    'modified_user_id' => '',
+                    'modified' => '',
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ]);
+//                Log::debug(print_r($entityTransferData, true));
+                $entity = $institutionStaffTransfers->newEntity($entityTransferData);
+                try {
+                    $result = $institutionStaffTransfers->save($entity);
+                        return $result->toArray();
+                } catch (\Exception $exception) {
+                    Log::debug(__FUNCTION__);
+
+                    Log::debug('Error in Transfer: ' . $exception->getMessage());
+                    return ['error' => 'Error in Transfer: ' . $exception->getMessage()];
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -6613,7 +7655,7 @@ class InstitutionsController extends AppController
 
     /**
      * Prepares the webhook body. returns empty string yet
-     *
+     * POCOR-8231
      * @param array $student
      * @return array
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
@@ -6626,13 +7668,174 @@ class InstitutionsController extends AppController
     }
 
     /**
-     * Saves student data. POCOR-8337
+     * Handles institution data for a staff member.
+     * POCOR-8231
+     *
+     * @param array $requestData
+     * @param int $userRecordId
+     * @param int $userId
+     * @return void
+     * @throws \Cake\ORM\Exception\PersistenceFailedException
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function handleStaffInstitutionData($requestData, $userRecordId, $userId)
+    {
+        $institutionId = $requestData['institution_id'] ?? null;
+        if (!empty($institutionId)) {
+        $institutionPositionId = $requestData['institution_position_id'] ?? null;
+            $staffTypeId = $requestData['staff_type_id'] ?? null;
+            $fte = $requestData['fte'] ?? null;
+            $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
+            $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
+            $endYear = !empty($requestData['end_date']) ? date('Y', strtotime($requestData['end_date'])) : null;
+            $staff_position_grade_id = (array_key_exists('staff_position_grade_id', $requestData)) ? $requestData['staff_position_grade_id'] : '';//POCOR-7238
+            $startYear = date('Y', strtotime($startDate));
+            $is_homeroom = (array_key_exists('is_homeroom', $requestData)) ? $requestData['is_homeroom'] : 0; //POCOR-5070
+
+            $institutionStaffs = self::getDynamicTableInstance('institution_staff');
+            $institutionPositions = self::getDynamicTableInstance('institution_positions');
+            $securityGroupUsers = self::getDynamicTableInstance('security_group_users');
+            $StaffStatuses = self::getDynamicTableInstance('Staff.StaffStatuses');
+            $statuses = $StaffStatuses->findCodeList();
+            $position = $institutionPositions->get($institutionPositionId);
+            // POCOR-8853 start
+            $securityRoleID = $this->getSecurityRoleID($position->staff_position_title_id);
+            $institution_security_group_id = $this->getInstitutionSecurityGroupId($institutionId);
+
+            if($securityRoleID){
+                $staff_security_group_id = $this->getSecurityGroupUserId($securityGroupUsers, $institution_security_group_id, $userRecordId, $userId, $securityRoleID) ?? null;
+            }
+            if($is_homeroom){
+                $homeroomSecurityRoleId = self::getHomeroomTeacherSecurityRoleId();
+                $homeroom_security_group_id = $this->getSecurityGroupUserId($securityGroupUsers, $institution_security_group_id, $userRecordId, $userId, $homeroomSecurityRoleId);
+            }
+            // POCOR-8853 end
+            $entityStaffData = [
+                'FTE' => $fte,
+                'start_date' => $startDate,
+                'start_year' => $startYear,
+                'end_date' => $endDate,
+                'end_year' => $endYear,
+                'staff_id' => $userRecordId,
+                'staff_type_id' => $staffTypeId,
+                'staff_status_id' => $statuses['ASSIGNED'],
+                'is_homeroom' => $is_homeroom, //POCOR-5070
+                'institution_id' => $institutionId,
+                'institution_position_id' => $institutionPositionId,
+                'security_group_user_id' => $staff_security_group_id, // POCOR-8853
+                'staff_position_grade_id' => $staff_position_grade_id,//POCOR-7238
+                'created_user_id' => $userId,
+                'created' => date('Y-m-d H:i:s')
+            ];
+
+            $entity = $institutionStaffs->newEntity($entityStaffData);
+            return $institutionStaffs->save($entity);
+        }
+
+    }
+    /**
+     * Retrieves or creates the security group user ID.
+     * POCOR-8231
+     *
+     * @param \Cake\ORM\Table $securityGroupUsers
+     * @param int $security_group_id // POCOR-8853 start
+     * @param int $userRecordId
+     * @param int $userId
+     * @param int $securityRoleId // POCOR-8853 start
+     * @return string|null
+     * @throws \Cake\ORM\Exception\PersistenceFailedException
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function getSecurityGroupUserId($securityGroupUsers, $security_group_id, $userRecordId, $userId, $securityRoleId)
+    {
+        $groupUser = $securityGroupUsers->find()
+            ->where([
+                'security_user_id' => $userRecordId,
+                'security_role_id' => $securityRoleId, // POCOR-8853 start
+                'security_group_id' => $security_group_id // POCOR-8853 start
+            ])
+            ->first();
+
+        if (empty($groupUser)) {
+            $groupUserData = [
+                'id' => Text::uuid(),
+                'security_group_id' => $security_group_id, // POCOR-8853 start
+                'security_user_id' => $userRecordId,
+                'security_role_id' => $securityRoleId, // POCOR-8853 start
+                'created_user_id' => $userId,
+                'created' => date('Y-m-d H:i:s')
+            ];
+            $entity = $securityGroupUsers->newEntity($groupUserData);
+            $securityGroupUsers->save($entity);
+            return $entity->id;
+        }
+
+        return $groupUser->id;
+    }
+
+    /**
+     * Retrieves the security role based on the position title ID.
+     * POCOR-8231
+     * POCOR-8853 renamed/refactured
+     * @param int $staffPositionTitleId
+     * @return int | null
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function getSecurityRoleID($staffPositionTitleId)
+    {
+        $staffPositionTitles = self::getDynamicTableInstance('staff_position_titles');
+        $title = $staffPositionTitles->get($staffPositionTitleId);
+        return $title->security_role_id ?? null;
+    }
+
+    /**
+     * Handles shifts for a staff member.
+     * POCOR-8231
+     *
+     * @param array $requestData
+     * @param int $userRecordId
+     * @return void
+     * @throws \Cake\ORM\Exception\PersistenceFailedException
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function handleShifts($requestData, $userRecordId)
+    {
+        $shiftIds = $requestData['shift_ids'] ?? [];
+
+        if (!empty($shiftIds)) {
+            $institutionStaffShifts = self::getDynamicTableInstance('institution_staff_shifts');
+
+            foreach ($shiftIds as $shiftId) {
+                $shiftData = [
+                    'staff_id' => $userRecordId,
+                    'shift_id' => $shiftId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+
+                $entity = $institutionStaffShifts->newEntity($shiftData);
+                $institutionStaffShifts->save($entity);
+            }
+        } else {
+            self::triggerWebhooksForStaff($userRecordId); //POCOR-7971
+        }
+    }
+
+    /**
+     * Saves guardian data. POCOR-8337
      *
      * @return \Cake\Http\Response|null
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public function saveGuardianData()
     {
+
+        if($this->savingGuardianData > 0) {
+            return;
+        }
+        $this->savingGuardianData = $this->savingGuardianData + 1;
+
 //        Log::debug('saveGuardianData');
         $this->autoRender = false;
         $requestData = $this->getRequestData();
@@ -6653,8 +7856,55 @@ class InstitutionsController extends AppController
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
             $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
             $r3 = $this->handleContacts($requestData, $userRecordId, $userId);
+            if ($studentOpenemisNo) {
             $r4 = $this->handleGuardians($guardianRelationId, $studentOpenemisNo, $userRecordId, $userId);
-            $r5 = $this->handleCustomFields('guardian', $requestData, $userRecordId, $userId);
+            }
+//            Log::debug('handleNationalities');
+//            Log::debug(print_r($r1, true));
+//            Log::debug('handleIdentities');
+//            Log::debug(print_r($r2, true));
+//            Log::debug('handleContacts');
+//            Log::debug(print_r($r3, true));
+//            Log::debug('handleGuardians');
+//            Log::debug(print_r($r4, true));
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+        } else {
+//            Log::debug(print_r($userData,true));
+            return $this->sendJsonResponse(['message' => 'Failed to save user Guardian.'], 500);
+        }
+    }
+
+    /**
+     * Saves other user data. POCOR-8337
+     *
+     * @return \Cake\Http\Response|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function saveOtherData()
+    {
+//        Log::debug(__FUNCTION__);
+//
+//        Log::debug('saveOtherData');
+        $this->autoRender = false;
+        $requestData = $this->getRequestData();
+//        Log::debug(print_r($requestData, true));
+        if (empty($requestData)) {
+            return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
+        }
+
+        $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+        $userData = $this->extractSecurityUserData($requestData, $userId, false, false, true);
+        $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData)) ? $requestData['student_openemis_no'] : null;
+        $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
+//        Log::debug(print_r($userData, true));
+        $securityUserResult = $this->saveSecurityUser($userData);
+//        Log::debug(print_r($securityUserResult, true));
+        if ($securityUserResult) {
+            $userRecordId = $securityUserResult->id;
+            $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
+            $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
+            $r3 = $this->handleContacts($requestData, $userRecordId, $userId);
+//            $r5 = $this->handleCustomFields('guardian', $requestData, $userRecordId, $userId);
 //            Log::debug('handleNationalities');
 //            Log::debug(print_r($r1, true));
 //            Log::debug('handleIdentities');
@@ -6665,10 +7915,10 @@ class InstitutionsController extends AppController
 //            Log::debug(print_r($r4, true));
 //            Log::debug('handleCustomFields');
 //            Log::debug(print_r($r5, true));
-            return $this->sendJsonResponse(['message' => 'success'], 200);
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         } else {
 //            Log::debug(print_r($userData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Guardian.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user Other.'], 500);
         }
     }
 
@@ -6733,6 +7983,8 @@ class InstitutionsController extends AppController
             try {
                 return $StudentGuardians->save($entityGuardiansData, ['checkExisting' => true]);
             } catch (\Exception $e) {
+                Log::debug(__FUNCTION__);
+
                 Log::debug('Error: ' . $e->getMessage());
                 return $e;
             }
@@ -6742,6 +7994,10 @@ class InstitutionsController extends AppController
 
     public function checkUserAlreadyExistByIdentity()
     {
+        if($this->savingDirectoryData > 0) {
+            return;
+        }
+        $this->savingDirectoryData = $this->savingDirectoryData + 1;
 
         $requestData = $this->getRequestData();
 
@@ -6749,7 +8005,7 @@ class InstitutionsController extends AppController
             return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid data.')]);
 
         }
-
+//        self::debug($requestData);
         $identityTypeId = $this->getValue($requestData, 'identity_type_id');
         $identityNumber = $this->getValue($requestData, 'identity_number');
         $nationalityId = $this->getValue($requestData, 'nationality_id');
@@ -6757,7 +8013,7 @@ class InstitutionsController extends AppController
         if ($this->isIdentityValid($identityTypeId, $identityNumber)) {
             $userIdentitiesTable = $this->getUserIdentitiesTable();
             $userExists = $this->checkUserExistence($userIdentitiesTable, $identityTypeId, $identityNumber, $nationalityId);
-
+//            self::debug(__FUNCTION__);
             if ($userExists) {
                 return $this->sendJsonResponse(['user_exist' => 1, 'status_code' => 200, 'message' => __('User already exists with this nationality, identity type & identity number.')]);
 
@@ -6889,7 +8145,7 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
 
         //POCOR-8209 -- Start
         $configItemResult = $ConfigItems->find()
@@ -6979,44 +8235,8 @@ class InstitutionsController extends AppController
     public
     function Lands()
     {
-        $session = $this->request->getSession();
-        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-        $studentId = $session->read('Student.Students.id');
-        $studentName = $session->read('Student.Students.name');
-        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
-        $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        $UserData = $UsersTable->find('all', ['conditions' => ['id' => $studentId]])->first();
-        $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institutionId]])->first();
-        $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Lands']);
 
-        //POCOR-7485 starts for localstorage for angular 11
-        $userId = $this->Auth->user('id');
-        $institutionName = $this->Institutions->get($institutionId)->name;
-        $this->set('institutionId', $institutionId);
-        $this->set('institutionName', $institutionName);
-        $this->set('loginUserId', $userId);
-        $this->set('studentId', $UserData->id);
-        //POCOR-7485 ends
-
-        $this->Navigation->addCrumb(__('Students'), ['plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'institutionId' => $encodedInstitutionId,
-            'action' => 'Students',
-        ]);
-        $this->Navigation->addCrumb($studentName, ['plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'institutionId' => $encodedInstitutionId,
-            'action' => 'StudentUser',
-            'view',
-            $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-        $this->Navigation->addCrumb(__('Add Guardians'), []);
-        $this->set('InstitutionData', $InstitutionData);
-        $this->set('UserData', $UserData);
-        $this->set('StudentID', $institutionId);
-        $this->set('StudentID1', $studentId);
-        $this->set('queryStng', $queryStng);
-        $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
     }
 
     public
@@ -7115,7 +8335,7 @@ class InstitutionsController extends AppController
             '0' => 'index',
             '1' => $this->paramsEncode(['institution_id'=> $institutionId])
         ]);
-        
+
         $header = __('Reports') . ' - ' . $data['module'];
 
         $inputFileName = $replace_data;
@@ -7205,6 +8425,7 @@ class InstitutionsController extends AppController
             'Institution.StudentHealths' => __('Student Health'),
             'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
             'Institution.StudentSpecialNeeds' => __('Student Special Needs'),
+            'StaffAppraisal.Appraisals' => __('Staff Appraisals'),
         ];
         // End POCOR-6871
         return $options;
@@ -7293,7 +8514,7 @@ class InstitutionsController extends AppController
             $search_by_name = true;
         }
         if ($search_by_id || $search_by_name) {
-            $externalDataSourceAttributesTbl = TableRegistry::get('external_data_source_attributes');
+            $externalDataSourceAttributesTbl = self::getDynamicTableInstance('external_data_source_attributes');
             $externalDataSourceAttributesData = $externalDataSourceAttributesTbl
                 ->find()
                 ->select(['id', 'external_data_source_type', 'attribute_field', 'attribute_name', 'value'])
@@ -7402,7 +8623,7 @@ class InstitutionsController extends AppController
                         $fieldKey = 'last_name';
                     } else if ($ex_val['attribute_field'] == 'gender_mapping') {
                         $fieldKey = 'gender_name';
-                        $genders_types = TableRegistry::get('genders');
+                        $genders_types = self::getDynamicTableInstance('genders');
                         $genders_types_result = $genders_types
                             ->find()
                             ->select(['id', 'name'])
@@ -7413,7 +8634,7 @@ class InstitutionsController extends AppController
                         $fieldKey = 'date_of_birth';
                         $externalPerson[$value] = date('Y-m-d', strtotime($externalPerson[$value]));
                     } else if ($ex_val['attribute_field'] == 'identity_type_mapping') {
-                        $identity_types = TableRegistry::get('identity_types');
+                        $identity_types = self::getDynamicTableInstance('identity_types');
                         $identity_types_result = $identity_types
                             ->find()
                             ->select(['id', 'name'])
@@ -7429,7 +8650,7 @@ class InstitutionsController extends AppController
                     } else if ($ex_val['attribute_field'] == 'postal_mapping') {
                         $fieldKey = 'postal_code';
                     } else if ($ex_val['attribute_field'] == 'nationality_mapping') {
-                        $nationalitiesTbl = TableRegistry::get('nationalities');
+                        $nationalitiesTbl = self::getDynamicTableInstance('nationalities');
                         $nationalities = $nationalitiesTbl->find()
                             ->select(['id', 'name'])
                             ->where([
@@ -7443,7 +8664,7 @@ class InstitutionsController extends AppController
                     }
                     $result_Array[$fieldKey] = $externalPerson[$value];
 
-                    $guardian_relations = TableRegistry::get('guardian_relations');
+                    $guardian_relations = self::getDynamicTableInstance('guardian_relations');
                     $guardian_relations_result = $guardian_relations
                         ->find()
                         ->where([$guardian_relations->aliasField('international_code !=') => ''])
@@ -7519,19 +8740,28 @@ class InstitutionsController extends AppController
         $UsersTable = self::getDynamicTableInstance('User.Users');
         $InstitutionTable = self::getDynamicTableInstance('Institution.Institutions');
 
-        if (isset($requestDataa['student_id'])) {
-            $UserData = $UsersTable->find('all', ['conditions' => ['id' => $requestDataa['student_id']]])->first();
+        $student_id = $requestDataa['student_id'];
+        $UserData = [];
+        if (isset($student_id)) {
+            $UserData = $UsersTable->find('all', ['conditions' => ['id' => $student_id]])->first();
         }
+        if (empty($UserData)) {
         if (isset($requestDataa['openemis_no'])) {
             $UserData = $UsersTable->find('all', ['conditions' => ['openemis_no' => $requestDataa['openemis_no']]])->first();
         }
-        if (isset($requestDataa['institution_id'])) {
-            $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $requestDataa['institution_id']]])->first();
+        }
+        if(!empty($UserData)){
+            $studentName = $UserData->name;
+            $student_id = $UserData->id;
+        }
+        $institution_id = $requestDataa['institution_id'];
+        if (isset($institution_id)) {
+            $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institution_id]])->first();
         }
 
-        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-        $encodedQueryString = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
-        $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+//        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        $encodedQueryString = $this->paramsEncode(['id' => $institution_id, 'institution_id' => $institution_id]);
+        $queryStng = $this->paramsEncode(['id' => $student_id]);
         $this->Navigation->addCrumb(__('Students'), ['plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Students',
@@ -7540,10 +8770,12 @@ class InstitutionsController extends AppController
         ]);
         $this->Navigation->addCrumb($studentName, ['plugin' => 'Institution',
             'controller' => 'Institutions',
-            'institutionId' => $encodedInstitutionId,
             'action' => 'StudentUser',
-            'view',
-            $this->ControllerAction->paramsEncode(['id' => $studentId, 'institution_id' => $institutionId])]);
+            '0' => 'view',
+            '1' => $this->ControllerAction->paramsEncode([
+                'id' => $student_id,
+                'student_id' => $student_id,
+                'institution_id' => $institution_id])]);
         $this->Navigation->addCrumb(__('Add Guardians'), []);
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);
@@ -7656,28 +8888,35 @@ class InstitutionsController extends AppController
     //     $this->set('excelUrl', Router::url($excelUrl));
     // }
 
-//POCOR-7716 start
-
+    //POCOR-7716 start
     public
     function getStudentAdmissionStatus()
     {
-        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $configItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $configItemResult = $configItems->find()->where([
             $configItems->aliasField('code') => "student_admission_status"
         ])->first();
         $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
-        $WorkflowStepsTable = TableRegistry::get('workflow.WorkflowSteps');
+        $WorkflowStepsTable = self::getDynamicTableInstance('workflow.WorkflowSteps');
         if ($studentStatus == 0) {
             $result_array[] = array("id" => 0, "name" => "Enrolled");// setting 0 for enrolled as zero is not any id in workflow step
         } else {
-            $status = $WorkflowStepsTable->get($studentStatus)->name;
+            //POCOR-8434 starts
+            //$status = $WorkflowStepsTable->get($studentStatus)->name;
+            $WorkflowRes = $WorkflowStepsTable->find()->contain('Workflows')
+                            ->where([$WorkflowStepsTable->aliasField('id') => $studentStatus])
+                            ->first();
+            if($WorkflowRes->workflow->name == 'Student Admission'){
+                $status = 'Pending Admission : '.$WorkflowRes->name;
+            }else{
+                $status = 'Pending Enrolment : '.$WorkflowRes->name;
+            }//POCOR-8434 ends
             $result_array[] = array("id" => $studentStatus, "name" => $status);
         }
         echo json_encode($result_array);
         die;
     }
-
-//POCOR-7716 end
+    //POCOR-7716 end
 
     public
     function getMessagingTabElements($options = [])
@@ -8157,6 +9396,304 @@ class InstitutionsController extends AppController
         }
 
         \Cake\Log\Log::debug($message);
+    }
+
+    //POCOR-7971 start
+    public function triggerWebhooksForStaff($userRecordId)
+    {
+        $staff = self::getDynamicTableInstance('Institution.Staff');
+        $bodyData = $staff->find('all',
+                                [ 'contain' => [
+                                    'Institutions',
+                                    'StaffTypes',
+                                    'StaffPositionProfiles',
+                                    'Positions',
+                                    'Positions.StaffPositionTitles',
+                                    'Users',
+                                    'Users.Genders',
+                                    'Users.MainNationalities',
+                                    'Users.Identities.IdentityTypes',
+                                    'Users.AddressAreas',
+                                    'Users.BirthplaceAreas',
+                                    'Users.Contacts.ContactTypes'
+                                ],
+                    ])->where([
+                        $staff->aliasField('staff_id') => $userRecordId
+                    ]);
+
+        if (!empty($bodyData)) {
+            foreach ($bodyData as $key => $value) {
+                $institutionStaffId = $value->id;
+                $user_id = $value->user->id;
+                $openemis_no = $value->user->openemis_no;
+                $first_name = $value->user->first_name;
+                $middle_name = $value->user->middle_name;
+                $third_name = $value->user->third_name;
+                $last_name = $value->user->last_name;
+                $preferred_name = $value->user->preferred_name;
+                $gender = $value->user->gender->name;
+                $nationality = $value->user->main_nationality->name;
+                $dateOfBirth = $value->user->date_of_birth;
+
+                $address = $value->user->address;
+                $postalCode = $value->user->postal_code;
+                $addressArea = $value->user->address_area->name;
+                $birthplaceArea = $value->user->birthplace_area->name;
+                $role = $value->user->is_staff;
+
+                $contactValue = [];
+                $contactType = [];
+                if(!empty($value->user['contacts'])) {
+                    foreach ($value->user['contacts'] as $key => $contact) {
+                        $contactValue[] = $contact->value;
+                        $contactType[] = $contact->contact_type->name;
+                    }
+                }
+
+                $identityNumber = [];
+                $identityType = [];
+                if(!empty($value->user['identities'])) {
+                    foreach ($value->user['identities'] as $key => $identity) {
+                        $identityNumber[] = $identity->number;
+                        $identityType[] = $identity->identity_type->name;
+                    }
+                }
+
+                $username = $value->user->username;
+                $institution_id = $value->institution->id;
+                $institutionName = $value->institution->name;
+                $institutionCode = $value->institution->code;
+
+                $position_no = $value->position->position_no;
+                $staff_position_titles_type = $value->position->staff_position_title->type;
+                $staff_types_name = $value->staff_type->name;
+
+                if($staff_position_titles_type == 1 ){
+                    $class= 'Teaching';
+                } else {
+                    $class = 'Non-Teaching';
+                }
+                $staff_position_titles_name = $value->position->staff_position_title->name;
+
+                $startDate = $value->start_date;
+                $endDate = $value->end_date;
+
+            }
+        }
+        $shift =  self::getDynamicTableInstance('Institution.InstitutionShifts');
+        $shiftData = $shift->find('all',
+                            [ 'contain' => [
+                                'ShiftOptions'
+                            ],
+                ])->where([
+                    $shift->aliasField('id') => $userRecordId
+                ]);
+        if (!empty($shiftData)) {
+            foreach ($shiftData as $k => $val) {
+                $shiftName =  $val->shift_option->name;
+            }
+        }
+        $body = array();
+        $body = [
+            'security_users_id' => !empty($user_id) ? $user_id : NULL,
+            'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
+            'security_users_first_name' =>  !empty($first_name) ? $first_name : NULL,
+            'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
+            'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
+            'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
+            'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
+            'security_users_gender' => !empty($gender) ? $gender : NULL,
+            'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
+            'security_users_address' => !empty($address) ? $address : NULL,
+            'security_users_postal_code' => !empty($postalCode) ? $postalCode : NULL,
+            'area_administrative_name_birthplace' => !empty($addressArea) ? $addressArea : NULL,
+            'area_administrative_name_address' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
+            'contact_type_name' => !empty($contactType) ? $contactType : NULL,
+            'user_contact_type_value' => !empty($contactValue) ? $contactValue : NULL,
+            'nationality_name' => !empty($nationality) ? $nationality : NULL,
+            'identity_type_name' => !empty($identityType) ? $identityType : NULL,
+            'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
+            'security_user_username' => !empty($username) ? $username : NULL,
+            'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
+            'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
+            'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
+            //'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
+            'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
+            'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
+            'institution_positions_position_no'=>!empty($position_no) ? $position_no : NULL,
+            'staff_position_titles_type'=>!empty($class) ? $class : NULL,
+            'staff_position_titles_name'=>!empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
+            'staff_types_name'=>!empty($staff_types_name) ? $staff_types_name : NULL,
+            'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
+            'role_name' => ($role == 1) ? 'staff' : NULL
+        ];
+
+        $Webhooks = self::getDynamicTableInstance('Webhook.Webhooks');
+        $Webhooks->triggerShell('staff_create', ['username' => ''], $body);
+
+    }
+    //POCOR-7971 end
+    public function getInstitutionGpaTab($action = null)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $tabElements = [
+            'ReportCardGpa' => [
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardGpa', 0 => 'index', 1 => $encodedQueryString],
+                'text' => __('GPA')
+            ],
+            'ReportCardCumulativeGpa' => [
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardCumulativeGpa', 0 => 'index', 1 => $encodedQueryString],
+                'text' => __('Cumulative GPA')
+            ],
+
+        ];
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
+
+        $this->set('tabElements', $tabElements);
+        $action = !is_null($action) ? $action : $this->request->getParam('action');
+        $this->set('selectedAction', $action);
+    }
+
+    public function ReportCardGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardGpa']);
+    }
+
+    public function ReportCardCumulativeGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardCumulativeGpa']);
+    }
+
+    /**
+     * POCOR-8779
+     * @param  $institutionClassId
+     * @param  $academicPeriodId
+     * @param $user_record_id
+     * @param  $educationGradeId
+     * @param  $institutionId
+     * @param $CURRENT
+     * @param  $userId
+     */
+    private static function assignStudentSubject( $institutionClassId,  $academicPeriodId, $user_record_id,  $educationGradeId,  $institutionId, $CURRENT,  $userId)
+    {
+//        Log::debug(print_r([$institutionClassId,  $academicPeriodId, $user_record_id,  $educationGradeId,  $institutionId, $CURRENT,  $userId], true));
+        $institutionClassSubjects = self::getDynamicTableInstance('institution_class_subjects');
+        $institutionSubjects = self::getDynamicTableInstance('institution_subjects');
+        $educationGradesSubjects = self::getDynamicTableInstance('education_grades_subjects');//POCOR-7197
+        $SubjectsResult = $institutionClassSubjects
+            ->find()
+            ->select([
+                $institutionClassSubjects->aliasField('institution_class_id'),
+                $institutionClassSubjects->aliasField('institution_subject_id'),
+                'name' => $institutionSubjects->aliasField('name'),
+                'institution_id' => $institutionSubjects->aliasField('institution_id'),
+                'education_grade_id' => $institutionSubjects->aliasField('education_grade_id'),
+                'education_subject_id' => $institutionSubjects->aliasField('education_subject_id'),
+                'academic_period_id' => $institutionSubjects->aliasField('academic_period_id'),
+            ])
+            ->LeftJoin([$institutionSubjects->getAlias() => $institutionSubjects->getTable()], [
+                $institutionSubjects->aliasField('id =') . $institutionClassSubjects->aliasField('institution_subject_id')
+            ])//POCOR-7197 starts
+            ->InnerJoin([$educationGradesSubjects->getAlias() => $educationGradesSubjects->getTable()], [
+                $institutionSubjects->aliasField('education_grade_id =') . $educationGradesSubjects->aliasField('education_grade_id'),
+                $institutionSubjects->aliasField('education_subject_id =') . $educationGradesSubjects->aliasField('education_subject_id')
+            ])//POCOR-7197 ends
+            ->where([
+                $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId,
+                $institutionSubjects->aliasField('academic_period_id') => $academicPeriodId,//POCOR-7197
+                $educationGradesSubjects->aliasField('auto_allocation !=') => 0//POCOR-7197
+            ])
+            ->toArray();
+//        Log::debug(print_r($SubjectsResult, true));
+
+        if (!empty($SubjectsResult)) {
+            $count = 1;
+            $institutionSubjectStudents = self::getDynamicTableInstance('institution_subject_students');
+            foreach ($SubjectsResult as $skey => $sval) {
+                $primaryKey = $institutionSubjectStudents->getPrimaryKey();
+                $hashString = [];
+                foreach ($primaryKey as $key) {
+                    if ($key == 'student_id') {
+                        $hashString[] = $user_record_id;
+                    }
+                    if ($key == 'institution_class_id') {
+                        $hashString[] = $institutionClassId;
+                    }
+                    if ($key == 'academic_period_id') {
+                        $hashString[] = $academicPeriodId;
+                    }
+                    if ($key == 'education_grade_id') {
+                        $hashString[] = $educationGradeId;
+                    }
+                    if ($key == 'institution_id') {
+                        $hashString[] = $institutionId;
+                    }
+                    if ($key == 'education_subject_id') {
+                        $hashString[] = $sval->education_subject_id;
+                    }
+                }
+
+                $entitySubjectsData = [
+                    'id' => Security::hash(implode(',', $hashString), 'sha256'),
+                    'student_id' => $user_record_id,
+                    'institution_subject_id' => $sval->institution_subject_id,
+                    'institution_class_id' => $institutionClassId,
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_subject_id' => $sval->education_subject_id,
+                    'education_grade_id' => $educationGradeId,
+                    'student_status_id' => $CURRENT,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                //save in institution_subject_students table
+                $entitySubjectsData = $institutionSubjectStudents->newEntity($entitySubjectsData);
+                $institutionSubjectStudentsResult = $institutionSubjectStudents->save($entitySubjectsData);
+                $count++;
+                unset($entitySubjectsData);
+                unset($institutionSubjectStudentsResult);
+                unset($hashString);
+            }
+            return $count;
+        }
+        return null;
+    }
+
+    public function Scanned($pass = '')
+    {
+        $baseUrl = Router::fullBaseUrl();
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionId();
+        $institutionName = $this->Institutions->get($institutionId)->name;
+        $encodedParams = $this->ControllerAction->paramsEncode(['id' => $institutionId]);
+        $institutionDashborad = "{$this->plugin}/Institutions/{$encodedParams}/dashboard/{$encodedParams}";
+        $institutionIndex = "Institutions/Institutions/index/";
+
+
+             $url = $_SERVER['REQUEST_URI'];
+             $startPos = strpos($url, '/Institution/Institutions/Scanned/index/') + strlen('/Institution/Institutions/Scanned/index/');
+             $encodedPart = substr($url, $startPos);
+
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
+
+            $this->Navigation->addCrumb($crumbTitle);
+            //POCOR-8500 do not remove it. used in angular start
+            $user = $this->getRequest()->getSession()->read('sbn');
+            $pass = $this->getRequest()->getSession()->read('nbn');
+            $pass = $this->paramsEncode([$pass]);
+            //end
+            $this->set('institution_id', $institutionId);
+            $this->set('url', $encodedPart);
+            $this->set('institutionName', $institutionName);
+            $this->set('institutionDashborad', $institutionDashborad);
+            $this->set('institutionIndexUrl', $institutionIndex);
+            $this->set('baseUrl', $baseUrl);
+            $this->set('user', $user);
+            $this->set('pass', $pass);
+            $this->render('scanned_data');
     }
 
 }

@@ -14,6 +14,8 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
+use Cake\Routing\Router;
 
 class StudentUserTable extends ControllerActionTable
 {
@@ -40,7 +42,8 @@ class StudentUserTable extends ControllerActionTable
         // Behaviors
         $this->addBehavior('User.User');
         // this code is commented in POCOR-6130 because custome fields were coming in every tab so now custome fields function has been changed to custome
-        if (!in_array('Custom Fields', (array)Configure::read('School.excludedPlugins'))) {
+        $request = Router::getRequest();
+        if ($request !== null && !in_array('Custom Fields', (array)Configure::read('School.excludedPlugins')) && (($request->getParam('action') != 'StudentAdmission') && ($request->getParam('action') != 'StudentEnrolment'))) {
            $this->addBehavior('CustomField.Record', [
                'model' => 'Student.Students',
                'behavior' => 'Student',
@@ -76,10 +79,10 @@ class StudentUserTable extends ControllerActionTable
         $this->toggle('index', false);
         $this->toggle('remove', false);
         $this->addBehavior('Institution.InstitutionTab');
-
+        
         $studentID = $this->getStudentID();
         //$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
-        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => $studentID]);
+        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
     }
 
     public static function handleAssociations($model)

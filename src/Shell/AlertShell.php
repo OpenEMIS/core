@@ -2,6 +2,7 @@
 namespace App\Shell;
 
 use Cake\Console\Shell;
+use Cake\Log\Log;
 
 class AlertShell extends Shell
 {
@@ -31,21 +32,91 @@ class AlertShell extends Shell
 
     public function getAlertRules($feature)
     {
-        return $this->AlertRules->find()
+        // POCOR-8533 added check for frequency
+        $alertRules =$this->AlertRules;
+        $alerts = $this->Alerts;
+        return $alertRules
+            ->find()
                 ->contain(['SecurityRoles'])
+                ->innerJoin([$alerts->getAlias() => $alerts->getTable()],
+                    $alertRules->aliasField('feature = ') . $alerts->aliasField('name'),
+                )
                 ->where([
-                    'feature' => $feature,
-                    'enabled' => 1
+                    $alertRules->aliasField('feature') => $feature,
+                    $alertRules->aliasField('enabled') => 1,
+                    $alerts->aliasField('frequency !=') =>  'Never'
+                ])
+                ->all();
+    }
+
+    public function getSystemUpdateAlertRules($feature)
+    {
+        // POCOR-8869
+        $alertRules =$this->AlertRules;
+        $alerts = $this->Alerts;
+        return $alertRules
+            ->find()
+                ->contain(['SecurityRoles'])
+                ->innerJoin([$alerts->getAlias() => $alerts->getTable()],
+                    $alertRules->aliasField('feature = ') . $alerts->aliasField('name'),
+                )
+                ->where([
+                    $alertRules->aliasField('feature') => $feature,
+                    $alertRules->aliasField('enabled') => 1,
+                    $alerts->aliasField('frequency =') =>  'Once'
                 ])
                 ->all();
     }
 
     public function getAlertData($threshold, $model)
     {
-        return $model->getModelAlertData($threshold);
+        //POCOR-8533 added try-catch
+        try {
+            return $model->getModelAlertData($threshold);
+        } catch (\Exception $exception) {
+            $this->out('Error in the class: ' . __CLASS__);
+            $this->out('Error in the model: ' . $model->getName());
+            $this->out($exception->getMessage());
+            return [];
+        }
     }
 
     public function getEmailList($securityRoleRecords, $institutionId = null)
+    {
+        $emailList = [];
+
+        foreach ($securityRoleRecords as $securityRolesObj) {
+            $options = [
+                'securityRoleId' => $securityRolesObj->id
+            ];
+
+            if (!is_null($institutionId)) {
+                $options['institutionId'] = $institutionId;
+            }
+
+            // all staff within securityRole and institution
+            $emailListResult = $this->SecurityGroupUsers
+                ->find('emailList', $options)
+                ->toArray()
+            ;
+
+            // combine all email to the email list
+            if (!empty($emailListResult)) {
+                foreach ($emailListResult as $obj) {
+                    if (!empty($obj->_matchingData['Users']->email)) {
+                        $recipient = $obj->_matchingData['Users']->name . ' <' . $obj->_matchingData['Users']->email . '>';
+                        if (!in_array($recipient, $emailList)) {
+                            $emailList[] = $recipient;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $emailList;
+    }
+
+    public function getSystemUpdateEmailList($securityRoleRecords, $institutionId = null)
     {
         $emailList = [];
 

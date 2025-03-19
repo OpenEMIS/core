@@ -12,6 +12,9 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use OneLogin_Saml2_Error;
 use OneLogin_Saml2_Settings;
+use OneLogin\Saml2\Settings;
+use OneLogin\Saml2\Error;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -22,10 +25,9 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
 
     private $authenticationTypeOptions;
 
-    public function initialize(array $config)
+    public function initialize(array $config) : void
     {
-        //print_r('hi'); die;
-        $this->table('system_authentications');
+        $this->setTable('system_authentications');
         parent::initialize($config);
         $this->hasOne('Google', ['className' => 'SSO.IdpGoogle', 'foreignKey' => 'system_authentication_id', 'dependent' => true]);
         $this->hasOne('Saml', ['className' => 'SSO.IdpSaml', 'foreignKey' => 'system_authentication_id', 'dependent' => true]);
@@ -42,8 +44,9 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         $this->fields['mapped_last_name']['length'] = 100;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator) : Validator
     {
+        $validator->setProvider('custom', $this);
         return $validator
             ->requirePresence('name')
             ->notEmpty('name')
@@ -75,62 +78,62 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        $authenticationTypeId = $data[$this->alias()]['authentication_type_id'];
+        $authenticationTypeId = $data[$this->getAlias()]['authentication_type_id'];
         $idpType = isset($this->authenticationTypeOptions[$authenticationTypeId]) ? $this->authenticationTypeOptions[$authenticationTypeId] : '';
         switch ($idpType) {
             case 'google':
-                $data[$this->alias()]['google'] = [
-                    'client_id' => $data[$this->alias()]['client_id'],
-                    'client_secret' => $data[$this->alias()]['client_secret'],
-                    'redirect_uri' => $data[$this->alias()]['redirect_uri'],
-                    'hd' => $data[$this->alias()]['hd']
+                $data[$this->getAlias()]['google'] = [
+                    'client_id' => $data[$this->getAlias()]['client_id'],
+                    'client_secret' => $data[$this->getAlias()]['client_secret'],
+                    'redirect_uri' => $data[$this->getAlias()]['redirect_uri'],
+                    'hd' => $data[$this->getAlias()]['hd']
                 ];
                 $data['mapped_username'] = 'email';
                 break;
 
             case 'saml':
                 $setting['sp'] = [
-                    'entityId' => $data[$this->alias()]['sp_entity_id'],
+                    'entityId' => $data[$this->getAlias()]['sp_entity_id'],
                     'assertionConsumerService' => [
-                        'url' => $data[$this->alias()]['sp_acs'],
+                        'url' => $data[$this->getAlias()]['sp_acs'],
                     ],
                     'singleLogoutService' => [
-                        'url' => $data[$this->alias()]['sp_slo'],
+                        'url' => $data[$this->getAlias()]['sp_slo'],
                     ],
-                    'NameIDFormat' => $data[$this->alias()]['sp_name_id_format'],
+                    'NameIDFormat' => $data[$this->getAlias()]['sp_name_id_format'],
                 ];
 
-                $data[$this->alias()]['sp_metadata'] = htmlentities($this->getSPMetaData($setting));
+                $data[$this->getAlias()]['sp_metadata'] = htmlentities($this->getSPMetaData($setting));
 
-                $data[$this->alias()]['saml'] = [
-                    'idp_entity_id' => $data[$this->alias()]['idp_entity_id'],
-                    'idp_sso' => $data[$this->alias()]['idp_sso'],
-                    'idp_sso_binding' => $data[$this->alias()]['idp_sso_binding'],
-                    'idp_slo' => $data[$this->alias()]['idp_slo'],
-                    'idp_slo_binding' => $data[$this->alias()]['idp_slo_binding'],
-                    'idp_x509cert' => $data[$this->alias()]['idp_x509cert'],
-                    'idp_cert_fingerprint' => $data[$this->alias()]['idp_cert_fingerprint'],
-                    'idp_cert_fingerprint_algorithm' => $data[$this->alias()]['idp_cert_fingerprint_algorithm'],
-                    'sp_entity_id' => $data[$this->alias()]['sp_entity_id'],
-                    'sp_acs' => $data[$this->alias()]['sp_acs'],
-                    'sp_slo' => $data[$this->alias()]['sp_slo'],
-                    'sp_name_id_format' => $data[$this->alias()]['sp_name_id_format'],
-                    'sp_private_key' => $data[$this->alias()]['sp_private_key'],
-                    'sp_metadata' => $data[$this->alias()]['sp_metadata']
+                $data[$this->getAlias()]['saml'] = [
+                    'idp_entity_id' => $data[$this->getAlias()]['idp_entity_id'],
+                    'idp_sso' => $data[$this->getAlias()]['idp_sso'],
+                    'idp_sso_binding' => $data[$this->getAlias()]['idp_sso_binding'],
+                    'idp_slo' => $data[$this->getAlias()]['idp_slo'],
+                    'idp_slo_binding' => $data[$this->getAlias()]['idp_slo_binding'],
+                    'idp_x509cert' => $data[$this->getAlias()]['idp_x509cert'],
+                    'idp_cert_fingerprint' => $data[$this->getAlias()]['idp_cert_fingerprint'],
+                    'idp_cert_fingerprint_algorithm' => $data[$this->getAlias()]['idp_cert_fingerprint_algorithm'],
+                    'sp_entity_id' => $data[$this->getAlias()]['sp_entity_id'],
+                    'sp_acs' => $data[$this->getAlias()]['sp_acs'],
+                    'sp_slo' => $data[$this->getAlias()]['sp_slo'],
+                    'sp_name_id_format' => $data[$this->getAlias()]['sp_name_id_format'],
+                    'sp_private_key' => $data[$this->getAlias()]['sp_private_key'],
+                    'sp_metadata' => $data[$this->getAlias()]['sp_metadata']
                 ];
                 break;
 
             case 'o_auth':
-                $data[$this->alias()]['o_auth'] = [
-                    'client_id' => $data[$this->alias()]['client_id'],
-                    'client_secret' => $data[$this->alias()]['client_secret'],
-                    'redirect_uri' => $data[$this->alias()]['redirect_uri'],
-                    'well_known_uri' => $data[$this->alias()]['well_known_uri'],
-                    'authorization_endpoint' => $data[$this->alias()]['authorization_endpoint'],
-                    'token_endpoint' => $data[$this->alias()]['token_endpoint'],
-                    'userinfo_endpoint' => $data[$this->alias()]['userinfo_endpoint'],
-                    'issuer' => $data[$this->alias()]['issuer'],
-                    'jwks_uri' => $data[$this->alias()]['jwks_uri']
+                $data[$this->getAlias()]['o_auth'] = [
+                    'client_id' => $data[$this->getAlias()]['client_id'],
+                    'client_secret' => $data[$this->getAlias()]['client_secret'],
+                    'redirect_uri' => $data[$this->getAlias()]['redirect_uri'],
+                    'well_known_uri' => $data[$this->getAlias()]['well_known_uri'],
+                    'authorization_endpoint' => $data[$this->getAlias()]['authorization_endpoint'],
+                    'token_endpoint' => $data[$this->getAlias()]['token_endpoint'],
+                    'userinfo_endpoint' => $data[$this->getAlias()]['userinfo_endpoint'],
+                    'issuer' => $data[$this->getAlias()]['issuer'],
+                    'jwks_uri' => $data[$this->getAlias()]['jwks_uri']
                 ];
                 break;
         }
@@ -140,16 +143,16 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
     {
         try {
             // Now we only validate SP settings
-            $settings = new OneLogin_Saml2_Settings($settingsInfo, true);
+            $settings = new Settings($settingsInfo, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
                 header('Content-Type: text/xml');
                 return $metadata;
             } else {
-                throw new OneLogin_Saml2_Error(
+                throw new Error(
                     'Invalid SP metadata: '.implode(', ', $errors),
-                    OneLogin_Saml2_Error::METADATA_SP_INVALID
+                    Error::METADATA_SP_INVALID
                 );
             }
         } catch (Exception $e) {
@@ -161,18 +164,27 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
     {
         $query
             ->contain(['Google', 'Saml', 'OAuth']);
-        $this->request->data[$this->alias()]['authentication_type_id'] = $query->first()->authentication_type_id;
+       // $this->request->getdata()[$this->getAlias()]['authentication_type_id'] = $query->first()->authentication_type_id;
+        $data = $this->request->getData();
+
+        // Modify the data as needed
+        $data[$this->getAlias()]['authentication_type_id'] = $query->first()->authentication_type_id;
+        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]);
         $this->field('authentication_type_id');
     }
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->data[$this->alias()]['code'] = uniqid('IDP');
+        $data = $this->request->getData();
+        $data[$this->getAlias()]['code'] = uniqid('IDP');
+        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->data[$this->alias()]['code'] = $entity->code;
+        $data = $this->request->getData(); 
+        $data[$this->getAlias()]['code'] = $entity->code;
+        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -193,11 +205,12 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         $this->field('mapped_email', ['type' => 'hidden', 'attr' => ['label' => __('Email Mapping')]]);
     }
 
-    public function onUpdateFieldAuthenticationTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAuthenticationTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $request = $this->request;
         $attr['onChangeReload'] = true;
-        if (isset($request->data[$this->alias()]['authentication_type_id'])) {
-            $authenticationTypeId = $request->data[$this->alias()]['authentication_type_id'];
+        if (isset($request->getData()[$this->getAlias()]['authentication_type_id'])) {
+            $authenticationTypeId = $request->getData()[$this->getAlias()]['authentication_type_id'];
             $idpType = isset($this->authenticationTypeOptions[$authenticationTypeId]) ? $this->authenticationTypeOptions[$authenticationTypeId] : '';
             switch ($idpType) {
                 case 'google':

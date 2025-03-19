@@ -1,13 +1,13 @@
 angular
-    .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.students.svc', 'kd-angular-tree-dropdown', 'kd.data.svc'])
+    .module('institutions.students.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.students.svc', 'kd-angular-tree-dropdown', 'kd.data.svc', 'directory.directoryadd.svc'])
     .controller('InstitutionsStudentsCtrl', InstitutionStudentController);
 
-InstitutionStudentController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStudentsSvc', '$rootScope', 'KdDataSvc'];
+InstitutionStudentController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStudentsSvc', '$rootScope', 'KdDataSvc',  'DirectoryaddSvc'];
 
-function InstitutionStudentController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStudentsSvc, $rootScope, KdDataSvc) {
+function InstitutionStudentController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStudentsSvc, $rootScope, KdDataSvc,  DirectoryaddSvc) {
     // ag-grid vars
 
-    const userCtrl = this;
+    const userCtrl = $scope;
     var scope = $scope;
     userCtrl.selectedUserData = {};
     userCtrl.notSaved = true;
@@ -15,7 +15,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     userCtrl.selectedStudentData = userCtrl.selectedUserData;
     const userData = userCtrl.selectedUserData;
     const userSvc = InstitutionsStudentsSvc;
-
+    const directorySvc = DirectoryaddSvc;
     // for file upload
     scope.startWithOneLeftButton = false;
     scope.selectedButton = 'import';
@@ -96,25 +96,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
 
     //controller function
-    userCtrl.getUniqueOpenEmisId = getUniqueOpenEmisId;
-    userCtrl.generatePassword = generatePassword;
-    userCtrl.changeGender = changeGender;
-    userCtrl.changeNationality = changeNationality;
-    userCtrl.changeIdentityType = changeIdentityType;
-    userCtrl.changeContactType = changeContactType;
     userCtrl.goToFirstStep = goToFirstStep;
     userCtrl.goToNextStep = goToNextStep;
     userCtrl.goToPrevStep = goToPrevStep;
-    userCtrl.gotoConfirmStep = gotoConfirmStep;
     userCtrl.gotoAddStudentStep = gotoAddStudentStep;
     userCtrl.confirmUser = confirmUser;
-    // userCtrl.setStudentName = setStudentName;
     userCtrl.getStudentAdmissionStatus = getStudentAdmissionStatus;//POCOR-7716
-    userCtrl.appendName = appendName;
     userCtrl.initGrid = initGrid;
     userCtrl.changeAcademicPeriod = changeAcademicPeriod;
     userCtrl.changeEducationGrade = changeEducationGrade;
     userCtrl.changeClass = changeClass;
+    userCtrl.changeStartDate = changeStartDate;
     userCtrl.cancelProcess = cancelProcess;
     // userCtrl.getAcademicPeriods = getAcademicPeriods;
     userCtrl.getEducationGrades = getEducationGrades;
@@ -131,9 +123,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     userCtrl.validateAdditionalDetails = validateAdditionalDetails;
     userCtrl.saveUserDetails = saveUserDetails;
     userCtrl.getStudentCustomFields = getStudentCustomFields;
-    userCtrl.createCustomFieldsArray = createCustomFieldsArray;
-    userCtrl.filterBySection = filterBySection;
-    userCtrl.mapBySection = mapBySection;
     userCtrl.changeOption = changeOption;
     userCtrl.changed = changed;
     userCtrl.selectOption = selectOption;
@@ -163,6 +152,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         function initUserCtrl() {
             UtilsSvc.isAppendLoader(true);
             userSvc.init(angular.baseUrl);
+            directorySvc.init(angular.baseUrl);
             userCtrl.institutionId = Number($window.localStorage.getItem("institution_id"));
             userCtrl.translateFields = {
                 'openemis_no': 'OpenEMIS ID',
@@ -186,39 +176,27 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             loadUserData();
         }
 
+
         function getGenders() {
-            return userSvc.getGenders()
-                .then(resp => {
-                    userCtrl.genderOptions = resp.data;
-                });
+            return directorySvc.setGenders(userCtrl)
         }
 
         function getNationalities() {
-            return userSvc.getNationalities()
-                .then(resp => {
-                    userCtrl.nationalitiesOptions = resp.data;
-                });
+            return directorySvc.setNationalities(userCtrl);
         }
 
         function getIdentityTypes() {
-            return userSvc.getIdentityTypes()
-                .then(resp => {
-                    userCtrl.identityTypeOptions = resp.data;
-                });
+            return directorySvc.setIdentityTypes(userCtrl);
         }
 
         function getContactTypes() {
-            return userSvc.getContactTypes()
-                .then(resp => {
-                    userCtrl.contactTypeOptions = resp.data;
-                });
+            return directorySvc.setContactTypes(userCtrl);
         }
 
         function getMultipleInstitutionsStudentEnrollment() {
             return userSvc.getConfigItemValue('multiple_institutions_student_enrollment')
                 .then(configValue => {
-                    const config_value = configValue === "1";
-                    userCtrl.multipleInstitutionsStudentEnrollment = config_value;
+                    userCtrl.multipleInstitutionsStudentEnrollment = (configValue === "1");
                 })
                 .catch(error => {
                     console.error('Error fetching MultipleInstitutionsStudentEnrollment configuration:', error);
@@ -228,8 +206,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         function getMaxFileSizeConfig() {
             return userSvc.getConfigItemValue('dashboard_img_size_limit')
                 .then(configValue => {
-                    const config_value = configValue || 0;
-                    userCtrl.maxFileSize = config_value;
+                    userCtrl.maxFileSize = (configValue || 0);
                 })
                 .catch(error => {
                     console.error('Error fetching MaxFileSize configuration:', error);
@@ -240,11 +217,20 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             return userSvc.getAcademicPeriods()
                 .then(resp => {
                     userCtrl.academicPeriodOptions = resp.data;
+                    console.log(userCtrl.academicPeriodOptions);
                     // Iterate over the array to find the current academic period
                     for (const period of resp.data) {
                         if (period.current === 1) {
                             userCtrl.currentAcademicPeriod = period.id;
                             userCtrl.currentAcademicPeriodName = period.name;
+                            const academicPeriod = period.id; //POCOR-8411 -- Start
+                            userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
+                                    const startDateRangeResponse = response;
+                                    const {start_date, end_date} = startDateRangeResponse.data[0];
+                                    userCtrl.currentAcademicPeriodStartDate = userSvc.formatDate(start_date);
+                                    userCtrl.currentAcademicPeriodEndDate = userSvc.formatDate(end_date);
+                                }
+                            );
                             break; // Exit the loop once the current period is found
                         }
                     }
@@ -361,38 +347,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         field.answer = null;
     };
 
-    function getUniqueOpenEmisId() {
-        return new Promise((resolve, reject) => {
-            const {isInternalSearchSelected, isExternalSearchSelected, selectedUserData} = userCtrl;
-            const {openemis_no, username} = selectedUserData;
+    userCtrl.getUniqueOpenEmisId = function () {
+        return directorySvc.setUniqueOpenEmisId(userCtrl);
+    };
 
-            if ((isInternalSearchSelected || isExternalSearchSelected) && openemis_no && !isNaN(Number(openemis_no.toString()))) {
-
-                selectedUserData.username = angular.copy(openemis_no);
-                resolve();
-                return;
-            }
-
-            if (!username) {
-                selectedUserData.username = angular.copy(openemis_no);
-            }
-
-            UtilsSvc.isAppendLoader(true);
-
-            userSvc.getUniqueOpenEmisId()
-                .then(response => {
-                    selectedUserData.openemis_no = response;
-                    selectedUserData.username = angular.copy(response);
-                    UtilsSvc.isAppendLoader(false);
-                    resolve();
-                })
-                .catch(error => {
-                    console.error(error);
-                    UtilsSvc.isAppendLoader(false);
-                    reject(error);
-                });
-        });
-    }
+    userCtrl.generatePassword = function () {
+        return directorySvc.setPassword(userCtrl);
+    };
 
 
     function getInternalSearchData() {
@@ -577,40 +538,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         return userRecords;
     }
 
-    function generatePassword() {
-        return new Promise((resolve, reject) => {
-            UtilsSvc.isAppendLoader(true);
-
-            const fetchData = () => {
-                userCtrl.getStudentCustomFields();
-                userCtrl.getStudentAdmissionStatus();//POCOR-7716
-            };
-
-            if (!userCtrl.isInternalSearchSelected) {
-                userSvc.generatePassword()
-                    .then(response => {
-                        userCtrl.selectedUserData.password = response;
-                        fetchData();
-                        resolve();
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        fetchData();
-                        reject(error);
-                    })
-                    .finally(() => {
-                        UtilsSvc.isAppendLoader(false);
-                    });
-            } else {
-                fetchData();
-                UtilsSvc.isAppendLoader(false);
-                resolve();
-            }
-        });
-    }
 
     //POCOR-7716 start
-    function getStudentAdmissionStatus() {
+     function getStudentAdmissionStatus() {
         return userSvc.getStudentAdmissionStatus()
             .then(resp => {
                 const admissionStatus = resp.data[0];
@@ -681,16 +611,21 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         fileReader.readAsDataURL(photo);
 
         fileReader.onload = () => {
-            userCtrl.selectedUserData.photo_base_64 = fileReader.result;
-        };
-    }
+            const base64String = fileReader.result.split(',')[1];
 
+            // POCOR-8917 Manually trigger AngularJS digest cycle
+            $scope.$apply(() => {
+                userCtrl.selectedUserData.photo_base_64 = base64String;
+            });
+        };
+
+    };
     function getStudentCustomFields() {
         const studentId = userCtrl.userData?.id || null;
 
-        userSvc.getStudentCustomFields(studentId)
+        directorySvc.getStudentCustomFields(studentId)
             .then(resp => {
-
+                // console.log(resp)
                 userCtrl.customFields = resp.data;
                 userCtrl.customFieldsArray = [];
                 userCtrl.createCustomFieldsArray();
@@ -699,14 +634,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 console.error(error);
                 UtilsSvc.isAppendLoader(false);
             });
-    }
-
-    function mapBySection(item) {
-        return item.section;
-    }
-
-    function filterBySection(item, section) {
-        return section === item.section;
     }
 
     function changeOption(field, optionId) {
@@ -748,82 +675,74 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-
-    function appendName(studentObj, variableName, trim) {
-        if (studentObj.hasOwnProperty(variableName)) {
-            if (trim === true) {
-                studentObj[variableName] = studentObj[variableName].trim();
-            }
-            if (studentObj[variableName] != null && studentObj[variableName] != '') {
-                studentObj.name = studentObj.name + ' ' + studentObj[variableName];
+    userCtrl.appendName = (dataObj, variableName) => {
+        if (dataObj.hasOwnProperty(variableName)) {
+            const value = dataObj[variableName]?.trim() || '';
+            if (value) {
+                dataObj.name += ` ${value}`;
             }
         }
-        return studentObj;
-    }
+    };
 
-    function changeGender() {
-        const {selectedUserData, genderOptions} = userCtrl;
+    userCtrl.setName = function() {
+        const unsetFields = ['first_name', 'middle_name', 'third_name', 'last_name'];
+        unsetFields.forEach(field => userCtrl.unsetError(field));
 
-        if (selectedUserData.hasOwnProperty('gender_id')) {
-            const gender = genderOptions.find(option => option.id === selectedUserData.gender_id);
-            if (gender) {
-                selectedUserData.gender = {name: gender.name};
-                userCtrl.error.gender_id = '';
-            } else {
-                selectedUserData.gender = null;
-            }
-            userCtrl.selectedUserData = selectedUserData;
-        }
+        const userData = userCtrl.selectedUserData;
+        userData.name = userData.first_name?.trim() || '';
 
+        ['middle_name', 'third_name', 'last_name'].forEach(field =>  userCtrl.appendName(userData, field));
 
     }
 
+    userCtrl.changeNationality = function() {
+        directorySvc.changeNationality($scope);
+    };
 
-    function changeNationality() {
-        const {selectedUserData, nationalitiesOptions, identityTypeOptions} = userCtrl;
-        // console.log(selectedUserData);
-        const nationalityId = selectedUserData.nationality_id;
+    userCtrl.changeIdentityType = function() {
+        directorySvc.changeIdentityType($scope);
+    };
 
-        if (nationalityId === null) {
-            selectedUserData.nationality_name = "";
-            userCtrl.isExternalSearchEnable = false;
-            userCtrl.externalSearchSourceName = "";
-        } else {
-            const nationality = nationalitiesOptions.find(option => option.id === nationalityId);
 
-            if (nationality) {
-                if (nationality.identity_type_id === null) {
-                    selectedUserData.identity_type_id = identityTypeOptions[0].id;
-                    selectedUserData.identity_type_name = identityTypeOptions[0].name;
-                } else {
-                    selectedUserData.identity_type_id = nationality.identity_type_id;
-                    selectedUserData.identity_type_name = nationality.identity_type_name;
-                }
-                selectedUserData.nationality_name = nationality.name;
-            }
-        }
+    userCtrl.changeIdentityNumber = function() {
+        directorySvc.changeIdentityNumber($scope);
+    };
 
-        userCtrl.checkConfigForExternalSearch();
-    }
+    userCtrl.setName = function() {
+        directorySvc.setName($scope);
+    };
 
-    function changeIdentityType() {
-        const {selectedUserData, identityTypeOptions} = userCtrl;
-        const identityTypeId = selectedUserData.identity_type_id;
+    userCtrl.changeGender = function() {
+        directorySvc.changeGender($scope);
+    };
 
-        if (identityTypeId === null) {
-            selectedUserData.identity_number = '';
-            selectedUserData.identity_type_name = '';
-            return;
-        }
+    userCtrl.changeDateOfBirth = function() {
+        directorySvc.changeDateOfBirth($scope);
+    };
+    //POCOR-8411 -- Start
+    userCtrl.changeTransferStartDate = function() {
+        userCtrl.unsetError('transferStartDate');
+    };
 
-        const identityType = identityTypeOptions.find(option => option.id === identityTypeId);
+    userCtrl.setError = function(field, message) {
+        directorySvc.setError(userCtrl.error, field, message);
+    };
 
-        if (identityType) {
-            selectedUserData.identity_type_name = identityType.name;
-        }
+    userCtrl.unsetError = function(field) {
+        directorySvc.unsetError(userCtrl.error, field);
+    };
 
-        userCtrl.checkConfigForExternalSearch();
-    }
+    userCtrl.unsetAllErrors = function() {
+        userCtrl.error = {};
+    };
+
+    userCtrl.validateUserDetails = function () {
+        directorySvc.validateUserDetails(userCtrl);
+    };
+
+    userCtrl.validateConfirmDetails = function () {
+        directorySvc.validateConfirmDetails(userCtrl);
+    };
 
 
     async function changeAcademicPeriod() {
@@ -836,12 +755,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             selectedUserData.academic_period_name = selectedPeriod.name;
         }
 
-        userCtrl.error.academic_period_id = '';
+        userCtrl.unsetError('academic_period_id');
 
         try {
             const startDateRangeResponse = await userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod});
             const {start_date, end_date} = startDateRangeResponse.data[0];
-
             userCtrl.getEducationGrades();
 
             const startDatePicker2 = angular.element(document.getElementById('Student_start_date'));
@@ -864,7 +782,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             selectedUserData.education_grade_name = selectedClass.name;
         }
 
-        error.class_id = '';
+        userCtrl.unsetError('class_id');
 
         if (classId) {
             const param = {
@@ -888,19 +806,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    function changeContactType() {
 
-        const {selectedUserData, contactTypeOptions} = userCtrl;
-
-        const contactTypeId = selectedUserData.contact_type_id;
-
-        const selectedContactType = contactTypeOptions.find(option => option.id === contactTypeId);
-
-        if (selectedContactType) {
-            selectedUserData.contact_type_name = selectedContactType.full_contact_type_name;
-        }
+    async function changeStartDate() {
+        userCtrl.unsetError('startDate');
     }
-
     async function changeEducationGrade() {
         const {selectedUserData, educationGradeOptions, error} = userCtrl;
         const {education_grade_id, academic_period_id, date_of_birth} = selectedUserData;
@@ -910,8 +819,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (selectedGrade) {
             selectedUserData.education_grade_name = selectedGrade.name;
         }
+        userCtrl.unsetError('education_grade_id');
 
-        error.education_grade_id = '';
         userCtrl.getClasses();
 
         const formattedDateOfBirth = userSvc.formatDate(date_of_birth);
@@ -930,7 +839,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 if (validation_error === 1) {
                     error.date_of_birth = `The student is ${student_age} years old in the given Academic Period. The student should be between ${min_age} to ${max_age} years old`;
                 } else {
-                    error.date_of_birth = '';
+                    userCtrl.unsetError('date_of_birth');
                 }
             } catch (error) {
                 console.error(error);
@@ -949,8 +858,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (selectedReason) {
             selectedUserData.transferReason.name = selectedReason.name;
         }
+        userCtrl.unsetError('transfer_reason_id');
 
-        error.transfer_reason_id = '';
     }
 
     function getGridOptions(localeText, columnDefs, onRowSelected) {
@@ -981,139 +890,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function goToInternalSearch() {
-        UtilsSvc.isAppendLoader(true);
+        userCtrl.selectedUserData.userType = 'Student';
+        userCtrl.selectedUserData.user_type_id = 1;
+        directorySvc.goToInternalSearch(userCtrl);
+    };
 
-        const internalColumnDefs = [
-            {
-                headerName: userCtrl.translateFields.openemis_no,
-                field: "openemis_no",
-                suppressMenu: true,
-                suppressSorting: true
-            },
-            {headerName: userCtrl.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-            {
-                headerName: userCtrl.translateFields.gender_name,
-                field: "gender",
-                suppressMenu: true,
-                suppressSorting: true
-            },
-            {
-                headerName: userCtrl.translateFields.date_of_birth,
-                field: "date_of_birth",
-                suppressMenu: true,
-                suppressSorting: true
-            },
-            {
-                headerName: userCtrl.translateFields.nationality_name,
-                field: "nationality",
-                suppressMenu: true,
-                suppressSorting: true
-            },
-            {
-                headerName: userCtrl.translateFields.identity_type_name,
-                field: "identity_type",
-                suppressMenu: true,
-                suppressSorting: true
-            },
-            {
-                headerName: userCtrl.translateFields.identity_number,
-                field: "identity_number",
-                suppressMenu: true,
-                suppressSorting: true
-            },
-            {
-                headerName: userCtrl.translateFields.account_type,
-                field: "account_type",
-                suppressMenu: true,
-                suppressSorting: true
-            }
-        ];
-
-        const onInternalRowSelected = function (_e) {
-            userCtrl.selectUserFromInternalSearch(_e.node.data.id);
-            $scope.$apply();
-        };
-
-        AggridLocaleSvc.getTranslatedGridLocale()
-            .then(localeText => {
-                userCtrl.internalGridOptions = getGridOptions(localeText, internalColumnDefs, onInternalRowSelected);
-                setTimeout(() => {
-                    userCtrl.getInternalSearchData();
-                }, 1500);
-            })
-            .catch(error => {
-                console.error(error);
-                userCtrl.internalGridOptions = getGridOptions({}, internalColumnDefs, onInternalRowSelected);
-                setTimeout(() => {
-                    userCtrl.getInternalSearchData();
-                }, 1500);
-            });
-    }
-
-    function goToExternalSearch() {
-        UtilsSvc.isAppendLoader(true);
-
-        const externalColumnDefs = [
-            {headerName: userCtrl.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-            {
-                headerName: userCtrl.translateFields.gender_name,
-                field: "gender",
-                suppressMenu: true,
-                suppressSorting: true
-            },
-            {
-                headerName: userCtrl.translateFields.date_of_birth,
-                field: "date_of_birth",
-                suppressMenu: true,
-                suppressSorting: true
-            },
-            {
-                headerName: userCtrl.translateFields.nationality_name,
-                field: "nationality",
-                suppressMenu: true,
-                suppressSorting: true
-            },
-            {
-                headerName: userCtrl.translateFields.identity_type_name,
-                field: "identity_type",
-                suppressMenu: true,
-                suppressSorting: true
-            },
-            {
-                headerName: userCtrl.translateFields.identity_number,
-                field: "identity_number",
-                suppressMenu: true,
-                suppressSorting: true
-            }
-        ];
-
-        const onExternalRowSelected = function (_e) {
-            userCtrl.selectStudentFromExternalSearch(_e.node.data.id);
-            $scope.$apply();
-        };
-
-        AggridLocaleSvc.getTranslatedGridLocale()
-            .then(localeText => {
-                userCtrl.externalGridOptions = getGridOptions(localeText, externalColumnDefs, onExternalRowSelected);
-                setTimeout(() => {
-                    if (userCtrl.externalSearchSourceName === 'Jordan CSPD') {
-                        userCtrl.getCSPDSearchData();
-                    } else {
-                        userCtrl.getExternalSearchData();
-                    }
-                }, 1500);
-            })
-            .catch(error => {
-                console.error(error);
-                userCtrl.externalGridOptions = getGridOptions({}, externalColumnDefs, onExternalRowSelected);
-                setTimeout(() => {
-                    if (userCtrl.externalSearchSourceName === 'Jordan CSPD') {
-                        userCtrl.getCSPDSearchData();
-                    } else {
-                        userCtrl.getExternalSearchData();
-                    }
-                }, 1500);
-            });
+    function goToExternalSearch () {
+        directorySvc.goToExternalSearch(userCtrl);
     }
 
     function goToPrevStep() {
@@ -1157,11 +940,39 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     return;
                 }
                 case 'add_student':
-                    userCtrl.step = 'confirmation';
+                    userCtrl.processNewUser();
                     break;
             }
         }
     }
+
+    userCtrl.processNewUser = function () {
+        userCtrl.step = 'confirmation';
+        UtilsSvc.isAppendLoader(true);
+
+        userCtrl.getUniqueOpenEmisId()
+            .then(() => {
+                // console.log(userCtrl.selectedUserData.openemis_no)
+                return userCtrl.generatePassword();
+            })
+            .then(() => {
+                return userCtrl.getStudentAdmissionStatus();
+            })
+            .then(() => {
+                userCtrl.selectedUserData.userType = {};
+                userCtrl.selectedUserData.userType.name = 'Students';
+                return userCtrl.getStudentCustomFields();
+            })
+            .catch(error => {
+                UtilsSvc.isAppendLoader(false);
+                userCtrl.messageClass = 'alert-danger';
+                userCtrl.message = error.message || error.toString();
+                console.error(error);
+            })
+            .then(() => {
+                UtilsSvc.isAppendLoader(false);
+            });
+    };
 
 
     function studentExistInTheSameSchool() {
@@ -1231,20 +1042,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         userCtrl.isInternalSearchSelected = false;
     }
 
-    function gotoConfirmStep() {
-        userCtrl.step = 'confirmation';
-        userCtrl.selectedUserData.endDate = '31-12-' + userCtrl.currentYear;
-        userCtrl.getUniqueOpenEmisId()
-            .then(userCtrl.generatePassword)
-            .catch(error => {
-                console.error('An error occurred:', error);
-            });
-    }
 
     function gotoAddStudentStep() {
         userCtrl.step = 'add_student';
-        userCtrl.selectedUserData.endDate = '31-12-' + userCtrl.currentYear;
-        userCtrl.generatePassword();
+        userCtrl.selectedUserData.endDate = userCtrl.currentAcademicPeriodEndDate;
+
     }
 
     async function goToNextStep() {
@@ -1253,9 +1055,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (userCtrl.step === 'confirmation') {
             const studentExistByIdentityFromConfiguration =
                 await userCtrl.checkUserExistByIdentityFromConfiguration();
-
-            if (studentExistByIdentityFromConfiguration)
-                return;
         }
         if (userCtrl.studentExistInUnfinishedWithdraw()) {
             // console.log('studentExistInUnfinishedWithdraw');
@@ -1287,7 +1086,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         // POCOR-7871
         if (userCtrl.isInternalSearchSelected && userCtrl.step !== 'confirmation') {
-            userCtrl.gotoConfirmStep();
+            userCtrl.processNewUser();
             // StudentController.isInternalSearchSelected = false; // POCOR-7871
             return;
         }
@@ -1295,7 +1094,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (userCtrl.isExternalSearchSelected) {
             switch (userCtrl.step) {
                 case "external_search":
-                    userCtrl.gotoConfirmStep();
+                    userCtrl.processNewUser();
                     break;
                 case "confirmation":
                     userCtrl.gotoAddStudentStep();
@@ -1306,6 +1105,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         switch (userCtrl.step) {
             case 'user_details':
+                scope.internalGridOptions = null;
                 userCtrl.validateDetails();
                 break;
             case 'internal_search': {
@@ -1315,12 +1115,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     userCtrl.goToExternalSearch();
                     return;
                 }
-                userCtrl.gotoConfirmStep(); // this step adds OpenemisID // POCOR-8231-C4
+                userCtrl.processNewUser(); // this step adds OpenemisID // POCOR-8231-C4
                 return;
             }
                 break;
             case 'external_search':
-                userCtrl.gotoConfirmStep(); // this step adds OpenemisID // POCOR-8231-C4
+                userCtrl.processNewUser(); // this step adds OpenemisID // POCOR-8231-C4
                 break;
             case 'confirmation':
                 userCtrl.validateAdditionalDetails();
@@ -1334,23 +1134,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     //POCOR-7224-HINDOL[END]
 
     async function validateDetails() {
+        userCtrl.unsetAllErrors();
         const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
         const {selectedStudentData: selectedUserData, error} = userCtrl;
 
         // Reset errors
-        const errorFields = [
-            'first_name',
-            'last_name',
-            'gender_id',
-            'date_of_birth',
-            'nationality_id',
-            'identity_type_id',
-            'identity_number'
-        ];
 
-        errorFields.forEach(field => {
-            error[field] = '';
-        });
 
         // Validate Identity Block
         if (blockName === 'Identity' && hasError) {
@@ -1395,15 +1184,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     async function validateAdditionalDetails() {
-        // const [blockName, hasError] = checkAdditionalDetailValidationBlocksHasError();
-        // userCtrl.message = 'Start Validate Additional.';
-        // userCtrl.messageClass = 'alert-success';
-
-        userCtrl.error.nationality_id = '';
-        userCtrl.error.identity_type_id = '';
-        userCtrl.error.identity_number = '';
-        userCtrl.error.contact_type_id = '';
-        userCtrl.error.contact_value = '';
+        userCtrl.unsetAllErrors();
         let hasError = false;
         const userData = userCtrl.selectedUserData;
         if (!userCtrl.nationalitySkipped &&
@@ -1465,7 +1246,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (!userCtrl.selectedUserData.education_grade_id) {
             userCtrl.error.education_grade_id = 'This field cannot be left empty';
         }
-        var res = userSvc.getEducationGradeAddStudent(userCtrl.selectedUserData.education_grade_id, userCtrl.selectedUserData.first_name, userCtrl.selectedUserData.last_name, userCtrl.selectedUserData.openemis_no); //POCOR-7386
+        var res = userSvc.getEducationGradeAddStudent(userCtrl.selectedUserData.education_grade_id,
+            userCtrl.selectedUserData.first_name,
+            userCtrl.selectedUserData.last_name,
+            userCtrl.selectedUserData.openemis_no); //POCOR-7386
         var res1 = $window.localStorage.getItem('repeater_validation');
         timer = setTimeout(() => {
             var res1 = $window.localStorage.getItem('repeater_validation');
@@ -1478,7 +1262,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (!userCtrl.selectedUserData.startDate) {
             userCtrl.error.startDate = 'This field cannot be left empty';
         }
-        if (userCtrl.error.date_of_birth !== '') return;
 
         // Validation logic for custom fields POCOR-8179
         userCtrl.customFieldsArray.forEach((customField) => {
@@ -1486,9 +1269,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 field.errorMessage = '';
                 if (field.is_mandatory === 1) {
                     if (!field.answer && ['TEXT', 'TEXTAREA', 'NOTE', 'DROPDOWN', 'NUMBER', 'DECIMAL', 'DATE', 'TIME', 'file'].includes(field.field_type)) {
+                        userCtrl.error[field.name] = 'This field is required.'
                         field.errorMessage = 'Custom field is required.';
                         isCustomFieldNotValidated = true;
                     } else if (field.field_type === 'CHECKBOX' && field.answer.length === 0) {
+                        userCtrl.error[field.name] = 'This field is required.'
                         field.errorMessage = 'Custom field is required.';
                         isCustomFieldNotValidated = true;
                     }
@@ -1527,7 +1312,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function saveUserDetails(caller) {
         if (userCtrl.isConfirming) {
-            console.log('Confirmation already in progress');
+            console.info('Confirmation already in progress');
             return;
         }
         userCtrl.isConfirming = true;
@@ -1576,7 +1361,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             nationality_id: userCtrl.selectedUserData.nationality_id,
             nationality_name: userCtrl.selectedUserData.nationality_name,
             contact_type: userCtrl.selectedUserData.contact_type_id,
-            contact_type_id: userCtrl.selectedUserData.contact_type_id,
             contact_value: userCtrl.selectedUserData.contact_value,
             education_grade_id: userCtrl.selectedUserData.education_grade_id,
             academic_period_id: userCtrl.selectedUserData.academic_period_id,
@@ -1706,8 +1490,23 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         userSvc.saveStudentDetails(params).then(function (resp) {
             if (resp) {
                 //POCOR-6172-HINDOL[START]
-                // console.log(resp)
                 userCtrl.notSaved = false;
+                if (userCtrl.userData &&
+                    //POCOR-6172-HINDOL[END]
+                    userCtrl.userData.is_diff_school < 1
+                ) {
+                    if (resp.data.saved_student.institution_student === undefined) {
+                        if (resp.data.saved_student.error !== undefined) {
+                            userCtrl.message = resp.data.saved_student.error;
+                        } else {
+                            userCtrl.message = 'Student is not added. Check for errors.';
+                        }
+                        userCtrl.messageClass = 'alert-danger';
+                        UtilsSvc.isAppendLoader(false);
+                        userCtrl.isConfirming = false;
+                        return;
+                    }
+                }
                 if (userCtrl.userData &&
                     //POCOR-6172-HINDOL[END]
                     userCtrl.userData.is_diff_school > 0
@@ -1716,11 +1515,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     userCtrl.messageClass = 'alert-success';
                     UtilsSvc.isAppendLoader(false);
                     userCtrl.isConfirming = false;
-                    // $window.history.back();
+                    $window.history.back();
                 } else {
                     userCtrl.message = 'Student is added successfully.';
                     userCtrl.messageClass = 'alert-success';
-                    userCtrl.step = "summary";
+                    UtilsSvc.isAppendLoader(false);
+                    userCtrl.step = "summary"; // POCOR-8559
                     var todayDate = new Date();
                     userCtrl.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
                     userCtrl.getRedirectToGuardian();
@@ -1894,7 +1694,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
             );
         } else {
-            userCtrl.selectedUserData.endDate = '31-12-' + new Date().getFullYear(); //default beahaviour
+            userCtrl.selectedUserData.endDate = userCtrl.currentAcademicPeriodEndDate; //default beahaviour
         }
         //POCOR-7889: end
         userCtrl.selectedUserData.addressArea = {
@@ -1917,6 +1717,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         userCtrl.selectedUserData.last_name = selectedData.last_name;
         userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
         userCtrl.selectedUserData.gender_id = selectedData.gender_id;
+        userCtrl.selectedUserData.photo_name = selectedData.photo_name; // POCOR-8917
+        userCtrl.selectedUserData.photo_base_64 = selectedData.photo_content; // POCOR-8917
         userCtrl.selectedUserData.gender = {
             name: selectedData.gender
         };
@@ -2013,7 +1815,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 userCtrl.selectedUserData.address = selectedData.address;
                 userCtrl.selectedUserData.postalCode = selectedData.postal_code;
                 userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-                userCtrl.selectedUserData.endDate = '31-12-' + new Date().getFullYear();
+                userCtrl.selectedUserData.endDate = userCtrl.currentAcademicPeriodEndDate;
                 var todayDate = new Date();
                 userCtrl.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
 
@@ -2071,7 +1873,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             userCtrl.selectedUserData.address = selectedData.address;
             userCtrl.selectedUserData.postalCode = selectedData.postal_code;
             userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-            userCtrl.selectedUserData.endDate = '31-12-' + new Date().getFullYear();
+            userCtrl.selectedUserData.endDate = userCtrl.currentAcademicPeriodEndDate;
             var todayDate = new Date();
             userCtrl.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
 
@@ -2470,7 +2272,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             identity_type_name
         } = userCtrl.selectedUserData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
-        const isIdentityHasError = identity_number?.length > 1 && (nationality_id === undefined || nationality_id === "" || nationality_id === null || identity_type_id === undefined || identity_type_id === null || identity_type_id === "")
+        const isIdentityHasError = (identity_number?.length > 1 || nationality_id || identity_type_id) &&
+            (!identity_number || !nationality_id || !identity_type_id);
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
         let isSkipableForIdentity = identity_number?.length > 1 && nationality_id > 0 && identity_type_id > 0;
 
@@ -2525,52 +2328,55 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
 
-    function isNextButtonShouldDisable() {
-        const {
-            step,
-            selectedUserData: {
-                first_name,
-                last_name,
-                date_of_birth,
-                gender_id,
-                identity_number,
-                openemis_no,
-                user_id
-            },
-            isIdentityUserExist,
-            externalSearchSourceName,
-            isExternalSearchEnable
-        } = userCtrl;
+    // function isNextButtonShouldDisable() {
+    //     const {
+    //         step,
+    //         selectedUserData: {
+    //             first_name,
+    //             last_name,
+    //             date_of_birth,
+    //             gender_id,
+    //             identity_number,
+    //             openemis_no,
+    //             user_id
+    //         },
+    //         isIdentityUserExist,
+    //         externalSearchSourceName,
+    //         isExternalSearchEnable
+    //     } = userCtrl;
+    //
+    //     const checkVars = {
+    //         step,
+    //         first_name,
+    //         last_name,
+    //         date_of_birth,
+    //         gender_id,
+    //         identity_number,
+    //         openemis_no,
+    //         user_id,
+    //         isIdentityUserExist,
+    //         externalSearchSourceName,
+    //         isExternalSearchEnable
+    //     };
+    //
+    //     const isInternalSearch = checkVars.step === "internal_search";
+    //     const isExternalSearch = checkVars.step === "external_search";
+    //
+    //     // console.log(checkVars);
+    //
+    //     if (checkVars.isIdentityUserExist && isInternalSearch) return true;
+    //     if (checkVars.openemis_no && !checkVars.user_id && isInternalSearch) return true;
+    //     if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true;
+    //     if (isInternalSearch && !checkVars.isExternalSearchEnable && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
+    //     if (isExternalSearch && checkVars.externalSearchSourceName === 'UNHCR' && !checkVars.identity_number) return true;
+    //     if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
+    //
+    //     return false;
+    // }
 
-        const checkVars = {
-            step,
-            first_name,
-            last_name,
-            date_of_birth,
-            gender_id,
-            identity_number,
-            openemis_no,
-            user_id,
-            isIdentityUserExist,
-            externalSearchSourceName,
-            isExternalSearchEnable
-        };
-
-        const isInternalSearch = checkVars.step === "internal_search";
-        const isExternalSearch = checkVars.step === "external_search";
-
-        // console.log(checkVars);
-
-        if (checkVars.isIdentityUserExist && isInternalSearch) return true;
-        if (checkVars.openemis_no && !checkVars.user_id && isInternalSearch) return true;
-        if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true;
-        if (isInternalSearch && !checkVars.isExternalSearchEnable && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
-        if (isExternalSearch && checkVars.externalSearchSourceName === 'UNHCR' && !checkVars.identity_number) return true;
-        if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
-
-        return false;
+    function isNextButtonShouldDisable () {
+        return directorySvc.isNextButtonShouldDisable(userCtrl);
     }
-
 
     function getCSPDSearchData() {
         var param = userCtrl.selectedUserData; //POCOR-7916
@@ -2649,24 +2455,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         return false;
     }
 
-    function createCustomFieldsArray() {
-        const selectedCustomField = userCtrl.customFields;
-        // console.log(selectedCustomField);
-        if (selectedCustomField === "null") return;
-
-        const filteredSections = getFilteredSections(userCtrl.customFields);
-        filteredSections.forEach(section => {
-            const filteredArray = filterBySection(selectedCustomField, section);
-            userCtrl.customFieldsArray.push({sectionName: section, data: filteredArray});
-        });
-
-        userCtrl.customFieldsArray.forEach(customField => {
-            customField.data.forEach(fieldData => {
-                initializeFieldData(fieldData);
-            });
-        });
+    userCtrl.createCustomFieldsArray = function() {
+        directorySvc.createCustomFieldsArray(userCtrl);
     }
-
     function getFilteredSections(customFields) {
         return Array.from(new Set(customFields.map(item => item.section)));
     }
@@ -2785,5 +2576,31 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         return {hours, minutes};
     }
 
+    userCtrl.checkDateOfBirth = function() {
+        directorySvc.checkDateOfBirth($scope);
+    };
+
+    userCtrl.checkIdentityNumber = function() {
+        const {nationality_id, identity_type_id, identity_number} = userCtrl.selectedUserData;
+        if (identity_number) {
+            userCtrl.unsetError('identity_number');
+        }
+        if (nationality_id && identity_type_id && identity_number) {
+            userCtrl.unsetAllErrors();
+        }
+    };
+
+    userCtrl.setError = function(field, message) {
+        userCtrl.error[field] = message;
+    };
+
+    userCtrl.unsetError = function(field) {
+
+        delete userCtrl.error[field];
+    };
+
+    userCtrl.unsetAllErrors = function() {
+        userCtrl.error = {};
+    };
 
 }

@@ -43,7 +43,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
             .select(['section'])
             .where({survey_form_id: surveyFormId})
             .group(['section'])
-            .order(['order'])
+            //.order(['order']) //POCOR-8465
             .ajax({defer: true})
             ;
     };
@@ -54,7 +54,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
             .contain(['CustomFields'])
             .where({survey_form_id: surveyFormId, section: sectionName})
             .find('SurveyRules', {survey_form_id: surveyFormId})
-            .order(['order'])
+            //.order(['order']) //POCOR-8465
             .ajax({defer: true})
             ;
     };

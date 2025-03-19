@@ -67,7 +67,7 @@ class StudentsController extends AppController
             'Accounts' => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
             'Nationalities' => ['className' => 'User.Nationalities'],
             // 'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
-            'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+           // 'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'Extracurriculars' => ['className' => 'Student.Extracurriculars', 'actions' => ['index', 'add', 'edit', 'remove', 'view']],//POCOR-6700
 //            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']], //POCOR-7485 cakephp4 use as a function
             'ImportStudents' => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
@@ -239,10 +239,19 @@ class StudentsController extends AppController
         }
     }
 
+    // POCOR-8299 start
     public function Absences()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
+        $request = $this->request;
+        $pass = $request->getParam('pass');
+        $passAction = $pass[0] ?? null;
+        if ($passAction === 'index' || $passAction === 'excel') {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Attendances', 'actions' => ['index', 'excel']]);
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
+        }
     }
+    // POCOR-8299 end
 
     public function ArchivedAbsences()
     {
@@ -548,7 +557,6 @@ class StudentsController extends AppController
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->getAttribute('params')['action'];
         $institutionID = $this->getInstitutionID();
-
         $activeInstitution = $this->Institutions->get($institutionID);
         $institutionName = $activeInstitution->name;
 
@@ -587,6 +595,7 @@ class StudentsController extends AppController
                 }
             }
             if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $id])) {
+
                 $entity = $this->StudentUser->get($id);
                 $queryString = $this->getQueryString();
                 $name = $entity->name;
@@ -812,9 +821,19 @@ class StudentsController extends AppController
             if ($model->getHeader($alias) == 'HealthImmunizations') {
                 $alias = __('Vaccinations');
             }
-            //POCOR-5890 ends
-            $this->Navigation->addCrumb($model->getHeader($alias));
-            $header = $header . ' - ' . $model->getHeader($alias);
+
+            if($alias == 'StudentGpa' || $alias == 'Gpa'){
+                $alias = 'Student GPA';
+                $alias = $model->getHeader($alias);
+                $alias = preg_replace('/G\s*P\s*A/', 'GPA', $alias);
+                $this->Navigation->addCrumb($alias);
+                $header = $header . ' - ' . $alias;
+
+            }else{
+                $this->Navigation->addCrumb($model->getHeader($alias));
+                $header = $header . ' - ' . $model->getHeader($alias);
+            }
+
 
             // $params = $this->request->params;
             $this->set('contentHeader', $header);
@@ -894,8 +913,7 @@ class StudentsController extends AppController
         }
     }
 
-    public
-    function excel($id = 0)
+    public  function excel($id = 0)
     {
         $this->Students->excel($id);
         $this->autoRender = false;
@@ -1067,11 +1085,41 @@ class StudentsController extends AppController
 
     }
 
-    public
-    function Extracurriculars()
+    public function Extracurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']);
+
+        //POCOR-8795 start
+        $session = $this->request->getSession();
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $studentId = $session->read('Student.Students.id');
+        $isGuardian = $session->read('Auth.User.is_guardian');
+        $userData = $this->Session->read();
+        $id = null;
+        if (isset($this->request->getAttribute('params')['pass'][1])) {
+            $id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+        }
+        if ($this->controller->getName() == 'Profiles') {
+            if ($isGuardian) {
+                $sId = $session->read('Student.ExaminationResults.student_id');
+                $studentId = (is_int($sId) && $sId)
+                ? $sId
+                : ($sId ? $this->ControllerAction->paramsDecode($sId)['id'] : ($studentId ?: $userData['Auth']['User']['id']));
+            } else {
+                $studentId = $session->read('Auth.User.id');
+            }
+        }
+
+        $options = [
+            'academic_period_id' => $academicPeriodId,
+            'student_id' => $studentId,
+            'id' => $id
+        ];
+
+        $this->set('extracurricularOptions', $options);
+         //POCOR-8795 end
     }
+
 
     public
     function StudentCurriculars()
@@ -1103,10 +1151,16 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
     }
 
-    // public
-    // function StudentBehaviours()
-    // {
-    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
-    // }
+    //POCOR-8596
+    public
+    function Behaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
+    }
+
+    public function StudentGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
+    }
 
 }

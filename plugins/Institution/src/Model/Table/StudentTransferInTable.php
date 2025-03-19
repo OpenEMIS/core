@@ -65,9 +65,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
                 ],
                 'ruleCompareDateReverse' => [
-                    'rule' => ['compareDateReverse', 'requested_date', []],
+                    'rule' => ['compareDateReverse', 'requested_date', true],
                     'on' => function ($context) {
-                        return array_key_exists('requested_date', $context['data']) && !empty($context['data']['requested_date']);
+                        return array_key_exists('requested_date', $context['data'])
+                            && !empty($context['data']['requested_date']);
                     }
                 ],
                 'ruleCompareDate' => [
@@ -149,7 +150,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('previous_institution_id', ['type' => 'integer', 'sort' => ['field' => 'PreviousInstitutions.code']]);
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'previous_institution_id', 'start_date', 'education_grade_id', 'institution_class_id']);
-        
+
         // back button
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $toolbarAttr = [
@@ -579,9 +580,11 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                         'controller' => 'Institutions',
                         'action' => 'StudentTransferIn',
                         '0' => 'view',
-                        '1' => $encodedQueryString,
-                        '2' => $this->paramsEncode(['id' => $row->id]),
-                        // 'institution_id' => $row->institution_id
+                        '1' => $this->paramsEncode(['id' => $row->id, //POCOR-8642
+                         'institution_id' => $row->institution_id]),
+                        // '1' => $encodedQueryString,
+                        // '2' => $this->paramsEncode(['id' => $row->id]),
+                        // // 'institution_id' => $row->institution_id
                     ];
 
                     if (is_null($row->modified)) {

@@ -11,55 +11,71 @@ $this->start('toolbar');
 <?php endif; ?>
 
 <?php if ($_import) : ?>
-    <a href="<?=$importUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Import Absences') ?>" >
+    <a href="<?= $importUrl ?>" ng-show="$ctrl.action == 'view'">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Import Absences') ?>">
             <i class="fa kd-import"></i>
         </button>
     </a>
-</button>
+    </button>
 <?php endif; ?>
 
+<?php /******POCOR-8745--Start*********/ ?>
 <?php if ($_edit && $_isActive) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onEditClick()">
-        <i class="fa kd-edit"></i> 
+    <button class="btn btn-xs btn-default"
+        data-toggle="tooltip"
+        data-placement="bottom"
+        data-container="body"
+        title="<?= __('Edit'); ?>"
+        ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && !$ctrl.closedPeriod && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1"
+        ng-click="$ctrl.onEditClick()">
+        <i class="fa kd-edit"></i>
     </button>
 
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
+    <button class="btn btn-xs btn-default"
+        data-toggle="tooltip"
+        data-placement="bottom"
+        data-container="body"
+        title="<?= __('Back'); ?>"
+        ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0"
+        ng-click="$ctrl.onBackClick()">
         <i class="fa kd-back"></i>
     </button>
 <?php endif; ?>
+<?php /******POCOR-8745--End*********/ ?>
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('No Scheduled Class');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onNoScheduledClick()">
-        <i class="kd-null"></i> 
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('No Scheduled Class'); ?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onNoScheduledClick()">
+        <i class="kd-null"></i>
     </button>
 <?php endif; ?>
-<?php 
+<?php
 $session = $this->getRequest()->getSession();
 $superAdmin = $session->read('Auth.User.super_admin');
 $is_connection_is_online = $session->read('is_connection_stablished');
 ?>
-<!-- <?php //if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  ?> -->
+<!-- <?php //if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  
+        ?> -->
 <?php if ($archiveUrl) : ?>
-    <a href="<?=$archiveUrl ?>" ng-show="$ctrl.action == 'view'">
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >
+    <a href="<?= $archiveUrl ?>" ng-show="$ctrl.action == 'view'">
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>">
             <i class="fa fa-folder"></i>
         </button>
     </a>
-</button>
+    </button>
 <?php endif; ?>
-<?php //endif; ?>
+<?php //endif; 
+?>
 <?php /*************** Start POCOR-5188 */ ?>
-    <?php 
-        if(!empty($is_manual_exist)):
-    ?>
+<?php
+if (!empty($is_manual_exist)):
+?>
 
     <a href="<?php echo $is_manual_exist['url']; ?>" target="_blank">
-        <button  class="btn btn-xs btn-default icon-big"  data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Help') ?>" >
-        <i class="fa fa-question-circle"></i>
+        <button class="btn btn-xs btn-default icon-big" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Help') ?>">
+            <i class="fa fa-question-circle"></i>
         </button>
     </a>
-    <?php endif ?>
-    <?php /*************** End POCOR-5188 */ ?>
+<?php endif ?>
+<?php /*************** End POCOR-5188 */ ?>
 <?php
 $this->end();
 ?>
@@ -86,9 +102,9 @@ $panelHeader = $this->fetch('panelHeader');
     }
 
     .splitter-filter select[disabled] {
-        background-color: #f2f2f2!important;
-        border: 1px solid #ccc!important;
-        color: #999!important;
+        background-color: #f2f2f2 !important;
+        border: 1px solid #ccc !important;
+        color: #999 !important;
     }
 
     .splitter-filter .split-content-header {
@@ -100,7 +116,7 @@ $panelHeader = $this->fetch('panelHeader');
     }
 
     .splitter-filter .input-selection.attendance.disabled {
-        background-color: #f2f2f2!important;
+        background-color: #f2f2f2 !important;
     }
 
     #institution-student-attendances-table .sg-theme .ag-cell {
@@ -165,7 +181,7 @@ $panelHeader = $this->fetch('panelHeader');
     }
 
 
-    #institution-student-attendances-table .ag-cell .absence-reason + .absences-comment  {
+    #institution-student-attendances-table .ag-cell .absence-reason+.absences-comment {
         margin-top: 15px;
     }
 
@@ -200,39 +216,43 @@ $panelHeader = $this->fetch('panelHeader');
         font-size: 14px;
     }
 
-    .mobile-split-btn button.btn-default{z-index:9999!important; bottom:40px; position:fixed !important; right:15px;}
-
-    @media screen and (max-width:667px){
-         .table-wrapper ::-webkit-scrollbar {
-             -webkit-appearance: none;
-         }
-
-         .table-wrapper ::-webkit-scrollbar:vertical {
-             width: 8px;
-         }
-
-         .table-wrapper ::-webkit-scrollbar:horizontal {
-             height: 8px;
-         }
-
-         .table-wrapper ::-webkit-scrollbar-thumb {
-             background-color: rgba(0, 0, 0, .3);
-             border-radius: 10px;
-             border: 2px solid #ffffff;
-         }
-
-         .table-wrapper ::-webkit-scrollbar-track {
-             border-radius: 10px;
-             background-color: #ffffff;
-         }
+    .mobile-split-btn button.btn-default {
+        z-index: 9999 !important;
+        bottom: 40px;
+        position: fixed !important;
+        right: 15px;
     }
 
+    @media screen and (max-width:667px) {
+        .table-wrapper ::-webkit-scrollbar {
+            -webkit-appearance: none;
+        }
+
+        .table-wrapper ::-webkit-scrollbar:vertical {
+            width: 8px;
+        }
+
+        .table-wrapper ::-webkit-scrollbar:horizontal {
+            height: 8px;
+        }
+
+        .table-wrapper ::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, .3);
+            border-radius: 10px;
+            border: 2px solid #ffffff;
+        }
+
+        .table-wrapper ::-webkit-scrollbar-track {
+            border-radius: 10px;
+            background-color: #ffffff;
+        }
+    }
 </style>
 
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.exportexcel='<?=$excelUrl ?>';" float-btn="true">
-           
+        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>;$ctrl.exportexcel='<?= $excelUrl ?>';" float-btn="true">
+
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">
                     <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
@@ -333,20 +353,49 @@ $panelHeader = $this->fetch('panelHeader');
                             <option value="" ng-if="$ctrl.educationGradeListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
-                    <h5 ng-if="$ctrl.isMarkableSubjectAttendance==true"><?= __('Subjects') ?>: </h5>
+                    <!-- <h5 ng-if="$ctrl.isMarkableSubjectAttendance==true"><?= __('Subjects') ?>: </h5>
                     <div class="input-select-wrapper" ng-if="$ctrl.isMarkableSubjectAttendance==true">
                         <select ng-disabled="$ctrl.action=='edit'" name="subject" ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions" ng-model="$ctrl.selectedSubject" ng-change="$ctrl.changeSubject();">
                             <option value="" ng-if="$ctrl.subjectListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
-                    </div>
-                    <h5 ng-if="$ctrl.isMarkableSubjectAttendance==''"><?= __('Attendance per day') ?>: </h5>
+                    </div> -->
+                    <!-- <h5 ng-if="$ctrl.isMarkableSubjectAttendance==''"><?= __('Attendance per day') ?>: </h5>
                     <div class="input" ng-if="$ctrl.isMarkableSubjectAttendance==''">
                         <div class="input-selection attendance" ng-class="{'disabled': $ctrl.action=='edit' || $ctrl.selectedDay==-1}">
                             <div class="input" ng-repeat="attendance_period in $ctrl.attendancePeriodOptions">
                                 <input ng-disabled="$ctrl.action=='edit' || $ctrl.selectedDay==-1" kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
                             </div>
                         </div>
+                    </div> -->
+
+                    <!-- POCOR-8874 starts -->
+                    <h5><?= __('Attendance By') ?>: </h5>
+                    <div class="input-select-wrapper">
+                        <select name="attendance_by" ng-disabled="$ctrl.action=='edit' || $ctrl.isMarkableAttendance==true" ng-model="$ctrl.selectedAttendanceBy" ng-options="option.id as option.name for option in $ctrl.attendanceByOptions" ng-change="$ctrl.changeAttendanceBy();">
+                            <option value="">Select Attendance By</option>
+                        </select>
                     </div>
+
+                    <h5 ng-if="$ctrl.selectedAttendanceBy=='period'"><?= __('Attendance per day') ?>: </h5>
+                    <div class="input" ng-if="$ctrl.selectedAttendanceBy=='period'">
+                        <div class="input-selection attendance" ng-class="{'disabled': $ctrl.action=='edit' || $ctrl.selectedattendanceBy=='subject'}">
+                            <div class="input" ng-repeat="attendance_period in $ctrl.attendancePeriodOptions">
+                                <input ng-disabled="$ctrl.action=='edit' || $ctrl.selectedattendanceBy=='subject'" kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 ng-if="$ctrl.selectedAttendanceBy=='subject'"><?= __('Subjects') ?>: </h5>
+                    <div class="input-select-wrapper" ng-if="$ctrl.selectedAttendanceBy=='subject'">
+                        <select ng-disabled="$ctrl.action=='edit'" name="subject" ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions" ng-model="$ctrl.selectedSubject" ng-change="$ctrl.changeSubject();">
+                            <option value="" ng-if="$ctrl.subjectListOptions.length == 0"><?= __('No Options') ?></option>
+                        </select>
+                    </div>
+                    <!-- POCOR-8874 ends -->
+
+
+
+
                 </div>
             </bg-pane>
         </bg-splitter>

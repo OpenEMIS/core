@@ -247,8 +247,20 @@ class StudentTemplatesTable extends ControllerActionTable
     public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
-        } else {
-            // attr for template download button
+        } elseif($action == 'edit') {
+            $requestId = $this->request->getParam('pass')[1]; 
+            $paramsDecode = $this->paramsDecode($requestId);
+            $recordId = $paramsDecode['id']; // Added semicolon
+
+            $record = $this->find()
+                ->where([$this->aliasField('id') => $recordId])
+                ->first();
+            $excelName = $record ? $record->excel_template_name : null;
+            $attr['startWithOneLeftButton'] = 'download';
+            $attr['type'] = 'binary';
+            $attr['value'] = $excelName;
+            $attr['attr']['value'] = $excelName;
+        }else{
             $attr['startWithOneLeftButton'] = 'download';
             $attr['type'] = 'binary';
         }
@@ -294,16 +306,29 @@ class StudentTemplatesTable extends ControllerActionTable
         $fileType = 'xlsx';
         $filepath = WWW_ROOT . 'export' . DS . 'customexcel'. DS . 'default_templates'. DS . $filename . '.' . $fileType;
 
-        header("Pragma: public", true);
-        header("Expires: 0"); // set expiration time
-        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-        header("Content-Type: application/force-download");
-        header("Content-Type: application/octet-stream");
-        header("Content-Type: application/download");
-        header("Content-Disposition: attachment; filename=".basename($filepath));
-        header("Content-Transfer-Encoding: binary");
-        header("Content-Length: ".filesize($filepath));
-        echo file_get_contents($filepath);
+        // header("Pragma: public", true);
+        // header("Expires: 0"); // set expiration time
+        // header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        // header("Content-Type: application/force-download");
+        // header("Content-Type: application/octet-stream");
+        // header("Content-Type: application/download");
+        // header("Content-Disposition: attachment; filename=".basename($filepath));
+        // header("Content-Transfer-Encoding: binary");
+        // header("Content-Length: ".filesize($filepath));
+        // echo file_get_contents($filepath);
+
+        if (file_exists($filepath)) {
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
+            header('Content-Length: ' . filesize($filepath));
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            header('Expires: 0');
+
+            readfile($filepath);
+            exit;
+        } 
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {

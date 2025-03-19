@@ -231,6 +231,18 @@ class AlertsTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
     }
 
+    public function triggerSystemUpdateAlertFeatureShell($shellName, $params)
+    {
+        $args = '';
+        $args .= !is_null($params) ? ' '.$params : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+    }
+
    //POCOR-7558 start
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -260,15 +272,20 @@ class AlertsTable extends ControllerActionTable
 
     public function onUpdateFieldFrequency(Event $event, array $attr, $action)
     {
-        $freqOptions=["Daily"=>"Daily",
-                         "Weekly"=>"Weekly",
-                         "Monthly"=>"Monthly",
-                         "Yearly"=>"Yearly"];
+        $freqOptions=[
+            "Never" => __("Never"), // POCOR-8533
+            "Daily" => __("Daily"),
+            "Weekly" => __("Weekly"),
+            "Monthly" => __("Monthly"),
+            "Yearly" => __("Yearly"),
+            "Once" => __("Once")
+        ];
         $attr['type'] = 'select';
         $attr['attr']['options'] = $freqOptions;
 	    $attr['onChangeReload'] = true;
         return $attr;
     }
+
     public function editBeforeAction(Event $event)
     {
         $this->field('name',['type' => 'readonly']);

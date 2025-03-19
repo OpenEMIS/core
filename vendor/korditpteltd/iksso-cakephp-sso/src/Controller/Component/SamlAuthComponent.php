@@ -9,6 +9,8 @@ use Cake\Routing\Router;
 use Cake\Utility\Security;
 use OneLogin_Saml2_Auth;
 use OneLogin_Saml2_Error;
+use OneLogin\Saml2\Auth;
+use OneLogin\Saml2\Error;
 
 class SamlAuthComponent extends Component
 {
@@ -20,7 +22,7 @@ class SamlAuthComponent extends Component
 
     public function initialize(array $config): void
     {
-        $this->session = $this->request->session();
+        $this->session = $this->getController()->getRequest()->getSession();
         $settings = [];
         $returnUrl = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'], true);
         $logout = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'], true);
@@ -62,10 +64,10 @@ class SamlAuthComponent extends Component
 
         $this->createUser = $mappingAttributes['allow_create_user'];
 
-        $this->saml = new OneLogin_Saml2_Auth($setting);
+        $this->saml = new Auth($setting);
         $this->controller = $this->_registry->getController();
 
-        $this->Auth->config('authenticate', [
+        $this->Auth->setConfig('authenticate', [
                 'Form' => [
                     'userModel' => $this->_config['userModel'],
                     'passwordHasher' => [
@@ -115,7 +117,7 @@ class SamlAuthComponent extends Component
             } else {
                 return false;
             }
-        } catch (OneLogin_Saml2_Error $e) {
+        } catch (Error $e) {
             $this->login();
         }
     }

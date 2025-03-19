@@ -85,12 +85,12 @@ class ExtracurricularsTable extends AppTable {
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-		$session = $this->request->getSession();
+		$session = $this->getRequest()->getSession(); // POCOR-8683
         $staffId = $session->read('Staff.Staff.id');
 
 		$Staff = TableRegistry::get('Security.Users');
 
-         $query
+        $query
             ->select([
                 'name' =>  $this->aliasfield('name'),
 				'hours' =>  $this->aliasfield('hours'),

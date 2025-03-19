@@ -50,8 +50,8 @@ export class ApiService {
   }
 
   setSession(){
-    sessionStorage.setItem("username", 'admin');
-    sessionStorage.setItem("password", 'ZGVtbw==');
+    sessionStorage.setItem("nbn", 'admin');
+    sessionStorage.setItem("pbn", 'WyJkZW1vIl0.MTBhZTAzM2FkNjc2YjRmZjAwZWMxYmFkMzM5YzE2OGNlMDIwNDJmMmU5Y2VlY2EzZWUyNTUyZmYyMDEyZGYxNA');
 
     // sessionStorage.setItem("username", 'teacher');
     // sessionStorage.setItem("password", 'cGFzc3dvcmQ=');

@@ -31,6 +31,11 @@ class ConfigurationsController extends AppController
         $this->set('contentHeader', __($header));
     }
 
+    public function AutomatedStudentEnrollment() //POCOR-8689
+    { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAutomatedStudentEnrollments']);
+    }
+
     public function Webhooks()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigWebhooks']);
@@ -194,5 +199,10 @@ class ConfigurationsController extends AppController
         } else {
             throw new NotFoundException('Configuration item not found');
         }
+    }
+
+    public function ExternalDataSourceLMS()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ExternalDataSourceLMS']);
     }
 }

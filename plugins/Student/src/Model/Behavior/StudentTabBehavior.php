@@ -82,10 +82,10 @@ class StudentTabBehavior extends Behavior
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
+            'Absences' => ['text' => __('Attendance')], // POCOR-8299
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
-            'Competencies' => ['text' => __('Competenciessss')],
+            'Competencies' => ['text' => __('Competencies')],
             //POCOR-7474-HINDOL TYPO FIX
             'Assessments' => ['text' => __('Assessments')], //POCOR-5786
             'ExaminationResults' => ['text' => __('Examinations')],
