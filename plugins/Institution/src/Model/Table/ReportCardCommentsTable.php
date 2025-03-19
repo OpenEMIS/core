@@ -79,12 +79,12 @@ class ReportCardCommentsTable extends ControllerActionTable
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
         $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-
+        $ReportCardsConditions = [] ;
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        // $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod; Commented due to POCOR-8987
         //End
 
         $availableGrades = $InstitutionGrades->find()
@@ -93,20 +93,115 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->toArray();
         // Report Cards filter
         if (!empty($availableGrades)) {
-            $reportCardOptions = $ReportCards->find('list')
+            //POCOR-8987 start
+            $isSuperAdmin = $this->Auth->user()['super_admin'];
+            if($isSuperAdmin == 0){
+                $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+                $loggedInUserId = $this->Auth->user()['id'];
+                $userRoleId = $SecurityRoles->getLoggedInUserRoles($loggedInUserId);
+            
+                $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                $functionsData = $SecurityFunctions->find()
+                ->select([$SecurityFunctions->aliasField('id')])
                 ->where([
-                    $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                    $ReportCards->aliasField('education_grade_id IN ') => $availableGrades,
-                    // only show record if at least one comment type is needed
-                    //Commented for POCOR-8579[START]
-                    // 'OR' => [
-                    //     $ReportCards->aliasField('principal_comments_required') => 1,
-                    //     $ReportCards->aliasField('homeroom_teacher_comments_required') => 1,
-                    //     $ReportCards->aliasField('teacher_comments_required') => 1
-                    // ]
-                    //Commented for POCOR-8579[END]
+                    $SecurityFunctions->aliasField('name') => 'All Comments'
+                ])->enableHydration(false)->first();
+                if (!empty($functionsData)) {
+                    $funId = $functionsData['id'];
+                }
+
+                $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
+                $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+                ->where([
+                    $SecurityRoleFunctionsTbl->aliasField('security_function_id') => $funId,
+                    $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $userRoleId,
+                    $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
                 ])
+                ->enableHydration(false)->first();
+
+                if(empty($SecurityRoleFunctions)){
+                    $functionsData = $SecurityFunctions->find()
+                    ->select([$SecurityFunctions->aliasField('id')])
+                    ->where([
+                        $SecurityFunctions->aliasField('name') => 'Comments'
+                    ])->enableHydration(false)->first();
+
+                    if (!empty($functionsData)) {
+                        $funId = $functionsData['id'];
+
+                        $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
+                        $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+                        ->where([
+                            $SecurityRoleFunctionsTbl->aliasField('security_function_id') => $funId,
+                            $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $userRoleId,
+                            $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
+                        ])
+                        ->enableHydration(false)->first();
+                           
+                        if(!empty($SecurityRoleFunctions)){
+                            $userRoles = [];
+                            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+                            $Roles = $SecurityRoles
+                                        ->find()
+                                        ->select($SecurityRoles->aliasField('code'))
+                                        ->where([$SecurityRoles->aliasField('id IN') => $userRoleId ])
+                                        ->toArray();
+                            if (!empty($Roles)) {
+                                foreach ($Roles as $role) {
+                                    $userRoles[] = $role->code;
+                                }
+                            }
+                            
+                            if(in_array('PRINCIPAL',$userRoles)){
+                                $orConditions[ $ReportCards->aliasField('principal_comments_required')] =  1;
+                            }
+                            if(in_array('HOMEROOM_TEACHER',$userRoles))
+                            {
+                                $orConditions[ $ReportCards->aliasField('homeroom_teacher_comments_required')] =  1;
+                            }
+                            if(in_array('TEACHER',$userRoles)){
+                                $orConditions[ $ReportCards->aliasField('teacher_comments_required')] =  1;
+                            }
+                            
+                        }
+                        // else{
+                        //     $where[ $ReportCards->aliasField('principal_comments_required')] =  0;
+                        //     $where[ $ReportCards->aliasField('homeroom_teacher_comments_required')] =  0;
+                        //     $where[ $ReportCards->aliasField('teacher_comments_required')] =  0;
+                        // }
+                    }
+
+
+                }
+            }
+           
+            $ReportCardsConditions[$ReportCards->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+            $ReportCardsConditions[$ReportCards->aliasField('education_grade_id IN ')] = $availableGrades;
+
+            $reportCardOptions = $ReportCards->find('list')
+                ->where([$ReportCardsConditions,'OR' => $orConditions])
                 ->toArray();
+            //POCOR-8987 end
+            //commented due to POCOR-8987[START]
+            // $reportCardOptions = $ReportCards->find('list')
+            //     ->where($ReportCardsConditions)
+            //     ->where([
+            //         $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
+            //         $ReportCards->aliasField('education_grade_id IN ') => $availableGrades,
+
+            //         // only show record if at least one comment type is needed
+            //         //Commented for POCOR-8579[START]
+            //         // 'OR' => [
+            //         //     $ReportCards->aliasField('principal_comments_required') => 1,
+            //         //     $ReportCards->aliasField('homeroom_teacher_comments_required') => 1,
+            //         //     $ReportCards->aliasField('teacher_comments_required') => 1
+            //         // ]
+            //         //Commented for POCOR-8579[END]
+            //     ])
+            //     ->toArray();
+            //Commented due to POCOR-8987[END]
+            $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod; // POCOR-8987
+
             $reportCardOptions = ['0' => __('All Report Cards')] + $reportCardOptions;
             $selectedReportCard = !is_null($this->request->getQuery('report_card_id')) ? $this->request->getQuery('report_card_id') : 0;
             $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
@@ -198,6 +293,7 @@ class ReportCardCommentsTable extends ControllerActionTable
             ])
             ->where([
                 $where,$conditions, //POCOR-6821
+                'OR' => $orConditions //POCOR-8987
                 // only show record if at least one comment type is needed
                 //Commented for POCOR-8579[START]
                 // 'OR' => [
@@ -207,6 +303,7 @@ class ReportCardCommentsTable extends ControllerActionTable
                 // ]
                 //Commented for POCOR-8579[END]
             ])
+            
             // ->orWhere([$orWhere]) // POCOR-7485
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
