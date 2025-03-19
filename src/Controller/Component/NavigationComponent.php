@@ -4454,7 +4454,7 @@ class NavigationComponent extends Component
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
-//        dd($event->getResult());
+    //    dd($event->getResult());
         // POCOR-8527 start fix roles for navs
         if ($event->getResult()) {
             $result = $event->getResult();
