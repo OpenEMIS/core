@@ -48,6 +48,7 @@ class InstitutionConsumablesTable extends ControllerActionTable
     {
         $this->field('stock_unit_id', ['type' => 'select', 'visible' => ['index' => true, 'view' => true, 'edit' => true]]);
         $this->field('item_type_id', ['type' => 'select', 'visible' => ['index' => true, 'view' => true, 'edit' => true]]);
+        $this->field('balance', ['visible' => ['index' => true, 'view' => false, 'edit' => false]]);
        
         $this->setFieldOrder(['bin_no', 'item_type_id', 'stock_type_id', 'minimum', 'balance']);
 
@@ -138,8 +139,17 @@ class InstitutionConsumablesTable extends ControllerActionTable
     public function onGetBalance(Event $event, Entity $entity)
     {
         $content = "";
-        if ($entity->balance < $entity->minimum) {
-            $content .= '<span class="input string" style="color:red;">' . $entity->balance . '</span>';
+        $InstitutionConsumableTransactions = TableRegistry::getTableLocator()->get('Institution.InstitutionConsumableTransactions');
+        $transactions = $InstitutionConsumableTransactions->find()
+        ->where(['InstitutionConsumableTransactions.institution_consumable_id' => $entity->id])
+        ->order(['InstitutionConsumableTransactions.id' => 'DESC'])
+        ->first();
+        
+        if ($transactions->balance < $entity->minimum) {
+            $content .= '<span class="input string" style="color:red;">' . $transactions->balance . '</span>';
+        }
+        else{
+            $content .= '<span class="input string">' . $transactions->balance . '</span>';
         }
         return $content;
     }
