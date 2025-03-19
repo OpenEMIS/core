@@ -125,10 +125,10 @@ class ReportCardService extends Controller
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to generate student report card.',
+                'Failed to dowanload student report cards.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('Failed to generate student report card.');
+            return $this->sendErrorResponse('Failed to dowanload student report cards.');
         }
     }
     //For POCOR-8252 End...

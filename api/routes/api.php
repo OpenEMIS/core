@@ -502,7 +502,7 @@ Route::group(
 
 
         //POCOR-8252 start...
-        Route::get('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}', 'ReportCardController@studentReportCardGenerate');
+        Route::post('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}', 'ReportCardController@studentReportCardGenerate');
         //POCOR-8252 end...
     }
 );
