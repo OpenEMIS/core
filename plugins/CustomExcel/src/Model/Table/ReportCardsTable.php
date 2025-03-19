@@ -10,7 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Cake\Utility\Security;
 use App\Model\Table\AppTable;
-use Cake\I18n\Time;//POCOR-7319
+use Cake\I18n\FrozenTime;//POCOR-7319
 use Cake\Http\Session;
 use Cake\Datasource\ConnectionManager;
 
@@ -85,6 +85,8 @@ class ReportCardsTable extends AppTable
                 'SubjectTeacher',
                 'AttendanceAge',
                 'CompetencyPeriodsByTemplate',
+                'InstitutionStudentsReportCardGpa',//POCOR-8222
+                'InstitutionStudentGradeGpa'//POCOR-8222
             ]
         ]);
     }
@@ -141,6 +143,8 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentNextYearClass'] = 'onExcelTemplateInitialiseStudentNextYearClass';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentIdentities'] = 'onExcelTemplateInitialiseStudentIdentities';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseSubjectTeacher'] = 'onExcelTemplateInitialiseSubjectTeacher';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'; //POCOR-8222
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentGradeGpa'] = 'onExcelTemplateInitialiseInstitutionStudentGradeGpa'; //POCOR-8222
         return $events;
     }
 
@@ -241,7 +245,7 @@ class ReportCardsTable extends AppTable
         if (!empty($ReportCardProcessesData)) {
 
             foreach ($ReportCardProcessesData as $key => $val) {
-                $todayDate = Time::parse('now');
+                $todayDate = FrozenTime::parse('now');
                 $_now = $todayDate->i18nFormat('yyyy-MM-dd HH:mm:ss');
                 $status = $ReportCardProcesses::COMPLETED;
                 $modified = $_now;
@@ -294,11 +298,23 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentsReportCards(Event $event, array $params, ArrayObject $extra)
     {
+        $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
         if (isset($params['report_card_id'], $params['student_id'], $params['institution_id'], $params['academic_period_id'], $extra['report_card_education_grade_id'])) {
             $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $dateFormat = $ConfigItems->value('date_format');
 
+            //POCOR-8967 -- START
+            $entityGPA = $StudentsGpa->find()
+                ->select(['gpa' =>$StudentsGpa->aliasField('gpa')])
+                ->where([
+                    $StudentsGpa->aliasField('student_id') => $params['student_id'],
+                    $StudentsGpa->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $StudentsGpa->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $StudentsGpa->aliasField('institution_id') => $params['institution_id']
+                ])
+                ->first();
+            //POCOR-8967 -- END
             $entity = $StudentsReportCards
                 ->find()
                 ->select([
@@ -312,7 +328,6 @@ class ReportCardsTable extends AppTable
                     $StudentsReportCards->aliasField('academic_period_id'),
                     $StudentsReportCards->aliasField('education_grade_id'),
                     $StudentsReportCards->aliasField('institution_class_id'),
-                    $StudentsReportCards->aliasField('gpa'),
                 ])
                 ->contain([
                     'Students' => [
@@ -407,6 +422,14 @@ class ReportCardsTable extends AppTable
                 // end POCOR-4156 body masses data
                 $entity->generated_date = date('m-d-Y');
             }
+            //POCOR-8967 -- START
+            if (!empty($entityGPA) && !empty($entity)) {
+                // Add GPA value to the student entity
+                $entity->gpa = $entityGPA->gpa;
+            } else {
+                $entity->gpa = null;
+            }
+            //POCOR-8967 -- END
             return $entity;
         }
     }
@@ -749,18 +772,20 @@ class ReportCardsTable extends AppTable
             ]);
             //POCOR-7033[START]
             if (!empty($entity)) {
-                if ($entity->staff->gender_id == '1') {
-                    $entity->staff->gender_id = "Male";
-                } else {
-                    $entity->staff->gender_id = "Female";
-                }
-                if (!empty($entity->classes_secondary_staff)) {
-                    $entity->secondary = $entity->classes_secondary_staff[0]->secondary_staff->name;
-                }
                 if (!empty($entity->staff)) {
+                    if ($entity->staff->gender_id == '1') {
+                        $entity->staff->gender_id = "Male";
+                    } else {
+                        $entity->staff->gender_id = "Female";
+                    }
                     $entity->homeroom = $entity->staff->name;
                 }
+
+                if (!empty($entity->classes_secondary_staff) && !empty($entity->classes_secondary_staff[0]->secondary_staff)) {
+                    $entity->secondary = $entity->classes_secondary_staff[0]->secondary_staff->name;
+                }
             }
+
             //POCOR-7033[END]
             return $entity;
         }
@@ -1019,7 +1044,110 @@ class ReportCardsTable extends AppTable
             $education_grade_id = $params['education_grade_id'];
             $academic_period_id = $params['academic_period_id'];
             $conn = ConnectionManager::get('default');
-            $sqlQuery = $conn->execute("SELECT attend_info.academic_period_id
+            //POCOR-8902 start
+        //     $sqlQuery = $conn->execute("SELECT attend_info.academic_period_id
+        //     ,attend_info.institution_id
+        //     ,attend_info.education_grade_id
+        //     ,attend_info.institution_class_id
+        //     ,attend_info.student_id
+        //     ,report_card_info.report_card_id
+        //     ,COUNT(DISTINCT(CASE WHEN attend_info.absence_type_id = 1 THEN attend_info.absence_date END)) excused_absence_counter
+        //     ,COUNT(DISTINCT(CASE WHEN attend_info.absence_type_id = 2 THEN attend_info.absence_date END)) unexcused_absence_counter
+        //     ,COUNT(DISTINCT(CASE WHEN attend_info.absence_type_id = 3 THEN attend_info.absence_date END)) late_absence_counter
+        // FROM
+        // (
+        //     SELECT institution_student_absence_details.academic_period_id
+        //         ,institution_student_absence_details.institution_id
+        //         ,institution_student_absence_details.education_grade_id
+        //         ,institution_student_absence_details.institution_class_id
+        //         ,institution_student_absence_details.student_id
+        //         ,institution_student_absence_details.date absence_date
+        //         ,institution_student_absence_details.subject_id
+        //         ,institution_student_absence_details.absence_type_id
+        //         ,period_counter.attendance_per_day period_attendance_per_day
+        //         ,subject_counter.subjects_taken
+        //         ,attendance_type.value
+        //     FROM institution_student_absence_details
+        //     INNER JOIN
+        //     (
+        //         SELECT student_mark_type_status_grades.education_grade_id
+        //             ,student_mark_type_statuses.academic_period_id
+        //             ,student_attendance_mark_types.attendance_per_day
+        //         FROM student_mark_type_status_grades
+        //         INNER JOIN student_mark_type_statuses
+        //         ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
+        //         INNER JOIN student_attendance_mark_types
+        //         ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
+        //         GROUP BY student_mark_type_status_grades.education_grade_id
+        //             ,student_mark_type_statuses.academic_period_id
+        //     ) period_counter
+        //     ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id
+        //     AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id
+        //     LEFT JOIN
+        //     (
+        //         SELECT institution_subject_students.academic_period_id
+        //             ,institution_subject_students.institution_id
+        //             ,institution_subject_students.education_grade_id
+        //             ,institution_subject_students.institution_class_id
+        //             ,institution_subject_students.student_id
+        //             ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken
+        //         FROM institution_subject_students
+        //         INNER JOIN academic_periods
+        //         ON academic_periods.id = institution_subject_students.academic_period_id
+        //         WHERE institution_subject_students.academic_period_id = $academic_period_id
+        //         AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+        //         GROUP BY institution_subject_students.academic_period_id
+        //             ,institution_subject_students.institution_id
+        //             ,institution_subject_students.education_grade_id
+        //             ,institution_subject_students.institution_class_id
+        //             ,institution_subject_students.student_id
+        //     ) subject_counter
+        //     ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id
+        //     AND subject_counter.institution_id = institution_student_absence_details.institution_id
+        //     AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id
+        //     AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id
+        //     AND subject_counter.student_id = institution_student_absence_details.student_id
+        //     CROSS JOIN
+        //     (
+        //         SELECT config_items.value
+        //         FROM config_items
+        //         WHERE config_items.code LIKE 'calculate_daily_attendance'
+        //     ) attendance_type
+        //     WHERE institution_student_absence_details.academic_period_id = $academic_period_id
+        //     AND institution_student_absence_details.student_id = $student_id
+        //     AND institution_student_absence_details.institution_id = $institution_id
+        //     AND institution_student_absence_details.institution_class_id = $institution_class_id
+        //     AND institution_student_absence_details.education_grade_id = $education_grade_id
+        //     GROUP BY institution_student_absence_details.academic_period_id
+        //         ,institution_student_absence_details.institution_id
+        //         ,institution_student_absence_details.education_grade_id
+        //         ,institution_student_absence_details.institution_class_id
+        //         ,institution_student_absence_details.student_id
+        //         ,institution_student_absence_details.date
+        //     HAVING
+        //         CASE
+        //             WHEN attendance_type.value = 1
+        //             THEN COUNT(*) >= 1
+        //             ELSE
+        //                 CASE WHEN institution_student_absence_details.subject_id = 0
+        //                 THEN COUNT(*) >= period_counter.attendance_per_day
+        //                 ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
+        //                 END
+        //         END
+        // ) attend_info
+        // INNER JOIN
+        // (
+        //     SELECT report_cards.id report_card_id
+        //     FROM report_cards
+        //     WHERE report_cards.id = $report_card_id
+        // ) report_card_info
+        // GROUP BY attend_info.academic_period_id
+        //     ,attend_info.institution_id
+        //     ,attend_info.education_grade_id
+        //     ,attend_info.institution_class_id
+        //     ,attend_info.student_id");
+
+        $sqlQuery = $conn->execute("SELECT attend_info.academic_period_id
             ,attend_info.institution_id
             ,attend_info.education_grade_id
             ,attend_info.institution_class_id
@@ -1042,7 +1170,7 @@ class ReportCardsTable extends AppTable
                 ,subject_counter.subjects_taken
                 ,attendance_type.value
             FROM institution_student_absence_details
-            INNER JOIN
+            LEFT JOIN
             (
                 SELECT student_mark_type_status_grades.education_grade_id
                     ,student_mark_type_statuses.academic_period_id
@@ -1081,12 +1209,12 @@ class ReportCardsTable extends AppTable
             AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id
             AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id
             AND subject_counter.student_id = institution_student_absence_details.student_id
-            CROSS JOIN
+            LEFT JOIN
             (
                 SELECT config_items.value
                 FROM config_items
                 WHERE config_items.code LIKE 'calculate_daily_attendance'
-            ) attendance_type
+            ) attendance_type ON 1=1
             WHERE institution_student_absence_details.academic_period_id = $academic_period_id
             AND institution_student_absence_details.student_id = $student_id
             AND institution_student_absence_details.institution_id = $institution_id
@@ -1120,7 +1248,7 @@ class ReportCardsTable extends AppTable
             ,attend_info.education_grade_id
             ,attend_info.institution_class_id
             ,attend_info.student_id");
-
+            //POCOR-8902 end
             $getData = $sqlQuery->fetchAll('assoc');
             $results['EXCUSED']['number_of_days'] = $getData[0]['excused_absence_counter'];
             $results['UNEXCUSED']['number_of_days'] = $getData[0]['unexcused_absence_counter'];
@@ -1136,29 +1264,32 @@ class ReportCardsTable extends AppTable
         if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
 
-            // only get competency templates that have periods within the report card date
-            $entity = $CompetencyTemplates->find()
+            $query = $CompetencyTemplates->find()
                 ->innerJoinWith('Periods')
                 ->where([
-                    $CompetencyTemplates->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $CompetencyTemplates->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
-                    'Periods.start_date >= ' => $extra['report_card_start_date'],
-                    'Periods.end_date <= ' => $extra['report_card_end_date']
+                    'CompetencyTemplates.academic_period_id' => $params['academic_period_id'],
+                    'CompetencyTemplates.education_grade_id' => $extra['report_card_education_grade_id'],
+                    'Periods.start_date >=' => $extra['report_card_start_date'],
+                    'Periods.end_date <=' => $extra['report_card_end_date']
                 ])
-                ->group($CompetencyTemplates->aliasField('id'));
+                ->group(['CompetencyTemplates.id']); 
 
-            if ($entity->count() > 0) {
-                $extra['competency_templates_ids'] = $entity->extract('id')->toArray();
+            $results = $query->toArray();
+
+            if (!empty($results)) {
+                $extra['competency_templates_ids'] = array_column($results, 'id');
             }
-            return $entity->toArray();
+
+            return $results;
         }
     }
+
 
     //POCOR-7315::Start
     public function onExcelTemplateInitialiseAttendanceAge(Event $event, array $params, ArrayObject $extra)
     {
-        $EducationGradesTable = TableRegistry::get('education_grades');
-        $ConfigItemsTable = TableRegistry::get('config_items');
+        $EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
         $results = [];
         $EducationGrades = $EducationGradesTable->get($params['education_grade_id']);
         $AgePlus = $ConfigItemsTable->find()->where(['code' => 'admission_age_plus'])->first();
@@ -1198,7 +1329,7 @@ class ReportCardsTable extends AppTable
                 ]);
 
             if ($entity->count() > 0) {
-                $extra['competency_periods_ids'] = $entity->extract('id')->toArray();
+                $extra['competency_periods_ids'] = $entity->all()->extract('id')->toArray();
             }
             $AbsenceTypeExcused = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
             $AbsenceTypeUnexcused = $AbsenceTypesTable->find()->where(['code' => 'UNEXCUSED'])->first();
@@ -1315,7 +1446,7 @@ class ReportCardsTable extends AppTable
                 ]);
 
             if ($entity->count() > 0) {
-                $extra['competency_periods_ids'] = $entity->extract('id')->toArray();
+                $extra['competency_periods_ids'] = $entity->all()->extract('id')->toArray();
             }
             return $entity->toArray();
         }
@@ -1498,20 +1629,27 @@ class ReportCardsTable extends AppTable
         if (isset($extra['assessment_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
 
-            $entity = $AssessmentPeriods->find()
+            // Fetch the query result using all() to get the actual result set
+            $query = $AssessmentPeriods->find()
                 ->where([
-                    $AssessmentPeriods->aliasField('assessment_id') => $extra['assessment_id'],
-                    $AssessmentPeriods->aliasField('start_date >= ') => $extra['report_card_start_date'],
-                    $AssessmentPeriods->aliasField('end_date <= ') => $extra['report_card_end_date']
+                    'assessment_id' => $extra['assessment_id'],
+                    'start_date >=' => $extra['report_card_start_date'],
+                    'end_date <=' => $extra['report_card_end_date']
                 ])
-                ->order([$AssessmentPeriods->aliasField('start_date')]);
+                ->order(['start_date'])
+                ->enableHydration(false); //POCOR-8798
+            $results = $query->toArray();
 
-            if ($entity->count() > 0) {
-                $extra['assessment_period_ids'] = $entity->extract('id')->toArray();
+            if (!empty($results)) {
+                $extra['assessment_period_ids'] = array_column($results, 'id'); 
             }
-            return $entity->toArray();
+
+            return $results;
         }
     }
+
+
+
 
     public function onExcelTemplateInitialiseAssessmentItems(Event $event, array $params, ArrayObject $extra)
     {
@@ -1657,7 +1795,17 @@ class ReportCardsTable extends AppTable
             } else {
                 $extra['assessment_id'] = NULL;
             }
-            $subjectList = $AssessmentItems
+
+            //POCOR-8798
+            if ($extra['assessment_id'] === null) {
+                $subjectList = $AssessmentItems
+                    ->find('list', [
+                        'keyField' => 'education_subject_id',
+                        'valueField' => 'education_subject_id'
+                    ])
+                    ->toArray();
+            } else {
+                $subjectList = $AssessmentItems
                 ->find('list', [
                     'keyField' => 'education_subject_id',
                     'valueField' => 'education_subject_id'
@@ -1667,13 +1815,26 @@ class ReportCardsTable extends AppTable
                     'class_id' => $params['institution_class_id']
                 ])
                 ->toArray();
+            }
+
 
             // to only process the query if the class has subjects
             $conditions = [];
             if (!empty($subjectList)) {
+                //POCOR-8798
+                if ($extra['assessment_id'] === null) {
+                    $conditions[$AssessmentItemResults->aliasField('assessment_id IS')] = null;  // Handle null explicitly
+                } else {
+                    $conditions[$AssessmentItemResults->aliasField('assessment_id')] = $extra['assessment_id']; // Regular condition
+                }
+
+                if(isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids'])) {
+                    $conditions[$AssessmentItemResults->aliasField('assessment_period_id IN')] = $extra['assessment_period_ids'];
+                }
+
                 $conditions = [
-                    $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
-                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
+                    //$AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
+                    //$AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
                     $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
                     $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
                     $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
@@ -1919,7 +2080,7 @@ class ReportCardsTable extends AppTable
                 ->group($OutcomeTemplates->aliasField('id'));
 
             if ($entity->count() > 0) {
-                $extra['outcome_templates_ids'] = $entity->extract('id')->toArray();
+                $extra['outcome_templates_ids'] = $entity->all()->extract('id')->toArray();
             }
             return $entity->toArray();
         }
@@ -1939,7 +2100,7 @@ class ReportCardsTable extends AppTable
                 ]);
 
             if ($entity->count() > 0) {
-                $extra['outcome_periods_ids'] = $entity->extract('id')->toArray();
+                $extra['outcome_periods_ids'] = $entity->all()->extract('id')->toArray();
             }
             return $entity->toArray();
         }
@@ -2390,9 +2551,18 @@ class ReportCardsTable extends AppTable
          $institutionsPositions = TableRegistry::get('Institution.InstitutionPosition');//POCOR-8093
          $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
          $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+         //POCOR-8798
+         if(!empty($staffPosnId)){
+            $condition = [
+                'InstitutionPositions.staff_position_title_id' => $staffPosnId
+            ];
+        } else {
+            $condition = [];
+        }
          $where = [
              $Staff->aliasField('institution_id') => $institutionId,
-             'InstitutionPositions.staff_position_title_id' => $staffPosnId, //POCOR-8193
+             $condition,//POCOR-8798
+             //'InstitutionPositions.staff_position_title_id' => $staffPosnId, //POCOR-8193
              'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
              $Staff->aliasField('staff_status_id') => $assignedStatus
          ];
@@ -2476,5 +2646,97 @@ class ReportCardsTable extends AppTable
         };
         return $uniqu_array;
     }
-    //POCOR-8013 end
+
+    /**
+     * POCOR-8222
+     * Event handler for initializing the Excel template for Institution Students' Report Card and GPA.
+     * This method is triggered when the report card template is being prepared with student GPA data for the institution.
+     *
+     * @param Event $event The event that triggered the method.
+     * @param array $params Parameters passed to the event.
+     * @param ArrayObject $extra Additional data passed to the event.
+     */
+    public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpa(Event $event, array $params, ArrayObject $extra)
+    {
+        if (!empty($params['student_id']) && !empty($params['institution_id']) &&
+            !empty($params['education_grade_id']) && !empty($params['academic_period_id'])) {
+            $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+            $entity = $StudentsGpa->find()
+                ->select(['gpa' =>$StudentsGpa->aliasField('gpa')])
+                ->where([
+                    $StudentsGpa->aliasField('student_id') => $params['student_id'],
+                    $StudentsGpa->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $StudentsGpa->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $StudentsGpa->aliasField('institution_id') => $params['institution_id']
+                ])
+                ->first();
+        }
+        return $entity;
+    }
+
+    /**
+     * POCOR-8222
+     * Event handler for initializing the Excel template for Institution Student Grade and GPA.
+     * This method is triggered when the Excel template is being prepared with student grades and GPA data.
+     *
+     * @param Event $event The event that triggered the method.
+     * @param array $params Parameters passed to the event.
+     * @param ArrayObject $extra Additional data passed to the event.
+     */
+    public function onExcelTemplateInitialiseInstitutionStudentGradeGpa(Event $event, array $params, ArrayObject $extra)
+    {
+        $entity = null;
+        if (!empty($params['student_id']) && !empty($params['institution_id']) && !empty($params['academic_period_id'])) {
+            $educationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $educationGrades = TableRegistry::get('Education.EducationGrades');
+            $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+            $GradesGpa = TableRegistry::get('Gpa.EducationGradesGpa');
+            $result = $StudentsGpa->find()
+                    ->select(['gpa' => $StudentsGpa->aliasField('gpa'),
+                            'cumulative_gpa' => $StudentsGpa->aliasField('cumulative_gpa'),
+                            'academic_period' => $academicPeriod->aliasField('name'),
+                            'education_grade' => $educationGrades->aliasField('name'),
+                            'start_date' => $GradesGpa->aliasField('start_date'),
+                            'end_date' => $GradesGpa->aliasField('end_date'),
+                            'student_id' => $StudentsGpa->aliasField('student_id'),
+                    ])
+                    ->LeftJoin(
+                            [$academicPeriod->getAlias() => $academicPeriod->getTable()], [
+                                $academicPeriod->aliasField('id = ') . $StudentsGpa->aliasField('academic_period_id')
+                            ])
+                    ->LeftJoin(
+                            [$educationGrades->getAlias() => $educationGrades->getTable()], [
+                                $educationGrades->aliasField('id = ') . $StudentsGpa->aliasField('education_grade_id')
+                            ])
+                    ->LeftJoin(
+                            [$GradesGpa->getAlias() => $GradesGpa->getTable()], [
+                                $GradesGpa->aliasField('education_grade_id = ') . $StudentsGpa->aliasField('education_grade_id')
+                            ])
+                    ->where([
+                        $StudentsGpa->aliasField('student_id') => $params['student_id'],
+                        $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
+                        $GradesGpa->aliasField('gpa_grading_type_id IS NOT') => NULL
+                    ])->group([$StudentsGpa->aliasField('education_grade_id')])
+                    ->toArray();
+                $entity = [];
+                $i = 1;
+                foreach ($result as $row) {
+                    //echo "<pre>"; print_r($row); die;
+                    $entity[] = [
+                        'id' => $i,
+                        'academic_period' => $row['academic_period'],
+                        'education_grade' => $row['education_grade'],
+                        'gpa' => $row['gpa'],
+                        'cumulative' => $row['cumulative_gpa'],
+                        'start_date' => $row['start_date'],  // Null if not a valid date
+                        'end_date' => $row['end_date'],      // Null if not a valid date
+                    ];
+                    $i++;
+                }
+
+        }
+            return $entity;
+    }
+    
 }

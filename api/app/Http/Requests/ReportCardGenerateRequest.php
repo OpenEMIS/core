@@ -34,7 +34,6 @@ class ReportCardGenerateRequest extends FormRequest
             'institution_class_id' => 'required',
             'student_id' => 'required',
             'report_card_id' => 'required',
-            'type' => 'required',
         ];
     }
 

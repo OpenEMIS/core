@@ -124,8 +124,18 @@ trait MessagesTrait
             'custom_validation_pattern' => 'Please enter a valid format',
             'custom_validation_minimum_height' => 'Height is less then minimum height.',
             'custom_validation_maximum_height' => 'Height is more then maximum height.',
+
+            'validation_minimum_height' => 'Height is less then minimum height.',
+            'validation_maximum_height' => 'Height is more then maximum height.',
+
+
             'custom_validation_minimum_weight' => 'Height is less then minimum weight.',
             'custom_validation_maximum_weight' => 'Height is more then maximum weight.',
+
+            'validation_minimum_weight' => 'Weight is less then minimum weight.',
+            'validation_maximum_weight' => 'Weight is more then maximum weight.',
+
+
             'custom_validation_land_size' => 'Size is greater then config size.',
             //'bulk_student_transfer_in' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution.',
             'bulk_student_transfer_in' => 'Bulk Student is updated.', //POCOR-7007 change message
@@ -571,7 +581,13 @@ trait MessagesTrait
             'reconfirm' => 'Please review the information before proceeding with the operation',
             'noStudentSelected' => 'There are no students selected',
             'savingError' => 'Some selected students record were not updated succesfully',
-        ],
+        ],//POCOR-8434 starts
+        'BulkStudentEnrolment' => [
+            'success' => 'Bulk students admission successful',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noStudentSelected' => 'There are no students selected',
+            'savingError' => 'Some selected students record were not updated succesfully',
+        ],//POCOR-8434 ends
         'BulkStudentTransferIn' => [
             'success' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution',
             'reconfirm' => 'Please review the information before proceeding with the operation',
@@ -832,7 +848,9 @@ trait MessagesTrait
             'emailAll' => 'All Report Cards will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
 			'date_closed' => 'Generate date for report card has been closed',
-            'timezone'=>'Timezone is not configured. Please contact the administrator for assistance.'
+            'timezone'=>'Timezone is not configured. Please contact the administrator for assistance.',
+            'gpa' => 'GPA is Generated Successfully for the Report Card',
+            'gpa_closed' => 'Generate date for Student GPA has been closed',
         ],
         'StaffProfiles' => [
             'noProgrammes' => 'There is no programme set for this institution',
@@ -1118,7 +1136,7 @@ trait MessagesTrait
                     'ruleCheckFTE' => 'No available FTE.',
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleStaffExistWithinPeriod' => 'This staff member is already assigned within the selected dates. Please choose a different period.',
                 ],
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End date should not be earlier than Start date'
@@ -1206,7 +1224,7 @@ trait MessagesTrait
                     'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
-                    'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
+                    'ruleStaffExistWithinPeriod' => 'This staff member is already assigned within the selected dates. Please choose a different period.',
                     'ruleInAllPeriod' => 'Staff start date must be within all academic period range'
                 ],
                 'end_date' => [
@@ -2629,6 +2647,7 @@ trait MessagesTrait
             'genralerror' => 'To and from academic period can not be same.',
             'alreadyexist' => 'There are existing data in the selected To Academic Period.',
             'nodataexist' => 'Data does not exist for seleceted from academic period.',
+            'invalidDate' => 'From academic period cannot be greater than to academic period.',
             'nodataexisteducationsystem' => 'Data does not exist in education system for seleceted to academic period.'
         ],
         'UserNationalities' => [
@@ -2642,6 +2661,40 @@ trait MessagesTrait
         ],
         'Messaging'=>[//POCOR-7458
             'email'=>'Message has been send successfully'
+        ],
+        //POCOR-8222
+        'Gpa' => [
+            'GpaGradingTypes' => [
+                    'code' => [
+                        'ruleUniqueCode' => 'Code must be unique',
+                    ],
+                    'pass_mark' => [
+                        'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+                        'ruleIsDecimal' => 'Value is not a valid decimal',
+                        'ruleRange' => 'Mark entered exceeds system limit'
+                    ],
+                    'max' => [
+                        'ruleIsDecimal' => 'Value is not a valid decimal',
+                        'ruleRange' => 'Mark entered exceeds system limit'
+                    ],
+            ],
+
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form',
+                ],
+                'min' => [
+                    'ruleNotMoreThanMax' => 'Min value cannot be more than max value',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ],
+                'max' => [
+                    'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ],
+            ],
         ]
 
     ];

@@ -453,7 +453,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    //$this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),//POCOR-8508
                     $this->StudentsReportCards->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
@@ -463,7 +463,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->ReportCardEmailProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    //$this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),//POCOR-8508
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
@@ -1107,7 +1107,6 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('academic_period_id');
         $this->field('institution_class_id', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
-        $this->field('gpa', ['visible' => true]);
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_name');
         //$this->field('student_id', ['type' => 'hidden', 'sort' => ['field' => 'Users.first_name']]);
@@ -1118,7 +1117,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('email_status');
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
-        $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'gpa', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -1142,7 +1141,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message'),
-                'gpa' => $this->StudentsReportCards->aliasField('gpa'),//POCOR-7318,
+                //'gpa' => $this->StudentsReportCards->aliasField('gpa'),//POCOR-7318,
                 'student_id' => $this->aliasField('student_id'),
                 'openemis_no' => 'Users.openemis_no',
                 'academic_period_id' => 'AcademicPeriods.name',
@@ -1160,7 +1159,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
+                    //$this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')//POCOR-8508
                 ]
             )
             ->leftJoin([$this->ReportCardEmailProcesses->getAlias() => $this->ReportCardEmailProcesses->getTable()],
@@ -1169,7 +1168,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $this->ReportCardEmailProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $this->ReportCardEmailProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    //$this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),//POCOR-8508
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $params['report_card_id']
                 ])
             ->where($conditions)
@@ -1445,7 +1444,6 @@ class ReportCardStatusesTable extends ControllerActionTable
     //POCOR-7321 ends
     public function downloadAll(Event $event, ArrayObject $extra)
     {
-
         $params = $this->getQueryString();
 
         // only download report cards with generated or published status
@@ -1462,6 +1460,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->StudentsReportCards->aliasField('file_content IS NOT NULL')
             ])
             ->toArray();
+        ConnectionManager::get('default')->disconnect();
 
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
@@ -1471,10 +1470,13 @@ class ReportCardStatusesTable extends ControllerActionTable
             $zip = new ZipArchive;
             $zip->open($filepath, ZipArchive::CREATE);
             foreach ($files as $file) {
-                $zip->addFromString($file->file_name, $this->getFile($file->file_content));
-            }
+                $content = $this->getFile($file->file_content);
+                if ($content !== false) {
+                    $zip->addFromString($file->file_name, $content);
+                    unset($content); // Free up memory
+                }
+            }            
             $zip->close();
-
             header("Pragma: public", true);
             header("Expires: 0"); // set expiration time
             header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
@@ -1483,9 +1485,9 @@ class ReportCardStatusesTable extends ControllerActionTable
             header("Content-Length: " . filesize($filepath));
             header("Content-Disposition: attachment; filename=" . $zipName);
             readfile($filepath);
-            ob_clean();
-            flush();
-            sleep(10);
+            // ob_clean();
+            // flush();
+            // sleep(10);
 
             // delete file after download
             unlink($filepath);
@@ -1664,7 +1666,6 @@ class ReportCardStatusesTable extends ControllerActionTable
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
         if (!is_null($studentId)) {
-            $checkgpaStudent = $studentId; //POCOR-7656
             $where[$classStudentsTable->aliasField('student_id')] = $studentId;
         }
         $classStudents = $classStudentsTable->find()
@@ -1681,7 +1682,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         foreach ($classStudents as $student) {
             // Report card processes
-            $checkgpaStudent = $student->student_id;//POCOR-7656
+           // $checkgpaStudent = $student->student_id;//POCOR-7656
             $idKeys = [
                 'report_card_id' => $reportCardId,
                 'institution_class_id' => $student->institution_class_id,
@@ -1709,13 +1710,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->ReportCardEmailProcesses->delete($reportCardEmailProcessEntity);
             }
             // end
-            $getGpa = $this->addGpaReportCards($checkgpaStudent, $reportCardId, $student->academic_period_id);//POCOR-7318 get student GPA//POCOR-7656
+            //$getGpa = $this->addGpaReportCards($checkgpaStudent, $reportCardId, $student->academic_period_id);//POCOR-7318 get student GPA//POCOR-7656
             // Student report card
             $recordIdKeys = [
                 'report_card_id' => $reportCardId,
                 'student_id' => $student->student_id,
                 'academic_period_id' => $student->academic_period_id,
-                'education_grade_id' => $student->education_grade_id
+                'education_grade_id' => $student->education_grade_id,
+                'institution_id' => $student->institution_id //POCOR-8522
             ];
             if ($this->StudentsReportCards->exists($recordIdKeys)) {
                 $studentsReportCardEntity = $this->StudentsReportCards->find()
@@ -1746,6 +1748,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $recordIdKeys['status'] = $StudentsReportCards::IN_PROGRESS;
                     $recordIdKeys['started_on'] = date('Y-m-d H:i:s');
                     $recordIdKeys['gpa'] = $getGpa;
+                    $recordIdKeys['institution_class_id'] = $student->institution_class_id;// POCOR-8522
                     $newEntity = $StudentsReportCards->newEntity($recordIdKeys);
                     $StudentsReportCards->save($newEntity);
                 } else {
@@ -1800,7 +1803,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards ' . $args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
-            // print_r($shellCmd);die();
+             //print_r($shellCmd);die();
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);

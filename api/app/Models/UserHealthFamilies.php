@@ -1,0 +1,260 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class UserHealthFamilies extends Model
+{
+    use HasFactory;
+
+    protected $table = 'user_health_families';
+
+    // ✅ Allow mass assignment
+    protected $fillable = ['id', 'current', 'comment', 'health_relationship_id', 'health_condition_id', 'security_user_id', 'file_name', 'file_content', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+
+    // ✅ Disable Laravel's default timestamps
+    public $timestamps = false;
+
+    // ✅ Treat 'modified' and 'created' as timestamps
+    protected $dates = ['modified', 'created'];
+
+    // ✅ Define the primary key
+    
+    
+
+     // Override getKeyForSaveQuery to handle composite keys
+/**
+ * @OA\PathItem(
+ *     path="/api/v5/user-health-families"
+ * )
+ */
+public function _swaggerPath() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/user-health-families",
+ *     summary="Get list of UserHealthFamilies",
+ *     tags={"UserHealthFamilies"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Successful."
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+                          @OA\Property(property="id", type="integer", example=null),
+                          @OA\Property(property="current", type="integer", example=null),
+                          @OA\Property(property="comment", type="string", example=null),
+                          @OA\Property(property="health_relationship_id", type="integer", example=null),
+                          @OA\Property(property="health_condition_id", type="integer", example=null),
+                          @OA\Property(property="security_user_id", type="integer", example=null),
+                          @OA\Property(property="file_name", type="string", example=null),
+                          @OA\Property(property="file_content", type="string", example=null),
+                          @OA\Property(property="modified_user_id", type="integer", example=null),
+                          @OA\Property(property="modified", type="string", format="date-time", example=null),
+                          @OA\Property(property="created_user_id", type="integer", example=null),
+                          @OA\Property(property="created", type="string", format="date-time", example=null)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerList() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/user-health-families/{id}",
+ *     summary="Get UserHealthFamilies by ID",
+ *     tags={"UserHealthFamilies"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the UserHealthFamilies",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Post(
+ *     path="/api/v5/user-health-families",
+ *     summary="Create a new UserHealthFamilies",
+ *     tags={"UserHealthFamilies"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="id", type="integer", example=null),
+                     @OA\Property(property="current", type="integer", example=null),
+                     @OA\Property(property="comment", type="string", example=null),
+                     @OA\Property(property="health_relationship_id", type="integer", example=null),
+                     @OA\Property(property="health_condition_id", type="integer", example=null),
+                     @OA\Property(property="security_user_id", type="integer", example=null),
+                     @OA\Property(property="file_name", type="string", example=null),
+                     @OA\Property(property="file_content", type="string", example=null),
+                     @OA\Property(property="modified_user_id", type="integer", example=null),
+                     @OA\Property(property="modified", type="string", format="date-time", example=null),
+                     @OA\Property(property="created_user_id", type="integer", example=null),
+                     @OA\Property(property="created", type="string", format="date-time", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Created successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerCreate() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/user-health-families/{id}",
+ *     summary="Update UserHealthFamilies",
+ *     tags={"UserHealthFamilies"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the UserHealthFamilies",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="id", type="integer", example=null),
+                     @OA\Property(property="current", type="integer", example=null),
+                     @OA\Property(property="comment", type="string", example=null),
+                     @OA\Property(property="health_relationship_id", type="integer", example=null),
+                     @OA\Property(property="health_condition_id", type="integer", example=null),
+                     @OA\Property(property="security_user_id", type="integer", example=null),
+                     @OA\Property(property="file_name", type="string", example=null),
+                     @OA\Property(property="file_content", type="string", example=null),
+                     @OA\Property(property="modified_user_id", type="integer", example=null),
+                     @OA\Property(property="modified", type="string", format="date-time", example=null),
+                     @OA\Property(property="created_user_id", type="integer", example=null),
+                     @OA\Property(property="created", type="string", format="date-time", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Updated successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerUpdate() {}
+
+/**
+ * @OA\Delete(
+ *     path="/api/v5/user-health-families/{id}",
+ *     summary="Delete UserHealthFamilies",
+ *     tags={"UserHealthFamilies"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the UserHealthFamilies",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Deleted successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerDelete() {}
+    protected function getKeyForSaveQuery()
+    {
+        $query = $this->newQueryWithoutScopes();
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    // Override setKeysForSaveQuery to handle composite keys
+    protected function setKeysForSaveQuery($query)
+    {
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    public static function getValidationRules(): array
+    {
+        return [
+            // Add validation rules here
+        ];
+    }
+
+
+
+
+    public function _swaggerHelper() {
+        return;
+    }
+}

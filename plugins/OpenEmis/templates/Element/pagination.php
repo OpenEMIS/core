@@ -4,7 +4,7 @@ $totalRecords = isset($params['count']) ? $params['count'] : 0;
 ?>
 
 <?php if ($totalRecords > 0) : ?>
-<div class="pagination-wrapper" style="display:none" ng-class="disableElement">
+<div class="pagination-wrapper" ng-class="disableElement">
 	<?php
 	$totalPages = $params['pageCount'];
 	if ($totalPages >1) :
@@ -42,3 +42,4 @@ $totalRecords = isset($params['count']) ? $params['count'] : 0;
 	</div>
 </div>
 <?php endif ?>
+<?php //echo $this->Html->script('Survey.limit', ['block' => true]); // POCOR-8972 removed annoying error ?>

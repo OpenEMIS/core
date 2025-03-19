@@ -40,6 +40,8 @@ class DirectoriesTable extends ControllerActionTable
      */
     public static function getUserInternalSearch(array $requestDataParams): array
     {
+//        Log::debug(__FUNCTION__);
+//        Log::debug(print_r($requestDataParams, true));
         $institutionId = $requestDataParams['institution_id'] ?? null;
         $userTypeId = $requestDataParams['user_type_id'] ?? null;
         $firstName = $requestDataParams['first_name'] ?? null;
@@ -49,23 +51,51 @@ class DirectoriesTable extends ControllerActionTable
         $dateOfBirth = $requestDataParams['date_of_birth'] ?? null;
         $identityTypeId = $requestDataParams['identity_type_id'] ?? null;
         $nationalityId = $requestDataParams['nationality_id'] ?? null;
+        $studentOpenemisNo = $requestDataParams['student_openemis_no'] ?? null; // POCOR-8063
+        $guardianTypeId = $requestDataParams['guardian_type_id'] ?? null; // POCOR-8063
         $limit = $requestDataParams['limit'] ?? 10;
         $page = $requestDataParams['page'] ?? 1;
         $userId = $requestDataParams['id'] ?? null;
-
-        $securityUsersTable = TableRegistry::getTableLocator()->get('User.Users');
-        $userIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
+        // POCOR-8231 unified getting table
+        $securityUsersTable = self::getDynamicTableInstance('User.Users');
+        $userIdentitiesTable = self::getDynamicTableInstance('User.Identities');
         $userNationalitiesTable = self::getDynamicTableInstance('user_nationalities');
-        $gendersTable = TableRegistry::getTableLocator()->get('User.Genders');
+        $gendersTable = self::getDynamicTableInstance('User.Genders');
+        // POCOR-8231 unified getting table
+        $identityTypesTable = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+        $nationalitiesTable = self::getDynamicTableInstance('FieldOption.Nationalities');
+        $areaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
+        $birthAreaAdministrativesTable = self::getDynamicTableInstance('Area.AreaAdministratives');
 
-        $identityTypesTable = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-        $nationalitiesTable = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
-        $areaAdministrativesTable = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
-        $birthAreaAdministrativesTable = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
-        $conditions = ['1' => 'OK'];
-
-        $conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
-
+        if($userId){
+            $openemisNo = null;
+            $identityNumber = null;
+            $firstName = null;
+            $lastName = null;
+            $dateOfBirth = null;
+        }
+        if($openemisNo){
+            $identityNumber = null;
+            $firstName = null;
+            $lastName = null;
+            $dateOfBirth = null;
+        }
+        if($identityNumber){
+            $firstName = null;
+            $lastName = null;
+            $dateOfBirth = null;
+        }
+        // POCOR-8063: start
+        $base_conditions = [];
+        if ($studentOpenemisNo && $guardianTypeId) {
+            $base_conditions = [$securityUsersTable->aliasField('openemis_no !=') => $studentOpenemisNo];
+        }
+        if (!$identityNumber) {
+            $new_conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+            $conditions = array_merge($base_conditions, $new_conditions);
+//            Log::debug(print_r($conditions, true));
+        }
+        // POCOR-8063: end
         $usersSearchResult = [];
 
         if (!empty($conditions)) {
@@ -87,10 +117,14 @@ class DirectoriesTable extends ControllerActionTable
         $identityUsersResult = [];
 
         if ($identityNumber) {
-            $identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
+            // POCOR-8063: start
+            $new_identityCondition = self::getUserSearchIdentityCondition($identityTypeId,
                 $identityNumber,
                 $nationalityId,
                 $userIdentitiesTable);
+            $identityCondition = array_merge($base_conditions, $new_identityCondition);
+//            Log::debug(print_r($conditions, true));
+            // POCOR-8063: end
             $identityUsersResult = self::getUsersSearchWithIdentityArr($securityUsersTable,
                 $gendersTable,
                 $identityTypesTable,
@@ -107,10 +141,9 @@ class DirectoriesTable extends ControllerActionTable
             $usersSearchResult = $identityUsersResult;
         }
 
-        $institutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $institutionsTable = self::getDynamicTableInstance('Institution.Institutions');
 
-
-        $institutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $institutionStaffTable = self::getDynamicTableInstance('Institution.Staff');
 
         $userInternalSearchResult = [];
         foreach ($usersSearchResult as $securityUser) {
@@ -121,6 +154,8 @@ class DirectoriesTable extends ControllerActionTable
                 $institutionsTable,
                 $institutionStaffTable);
         }
+//        Log::debug(__FUNCTION__);
+//        Log::debug(print_r($userInternalSearchResult, true));
 
         return ['data' => $userInternalSearchResult, 'total' => count($userInternalSearchResult)];
     }
@@ -247,7 +282,8 @@ class DirectoriesTable extends ControllerActionTable
             ->disableHydration()
             ->limit($limit)
             ->page($page);
-        Log::debug($securityUsersResult->sql());
+        // POCOR-8231 removed redundant debug
+        // Log::debug($securityUsersResult->sql());
         $securityUsersResult = $securityUsersResult ? (is_array($securityUsersResult) ? $securityUsersResult : $securityUsersResult->toArray()) : [];
         return $securityUsersResult;
 
@@ -300,6 +336,8 @@ class DirectoriesTable extends ControllerActionTable
      */
     public static function getUsersSearchWithIdentityArr(Table $securityUsers, Table $genders, Table $mainIdentityTypes, Table $mainNationalities, Table $areaAdministratives, Table $userIdentities, array $identityCondition, Table $birthAreaAdministratives, int $limit, int $page): array
     {
+        $userNationalities = self::getDynamicTableInstance('user_nationalities'); //POCOR-8776
+
         $identityUsersResult = $securityUsers
             ->find()
             ->select([
@@ -354,8 +392,12 @@ class DirectoriesTable extends ControllerActionTable
             ->leftJoin([$mainIdentityTypes->getAlias() => $mainIdentityTypes->getTable()], [
                 $mainIdentityTypes->aliasField('id') . ' = ' . $userIdentities->aliasField('identity_type_id')
             ])
+            ->leftJoin([$userNationalities->getAlias() => $userNationalities->getTable()], [ //POCOR-8776 start
+                $userNationalities->aliasField('security_user_id') . ' = ' . $securityUsers->aliasField('id')
+            ])
             ->leftJoin([$mainNationalities->getAlias() => $mainNationalities->getTable()], [
-                $mainNationalities->aliasField('id') . ' = ' . $securityUsers->aliasField('nationality_id')
+                $mainNationalities->aliasField('id') . ' = ' . $userNationalities->aliasField('nationality_id'),
+                $userNationalities->aliasField('preferred = 1') // //POCOR-8776 end
             ])
             ->leftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()], [
                 $areaAdministratives->aliasField('id') . ' = ' . $securityUsers->aliasField('address_area_id')
@@ -380,24 +422,22 @@ class DirectoriesTable extends ControllerActionTable
                                                           $institutionsTable,
                                                           $institutionStaffTable): array
     {
-        $nationalitiesTable = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
-        $identityTypesTable = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-        $specialNeedsTable = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsAssessments');
+        // POCOR-8231 unified table get
+        $nationalitiesTable = self::getDynamicTableInstance('FieldOption.Nationalities');
+        $identityTypesTable = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+        $specialNeedsTable = self::getDynamicTableInstance('SpecialNeeds.SpecialNeedsAssessments');
 
-        $nationality = null;
-        $identityType = null;
-
-        if (!empty($securityUser['nationality_id'])) {
-            $nationality = $nationalitiesTable->find()->where(['id' => $securityUser['nationality_id']])->first();
-        }
-
-        if (!empty($securityUser['identity_type_id'])) {
-            $identityType = $identityTypesTable->find()->where(['id' => $securityUser['identity_type_id']])->first();
+        if (is_resource($securityUser['photo_content'])) {
+            // Read the resource content
+            $content = stream_get_contents($securityUser['photo_content']);
+            // Encode the content to base64
+            $securityUser['photo_content'] = base64_encode($content);
         }
 
         $hasSpecialNeeds = $specialNeedsTable->find()
                 ->where(['security_user_id' => $securityUser['id']])
                 ->count() == 1;
+
         $firstName = $securityUser['first_name'] ?? '';
         $middleName = $securityUser['middle_name'] ?? '';
         $thirdName = $securityUser['third_name'] ?? '';
@@ -416,6 +456,8 @@ class DirectoriesTable extends ControllerActionTable
         }
         $account_type = !empty($accountTypes) ? implode(', ', $accountTypes) : 'Others';
         $contactData = self::getContactData($securityUser['id']);
+        // POCOR-8231 for photo
+
         $userInternalSearchResult = [
             'id' => $securityUser['id'],
             'username' => $securityUser['username'],
@@ -439,7 +481,18 @@ class DirectoriesTable extends ControllerActionTable
             'contact_type_id' => $contactData['contact_type_id'],
             'contact_type_name' => $contactData['contact_type_name'],
             'contact_value' => $contactData['contact_value'],
-            'account_type' => $account_type
+            'account_type' => $account_type,
+            // POCOR-8231 added missing data
+            'address_area_id' => $securityUser['address_area_id'],
+            'area_name' => $securityUser['area_name'],
+            'area_code' => $securityUser['area_code'],
+            'birthplace_area_id' => $securityUser['birthplace_area_id'],
+            'birth_area_name' => $securityUser['birth_area_name'],
+            'birth_area_code' => $securityUser['birth_area_code'],
+            'address' => $securityUser['address'],
+            'postal_code' => $securityUser['postal_code'],
+            'photo_name' => $securityUser['photo_name'],
+            'photo_content' => $securityUser['photo_content'],
             // Add other fields as needed
         ];
 
@@ -518,8 +571,8 @@ class DirectoriesTable extends ControllerActionTable
         }
         $pendingTransfer = self::getPendingTransfer($securityUserId);
         $pendingWithdraw = self::getPendingWithdraw($securityUserId);
-
-        $customDataArray = self::getStudentCustomData($securityUserId);
+// POCOR-8231 custom data not needed as it is got later
+//        $customDataArray = self::getStudentCustomData($securityUserId);
 
         return [
             'institution_id' => $student['institution_id'],
@@ -544,7 +597,8 @@ class DirectoriesTable extends ControllerActionTable
             'is_pending_withdraw' => $pendingWithdraw ? 1 : 0,
             'pending_withdraw_institution_name' => $pendingWithdraw['institution_name'] ?? '',
             'pending_withdraw_institution_code' => $pendingWithdraw['institution_code'] ?? '',
-            'custom_data' => $customDataArray,
+// POCOR-8231 removed as it is got later
+//            'custom_data' => $customDataArray,
         ];
     }
 
@@ -590,6 +644,8 @@ class DirectoriesTable extends ControllerActionTable
             $studentEntity = $studentQuery->first();
             $result = $studentEntity ? (is_array($studentEntity) ? $studentEntity : $studentEntity->toArray()) : [];
         } catch (\Exception $exception) {
+// POCOR-8231 to find where is the error
+            Log::debug(__FUNCTION__);
             Log::debug('Error: ' . $exception->getMessage());
             $result = [];
         }
@@ -616,6 +672,8 @@ class DirectoriesTable extends ControllerActionTable
             // Try to get the table instance directly
             return $locator->get($tableName);
         } catch (\Exception $e) {
+            // POCOR-8231 to find where is the error
+            Log::debug(__FUNCTION__);
             Log::debug('Error: ' . $e->getMessage());
         }
 
@@ -700,6 +758,8 @@ class DirectoriesTable extends ControllerActionTable
             $transferEntity = $transfersQuery->first();
             $result = $transferEntity ? $transferEntity->toArray() : [];
         } catch (\Exception $exception) {
+            // POCOR-8231 to find where is the error
+            Log::debug(__FUNCTION__);
             Log::debug('Error: ' . $exception->getMessage());
             $result = [];
         }
@@ -746,6 +806,8 @@ class DirectoriesTable extends ControllerActionTable
             $withdrawEntity = $withdrawsQuery->first();
             $result = $withdrawEntity ? $withdrawEntity->toArray() : [];
         } catch (\Exception $exception) {
+            // POCOR-8231 to find where is the error
+            Log::debug(__FUNCTION__);
             Log::debug('Error: ' . $exception->getMessage());
             $result = [];
         }
@@ -855,9 +917,14 @@ class DirectoriesTable extends ControllerActionTable
      */
     private static function getStaffDetails(int $securityUserId, ?int $institutionId, $institutionStaffTable, $institutionsTable): array
     {
-        $staffStatusesTable = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+        // POCOR-8231 unified table get
+        $staffStatusesTable = self::getDynamicTableInstance('Staff.StaffStatuses');
         $assignedStatus = $staffStatusesTable->getIdByCode('ASSIGNED');
-
+        // POCOR-8231 no search for institution if it is not given
+        $where = [
+            $institutionStaffTable->aliasField('staff_id') => $securityUserId,
+            $institutionStaffTable->aliasField('staff_status_id') => $assignedStatus
+        ];
         $institutionStaffTbl = $institutionStaffTable
             ->find()
             ->select([
@@ -871,35 +938,68 @@ class DirectoriesTable extends ControllerActionTable
             ->InnerJoin([$institutionsTable->getAlias() => $institutionsTable->getTable()], [
                 $institutionsTable->aliasField('id') . ' = ' . $institutionStaffTable->aliasField('institution_id')
             ])
-            ->where([
-                $institutionStaffTable->aliasField('staff_id') => $securityUserId,
-                $institutionStaffTable->aliasField('staff_status_id') => $assignedStatus,
-                $institutionStaffTable->aliasField('institution_id') => $institutionId
+            ->where($where)
+            ->toArray();
+        if($institutionId){
+            $thisInstitution = $institutionsTable->get($institutionId);
+            $where[$institutionStaffTable->aliasField('institution_id')] = $institutionId;
+        }
+        $sameInstitutionStaffTbl = $institutionStaffTable
+            ->find()
+            ->select([
+                'institution_id' => $institutionStaffTable->aliasField('institution_id'),
+                'staff_id' => $institutionStaffTable->aliasField('staff_id'),
+                'institution_position_id' => $institutionStaffTable->aliasField('institution_position_id'),
+                'staff_status_id' => $institutionStaffTable->aliasField('staff_status_id'),
+                'institution_name' => $institutionsTable->aliasField('name'),
+                'institution_code' => $institutionsTable->aliasField('code')
             ])
+            ->InnerJoin([$institutionsTable->getAlias() => $institutionsTable->getTable()], [
+                $institutionsTable->aliasField('id') . ' = ' . $institutionStaffTable->aliasField('institution_id')
+            ])
+            ->where($where)
             ->toArray();
 
         $isSameSchool = $isDiffSchool = 0;
-        if ($student->institution_id) {
-            $isSameSchool = $student->institution_id == $institutionId ? 1 : 0;
-            $isDiffSchool = !$isSameSchool ? 1 : 0;
+        if (!empty($sameInstitutionStaffTbl)) {
+            $institutionStaffTbl = $sameInstitutionStaffTbl;
         }
-
         $positionArray = [];
+        // POCOR-8231-start
+        $isSameSchool = -1;
+        $isDiffSchool = -1;
+//        Log::debug(print_r($institutionStaffTbl, true));
         foreach ($institutionStaffTbl as $staff) {
             $positionArray[] = $staff->institution_position_id;
+            if ($staff->institution_id) {
+                if ($isSameSchool == -1) {
+                    $isSameSchool = $staff->institution_id == $institutionId ? 1 : 0;
+                }
+                if ($isDiffSchool == -1) {
+                    $isDiffSchool = !$isSameSchool ? 1 : 0;
+                }
+            }
         }
-
-        $customDataArray = self::getStaffCustomData($securityUserId);
-
-        return [
-            'institution_id' => $institutionStaffTbl[0]->institution_id ?? '',
-            'institution_name' => $institutionStaffTbl[0]->institution_name ?? '',
-            'institution_code' => $institutionStaffTbl[0]->institution_code ?? '',
+        // POCOR-8231 end fixed search same-school - other-school
+// POCOR-8231 removed custom data here
+//        $customDataArray = self::getStaffCustomData($securityUserId);
+        // POCOR-8231: start fixed this and that school names and ids for search and add
+        $arrResult = [
+            'institution_id' => $thisInstitution->id,
+            'institution_name' => $thisInstitution->name,
+            'institution_code' => $thisInstitution->code,
+            'current_enrol_institution_id' => $institutionStaffTbl[0]->institution_id ?? '',
+            'current_enrol_institution_name' => $institutionStaffTbl[0]->institution_name ?? '',
+            'current_enrol_institution_code' => $institutionStaffTbl[0]->institution_code ?? '',
             'positions' => $positionArray,
             'is_same_school' => $isSameSchool,
             'is_diff_school' => $isDiffSchool,
-            'custom_data' => $customDataArray,
+            // POCOR-8231 removed custom data in search
+//            'custom_data' => $customDataArray,
         ];
+//        Log::debug(print_r($arrResult,true));
+        return $arrResult;
+        // POCOR-8231: end
     }
 
     /**
@@ -995,6 +1095,7 @@ class DirectoriesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
+        // echo "<pre>";print_r($_REQUEST);die;
         $this->setTable('security_users');
         $this->setEntityClass('User.User');
         parent::initialize($config);
@@ -1071,7 +1172,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->hasMany('InstitutionStudentsReportCardsCommentsStaff', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionStudentsReportCardsCommentsStudent', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'student_id', 'dependent' => true]);
        // not found
-        $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
+        // $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);POCOR-8795
         $this->hasMany('InstitutionSubjectStaff', ['className' => 'Staff.StaffSubjects', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Student.StudentSubjects', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionTripPassengers', ['className' => 'Student.StudentTransport', 'foreignKey' => 'student_id', 'dependent' => true]);
@@ -1201,12 +1302,14 @@ class DirectoriesTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.Image');
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Directory.Directories.id']);
-        $this->toggle('search', false);
+        $this->toggle('search', true);
         $this->setDeleteStrategy('restrict'); //POCOR-7083
     }
 
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
+        // echo "<pre>";
+        // print_r( $primary);die;
         if ($primary) {
             $schema = $this->getSchema();
             $fields = $schema->columns();
@@ -1404,14 +1507,20 @@ class DirectoriesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
     {
-        if (!$this->isAdvancedSearchEnabled()) {
-            $event->stopPropagation();
-            return [];
-        } else {
+        // POCOR-8558 start
+        $referer = $this->request->getEnv('HTTP_REFERER');
+        $parsedUrl = parse_url($referer);
+
+        // Check if 'page' is set in the query string or 'AdvanceSearch' is present
+        if (isset($_GET['page']) || isset($_REQUEST['AdvanceSearch'])) {
             $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
+        } else {
+            $event->stopPropagation();
+            return;
         }
+        // POCOR-8558 ends
 
         $conditions = [];
 
@@ -1941,10 +2050,9 @@ public function getIdentityTypeData($value_selection)
         $this->field('username', ['order' => ++$highestOrder, 'visible' => true]);
         $data['password'] = '';
         if (!isset($requestData[$this->getAlias()]['password'])) {
-            $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
-
+            // POCOR-8231 removed unnecessary call for user
             // Read the number of length of password from system config
-            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
             $data['password'] = $ConfigItems->getAutoGeneratedPassword();
         }
         $this->request = $this->request->withData($this->getAlias(), $data);
@@ -1979,6 +2087,8 @@ public function getIdentityTypeData($value_selection)
             'url' => '#',
             'label' => '<i class="fa fa-search-plus"></i>',
         ];
+        if(isset($toolbarButtons['search']))//POCOr-8733
+           unset($toolbarButtons['search']);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -2106,6 +2216,14 @@ public function getIdentityTypeData($value_selection)
 
     public function indexAfterAction(Event $event)
     {
+        // echo "<pre>";print_r($_REQUEST);die;
+        // $data  = $event->getData();
+        // $datas = $data['2'];
+        // unset($datas['toolbarButtons']['view']['url']['?']);
+        // unset($datas['indexButtons']['view']['url']['?']);
+        // unset($datas['indexButtons']['view']['url']['page']);
+        // unset($datas['toolbarButtons']['view']['url']['page']);
+        // echo "<pre>";print_r($datas);exit;
         $this->fields = [];
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
@@ -2139,10 +2257,10 @@ public function getIdentityTypeData($value_selection)
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
+        // echo '<pre>';print_r($extra);die;
         if ($this->action == 'index') {
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             //POCOR-6248 starts
-            if ($userType == self::STAFF || $userType == self::STUDENT) {
                 $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
                 $ConfigItem = $ConfigItemTable
                     ->find()
@@ -2221,8 +2339,10 @@ public function getIdentityTypeData($value_selection)
                 case self::OTHER:
                     $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
                     break;
+                default: //POCOR-8850
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'date_of_birth']);
+                    break;
             }
-        }
     }
 
     public function onGetStudentStatus(Event $event, Entity $entity)
@@ -2412,10 +2532,19 @@ public function getIdentityTypeData($value_selection)
             }
         }
         //POCOR-8059 :: end
-        if (!$entity->isNew() && $entity->getDirty('gender_id') && !$entity->is_student) {
-            $entity->getErrors('gender_id', __('Gender is not editable in Directories'));
-            return false;
+        //POCOR-8906 start
+        if (!$entity->isNew()) {
+            if (!$entity->is_student) {
+                $dirty = $entity->getDirty();
+                Log::debug(print_r($dirty,true));
+                if (in_array('gender_id', $dirty)) {
+                    $this->Alert->error(__('Gender is not editable in Directories') , ['type' => 'string', 'reset' => true]);
+                    $entity->setErrors(['gender_id', __('Gender is not editable in Directories')]);
+                    return false;
+                }
+            }
         }
+        //POCOR-8906 end
     }
 
     public function onGetInstitution(Event $event, Entity $entity)
@@ -2727,4 +2856,21 @@ public function getIdentityTypeData($value_selection)
         return $result;
     }
 
+    //POCOR-8743 Start
+    public function onGetModifiedUserId(Event $event, Entity $entity)
+    {
+        if(!empty($entity->modified_user_id)) {
+            $users = TableRegistry::get('Security.Users');
+            $user = $users->get($entity->modified_user_id);
+            return $user->name;
+        }
+    }
+
+    public function onGetCreatedUserId(Event $event, Entity $entity)
+    {
+        $users = TableRegistry::get('Security.Users');
+        $user = $users->get($entity->created_user_id);
+        return $user->name;
+    }
+    //POCOR-8743 End
 }

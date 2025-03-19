@@ -12,6 +12,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Log\Log;
+use Cake\Datasource\Paging\NumericPaginator;
 
 class SurveyFormsTable extends CustomFormsTable
 {
@@ -22,7 +23,7 @@ class SurveyFormsTable extends CustomFormsTable
     private $isFilterSelectionEditable = true;
 
     public function initialize(array $config): void
-    {
+    {     
         $config['extra'] = [
             'fieldClass' => [
                 'className' => 'Survey.SurveyQuestions',
@@ -277,6 +278,42 @@ class SurveyFormsTable extends CustomFormsTable
             //$this->CustomFilters->getAlias() //POCOR-8297
         ];
     }
+
+    //POCOR-8549 START
+    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $paginator = new NumericPaginator();
+        $customModuleId = $extra['redirect']['module'] ?? 1;
+        $query = $this->find('all')->where(['custom_module_id' => $customModuleId]);
+        $options = [
+            'limit' => 10, 
+            'page' => $extra['redirect']['page'] ?? 1, 
+        ];
+        $results = $paginator->paginate($query, $options);
+        $count = $results->count();
+
+        if ($count === 1) {
+            $pageKeys = ['page', '?']['page'];
+            foreach (['back', 'list'] as $buttonType) {
+                $buttonUrl = &$extra['toolbarButtons'][$buttonType]['url'];
+                if (isset($buttonUrl['?']['page'])) {
+                    $buttonUrl['?']['page'] -= 1;
+                }
+                if (isset($buttonUrl['page'])) {
+                    $buttonUrl['page'] -= 1;
+                }
+            }
+            foreach (['redirect', 'toolbarButtons'] as $key) {
+                if (isset($extra[$key]['?']['page'])) {
+                    $extra[$key]['?']['page'] -= 1;
+                }
+                if (isset($extra[$key]['page'])) {
+                    $extra[$key]['page'] -= 1;
+                }
+            }
+        }
+    }
+    //POCOR-8549 END
 
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)

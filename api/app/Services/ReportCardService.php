@@ -116,21 +116,39 @@ class ReportCardService extends Controller
     //For pocor-8270 end...
 
 
-    //For POCOR-8252 Start...
-    public function studentReportCardGenerate($params, $institutionId, $classId, $studentId)
+    //For POCOR-8617 Start...
+    public function studentReportCardPdfDownload($params, $institutionId, $classId, $studentId)
     {
         try {
-            $data = $this->reportCardRepository->studentReportCardGenerate($params, $institutionId, $classId, $studentId);
+            $data = $this->reportCardRepository->studentReportCardPdfDownload($params, $institutionId, $classId, $studentId);
+
             return $data;
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to dowanload student report cards.',
+                'Failed to generate student report card in PDF.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('Failed to dowanload student report cards.');
+            return $this->sendErrorResponse('Failed to generate student report card in PDF.');
         }
     }
-    //For POCOR-8252 End...
+
+
+    public function studentReportCardExcelDownload($params, $institutionId, $classId, $studentId)
+    {
+        try {
+            $data = $this->reportCardRepository->studentReportCardExcelDownload($params, $institutionId, $classId, $studentId);
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card in excel.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card in excel.');
+        }
+    }
+    //For POCOR-8617 End...
 
 }

@@ -10,8 +10,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
-use Cake\I18n\Date;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenDate;
+use Cake\I18n\FrozenTime;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 /**
@@ -169,11 +169,25 @@ class ClassTemplatesTable extends ControllerActionTable
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
-        } else {
-            // attr for template download button
+        } elseif($action == 'edit') { //POCOR-8903
+            $requestId = $this->request->getParam('pass')[1]; 
+            $paramsDecode = $this->paramsDecode($requestId);
+            $recordId = $paramsDecode['id']; // Added semicolon
+
+            $record = $this->find()
+                ->where([$this->aliasField('id') => $recordId])
+                ->first();
+            $excelName = $record ? $record->excel_template_name : null;
+            $attr['startWithOneLeftButton'] = 'download';
+            $attr['type'] = 'binary';
+            $attr['value'] = $excelName;
+            $attr['attr']['value'] = $excelName;
+        }else{
             $attr['startWithOneLeftButton'] = 'download';
             $attr['type'] = 'binary';
         }
+
+        return $attr;
 
         return $attr;
     }
@@ -247,11 +261,11 @@ class ClassTemplatesTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 
         if (!empty($entity->generate_start_date)) {
-            $entity->generate_start_date = (new Date($entity->generate_start_date))->format('Y-m-d H:i:s');
+            $entity->generate_start_date = (new FrozenDate($entity->generate_start_date))->modify('+2 day')->format('Y-m-d H:i:s');
         }
 
         if (!empty($entity->generate_end_date)) {
-            $entity->generate_end_date = (new Date($entity->generate_end_date))->format('Y-m-d H:i:s');
+            $entity->generate_end_date = (new FrozenDate($entity->generate_end_date))->modify('+2 day')->format('Y-m-d H:i:s');
         }        
 
     } 
@@ -259,11 +273,11 @@ class ClassTemplatesTable extends ControllerActionTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (!empty($data['generate_start_date'])) {
-            $data['generate_start_date'] = (new Date($data['generate_start_date']))->format('Y-m-d H:i:s');
+            $data['generate_start_date'] = (new FrozenDate($data['generate_start_date']))->format('Y-m-d H:i:s');
         }
 
         if (!empty($data['generate_end_date'])) {
-            $data['generate_end_date'] = (new Date($data['generate_end_date']))->format('Y-m-d H:i:s');
+            $data['generate_end_date'] = (new FrozenDate($data['generate_end_date']))->format('Y-m-d H:i:s');
         }
     }
 	

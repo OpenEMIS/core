@@ -55,7 +55,7 @@ class EmailAllExcelReportCardsShell extends Shell
                         $this->ReportCardEmailProcesses->aliasField('created'),
                         $this->ReportCardEmailProcesses->aliasField('student_id')
                     ])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->first();
 
                 if (!empty($recordToProcess)) {
@@ -255,7 +255,7 @@ class EmailAllExcelReportCardsShell extends Shell
     }
 
     private function setAttachments(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
-    {        
+    {
 		$attachments = [];
         // echo "<pre>"; print_r($studentsReportCardEntity); //POCOR-6836 don't remove this print_r because it's helping us for getting correct attachment with respect to user
         if ($studentsReportCardEntity->has('file_name') && !empty($studentsReportCardEntity->file_name) && $studentsReportCardEntity->has('file_content') && !empty($studentsReportCardEntity->file_content)) {
@@ -294,7 +294,7 @@ class EmailAllExcelReportCardsShell extends Shell
                 $replace = sprintf($format, $placeholder);
 
                 if (!empty($availablePlaceholders)) {
-                    $value = Hash::get($vars, $placeholder);                    
+                    $value = Hash::get($vars, $placeholder);
                     $message = str_replace($replace, $value, $message);
                 }
             }

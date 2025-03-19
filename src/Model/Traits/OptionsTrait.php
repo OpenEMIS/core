@@ -30,6 +30,9 @@ trait OptionsTrait
             'AssessmentGradingTypes' => [
                 'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades'), 'DURATION' => ('Duration')]
             ],
+            'GpaGradingTypes' => [
+                'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades'), 'DURATION' => ('Duration')]
+            ], //POCOR-8222
             'ExaminationGradingTypes' => [
                 'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
             ],

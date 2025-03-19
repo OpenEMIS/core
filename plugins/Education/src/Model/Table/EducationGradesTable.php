@@ -27,7 +27,7 @@ class EducationGradesTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         parent::initialize($config);
-        $this->belongsToMany('Institutions', [
+        $this->belongsToMany('EducationInstitutions', [ //POCOR-8507 association names are unique
             'className' => 'Institution.Institutions',
             'joinTable' => 'institution_grades',
             'foreignKey' => 'education_grade_id',
@@ -43,7 +43,7 @@ class EducationGradesTable extends ControllerActionTable
         $this->hasMany('Rubrics',                   ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionClassGrades',    ['className' => 'Institution.InstitutionClassGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionClassStudents',  ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionStudents',       ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('EducationInstitutionStudents',       ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentAdmission',          ['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentWithdraw',           ['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
 
@@ -74,6 +74,7 @@ class EducationGradesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         if (isset($this->action) && $this->action == 'add') {
             $validator
                     ->add('code', 'ruleUnique', [
@@ -111,6 +112,8 @@ class EducationGradesTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options){
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
          // Webhook Education Grade create -- start
          if($entity->isNew()){
             $body = array();
@@ -157,15 +160,15 @@ class EducationGradesTable extends ControllerActionTable
         }
          else{
             //deleting issue of isnstitution_subject
-            $institutionSubjects = TableRegistry::get('institution_subjects')
+            $institutionSubjects = TableRegistry::get('Institution.InstitutionSubjects')
                 ->find()->where(['education_grade_id' => $entity->id])->first();
             if($institutionSubjects){
                 TableRegistry::get('institution_subjects')->delete($institutionSubjects);
             }
 
-            $educationGradeTable = TableRegistry::get('education_grades')
+            $educationGradeTable = TableRegistry::get('Education.EducationGrades')
                 ->find()->where(['id' => $entity->id])->first();
-               if(TableRegistry::get('education_grades')->delete($entity)){
+               if(TableRegistry::get('Education.EducationGrades')->delete($entity)){
                 $this->Alert->success('general.delete.success', ['reset'=>true]);
                 return $this->controller->redirect(['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Grades']);
                }
@@ -180,43 +183,43 @@ class EducationGradesTable extends ControllerActionTable
 
         if($educationGradeId) {
             // count all institution_grades
-            $institutionGrades = TableRegistry::get('institution_grades')
+            $institutionGrades = TableRegistry::get('Institution.InstitutionGrades')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all assessments
-            $assessments = TableRegistry::get('assessments')
+            $assessments = TableRegistry::get('Assessment.Assessments')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_fees
-            $institutionFees = TableRegistry::get('institution_fees')
+            $institutionFees = TableRegistry::get('Institution.InstitutionFees')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_quality_rubrics
-            $institutionQualityRubrics = TableRegistry::get('institution_quality_rubrics')
+            $institutionQualityRubrics = TableRegistry::get('Institution.InstitutionRubrics')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_class_grades
-            $institutionClassGrades = TableRegistry::get('institution_class_grades')
+            $institutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_class_students
-            $institutionClassStudents = TableRegistry::get('institution_class_students')
+            $institutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_students
-            $institutionStudents = TableRegistry::get('institution_students')
+            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_student_admission
-            $institutionStudentAdmission = TableRegistry::get('institution_student_admission')
+            $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_student_withdraw
-            $institutionStudentWithdraw = TableRegistry::get('institution_student_withdraw')
+            $institutionStudentWithdraw = TableRegistry::get('Institution.StudentWithdraw')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all education_grades_subjects
-            $educationGradesSubjects = TableRegistry::get('education_grades_subjects')
+            $educationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             if( $institutionGrades||
@@ -686,7 +689,8 @@ class EducationGradesTable extends ControllerActionTable
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $this->association('Education')->name('InstitutionProgrammes');
+        //$this->getAssociation('Education')->name('InstitutionProgrammes');
+        $this->getAssociation('EducationInstitutions')->setName('EducationInstitutions');//POCOR-8507
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -931,12 +935,14 @@ class EducationGradesTable extends ControllerActionTable
         // Academic period filter
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? //POCOR-8897
+                                    $serverRequest->getQuery('academic_period_id') :
+                                    $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         //Return all required options and their key
         $levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
-        $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
+        $selectedLevel = !is_null($serverRequest->getQuery('level')) ? $serverRequest->getQuery('level') : key($levelOptions);//POCOR-8897
 
         $cycleIds = $this->EducationProgrammes->EducationCycles
             ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -963,7 +969,7 @@ class EducationGradesTable extends ControllerActionTable
                 $EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'
             ])
             ->toArray();
-        $selectedProgramme = !is_null($serverRequest->getAttribute('query')['programme']) ? $serverRequest->getAttribute('query')['programme'] : key($programmeOptions);
+        $selectedProgramme = !is_null($serverRequest->getQuery('programme')) ? $serverRequest->getQuery('programme') : key($programmeOptions);//POCOR-8897
 
         return compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme');
     }

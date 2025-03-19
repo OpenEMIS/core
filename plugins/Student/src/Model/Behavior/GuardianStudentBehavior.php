@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Controller;
 
 class GuardianStudentBehavior extends Behavior {

@@ -567,13 +567,14 @@ class UsersTable extends ControllerActionTable
         }
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         $BaseUsers = TableRegistry::get('User.Users');
+        $validator->requirePresence('gender_id', 'create'); //POCOR-8752 name,gender and dob should be mandatory
         return $BaseUsers->setUserValidation($validator, $this);
-    }*/
+    }
 
     public function isAdmin($userId)
     {
@@ -726,24 +727,7 @@ class UsersTable extends ControllerActionTable
             }
         }
 //            POCOR-8446
-        $firstName = $this->request->getData()['AdvanceSearch']['Users']['hasMany']['first_name'];
-        $lastName = $this->request->getData()['AdvanceSearch']['Users']['hasMany']['last_name'];
-        $openemisID = $this->request->getData()['AdvanceSearch']['Users']['tableField']['openemis_no'];
-        $username = $this->request->getData()['AdvanceSearch']['Users']['tableField']['username'];
-        if ($firstName === "" && $openemisID === "" && $lastName === "" && $username === ""){
-            $this->Alert->warning("Please search by OpenEMIS ID, Username or by First and Last Name. Otherwise, only users created or modified within the last month will be displayed.", ['type' => 'string', 'reset' => true]);
-
-            $currentDate = FrozenTime::now();
-                $pastDate = $currentDate->subDays(31);
-
-// Format the dates to 'Y-m-d'
-                $currentDateFormatted = $currentDate->format('Y-m-d');
-                $pastDateFormatted = $pastDate->format('Y-m-d');
-
-                $query->where(function ($exp, $query) use ($currentDateFormatted, $pastDateFormatted) {
-                    return $exp->between('DATE(Users.created)', $pastDateFormatted, $currentDateFormatted);
-                });
-        }
+//        POCOR 8972 temporary solution removed
     return $options;
     }
     /**
@@ -798,6 +782,14 @@ class UsersTable extends ControllerActionTable
 
         // Return the table instance
         return $locator->get($tableFullAlias);
+    }
+
+    public function findSystemUpdateEmailList(Query $query, array $options) {
+        $conditions = [
+            $this->aliasField('id') => $options['securityRoleId']
+        ];
+
+        return $query->where($conditions);
     }
 
 }

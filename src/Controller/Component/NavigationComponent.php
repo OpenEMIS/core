@@ -32,10 +32,15 @@ class NavigationComponent extends Component
 
     public function addCrumb($title, $options = [])
     {
+        if (!is_countable($options)) {
+            $size_of_options = 0;
+        } else {
+            $size_of_options = sizeof($options);
+        }
         $item = array(
             'title' => __((string)$title),
             'link' => ['url' => $options],
-            'selected' => sizeof($options) == 0
+            'selected' => $size_of_options == 0
         );
         $this->breadcrumbs[] = $item;
         $this->controller->set('_breadcrumbs', $this->breadcrumbs);
@@ -87,7 +92,6 @@ class NavigationComponent extends Component
                 $navigations = $this->buildNavigation();
                 $this->checkSelectedLink($navigations);
                 $this->checkPermissions($navigations);
-//                die('<pre>' . print_r($navigations, true) );
                 $controller->set('_navigations', $navigations);
             } catch (SecurityException $ex) {
                 return $ex;
@@ -242,6 +246,9 @@ class NavigationComponent extends Component
                 //$encodedParam = $this->request->getAttribute('params')['pass'][1];
                 if ($this->request) { //POCOR-8082
                     $encodedParam = $this->request->getAttribute('params')['pass'][1];
+                }
+                if($action === 'ImportUsers'){
+                    $encodedParam = null; // POCOR-8683 ignore query string
                 }
                 if (!empty($encodedParam)) {
                     $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
@@ -787,7 +794,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.InstitutionCurriculars.index' => [ //POCOR-6673
-                'title' => 'Curriculars',
+                'title' => 'Institution Curriculars',
                 'parent' => 'Institution.Academic',
                 'selected' => ['Institutions.InstitutionCurriculars', 'Institutions.InstitutionCurricularStudents'],
                 'action' => 'index',
@@ -820,6 +827,7 @@ class NavigationComponent extends Component
                     'Institutions.Transfer',
                     'Institutions.Undo',
                     'Institutions.StudentAdmission',
+                    'Institutions.StudentEnrolment',//POCOR-8434
                     'Institutions.StudentTransferIn',
                     'Institutions.StudentTransferOut',
                     'Institutions.StudentWithdraw',
@@ -829,6 +837,7 @@ class NavigationComponent extends Component
                     'Institutions.Students',
                     'Institutions.StudentHistories.index',//POCOR-8333
                     'Institutions.BulkStudentAdmission',
+                    'Institutions.BulkStudentEnrolment',//POCOR-8434
                     'Institutions.ImportStudentBodyMasses',
                     'Institutions.ImportStudentGuardians',
                     'Institutions.StudentStatusUpdates', 'Institutions.ImportStudentExtracurriculars',
@@ -873,6 +882,13 @@ class NavigationComponent extends Component
                     'Institutions.ImportStaffAttendances',
                     'Institutions.StaffAttendancesArchived'],
             ],
+            
+            //POCOR-8667 start
+            'Institutions.Scanned.index' => [ 
+                'title' => 'Scanned',
+                'parent' => 'Institutions.Institutions.index',
+                'selected' => ['Institutions.Scanned'],
+            ], //POCOR-8667 end
 
             'Institution.Behaviour' => [
                 'title' => 'Behaviour',
@@ -927,6 +943,7 @@ class NavigationComponent extends Component
                     'Institutions.ImportAssessmentItemResults.add',
                     'Institutions.ImportAssessmentItemResults.results',
                     'Institutions.AssessmentItemResultsArchived',
+                    'Institutions.AssessmentItemExemptions', //POCOR-8224
                     'Institutions.reportCardGenerate'],
             ],
 
@@ -936,6 +953,12 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.ReportCardStatuses',
                     'Institutions.ReportCardStatusProgress'],
             ],
+            'Institutions.ReportCardGpa.index' => [
+                'title' => 'GPA',
+                'parent' => 'Institution.Performance',
+                'selected' => ['Institutions.ReportCardGpa',
+                    'Institutions.ReportCardCumulativeGpa'],
+            ], //POCOR-8222
             //POCOR-7458 start
             'Institutions.Messaging.index' => [
                 'title' => 'Messaging',
@@ -963,6 +986,7 @@ class NavigationComponent extends Component
             'Institutions.ExaminationStudents.index' => [
                 'title' => 'Students',
                 'parent' => 'Institutions.Examinations',
+                'selected' => ['Institutions.ExaminationStudents'],
             ],
 
             'Institutions.ExaminationResults.index' => [
@@ -1041,6 +1065,14 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.StudentFees'],
             ],
+
+            // POCOR-8873 start
+            'Institutions.Consumable.index' => [
+                'title' => 'Consumable',
+                'parent' => 'Institution.Finance',
+                'selected' => ['Institutions.Consumable','Institutions.Transactions'],
+            ],
+            // POCOR-8873 end
 
             'Infrastructures' => [
                 'title' => 'Infrastructures',
@@ -1315,21 +1347,21 @@ class NavigationComponent extends Component
         $studentID = $this->getStudentID($debugString);
         $institutionID = $this->getInstitutionIDForStudent($debugString);
         $institutionStudentId = $this->controller->getQueryString('institution_student_id');
+        //POCOR-8551
         if (empty($institutionStudentId)) {
             $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-            $institutionStudentId = $InstitutionStudentsTable->find()
+            $query = $InstitutionStudentsTable->find()
+                ->select(['id']) // Specify the field you want to extract
                 ->where([
                     $InstitutionStudentsTable->aliasField('student_id') => $studentID,
                     $InstitutionStudentsTable->aliasField('institution_id') => $institutionID,
                 ])
-                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
-                ->extract('id')
-                ->first();
-            if (empty($institutionStudentId)) {
-                $institutionStudentId = null;
-            }
+                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC']);
 
+            $results = $query->all()->extract('id')->toArray();
+            $institutionStudentId = !empty($results) ? $results[0] : null;
         }
+
 
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
@@ -1390,6 +1422,7 @@ class NavigationComponent extends Component
                     'Students.Behaviours.index',
                     //POCOR-7474-HINDOL TYPO FIX
                     'Students.Assessments.index',
+                    'Students.StudentGpa.index',
                     'Students.AssessmentsArchived.index',
                     'Students.ExaminationResults.index',
                     'Students.ReportCards.index',
@@ -1619,11 +1652,12 @@ class NavigationComponent extends Component
                     'Staff.InstitutionStaffAttendanceActivities',
                     //'Institutions.StaffLeave',
                     'Staff.StaffLeave',
+                    'Staff.StaffEntitlement', // POCOR-8128
                     'Institutions.ArchivedStaffLeave',
                     'Institutions.HistoricalStaffLeave',
                     'Staff.Behaviours',
                     'Institutions.Staff',
-                    'Institutions.StaffPositionProfiles.add',
+                    'Institutions.StaffPositionProfiles',
                     //'Institutions.StaffAppraisals', POCOR-7485 not use becuase now StaffAppraisals's controller change
                     'Staff.StaffAppraisals',
                     'Institutions.ImportStaffLeave',
@@ -2236,7 +2270,10 @@ class NavigationComponent extends Component
                 'title' => 'Scholarships',
                 'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.ScholarshipsDirectory']
+                'selected' => ['Profiles.ScholarshipApplications',
+                                'Profiles.ScholarshipsDirectory',
+                                'Profiles.ScholarshipApplicationInstitutionChoices',
+                                'Profiles.ScholarshipApplicationAttachments']
             ],
 
             // 'Scholarships.Scholarships' => [
@@ -2347,7 +2384,8 @@ class NavigationComponent extends Component
                     'Profiles.StudentRisks',
                     'Profiles.StudentAssociations',
                     'Profiles.Absences',
-                    'Profiles.StudentCurriculars']
+                    'Profiles.StudentCurriculars',
+                    'Profiles.StudentGpa']
             ],//POCOR-6701 added Profiles.Absences becasue navigation was collapsing //POCOR-6699 adding studentAssessment
             'Profiles.StudentScheduleTimetable' => [
                 'title' => 'Timetables',
@@ -2376,23 +2414,39 @@ class NavigationComponent extends Component
 
     public function getGuardianNavNavigation()
     {
-        $session = $this->getController()->getRequest()->getSession();
-        $studentId = $session->read('Student.Students.id');
-        $queryString = $this->request->getQuery['queryString']; // comment cakephp4
-        $queryString = '';
-        if ($queryString != '') {
-            $session->write('queryString', $queryString);
-        } else {
-            $queryString = $session->read('queryString');
+        // $request = $this->getController()->getRequest();
+        // $session = $this->getController()->getRequest()->getSession();
+        // $studentId = $session->read('Student.Students.id');
+        // if(empty($studentId) && $request->getParam('action') == 'StudentUser') {
+        //     $studentId = $this->controller->paramsDecode($request->getParam('pass')[1])['id'];
+        // }
+        // $queryString = $this->request->getQuery['queryString']; // comment cakephp4
+        // $queryString = '';
+        // if ($queryString != '') {
+        //     $session->write('queryString', $queryString);
+        // } else {
+        //     $queryString = $session->read('queryString');
+        // }
+        // POCOR-8415 start
+        $studentId = $this->getStudentID();
+        if(!$studentId){
+            $session = $this->getController()->getRequest()->getSession();
+            $studentId = $session->read('Student.Students.id');
         }
+        $decodedQueryString = $this->controller->getQueryString();
+        $decodedQueryString['id'] = $studentId;
+        $decodedQueryString['student_id'] = $studentId;
+        $queryString = $this->controller->paramsEncode($decodedQueryString);
+        // POCOR-8415 end
         $navigation = [
             'GuardianNavs.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
                 'params' => ['plugin' => 'GuardianNav',
-                    '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
+                    '1' => $queryString], // POCOR-8415
                 'selected' => ['GuardianNavs.StudentUser']
             ],
+
             'GuardianNavs.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
@@ -2411,11 +2465,29 @@ class NavigationComponent extends Component
                     'GuardianNavs.StudentTextbooks',
                     'GuardianNavs.StudentRisks',
                     'GuardianNavs.StudentAssociations']
+            ],
+            //POCOR-8293 start
+            'GuardianNavs.Healths.index' => [
+                'title' => 'Student Health',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'GuardianNav',
+                    '1' => $this->controller->paramsEncode(['id' => $studentId,'security_user_id'=> $studentId]), 'queryString' => $queryString],
+                'selected' => ['GuardianNavs.Healths',
+                        'GuardianNavs.HealthAllergies',
+                        'GuardianNavs.HealthConsultations',
+                        'GuardianNavs.HealthFamilies',
+                        'GuardianNavs.HealthHistories',
+                        'GuardianNavs.HealthImmunizations',
+                        'GuardianNavs.HealthMedications',
+                        'GuardianNavs.HealthTests',
+                        'GuardianNavs.HealthBodyMasses',
+                        'GuardianNavs.HealthInsurances']
             ]
+            //POCOR-8293 end
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
-                $n['params']['studentId'] = $this->controller->paramsEncode($studentId);
+                $n['params']['1'] = $queryString; // POCOR-8415
             }
         }
         return $navigation;
@@ -2541,6 +2613,7 @@ class NavigationComponent extends Component
         $TrainingNav = $this->getAdminstrationTrainingNav();
         $PerformanceNav = $this->getAdminstrationPerformanceNav();
         $ExaminationNav = $this->getAdminstrationExaminationNav();
+        $StaffNav = $this->getAdministrationStaffNav();    // POCOR-8128
         $ScholarshipNav = $this->getAdminstrationScholarshipNav();
         $MoodleNav = $this->getAdminstrationMoodleNav();
         $dataMgtNav = $this->getAdminstrationdataMgtNav();
@@ -2598,8 +2671,21 @@ class NavigationComponent extends Component
 
         ];
 
-        $getallNavigation = array_merge($firstSubMenuAdmin, $SecurityNav, $ProfileNav, $SurveyNav,
-            $CommunicationsNav, $TrainingNav, $PerformanceNav, $ExaminationNav, $ScholarshipNav, $navigation, $MoodleNav, $dataMgtNav); //POCOR-7527
+        // POCOR-8128 start
+        $getallNavigation = array_merge($firstSubMenuAdmin,
+            $SecurityNav,
+            $ProfileNav,
+            $SurveyNav,
+            $CommunicationsNav,
+            $TrainingNav,
+            $PerformanceNav,
+            $ExaminationNav,
+            $StaffNav,
+            $ScholarshipNav,
+            $navigation,
+            $MoodleNav,
+            $dataMgtNav); //POCOR-7527
+        // POCOR-8128 end
         return $getallNavigation;
     }
 
@@ -2681,9 +2767,14 @@ class NavigationComponent extends Component
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
                     'selected' => ['Configurations.Themes',
+                        'Configurations.Webhooks',
                         'Configurations.add',
                         'Configurations.view',
                         'Configurations.edit',
+                        'Configurations.Authentication',
+                        'Configurations.AuthSystemAuthentications',
+                        'Configurations.CustomValidation',
+                        'Configurations.AdministrativeBoundaries',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
@@ -2694,6 +2785,7 @@ class NavigationComponent extends Component
                 'Manuals.Institutions' => [
                     'title' => 'Manuals',
                     'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Manuals'],//POCOR-8732
                     'selected' => ['Manuals.Institutions',
                         'Manuals.Directory',
                         'Manuals.Reports',
@@ -2805,7 +2897,7 @@ class NavigationComponent extends Component
                             'parent' => 'SystemSetup.CustomField',
                             'params' => ['plugin' => 'StudentCustomField'],
                             'selected' => ['StudentCustomFields.Fields',
-                                'StudentCustomFields.Pages']
+                                'StudentCustomFields.Pages', 'StudentCustomFields.Filters']//POCOR-8434 add filters
                         ],
                         'StaffCustomFields.Fields' => [
                             'title' => 'Staff',
@@ -2879,7 +2971,7 @@ class NavigationComponent extends Component
                             'parent' => 'SystemSetup.CustomField',
                             'params' => ['plugin' => 'StudentCustomField'],
                             'selected' => ['StudentCustomFields.Fields',
-                                'StudentCustomFields.Pages']
+                                'StudentCustomFields.Pages', 'StudentCustomFields.Filters']//POCOR-8434 add filters
                         ],
                         'StaffCustomFields.Fields' => [
                             'title' => 'Staff',
@@ -2969,7 +3061,7 @@ class NavigationComponent extends Component
                         'parent' => 'SystemSetup.CustomField',
                         'params' => ['plugin' => 'StudentCustomField'],
                         'selected' => ['StudentCustomFields.Fields',
-                            'StudentCustomFields.Pages']
+                            'StudentCustomFields.Pages', 'StudentCustomFields.Filters']//POCOR-8434 add filters
                     ],
                     'StaffCustomFields.Fields' => [
                         'title' => 'Staff',
@@ -3711,6 +3803,14 @@ class NavigationComponent extends Component
                     'ReportCards.ReportCardEmail',
                     'ReportCards.Processes']
             ],
+            'Gpa.GpaSystem' => [
+                'title' => 'GPA',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Gpa'],
+                'selected' => ['Gpa.GpaSystem',
+                                'Gpa.Cumulative',
+                                'Gpa.GpaGradingType']
+            ], //POCOR-8222
 
         ];
         return $fullPerformanceNavigation;
@@ -3855,6 +3955,33 @@ class NavigationComponent extends Component
 
     //POCOR-7527
 
+    // POCOR-8128
+    private function getAdministrationStaffNav()
+    {
+
+
+        $nav = [
+            'Administration.Staff' => [
+                'title' => 'Staff',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+            'Systems.StaffPolicies' => [
+                'title' => 'Leaves',
+                'parent' => 'Administration.Staff',
+                'link' => true,
+            ],
+            'Systems.StaffEntitlements' => [
+                'title' => 'Entitlements',
+                'parent' => 'Administration.Staff',
+                'link' => true,
+            ],
+
+        ];
+
+        return $nav;
+    }
+
     private function getAdminstrationScholarshipNav()
     {
         $session = $this->getController()->getRequest()->getSession();
@@ -3917,7 +4044,7 @@ class NavigationComponent extends Component
                         'title' => 'Applications',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],
-                        'selected' => ['Scholarships.Applications',
+                        'selected' => ['Scholarships.Applications.index',
                             'UsersDirectory.index',
                             'UsersDirectory.view',
                             'Scholarships.Identities.index',
@@ -3929,16 +4056,10 @@ class NavigationComponent extends Component
                             'Scholarships.Guardians.index',
                             'Scholarships.Guardians.view',
                             'Scholarships.Histories',
-                            'ScholarshipApplicationInstitutionChoices.index',
-                            'ScholarshipApplicationInstitutionChoices.view',
-                            'ScholarshipApplicationInstitutionChoices.add',
-                            'ScholarshipApplicationInstitutionChoices.edit',
-                            'ScholarshipApplicationInstitutionChoices.delete',
-                            'ScholarshipApplicationAttachments.index',
-                            'ScholarshipApplicationAttachments.view',
-                            'ScholarshipApplicationAttachments.add',
-                            'ScholarshipApplicationAttachments.edit',
-                            'ScholarshipApplicationAttachments.delete']
+                            'Scholarships.ScholarshipApplicationInstitutionChoices.index',
+                            'Scholarships.ScholarshipApplicationInstitutionChoices.add',
+                            'Scholarships.ScholarshipApplicationAttachments',
+                            ]
                     ],
                     // 'ScholarshipRecipients.index' => [
                     //     'title' => 'Recipients',
@@ -3992,7 +4113,7 @@ class NavigationComponent extends Component
                     'title' => 'Applications',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
-                    'selected' => ['Scholarships.Applications',
+                    'selected' => ['Scholarships.Applications.index',
                         'UsersDirectory.index',
                         'UsersDirectory.view',
                         'Scholarships.Identities.index',
@@ -4004,16 +4125,12 @@ class NavigationComponent extends Component
                         'Scholarships.Guardians.index',
                         'Scholarships.Guardians.view',
                         'Scholarships.Histories',
-                        'ScholarshipApplicationInstitutionChoices.index',
-                        'ScholarshipApplicationInstitutionChoices.view',
-                        'ScholarshipApplicationInstitutionChoices.add',
-                        'ScholarshipApplicationInstitutionChoices.edit',
-                        'ScholarshipApplicationInstitutionChoices.delete',
-                        'ScholarshipApplicationAttachments.index',
-                        'ScholarshipApplicationAttachments.view',
-                        'ScholarshipApplicationAttachments.add',
-                        'ScholarshipApplicationAttachments.edit',
-                        'ScholarshipApplicationAttachments.delete']
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.index',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.add',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.view',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.edit',
+                        'Scholarships.ScholarshipApplicationAttachments',
+                        ]
                 ],
                 // 'ScholarshipRecipients.index' => [
                 //     'title' => 'Recipients',
@@ -4265,6 +4382,7 @@ class NavigationComponent extends Component
         // if ($superAdmin) {
         //     return;
         // }
+
         $user_id = $this->getCurrentUserId();
         $superAdmin = self::isSuperUser($user_id);
         if ($superAdmin) {
@@ -4274,6 +4392,7 @@ class NavigationComponent extends Component
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+
         if ($event->getResult()) {
             $roles = $event->getResult('roles');
             $restrictedTo = $event->getResult('restrictedTo');
@@ -4282,6 +4401,7 @@ class NavigationComponent extends Component
         // Unset the children
         $linkOnly = [];
         foreach ($navigations as $key => $value) {
+
             $rolesRestrictedTo = $roles;
             //print_r($roles);die;
             if (isset($value['link']) && !$value['link']) {
@@ -4334,11 +4454,21 @@ class NavigationComponent extends Component
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+//        dd($event->getResult());
+        // POCOR-8527 start fix roles for navs
         if ($event->getResult()) {
-            $roles = $event->getResult('roles');
-            $restrictedTo = $event->getResult('restrictedTo');
+            $result = $event->getResult();
+            $roles = $result['roles'];
+            $restrictedTo = $result['restrictedTo'];
+            $isRestricted = false;
+        } else{
+            $rolesByUser = $this->AccessControl->getRolesByUser()->toArray();
+            foreach ($rolesByUser as $key => $role) {
+                $roles[$role->security_role_id] = $role->security_role_id;
+            }
+            $isRestricted = true;
         }
-
+        // POCOR-8527 end
         // Unset the children
         $linkOnly = [];
         foreach ($navigations as $key => $value) {
@@ -4352,7 +4482,12 @@ class NavigationComponent extends Component
                     $params = $value['params'];
                 }
                 $url = $this->getLink($key, $params);
-
+                // POCOR-8128 start
+                if (isset($value['link']) && $value['link']) {
+                    $params = ['plugin' => 'Systems'];
+                    $url = $this->getLink($key, $params);
+                }
+                // POCOR-8128 end
                 // Ensure $url is an array and has necessary keys
                 if (!is_array($url) || !isset($url['controller'], $url['action'], $url['plugin'])) {
                     // Log or handle the case where $url is not as expected
@@ -4370,7 +4505,7 @@ class NavigationComponent extends Component
                 }
 
                 // Check if the role is only restricted to a certain page
-                $isRestricted = false;
+//                $isRestricted = false; // POCOR-8527
                 foreach ($restrictedTo as $restrictedURLs) {
                     if (!is_array($restrictedURLs)) {
                         // Log or handle the case where $restrictedURLs is not an array

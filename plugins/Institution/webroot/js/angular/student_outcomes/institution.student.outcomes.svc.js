@@ -20,7 +20,10 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         renderInput: renderInput,
         saveOutcomeResults: saveOutcomeResults,
         saveOutcomeComments: saveOutcomeComments,
-        getSubjectOptions: getSubjectOptions
+        getSubjectOptions: getSubjectOptions,
+        saveOutcomeFinalResult: saveOutcomeFinalResult,//POCOR-8435
+        getSubjectOptions: getSubjectOptions,//POCOR-8435
+        getStudentOutcomeFinalResult:getStudentOutcomeFinalResult//POCOR-8435
     };
 
     var models = {
@@ -32,7 +35,8 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         OutcomeCriterias: 'Outcome.OutcomeCriterias',
         OutcomeGradingTypes: 'Outcome.OutcomeGradingTypes',
         InstitutionOutcomeResults: 'Institution.InstitutionOutcomeResults',
-        OutcomeSubjectComments: 'Institution.InstitutionOutcomeSubjectComments'
+        OutcomeSubjectComments: 'Institution.InstitutionOutcomeSubjectComments',
+        StudentSubject: 'Student.StudentSubjects'//POCOR-8435
     };
 
     return service;
@@ -76,18 +80,18 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getSubjectOptions(classId, institutionId, academicPeriodId, gradeId, studentId) { //6198 studentId 
-        var success = function(response, deferred) { 
+    function getSubjectOptions(classId, institutionId, academicPeriodId, gradeId, studentId) { //6198 studentId
+        var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        
+
         return InstitutionSubjects
             .find('bySubjectsInClass', {
                 institution_class_id: classId,
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId,
                 education_grade_id: gradeId,
-                student_id : studentId //6198 studentId 
+                student_id : studentId //6198 studentId
             })
             .ajax({success: success, defer: true});
     }
@@ -99,7 +103,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         };
         return OutcomeTemplates
             .get(primaryKey)
-            .contain(['Periods', 'EducationGrades.EducationSubjects'])
+            .contain(['Periods', 'EducationGrades.EducationSubjects','OutcomeGradingTypes.GradingOptions'])
             .ajax({success: success, defer:true});
     }
 
@@ -173,7 +177,11 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             field: "outcome_criteria_name",
             filterParams: filterParams,
             menuTabs: menuTabs,
-            filter: 'text'
+            filter: 'text',  /* POCOR-8877 start */
+            cellClass: { whiteSpace: "normal", lineHeight: "1.2" },
+            autoHeight: true,  // Ensures row height adjusts to content
+            wrapText: true,
+            /* POCOR-8877 end */
         });
 
         var columnDef = {
@@ -323,10 +331,80 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                 if (angular.isDefined(params.data)) {
                     var periodEditable = params.data.period_editable;
                     var studentStatus = params.data.student_status;
+                    var select = params.data.select;
+                    var gradingOptions = params.data.final_garding_options;
 
                     if (periodEditable && studentStatus == "CURRENT") {
-                        var oldValue = params.value;
+                        //POCOR-8435 start
+                        if (select) {
+                            var oldValue = params.value;
+                            // Create a container div for the dropdown
+                            var eCell = document.createElement('div');
+                            // Create a select dropdown
+                            var selectInput = document.createElement('select');
+                            selectInput.setAttribute("class", "oe-cell-editable");
+                            // Default option for the dropdown
+                            var defaultOption = document.createElement("option");
+                            defaultOption.value = ""; // Default value
+                            defaultOption.text = "-- Select --"; // Default display text
+                            selectInput.appendChild(defaultOption);
 
+                            // Populate the dropdown with gradingOptions
+                            gradingOptions.forEach(function(option) {
+                                var optionElement = document.createElement("option");
+                                optionElement.value = option.id; // Set option value
+                                optionElement.text = option.name; // Set option text
+                                selectInput.appendChild(optionElement);
+                            });
+
+                            // Set the initial value of the dropdown
+                            selectInput.value = oldValue;
+                            eCell.appendChild(selectInput);
+
+                            // Add event listener for the dropdown change event
+                            selectInput.addEventListener('change', function() {
+                                var newValue = selectInput.value;
+                                if (newValue!="" && newValue !== oldValue) {
+                                    // Update the value in params.data
+                                    params.data[params.colDef.field] = newValue;
+                                    oldValue = newValue;
+                                    var controller = params.context._controller;
+
+                                    // Save the new value asynchronously
+                                    vm.saveOutcomeFinalResult(params)
+                                        .then(function(response) {
+                                            params.data.save_error[params.colDef.field] = false;
+                                            AlertSvc.info(
+                                                controller,
+                                                "Changes will be automatically saved when any value is changed"
+                                            );
+
+                                            // Refresh the cell to reflect changes
+                                            params.api.refreshCells({
+                                                rowNodes: [params.node],
+                                                columns: [params.colDef.field],
+                                                force: true
+                                            });
+                                        })
+                                        .catch(function(error) {
+                                            params.data.save_error[params.colDef.field] = true;
+                                            AlertSvc.error(
+                                                controller,
+                                                "There was an error when saving the results"
+                                            );
+
+                                            // Refresh the cell to reflect the error
+                                            params.api.refreshCells({
+                                                rowNodes: [params.node],
+                                                columns: [params.colDef.field],
+                                                force: true
+                                            });
+                                        });
+                                }
+                            });
+                        } else {
+                        //POCOR-8435 end
+                        var oldValue = params.value;
                         var eCell = document.createElement('div');
                         var textInput = document.createElement('textarea');
 
@@ -346,7 +424,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                             var controller = params.context._controller;
                             if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
                                 params.data[params.colDef.field] = newValue;
-                                
+
                                 var newVal = newValue;
                                 var format = /[ `/'"=%]/;
                                 if(format.test(newVal.charAt(0))) {
@@ -354,8 +432,8 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                                     return false
                                 } else {
                                     AlertSvc.info(controller, 'Changes will be automatically saved when any value is changed');
-                                } 
-                                
+                                }
+
                                 vm.saveOutcomeComments(params)
                                 .then(function(response) {
                                     params.data.save_error[params.colDef.field] = false;
@@ -379,7 +457,8 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                             }
                         });
 
-                    } else {
+                    }
+                   } else {
                         // don't allow input if period is not editable
                         var cellValue = '';
                         if (angular.isDefined(params.value) && params.value.length != 0) {
@@ -499,4 +578,69 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         };
         return OutcomeSubjectComments.save(saveObj);
     }
-};
+    //POCOR-8435 start
+    // Function to save the outcome final result
+    function saveOutcomeFinalResult(params) {
+
+        var studentId = params.data.student_id;
+        var educationGradeId = params.context.education_grade_id;
+        var educationSubjectId = params.data.education_subject_id;
+        var institutionId = params.context.institution_id;
+        var academicPeriodId = params.context.academic_period_id;
+
+        // Extract the outcome result ID and map it to its name from the options
+        var outcomeResultId = params.data.result;
+        var outcomeGradeOptions = params.data.final_garding_options;
+        var outcomeResult = outcomeGradeOptions.find(function(item) {
+            return item.id == outcomeResultId; // Find the item by matching IDs
+        })?.name;
+
+        var options = {
+            student_id: studentId,
+            education_grade_id: educationGradeId,
+            education_subject_id: educationSubjectId,
+            institution_id: institutionId,
+            academic_period_id: academicPeriodId,
+            outcome_result: outcomeResult
+        };
+
+        // Success callback function to handle response
+        var success = function(response, deferred) {
+            var subjectData = response.data.data;
+            if (subjectData) {
+                deferred.resolve(subjectData, "subject data");
+            } else {
+                deferred.reject('Empty Data');
+            }
+        };
+
+        return StudentSubject
+            .find('studentSubjectOutcomeResult', options)
+            .ajax({
+                success: success,
+                defer: true
+            });
+    }
+
+    // Function to get the student's outcome final result
+    function getStudentOutcomeFinalResult(studentId, gradeId, subjectId, institutionId, academicPeriodId) {
+
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+
+        return StudentSubject
+            .find('studentSubjectOutcomeResult', {
+                student_id: studentId,
+                education_grade_id: gradeId,
+                education_subject_id: subjectId,
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
+    }
+    //POCOR-8435 end
+    };

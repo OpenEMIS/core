@@ -3,8 +3,6 @@ namespace System\Model\Table;
 
 use ArrayObject;
 use InvalidArgumentException;
-
-use Cake\Http\Request;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -15,7 +13,7 @@ use Cake\Http\Client;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
 use Cake\Http\Response;
-
+use Cake\Mailer\Mailer;
 use App\Model\Table\ControllerActionTable;
 
 class SystemUpdatesTable extends ControllerActionTable
@@ -63,6 +61,7 @@ class SystemUpdatesTable extends ControllerActionTable
             ->first();
 
         $maxId = $latestVersion->id;
+        
         if ($latestVersion->status == 2) {
             $this->updateAll(
                 [
@@ -98,19 +97,17 @@ class SystemUpdatesTable extends ControllerActionTable
         $get_response = new Response();
         $host = $request->getUri()->getHost();
         $subject = 'Core Upgrade Request Failed - ' . $host;
-
         if ($get_response->getStatusCode() == 200) {
             // $jsonResponse = json_decode($response->body(), true);
             $jsonResponse = json_decode($response, true);
-            // echo "<pre>";print_r($jsonResponse);die;
             $data = array_reverse($jsonResponse['data']);
-
             foreach ($data as $item) {
                 if ($item['id'] > $maxId) {
                     $entity = $this->newEntity([
                         'id' => $item['id'],
                         'version' => $item['version'],
                         'date_released' => $item['date_released'],
+                        'status' => 1, //POCOR-8891
                         'created' => Time::now(),
                     ]);
                     $result = $this->save($entity);
@@ -129,13 +126,12 @@ class SystemUpdatesTable extends ControllerActionTable
 
             $version = trim(file_get_contents(WWW_ROOT . 'version'));
             $entity = $this->find()->where(['version' => $version])->first();
-
             if (!is_null($entity)) {
                 $this->updateAll(
                     [
-                        'date_approved' => $entity->date_released,
-                        'approved_by' => 1,
-                        'status' => 2
+                        'date_approved' => null, //POCOR-8940
+                        'approved_by' => 0, //POCOR-8940
+                        'status' => 1
                     ], [
                         'id <=' => $entity->id,
                         'status' => 1
@@ -223,14 +219,14 @@ class SystemUpdatesTable extends ControllerActionTable
         if ($this->request->is(['post', 'put'])) {
             $emails = explode(',', $supportEmails);
 
-            $host = $this->request->env('HTTP_HOST');
+            $host = $this->request->getEnv('HTTP_HOST');
             $subject = 'Core Upgrade Request - ' . $host;
 
-            $email = new Email('openemis');
+            $email = new Mailer('openemis');//POCOR-8783
             $email
-            ->to($emails)
-            ->subject($subject)
-            ->send($subject);
+                ->setTo($emails) 
+                ->setSubject($subject) 
+                ->deliver($subject); 
 
             $this->updateAll(['date_approved' => Time::now(), 'approved_by' => $this->Auth->user('id'), 'status' => 2], ['status' => 1]);
             $this->Alert->show('Your update request has been submitted.', 'success');
@@ -253,7 +249,7 @@ class SystemUpdatesTable extends ControllerActionTable
                 'element' => 'System.description'
             ]);
 
-            $entity = $this->newEntity();
+            $entity =$this->newEntity([]); //POCOR-8783
 
             $this->controller->set('data', $entity);
             return $entity;

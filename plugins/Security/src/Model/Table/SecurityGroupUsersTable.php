@@ -52,7 +52,7 @@ class SecurityGroupUsersTable extends AppTable {
             'security_role_id',
             'institution_id' => $SecurityInstitutions->aliasField('institution_id')
         ])
-        ->leftJoin([$SecurityInstitutions->alias() => $SecurityInstitutions->table()], [
+        ->leftJoin([$SecurityInstitutions->getAlias() => $SecurityInstitutions->getTable()], [
             $SecurityInstitutions->aliasField('security_group_id = ') . $this->aliasField('security_group_id'),
         ])
         ->where(['security_user_id' => $security_user_id]);
@@ -127,7 +127,7 @@ class SecurityGroupUsersTable extends AppTable {
             $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $institutionQuery = $Institution
                     ->find()
-                    ->where([$Institution->aliasField($Institution->primaryKey()) => $institutionId])
+                    ->where([$Institution->aliasField($Institution->getPrimaryKey()) => $institutionId])
                     ->first()
             ;
 
@@ -165,7 +165,7 @@ class SecurityGroupUsersTable extends AppTable {
                         ]
                 )
                 ->where([$this->aliasField('security_user_id') => $userId, $this->aliasField('security_group_id') => $securityGroupId])
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray();
         return $results;
     }
@@ -245,10 +245,14 @@ class SecurityGroupUsersTable extends AppTable {
         $where = isset($options['where']) ? $options['where'] : [];
         $area = isset($options['area']) ? $options['area'] : null;
 
-        $query->find('list', ['keyField' => function ($query) {
+        $query->find('all') //POCOR-8808
+        ->matching('Users', function ($q) {
+            return $q; //Ensures only rows with matching Users are included
+        })
+        ->find('list', ['keyField' => function ($query) {
                                 return $query->user->id;
                             }, 'valueField' => function ($query) {
-                                return $query->user->get('name_with_id_role');
+                                return $query->user ? $query->user->get('name_with_id_role') : '';
                             }])
                 /*->select([
                     $this->Users->aliasField('id'),
@@ -316,10 +320,10 @@ class SecurityGroupUsersTable extends AppTable {
                         $securityGroupId = $institutionObj->security_group_id;
                         $areaObj = $institutionObj->area;
 
-                        Log::write('debug', 'Institution Id: ' . $institutionId);
-                        Log::write('debug', 'Security Group Id: ' . $securityGroupId);
-                        Log::write('debug', 'Institution Area:');
-                        Log::write('debug', print_r($areaObj, true));
+//                        Log::write('debug', 'Institution Id: ' . $institutionId); // POCOR-8853 removed logging
+//                        Log::write('debug', 'Security Group Id: ' . $securityGroupId);
+//                        Log::write('debug', 'Institution Area:');
+//                        Log::write('debug', print_r($areaObj, true));
 
                         // School based assignee
                         $where = [
@@ -331,23 +335,23 @@ class SecurityGroupUsersTable extends AppTable {
                                 ->find('userList', ['where' => $where])
                                 ->leftJoinWith('SecurityGroups.Institutions');
 
-                        Log::write('debug', 'School based assignee query:');
-                        Log::write('debug', (string) $schoolBasedAssigneeQuery->sql());
+//                        Log::write('debug', 'School based assignee query:');
+//                        Log::write('debug', (string) $schoolBasedAssigneeQuery->sql());
                         $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
 
-                        Log::write('debug', 'School based assignee:');
-                        Log::write('debug', (string) $schoolBasedAssigneeOptions);
+//                        Log::write('debug', 'School based assignee:');
+//                        Log::write('debug', (string) $schoolBasedAssigneeOptions);
                         // End
                         // Region based assignee
                         $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                         $regionBasedAssigneeQuery = $SecurityGroupUsers
                                     ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                        Log::write('debug', 'Region based assignee query:');
-                        Log::write('debug', (string) $regionBasedAssigneeQuery->sql());
+//                        Log::write('debug', 'Region based assignee query:');
+//                        Log::write('debug', (string) $regionBasedAssigneeQuery->sql());
 
                         $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
-                        Log::write('debug', 'Region based assignee:');
-                        Log::write('debug', (string) $regionBasedAssigneeOptions);
+//                        Log::write('debug', 'Region based assignee:');
+//                        Log::write('debug', (string) $regionBasedAssigneeOptions);
                         // End
 
                         $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -358,8 +362,8 @@ class SecurityGroupUsersTable extends AppTable {
                             ->find('userList', ['where' => $where])
                             ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
 
-                    Log::write('debug', 'Non-School based assignee query:');
-                    Log::write('debug', (string) $assigneeQuery->sql());
+//                    Log::write('debug', 'Non-School based assignee query:');
+//                    Log::write('debug', (string) $assigneeQuery->sql());
 
                     $assigneeOptions = $assigneeQuery->toArray();
                 }
@@ -377,15 +381,15 @@ class SecurityGroupUsersTable extends AppTable {
         $category = isset($params['category']) ? $params['category'] : null;
         $createdUserId = isset($params['created_user_id']) ? $params['created_user_id'] : null;
 
-        Log::write('debug', 'Is School Based: ' . $isSchoolBased);
-        Log::write('debug', 'Step Id: ' . $stepId);
+//        Log::write('debug', 'Is School Based: ' . $isSchoolBased);
+//        Log::write('debug', 'Step Id: ' . $stepId);
 
         $assigneeId = 0;
         if (!is_null($isSchoolBased) && !is_null($stepId)) {
             $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
             $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
-            Log::write('debug', 'Roles By Step:');
-            Log::write('debug', $stepRoles);
+            //Log::write('debug', 'Roles By Step:');
+            //Log::write('debug', $stepRoles);
 
             if (!empty($stepRoles)) {
                 $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
@@ -398,10 +402,10 @@ class SecurityGroupUsersTable extends AppTable {
                         $securityGroupId = $institutionObj->security_group_id;
                         $areaObj = $institutionObj->area;
 
-                        Log::write('debug', 'Institution Id: ' . $institutionId);
-                        Log::write('debug', 'Security Group Id: ' . $securityGroupId);
-                        Log::write('debug', 'Institution Area:');
-                        Log::write('debug', $areaObj);
+//                        Log::write('debug', 'Institution Id: ' . $institutionId);
+//                        Log::write('debug', 'Security Group Id: ' . $securityGroupId);
+//                        Log::write('debug', 'Institution Area:');
+//                        Log::write('debug', $areaObj);
 
                         // School based assignee
                         $where = [
@@ -412,12 +416,12 @@ class SecurityGroupUsersTable extends AppTable {
                                 ->find('userList', ['where' => $where])
                                 ->order([$this->aliasField('created') => 'asc']);
 
-                        Log::write('debug', 'School based assignee query:');
-                        Log::write('debug', $schoolBasedAssigneeQuery->sql());
+//                        Log::write('debug', 'School based assignee query:');
+//                        Log::write('debug', $schoolBasedAssigneeQuery->sql());
 
                         $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                        Log::write('debug', 'School based assignee:');
-                        Log::write('debug', $schoolBasedAssigneeOptions);
+                        /*Log::write('debug', 'School based assignee:');
+                        Log::write('debug', $schoolBasedAssigneeOptions);*/
 
                         if (!empty($schoolBasedAssigneeOptions)) {
                             return key($schoolBasedAssigneeOptions);
@@ -429,26 +433,24 @@ class SecurityGroupUsersTable extends AppTable {
                         $regionBasedAssigneeQuery = $this
                                 ->find('userList', ['where' => $where, 'area' => $areaObj]);
 
-                        Log::write('debug', 'Region based assignee query:');
-                        Log::write('debug', $regionBasedAssigneeQuery->sql());
+                        // Log::write('debug', 'Region based assignee query:');
+                        // Log::write('debug', $regionBasedAssigneeQuery->sql());
 
                         $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
-                        Log::write('debug', 'Region based assignee:');
-                        Log::write('debug', $regionBasedAssigneeOptions);
+                        /*Log::write('debug', 'Region based assignee:');
+                        Log::write('debug', $regionBasedAssigneeOptions);*/
                         // End
 
                         $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
                     } else {
-                        Log::write('debug', 'Institution Id not found.');
+                        $message = ['Institution Id not found.']; // Example array
+                        Log::write('debug', json_encode($message)); // Convert to JSON string
+
                     }
                 } else {
                     $where = [$this->aliasField('security_role_id IN ') => $stepRoles];
                     $assigneeQuery = $this
                             ->find('userList', ['where' => $where]);
-
-                    Log::write('debug', 'Non-School based assignee query:');
-                    Log::write('debug', $assigneeQuery->sql());
-
                     $assigneeOptions = $assigneeQuery->toArray();
                 }
 
@@ -458,8 +460,9 @@ class SecurityGroupUsersTable extends AppTable {
                 }
             } else {
                 Log::write('debug', 'Roles By Step is empty:');
-                Log::write('debug', 'Category: ' . $category);
-                Log::write('debug', 'Creator Id: ' . $createdUserId);
+                Log::write('debug', 'Category: ' . json_encode($category));
+                Log::write('debug', 'Creator Id: ' . json_encode($createdUserId));
+
 
                 // Set assignee as creator only when no roles is configured in workflow step and category of the workflow step is To Do
                 $assigneeId = $createdUserId;

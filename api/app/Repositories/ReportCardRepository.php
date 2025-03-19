@@ -646,144 +646,80 @@ class ReportCardRepository extends Controller
     //For pocor-8270 end...
 
 
-    // //For POCOR-8252 Start...
-    // public function studentReportCardGenerate($params, $institutionId, $classId, $studentId)
-    // {
-    //     try {
-    //         ini_set('memory_limit', '-1');
-    //         ini_set('max_execution_time', 3600);
 
-    //         $logoPath = public_path('openemis_logo.png');
-    //         $generalData = $this->getGeneralData($params, $institutionId, $classId, $studentId);
-    //         dd($generalData);
-
-    //         $reportCard = ReportCard::where('id', $params['report_card_id'])->first();
-
-    //         if(!$reportCard){
-    //             return 1; //Report card don't exist.
-    //         }
-
-    //         $template = $reportCard->excel_template;
-    //         $template_name = $reportCard->excel_template_name;
-
-    //         $filepathexcel = base_path('public/storage/templates/').$template_name;
-
-    //         file_put_contents($filepathexcel, $template);
-
-
-    //         $spreadsheet = IOFactory::load($filepathexcel);
-    //         //$sheet = $spreadsheet->getActiveSheet();
-    //         $sheetCount = $spreadsheet->getSheetCount();
-    //         //dd($sheetCounts);
-            
-    //         for ($i = 0; $i < $sheetCount; $i++) {
-    //             $sheet = $spreadsheet->getSheet($i);
-                
-    //             $sheetTitle = $sheet->getTitle();
-    //             echo " | ".$sheetTitle." | ";
-    //             foreach ($sheet->getRowIterator() as $r => $row) {
-    //                 if($r == 100){
-    //                     break;
-    //                 }
-
-    //                 $cellIterator = $row->getCellIterator();
-    //                 $cellIterator->setIterateOnlyExistingCells(TRUE);
-
-    //                 foreach ($cellIterator as $c => $cell) {
-    //                     echo " | ".$cell->getCoordinate()." | ";
-    //                     if(Str::contains($cell->getValue(),'Institutions.logo_content'))
-    //                     {
-    //                         $this->setOpenEMISLogo($cell, $sheet, $logoPath, $cell->getValue());
-    //                     }
-
-                        
-    //                 }
-    //             }
-    //         }
-
-    //         $writer = new Xlsx($spreadsheet);
-    //         $file_name = "ReportCard_".time().'.xlsx';
-    //         $newFilePath = base_path('public/storage/templates/'.$file_name);
-    //         $writer->save($newFilePath);
-
-    //         unlink($filepathexcel);
-    //         dd("done");
-    //         return $newFilePath;
-            
-    //     } catch (\Exception $e) {
-    //         Log::error(
-    //             'Failed to generate student report card.',
-    //             ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-    //         );
-    //         dd($e);
-    //         return $this->sendErrorResponse('Failed to generate student report card.');
-    //     }
-    // }
-
-    //For POCOR-8252 Start...
-    public function studentReportCardGenerate($params, $institutionId, $classId, $studentId)
+    //For POCOR-8617 Start...
+    public function studentReportCardPdfDownload($params, $institutionId, $classId, $studentId)
     {
         try {
-            ini_set('memory_limit', '-1');
-            ini_set('max_execution_time', 3600);
-
-            $logoPath = public_path('openemis_logo.png');
-            $generalData = $this->getGeneralData($params, $institutionId, $classId, $studentId);
-
             $reportCard = ReportCard::where('id', $params['report_card_id'])->first();
+            $file_list = [];
 
-            $institutionStudentReportCard = InstitutionStudentReportCard::where('report_card_id', $params['report_card_id'])->whereIn('status', [3, 4])->first();
+            $instStudentReportCard = InstitutionStudentReportCard::where('student_id', $studentId)
+                    ->where('institution_id', $institutionId)
+                    ->where('academic_period_id', $params['academic_period_id'])
+                    ->where('report_card_id', $params['report_card_id'])
+                    ->where('education_grade_id', $reportCard->education_grade_id??0)
+                    ->where('institution_class_id', $classId)
+                    ->whereIn('status', [3,4])
+                    ->first();
 
-            if(!$institutionStudentReportCard){
-                return 1; //Report card don't exist.
+            
+            if($instStudentReportCard){
+                $file_list['id'] = $instStudentReportCard['id'];
+                $file_name = $instStudentReportCard['file_name'];
+                $file_name = explode(".", $instStudentReportCard['file_name'])[0];
+                $file_name = $file_name.".pdf";
+                
+                $file_list['file_name'] = $file_name;
+                $file_list['file_content'] = base64_encode($instStudentReportCard['file_content_pdf']);
             }
-            return $institutionStudentReportCard['file_content'];
+            
+            return $file_list;
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to dowanload student report cards.',
+                'Failed to generate student report card in PDF.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('Failed to dowanload student report cards.');
+            return $this->sendErrorResponse('Failed to generate student report card in PDF.');
         }
     }
 
 
-    public function setOpenEMISLogo($cell, $sheet, $logoPath, $cellValue)
-    {   
-        $string = str_replace("$", "", $cellValue);
-        $imageDimension = json_decode($string, true);
-
-        $imageMarginLeft = $imageDimension['image']['imageMarginLeft']??"";
-        $imageMarginTop = $imageDimension['image']['imageMarginTop']??"";
-        $imageWidth = $imageDimension['image']['imageWidth']??"";
-        $cordinate = $cell->getCoordinate();
-
-        $sheet->setCellValue($cordinate, ""); //Removing the placeholder text from image cell...
-
-        $drawing = new Drawing();
-        $drawing->setName('OpenEMIS Logo');
-        $drawing->setDescription('OpenEMIS Logo');
-        $drawing->setPath($logoPath);
-        $drawing->setCoordinates($cordinate);
-        $drawing->setWidth($imageWidth); // Adjust the height as needed
-        $drawing->setOffsetX($imageMarginLeft);
-        $drawing->setOffsetY($imageMarginTop);
-        $drawing->setWorksheet($sheet);
-        return true;
-    }
-
-
-    public function getGeneralData($params, $institutionId, $classId, $studentId)
+    public function studentReportCardExcelDownload($params, $institutionId, $classId, $studentId)
     {
-        $institution = Institutions::where('id', $institutionId)
-                    ->with([
-                        'areaAdministratives:id,code,name',
-                        'area:id,code,name',
-                        'institutionProviders:id,name'
-                    ])->first();
-        return  $institution;
+        try {
+            $reportCard = ReportCard::where('id', $params['report_card_id'])->first();
+            $file_list = [];
+
+            $instStudentReportCard = InstitutionStudentReportCard::where('student_id', $studentId)
+                    ->where('institution_id', $institutionId)
+                    ->where('academic_period_id', $params['academic_period_id'])
+                    ->where('report_card_id', $params['report_card_id'])
+                    ->where('education_grade_id', $reportCard->education_grade_id??0)
+                    ->where('institution_class_id', $classId)
+                    ->whereIn('status', [3,4])
+                    ->first();
+
+            
+            if($instStudentReportCard){
+                $file_list['id'] = $instStudentReportCard['id'];
+                $file_name = $instStudentReportCard['file_name'];
+                
+                $file_list['file_name'] = $file_name;
+                $file_list['file_content'] = base64_encode($instStudentReportCard['file_content']);
+            }
+            
+            return $file_list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card in excel.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card in excel.');
+        }
     }
-    //For POCOR-8252 End...
+    //For POCOR-8617 End...
 
 }

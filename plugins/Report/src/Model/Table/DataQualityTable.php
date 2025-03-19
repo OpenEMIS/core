@@ -18,11 +18,11 @@ class DataQualityTable extends AppTable {
 	public function initialize(array $config): void {
 		$this->setTable('security_users');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
-		
+
 		$this->addBehavior('Excel', [
 			'excludes' => ['is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status'],
 			'pages' => false
@@ -65,7 +65,7 @@ class DataQualityTable extends AppTable {
 
     /*public function addAfterAction(Event $event, Entity $entity)
     {
-    	if ($entity->has('feature')) { 
+    	if ($entity->has('feature')) {
             $feature = $entity->feature;
             $fieldsOrder = ['feature'];
             switch ($feature) {
@@ -110,7 +110,7 @@ class DataQualityTable extends AppTable {
                 }
                 return $attr;
             }
-        }	
+        }
     }
 
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
@@ -119,9 +119,9 @@ class DataQualityTable extends AppTable {
             $feature = $this->request->getData()[$this->getAlias()]['feature'];
 
             if ((in_array($feature, ['Report.ValidationReport',
-                
+
             ]))) {
-                $Areas = TableRegistry::get('AreaLevel.AreaLevels');
+                $Areas = TableRegistry::get('Area.AreaLevels');
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {
@@ -133,7 +133,7 @@ class DataQualityTable extends AppTable {
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
                     $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
-                    
+
                     $attr['onChangeReload'] = true;
                 } else {
                     $attr['type'] = 'hidden';
@@ -219,7 +219,7 @@ class DataQualityTable extends AppTable {
                     $institutionList = $institutionQuery->toArray();
                 } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->getData()[$this->getAlias()]) && !empty($request->getData()[$this->getAlias()]['area_education_id']) && $areaId != -1) {
                     //Start:POCOR-6818 Modified this for POCOR-6859
-                    $AreaT = TableRegistry::get('areas');                    
+                    $AreaT = TableRegistry::get('areas');
                     //Level-1
                     $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
                     $childArea =[];
@@ -245,7 +245,7 @@ class DataQualityTable extends AppTable {
                             }
                         }
                     }
-                    
+
                     //level-4
                     if(!empty($childAreaMain)){
                         foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -315,7 +315,7 @@ class DataQualityTable extends AppTable {
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
-                   
+
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
                     $attr['attr']['multiple'] = false;
@@ -340,5 +340,5 @@ class DataQualityTable extends AppTable {
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-	    
+
 }

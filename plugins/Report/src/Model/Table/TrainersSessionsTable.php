@@ -47,7 +47,8 @@ class TrainersSessionsTable extends AppTable
                 ])
                 ->where([$userIdentities->aliasField('security_user_id') => $entity->trainer_id])
                 ->order([$userIdentities->aliasField('id DESC')])
-                ->hydrate(false)->toArray();
+                ->disableHydration() // POCOR-8533
+            ->toArray();
                 $entity->custom_identity_number = '';
                 $other_identity_array = [];
                 if (!empty($userIdentitiesResult)) {
@@ -131,7 +132,7 @@ class TrainersSessionsTable extends AppTable
             ],
             ' ' => [
                 'type' => 'left',
-                'table' => '(SELECT qualification_specialisations.name,staff_qualifications.staff_id FROM staff_qualifications 
+                'table' => '(SELECT qualification_specialisations.name,staff_qualifications.staff_id FROM staff_qualifications
                 INNER JOIN staff_qualifications_specialisations ON staff_qualifications_specialisations.staff_qualification_id = staff_qualifications.id
                 INNER JOIN qualification_specialisations ON qualification_specialisations.id =staff_qualifications_specialisations.qualification_specialisation_id) AS staff_qualification_info',
                 'conditions' => ['staff_qualification_info.staff_id = TrainingSessionTrainers.trainer_id']

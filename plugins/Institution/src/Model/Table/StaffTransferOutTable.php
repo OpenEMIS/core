@@ -267,6 +267,8 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
+//         echo "<pre>"; print_r($queryString);
+// die;
         $encodedQueryString = $this->paramsEncode($queryString);
         $session = $this->request->getSession();
         $institutionId = !is_null($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
@@ -302,10 +304,16 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                         $visible = 1;
                     }
                 }
-
+                
                 if ($visible) {
                     $url = $this->url('view');
+                    
+                    //POCOR-8604 starts add id in queryString
+                    $newQueryString = array_merge($queryString,['id' => $pendingTransfer->id]);
+                    $url['?']['queryString'] = $this->paramsEncode($newQueryString);
                     $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
+                    $url['queryString'] = $this->paramsEncode($newQueryString); 
+                    //POCOR-8604 ends
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
                 } else {
@@ -336,9 +344,15 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
+        
         // redirect to view page of record after save
         $extra['redirect'][0] = 'view';
         $extra['redirect'][1] = $this->paramsEncode(['id' => $entity->id]);
+        //POCOR-8604 starts
+        $queryString = $this->getQueryString();
+        $newQueryString = array_merge($queryString,['id' => $entity->id]);
+        $extra['redirect']['?']['queryString'] = $this->paramsEncode($newQueryString);
+        //POCOR-8604 ends
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -590,7 +604,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 // using institution_staff entity
                 $conditions = [];
                 $conditions[$this->NewInstitutions->aliasField('id <>')] = $entity->institution_id;
-                
+
                 $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
                 $Institutions = TableRegistry::get('Institution.Institutions');
 
@@ -601,7 +615,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                         $institutionId = $entity->institution_id;
 
                         $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
-                        
+
                         $conditions['institution_type_id'] = $institutionTypeId;
                     }
                 }
@@ -613,7 +627,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                     if ($entity->has('institution_id')) {
                         $institutionId = $entity->institution_id;
                         $institutionProviderId = $Institutions->get($institutionId)->institution_provider_id;
-                        
+
                         $conditions['institution_provider_id'] = $institutionProviderId;
                     }
                 }
@@ -782,7 +796,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add' || $action == 'edit' || $action == 'approve') { // POCOR-8532
             $workflowModel = 'Institutions > Staff Transfer > Sending';
             $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
@@ -821,7 +835,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -837,12 +851,12 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -864,4 +878,21 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             return $attr;
         }
     }
+
+    //POCOR-8642 -- START
+    public function getReceivingInstList($params) {
+        $receivingOptions = [];
+        $StaffTransferOut = TableRegistry::get('Institution.StaffTransferOut');
+
+        $receivingOptions = $StaffTransferOut->find()
+            ->select(['new_institution_id'])
+            ->where([$StaffTransferOut->aliasField('id') => $params])
+            ->first();
+
+        if ($receivingOptions) {
+            $recvInstitution = $receivingOptions->new_institution_id; 
+        }
+        return $recvInstitution;
+    }
+    //POCOR-8642 -- END
 }

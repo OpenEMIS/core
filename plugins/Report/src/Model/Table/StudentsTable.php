@@ -485,11 +485,11 @@ class StudentsTable extends AppTable
         $institutionId = $requestData->institution_id;
         $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
-
+        $selectedArea = $requestData->area_education_id;//POCOR-8768
         //Start:POCOR-6818 Modified this for POCOR-6859
         $AreaT = TableRegistry::getTableLocator()->get('areas');                    
         //Level-1
-        $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
+        /*$AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
         $childArea =[];
         $childAreaMain = [];
         $childArea3 = [];
@@ -529,13 +529,25 @@ class StudentsTable extends AppTable
         $finalIds = implode(',',$mergeArr);
         $finalIds = explode(',',$finalIds);
         //echo "<pre>"; print_r($finalIds);die;
-        //End:POCOR-6818 Modified this for POCOR-6859
+        //End:POCOR-6818 Modified this for POCOR-6859 */
 
 
         $conditions = [];
-        if ($areaId != -1) {
+        //POCOR-8598 starts
+        if ($areaId != -1 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }//POCOR-6944 code ends
+                $conditions['Institution.area_id IN'] = $allselectedAreas;//POCOR-8768
+        } //POCOR-8598 end
+        /*if ($areaId != -1) {
             $conditions['Institution.area_id IN'] = $finalIds;
-        }
+        }*/
         if (!empty($academicPeriodId)) {
             $conditions['InstitutionStudent.academic_period_id'] = $academicPeriodId;
         }
@@ -628,6 +640,12 @@ class StudentsTable extends AppTable
 
          $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
+                 // POCOR-8934 start
+                 if ($row['date_of_birth'] instanceof \Cake\I18n\FrozenDate) {
+                    $row['date_of_birth'] = $row['date_of_birth']->format('Y-m-d'); // Change format as needed
+                } 
+                // POCOR-8934 end
+
                 // POCOR-6338 starts
                 
                 $Users = TableRegistry::getTableLocator()->get('security_users');
@@ -807,7 +825,7 @@ class StudentsTable extends AppTable
         $extraField[] = [
             'key' => 'Students.date_of_birth',
             'field' => 'date_of_birth',
-            'type' => 'date',
+            'type' => 'string',
             'label' => 'Date Of Birth',
         ];
 
@@ -1384,5 +1402,27 @@ class StudentsTable extends AppTable
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    /**
+     * POCOR-8598
+     * Recursively retrieves all child area IDs for a given parent area ID.
+     *
+     * @param int $id The parent area ID to find children for.
+     * @param array $idArray An array to collect all child IDs (including nested children).
+     * @return array The array of child area IDs.
+     */
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 }

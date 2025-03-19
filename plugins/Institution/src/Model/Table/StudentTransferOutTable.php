@@ -50,7 +50,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     'rule' => ['inAcademicPeriod', 'previous_academic_period_id', []]
                 ],
                 'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'start_date', false],
+                    'rule' => ['compareDate', 'start_date', true],
                     'on' => function ($context) {
                         return array_key_exists('start_date', $context['data']) && !empty($context['data']['start_date']);
                     }
@@ -1061,7 +1061,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     //POCOR-6981
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (in_array($action, ['edit', 'add'])) {
+        if (in_array($action, ['edit', 'add', 'approve'])) { // POCOR-8411 start
             $workflowModel = 'Institutions > Student Transfer > Sending';
             $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
@@ -1206,6 +1206,21 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         // Return the table instance
         return $locator->get($tableFullAlias);
     }
+    //POCOR-8642 -- START
+    public function getReceivingInstList($params) {
+        $receivingOptions = [];
 
+        $StudentTransferOut = TableRegistry::get('Institution.StudentTransferOut');
+
+        $receivingOptions = $StudentTransferOut->find()
+            ->select(['institution_id'])
+            ->where([$StudentTransferOut->aliasField('id') => $params])
+            ->first();
+            if ($receivingOptions) {
+                $recvInstitution = $receivingOptions->institution_id; // Assign the institution_id to $newid
+            }
+        return $recvInstitution;
+    }
+    //POCOR-8642 -- END
 
 }

@@ -9,7 +9,12 @@ interface TableColumns {
   student_attendance_select_new?: any;
   reasonOrComment?: any;
   reasonOrComment_select?: any;
-  reasonOrComment_select_new?: any
+  reasonOrComment_select_new?: any;
+  monday?: any;
+  tuesday?: any;
+  wednesday?: any;
+  thursday?: any;
+  friday?: any;
 }
 
 const COLUMN_OPENEMISID: any = {
@@ -17,11 +22,7 @@ const COLUMN_OPENEMISID: any = {
   field: "user.openemis_no",
   sortable: true,
   filterable: true,
-  filterValue: [
-    "First Primary School",
-    "Second Primary School",
-    "Last Primary School",
-  ],
+  filterValue: [],
   class: "ag-school-column",
   pinned: 'left',
   canEdit: false
@@ -32,10 +33,186 @@ const COLUMN_PERSONNAME: any = {
   field: "user.full_name",
   sortable: true,
   filterable: true,
-  filterValue: [
-    "First Primary School",
-    "Second Primary School",
-    "Last Primary School",
+  filterValue: [],
+  class: "ag-school-column",
+  canEdit: false,
+  pinned: 'left',
+  menuTabs: ['filterMenuTab']
+}
+
+const MONDAY: any = {
+  headerName: "Monday",
+  field: "monday",
+  sortable: false,
+  filterable: false,
+  filterValue: [],
+  children: [
+    {
+      headerName: '1',
+      field: "M1",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+    {
+      headerName: '2',
+      field: "M2",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+  ],
+  class: "ag-school-column",
+  canEdit: false,
+  pinned: 'left',
+  menuTabs: ['filterMenuTab']
+}
+
+const TUESDAY: any = {
+  headerName: "Tuesday",
+  field: "tuesday",
+  sortable: false,
+  filterable: false,
+  filterValue: [],
+  children: [
+    {
+      headerName: '1',
+      field: "T1",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+    {
+      headerName: '2',
+      field: "T2",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+  ],
+  class: "ag-school-column",
+  canEdit: false,
+  pinned: 'left',
+  menuTabs: ['filterMenuTab']
+}
+
+const WEDNESDAY: any = {
+  headerName: "Wednesday",
+  field: "wednesday",
+  sortable: false,
+  filterable: false,
+  filterValue: [],
+  children: [
+    {
+      headerName: '1',
+      field: "W1",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+    {
+      headerName: '2',
+      field: "W2",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+  ],
+  class: "ag-school-column",
+  canEdit: false,
+  pinned: 'left',
+  menuTabs: ['filterMenuTab']
+}
+
+const THURSDAY: any = {
+  headerName: "Thursday",
+  field: "thursday",
+  sortable: false,
+  filterable: false,
+  filterValue: [],
+  children: [
+    {
+      headerName: '1',
+      field: "TH1",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+    {
+      headerName: '2',
+      field: "TH2",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+  ],
+  class: "ag-school-column",
+  canEdit: false,
+  pinned: 'left',
+  menuTabs: ['filterMenuTab']
+}
+
+const FRIDAY: any = {
+  headerName: "Friday",
+  field: "friday",
+  sortable: false,
+  filterable: false,
+  filterValue: [],
+  children: [
+    {
+      headerName: '1',
+      field: "F1",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+    {
+      headerName: '2',
+      field: "F2",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
   ],
   class: "ag-school-column",
   canEdit: false,
@@ -132,6 +309,11 @@ const COLUMN_INPUT_ATTENDANCE_DROPDOWN_NEW: any = {
           "id": 3,
           "name": "Late",
           "code": "LATE"
+        },
+        {
+          "id": 99,
+          "name": "No Lessons",
+          "code": "NOLESSONS"
         }
       ]
       let isMarked = params.context.isMarked ? params.context.isMarked : false;
@@ -171,7 +353,7 @@ const COLUMN_INPUT_REASON_OR_COMMENT_NEW: any = {
         let absenceTypeObj = absenceTypeList?.find(obj => obj.id == studentAbsenceTypeId);
         let html = '';
         if (mode == 'view') {
-          switch (absenceTypeObj.code) {
+          switch (absenceTypeObj?.code) {
             case attendanceType.PRESENT.code:
               // return '<i class=">' + icons.PRESENT + '"></i>';
               return '<div><i class="' + icons.PRESENT + '"></i></div>';
@@ -187,7 +369,7 @@ const COLUMN_INPUT_REASON_OR_COMMENT_NEW: any = {
           }
         } else if (mode == 'edit') {
           let api = params.api
-          switch (absenceTypeObj.code) {
+          switch (absenceTypeObj?.code) {
             case attendanceType.PRESENT.code:
               return '<div><i class="' + icons.PRESENT + '"></i></div>';
             case attendanceType.LATE.code:
@@ -258,34 +440,39 @@ const COLUMN_INPUT_REASON_OR_COMMENT: any = {
 
 const attendanceType = {
   'NOTMARKED': {
-      code: 'NOTMARKED',
-      icon: 'fa fa-minus',
-      color: '#999999'
+    code: 'NOTMARKED',
+    icon: 'fa fa-minus',
+    color: '#999999'
   },
   'PRESENT': {
-      code: 'PRESENT',
-      icon: 'fa fa-check',
-      color: '#77B576'
+    code: 'PRESENT',
+    icon: 'fa fa-check',
+    color: '#77B576'
   },
   'LATE': {
-      code: 'LATE',
-      icon: 'fa fa-check-circle-o',
-      color: '#999'
+    code: 'LATE',
+    icon: 'fa fa-check-circle-o',
+    color: '#999'
   },
   'UNEXCUSED': {
-      code: 'UNEXCUSED',
-      icon: 'fa fa-circle-o',
-      color: '#CC5C5C'
+    code: 'UNEXCUSED',
+    icon: 'fa fa-circle-o',
+    color: '#CC5C5C'
   },
   'EXCUSED': {
-      code: 'EXCUSED',
-      icon: 'fa fa-circle-o',
-      color: '#CC5C5C'
+    code: 'EXCUSED',
+    icon: 'fa fa-circle-o',
+    color: '#CC5C5C'
   },
   'NoScheduledClicked': {
-      code: 'NoScheduledClicked',
-      icon: '',
-      color: 'black',
+    code: 'NoScheduledClicked',
+    icon: '',
+    color: 'black',
+  },
+  'NOLESSONS': {
+    code: 'NOLESSONS',
+    icon: '',
+    color: 'black'
   }
 };
 
@@ -299,6 +486,11 @@ export const TABLE_COLUMN_LIST: TableColumns = {
   reasonOrComment: COLUMN_REASONORCOMMENT,
   reasonOrComment_select: COLUMN_INPUT_REASON_OR_COMMENT,
   reasonOrComment_select_new: COLUMN_INPUT_REASON_OR_COMMENT_NEW,
+  monday: MONDAY,
+  tuesday: TUESDAY,
+  wednesday: WEDNESDAY,
+  thursday: THURSDAY,
+  friday: FRIDAY
 };
 
 export const MINI_DASHBOARD_CONFIG: IMiniDashboardConfig = {
@@ -337,6 +529,9 @@ function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClose
         case attendanceType.NoScheduledClicked.code:
           html = '<div style="color: ' + attendanceType.NoScheduledClicked.color + '"> <span> ' + absenceTypeObj.name + ' </span></div>';
           break;
+        case attendanceType.NOLESSONS.code:
+          html = '<div style="color: ' + attendanceType.NoScheduledClicked.color + '"> <span> ' + absenceTypeObj.name + ' </span></div>';
+          break;
         default:
           break;
       }
@@ -357,12 +552,13 @@ function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClose
 }
 
 function getEditAttendanceElement(data, absenceTypeList, api, context) {
+  absenceTypeList.pop();
   let dataKey = 'absence_type_id';
   let eCell = document.createElement('div');
   eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
   eCell.setAttribute("id", dataKey);
 
-  if (data.institution_student_absences[dataKey] == null) {
+  if (data.institution_student_absences[dataKey] == null || data.institution_student_absences[dataKey] == 99) {
     data.institution_student_absences[dataKey] = 0;
   }
 
@@ -431,13 +627,16 @@ function getEditCommentElement(data, context, api) {
   let dataKey = 'comment';
   // let scope = context.scope;
   let eTextarea = document.createElement("textarea");
+  eTextarea.style.width = '160px'; // Set the width as needed
+  eTextarea.style.height = '80px'; // Set the height as needed
+  eTextarea.style.resize = 'none';
   eTextarea.setAttribute("placeholder", "Comments");
   eTextarea.setAttribute("id", dataKey);
 
   eTextarea.value = data.institution_student_absences[dataKey];
   eTextarea.addEventListener('blur', () => {
-      let oldValue = data.institution_student_absences.comment;
-      data.institution_student_absences[dataKey] = eTextarea.value;
+    let oldValue = data.institution_student_absences.comment;
+    data.institution_student_absences[dataKey] = eTextarea.value;
   })
 
   return eTextarea
@@ -447,7 +646,7 @@ function getViewCommentsElement(data) {
   let comment = data.institution_student_absences.comment;
   let html = '';
   if (comment != null) {
-      html = '<div class="absences-comment"><i class="' + icons.COMMENT + '"></i><span style="margin-left: 8px;">' + comment + '</span></div>';
+    html = '<div class="absences-comment"><i class="' + icons.COMMENT + '"></i><span style="margin-left: 8px;">' + comment + '</span></div>';
   }
   return html
 }
@@ -458,9 +657,9 @@ function getViewAbsenceReasonElement(data, studentAbsenceReasonList) {
   let html = '';
 
   if (absenceReasonId === null) {
-      html = '<div><i class="' + icons.PRESENT + '"></i></div>';
+    html = '<div><i class="' + icons.PRESENT + '"></i></div>';
   } else {
-      html = '<div class="absence-reason"><i class="' + icons.REASON + '"></i><span style="margin-left: 8px;">' + absenceReasonObj.name + '</span></div>';
+    html = '<div class="absence-reason"><i class="' + icons.REASON + '"></i><span style="margin-left: 8px;">' + absenceReasonObj.name + '</span></div>';
   }
 
   return html
@@ -470,11 +669,11 @@ function setRowDatas(context, data, api) {
   let studentList = context.scope.data
 
   studentList.forEach((dataItem, index) => {
-      if (dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
-          dataItem.rowHeight = 60;
-      } else {
-          dataItem.rowHeight = 120;
-      }
+    if (dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
+      dataItem.rowHeight = 60;
+    } else {
+      dataItem.rowHeight = 120;
+    }
   })
   // api.setRowData(studentList)
 }
@@ -487,21 +686,21 @@ function getEditAbsenceReasonElement(data, studentAbsenceReasonList, context, ap
   eSelectWrapper.setAttribute("id", dataKey);
   let eSelect = document.createElement("select");
   if (data.institution_student_absences[dataKey] == null) {
-      data.institution_student_absences[dataKey] = studentAbsenceReasonList[0].id;
+    data.institution_student_absences[dataKey] = studentAbsenceReasonList[0].id;
   }
 
   studentAbsenceReasonList.forEach((obj, key) => {
-      let eOption = document.createElement("option");
-      let labelText = obj.name;
-      eOption.setAttribute("value", obj.id);
-      eOption.innerHTML = labelText;
-      eSelect.appendChild(eOption);
+    let eOption = document.createElement("option");
+    let labelText = obj.name;
+    eOption.setAttribute("value", obj.id);
+    eOption.innerHTML = labelText;
+    eSelect.appendChild(eOption);
   })
 
   eSelect.value = data.institution_student_absences[dataKey];
   eSelect.addEventListener('change', () => {
-      let oldValue = data.institution_student_absences[dataKey];
-      data.institution_student_absences[dataKey] = eSelect.value;
+    let oldValue = data.institution_student_absences[dataKey];
+    data.institution_student_absences[dataKey] = eSelect.value;
   })
   eSelectWrapper.appendChild(eSelect);
   return eSelectWrapper;

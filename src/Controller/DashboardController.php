@@ -12,6 +12,8 @@ use Cake\I18n\Time;
 use App\Model\Table\AlertsTable;
 use Cake\Controller\Controller;
 use Cake\Event\EventInterface;
+use Cake\Http\Client;
+use Cake\Http\Response;
 
 class DashboardController extends AppController
 {
@@ -31,8 +33,8 @@ class DashboardController extends AppController
 
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
-       // $this->callAlerts(); //POCOR-7558
-
+        //$this->callAlerts(); //POCOR-7558
+        $this->sendSystemUpdateAlerts(); //POCOR-7559
     }
 
     // CAv4
@@ -59,17 +61,35 @@ class DashboardController extends AppController
         parent::beforeFilter($event);
 
         $user = $this->Auth->user();
+//      POCOR-8972 start
+        if (is_array($user) && (empty($user['last_login']))) {
 
-        if (is_array($user) && isset($user['last_login']) && is_null($user['last_login'])) {
+            $header = __('Home Page');
+            $this->set('contentHeader', $header);
             $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user['id']);
             if ($userInfo->password) {
-                $this->Alert->warning('security.login.changePassword');
+                $changePasswordUrl = ['plugin' => 'Profile',
+                    'controller' => 'Profiles',
+                    'action' => 'Accounts',
+                    '0' => 'edit',
+                    '1' => $this->ControllerAction->paramsEncode(['id' => $user['id']])];
+                $check = $this->AccessControl->check($changePasswordUrl);
                 $lastLogin = $userInfo->last_login;
                 $this->request->getSession()->write('Auth.User.last_login', $lastLogin);
-                $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Accounts', 'edit', $this->ControllerAction->paramsEncode(['id' => $user['id']])]);
+                if ($check) {
+                    Log::debug('Redirecting to change password page');
+                    $this->Alert->warning('security.login.changePassword');
+                    $this->redirect($changePasswordUrl);
+                }else{
+//                    Log::debug('No rights to Redirecting to change password page');
+                }
+            }else{
+//                Log::debug('No password to Redirecting to change password page');
             }
-
+        }else{
+//            Log::debug('No user or user has logged to Redirecting to change password page');
         }
+//      POCOR-8972 end
         $header = __('Home Page');
         $this->set('contentHeader', $header);
 
@@ -559,7 +579,10 @@ class DashboardController extends AppController
     private function callAlerts()
     {
         $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-        $AlertsData = $AlertsTable->find('all')->toArray();
+        $AlertsData = $AlertsTable->find('all')
+            ->where(['frequency !=' => 'Never']) // POCOR-8533-C3
+            ->toArray();
+//        Log::debug(print_r($AlertsData, true));
         $lastRunDates = TableRegistry::getTableLocator()->get('Alert.AlertRules')->getLastRunDate();
         $mainAlerts = [];
         foreach ($AlertsData as $key => $value) {
@@ -619,4 +642,37 @@ class DashboardController extends AppController
         }
     }
     //POCOR-7558 end
+
+    //[POCOR-7559]
+    private function sendSystemUpdateAlerts()
+    {
+        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+        $this->loadModel('System.SystemUpdates');
+        $latestVersion = $this->SystemUpdates->find()
+            ->order([$this->SystemUpdates->aliasField('id') => 'desc'])
+            ->first();
+        $maxId = $latestVersion->id;
+
+        //code to get the latest version[POCOR-7559]
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $domain = $ConfigItems->value('version_api_domain');
+        $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
+
+        $http = new Client();
+        $response = $http->get($api);
+        $response = $response->getBody()->getContents();
+        //code to get the latest version[POCOR-7559]
+        $get_response = new Response();
+        if ($get_response->getStatusCode() == 200) {
+            $jsonResponse = json_decode($response, true);
+            $data = array_reverse($jsonResponse['data']);
+            $key = "SystemUpdates";
+            foreach ($data as $item) {
+                if ($item['id'] > $maxId) {
+                    // $AlertsTable->triggerAlertFeatureShell($key);
+                    $AlertsTable->triggerSystemUpdateAlertFeatureShell($key, $item['version']);
+                }
+            }
+        }
+    }
 }
