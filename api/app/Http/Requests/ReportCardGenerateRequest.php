@@ -29,7 +29,12 @@ class ReportCardGenerateRequest extends FormRequest
     {
         return [
             'academic_period_id' => 'required',
+            'institution_id' => 'required',
+            'education_grade_id' => 'required',
+            'institution_class_id' => 'required',
+            'student_id' => 'required',
             'report_card_id' => 'required',
+            'type' => 'required',
         ];
     }
 
