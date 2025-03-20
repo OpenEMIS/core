@@ -11,7 +11,8 @@ $this->start('toolbar');
             'plugin' => $this->request->getAttribute('params')['plugin'],
             'controller' => $this->request->getAttribute('params')['controller'],
             'action' => 'ReportCardComments',
-            'index'
+            'index',
+            $queryString //POCOR-8987
         ];
         echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
     ?>
