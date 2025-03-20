@@ -959,6 +959,14 @@ class AppController extends Controller
         ) {
             $params['action'] = 'InstitutionStaffAttendances';
         }
+        // POCOR-8985 start
+        if (
+            $params['controller'] == 'Institutions' &&
+            $params['action'] == 'ScheduleTimetable'
+        ) {
+            $params['action'] = 'ScheduleTimetableOverview';
+        }
+        // POCOR-8985 end
 
 
         // POCOR-7895 END
@@ -978,7 +986,7 @@ class AppController extends Controller
             if ($params !== null) {
                 $this->log(print_r($params,true), 'debug');
             }
-            //$this->Alert->warning('general.notAccess'); //tmp solution 
+            //$this->Alert->warning('general.notAccess'); //tmp solution
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
         }
     }
