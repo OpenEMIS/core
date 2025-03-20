@@ -13,23 +13,64 @@ use Cake\Utility\Security;
 use Cake\ORM\TableRegistry;
 use Exception;
 
+/**
+ * SyncExamComponent
+ * 
+ * This component handles synchronization of examination data with the OpenEMIS Exam Project
+ * through its API endpoints. It manages authentication, fetching exam results, and updating
+ * local records.
+ */
 class SyncExamComponent extends Component
 {
     use LocatorAwareTrait;
 
-    public $components = ['CurlRequest'];
+    /**
+     * Components used by this component
+     * 
+     * @var array
+     */
+    public $components = ['CurlRequest', 'ControllerAction.Alert'];
 
-    private $loginEndPoint = '/login';
+    /**
+     * API endpoint for authentication
+     * 
+     * @var string
+     */
+    private $loginEndPoint = '/api/v2/login';
 
-    private $resultEndPoint = '/results';
+    /**
+     * API endpoint for fetching exam results
+     * 
+     * @var string
+     */
+    private $resultEndPoint = '/api/v2/results';
 
-    private $token="";
+    /**
+     * Authentication token for API requests
+     * 
+     * @var string
+     */
+    private $token = "";
 
+    /**
+     * Initialize component
+     * 
+     * @param array $config Configuration settings
+     * @return void
+     */
     public function initialize(array $config): void {}
 
-    // Connect to OpenEMIS Exam Project
+    /**
+     * Connect to OpenEMIS Exam Project API and get authentication token
+     * 
+     * @param string $url Base URL for the API
+     * @param string $username Username for authentication
+     * @param string $password Password for authentication
+     * @return array Response with status, token and message
+     */
     private function getConnectionResponse(string $url, string $username, string $password): array
     {
+        // Prepare authentication data
         $postFields = [
             'username' => $username,
             'password' => $password
@@ -42,17 +83,38 @@ class SyncExamComponent extends Component
 
         $loginUrl = $url . $this->loginEndPoint;
 
+        // Log connection attempt details
+        Log::write('debug', '=================== BEGIN AUTH REQUEST ===================');
+        Log::write('debug', 'Sending request to: ' . $loginUrl);
+        Log::write('debug', 'Request Headers: ' . json_encode($headers));
+        Log::write('debug', 'Post Fields: ' . json_encode($postFields));
+
+        // Make the authentication request
         $response = $this->CurlRequest->makeCurlRequests($loginUrl, 'POST', $headers, $postFields);
 
-        $responseData = json_decode($response['data'], true);
+        // Initialize responseData variable
+        $responseData = [];
+        
+        // Process response
+        if ($response['data']) {
+            $responseData = json_decode($response['data'], true);
+            Log::write('debug', 'Response Data: ' . json_encode($responseData));
+        }
 
-        if ($response['statusCode'] === 200 && isset($responseData['data']['token'])) {
+        // Check if authentication was successful
+        if ($response['statusCode'] == 200 && isset($responseData['data']['token'])) {
+            Log::write('debug', 'Connection successful. Token received.');
+            Log::write('debug', '=================== END AUTH REQUEST ===================');
             return [
                 'status' => 1,
                 'token' => $responseData['data']['token'],
                 'message' => $responseData['message'] ?? 'Connected successfully',
             ];
         }
+
+        // Log failure details
+        Log::write('debug', 'Connection failed. Status code: ' . $response['statusCode'] . ', Message: ' . ($responseData['message'] ?? 'No message'));
+        Log::write('debug', '=================== END AUTH REQUEST ===================');
 
         return [
             'status' => 0,
@@ -61,129 +123,170 @@ class SyncExamComponent extends Component
         ];
     }
 
-
-    // Main function to sync students to exams
+    /**
+     * Main function to fetch and process exam results
+     * 
+     * @param array $params Parameters containing academic_period_code and examination_code
+     * @return void
+     */
     public function getResultFromExam(array $params): void
     {
+        Log::write('debug', '=================== BEGIN RESULT SYNC ===================');
+        Log::write('debug', 'Starting exam result sync with params: ' . json_encode($params));
+        
+        // Get OpenEMIS Exam configuration
         $config = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')
             ->getOpenemisExamConfiguration();
 
         if (!empty($config)) {
+            Log::write('debug', 'Configuration found, attempting connection');
+            
+            // Attempt to connect to the API
             $response = $this->getConnectionResponse($config['url'], $config['username'], $config['password']);
+            
             if ($response['status']) {
-                if (!empty($params['academic_period_code'] && !empty($params['examination_code']))) {
+                Log::write('debug', 'Connection successful, proceeding to fetch results');
+                
+                // Check if required parameters are provided
+                if (!empty($params['academic_period_code']) && !empty($params['examination_code'])) {
                     $this->token = $response['token'];
-                    $this->getExamResult($params,$config);
-
+                    $this->getExamResult($params, $config);
                 } else {
-                    Log::write('debug', '');
+                    Log::write('debug', 'Invalid parameters: academic period code or examination code is missing.');
+                    $this->Alert->error('Invalid parameters: academic period code or examination code is missing.', ['type' => 'string', 'reset' => true]);
                 }
             } else {
                 Log::write('debug', 'Connection failed: ' . $response['message']);
+                $this->Alert->error('Connection failed: ' . h($response['message']), ['type' => 'string', 'reset' => true]);
             }
         } else {
             Log::write('debug', 'OpenEMIS Exam Configuration not found.');
+            $this->Alert->error('OpenEMIS Exam Configuration not found.', ['type' => 'string', 'reset' => true]);
         }
+        
+        Log::write('debug', '=================== END RESULT SYNC ===================');
     }
 
-    // Get data for registering students to the exam API
-    private function getExamResult(array $params,array $config): array
+    /**
+     * Fetch exam results from the API
+     * 
+     * @param array $params Parameters for the API request
+     * @param array $config Configuration settings
+     * @return void
+     */
+    private function getExamResult(array $params, array $config): void
     {
+        Log::write('debug', '=================== BEGIN FETCH RESULTS ===================');
+        
+        // Prepare request headers with authentication token
         $headers = [
             "accept: application/json, text/plain, */*",
-            "Authorization: Bearer " . $this->token,  // Attach the token dynamically
-            "content-type: application/json",  // Optional depending on the server requirements
+            "Authorization: Bearer " . $this->token,
+            "content-type: application/json",
         ];
-        // Convert the parameters array to a query string
-        $queryString = http_build_query($params);
-        $resultUrl = $config['url'] . $this->resultEndPoint. "?".$queryString;
+        
+        // Override params for testing - this should be removed in production
+        $params=[
+            "academic_period_code" => '24',
+            'examination_code' => 'FO202411',
+        ];
+        
+        Log::write('debug', 'Using params for result fetch: ' . json_encode($params));
 
+        // Build API request URL
+        $queryString = http_build_query($params);
+        $resultUrl = $config['url'] . $this->resultEndPoint . "?" . $queryString;
+        Log::write('debug', 'Sending results request to: ' . $resultUrl);
+        Log::write('debug', 'Request headers: ' . json_encode($headers));
+
+        $responseData=[];
+        
+        // Make the API request
         $response = $this->CurlRequest->makeCurlRequests($resultUrl, 'GET', $headers);
 
-        echo "<pre>";
-        print_r($response);
-        exit;
-        // $responseData = json_decode($response['data'], true);
-
-        // if ($response['statusCode'] === 200 && isset($responseData['data']['token'])) {
-        //     return [
-        //         'status' => 1,
-        //         'token' => $responseData['data']['token'],
-        //         'message' => $responseData['message'] ?? 'Connected successfully',
-        //     ];
-        // }
-        // $studentsTable = $this->getTableLocator()->get('Institution.StudentUser');
-        // $examinationsTable = $this->getTableLocator()->get('Examination.ExaminationCentresExaminationsStudents');
-        // $subjectsTable = $this->getTableLocator()->get('Examination.ExaminationCentresExaminationsSubjectsStudents');
-
-        // $studentData = $studentsTable
-        //     ->find()
-        //     ->contain(['MainNationalities'])
-        //     ->where(['openemis_no' => $params['openemis_no']])
-        //     ->first();
-
-        // $conditions = [
-        //     'academic_period_id' => $params['academic_period_id'],
-        //     'examination_id' => $params['examination_id'],
-        // ];
-
-        // if (!empty($params['institution_id'])) {
-        //     $conditions['institution_id'] = $params['institution_id'];
-        // }
-
-        // if (!empty($params['examination_centre_id'])) {
-        //     $conditions['examination_centre_id'] = $params['examination_centre_id'];
-        // }
-
-        // if (!empty($params['student_id']) && $params['student_id'] !== -1) {
-        //     $conditions['student_id'] = $params['student_id'];
-        // }
-
-        // $examinationData = $examinationsTable
-        //     ->find()
-        //     ->contain([
-        //         'Examinations',
-        //         'ExaminationCentres',
-        //         'AcademicPeriods',
-        //         'Institutions',
-        //         'Users',
-        //         'Users.Genders',
-        //     ])
-        //     ->where($conditions)
-        //     ->toArray();
-
-        // foreach ($examinationData as &$data) {
-        //     $data['subjects'] = $subjectsTable
-        //         ->find()
-        //         ->contain(['ExaminationSubjects'])
-        //         ->where([
-        //             'examination_centre_id' => $data['examination_centre_id'],
-        //             'student_id' => $data['student_id'],
-        //         ])
-        //         ->toArray();
-        // }
-
-        return [];
-        // return [$examinationData, $studentData];
+        // Process response
+        if ($response['data']) {
+            $responseData = json_decode($response['data'], true);
+            $params = json_encode($params); 
+            Log::write('debug', 'Response status code: ' . $response['statusCode']);
+            Log::write('debug', 'Response data received: ' . (isset($responseData['data']) ? 'Yes' : 'No'));
+        }
+        
+        // Check if results were successfully fetched
+        if ($response['statusCode'] == 200 && isset($responseData['data'])) { 
+            Log::write('debug', 'Results fetched successfully. Creating temporary file and launching sync shell.');
+            
+            // Create temporary file to store results data
+            $tempFile = TMP . 'exam_data_' . time() . '.json';
+            file_put_contents($tempFile, json_encode($responseData));
+            Log::write('debug', 'Temporary file created: ' . $tempFile);
+                
+            // Prepare shell command to process results in background
+            $cmd = ROOT . DS . 'bin' . DS . 'cake SyncExamResult ' . escapeshellarg($tempFile) . ' ' . escapeshellarg($params);
+            $logs = ROOT . DS . 'logs' . DS . 'SyncExamResult.log';
+            $shellCmd = $cmd . ' >> ' . $logs . ' 2>&1 & echo $!';
+            
+            // Log shell command details
+            Log::write('debug', 'About to execute shell command: ' . $shellCmd);
+            
+            try {
+                // Execute shell command
+                $pid = exec($shellCmd);
+                Log::write('debug', 'Shell command executing with PID: ' . $pid);
+                $this->Alert->success(__('Sync process started in background'), ['type' => 'string', 'reset' => true]);
+            } catch (\Exception $ex) {
+                Log::write('error', __METHOD__ . ' exception syncing exam result: ' . $ex->getMessage());
+                Log::write('error', 'Exception trace: ' . $ex->getTraceAsString());
+                $this->Alert->success(__('Error starting sync process: {0}', $ex->getMessage()), ['type' => 'string', 'reset' => true]);
+            }
+        } else {
+            $errorMessage = $responseData['message'] ?? 'Unknown error';
+            Log::write('debug', 'Sync Request Failed: ' . $errorMessage);
+            Log::write('debug', 'Full response: ' . json_encode($response));
+            $this->Alert->error('Unable to fetch data : ' . h($errorMessage), ['type' => 'string', 'reset' => true]);
+        }  
+        
+        Log::write('debug', '=================== END FETCH RESULTS ===================');
     }
 
-    // Decrypt sensitive data
+    /**
+     * Decrypt sensitive data using provided secret key
+     * 
+     * @param string $encryptedString The encrypted data to decrypt
+     * @param string $secretKey The secret key for decryption
+     * @return string|null Decrypted data or null on failure
+     */
     private function decrypt(string $encryptedString, string $secretKey): ?string
     {
+        Log::write('debug', 'Decrypting sensitive data');
         $iv = substr($secretKey, 0, 16);
         $data = base64_decode($encryptedString);
         return openssl_decrypt($data, 'AES-256-CBC', $secretKey, OPENSSL_RAW_DATA, $iv);
     }
 
-    // Update sync status
+    /**
+     * Update local sync status based on API response
+     * 
+     * @param array $response API response data
+     * @param array $params Request parameters
+     * @return void
+     */
     private function updateSyncStatus(array $response, array $params): void
     {
+        Log::write('debug', '=================== BEGIN STATUS UPDATE ===================');
+        Log::write('debug', 'Updating sync status for students');
+        
         $studentsTable = $this->getTableLocator()->get('Examination.ExaminationCentresExaminationsStudents');
         [$studentData] = $this->getRegisterStudentData($params);
+        
+        Log::write('debug', 'Found ' . count($studentData) . ' students to update');
 
+        $updateCount = 0;
         foreach ($studentData as $student) {
             foreach ($response as $syncResult) {
                 if ($syncResult['openemis_no'] === $student['openemis_no']) {
+                    Log::write('debug', 'Updating student: ' . $student['openemis_no'] . ' with sync status: ' . ($syncResult['sync_status'] ? '1' : '-1'));
+                    
                     $studentsTable->updateAll(
                         [
                             'sync_status' => $syncResult['sync_status'] ? 1 : -1,
@@ -191,9 +294,14 @@ class SyncExamComponent extends Component
                         ],
                         ['student_id' => $student['student_id']]
                     );
+                    
+                    $updateCount++;
                     break;
                 }
             }
         }
+        
+        Log::write('debug', 'Updated sync status for ' . $updateCount . ' students');
+        Log::write('debug', '=================== END STATUS UPDATE ===================');
     }
 }
