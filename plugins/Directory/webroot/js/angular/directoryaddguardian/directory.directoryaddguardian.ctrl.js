@@ -386,10 +386,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         var log = [];
         angular.forEach(userCtrl.rowsThisPage, function (value) {
             if (value.id == userCtrl.selectedGuardian) {
-                if (userCtrl.isInternalSearchSelected)
+                // if (userCtrl.isInternalSearchSelected)
                     userCtrl.setUserData(value);
-                else
-                    userCtrl.setExternalUserData(value);
+                // else
+                //     userCtrl.setExternalUserData(value);
             }
         }, log);
     }
