@@ -48,7 +48,7 @@ class InstitutionConsumablesTable extends ControllerActionTable
     {
         $this->field('stock_unit_id', ['type' => 'select', 'visible' => ['index' => true, 'view' => true, 'edit' => true]]);
         $this->field('item_type_id', ['type' => 'select', 'visible' => ['index' => true, 'view' => true, 'edit' => true]]);
-        $this->field('balance', ['visible' => ['index' => true, 'view' => false, 'edit' => false]]);
+        $this->field('balance', ['visible' => ['index' => true, 'view' => false, 'edit' => false]]);//POCOR-8979
        
         $this->setFieldOrder(['bin_no', 'item_type_id', 'stock_type_id', 'minimum', 'balance']);
 
@@ -136,6 +136,7 @@ class InstitutionConsumablesTable extends ControllerActionTable
         }
     }
 
+    //POCOR-8979 start
     public function onGetBalance(Event $event, Entity $entity)
     {
         $content = "";
@@ -153,6 +154,7 @@ class InstitutionConsumablesTable extends ControllerActionTable
         }
         return $content;
     }
+    //POCOR-8979 end
 
     public function onUpdateFieldItemTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {  
