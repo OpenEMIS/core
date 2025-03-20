@@ -394,7 +394,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                                 });
                             }
                         }
-                        else if(principalCommentsRequired == 1 && homeroomTeacherCommentsRequired == 0 && teacherCommentsRequired == 0){
+                        if(principalCommentsRequired == 1){
                             editable = (angular.isObject(principalPermission) && principalPermission.length > 0 && principalEditCommentsRequired ==1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && principalEditCommentsRequired ==1) || (allCommentsEditRequired == 1) || (principalEditCommentsRequired ==1);//POCOR-8007 add principalEditCommentsRequired
                             tabs.push({
                                 tabName: "Principal",
@@ -532,7 +532,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                         //         editable: editable
                         //     });
                         // }
-                        if ((principalCommentsRequired == 0 && homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1  && isHomeRoomClass == 1)) {
+                        if ((homeroomTeacherCommentsRequired == 1 && teacherCommentsRequired == 1  && isHomeRoomClass == 1)) { //POCOR-8987 remove principalCommentsRequired = 0 condition
                             editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && homeroomTeacherEditCommentsRequired == 1) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-8007 add homeroomTeacherEditCommentsRequired
                             tabs.push({
                                 tabName: "Homeroom Teacher",
