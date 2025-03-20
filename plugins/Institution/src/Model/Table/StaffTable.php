@@ -3529,6 +3529,7 @@ class StaffTable extends ControllerActionTable
                 ->leftJoin(
                     [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                     [
+                        // $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
                         $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupTbl->aliasField('id') // POCOR-8983 initially:- $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
                     ]
                 )
@@ -3539,7 +3540,8 @@ class StaffTable extends ControllerActionTable
                     ]
                 )
                 ->where([
-                    $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    // $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    $SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,//POCOR-8987
                     $SecurityGroupUserTbl->aliasField('security_user_id') => $staffId,
                 ])->enableHydration(false)->toArray();
             $RoleArr = [];
@@ -3560,6 +3562,7 @@ class StaffTable extends ControllerActionTable
                     $SecurityRolesNames[] = $SecurityRolesvalue['code'];
                 }
             }
+
             echo json_encode($SecurityRolesNames, true);
             die;
         }
