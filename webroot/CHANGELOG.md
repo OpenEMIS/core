@@ -1,3 +1,10 @@
+### [4.16.2] - 2025-03-18
+- Big Fixed: Institutions>Report Card>Comments: Permission for Teachers are not working correctly
+- Big Fixed: Administrations>Performance>Report Cards: GPA placeholder naming should be updated
+- Big Fixed: Reports > Students > Enrollment Summary: When generating Student Enrollment Summary report, the page gives a 404 error
+- Big Fixed: Institutions > Staff > Career : Entitlement is not showing correctly
+- Big Fixed: Directory > Staff/Students/Guardian/Others: Adding new user
+
 ### [4.16.1] - 2025-03-17
 - Bug Fixes: Administration > Performance > Report Cards: When selecting the generate start and generate end dates to, the system adds one extra day to the selected dates
 - Bug Fixed: Institutions>Report Card>Comments: Revert angular 11 changes
