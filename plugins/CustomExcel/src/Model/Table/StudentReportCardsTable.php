@@ -548,6 +548,7 @@ class StudentReportCardsTable extends AppTable
         if (isset($params['institution_id']) && isset($params['education_grade_id']) && isset($params['academic_period_id']) && isset($params['student_id'])) {
             $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $StudentRisksCriterias = TableRegistry::get('Institution.StudentRisksCriterias');
+            $InstitutionStudentProgrammes = TableRegistry::get('Student.InstitutionStudentProgrammes');
 
             $entity = $InstitutionClassStudents
                 ->find()
@@ -559,6 +560,7 @@ class StudentReportCardsTable extends AppTable
                     'start_date' => 'InstitutionStudents.start_date',
                     'end_date' => 'InstitutionStudents.end_date',
                     'status' => 'StudentStatuses.name',
+                    'student_candidate_number' => 'InstitutionStudentProgrammes.registration_number', //POCOR-8871
                 ])
                 ->contain(['InstitutionClasses', 'EducationGrades', 'AcademicPeriods', 'StudentStatuses'])
                 ->innerJoin(
@@ -569,6 +571,22 @@ class StudentReportCardsTable extends AppTable
                         'InstitutionStudents.education_grade_id =' . $InstitutionClassStudents->aliasField('education_grade_id')
                     ]
                 )
+                //POCOR-8871 start
+                 ->innerJoin(
+                    ['StudentEducationGrades' => 'education_grades'],
+                    [
+                        'StudentEducationGrades.id =' . $InstitutionClassStudents->aliasField('education_grade_id'),
+                    ]
+                )
+                 ->leftJoin(
+                    ['InstitutionStudentProgrammes' => 'institution_student_programmes'],
+                    [
+                        'InstitutionStudentProgrammes.student_id =' . $InstitutionClassStudents->aliasField('student_id'),
+                        'InstitutionStudentProgrammes.institution_id =' . $InstitutionClassStudents->aliasField('institution_id'),
+                        'InstitutionStudentProgrammes.education_programme_id = StudentEducationGrades.education_programme_id'
+                    ]
+                )
+                //POCOR-8871 end
                 ->where([
                     $InstitutionClassStudents->aliasField('student_id') => $params['student_id'],
                     //$InstitutionClassStudents->aliasField('academic_period_id') => $params['academic_period_id'],//POCOR-5191
