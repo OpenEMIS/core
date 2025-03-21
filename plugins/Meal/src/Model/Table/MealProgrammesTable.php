@@ -14,9 +14,9 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
 use Cake\Http\ServerRequest;
-use AllowDynamicProperties;
+use AllowDynamicProperties; // POCOR-8988
 
-#[AllowDynamicProperties] class MealProgrammesTable extends ControllerActionTable
+#[AllowDynamicProperties] class MealProgrammesTable extends ControllerActionTable // POCOR-8988
 {
 
     /**
@@ -118,6 +118,7 @@ use AllowDynamicProperties;
                     ], [], true); //this parameter will remove all where before this and replace it with new where.
         }
     }
+
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -375,10 +376,11 @@ use AllowDynamicProperties;
         $this->field('amount');
         $this->field('area_administrative_id', [
             'attr' => [
-                'label' => __('Area Educations')
+                'label' => __('Area Education')
             ],
             'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]
         ]);
+        // POCOR-8988 start
         $this->field('area_id',
             ['attr' => ['entity' => $entity],
                 'entity' => $entity,
@@ -388,6 +390,7 @@ use AllowDynamicProperties;
                 'entity' => $entity,
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true],
             ]);
+        // POCOR-8988 end
         $this->field('type',['select' => false]);
         $this->field('meal_nutritions', [
             'type' => 'chosenSelect',
@@ -461,6 +464,7 @@ use AllowDynamicProperties;
         return compact('periodOptions', 'selectedPeriod');
     }
 
+    // POCOR-8988 start
     private function getSelectedAcademicPeriod(ServerRequest $request)
     {
         $selectedAcademicPeriod = '';
@@ -472,6 +476,7 @@ use AllowDynamicProperties;
         if ($this->action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         }
+        // POCOR-8988 end
 
         return $selectedAcademicPeriod;
     }
@@ -506,7 +511,7 @@ use AllowDynamicProperties;
 
      public function onGetAreaId(Event $event, Entity $entity)
     {
-        $areaName = '';
+        $areaName = ''; // POCOR-8988
         if ($this->action == 'index') {
             $areaName = $entity->Areas['name'];
             // Getting the system value for the area
@@ -1044,6 +1049,8 @@ use AllowDynamicProperties;
 
         }
     }
+
+    // POCOR-8988 end
     /*
     * Get the list Meals Programmes
     * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
