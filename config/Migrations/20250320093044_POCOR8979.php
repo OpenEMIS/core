@@ -18,7 +18,7 @@ class POCOR8979 extends AbstractMigration
         $this->execute('INSERT INTO `z_8979_security_functions` SELECT * FROM `security_functions`');
 
         $this->execute("INSERT INTO `security_functions` (`name`, `controller`, `module`, `category`,`parent_id`,`_view`,`_edit`,`_add`,`_delete`,`_execute`,`order`,`visible`,`description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-        ('Transactions', 'Institutions', 'Institutions','Finance',8,'Transactions.index|Transactions.view','Transactions.edit','Transactions.add','Transactions.remove',NULL,569,1,NULL,NULL,NULL,1, NOW()");
+        ('Transactions', 'Institutions', 'Institutions','Finance',8,'Transactions.index|Transactions.view','Transactions.edit','Transactions.add','Transactions.remove',NULL,569,1,NULL,NULL,NULL,1, NOW())");
     }
 
     public function down()
