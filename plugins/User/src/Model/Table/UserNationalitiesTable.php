@@ -17,16 +17,18 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Http\Client;
 use Cake\Http\Session;
 use Cake\Log\Log;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 
 class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
     use MessagesTrait;
 
-	public function initialize(array $config): void
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
 
         $this->securityUserId = $this->getQueryString('security_user_id');
@@ -44,7 +46,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->addBehavior('User.UserTab');
         $this->addBehavior('User.CreateUser');//POCOR-7727
         $this->addBehavior('CompositeKey');
-	}
+    }
 
     public function implementedEvents(): array {
         $events = parent::implementedEvents();
@@ -65,7 +67,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             return;
         }
         try{
-        $query = $this->find()
+            $query = $this->find()
                 ->where([
                     $this->aliasField('security_user_id') => $userID,
                     $this->aliasField('nationality_id') => $nationalityID
@@ -98,7 +100,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
     }
 
-	public function beforeAction(Event $event) {
+    public function beforeAction(Event $event) {
         $this->securityUserId =  $this->getQueryString('security_user_id');
         if($this->securityUserId == ''){
             $this->securityUserId = $this->getQueryString('user_id');
@@ -108,50 +110,50 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->setFieldOrder([
             'nationality_id', 'comment', 'preferred','identity_type_id','number','validate_number'
         ]);
-	}
+    }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-	public function validationDefault(Validator $validator): Validator {
-		$validator = parent::validationDefault($validator);
+    public function validationDefault(Validator $validator): Validator {
+        $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-		$validator
+        $validator
             ->add('nationality_id', 'notBlank', ['rule' => 'notBlank'])
             ->add('preferred', 'ruleValidatePreferredNationality', [
                 'rule' => ['validatePreferredNationality'],
                 'provider' => 'table'
             ]);
-            // task POCOR-5668 starts
-            $isFieldsShow = $this->showIdentityTypeAndNumber();
-            if($isFieldsShow > 0){
-                $validator
-                    ->add('identity_type_id', 'notBlank', ['rule' => 'notBlank'])
-                    ->requirePresence('number')
-                    ->notEmpty('number')
-                    ->add('number', [
-                        'ruleNumber' => [
-                            'rule' => ['check_validate_number'],
-                            'message' => __('Please validate before saving.')
-                        ]
-                    ]);
-            }
-            // task POCOR-5668 ends
+        // task POCOR-5668 starts
+        $isFieldsShow = $this->showIdentityTypeAndNumber();
+        if($isFieldsShow > 0){
+            $validator
+                ->add('identity_type_id', 'notBlank', ['rule' => 'notBlank'])
+                ->requirePresence('number')
+                ->notEmpty('number')
+                ->add('number', [
+                    'ruleNumber' => [
+                        'rule' => ['check_validate_number'],
+                        'message' => __('Please validate before saving.')
+                    ]
+                ]);
+        }
+        // task POCOR-5668 ends
         return $validator;
-	}
+    }
 
-	public function validationNonMandatory(Validator $validator) {
-		$validator = $this->validationDefault($validator);
-		return $validator->allowEmpty('nationality_id');
-	}
+    public function validationNonMandatory(Validator $validator) {
+        $validator = $this->validationDefault($validator);
+        return $validator->allowEmpty('nationality_id');
+    }
 
-	public function validationAddByAssociation(Validator $validator)
-	{
-		$validator = $this->validationDefault($validator);
-		return $validator->requirePresence('security_user_id', false);
-	}
+    public function validationAddByAssociation(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        return $validator->requirePresence('security_user_id', false);
+    }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -177,91 +179,91 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-   {
-       if ($entity->getDirty('preferred')) {
-           if ($entity->preferred == 1) { //if set as preferred
-               // update the rest of user nationality to not preferred
-               $this->updateAll(
-                   ['preferred' => 0],
-                   [
-                       'security_user_id' => $entity->security_user_id,
-                       'id <> ' => $entity->id
-                   ]
-               );
+    {
+        if ($entity->getDirty('preferred')) {
+            if ($entity->preferred == 1) { //if set as preferred
+                // update the rest of user nationality to not preferred
+                $this->updateAll(
+                    ['preferred' => 0],
+                    [
+                        'security_user_id' => $entity->security_user_id,
+                        'id <> ' => $entity->id
+                    ]
+                );
 
-               //update information on security user table
-               $listeners = [
-                   TableRegistry::getTableLocator()->get('User.Users')
-               ];
-               $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
-           }
-       }
-       // task POCOR-5668 starts
+                //update information on security user table
+                $listeners = [
+                    self::getDynamicTableInstance('User.Users')
+                ];
+                $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
+            }
+        }
+        // task POCOR-5668 starts
 
-       if(isset($this->request) && isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'add'){
-           if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
-           {
-               if($entity->validate_number == 1){
-                   $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-                   $newIdentity = [
-                       'identity_type_id' => $entity->identity_type_id,
-                       'number' => $entity->number,
-                       'security_user_id' => $entity->security_user_id,
-                       'created_user_id' => $entity->created_user_id,
-                       'nationality_id' => $entity->nationality_id,
-                       'created' => Time::now()
-                   ];
+        if(isset($this->request) && isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'add'){
+            if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
+            {
+                if($entity->validate_number == 1){
+                    $UserIdentities = self::getDynamicTableInstance('User.Identities');
+                    $newIdentity = [
+                        'identity_type_id' => $entity->identity_type_id,
+                        'number' => $entity->number,
+                        'security_user_id' => $entity->security_user_id,
+                        'created_user_id' => $entity->created_user_id,
+                        'nationality_id' => $entity->nationality_id,
+                        'created' => Time::now()
+                    ];
 //                   Log::debug(print_r($newIdentity,true));
 //                   Log::debug(print_r($entity,true));
-                   $newEntity = $UserIdentities->newEntity($newIdentity);
-                   $UserIdentities->save($newEntity);
+                    $newEntity = $UserIdentities->newEntity($newIdentity);
+                    $UserIdentities->save($newEntity);
 
-                   //update identity_type_id in nationalities table
-                   $Nationalities = TableRegistry::getTableLocator()->get('nationalities');
-                   $updateEntity = $Nationalities->newEntity([
-                       'id' => $entity->nationality_id,
-                       'identity_type_id' => $entity->identity_type_id,
-                       'modified_user_id' => $entity->created_user_id,
-                       'modified' => Time::now()
-                   ]);
-                   $Nationalities->save($updateEntity);
-               }
-           }
-       }else{ //after save edit nationality
-           if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
-           {
-               $UserIdentitiesData = $this->findDataExistInUserIdentityTable($entity->identity_type_id, $entity->nationality_id, $entity->security_user_id);
-               if($UserIdentitiesData->number != $entity->number){
-                   $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-                   $update_identity_data = [
-                       'id' => $UserIdentitiesData->id,
-                       'identity_type_id' => $entity->identity_type_id,
-                       'number' => $entity->number,
-                       'security_user_id' => $entity->security_user_id,
-                       'modified_user_id' => $entity->created_user_id,
-                       'nationality_id' => $entity->nationality_id,
-                       'modified' => Time::now()
-                   ];
+                    //update identity_type_id in nationalities table
+                    $Nationalities = self::getDynamicTableInstance('FieldOption.Nationalities');
+                    $updateEntity = $Nationalities->newEntity([
+                        'id' => $entity->nationality_id,
+                        'identity_type_id' => $entity->identity_type_id,
+                        'modified_user_id' => $entity->created_user_id,
+                        'modified' => Time::now()
+                    ]);
+                    $Nationalities->save($updateEntity);
+                }
+            }
+        }else{ //after save edit nationality
+            if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
+            {
+                $UserIdentitiesData = $this->findDataExistInUserIdentityTable($entity->identity_type_id, $entity->nationality_id, $entity->security_user_id);
+                if($UserIdentitiesData->number != $entity->number){
+                    $UserIdentities = self::getDynamicTableInstance('User.Identities');
+                    $update_identity_data = [
+                        'id' => $UserIdentitiesData->id,
+                        'identity_type_id' => $entity->identity_type_id,
+                        'number' => $entity->number,
+                        'security_user_id' => $entity->security_user_id,
+                        'modified_user_id' => $entity->created_user_id,
+                        'nationality_id' => $entity->nationality_id,
+                        'modified' => Time::now()
+                    ];
 //                   Log::debug(print_r($update_identity_data,true));
-                   $patchOptions = ['validate' => false];
-                   $newEntity = $UserIdentities->newEntity([]);
-                   $newEntity = $UserIdentities->patchEntity($newEntity, $update_identity_data, $patchOptions);
-                   $UserIdentities->save($newEntity);
+                    $patchOptions = ['validate' => false];
+                    $newEntity = $UserIdentities->newEntity([]);
+                    $newEntity = $UserIdentities->patchEntity($newEntity, $update_identity_data, $patchOptions);
+                    $UserIdentities->save($newEntity);
 
-                   //update identity_type_id in nationalities table
-                   $Nationalities = TableRegistry::getTableLocator()->get('nationalities');
-                   $updateEntity = $Nationalities->newEntity([
-                       'id' => $entity->nationality_id,
-                       'identity_type_id' => $entity->identity_type_id,
-                       'modified_user_id' => $entity->created_user_id,
-                       'modified' => Time::now()
-                   ]);
-                   $Nationalities->save($updateEntity);
-               }
-           }
-       }
-       // task POCOR-5668 ends
-   }
+                    //update identity_type_id in nationalities table
+                    $Nationalities = self::getDynamicTableInstance('FieldOption.Nationalities');
+                    $updateEntity = $Nationalities->newEntity([
+                        'id' => $entity->nationality_id,
+                        'identity_type_id' => $entity->identity_type_id,
+                        'modified_user_id' => $entity->created_user_id,
+                        'modified' => Time::now()
+                    ]);
+                    $Nationalities->save($updateEntity);
+                }
+            }
+        }
+        // task POCOR-5668 ends
+    }
 
     public function beforeDelete(Event $event, Entity $entity)
     {
@@ -275,7 +277,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         //         ])
         //         ->count();
 
-        $UserNationalities = TableRegistry::getTableLocator()->get('User.Identities');
+        $UserNationalities = self::getDynamicTableInstance('User.Identities');
         $checkexistingNationalities = $UserNationalities->find()
             ->where([
                 $UserNationalities->aliasField('nationality_id') => $entity->nationality_id,
@@ -297,11 +299,11 @@ class UserNationalitiesTable extends ControllerActionTable {
 
             //get the next latest nationality to be set as preferred
             $query = $this->find()
-                    ->where([
-                        $this->aliasfield('security_user_id') => $entity->security_user_id
-                    ])
-                    ->order('created DESC')
-                    ->first();
+                ->where([
+                    $this->aliasfield('security_user_id') => $entity->security_user_id
+                ])
+                ->order('created DESC')
+                ->first();
 
             if (!empty($query)) {
                 $query->preferred = 1;
@@ -330,22 +332,22 @@ class UserNationalitiesTable extends ControllerActionTable {
     // task POCOR-5668 starts
     public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'] ?? null;
-            $userId = $this->getUserID();
+            $userId = $entity->security_user_id;
             if ($action == 'add') {
 
-                if(!empty($userId)){
+                if($userId){
                     //nationality_id
-                    if(!empty($request->getQuery('nationality_id'))){
+                    $nationalityId = $entity->nationality_id;
+                    if(empty($nationalityId)){
                         $nationalityId = $request->getQuery('nationality_id');
-                    }else{
-                        $nationalityId = $entity->nationality_id;
                     }
-                    dd($nationalityId);
-                    $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types')->find('list',
-                                        ['keyField' => 'id','valueField' => 'name'
-                                    ])->toArray();
+
+                    $IdentityTypes = self::getDynamicTableInstance('identity_types')->find('list',
+                        ['keyField' => 'id','valueField' => 'name'
+                        ])->toArray();
 
                     $attr['options'] = $IdentityTypes;
                     if(!empty($nationalityId)){
@@ -369,28 +371,28 @@ class UserNationalitiesTable extends ControllerActionTable {
                 }
             } else if ($action == 'edit') {
                 if(!empty($userId)){
-                    $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
-                    $nationality = TableRegistry::getTableLocator()->get('Nationalities');
+                    $IdentityTypes = self::getDynamicTableInstance('identity_types');
+                    $nationality = self::getDynamicTableInstance('FieldOption.Nationalities');
                     $nationalityTable = $nationality
-                                        ->find()
-                                        ->select([
-                                            $nationality->aliasField('id'),
-                                            $nationality->aliasField('name'),
-                                            $nationality->aliasField('identity_type_id'),
-                                            $nationality->aliasField('default'),
-                                            $IdentityTypes->aliasField('id'),
-                                            $IdentityTypes->aliasField('name')
-                                        ])
-                                        ->leftJoin(
-                                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
-                                                $IdentityTypes->aliasField('id = ') . $nationality->aliasField('identity_type_id')
-                                            ]
-                                        )
-                                        ->where([
-                                            'Nationalities.default' => 1,
-                                            'Nationalities.id' => $entity->nationality_id
-                                        ])
-                                        ->first();
+                        ->find()
+                        ->select([
+                            $nationality->aliasField('id'),
+                            $nationality->aliasField('name'),
+                            $nationality->aliasField('identity_type_id'),
+                            $nationality->aliasField('default'),
+                            $IdentityTypes->aliasField('id'),
+                            $IdentityTypes->aliasField('name')
+                        ])
+                        ->leftJoin(
+                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
+                                $IdentityTypes->aliasField('id = ') . $nationality->aliasField('identity_type_id')
+                            ]
+                        )
+                        ->where([
+                            'Nationalities.default' => 1,
+                            'Nationalities.id' => $entity->nationality_id
+                        ])
+                        ->first();
 
                     if(!empty($nationalityTable) && !empty($nationalityTable->identity_type_id)){
                         // when default identity in nationality table regarding country
@@ -398,9 +400,9 @@ class UserNationalitiesTable extends ControllerActionTable {
                         $attr['value'] = $nationalityTable->identity_types['id'];
                         $attr['attr']['value'] = $nationalityTable->identity_types['name'];
                     }else{
-                        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types')->find('list',
-                                            ['keyField' => 'id','valueField' => 'name'
-                                        ])->toArray();
+                        $IdentityTypes = self::getDynamicTableInstance('identity_types')->find('list',
+                            ['keyField' => 'id','valueField' => 'name'
+                            ])->toArray();
                         $attr['options'] = $IdentityTypes;
                     }
                 }
@@ -421,13 +423,13 @@ class UserNationalitiesTable extends ControllerActionTable {
             } else if ($action == 'edit') {
                 if(!empty($userId)){
                     //first check nationality have default or not
-                    $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
-                                    ->find()
-                                    ->where([
-                                        'Nationalities.default' => 1,
-                                        'Nationalities.id' => $attr['entity']->nationality_id
-                                    ])
-                                    ->first();
+                    $nationalityTable = self::getDynamicTableInstance('FieldOption.Nationalities')
+                        ->find()
+                        ->where([
+                            'Nationalities.default' => 1,
+                            'Nationalities.id' => $attr['entity']->nationality_id
+                        ])
+                        ->first();
 
                     if(!empty($nationalityTable) && !empty($nationalityTable->identity_type_id)){
                         // second check when user have identity in user identity table
@@ -462,13 +464,13 @@ class UserNationalitiesTable extends ControllerActionTable {
         }  else if ($action == 'edit') {
             if(!empty($userId)){
                 //first check nationality have default or not
-                $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
-                                ->find()
-                                ->where([
-                                    'Nationalities.default' => 1,
-                                    'Nationalities.id' => $attr['entity']->nationality_id
-                                ])
-                                ->first();
+                $nationalityTable = self::getDynamicTableInstance('FieldOption.Nationalities')
+                    ->find()
+                    ->where([
+                        'Nationalities.default' => 1,
+                        'Nationalities.id' => $attr['entity']->nationality_id
+                    ])
+                    ->first();
                 if(!empty($nationalityTable) && !empty($nationalityTable->identity_type_id)){
                     // second check when user have identity in user identity table
                     $identityTypeData = $this->findDataExistInUserIdentityTable($nationalityTable->identity_type_id, $nationalityTable->id, $userId);
@@ -492,23 +494,23 @@ class UserNationalitiesTable extends ControllerActionTable {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
                 $currentNationalities = $this
-                                        ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-                                        ->matching('NationalitiesLookUp')
-                                        ->where([
-                                            $this->aliasfield('security_user_id') => $this->securityUserId
-                                        ])
-                                        ->select([
-                                            'id' => $this->NationalitiesLookUp->aliasfield('id')
-                                        ])
-                                        ->toArray();
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                    ->matching('NationalitiesLookUp')
+                    ->where([
+                        $this->aliasfield('security_user_id') => $this->securityUserId
+                    ])
+                    ->select([
+                        'id' => $this->NationalitiesLookUp->aliasfield('id')
+                    ])
+                    ->toArray();
 
                 $nationalities = $this->NationalitiesLookUp->find('all')->find('list')/*->order(['order','name'])*/;
 
                 if (!empty($currentNationalities)) {
                     $nationalities = $nationalities
-                                    ->where([
-                                        $this->NationalitiesLookUp->aliasfield('id NOT IN ') => $currentNationalities
-                                    ]);
+                        ->where([
+                            $this->NationalitiesLookUp->aliasfield('id NOT IN ') => $currentNationalities
+                        ]);
                 }
 
                 $nationalities = $nationalities->toArray();
@@ -528,6 +530,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     {
         $request = $this->request;
         $query = $request->getQuery(); // Get the query parameters as an array
+
         $alias = $this->getAlias();
         unset($query['nationality_id']); // Unset the specific parameter you want to remove
         if ($request->is(['post', 'put'])) {
@@ -570,12 +573,12 @@ class UserNationalitiesTable extends ControllerActionTable {
             $userId = $queryString['security_user_id'];
         }
 
-        $nationalityTable = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')
-                            ->find()
-                            ->where([
-                                'Nationalities.id' => $nationalityId
-                            ])
-                            ->first();
+        $nationalityTable = self::getDynamicTableInstance('FieldOption.Nationalities')
+            ->find()
+            ->where([
+                'Nationalities.id' => $nationalityId
+            ])
+            ->first();
         // validate button when external validation is enable and it has identity link added
         if(!empty($nationalityId) && ($nationalityTable['external_validation'] == 1) && ($nationalityTable['identity_type_id'] != '')){
             if ($this->action == 'add') {
@@ -625,10 +628,10 @@ class UserNationalitiesTable extends ControllerActionTable {
             $userId = $queryString['security_user_id'];
         }
         $userData = TableRegistry::get('Security.Users')
-                    ->find()
-                    ->where([
-                        'id' => $userId
-                    ])->first();
+            ->find()
+            ->where([
+                'id' => $userId
+            ])->first();
         $this->autoRender = false;
         $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalAttributes
@@ -649,13 +652,13 @@ class UserNationalitiesTable extends ControllerActionTable {
         //POCOR-7727 start
         $ConfigItems = TableRegistry::get('config_items');
         $config_item_result = $ConfigItems->find()->select(["config_value" => $ConfigItems->aliasField('value')])
-        ->where([$ConfigItems->aliasField('code') => 'external_data_source_type'])->first();
+            ->where([$ConfigItems->aliasField('code') => 'external_data_source_type'])->first();
 
         if ($config_item_result->config_value != "Jordan CSPD") { //POCOR-7727 end
             $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
             $data = [
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $token
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion' => $token
             ];
         }
         $this->request->query['number'] = $this->request->data['UserNationalities']['number'];
@@ -759,27 +762,27 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
 
     public function getNationalityTableData($nationalityId){
-        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-        $nationality = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
+        $IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+        $nationality = self::getDynamicTableInstance('FieldOption.Nationalities');
         $nationalityTable = $nationality
-                            ->find()
-                            ->select([
-                                $nationality->aliasField('id'),
-                                $nationality->aliasField('name'),
-                                $nationality->aliasField('identity_type_id'),
-                                $nationality->aliasField('default'),
-                                $IdentityTypes->aliasField('id'),
-                                $IdentityTypes->aliasField('name')
-                            ])
-                            ->leftJoin(
-                                [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
-                                    $IdentityTypes->aliasField('id = ') . $nationality->aliasField('identity_type_id')
-                                ]
-                            )
-                            ->where([
-                                'Nationalities.id' => $nationalityId
-                            ])
-                            ->first();
+            ->find()
+            ->select([
+                $nationality->aliasField('id'),
+                $nationality->aliasField('name'),
+                $nationality->aliasField('identity_type_id'),
+                $nationality->aliasField('default'),
+                $IdentityTypes->aliasField('id'),
+                $IdentityTypes->aliasField('name')
+            ])
+            ->leftJoin(
+                [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
+                    $IdentityTypes->aliasField('id = ') . $nationality->aliasField('identity_type_id')
+                ]
+            )
+            ->where([
+                'Nationalities.id' => $nationalityId
+            ])
+            ->first();
         return $nationalityTable;
     }
 
@@ -793,21 +796,21 @@ class UserNationalitiesTable extends ControllerActionTable {
         ];
 //        Log::debug(print_r($where,true));
         $identityTypeData = $UserIdentities
-                                ->find()
-                                ->select([
-                                    $UserIdentities->aliasField('id'),
-                                    $UserIdentities->aliasField('identity_type_id'),
-                                    $IdentityTypes->aliasField('name'),
-                                    $UserIdentities->aliasField('number'),
-                                    $UserIdentities->aliasField('nationality_id'),
-                                ])
-                                ->leftJoin(
-                                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
-                                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
-                                    ]
-                                )
-                                ->where($where)
-                                ->first();
+            ->find()
+            ->select([
+                $UserIdentities->aliasField('id'),
+                $UserIdentities->aliasField('identity_type_id'),
+                $IdentityTypes->aliasField('name'),
+                $UserIdentities->aliasField('number'),
+                $UserIdentities->aliasField('nationality_id'),
+            ])
+            ->leftJoin(
+                [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
+                    $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
+                ]
+            )
+            ->where($where)
+            ->first();
         return $identityTypeData;
     }
 
@@ -845,7 +848,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function showIdentityTypeAndNumber(){
         $count = 0;
         $nationalityId = $identityName ='';
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         //$arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
         if(isset($this->request)){
             if($this->request->getParam('controller') == 'Students'){
@@ -871,9 +874,9 @@ class UserNationalitiesTable extends ControllerActionTable {
             }
 
             $conditions = [
-                    'code' => $identityName,
-                    'value' => 1,
-                ];
+                'code' => $identityName,
+                'value' => 1,
+            ];
             $count = $ConfigItems->find()
                 ->where($conditions)
                 ->count();
@@ -992,5 +995,59 @@ class UserNationalitiesTable extends ControllerActionTable {
             $userId = $this->getUserID();
             $data['security_user_id'] = $userId;
         }
+    }
+
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
     }
 }
