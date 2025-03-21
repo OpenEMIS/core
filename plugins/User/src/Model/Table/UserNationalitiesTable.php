@@ -342,6 +342,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     }else{
                         $nationalityId = $entity->nationality_id;
                     }
+                    dd($nationalityId);
                     $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types')->find('list',
                                         ['keyField' => 'id','valueField' => 'name'
                                     ])->toArray();
@@ -534,6 +535,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 if (isset($data[$alias]['nationality_id'])) {
                     $nationalityId = $data[$alias]['nationality_id']; // Get the 'nationality_id' value
                     $this->request = $this->request->withQueryParams(['nationality_id' => $nationalityId]); // Set the 'nationality_id' as a query parameter
+                    $this->request = $this->request->withData('nationality_id', $nationalityId); // Set the 'nationality_id' as a query parameter
                 }
             }
         }
