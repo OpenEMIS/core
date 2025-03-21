@@ -21,7 +21,6 @@ class ExaminationResultsTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportResults']);
 
@@ -54,9 +53,9 @@ class ExaminationResultsTable extends ControllerActionTable
         $this->field('name', ['sort' => ['field' => 'ExaminationCentres.name']]);
         $this->setFieldOrder(['name', 'academic_period_id', 'examination_id', 'total_registered']);
 
-                
+
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Results','Examinations');       
+		$is_manual_exist = $this->getManualUrl('Administration','Results','Examinations');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -83,14 +82,10 @@ class ExaminationResultsTable extends ControllerActionTable
 
         $where = [];
         // Academic Period
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ?$this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         // End
 
         // Examination
-        $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod);
+        $examinationOptions = $this->getExaminationOptions();
         $examinationOptions = ['-1' => __('All Examinations')] + $examinationOptions;
         $selectedExamination = !is_null($serverRequest->getQuery('examination_id')) ? $serverRequest->getQuery('examination_id') : -1;
 
@@ -125,11 +120,10 @@ class ExaminationResultsTable extends ControllerActionTable
         return $entity->examination_centre->code_name;
     }
 
-    private function getExaminationOptions($selectedAcademicPeriod)
+    private function getExaminationOptions()
     {
         $examinationOptions = $this->Examinations
             ->find('list')
-            ->where([$this->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
             ->toArray();
 
         return $examinationOptions;
