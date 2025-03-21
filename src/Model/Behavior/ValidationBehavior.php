@@ -3189,7 +3189,7 @@ class ValidationBehavior extends Behavior
     public static function check_validate_number($field, array $globalData)
     {
         //$field is for external variable
-        $Nationalities = TableRegistry::getTableLocator()->get('nationalities')
+        $Nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')
                             ->find()
                             ->where([
                                 $Nationalities->aliasField('id') => $globalData['data']['nationality_id']
@@ -3198,8 +3198,8 @@ class ValidationBehavior extends Behavior
         if($Nationalities->external_validation == 1){
             if($globalData['data']['id'] != '' && $globalData['data']['identity_type_id'] != '' && $globalData['data']['number'] != ''){
                 //edit nationality case
-                $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
-                $UserIdentities = TableRegistry::getTableLocator()->get('user_identities');
+                $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+                $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                 $identityTypeData = $UserIdentities
                                         ->find()
                                         ->select([
