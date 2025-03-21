@@ -8025,17 +8025,15 @@ class InstitutionsController extends AppController
             $userExists = $this->checkUserExistence($userIdentitiesTable, $identityTypeId, $identityNumber, $nationalityId);
 //            self::debug(__FUNCTION__);
             if ($userExists) {
-                return $this->sendJsonResponse(['user_exist' => 1, 'status_code' => 200, 'message' => __('User already exists with this nationality, identity type & identity number.')]);
-
+                return $this->sendJsonResponse(['user_exist' => 1, 'status_code' => 200, 'message' => '']); // POCOR-8989 it is not a problem, no need to check ID validity
             }
 
             $message = $this->validateCustomIdentityNumber($requestData);
             if (!empty($message)) {
-                return $this->sendJsonResponse(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
-
+                return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => $message]);
             }
 
-            return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
+            return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]); // POCOR-8989 invalid ID by configuration
         } else {
             return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]);
         }
