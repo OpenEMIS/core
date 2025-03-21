@@ -82,16 +82,16 @@ class DirectoryCommentsController extends BaseController
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
                     'action' => 'Nationalities',
-                    'index',
-                    'queryString' => $encodedUserAndNationalityId
+                    '0' => 'index',
+                    '1' => $encodedUserAndNationalityId
                 ];
             } else {
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
                     'action' => $action,
-                    'index',
-                    'queryString' => $encodedUserId
+                    '0' => 'index',
+                    '1' => $encodedUserId
                 ];
             }
             $tabElements[$action]['url'] = $url;
