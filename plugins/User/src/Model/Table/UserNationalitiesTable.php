@@ -328,12 +328,13 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
 
     // task POCOR-5668 starts
-    public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity'] ?? null;
             $userId = $this->getUserID();
-            $entity = $attr['entity'];
             if ($action == 'add') {
+
                 if(!empty($userId)){
                     //nationality_id
                     if(!empty($request->getQuery('nationality_id'))){
@@ -408,7 +409,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
 
 
-    public function onUpdateFieldNumber(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNumber(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $userId = $this->getUserID();
@@ -451,7 +452,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldValidateNumber(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValidateNumber(Event $event, array $attr, $action, ServerRequest $request)
     {
         $userId = $this->getUserID();
         $validate_number = !empty($request->getQuery('validate_number')) ? $request->getQuery('validate_number') : 0;
@@ -525,7 +526,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function addEditOnChangeIdentityTypeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        $query = $this->request->getQuery(); // Get the query parameters as an array
+        $query = $request->getQuery(); // Get the query parameters as an array
         $alias = $this->getAlias();
         unset($query['nationality_id']); // Unset the specific parameter you want to remove
         if ($request->is(['post', 'put'])) {
@@ -859,7 +860,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                         $identityName = 'StudentIdentities';
                     }elseif ($isStaff == 1) {
                         $identityName = 'StaffIdentities';
-                    }elseif ($is_guardian == 1) {
+                    }elseif ($isGuardian == 1) {
                         $identityName = 'GuardianIdentities';
                     }else{
                         $identityName = 'OtherIdentities';
