@@ -202,13 +202,12 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
         if ($syncUserConfigured) {
             $examinationId = $this->request->getQuery('examination_id');
 
-            if (($this->AccessControl->check(['Examinations', 'syncStudentsToExam', 'execute']) || $this->AccessControl->isAdmin())
+            if (($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute']) || $this->AccessControl->isAdmin())
                 && !empty($examinationId) && $examinationId != -1
             ) {
-
                 $syncUrl = [
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
+                    'plugin' => 'Examination',
+                    'controller' => 'Examinations',
                     'action' => 'syncStudentsToExam',
                 ];
 
@@ -228,6 +227,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
                 $extra['toolbarButtons']['sync'] = $syncButton;
             }
         }
+
         //POCOR-7510 end
     }
 
@@ -742,9 +742,10 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
     //POCOR-7510 start
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+        $referrerUrl = $this->request->referer();
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if ($this->AccessControl->check(['Examinations', 'syncStudentsToExam', 'execute'])) {
+        if ($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute'])) {
 
             $syncUserConfigured = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')->getOpenemisExamConfiguration();
 
@@ -756,6 +757,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
                     'examination_id' => $entity->examination_id,
                     'examination_centre_id' => $entity->examination_centre_id,
                     'openemis_no' => $entity->openemis_no,
+                    'referrer' => $referrerUrl,
                 ];
 
                 $url = [
@@ -829,5 +831,6 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
         $this->field('sync_status', ['visible' => true]);
         $this->field('last_synced', ['visible' => true]);
     }
+
     //POCOR-7510 end
 }

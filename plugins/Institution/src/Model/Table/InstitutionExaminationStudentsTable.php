@@ -419,8 +419,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
 
                 $syncUrl = [
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
+                    'plugin' => 'Examination',
+                    'controller' => 'Examinations',
                     'action' => 'syncStudentsToExam',
                 ];
 
@@ -484,16 +484,16 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     {
         $subjectTable = TableRegistry::getTableLocator()->get('Examination.ExaminationStudentSubjects');
         $subjectData = $subjectTable->find('all')->select([
-                'id' => 'ExaminationSubjects.id',
-                'name' => 'ExaminationSubjects.name',
-                'code' => 'ExaminationSubjects.code'
+            'id' => 'ExaminationSubjects.id',
+            'name' => 'ExaminationSubjects.name',
+            'code' => 'ExaminationSubjects.code'
 
-            ])->leftJoin(
-                ['ExaminationSubjects' => 'examination_subjects'],
-                [
-                    'ExaminationSubjects.id = ' .  $subjectTable->aliasField('examination_subject_id')
-                ]
-            )->where([$subjectTable->aliasField('student_id') => $entity->student_id])->toArray();
+        ])->leftJoin(
+            ['ExaminationSubjects' => 'examination_subjects'],
+            [
+                'ExaminationSubjects.id = ' .  $subjectTable->aliasField('examination_subject_id')
+            ]
+        )->where([$subjectTable->aliasField('student_id') => $entity->student_id])->toArray();
         $entity['examination_subjects'] = $subjectData;
     }  //POCOR-7512 end
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
@@ -962,7 +962,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
      */
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
-
+        $referrerUrl = $this->request->referer();
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 
@@ -976,13 +976,14 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 'examination_id' => $entity->examination_id,
                 'examination_centre_id' => $entity->examination_centre_id,
                 'openemis_no' => $entity->openemis_no,
-                'institution_id' => $entity->institution_id
+                'institution_id' => $entity->institution_id,
+                'referrer' => $referrerUrl,
             ];
 
 
             $url = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
+                'plugin' => 'Examination',
+                'controller' => 'Examinations',
                 'action' => 'syncStudentsToExam',
             ];
 

@@ -306,28 +306,26 @@ class ExaminationsController extends AppController
     public function syncStudentsToExam()
     {
         error_reporting(0);
-
         $this->autoRender = false;
-
+        $params = [];
         $requestQuery = $this->request->getQuery();
 
         if (isset($requestQuery['queryString'])) {
-
-            $params =  $this->ControllerAction->paramsDecode($requestQuery['queryString']);
-
-            $SecurityUsersTable = $this->getTableLocator()->get('Institution.SecurityUsers');
+            $params = $this->ControllerAction->paramsDecode($requestQuery['queryString']);
+            $SecurityUsersTable = $this->getTableLocator()->get('Security.Users');
             $userData = $SecurityUsersTable->find()
                 ->where(['openemis_no' => $params['openemis_no']])
                 ->first();
 
             if ($userData) {
                 $params['student_id'] = $userData->id;
-
-                // $this->SyncStudentToExam->registerStudentsInExams($params);
+                $this->SyncExam->registerStudentsInExams($params);
             }
         }
 
-        return $this->redirect($this->referer());
+        $referrerUrl = isset($params['referrer']) ? $params['referrer'] : '/';
+        return $this->redirect($referrerUrl);
     }
+
     //POCOR-7510 end
 }
