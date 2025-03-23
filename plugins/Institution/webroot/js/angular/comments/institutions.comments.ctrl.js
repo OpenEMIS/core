@@ -201,9 +201,11 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 if((vm.allCommentsViewRequired == 1) && (vm.allCommentsEditRequired == 1)){
                     vm.teacherCommentsRequired = (vm.teacherCommentsRequired == 0) ? 0 : 1;
                 }
-                else{
-                    vm.teacherCommentsRequired = 0;//for subjectTeacher's subjects show only
-                }
+                //commented for POCOR-8987[START]
+                // else{
+                //     vm.teacherCommentsRequired = 0;//for subjectTeacher's subjects show only
+                // }
+                //commented for POCOR-8987[END]
             }
             // if(homeroomTeacherPermissionData.data.result <= 0){
             //     vm.homeroomTeacherCommentsRequired = 0;
@@ -222,7 +224,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             console.log(response);
             if(response.data.result){
                 vm.allSubjectViewRequired = 1;
-                vm.teacherCommentsRequired = 1;
+                // vm.teacherCommentsRequired = 1;//commented for POCOR-8987
             }
             return InstitutionsCommentsSvc.getCurrentUserRole(userData, $scope.institutionId, vm.currentUserId);//POCOR-6800 add vm.allCommentsEditRequired
             

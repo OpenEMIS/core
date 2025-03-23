@@ -45,7 +45,7 @@ class ReportsController extends AppController
     }
 
     public function beforeFilter(EventInterface $event)
-    { 
+    {
         if ($this->getPlugin() == 'Report') {
             $this->Security->setConfig('validatePost', false);
         }
@@ -341,7 +341,7 @@ class ReportsController extends AppController
         $institutionId = $this->getInstitutionID();
 
         if ($data['module'] == NULL) {
-           $dataModule =  $data['amp;module'];
+            $dataModule =  $data['amp;module'];
         } else {
             $dataModule = $data['module'];
         }
@@ -434,7 +434,7 @@ class ReportsController extends AppController
 
     public function StudentGuardians()
     {
-        $this->ControllerAction->process(['alias' => _FUNCTION_, 'className' => 'Student.Guardians']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']);
     }
 
     private function getInstitutionID()
@@ -442,9 +442,7 @@ class ReportsController extends AppController
         $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
-            $encodedInstitutionIDFromSession;
+        $encodedInstitutionID = $this->request->getParam('institutionId') ??  $encodedInstitutionIDFromSession;
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
         } catch (\Exception $exception) {
