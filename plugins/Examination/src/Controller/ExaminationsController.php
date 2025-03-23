@@ -1,4 +1,5 @@
 <?php
+
 namespace Examination\Controller;
 
 use App\Controller\AppController;
@@ -257,14 +258,14 @@ class ExaminationsController extends AppController
             'examination_id' => 'Examination.Examinations',
             'examination_centre_id' => 'Examination.ExaminationCentres',
         ]);
-        if (!empty($params)) {     
+        if (!empty($params)) {
             $this->SyncExam->getResultFromExam($params);
         }
 
         return $this->redirect($this->referer());
     }
 
-     /**
+    /**
      * Build parameters by fetching codes from corresponding tables.
      *
      * This method retrieves the IDs from the query parameters,
@@ -289,6 +290,44 @@ class ExaminationsController extends AppController
         }
 
         return $params;
+    }
+
+
+    /**
+     * Syncs students to their respective exams based on a query string.
+     *
+     * This function processes the incoming query string, retrieves the student's data
+     * using the `openemis_no` identifier, and adds the `student_id` to the parameters.
+     * It also handles potential error reporting and ensures the sync operation is 
+     * performed. Currently, the actual sync process is commented out.
+     * 
+     * @return \Cake\Http\Response|null Redirects the user back to the previous page after processing.
+     */
+    public function syncStudentsToExam()
+    {
+        error_reporting(0);
+
+        $this->autoRender = false;
+
+        $requestQuery = $this->request->getQuery();
+
+        if (isset($requestQuery['queryString'])) {
+
+            $params =  $this->ControllerAction->paramsDecode($requestQuery['queryString']);
+
+            $SecurityUsersTable = $this->getTableLocator()->get('Institution.SecurityUsers');
+            $userData = $SecurityUsersTable->find()
+                ->where(['openemis_no' => $params['openemis_no']])
+                ->first();
+
+            if ($userData) {
+                $params['student_id'] = $userData->id;
+
+                // $this->SyncStudentToExam->registerStudentsInExams($params);
+            }
+        }
+
+        return $this->redirect($this->referer());
     }
     //POCOR-7510 end
 }
