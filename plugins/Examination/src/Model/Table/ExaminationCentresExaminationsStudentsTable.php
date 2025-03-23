@@ -202,7 +202,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
         if ($syncUserConfigured) {
             $examinationId = $this->request->getQuery('examination_id');
 
-            if (($this->AccessControl->check(['Examinations', 'syncStudentsToExam', 'execute']) || $this->AccessControl->isAdmin())
+            if (($this->AccessControl->check(['Examinations', 'syncResultsFromExam', 'execute']) || $this->AccessControl->isAdmin())
                 && !empty($examinationId) && $examinationId != -1
             ) {
 
@@ -744,7 +744,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if ($this->AccessControl->check(['Examinations', 'syncStudentsToExam', 'execute'])) {
+        if ($this->AccessControl->check(['Examinations', 'syncResultsFromExam', 'execute'])) {
 
             $syncUserConfigured = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')->getOpenemisExamConfiguration();
 
