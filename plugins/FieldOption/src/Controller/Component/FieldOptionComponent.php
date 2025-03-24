@@ -185,6 +185,20 @@ class FieldOptionComponent extends Component
             return "SpecialNeeds.SpecialNeedsDiagnosticsTypes";
         } elseif ($key == "DiagnosticDisabilityDegree") {
             return "SpecialNeeds.SpecialNeedsDiagnosticsDegree";
+        } elseif ($key == "SpecialNeedsDifficulties") { // POCOR-8995 start
+            return "SpecialNeeds.SpecialNeedsDifficulties";
+        } elseif ($key == "SpecialNeedsAssessmentsTypes") {
+            return "SpecialNeeds.SpecialNeedsAssessmentsTypes";
+        } elseif ($key == "SpecialNeedsDeviceTypes") {
+            return "SpecialNeeds.SpecialNeedsDeviceTypes";
+        } elseif ($key == "SpecialNeedsReferrerTypes") {
+            return "SpecialNeeds.SpecialNeedsReferrerTypes";
+        } elseif ($key == "SpecialNeedsServiceClassification") {
+            return "SpecialNeeds.SpecialNeedsServiceClassification";
+        } elseif ($key == "SpecialNeedsServiceTypes") {
+            return "SpecialNeeds.SpecialNeedsServiceTypes";
+        } elseif ($key == "SpecialNeedsTypes") {
+            return "SpecialNeeds.SpecialNeedsTypes"; // POCOR-8995 end
         } elseif ($key == "AssetMakes") {
             return "FieldOption.AssetMakes";
         } elseif ($key == "AssetModels") {
