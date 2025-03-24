@@ -538,7 +538,7 @@ class DirectoriesController extends AppController
             // Try to get the table instance directly
             return $locator->get($tableName);
         } catch (\Exception $e) {
-            Log::debug('Error: ' . $e->getMessage());
+//            Log::debug('Error: ' . $e->getMessage()); // POCOR-8998 unnecessary log
         }
 
         $parts = explode('.', $tableName);
