@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\Utility\Text;
 use App\Model\Table\ControllerActionTable;
+use Cake\I18n\FrozenTime;
 
 class InstitutionGradesTable extends ControllerActionTable
 {
@@ -846,7 +847,7 @@ public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     $institution = $Institution->find()->where([$Institution->aliasField($Institution->getPrimaryKey()) => $institutionId])->first();
 
     if (empty($institution->date_opened)) {
-        $institution->date_opened = new Time('01-01-1970');
+        $institution->date_opened = new FrozenTime('01-01-1970'); // POCOR-8902 change Time to FrozenTime due to deprecation error
         $Institution->save($institution);
     }
 
@@ -861,14 +862,14 @@ public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
         if ($yearOpened != $year) {
             $month = $dateOpened->format('m');
             $day = $dateOpened->format('d');
-            $dateOpened = new Time($yearOpened.'-'.$month.'-'.$day);
+            $dateOpened = new FrozenTime($yearOpened.'-'.$month.'-'.$day); // POCOR-8902 change Time to FrozenTime due to deprecation error
             $institution->date_opened = $dateOpened;
             $Institution->save($institution);
         }
 
         $formatDate = $dateOpened->format('d-m-Y');
     } catch (\Exception $e) {
-        $institution->date_opened = new Time('01-01-1970');
+        $institution->date_opened = new FrozenTime('01-01-1970'); // POCOR-8902 change Time to FrozenTime due to deprecation error
         $Institution->save($institution);
         $dateOpened = $institution->date_opened;
     }
@@ -1266,7 +1267,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
          */
 
         // Get the current time.
-        $currTime = Time::now();
+        $currTime = FrozenTime::now(); // POCOR-8902 change Time to FrozenTime due to deprecation error
 
         $query = $this->find('all')
         ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
@@ -1667,6 +1668,25 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    /**
+     * Checks if a specific grade exists in an institution for a given academic period.
+     *
+     * @param int $nextGradeId The ID of the next grade to check.
+     * @param int $nextPeriodId The ID of the next academic period to check.
+     * @param int $institutionId The ID of the institution to check.
+     * @return int The count of records that match the given criteria.
+     * POCOR-8689
+     */
+    public function checkGradeInInstitution($nextGradeId, $nextPeriodId, $institutionId) {
+        $query = $this->find()
+        ->where([
+            $this->aliasField('education_grade_id') => $nextGradeId,
+            $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('academic_period_id') => $nextPeriodId
+        ]);
+        return $query->count();
     }
 
 }

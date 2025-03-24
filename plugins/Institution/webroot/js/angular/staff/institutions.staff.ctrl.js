@@ -998,11 +998,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
                     userCtrl.staffData.requestedBy = value.institution_code + ' - ' + value.institution_name;
 
-                    userCtrl.setUserData(value);
                 }
-                if (userCtrl.isExternalSearchSelected) {
-                    userCtrl.setUserDataFromExternalSearchData(value);
-                }
+                userCtrl.setUserData(value);
             }
         }, log);
     }

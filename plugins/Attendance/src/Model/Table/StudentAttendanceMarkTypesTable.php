@@ -78,7 +78,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
         $StudentMarkTypeStatusGrades = TableRegistry::get('Attendance.StudentMarkTypeStatusGrades');
         $gradeId = $InstitutionClassGrades
             ->find()
-            ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId])
+            ->where([$InstitutionClassGrades->aliasField('institution_class_id IS') => $classId])
             ->extract('education_grade_id')
             ->first();
 
