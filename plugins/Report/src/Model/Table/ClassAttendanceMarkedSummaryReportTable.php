@@ -231,7 +231,8 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
 
     public function onExcelGetSecondaryStaffName(Event $event, Entity $entity)
     {
-        $institution_class_id = $entity->id;
+        // $institution_class_id = $entity->id;
+        $institution_class_id = $entity->class_id; //POCOR-8902
         $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
         $data = $InstitutionClassesSecondaryStaff
                 ->find()
@@ -449,6 +450,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
                 'education_grade_code' => 'subq.education_grade_code',
                 'education_grade_name' => 'subq.education_grade_name',
                 'class_name' => 'subq.class_name',
+                'class_id' => 'subq.class_id', //POCOR-8902
                 'shift_name' => 'ShiftOptions.name',
                 'period_name' => 'subq.period_name',
                 'subject_name' => 'subq.subject_name',
