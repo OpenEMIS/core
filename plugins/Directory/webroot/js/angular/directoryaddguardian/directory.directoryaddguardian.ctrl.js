@@ -214,8 +214,13 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         let fileReader = new FileReader();
         fileReader.readAsDataURL(photo);
         fileReader.onload = () => {
-            userCtrl.selectedUserData.photo_base_64 = fileReader.result;
-        }
+            const base64String = fileReader.result.split(',')[1];
+
+            // POCOR-8917 Manually trigger AngularJS digest cycle
+            $scope.$apply(() => {
+                userCtrl.selectedUserData.photo_base_64 = base64String;
+            });
+        };
     }
 
 
@@ -381,10 +386,10 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         var log = [];
         angular.forEach(userCtrl.rowsThisPage, function (value) {
             if (value.id == userCtrl.selectedGuardian) {
-                if (userCtrl.isInternalSearchSelected)
+                // if (userCtrl.isInternalSearchSelected)
                     userCtrl.setUserData(value);
-                else
-                    userCtrl.setExternalUserData(value);
+                // else
+                //     userCtrl.setExternalUserData(value);
             }
         }, log);
     }

@@ -4,19 +4,19 @@ namespace SSO\Auth;
 use Cake\Auth\BaseAuthenticate;
 use Cake\Http\Client;
 use Cake\Log\Log;
-use Cake\Network\Request;
-use Cake\Network\Response;
+use Cake\Http\ServerRequest;
+use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 use SSO\OAuth\Custom_Client;
 
 class OAuthAuthenticate extends BaseAuthenticate
 {
 
-    public function authenticate(Request $request, Response $response)
+    public function authenticate(ServerRequest $request, Response $response)
     {
-        $oAuthAttributes = $this->config('authAttribute');
-        $mappingAttributes = $this->config('mappingAttribute');
-        $session = $request->session();
+        $oAuthAttributes = $this->getConfig('authAttribute');
+        $mappingAttributes = $this->getConfig('mappingAttribute');
+        $session = $request->getSession();
         if ($session->check('OAuth.accessToken')) {
             $client = new Custom_Client(null, $oAuthAttributes);
             $client->setClientId($oAuthAttributes['client_id']);
@@ -59,7 +59,7 @@ class OAuthAuthenticate extends BaseAuthenticate
             if ($isFound) {
                 return $isFound;
             } else {
-                if ($this->config('createUser')) {
+                if ($this->getConfig('createUser')) {
                     $userInfo = [
                         'firstName' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_first_name']),
                         'lastName' => $this->getUserInfo($userInfo, $mappingAttributes['mapped_last_name']),
@@ -71,10 +71,10 @@ class OAuthAuthenticate extends BaseAuthenticate
 
                     $User = TableRegistry::get($this->_config['userModel']);
                     $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
-                    if ($event->result === false) {
+                    if ($event->getResult() === false) {
                         return false;
                     } else {
-                        return $this->_findUser($event->result);
+                        return $this->_findUser($event->getResult());
                     }
                 } else {
                     return false;

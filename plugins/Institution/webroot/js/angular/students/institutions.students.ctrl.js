@@ -217,7 +217,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             return userSvc.getAcademicPeriods()
                 .then(resp => {
                     userCtrl.academicPeriodOptions = resp.data;
-                    console.log(userCtrl.academicPeriodOptions);
+                    // console.log(userCtrl.academicPeriodOptions);
                     // Iterate over the array to find the current academic period
                     for (const period of resp.data) {
                         if (period.current === 1) {
@@ -473,7 +473,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 userSvc.getExternalSearchData(param)
                     .then(function (response) {
                         let gridData = response.data.data || [];
-
                         if (externalSearchSourceName === 'UNHCR') {
                             userCtrl.selectedUserData.identity_number = null;
                         }
@@ -611,10 +610,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         fileReader.readAsDataURL(photo);
 
         fileReader.onload = () => {
-            userCtrl.selectedUserData.photo_base_64 = fileReader.result;
-        };
-    }
+            const base64String = fileReader.result.split(',')[1];
 
+            // POCOR-8917 Manually trigger AngularJS digest cycle
+            $scope.$apply(() => {
+                userCtrl.selectedUserData.photo_base_64 = base64String;
+            });
+        };
+
+    };
     function getStudentCustomFields() {
         const studentId = userCtrl.userData?.id || null;
 
@@ -1650,7 +1654,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     userCtrl.selectStudentFromExternalSearch = function (id) {
-        userCtrl.selectedStudent = id;
+        userCtrl.selectedUserID = id;
+        userCtrl.isInternalSearchSelected = false;
+        userCtrl.isExternalSearchSelected = true;
+        userCtrl.getStudentData();
+        userCtrl.disableFields = {
+            username: false,
+            password: false
+        }
+    }
+
+    userCtrl.selectUserFromExternalSearch = function (id) {
+        userCtrl.selectedUserID = id;
         userCtrl.isInternalSearchSelected = false;
         userCtrl.isExternalSearchSelected = true;
         userCtrl.getStudentData();
@@ -1667,11 +1682,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 userCtrl.userData = value;
                 if (userCtrl.isInternalSearchSelected) {
                     userCtrl.userData.currentlyAllocatedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
-                    userCtrl.setUserData(value);
+
                 }
-                if (userCtrl.isExternalSearchSelected) {
-                    userCtrl.setUserDataFromExternalSearchData(value);
-                }
+                userCtrl.setUserData(value);
             }
         }, log);
     }
@@ -1712,6 +1725,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         userCtrl.selectedUserData.last_name = selectedData.last_name;
         userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
         userCtrl.selectedUserData.gender_id = selectedData.gender_id;
+        userCtrl.selectedUserData.photo_name = selectedData.photo_name; // POCOR-8917
+        userCtrl.selectedUserData.photo_base_64 = selectedData.photo_content; // POCOR-8917
         userCtrl.selectedUserData.gender = {
             name: selectedData.gender
         };
@@ -2430,8 +2445,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             'nationality_id': userData.nationality_id,
         });
         // StudentController.error.nationality_id = "";
-        userCtrl.error.identity_type_id = ""
-        userCtrl.error.identity_number = "";
+        userCtrl.unsetError('identity_type_id');
+        userCtrl.unsetError('identity_number');
 
         if (result.data.user_exist === 1) {
             userCtrl.messageClass = 'alert-warning';
@@ -2443,7 +2458,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             userCtrl.messageClass = '';
             userCtrl.message = '';
             userCtrl.isIdentityUserExist = false;
-            userCtrl.error.identity_number == ""
+            userCtrl.unsetError('identity_number');
         }
         return false;
     }

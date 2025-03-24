@@ -181,9 +181,9 @@ class InstitutionStaffDetailedTable extends AppTable
                         'position_title_teaching' => 'StaffPositionTitles.type'
                     ]
                 ]
-            ])->leftJoin([$custom_field->alias() => $custom_field->table()],
+            ])->leftJoin([$custom_field->getAlias() => $custom_field->getTable()],
                         [$custom_field->aliasField('staff_id  = ') . $this->aliasField('staff_id')])
-            ->leftJoin([$StaffCustomFields->alias() => $StaffCustomFields->table()],
+            ->leftJoin([$StaffCustomFields->getAlias() => $StaffCustomFields->getTable()],
                         [$StaffCustomFields->aliasField('id  = ') . $custom_field->aliasField('staff_custom_field_id')])
             ->where($conditions)
             ->group(['staff_id']);

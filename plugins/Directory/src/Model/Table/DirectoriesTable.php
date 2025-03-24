@@ -2532,10 +2532,19 @@ public function getIdentityTypeData($value_selection)
             }
         }
         //POCOR-8059 :: end
-        if (!$entity->isNew() && $entity->getDirty('gender_id') && !$entity->is_student) {
-            $entity->getErrors('gender_id', __('Gender is not editable in Directories'));
-            return false;
+        //POCOR-8906 start
+        if (!$entity->isNew()) {
+            if (!$entity->is_student) {
+                $dirty = $entity->getDirty();
+                Log::debug(print_r($dirty,true));
+                if (in_array('gender_id', $dirty)) {
+                    $this->Alert->error(__('Gender is not editable in Directories') , ['type' => 'string', 'reset' => true]);
+                    $entity->setErrors(['gender_id', __('Gender is not editable in Directories')]);
+                    return false;
+                }
+            }
         }
+        //POCOR-8906 end
     }
 
     public function onGetInstitution(Event $event, Entity $entity)

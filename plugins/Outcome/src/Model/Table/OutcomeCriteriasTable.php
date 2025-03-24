@@ -10,6 +10,7 @@ use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\TableRegistry;
 
 class OutcomeCriteriasTable extends ControllerActionTable
 {
@@ -269,5 +270,47 @@ class OutcomeCriteriasTable extends ControllerActionTable
         }
     }
 
+     //POCOR-8875 start
+     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+     {
+         if ($field == 'academic_period_id') {
+             return __('Academic Period');
+         } elseif ($field == 'name') {
+             return __('Name');
+         } elseif ($field == 'outcome_template_id') {
+             return __('Outcome Template');
+         } elseif ($field == 'education_subject_id') {
+             return __('Education Subject');
+         } elseif ($field == 'education_grade_id') {
+             return __('Education Grade');
+         } elseif ($field == 'outcome_grading_type_id') {
+             return __('Outcome Grading Type');
+         }  elseif ($field == 'modified_user_id') {
+             return __('Modified By');
+         } elseif ($field == 'modified') {
+             return __('Modified On');
+         } elseif ($field == 'created_user_id') {
+             return __('Created By');
+         } elseif ($field == 'created') {
+             return __('Created On');
+         } 
+         elseif ($field == 'code') {
+             $LabelsTable = TableRegistry::getTableLocator()->get('Labels');
+ 
+             $label = $LabelsTable->find()
+                 ->where([
+                     'module' => $module,
+                     'module_name' => 'Outcome -> Criterias',
+                     'field' => 'code'
+                 ])
+                 ->first();
+             
+             return $label ? $label->field_name : null;
+         } 
+         else {
+             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+         }
+     }
+     //POCOR-8875 end
     
 }

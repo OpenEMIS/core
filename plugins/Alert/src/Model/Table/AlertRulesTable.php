@@ -51,6 +51,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleScholarshipApplication');
         $this->addBehavior('Alert.AlertRuleScholarshipDisbursement');
         $this->addBehavior('Alert.AlertRuleCaseEscalation');//POCOR-7642
+        $this->addBehavior('Alert.AlertRuleSystemUpdates');//POCOR-7642
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -470,11 +471,10 @@ class AlertRulesTable extends ControllerActionTable
         if (is_array($thresholdArray)) {
             $alertTypeDetails = $this->getAlertTypeDetailsByFeature($entity->feature);
             $thresholdConfig = $alertTypeDetails[$entity->feature]['threshold'];
-
             foreach ($thresholdArray as $field => $value) {
                 $entity->{$field} = $value;
 
-                if (array_key_exists($field, $thresholdConfig) && isset($thresholdConfig[$field]['type'])) {
+                if (array_key_exists($field, (array)$thresholdConfig) && isset($thresholdConfig[$field]['type'])) {
                     $fieldType = $thresholdConfig[$field]['type'];
                     // for threshold with type chosenSelect type
                     if ($fieldType == 'chosenSelect') {

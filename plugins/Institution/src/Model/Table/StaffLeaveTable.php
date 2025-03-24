@@ -367,7 +367,9 @@ class StaffLeaveTable extends ControllerActionTable
         ]);
 
         // after $this->field(), field ordering will mess up, so need to reset the field order
-        $this->setFieldOrder(['staff_leave_type_id', 'academic_period_id', 'date_from', 'date_to', 'full_day', 'start_time', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
+        $this->setFieldOrder(['staff_leave_type_id',
+            'academic_period_id',
+            'date_from', 'date_to', 'full_day', 'start_time', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
     }
 
     public function onGetTime(Event $event, Entity $entity)
@@ -499,8 +501,10 @@ class StaffLeaveTable extends ControllerActionTable
             $entity = $attr['entity'];
 
             if ($entity->isNew()) {
-                $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
-                $academic_period_id = $data['academic_period_id'] ?? $currentAcademicPeriodId;
+                // POCOR-8128 start
+//                $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+                $academic_period_id = $data['academic_period_id'] ?? null;
+                // POCOR-8128 end
                 $attr['value'] = $academic_period_id;
                 $attr['attr']['value'] = $academic_period_id;
             }
@@ -762,7 +766,7 @@ class StaffLeaveTable extends ControllerActionTable
         $dateTo = date_create($entity->date_to);
         $staffId = $entity->staff_id;
         $institutionId = $entity->institution_id;
-        $academicPeriodId = $entity->academic_period_id;
+//        $academicPeriodId = $entity->academic_period_id; // POCOR-8128
         $isFullDayLeave = $entity->full_day;
         /*
             Non full day leave is always assume to be 0.5 since staff can only apply 2 non full day leave
@@ -780,7 +784,7 @@ class StaffLeaveTable extends ControllerActionTable
 
         $existingConditions = [
             $this->aliasField('staff_id') => $staffId,
-            $this->aliasField('academic_period_id') => $academicPeriodId,
+//            $this->aliasField('academic_period_id') => $academicPeriodId, // POCOR-8128
         ];
 
         if (!$entity->isNew()) {
@@ -799,8 +803,8 @@ class StaffLeaveTable extends ControllerActionTable
             ])
             ->where($existingConditions)
             ->toArray();
-
-        $workingDaysOfWeek = $this->AcademicPeriods->getWorkingDaysOfWeek();
+        $AcademicPeriod = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods'); // POCOR-8128
+        $workingDaysOfWeek = $AcademicPeriod->getWorkingDaysOfWeek(); // POCOR-8128
 
         $startDate = $dateFrom;
         $endDate = $dateTo;

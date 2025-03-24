@@ -30,12 +30,16 @@ class GpaSystemTable extends ControllerActionTable {
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->notEmpty('name')
             ->notEmpty('academic_period_id')
             ->notEmpty('education_grade_id')
             ->notEmpty('gpa_education_programme_id')
-            ->notEmpty('gpa_grading_type_id');
+            ->notEmpty('gpa_grading_type_id')
+            ->add('start_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'end_date', true]
+            ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -67,8 +71,8 @@ class GpaSystemTable extends ControllerActionTable {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('gpa_education_programme_id', ['type' => 'hidden']);
         $this->field('main_education_grade_id', ['type' => 'hidden']);
-        $this->field('start_date');
-        $this->field('end_date');
+        $this->field('start_date', ['attr' => ['label' => __('Start Date')]]);
+        $this->field('end_date', ['attr' => ['label' => __('End Date')]]);
         $this->field('education_grade_id', ['type' => 'select']);
         $this->field('gpa_grading_type_id', ['type' => 'select']);
 
@@ -80,8 +84,8 @@ class GpaSystemTable extends ControllerActionTable {
         $this->field('name');
         $this->field('academic_period_id', ['type' => 'select','entity' => $entity]);
         $this->field('gpa_education_programme_id', ['type' => 'select', 'entity' => $entity]);
-        $this->field('start_date', ['type' => 'date']);
-        $this->field('end_date', ['type' => 'date']);
+        $this->field('start_date', ['attr' => ['label' => __('Start Date')]]);
+        $this->field('end_date', ['attr' => ['label' => __('End Date')]]);
         $this->field('education_grade_id', ['type' => 'select']);
         $this->field('gpa_grading_type_id', ['type' => 'select']);
         $this->setFieldOrder(['name','academic_period_id', 'start_date','end_date','gpa_education_programme_id','education_grade_id', 'gpa_grading_type_id']);

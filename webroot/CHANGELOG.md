@@ -1,9 +1,111 @@
+### [4.17.0] - 2025-03-20
+- Implemented: Develop a new External Data Source - OpenEMIS Core in the Administration module to allow OpenEMIS Core to connect to another instance of OpenEMIS Core to retrieve student data
+- Implemented: Administrations > Performances > Outcomes > Criteria : Add "Code" to Label feature so that users can rename this text
+- Bug Fixed: Institutions>Report Card>Comments: All comments permission not working properly
+- Bug Fixed: Institutions > Students > Transfer Out: When transferring students to an only gender school, the system gives an error message of "The selected institution only accepts Female students" or "The selected institution only accepts Male students."
+- Bug Fixed: Institutions > Academic > Schedules > Timetables > Timetables: When accessing timetable module, the page navigate to the home page even when permission is given 
+- Bug Fixed: API: Staff attendance is not working when using non admin
+
+### [4.16.2] - 2025-03-18
+- Big Fixed: Institutions>Report Card>Comments: Permission for Teachers are not working correctly
+- Big Fixed: Administrations>Performance>Report Cards: GPA placeholder naming should be updated
+- Big Fixed: Reports > Students > Enrollment Summary: When generating Student Enrollment Summary report, the page gives a 404 error
+- Big Fixed: Institutions > Staff > Career : Entitlement is not showing correctly
+- Big Fixed: Directory > Staff/Students/Guardian/Others: Adding new user
+
+### [4.16.1] - 2025-03-17
+- Bug Fixes: Administration > Performance > Report Cards: When selecting the generate start and generate end dates to, the system adds one extra day to the selected dates
+- Bug Fixed: Institutions>Report Card>Comments: Revert angular 11 changes
+
+### [4.16.0] - 2025-03-17
+- Implemented: Change the Criteria field to wrap the text so that the competencies can be fully displayed for users in the Outcome feature
+- Implemented: Develop functions for Staff Leave
+- Implemented: Increase the character limit count for ‚ÄúCode‚Äù field in the Outcome feature
+- Implemented: Develop reports for institutions to take attendance by both period and subject
+- Implemented: Develop a new feature in OpenEMIS Core called Consumables
+- Bug Fixed: API: Student Admission is not working
+- Bug Fixed: Institutions>Survey>Forms: Make the height longer and change back the width
+- Bug Fixed: Administration > Performance > Report Cards breadcrumb: When clicking on the "report cards" link at the top menu, the page gives a 404 error
+- Bug Fixed: Institutions>Attendance>Students: Import is not working
+
+### [4.15.0] - 2025-03-10
+- Implemented: Develop standard OpenEMIS Core v5 APIs based on database tables
+
+### [4.14.0] - 2025-03-07
+- Implemented: Develop a function to allow institutions to take attendance by both period and subject
+- Implemented: Develop a function to add System Updates emails to Alerts
+- Implemented: Develop changes to the student programmes page to add the Candidate Number field
+- Bug Fixed: Api: When user logins as non superadmin, user does not have permission to edit
+- Bug Fixed: Administration > Performance > GPA > Add: Start and end date disappear even after inputting
+- Bug Fixed: Institutions > Attendance > Staff > Import: When importing staff attendance, the page gives an error
+- Bug Fixed: Reports > Students > Students: When exporting Students report, the date of birth column is not showing any data
+- Bug Fixed: Administration > System Setup > Field Options > Staff Positions Titles: When editing Staff Position Titles and upon saving, the page gives a 404 error
+- Bug Fixed: Institutions > Survey > Forms > Export:When exporting a selected survey, the data in survey is showing all answers for all surveys and all institutions
+- Bug Fixed: Swagger: Incorrect API naming standards
+- Bug Fixed: Develop changes to the education structure and student subjects page
+- Bug Fixed: Reports > Staff > Qualifications: The report goes to Status error
+- Bug Fixed: Institutions > Dashboard: When users role are given permission to view Institution Profile Completeness, the Institution Profile Completeness did not appear under their account
+
+### [4.13.2] - 2025-03-05
+- Bug Fixed: Unable to login through SAML
+- Bug Fixed: Institutions > Performance > Report Cards: Report card is stuck in progress and then it went to error status
+
+### [4.13.1] - 2025-03-04
+- Bug Fixed: Login : 404 error when logged in through SAML
+
+### [4.13.0] - 2025-02-28
+- Implemented: Develop Automated Enrolment Feature
+- Implemented: Add Export button to Student > Academic features
+- Implemented: Develop changes to individual student attendance / absence
+- Implemented: Develop changes to the Laravel API routes file to add both /api/v4 and /api/v5
+- Implemented: Develop Student Behaviour Report
+- Bug Fixed: Running command to generate swagger documentation generates error
+- Bug Fixed: Administration > Performance > Report Cards: Report card template is not showing even though there is a report card template attached
+- Bug Fixed: Administration>Update: Update button should be hidden if the version is the latest
+- Bug Fixed: Administration > Performance > Assessments > Templates > Add:User is able to create more than 1 assessment template for one grade
+- Bug Fixed: Institutions > Attendance > Staff: When marking attendance for staff on mobile phones, the circle hamburger option is not showing to select the filter (like dates, time eg)
+
+### [4.12.0] - 2025-02-25
+- Implemented: Develop Users feature APIs by OpenEMIS ID - part 2
+- Bug Fixed: Institutions > Students > Undo: There is an error when undoing graduation, the systems navigate to a blank page with the message "beforeFilter:2764For Developer: You should put institution_id into query string first"
+- Bug Fixed: Institutions>Survey>Forms: Make the font color black when editing the survey and when editing make the note question fit into the window
+- Bug Fixed: Institutions > Students > Academic > Programmes > Transitions: When selecting education programme for student transition, the page gives a 404 error
+- Bug Fixed: Institutions > Infrastructures > Assets: When adding assets, the page give a 404 error
+- Bug Fixed: Reports > Audits: Security Roles and Permissions: When generating "Security Roles and Permissions" report, the status goes to error
+- Bug Fixed: Directory: When updating users information in directory page, the system gives a successful message but the information edited is not reflecting
+- Bug Fixed: Institutions > Students > Export: When exporting students report under Institutions, student status is showing student 1 status
+- Bug Fixed: Administration>Updates: Update button is missing
+- Bug Fixed: Institutions > Performance > Assessments: Super_admin account does not have the privilege to edit pass assessments
+- Bug Fixed: Homepage > Workbench: The workbench is displaying notifications even though there are none
+- Bug Fixed: Institutions > Performance > Report Cards > All Classes filter:When the user selects all classes filter on the report card page, the page navigates back to the home page
+
+### [4.11.0] - 2025-02-19
+- Implemented: Develop Guardian feature APIs
+- Implemented: Develop Users feature APIs by username
+- Implemented: Develop Staff Attendance API
+- Implemented: Develop changes to the Nationalities API
+- Bug Fixed: Reports > Institutions > Staff Leave: Getting 404 error when generating
+- Bug Fixed: Institutions>Performance>Assessments: Certain roles having issues accessing and editing assessments even when permission is given
+- Bug Fixed: Administration > System Setup > Education Structure > Grades: When creating grades for previous academic periods, the grades are showing up in the current academic period instead of previous academic periods
+- Bug Fixed: Institutions > General > Overview: When adding institution custom field, the custom field is not showing
+- Bug Fixed: Administration > System Configuration > Custom Validation: When navigating to Custom Validation page under System Configuration, the page refreshes but goes to Add A New Guardian page under System Configuration
+- Bug Fixed: Institutions > Behaviour > Students: The drop-down for classification is showing to the linked on
+- Bug Fixed: Institutions > Students > Bulk Transfer: When doing bulk transfer for enrolled students within the same academic period, the next education grade is showing a different grade
+- Bug Fixed: Develop enhancements to the Directory import function Part Two: Remove OpenEMIS ID column
+- Bug Fixed: Institutions > Appointments > Positions: When accessing Positions page, the page gives a 404 error. 
+- Bug Fixed: Reports > Institutions: Institutions: When users have permission to generate the institutions report, the report goes to error status
+- Bug Fixed: Administration>Survey>Forms>Rules: User is unable to save the rule
+- Bug Fixed: Institutions>Students>Transfer: Student is not transferred to another school even though transfer is completed
+- Bug Fixed: Reports > Institutions > Classes: When generating classes report, the report got stuck in progress
+- Bug Fixed: Homepage > Workbench: When assignee click on the workflow link to approve institutions positions, the page gives a 404 error
+
 ### [4.10.0] - 2025-02-06
 - Implemented: Develop Scanned feature
 - Bug Fixed: Institutions > Students: When viewing students page, the page gives 404 error
 - Bug Fixed: Administration > Performance > Assessments > Templates: When adding assessments, the page give the error message
 - Implemented: Develop Student Absence API
 - Implemented: Develop Student Absence Webhook API
+
 ### [4.9.0] - 2025-02-05
 - Implemented: Develop Admissions workflow and custom fields 
 - Bug Fixed: Theme Api is not working
@@ -501,7 +603,7 @@
 - Bug Fixed: Institutions>General>Map: User is able to delete institution while deleting map
 - Bug Fixed: Institutions>Students(Automation): Promote,Graduate, Repeat should work
 - Bug Fixed: Institutions>Students>Export: Export is giving blank page
-- Bug Fixed: Institutions>Students>General: Showing Avory Primary School instead of the student itself
+- Bug Fixed: Institutions>Students>General: Showing Avory Primary School instead of the student itself:wq
 - Bug Fixed: Institutions>Performance>Competencies: User should be able to edit
 - Bug Fixed: Personal>History tab(Automation): It should collapse the left menu
 - Bug Fixed: Report>Examination>Add(Automation): Going blank page
@@ -526,6 +628,43 @@
 - Bug Fixed: Institutions>Students>Account>Edit: User should be able to edit and success message should return
 - Bug Fixed: Institutions>Students>Academic: Academic module is not working and giving blank page
 - Bug Fixed: Institutions>Staff>General>Nationalities: User is unable to add Nationalities
+
+### [3.112.2] - 2025-02-18
+- Bug Fixed: Forget Password: When you click on the link you back you to the login page.
+- Bug Fixed: Institutions > Performance > Assessments : Issues with marks for transferred students
+- Bug Fixed: Reports>Students>Students Out of School: Reports stuck in progress
+- Bug Fixed: Institutions > Performance > Assessments: Super_admin account does not have the privilege to edit pass assessments
+- Bug Fixed: Reports stuck in progress
+- Bug Fixed: Institutions > Performance > Report Cards > All Classes filter:When the user selects all classes filter on the report card page, the page navigates back to the home page
+- Bug Fixed: Institutions > Students: When viewing some students account, the page gives 404 error
+- Bug Fixed: Login Page: When entering incorrect username/password for 2FA login, the page navigate to OTP page
+- Bug Fixed: Institutions > Staff > Edit > Change in FTE: When changing staff FTE, system add an end date to the position but staff is still assigned in the institution
+- Bug Fixed: Reports > Students > BMI Status Report: When generating report for BMI Status Report, the report does not show any data even though there is data showing on the system
+- Bug Fixed: Institutions > Performance > Assessments: When transferring students, the assessment marks which was from previous school wasn't reflected in the new school
+- Bug Fixed: Institutions > Students > Export: When exporting students report in Jordan UAT, the page takes a long time and does not generate it at all
+- Bug Fixed: Institutions > Performance > Assessments : Assessment Period Weight is not updated correctly. 
+
+### [3.112.1] - 2025-01-28
+- Bug Fixed: Institutions > Performance > Assessments: Not able to see assessments even though assessment periods are configured
+- Bug Fixed: Institution > Staff: Some staff is showing duplicates
+- Bug Fixed: Reports > Custom : When generating custom report, the timestamp is showing incorrect timing for started on and completed on
+- Bug Fixed: Institutions > Staff>Export: The count of staff in Institutions > Staff page is incorrect
+- Bug Fixed: The login process takes a noticeable amount of time before the user is authenticated and redirected to the dashboard.
+- Bug Fixed: Administration > Performance > Assessment Periods > Edit > Save: In jordan uat, when editing assessment periods and upon saving, the education subject and grading types is missing
+
+### [3.112.0] - 2024-12-20
+- Implemented: Develop changes to the Jordan CSPD API
+- Bug Fixed: Institutions>Students/Staff>Add: Internal search is taking too long
+- Bug Fixed: Institutions > Performances > Report Cards > Download All : This process causes multiple sleep processes on the database
+- Bug Fixed: Directory > Student / Staff > General > Identities: when viewing or editing UNHCR identities under Directory page, the page give 404 error
+- Bug Fixed: Institutions > Staff: The count of staff in Institutions > Staff page is incorrect
+
+### [3.111.3] - 2024-12-12
+- Bug Fixed: Institutions > Students > Add > External Search: External Search does not return list of students even when external data source is configured
+- Bug Fixed: Institutions>Students>Add: Display an error message if the unhcr number is not found in the external data source.
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate report cards even though system date is within generate end date
+- Bug Fixed: Infrastructure > Overview: If user key in the same size as building when adding floor, they are not able to proceed
+- Bug Fixed: Institutions > Students: When doing transfer for enrolled (repeater) student, the status enrolled (repeater) does not follow to the next institution
 
 ### [3.111.2] - 2024-11-21
 - Bug Fixed: Administrations > Performances > GPA/ Cumulative GPA : Issues when viewing GPA/Cumulative GPA
