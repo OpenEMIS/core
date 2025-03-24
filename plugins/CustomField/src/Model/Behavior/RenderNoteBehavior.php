@@ -46,6 +46,7 @@ class RenderNoteBehavior extends RenderBehavior
 
             $options['type'] = 'textarea';
             $options['disabled'] = 'disabled';
+            $options['style'] = 'height: 200px'; //POCOR-8956
             if (!is_null($displayValue)) {
                 $options['value'] = $displayValue;
             }

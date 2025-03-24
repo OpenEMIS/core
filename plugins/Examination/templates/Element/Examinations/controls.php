@@ -8,17 +8,9 @@
             ]);
             $template = $this->ControllerAction->getFormTemplate();
             $this->Form->templates($template);
-        ?>
+        // POCOR-8919
+            ?>
 
-        <div class="input select">
-            <div class="input-select-wrapper">
-                <select class="form-control"
-                    ng-options="item.value as item.text for item in ExaminationsResultsController.academicPeriodOptions"
-                    ng-model="ExaminationsResultsController.academicPeriodId"
-                    disabled="disabled"
-                ></select>
-            </div>
-        </div>
         <div class="input select">
             <div class="input-select-wrapper">
                 <select class="form-control"

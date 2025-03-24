@@ -1,3 +1,41 @@
+### [4.18.0] - 2025-03-21
+- Implemented: Develop changes to security_users database table to make email and phone unique
+- Implemented: Develop changes to examinations database tables
+- Implemented: Develop a placeholder in the student profile feature to generate the candidate number
+- Bug Fixed: SAML: After the 1st attempt, the SAML works well but after a second attempt, it becomes unsuccessful and returns
+- Bug Fixed: Administration > Meals > Add: When clicking the add button to create meals, the page gives a 404 error
+- Bug Fixed: Institutions > Finance > Consumables : Fix Permissions and validations
+
+### [4.17.0] - 2025-03-20
+- Implemented: Develop a new External Data Source - OpenEMIS Core in the Administration module to allow OpenEMIS Core to connect to another instance of OpenEMIS Core to retrieve student data
+- Implemented: Administrations > Performances > Outcomes > Criteria : Add "Code" to Label feature so that users can rename this text
+- Bug Fixed: Institutions>Report Card>Comments: All comments permission not working properly
+- Bug Fixed: Institutions > Students > Transfer Out: When transferring students to an only gender school, the system gives an error message of "The selected institution only accepts Female students" or "The selected institution only accepts Male students."
+- Bug Fixed: Institutions > Academic > Schedules > Timetables > Timetables: When accessing timetable module, the page navigate to the home page even when permission is given 
+- Bug Fixed: API: Staff attendance is not working when using non admin
+
+### [4.16.2] - 2025-03-18
+- Big Fixed: Institutions>Report Card>Comments: Permission for Teachers are not working correctly
+- Big Fixed: Administrations>Performance>Report Cards: GPA placeholder naming should be updated
+- Big Fixed: Reports > Students > Enrollment Summary: When generating Student Enrollment Summary report, the page gives a 404 error
+- Big Fixed: Institutions > Staff > Career : Entitlement is not showing correctly
+- Big Fixed: Directory > Staff/Students/Guardian/Others: Adding new user
+
+### [4.16.1] - 2025-03-17
+- Bug Fixes: Administration > Performance > Report Cards: When selecting the generate start and generate end dates to, the system adds one extra day to the selected dates
+- Bug Fixed: Institutions>Report Card>Comments: Revert angular 11 changes
+
+### [4.16.0] - 2025-03-17
+- Implemented: Change the Criteria field to wrap the text so that the competencies can be fully displayed for users in the Outcome feature
+- Implemented: Develop functions for Staff Leave
+- Implemented: Increase the character limit count for ‚ÄúCode‚Äù field in the Outcome feature
+- Implemented: Develop reports for institutions to take attendance by both period and subject
+- Implemented: Develop a new feature in OpenEMIS Core called Consumables
+- Bug Fixed: API: Student Admission is not working
+- Bug Fixed: Institutions>Survey>Forms: Make the height longer and change back the width
+- Bug Fixed: Administration > Performance > Report Cards breadcrumb: When clicking on the "report cards" link at the top menu, the page gives a 404 error
+- Bug Fixed: Institutions>Attendance>Students: Import is not working
+
 ### [4.15.0] - 2025-03-10
 - Implemented: Develop standard OpenEMIS Core v5 APIs based on database tables
 

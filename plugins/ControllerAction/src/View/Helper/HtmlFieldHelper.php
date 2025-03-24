@@ -976,9 +976,19 @@ class HtmlFieldHelper extends Helper
             if (isset($attr['placeholder'])) {
                 $options['placeholder'] = $attr['placeholder'];
             }
+            // POCOR-8128 start
+
+                // Attempt to use the old version
             if (isset($attr['url'])) {
-                $options['url'] = $this->Url->build($attr['url'], true);
+                try {
+                    $options['url'] = $this->Url->build($attr['url'], true);
+                } catch (\TypeError $e) {
+                    // Fallback to the new version if an error occurs
+                    $options['url'] = $this->Url->build($attr['url']);
+                }
             }
+
+            // POCOR-8128 end
             $fieldName = $attr['model'] . '.' . $attr['field'];
             if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];

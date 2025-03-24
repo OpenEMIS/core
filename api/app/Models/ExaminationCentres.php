@@ -14,7 +14,11 @@ use InstitutionScope;
     protected $table = 'examination_centres';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'name', 'code', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'institution_id', 'area_id', 'academic_period_id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+    // POCOR-8919 removed academic period
+    protected $fillable = ['id', 'name', 'code', 'address', 'postal_code',
+        'contact_person', 'telephone', 'fax', 'email', 'website',
+        'institution_id', 'area_id',
+        'modified_user_id', 'modified', 'created_user_id', 'created'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
@@ -23,8 +27,8 @@ use InstitutionScope;
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
+
 
      // Override getKeyForSaveQuery to handle composite keys
 /**
@@ -66,7 +70,6 @@ public function _swaggerPath() {}
                           @OA\Property(property="website", type="string", example=null),
                           @OA\Property(property="institution_id", type="integer", example=null),
                           @OA\Property(property="area_id", type="integer", example=null),
-                          @OA\Property(property="academic_period_id", type="integer", example=null),
                           @OA\Property(property="modified_user_id", type="integer", example=null),
                           @OA\Property(property="modified", type="string", format="date-time", example=null),
                           @OA\Property(property="created_user_id", type="integer", example=null),
@@ -128,7 +131,6 @@ public function _swaggerView() {}
                      @OA\Property(property="website", type="string", example=null),
                      @OA\Property(property="institution_id", type="integer", example=null),
                      @OA\Property(property="area_id", type="integer", example=null),
-                     @OA\Property(property="academic_period_id", type="integer", example=null),
                      @OA\Property(property="modified_user_id", type="integer", example=null),
                      @OA\Property(property="modified", type="string", format="date-time", example=null),
                      @OA\Property(property="created_user_id", type="integer", example=null),
@@ -179,7 +181,6 @@ public function _swaggerCreate() {}
                      @OA\Property(property="website", type="string", example=null),
                      @OA\Property(property="institution_id", type="integer", example=null),
                      @OA\Property(property="area_id", type="integer", example=null),
-                     @OA\Property(property="academic_period_id", type="integer", example=null),
                      @OA\Property(property="modified_user_id", type="integer", example=null),
                      @OA\Property(property="modified", type="string", format="date-time", example=null),
                      @OA\Property(property="created_user_id", type="integer", example=null),

@@ -583,7 +583,17 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExpenditures']);
     }
+    //POCOR-8873 start
+    public function Consumable()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionConsumables']);
+    }
 
+    public function Transactions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionConsumableTransactions']);
+    }
+    //POCOR-8873 end
     public function StaffPositionProfiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']);
@@ -1367,6 +1377,7 @@ class InstitutionsController extends AppController
         if(empty($timetableId)) {
             $timetableId = $params['id'];
         }
+
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $params['id'] = $timetableId;
         $encodedQueryString = $this->ControllerAction->paramsEncode($params);
@@ -1380,8 +1391,17 @@ class InstitutionsController extends AppController
 
         $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
-
         $this->set('_action', $action);
+        // POCOR-8985 start only
+        $roles = [];
+        if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+
+        }
+        $edit = $this->AccessControl->check(['Institutions', 'ScheduleTimetableOverview', 'edit'], $roles);
+        $this->set('_edit', $edit);
+        // POCOR-8985 end
         $this->set('_back', Router::url($backUrl));
 
         $this->set('timetable_id', $timetableId);
@@ -1509,10 +1529,9 @@ class InstitutionsController extends AppController
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'ImportStudentAttendances',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'add'
+                0 => 'add',
+                1 => $this->ControllerAction->paramsEncode(['id' => $institutionId,'institution_id' => $institutionId]), //POCOR-8886
             ];
-
             $archiveUrl = $this->ControllerAction->url('index');
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
@@ -2878,10 +2897,10 @@ class InstitutionsController extends AppController
                 'InstitutionProfileCompletness',
                 'view'],
                 $roles);*/
-            //POCOR-8827 start    
+            //POCOR-8827 start
             $roles = array_values($roles);
             $roles = $roles[0];
-            $havePermissionToViewCompleteness = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()              
+            $havePermissionToViewCompleteness = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -3627,7 +3646,7 @@ class InstitutionsController extends AppController
             $roles = $roles[0];
             $isActive = $Institutions->isActive($institutionID);
             if ($isActive) {
-                $havePermissionToViewCompleteness = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()              
+                $havePermissionToViewCompleteness = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
