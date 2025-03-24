@@ -90,7 +90,7 @@ class NavigationComponent extends Component
         $isUserId = $session->read('Auth.User.id');
 
         if (isset($isUserId)) {
-//            dd($navigations);
+//          POCOR-8989 start
             try {
                 $navigations = $this->buildNavigation();
             } catch (SecurityException $s_ex) {
@@ -119,7 +119,7 @@ class NavigationComponent extends Component
                 return $ex;
             }
             $controller->set('_navigations', $navigations);
-
+//          POCOR-8989 end
         }
     }
 
@@ -127,10 +127,12 @@ class NavigationComponent extends Component
     {
         $controller = $this->getController();
         $request = $controller->getRequest();
+        // POCOR-8989 start
         $this->request = $request;
         $session = $request->getSession();
         $authUserId = $session->read('Auth.User.id');
         if (isset($authUserId)) {
+            // POCOR-8989 end
             //$navigations = $this->getNavigation();
             $navigations = $this->getMainNavigation();
 
@@ -190,6 +192,7 @@ class NavigationComponent extends Component
             $directoryControllers = ['DirectoryBodyMasses',
                 'DirectoryComments',
                 'DirectoryInsurances'];
+            // POCOR-8989 start
             $controllerName = $controller->getName();
             if (in_array($controllerName, $institutionControllers) || (
                     $controllerName == 'Institutions'
@@ -218,7 +221,7 @@ class NavigationComponent extends Component
             if (($controllerName == 'GuardianNavs' && $action != 'index')) {
                 $navigations = $this->makeGuardianNavigations($navigations);
             }
-
+        // POCOR-8989 end
             $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
             $navigations = $this->appendNavigation('Administration', $navigations, $this->getAdministrationNavigation());
             return $navigations;
@@ -1524,7 +1527,7 @@ class NavigationComponent extends Component
             'Staff.Staff.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
                 'parent' => 'Institutions.Staff.index',
-                'params' => $paramsForStaff,
+//                'params' => $paramsForStaff,  // POCOR-8989 removed unused
                 'selected' => ['Staff.SpecialNeedsReferrals',
                     'Staff.SpecialNeedsAssessments',
                     'Staff.SpecialNeedsServices',
@@ -1536,7 +1539,7 @@ class NavigationComponent extends Component
                 'title' => 'Profiles',
                 'parent' => 'Institutions.Staff.index',
                 'selected' => ['Staff.Profiles.index'],
-                'params' => $paramsForStaff
+//                'params' => $paramsForStaff // POCOR-8989 removed unused
             ],
         ];
         foreach ($navigation as &$n) {

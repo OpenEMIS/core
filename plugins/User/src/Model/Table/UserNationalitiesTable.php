@@ -88,6 +88,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 ['preferred' => 1],
                 ['validate' => false]);
             $this->save($userNationalityEntity);
+            Log::debug('UserNationality Updated: ' . print_r($userNationalityEntity->toArray(), true));
         } else {
             $userNationalityEntity = $this->newEntity([
                 'preferred' => 1,
@@ -97,6 +98,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 'created' => new Time()
             ]);
             $this->save($userNationalityEntity);
+            Log::debug('UserNationality Created: ' . print_r($userNationalityEntity->toArray(), true));
         }
     }
 
@@ -114,6 +116,53 @@ class UserNationalitiesTable extends ControllerActionTable {
                 $entity->preferred = 1;
             }
         }
+
+        if(isset($entity->identity_type_id) && isset($entity->number)) {
+            $options['identity_type_id'] = $entity->identity_type_id;
+            $options['identity_number'] = $entity->number;
+            $message = $this->checkCustomIdentityNumber($options);
+            if ($message != "") {
+                $message = __('Wrong identity number');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                $event->stopPropagation();
+                return false;
+            } else {
+                $entity->validate_number = 1;
+            }
+        }
+    }
+
+    private function checkCustomIdentityNumber($options)
+    {
+        $pattern = '';
+
+        if (isset($options['identity_type_id']) && !empty($options['identity_type_id'])) {
+            $identityTypeId = $options['identity_type_id'];
+        } else {
+            return "";
+        }
+        if (isset($options['identity_number']) && !empty($options['identity_number'])) {
+            $identityNumber = $options['identity_number'];
+        } else {
+            return "";
+        }
+
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $IdentityTypesData = $IdentityTypes
+            ->find()
+            ->where([$IdentityTypes->aliasField('id') => $identityTypeId])
+            ->first();
+
+        if (!empty($IdentityTypesData->validation_pattern)) {
+            $pattern = '/' . $IdentityTypesData->validation_pattern . '/';
+        }
+
+        // custom validation is nullable, have to cater for the null pattern.
+        if (!empty($pattern) && !preg_match($pattern, $identityNumber)) {
+            return __("Please enter a valid Identity Number");
+        }
+
+        return "";
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -127,7 +176,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     'id <>' => $entity->id
                 ]
             );
-
+            Log::debug('UserNationality Preferred Updated: ' . print_r($entity->toArray(), true));
             $listeners = [self::getDynamicTableInstance('User.Users')];
             $this->dispatchEventToModels('Model.UserNationalities.onChange',
                 [$entity],
@@ -137,6 +186,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
         // Handle identity updates (POCOR-5668)
         $isAdd = isset($this->request) && ($this->request->getParam('pass')[0] ?? '') === 'add';
+
         $hasIdentityData = $entity->has('identity_type_id')
             && $entity->has('number')
             && $entity->has('validate_number');
@@ -241,38 +291,39 @@ class UserNationalitiesTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         $validator
-            ->add('nationality_id', 'notBlank', ['rule' => 'notBlank'])
-            ->add('preferred', 'ruleValidatePreferredNationality', [
-                'rule' => ['validatePreferredNationality'],
-                'provider' => 'table'
-            ]);
+            ->notEmptyString('nationality_id')
+//            ->add('preferred', 'ruleValidatePreferredNationality', [
+//                'rule' => ['validatePreferredNationality'],
+//                'provider' => 'table'
+//            ])
+        ;
         // task POCOR-5668 starts
-//        $isFieldsShow = $this->showIdentityTypeAndNumber();
-//        if($isFieldsShow > 0){
-//            $validator
-//                ->add('identity_type_id', 'notBlank', ['rule' => 'notBlank'])
-//                ->requirePresence('number')
-//                ->notEmpty('number')
+        $identityIdRequired = $this->identityIdRequired;
+        if($identityIdRequired){
+            $validator
+                ->notEmptyString('identity_type_id')
+                ->notEmptyString('number')
 //                ->add('number', [
 //                    'ruleNumber' => [
 //                        'rule' => ['check_validate_number'],
 //                        'message' => __('Please validate before saving.')
 //                    ]
-//                ]);
-//        }
+//                ])
+            ;
+        }
         // task POCOR-5668 ends
         return $validator;
     }
 
     public function validationNonMandatory(Validator $validator) {
         $validator = $this->validationDefault($validator);
-        return $validator->allowEmpty('nationality_id');
+        return $validator->allowEmptyString('nationality_id');
     }
 
     public function validationAddByAssociation(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
-        return $validator->requirePresence('security_user_id', false);
+        return $validator->allowEmptyString('security_user_id');
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -284,15 +335,6 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function beforeDelete(Event $event, Entity $entity)
     {
-        //check whether has minimum one nationality record.
-        // POCOR-7179[START]
-        // $query = $this
-        //         ->find()
-        //         ->where([
-        //             $this->aliasfield('security_user_id') => $entity->security_user_id,
-        //             $this->aliasfield('id <> ') => $entity->id
-        //         ])
-        //         ->count();
 
         $UserNationalities = self::getDynamicTableInstance('User.Identities');
         $checkexistingNationalities = $UserNationalities->find()
@@ -415,44 +457,6 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function onUpdateFieldNumber(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            $userId = $this->getUserID();
-
-            $identity_number = !empty($request->getQuery('number')) ? trim($request->getQuery('number')) : '';
-            if ($action == 'add') {
-                $attr['attr']['value'] = $identity_number;
-            } else if ($action == 'edit') {
-                if(!empty($userId)){
-                    //first check nationality have default or not
-                    $nationalityTable = self::getDynamicTableInstance('FieldOption.Nationalities')
-                        ->find()
-                        ->where([
-                            'Nationalities.default' => 1,
-                            'Nationalities.id' => $attr['entity']->nationality_id
-                        ])
-                        ->first();
-
-                    if(!empty($nationalityTable) && !empty($nationalityTable->identity_type_id)){
-                        // second check when user have identity in user identity table
-                        $identityTypeData = $this->findDataExistInUserIdentityTable($nationalityTable->identity_type_id, $nationalityTable->id, $userId);
-                        if(!empty($identityTypeData)){
-                            //$attr['type'] = 'readonly';
-                            if($identity_number == $identityTypeData->number){
-                                $attr['attr']['value'] = $identityTypeData->number;
-                            }else if($identity_number == ''){
-                                $attr['attr']['value'] = $identityTypeData->number;
-                            }else{
-                                $attr['attr']['value'] = $identity_number;
-                            }
-                        }else{
-                            $attr['attr']['value'] = '';
-                        }
-                    }else{
-                        $attr['attr']['value'] = '';
-                    }
-                }
-            }
-        }
         return $attr;
     }
 
@@ -752,7 +756,8 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
 
     public function getNationality($nationalityId){
-        if(!number_format($nationalityId)){
+
+        if (!is_numeric($nationalityId)) {
             return null;
         }
         $IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
@@ -821,6 +826,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         ]);
 
         $identityIdRequired = $this->showIdentityTypeAndNumber($entity);
+//        dd($identityIdRequired);
         $this->identityIdRequired = $identityIdRequired;
         if($identityIdRequired > 0){
             $this->field('identity_type_id', [
@@ -842,9 +848,9 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function showIdentityTypeAndNumber($entity){
 //        dd($entity);
 //        dd($this->getQueryString());
-        $entity->security_user_id = $this->getUserID();
+        $entity->security_user_id = $this->securityUserId;
         $request = $this->request;
-        $count = 0;
+
         $identityRequiredCode = '';
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         //$arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
@@ -880,13 +886,11 @@ class UserNationalitiesTable extends ControllerActionTable {
                 ->count();
             //$count =1;//for testing purpose
             //check nationality has default 1 or 0, if 1 than show identity type/number
-            $nationalityId = $this->getQueryString('nationality_id');
-            if (!$nationalityId) {
-                $nationalityId = $request->getData('UserNationalities.nationality_id');
-            }
-            if (!$nationalityId) {
-                $nationalityId = $request->getQuery('nationality_id');
-            }
+            $nationalityId = $this->getQueryString('nationality_id')
+                ??  $request->getData('UserNationalities.nationality_id')
+                ?? $request->getQuery('nationality_id');
+//            dd($nationalityId);
+            $nationalityId = intval($nationalityId);
             $nationalityData = $this->getNationality($nationalityId);
 //            dd($nationalityData);
             if($nationalityData && $nationalityData->default == 1 && $count >= 1){
