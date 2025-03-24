@@ -1066,6 +1066,14 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.StudentFees'],
             ],
 
+            // POCOR-8873 start
+            'Institutions.Consumable.index' => [
+                'title' => 'Consumable',
+                'parent' => 'Institution.Finance',
+                'selected' => ['Institutions.Consumable','Institutions.Transactions'],
+            ],
+            // POCOR-8873 end
+
             'Infrastructures' => [
                 'title' => 'Infrastructures',
                 'parent' => 'Institutions.Institutions.index',
@@ -1644,6 +1652,7 @@ class NavigationComponent extends Component
                     'Staff.InstitutionStaffAttendanceActivities',
                     //'Institutions.StaffLeave',
                     'Staff.StaffLeave',
+                    'Staff.StaffEntitlement', // POCOR-8128
                     'Institutions.ArchivedStaffLeave',
                     'Institutions.HistoricalStaffLeave',
                     'Staff.Behaviours',
@@ -2604,6 +2613,7 @@ class NavigationComponent extends Component
         $TrainingNav = $this->getAdminstrationTrainingNav();
         $PerformanceNav = $this->getAdminstrationPerformanceNav();
         $ExaminationNav = $this->getAdminstrationExaminationNav();
+        $StaffNav = $this->getAdministrationStaffNav();    // POCOR-8128
         $ScholarshipNav = $this->getAdminstrationScholarshipNav();
         $MoodleNav = $this->getAdminstrationMoodleNav();
         $dataMgtNav = $this->getAdminstrationdataMgtNav();
@@ -2661,8 +2671,21 @@ class NavigationComponent extends Component
 
         ];
 
-        $getallNavigation = array_merge($firstSubMenuAdmin, $SecurityNav, $ProfileNav, $SurveyNav,
-            $CommunicationsNav, $TrainingNav, $PerformanceNav, $ExaminationNav, $ScholarshipNav, $navigation, $MoodleNav, $dataMgtNav); //POCOR-7527
+        // POCOR-8128 start
+        $getallNavigation = array_merge($firstSubMenuAdmin,
+            $SecurityNav,
+            $ProfileNav,
+            $SurveyNav,
+            $CommunicationsNav,
+            $TrainingNav,
+            $PerformanceNav,
+            $ExaminationNav,
+            $StaffNav,
+            $ScholarshipNav,
+            $navigation,
+            $MoodleNav,
+            $dataMgtNav); //POCOR-7527
+        // POCOR-8128 end
         return $getallNavigation;
     }
 
@@ -2750,6 +2773,8 @@ class NavigationComponent extends Component
                         'Configurations.edit',
                         'Configurations.Authentication',
                         'Configurations.AuthSystemAuthentications',
+                        'Configurations.CustomValidation',
+                        'Configurations.AdministrativeBoundaries',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
@@ -3930,6 +3955,33 @@ class NavigationComponent extends Component
 
     //POCOR-7527
 
+    // POCOR-8128
+    private function getAdministrationStaffNav()
+    {
+
+
+        $nav = [
+            'Administration.Staff' => [
+                'title' => 'Staff',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+            'Systems.StaffPolicies' => [
+                'title' => 'Leaves',
+                'parent' => 'Administration.Staff',
+                'link' => true,
+            ],
+            'Systems.StaffEntitlements' => [
+                'title' => 'Entitlements',
+                'parent' => 'Administration.Staff',
+                'link' => true,
+            ],
+
+        ];
+
+        return $nav;
+    }
+
     private function getAdminstrationScholarshipNav()
     {
         $session = $this->getController()->getRequest()->getSession();
@@ -4349,6 +4401,7 @@ class NavigationComponent extends Component
         // Unset the children
         $linkOnly = [];
         foreach ($navigations as $key => $value) {
+
             $rolesRestrictedTo = $roles;
             //print_r($roles);die;
             if (isset($value['link']) && !$value['link']) {
@@ -4429,7 +4482,12 @@ class NavigationComponent extends Component
                     $params = $value['params'];
                 }
                 $url = $this->getLink($key, $params);
-
+                // POCOR-8128 start
+                if (isset($value['link']) && $value['link']) {
+                    $params = ['plugin' => 'Systems'];
+                    $url = $this->getLink($key, $params);
+                }
+                // POCOR-8128 end
                 // Ensure $url is an array and has necessary keys
                 if (!is_array($url) || !isset($url['controller'], $url['action'], $url['plugin'])) {
                     // Log or handle the case where $url is not as expected
