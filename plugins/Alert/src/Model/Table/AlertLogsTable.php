@@ -197,20 +197,29 @@ class AlertLogsTable extends ControllerActionTable
         // checksum hash($subject,$message)
         $checksum = Security::hash($subject . ',' . $message, 'sha256');
         // to update and add new records into the alert_logs
-        $entity = $this->newEntity([
-            'feature' => $feature,
-            'method' => $method,
-            'destination' => $email,
-            'status' => 0,
-            'subject' => $subject,
-            'message' => $message,
-            'checksum' => $checksum
-        ]);
-        $saveData = $this->save($entity);
+        $result_checksum = TableRegistry::get('Alert.AlertLogs')->find()->where(['checksum' => $checksum])->first();
+        if(empty($result_checksum)){
+            $emailsArray = explode(", ", $email);
+            foreach($emailsArray AS $emailData){
+                $entity = $this->newEntity([
+                    'feature' => $feature,
+                    'method' => $method,
+                    'destination' => $emailData,
+                    'status' => 0,
+                    'subject' => $subject,
+                    'message' => $message,
+                    'checksum' => $checksum
+                ]);
+                $saveData = $this->save($entity);
+            }
+        }
 
         if(!empty($saveData)){
-            $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
-            $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
+            // $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
+            $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['feature' => $feature])->all();
+            foreach($result AS $resultData){
+                $this->triggerSendingAlertShell('SendingAlert', $feature, $resultData['id']);
+            }
         }
 
     }

@@ -583,7 +583,17 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExpenditures']);
     }
+    //POCOR-8873 start
+    public function Consumable()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionConsumables']);
+    }
 
+    public function Transactions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionConsumableTransactions']);
+    }
+    //POCOR-8873 end
     public function StaffPositionProfiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']);
@@ -1367,6 +1377,7 @@ class InstitutionsController extends AppController
         if(empty($timetableId)) {
             $timetableId = $params['id'];
         }
+
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $params['id'] = $timetableId;
         $encodedQueryString = $this->ControllerAction->paramsEncode($params);
@@ -1380,8 +1391,17 @@ class InstitutionsController extends AppController
 
         $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
-
         $this->set('_action', $action);
+        // POCOR-8985 start only
+        $roles = [];
+        if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+
+        }
+        $edit = $this->AccessControl->check(['Institutions', 'ScheduleTimetableOverview', 'edit'], $roles);
+        $this->set('_edit', $edit);
+        // POCOR-8985 end
         $this->set('_back', Router::url($backUrl));
 
         $this->set('timetable_id', $timetableId);
@@ -1509,10 +1529,9 @@ class InstitutionsController extends AppController
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'ImportStudentAttendances',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'add'
+                0 => 'add',
+                1 => $this->ControllerAction->paramsEncode(['id' => $institutionId,'institution_id' => $institutionId]), //POCOR-8886
             ];
-
             $archiveUrl = $this->ControllerAction->url('index');
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
@@ -2614,13 +2633,16 @@ class InstitutionsController extends AppController
     function setInstitutionStaffAttendancesImport($institutionId)
     {
         $_import = $this->AccessControl->check(['Institutions', 'ImportStaffAttendances', 'add']);
+        // POCOR-8944 start
         $importUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'ImportStaffAttendances',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'add'
+            0 => 'add',
+            1 => $this->ControllerAction->paramsEncode(['id' => $institutionId,
+        'institution_id' => $institutionId]),
         ];
+        // POCOR-8944 end
         $this->set('importUrl', Router::url($importUrl));
         $this->set('_import', $_import);
     }
@@ -2870,11 +2892,29 @@ class InstitutionsController extends AppController
 
         if ($action == 'dashboard') {
             $roles = self::getDynamicTableInstance('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $institutionId);
-            $havePermissionToViewCompleteness = $this->AccessControl->check([
+            /*$havePermissionToViewCompleteness = $this->AccessControl->check([
                 'Institutions',
                 'InstitutionProfileCompletness',
                 'view'],
-                $roles);
+                $roles);*/
+            //POCOR-8827 start
+            $roles = array_values($roles);
+            $roles = $roles[0];
+            $havePermissionToViewCompleteness = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityFunctions.name' => 'Institution Profile Completeness',
+                    'SecurityRoleFunctions.security_role_id IS'=> $roles,
+                    'SecurityRoleFunctions._view' => 1,
+                ])
+                ->toArray();
+                //POCOR-8827 end
+
             if ($havePermissionToViewCompleteness) {
                 $header = $institutionName . ' - ' . __('Institution Data Completeness');//POCOR-6022
             } else {
@@ -3601,9 +3641,32 @@ class InstitutionsController extends AppController
         if (!$this->AccessControl->isAdmin()) {
             $userId = $this->Auth->user('id');
             $roles = self::getDynamicTableInstance('Institution.Institutions')->getInstitutionRoles($userId, $institutionID);
+            //POCOR-8827 start
+            $roles = array_values($roles);
+            $roles = $roles[0];
             $isActive = $Institutions->isActive($institutionID);
             if ($isActive) {
-                $this->set('haveProfilePermission', $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles));
+                $havePermissionToViewCompleteness = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
+                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                    [
+                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                    ]
+                ])
+                ->where([
+                    'SecurityFunctions.controller' => 'Institutions',
+                    'SecurityFunctions.name' => 'Institution Profile Completeness',
+                    'SecurityRoleFunctions.security_role_id IS'=> $roles,
+                    'SecurityRoleFunctions._view' => 1,
+                ])
+                ->toArray();
+                if(!empty($havePermissionToViewCompleteness)){
+                    $havePermissionToViewCompleteness = true;
+                }else{
+                     $havePermissionToViewCompleteness = false;
+                }
+                //$this->set('haveProfilePermission', $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles));
+                $this->set('haveProfilePermission', $havePermissionToViewCompleteness);
+                //POCOR-8827 end
             } else {
                 $this->set('haveProfilePermission', false);
             }
@@ -4374,7 +4437,7 @@ class InstitutionsController extends AppController
         }
         /********************************************* */
         //Shifts
-        $institutionShifts = TableRegistry::getTableLocator()->get('institution_shifts');
+        $institutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
         $institutionShiftsData = $institutionShifts->find()
             ->select([
                 'created' => 'institution_shifts.created',
@@ -6608,7 +6671,7 @@ class InstitutionsController extends AppController
         }
         //POCOR-8706(attached behaviour to reflect users in moodle created from directory)
         $securityUsers->addBehavior('User.MoodleCreateUser');
-        
+
         try {
             return $securityUsers->save($entity);
         } catch (\Exception $e) {
