@@ -235,6 +235,8 @@ class RisksTable extends ControllerActionTable
                 'plugin' => $this->controller->getPlugin(),
                 'controller' => $this->controller->getName(),
                 'action' => 'InstitutionStudentRisks',
+                 0 => 'view',
+                 1 => $encodedQueryString
 
             ];
 

@@ -54,26 +54,26 @@ class RiskCriteriasTable extends ControllerActionTable
 
         $activeRiskId = [];
         $activeRisksData = $InstitutionRisks->find()
+            ->contain('Risks')
             ->where([
                 'institution_id' => $options['institution_id'],
                 'OR' => [
                     ['status' => 2], // status == processing
                     ['status' => 3]  // status == completed
                 ]
-            ])
+            ])->where(['Risks.academic_period_id' => $options['academic_period_id']]) //POCOR-8276
             ->all();
 
         foreach ($activeRisksData as $activeRisks) {
             $activeRiskId [] = $activeRisks->risk_id;
-        }
-
-        $query->contain('Risks')
+        } 
+        return $query->contain('Risks')
             ->where([
+                'Risks.academic_period_id' => $options['academic_period_id'], //POCOR-8276
                 'criteria' => $options['criteria_key'],
                 $this->Risks->aliasField('id') . ' IN ' => $activeRiskId
-            ])
-            ->all();
-        return $query;
+            ]);
+        
     }
 
     public function getTotalRisk($riskId)
