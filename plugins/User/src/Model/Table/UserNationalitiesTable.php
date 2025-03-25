@@ -17,15 +17,15 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Http\Client;
 use Cake\Http\Session;
 use Cake\Log\Log;
-use Cake\ORM\Table;
-use Cake\Utility\Inflector;
+use Cake\ORM\Table; // POCOR-8989
+use Cake\Utility\Inflector; // POCOR-8989
 
 class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
     use MessagesTrait;
-    private $securityUserId = null;
-    private $securityUser = null;
-    private $identityIdRequired = false;
+    private $securityUserId = null; // POCOR-8989
+    private $securityUser = null; // POCOR-8989
+    private $identityIdRequired = false; // POCOR-8989
 
     public function initialize(array $config): void
     {
@@ -34,7 +34,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
 
-//        $this->securityUserId = $this->getQueryString('security_user_id');
+// POCOR-8989 removed for later
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add'],
@@ -63,7 +63,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function afterSaveUsers(Event $event, Entity $entity)
     {
-        $userID = $entity->security_user_id ?? $this->securityUserId;
+        $userID = $entity->security_user_id ?? $this->securityUserId; // POCOR-8989
         $nationalityID = $entity->nationality_id ?? -1;
 
         if ($nationalityID == -1 || $userID == -1) {
@@ -77,18 +77,16 @@ class UserNationalitiesTable extends ControllerActionTable {
                     $this->aliasField('nationality_id') => $nationalityID
                 ]);
         } catch (\Exception $exception) {
-            Log::debug('Query Exception: ' . $exception->getMessage());
+            Log::debug('Query Exception: ' . $exception->getMessage()); // POCOR-8989
             return;
         }
 
-        // Log::debug('UserNationality Query Result: ' . print_r($query->toArray(), true));
 
         if ($query->count()) {
             $userNationalityEntity = $this->patchEntity($query->first(),
                 ['preferred' => 1],
                 ['validate' => false]);
             $this->save($userNationalityEntity);
-            Log::debug('UserNationality Updated: ' . print_r($userNationalityEntity->toArray(), true));
         } else {
             $userNationalityEntity = $this->newEntity([
                 'preferred' => 1,
@@ -98,7 +96,6 @@ class UserNationalitiesTable extends ControllerActionTable {
                 'created' => new Time()
             ]);
             $this->save($userNationalityEntity);
-            Log::debug('UserNationality Created: ' . print_r($userNationalityEntity->toArray(), true));
         }
     }
 
@@ -109,7 +106,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             if ($userID) {
                 $entity['security_user_id'] = $userID;
             }
-
+            // POCOR-8989 make the only the preferred
             if (!$this->exists([
                 $this->aliasField('security_user_id')
                 => $entity->security_user_id])) {
@@ -120,9 +117,12 @@ class UserNationalitiesTable extends ControllerActionTable {
         if(isset($entity->identity_type_id) && isset($entity->number)) {
             $options['identity_type_id'] = $entity->identity_type_id;
             $options['identity_number'] = $entity->number;
+            $options['nationality_id'] = $entity->nationality_id;
+            $options['security_user_id'] = $entity->security_user_id;
             $message = $this->checkCustomIdentityNumber($options);
             if ($message != "") {
-                $message = __('Wrong identity number');
+                $entity->setError('identity_type_id', $message);
+                $entity->setError('number', $message);
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 $event->stopPropagation();
                 return false;
@@ -139,14 +139,19 @@ class UserNationalitiesTable extends ControllerActionTable {
         if (isset($options['identity_type_id']) && !empty($options['identity_type_id'])) {
             $identityTypeId = $options['identity_type_id'];
         } else {
-            return "";
+            return __("Please enter a valid Identity Type");
+        }
+        if (isset($options['nationality_id']) && !empty($options['nationality_id'])) {
+            $nationalityId = $options['nationality_id'];
+        } else {
+            return __("Please enter a valid Nationality");
         }
         if (isset($options['identity_number']) && !empty($options['identity_number'])) {
             $identityNumber = $options['identity_number'];
         } else {
-            return "";
+            return __("Please enter a valid Identity Number");
         }
-
+        $securityUserId = $options['security_user_id'] ?? null;;
         $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $IdentityTypesData = $IdentityTypes
             ->find()
@@ -161,7 +166,10 @@ class UserNationalitiesTable extends ControllerActionTable {
         if (!empty($pattern) && !preg_match($pattern, $identityNumber)) {
             return __("Please enter a valid Identity Number");
         }
-
+        $exists = $this->findNumberExistInUserIdentityTable($identityTypeId, $nationalityId, $identityNumber, $securityUserId);
+        if ($exists > 0) {
+            return __("Please enter a unique Identity Number");
+        }
         return "";
     }
 
@@ -219,7 +227,6 @@ class UserNationalitiesTable extends ControllerActionTable {
         $newEntity = $UserIdentities->newEntity($newIdentity);
         $UserIdentities->save($newEntity);
 
-        $this->updateNationalityIdentityType($entity);
     }
 
     protected function updateUserIdentityIfChanged(Entity $entity)
@@ -282,9 +289,12 @@ class UserNationalitiesTable extends ControllerActionTable {
         ;
         // task POCOR-5668 starts
         $identityIdRequired = $this->identityIdRequired;
+//        dd($identityIdRequired);
         if($identityIdRequired){
             $validator
+                ->requirePresence('identity_type_id', ['create', 'update'], __('This field cannot be left empty'))
                 ->notEmptyString('identity_type_id')
+                ->requirePresence('number', ['create', 'update'], __('This field cannot be left empty'))
                 ->notEmptyString('number')
                 ->add('identity_type_id', 'ruleCustomIdentityType', [
                     'rule' => ['validateCustomIdentityType'],
@@ -302,15 +312,10 @@ class UserNationalitiesTable extends ControllerActionTable {
                     ]
                 ])
                 // POCOR-8989 removed external source validation
-//                ->add('number', [
-//                    'ruleNumber' => [
-//                        'rule' => ['check_validate_number'],
-//                        'message' => __('Please validate before saving.')
-//                    ]
-//                ])
+
             ;
         }
-        // task POCOR-5668 ends
+//        dd($validator);
         return $validator;
     }
 
@@ -559,23 +564,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $attr;
     }
 
-    // task POCOR-5668 starts
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
-    {
-        $nationalityId = $this->getQueryString('nationality_id')
-            ?? $this->request->getData('UserNationalities.nationality_id')
-            ?? $this->request->getQuery('nationality_id');
 
-        if (empty($nationalityId)) {
-            return;
-        }
-
-        $nationality = $this->getNationality($nationalityId);
-        if (empty($nationality) || $nationality->external_validation != 1 || empty($nationality->identity_type_id)) {
-            return;
-        }
-
-    }
 
 
     public function getNationality($nationalityId){
@@ -607,13 +596,13 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $Nationality;
     }
 
-    public function findDataExistInUserIdentityTable($nationality_table_identity_type_id, $nationality_table_id, $userId){
-        $IdentityTypes = TableRegistry::get('identity_types');
-        $UserIdentities = TableRegistry::get('user_identities');
+    public function findDataExistInUserIdentityTable($identity_type_id, $nationality_id, $userId){
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::get('User.Identities');
         $where = [
-            'UserIdentities.identity_type_id' => $nationality_table_identity_type_id,
-            'UserIdentities.nationality_id' => $nationality_table_id,
-            'UserIdentities.security_user_id' => $userId
+            $UserIdentities->aliasField('identity_type_id') => $identity_type_id,
+            $UserIdentities->aliasField('nationality_id') => $nationality_id,
+            $UserIdentities->aliasField('security_user_id') => $userId
         ];
 //        Log::debug(print_r($where,true));
         $identityTypeData = $UserIdentities
@@ -633,6 +622,29 @@ class UserNationalitiesTable extends ControllerActionTable {
             ->where($where)
             ->first();
         return $identityTypeData;
+    }
+    public function findNumberExistInUserIdentityTable($identity_type_id, $nationality_id, $number, $userId = null){
+        $UserIdentities = TableRegistry::get('User.Identities');
+        $where = [
+            $UserIdentities->aliasField('identity_type_id') => $identity_type_id,
+            $UserIdentities->aliasField('nationality_id') => $nationality_id,
+            $UserIdentities->aliasField('number') => $number,
+        ];
+
+        if (!empty($userId)) {
+            $where[$UserIdentities->aliasField('security_user_id') . ' !='] = $userId;
+        }
+//        Log::debug(print_r($where,true));
+        $identityTypeCount = $UserIdentities
+            ->find()
+            ->select([
+                $UserIdentities->aliasField('identity_type_id'),
+                $UserIdentities->aliasField('number'),
+                $UserIdentities->aliasField('nationality_id'),
+            ])
+            ->where($where)
+            ->count();
+        return $identityTypeCount;
     }
 
     private function setupFields(Entity $entity)
