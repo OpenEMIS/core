@@ -196,8 +196,7 @@ class CalendarsTable extends ControllerActionTable
             }
 
         }
-        $url = $toolbarButtons['back']['url'];
-        dd($url);
+
 //        dd($options);
     }
 
