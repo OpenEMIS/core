@@ -297,6 +297,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function afterSaveOrDelete(Event $mainEvent, Entity $afterSaveOrDeleteEntity)
     {
+
         $role = null;
         $user_id = null;
         $criteriaModel = $afterSaveOrDeleteEntity->getSource();
@@ -338,6 +339,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
         if (!empty($institutionId)) {
             $criteriaRecord = $this->Risks->getCriteriaByModel($criteriaModel, $institutionId);
+
             if(!empty($criteriaRecord)){
                 foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
                     // to get the risks criteria to get the value on the student_risk_criterias
@@ -944,5 +946,11 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        
+        //echo "<pre>";print_r($query);exit;
     }
 }
