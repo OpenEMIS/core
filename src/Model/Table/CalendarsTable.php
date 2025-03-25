@@ -39,6 +39,9 @@ class CalendarsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         return $validator
+            ->notEmptyString('name', __('This field cannot be left empty'))
+            ->notEmptyString('calendar_type_id', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id', __('This field cannot be left empty'))
             ->add('start_date', 'dateWithinPeriod', [
                 'rule' => function ($value, $context) {
                     $inputDate = new Date ($value);
@@ -147,6 +150,57 @@ class CalendarsTable extends ControllerActionTable
 
     }
 
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $maincontroller = $this->controller;
+        $controllerName = $maincontroller->getName();
+        if ($controllerName == 'Institutions') {
+            if ($entity->institution_id == -1) {
+                $message = __('Delete operation is not allowed as there are other information linked to this record.');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+
+                $url = $this->request->referer();
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
+        }
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if(empty($entity->institution_id)){
+            $entity->institution_id = -1;
+        }
+        if(empty($entity->institution_shift_id)){
+            $entity->institution_shift_id = 0;
+        }
+        if ($entity->id) {
+            $original_entity = $this->find()->where([$this->aliasField('id') => $entity->id])->first();
+        }
+        if ($original_entity) {
+            if ($original_entity->institution_id == -1) {
+                if ($entity->institution_id != -1) {
+                    $other_entity = $this->find()->where([
+                        $this->aliasField('id !=') => $entity->id,
+                        $this->aliasField('institution_id') => $entity->institution_id,
+                        $this->aliasField('name') => $entity->name
+                    ])->first();
+                    if ($other_entity) {
+                        $entity->id = $other_entity->id;
+                        $entity->isNew(false);
+                    }else {
+                        $entity->id = null;
+                        $entity->isNew(true);
+                    }
+                }
+            }
+
+        }
+        $url = $toolbarButtons['back']['url'];
+        dd($url);
+//        dd($options);
+    }
+
     // POCOR-6122
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -220,7 +274,7 @@ class CalendarsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        
+
         $institutionId  = $this->getQueryString('institution_id');
         $academicPeriod = ($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent() ;
         $calendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
@@ -249,7 +303,7 @@ class CalendarsTable extends ControllerActionTable
             ])
             ->group($this->aliasField('id'))
             ->where([
-                //'institution_id IS =' .$institutionId, 
+                //'institution_id IS =' .$institutionId,
                 $this->aliasField('academic_period_id') => $academicPeriod
             ]);
         }
@@ -266,7 +320,7 @@ class CalendarsTable extends ControllerActionTable
             $params = $this->paramsDecode($this->request->getParam('pass')[1]);
             $institutionId  = $params['institution_id'];
         }
-        
+
         $this->field('name', ['attr' => ['label' => __('Name')]]);
 
         $this->fields['calendar_type_id']['type'] = 'select';
@@ -287,6 +341,7 @@ class CalendarsTable extends ControllerActionTable
         $this->fields['institution_shift_id']['type'] = 'select';
 
         $this->field('institution_shift_id', ['attr' => ['label' => __('Shift')]]);
+
         $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionID]);
         //POCOR-5280 : End
     }
@@ -301,7 +356,7 @@ class CalendarsTable extends ControllerActionTable
     public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($this->action == 'add' || $this->action == 'edit') {
-            
+
                 $ShiftOptionTable = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
                 $InstitutionShiftsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
                 $shiftOptions = $ShiftOptionTable->find('list')->toArray();
@@ -339,7 +394,10 @@ class CalendarsTable extends ControllerActionTable
         $this->field('start_date', ['type' => 'date','attr' => ['label' => __('Start Date')]]);
         $this->field('end_date', ['type' => 'date','attr' => ['label' => __('End Date')]]);
         $this->field('shift', ['visible' => true, 'attr' => ['label' => __('Shift')]]);
+
+        $this->field('institution', ['visible' => true, 'attr' => ['label' => __('institution')]]);
         $this->field('institution_id', ['visible' => false, 'attr' => ['label' => __('institution')]]);
+
         $this->field('institution_shift_id', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
@@ -363,7 +421,17 @@ class CalendarsTable extends ControllerActionTable
         return $selectedAcademicPeriod;
     }
     // POCOR-6122 end
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+//        dd($buttons);
+        parent::onUpdateActionButtons($event, $entity, $buttons);
+//        $entity = $entity->toArray();
+        if($entity->institution_id == -1){
+            $entity->institution_id = $this->getInstitutionID();
+        }
+        unset($buttons['remove']);
 
+        return $buttons;
+    }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // POCOR-6122 start
@@ -423,7 +491,7 @@ class CalendarsTable extends ControllerActionTable
         //->group($this->aliasField('id'))
         if(!empty($institutionId)) {
             $query->where([
-                'institution_id =' .$institutionId
+                'institution_id IN (-1, ' . $institutionId . ')'
             ]);
         }
     }
@@ -439,6 +507,16 @@ class CalendarsTable extends ControllerActionTable
             ->where(['id' => $entity->institution_shift_id])
             ->first()->name;
         return $shiftOptionsName;
+    }
+
+    public function onGetInstitution(Event $event, Entity $entity)
+    {
+//        dd($entity);
+        if ($entity->institution_id == -1) {
+            return __('All Institutions');
+        } else {
+            return $entity->institution->name;
+        }
     }
 
 }
