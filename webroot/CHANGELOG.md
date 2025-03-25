@@ -1,3 +1,11 @@
+### [4.18.0] - 2025-03-21
+- Implemented: Develop changes to security_users database table to make email and phone unique
+- Implemented: Develop changes to examinations database tables
+- Implemented: Develop a placeholder in the student profile feature to generate the candidate number
+- Bug Fixed: SAML: After the 1st attempt, the SAML works well but after a second attempt, it becomes unsuccessful and returns
+- Bug Fixed: Administration > Meals > Add: When clicking the add button to create meals, the page gives a 404 error
+- Bug Fixed: Institutions > Finance > Consumables : Fix Permissions and validations
+
 ### [4.17.0] - 2025-03-20
 - Implemented: Develop a new External Data Source - OpenEMIS Core in the Administration module to allow OpenEMIS Core to connect to another instance of OpenEMIS Core to retrieve student data
 - Implemented: Administrations > Performances > Outcomes > Criteria : Add "Code" to Label feature so that users can rename this text
