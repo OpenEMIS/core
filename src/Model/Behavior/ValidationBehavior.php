@@ -3186,57 +3186,7 @@ class ValidationBehavior extends Behavior
 
 
 
-    public static function check_validate_number($field, array $globalData)
-    {
-        //$field is for external variable
-        $Nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
-        $Nationality = $Nationalities
-            ->find()
-            ->where([$Nationalities->aliasField('id') => $globalData['data']['nationality_id']
-            ])
-            ->first();
-        if($Nationality->external_validation == 1){
-            if($globalData['data']['id'] != '' && $globalData['data']['identity_type_id'] != '' && $globalData['data']['number'] != ''){
-                //edit nationality case
-                $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-                $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-                $identityTypeData = $UserIdentities
-                    ->find()
-                    ->select([
-                        $UserIdentities->aliasField('id'),
-                        $UserIdentities->aliasField('identity_type_id'),
-                        $IdentityTypes->aliasField('name'),
-                        $UserIdentities->aliasField('number'),
-                        $UserIdentities->aliasField('nationality_id'),
-                    ])
-                    ->leftJoin(
-                        [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
-                            $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
-                        ]
-                    )
-                    ->where([
-                        $UserIdentities->aliasField('identity_type_id') => $globalData['data']['identity_type_id'],
-                        $UserIdentities->aliasField('nationality_id') => $globalData['data']['nationality_id'],
-                        $UserIdentities->aliasField('security_user_id') => $globalData['data']['security_user_id']
-                    ])
-                    ->first();
-                if(!empty($identityTypeData)){
-                    if($identityTypeData->number == $globalData['data']['number']){
-                        return true;
-                    }else if($identityTypeData->number != $globalData['data']['number'] && $globalData['data']['validate_number'] == 1){
-                        return true;
-                    }
-                }
-                return false;
-            }else{
-                //add nationality
-                if($globalData['data']['validate_number'] == 0){
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+    // POCOR-8989 removed
 
 
     public static function check_identity_type_id_validation($field)

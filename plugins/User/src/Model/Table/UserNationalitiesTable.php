@@ -247,25 +247,8 @@ class UserNationalitiesTable extends ControllerActionTable {
             $newEntity = $UserIdentities->patchEntity($UserIdentities->newEntity([]), $updateData, ['validate' => false]);
             $UserIdentities->save($newEntity);
 
-            $this->updateNationalityIdentityType($entity);
         }
     }
-
-    protected function updateNationalityIdentityType(Entity $entity)
-    {
-        $Nationalities = self::getDynamicTableInstance('FieldOption.Nationalities');
-        $updateEntity = $Nationalities->newEntity([
-            'id' => $entity->nationality_id,
-            'identity_type_id' => $entity->identity_type_id,
-            'modified_user_id' => $this->Auth->user('id'),
-            'modified' => Time::now()
-        ]);
-
-        Log::debug('Updating nationality identity type: ' . print_r($updateEntity->toArray(), true));
-
-        $Nationalities->save($updateEntity);
-    }
-
 
     public function beforeAction(Event $event) {
         $this->securityUserId =  $this->getQueryString('security_user_id');
@@ -303,6 +286,22 @@ class UserNationalitiesTable extends ControllerActionTable {
             $validator
                 ->notEmptyString('identity_type_id')
                 ->notEmptyString('number')
+                ->add('identity_type_id', 'ruleCustomIdentityType', [
+                    'rule' => ['validateCustomIdentityType'],
+                    'provider' => 'table',
+                ])
+                ->add('number', 'ruleCustomIdentityNumber', [
+                    'rule' => ['validateCustomIdentityNumber'],
+                    'provider' => 'table',
+                    'last' => true
+                ])
+                ->add('number', [
+                    'ruleUnique' => [
+                        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
+                        'provider' => 'table'
+                    ]
+                ])
+                // POCOR-8989 removed external source validation
 //                ->add('number', [
 //                    'ruleNumber' => [
 //                        'rule' => ['check_validate_number'],
@@ -576,184 +575,8 @@ class UserNationalitiesTable extends ControllerActionTable {
             return;
         }
 
-        if ($this->action === 'add') {
-            $this->prependValidateButton($buttons);
-        }
-
-        if ($this->action === 'edit' && !empty($this->securityUserId)) {
-            $identityTypeData = $this->findDataExistInUserIdentityTable(
-                $nationality->identity_type_id,
-                $nationality->id,
-                $this->securityUserId
-            );
-
-            if (!empty($identityTypeData)) {
-                $this->prependValidateButton($buttons);
-            }
-        }
     }
 
-    protected function prependValidateButton(ArrayObject $buttons): void
-    {
-        $button = [
-            [
-                'name' => '<i class="fa fa-chain-broken"></i>' . __('Validate'),
-                'attr' => [
-                    'class' => 'btn btn-default',
-                    'name' => 'submit',
-                    'value' => 'getExternalUsers',
-                    'div' => false
-                ]
-            ]
-        ];
-
-        $originalButtons = $buttons->getArrayCopy();
-        array_splice($originalButtons, 0, 0, $button);
-        $buttons->exchangeArray($originalButtons);
-    }
-
-
-    //search external users
-    public function addEditOnGetExternalUsers()
-    {
-        $userId = $this->getUserID();
-        $queryString = $this->getQueryString();
-        if (isset($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        }
-        $userData = TableRegistry::get('Security.Users')
-            ->find()
-            ->where([
-                'id' => $userId
-            ])->first();
-        $this->autoRender = false;
-        $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-        $attributes = $ExternalAttributes
-            ->find('list', [
-                'keyField' => 'attribute_field',
-                'valueField' => 'value'
-            ])
-            ->innerJoin(['ConfigItems' => 'config_items'], [
-                'ConfigItems.code' => 'external_data_source_type',
-                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
-            ])
-            ->toArray();
-
-        $clientId = $attributes['client_id'];
-        $scope = $attributes['scope'];
-        $tokenUri = $attributes['token_uri'];
-        $privateKey = $attributes['private_key'];
-        //POCOR-7727 start
-        $ConfigItems = TableRegistry::get('config_items');
-        $config_item_result = $ConfigItems->find()->select(["config_value" => $ConfigItems->aliasField('value')])
-            ->where([$ConfigItems->aliasField('code') => 'external_data_source_type'])->first();
-
-        if ($config_item_result->config_value != "Jordan CSPD") { //POCOR-7727 end
-            $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
-            $data = [
-                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                'assertion' => $token
-            ];
-        }
-        $this->request->query['number'] = $this->request->data['UserNationalities']['number'];
-        $this->request->query['identity_number'] =  trim($this->request->query['number']);
-        if($this->request->query['identity_number'] == ''){
-            $this->request->query['validate_number'] = 0;
-            $this->Alert->error('UserNationalities.IdentityNumberNotExist', ['reset' => true]);
-        }elseif($config_item_result->config_value == "Jordan CSPD"){//POCOR-7727 start
-            if (!empty($attributes['username']) && !empty($attributes['password']) && !empty($attributes['url'])) {
-                $national_no= $this->request->query['identity_number'];
-                $soapUrl = $attributes['url'];
-                $soapUser = $attributes['username'];
-                $soapPassword = $attributes['password'];
-                // xml post structure
-                $xml_post_string = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
-                       <soapenv:Header>
-                            <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
-                                <wsse:UsernameToken wsu:Id="UsernameToken-459">
-                                    <wsse:Username>' . $soapUser . '</wsse:Username>
-                                    <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">' . $soapPassword . '</wsse:Password>
-                                </wsse:UsernameToken>
-                            </wsse:Security>
-                        </soapenv:Header>
-                       <soapenv:Body>
-                          <tem:gePersonal>
-                             <!--Optional:-->
-                             <tem:nationalNo>' . $national_no . '</tem:nationalNo>
-                          </tem:gePersonal>
-                       </soapenv:Body>
-                    </soapenv:Envelope>
-                    ';
-                $response = $this->getResponseForJordanCSPD($soapUrl, $soapUser, $soapPassword, $xml_post_string);
-                $nationalNumberExist=$this->getXmlResponseTextNodeCount($response);
-                if ($nationalNumberExist) {
-                    $this->request->query['validate_number'] = 1;
-                    $this->Alert->success('UserNationalities.ValidateNumberSuccess', ['reset' => true]);
-                } else {
-                    $this->request->query['validate_number'] = 0;
-                    $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
-                }
-
-            } else {
-                $this->request->query['validate_number'] = 0;
-                $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
-            }
-        } //POCOR-7727 end
-        else {
-
-            $fieldMapping = [
-                '{page}' => 1,
-                '{limit}' => trim($this->request->query('limit')),
-                '{first_name}' => trim($this->request->query('first_name')),
-                '{last_name}' => trim($this->request->query('last_name')),
-                '{identity_number}' => trim($this->request->query('identity_number')),
-                '{date_of_birth}' => trim($this->request->query('date_of_birth'))
-            ];
-
-            $http = new Client();
-            $response = $http->post($attributes['token_uri'], $data);
-            $noData = json_encode(['data' => [], 'total' => 0], JSON_PRETTY_PRINT);
-            if ($response->isOK()) {
-                $body = $response->body('json_decode');
-                $recordUri = $attributes['record_uri'];
-
-                foreach ($fieldMapping as $key => $map) {
-                    $recordUri = str_replace($key, $map, $recordUri);
-                }
-
-                $http = new Client([
-                    'headers' => ['Authorization' => $body->token_type.' '.$body->access_token]
-                ]);
-
-                $response = $http->get($recordUri);
-                $resultArr = $response->body('json_decode')->data;
-
-                if(!empty($resultArr)){
-                    $countVal = 0;
-                    foreach ($resultArr as $arr) {
-                        //you can remove $arr->openemis_no == $userData->openemis_no this condition while testing
-                        if($arr->openemis_no == $userData->openemis_no && $arr->identity_number == trim($this->request->query('identity_number'))){
-                            $countVal++;
-                        }
-                    }
-
-                    if($countVal > 0){
-                        $this->request->query['validate_number'] = 1;
-                        $this->Alert->success('UserNationalities.ValidateNumberSuccess', ['reset' => true]);
-                    }else{
-                        $this->request->query['validate_number'] = 0;
-                        $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
-                    }
-                }else{
-                    $this->request->query['validate_number'] = 0;
-                    $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
-                }
-            } else {
-                $this->request->query['validate_number'] = 0;
-                $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
-            }
-        }
-    }
 
     public function getNationality($nationalityId){
 

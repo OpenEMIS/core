@@ -8030,7 +8030,7 @@ class InstitutionsController extends AppController
 
             $message = $this->validateCustomIdentityNumber($requestData);
             if (!empty($message)) {
-                return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => $message]);
+                return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => $message]);  // POCOR-8989 
             }
 
             return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]); // POCOR-8989 invalid ID by configuration

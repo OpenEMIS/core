@@ -1197,6 +1197,7 @@ class DirectoriesController extends AppController
                 if ($key == 'UserNationalities') {
                     $actionURL = 'Nationalities';
                 }
+                // POCOR-8989 changed from ?queryString to /queryString/ for better compliance
                 $tabElements[$key]['url'] = ['plugin' => $plugin,
                     'controller' => $name,
                     'action' => $actionURL,
