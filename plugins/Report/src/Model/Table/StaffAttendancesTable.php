@@ -261,7 +261,7 @@ class StaffAttendancesTable extends ControllerActionTable
             WHERE ap.id = {$academicPeriodId}
         ) d2
         WHERE m1 <= d2.end_date
-          AND MONTH(m1) BETWEEN {$startMonth} AND {$endMonth}
+          AND m1 BETWEEN '{$startDate}' AND '{$endDate}'
         ORDER BY m1
     SQL;
     }
