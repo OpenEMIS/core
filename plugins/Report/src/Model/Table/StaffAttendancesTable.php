@@ -217,7 +217,7 @@ class StaffAttendancesTable extends ControllerActionTable
         ;
 
         // Month generator join (creates one row per month)
-        $monthSql = $this->buildMonthGeneratorSQL($academicPeriodId, $startMonth, $endMonth);
+        $monthSql = $this->buildMonthGeneratorSQL($academicPeriodId, $startDate, $endDate);
         $query->join([
             'month_generator' => [
                 'type' => 'INNER',
@@ -242,7 +242,7 @@ class StaffAttendancesTable extends ControllerActionTable
         ]);
     }
 
-    private function buildMonthGeneratorSQL($academicPeriodId, $startMonth, $endMonth)
+    private function buildMonthGeneratorSQL($academicPeriodId, $startDate, $endDate)
     {
         return <<<SQL
         SELECT academic_period_id, YEAR(m1) year_name, MONTH(m1) month_id, MONTHNAME(m1) month_name
