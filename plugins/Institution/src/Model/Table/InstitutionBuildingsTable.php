@@ -859,21 +859,21 @@ class InstitutionBuildingsTable extends ControllerActionTable
     {
         $institutionId = $this->request->getParam('institutionId');
         $params = $this->getQueryString();
+        if(!isset($params['institution_id'])){
+            $params['institution_id'] = $institutionId;
+        }
+//        dd($entity);
         $params['institution_building_id'] = $entity->id;
         $params['institution_building_name'] = $entity->name;
+
         $encodedQueryString = $this->paramsEncode($params);
         $url = [
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
             'action' => 'InstitutionFloors',
             '0' => 'index',
-            '1' => $encodedQueryString,
-            'institutionId' => $institutionId
+            '1' => $encodedQueryString
         ];
-        $url = array_merge($url, $this->request->getQuery());
-        $paramsArr = $this->request->getParam('?'); //POCOR-8523
-        $url = is_array($paramsArr) ? array_merge($url, $paramsArr) : $url; //POCOR-8523
-        //$url = $this->setQueryString($url, ['institution_building_id' => $entity->id, 'institution_building_name' => $entity->name]);
         return $event->getSubject()->HtmlField->link($entity->code, $url);
     }
 
