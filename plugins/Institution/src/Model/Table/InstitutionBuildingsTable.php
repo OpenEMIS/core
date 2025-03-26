@@ -28,15 +28,14 @@ class InstitutionBuildingsTable extends ControllerActionTable
     private $buildingLevel = null;
 
     private $canUpdateDetails = true;
-    private $currentAcademicPeriod = null;
+
 
     public function initialize(array $config): void
     {
         parent::initialize($config);
 
         $this->belongsTo('BuildingStatuses', ['className' => 'Infrastructure.InfrastructureStatuses']);
- //       $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']); // POCOR-8037
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+ //     POCOR-8037
         $this->belongsTo('BuildingTypes', ['className' => 'Infrastructure.BuildingTypes']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
         $this->belongsTo('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'institution_land_id']);
@@ -44,7 +43,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->belongsTo('InfrastructureOwnership', ['className' => 'FieldOption.InfrastructureOwnerships']);
         $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true]);
 
-        // $this->addBehavior('AcademicPeriod.AcademicPeriod'); // POCOR-8037
+        //  POCOR-8037
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         /*$this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
@@ -80,25 +79,15 @@ class InstitutionBuildingsTable extends ControllerActionTable
         return $validator
             ->add('code', [
                 'ruleUnique' => [
-                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
+                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id']]],
                     'provider' => 'table'
                 ]
             ])
-            // POCOR-8037 start
-            // ->add('start_date', [
-            //     'ruleInAcademicPeriod' => [
-            //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-            //     ]
-            // ])
-            // POCOR-8037 end
+            // POCOR-8037
+
             ->add('end_date', [
-                // POCOR-8037 start
-                // ->add('start_date', [
-                // //     'ruleInAcademicPeriod' => [
-                // //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-                // //     ]
-                // ])
-                // POCOR-8037 end
+                // POCOR-8037
+
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', true],
                     'on' => function ($context) { //POCOR-8241 -- Date validation when start_date is not empty
@@ -165,7 +154,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
-// $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave'; // POCOR-8037
+//POCOR-8037
         return $events;
     }
 
@@ -303,7 +292,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->field('end_date', ['visible' => false]);
         $this->field('end_year', ['visible' => false]);
         $this->field('institution_land_id', ['visible' => false]);
-        // $this->field('academic_period_id', ['visible' => false]); // POCOR-8037
+        // POCOR-8037
         $this->field('infrastructure_condition_id', ['visible' => false]);
         $this->field('previous_institution_building_id', ['visible' => false]);
 
@@ -335,13 +324,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $query->where([$this->aliasField('institution_land_id IS NULL')]);
         }
 
-        // POCOR-8037 start
-        // Academic Period
-        // list($periodOptions, $selectedPeriod) = array_values($this->getPeriodOptions());
-        // $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
-        // $this->controller->set(compact('periodOptions', 'selectedPeriod'));
-        // End
-        // POCOR-8037 end
+        // POCOR-8037
+
 
         // Building Types
         list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
@@ -392,7 +376,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-//            'AcademicPeriods', // POCOR-8037
+//   POCOR-8037
             'InstitutionLands', 'BuildingTypes', 'InfrastructureConditions']);
     }
 
@@ -472,54 +456,21 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $this->InstitutionFloors->getAlias()
         ];
 
-        // check if the same building is copy from / copy to other academic period, then not allow user to delete
         // POCOR-8037 start
-        //POCOR-5330 starts
-        $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
-        $this->currentAcademicPeriod = $this->AcademicPeriods->get($currentAcademicPeriodId);
-        $resultQuery = $this->find()->where([$this->aliasField('academic_period_id') => $currentAcademicPeriodId]);
-        //POCOR-5330 ends
-//        $results = $resultQuery
-        // POCSO-8037 end
-        $results = $this->find()
-            ->select([
-                'academic_period_name' => 'AcademicPeriods.name',
-                'count' => $resultQuery->func()->count($this->aliasField('id'))
-            ])
-            ->contain(['AcademicPeriods'])
+
+        $floorQuery = $this->InstitutionFloors
+            ->find()
             ->where([
-                $this->aliasField('code') => $entity->code,
-                $this->aliasField('building_status_id') => $inUseId,
-                $this->aliasField('id <> ') => $entity->id
+                $this->InstitutionFloors->aliasField('institution_building_id') => $entity->id,
+                $this->InstitutionFloors->aliasField('floor_status_id IN ') => [$inUseId, $endOfUsageId]
             ])
-            ->group($this->aliasField('academic_period_id'))
-            ->order([$this->aliasField('start_date')])
             ->all();
 
-        if (!$results->isEmpty()) {
-            $extra['excludedModels'][] = $this->InstitutionFloors->getAlias();
-
-            foreach ($results as $obj) {
-                $title = $this->getAlias() . ' - ' . $obj->academic_period_name;
-                $extra['associatedRecords'][] = [
-                    'model' => $title,
-                    'count' => $obj->count
-                ];
-            }
-        } else {
-            $floorQuery = $this->InstitutionFloors
-                ->find()
-                ->where([
-                    $this->InstitutionFloors->aliasField('institution_building_id') => $entity->id,
-                    $this->InstitutionFloors->aliasField('floor_status_id IN ') => [$inUseId, $endOfUsageId]
-                ])
-                ->all();
-
-            $extra['associatedRecords'][] = [
-                'model' => $this->InstitutionFloors->getAlias(),
-                'count' => $floorQuery->count()
-            ];
-        }
+        $extra['associatedRecords'][] = [
+            'model' => $this->InstitutionFloors->getAlias(),
+            'count' => $floorQuery->count()
+        ];
+        return $extra;
         // end
     }
 
@@ -600,26 +551,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        if ($action == 'add') {
-            $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
-            $this->currentAcademicPeriod = $this->AcademicPeriods->get($currentAcademicPeriodId);
 
-            $attr['type'] = 'readonly';
-            $attr['value'] = $currentAcademicPeriodId;
-            $attr['attr']['value'] = $this->currentAcademicPeriod->name;
-        } elseif ($action == 'edit') {
-            $entity = $attr['entity'];
-            $this->currentAcademicPeriod = $entity->academic_period;
-
-            $attr['type'] = 'readonly';
-            $attr['value'] = $entity->academic_period->id;
-            $attr['attr']['value'] = $entity->academic_period->name;
-        }
-
-        return $attr;
-    }
 
     public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -683,25 +615,23 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $today = new DateTime();
+        $startDate = $today->format('d-m-Y');
         if ($action == 'add') {
-            $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
-            /* restrict Start Date from start until end of academic period
-            $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-            */
-            // temporary restrict until today until have better solution
+
             $today = new DateTime();
-            $endDate = $today->format('d-m-Y');
+            $startDate = $today->format('d-m-Y');
 
             $attr['date_options']['startDate'] = $startDate;
-            $attr['date_options']['endDate'] = $endDate;
+
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
             /**POCOR-6904 starts - modified condition to get start date at the time of edit*/
-            $sDate = '';
+
             if (!empty($entity->start_date)) {
                 $sDate = $entity->start_date;
             } else {
-                $sDate = $this->currentAcademicPeriod->start_date;
+                $sDate = $startDate;
             }
             $attr['type'] = 'readonly';
             $attr['value'] = $sDate->format('Y-m-d');
@@ -715,34 +645,14 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
-            $attr['visible'] = false;
-        } elseif ($action == 'add') {
-            $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-
-            $attr['type'] = 'hidden';
-            $attr['value'] = $endDate;
+            $attr['visible'] = true;
         } elseif ($action == 'edit') {
-            $entity = $attr['entity'];
-
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
-                /* restrict End Date from start date until end of academic period
-                $startDate = $entity->start_date->format('d-m-Y');
-                $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-
-                $attr['date_options']['startDate'] = $startDate;
-                $attr['date_options']['endDate'] = $endDate;
-                */
-
-                // temporary restrict to today until have better solution
                 $today = new DateTime();
-
                 $attr['type'] = 'readonly';
                 $attr['value'] = $today->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($today);
-            } else {
-                $attr['type'] = 'hidden';
-                $attr['value'] = $entity->end_date->format('Y-m-d');
             }
         }
 
@@ -847,18 +757,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
-                /* restrict End Date from start date until end of academic period
-                $startDateObj = $entity->start_date->copy();
-                $startDateObj->addDay();
 
-                $startDate = $startDateObj->format('d-m-Y');
-                $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
-
-                $attr['visible'] = true;
-                $attr['null'] = false;	// for asterisk to appear
-                $attr['date_options']['startDate'] = $startDate;
-                $attr['date_options']['endDate'] = $endDate;
-                */
 
                 // temporary restrict to today until have better solution
                 $today = new DateTime();
@@ -897,13 +796,12 @@ class InstitutionBuildingsTable extends ControllerActionTable
     private function setupFields(Entity $entity)
     {
         $this->setFieldOrder([
-            'change_type', 'institution_land_id', 'academic_period_id', 'institution_id', 'code', 'name', 'building_type_id', 'area', 'building_status_id', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_building_id', 'new_building_type', 'new_start_date'
+            'change_type', 'institution_land_id',  'institution_id', 'code', 'name', 'building_type_id', 'area', 'building_status_id', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_building_id', 'new_building_type', 'new_start_date'
         ]);
 
         $this->field('change_type');
         $this->field('building_status_id', ['type' => 'hidden']);
         $this->field('institution_land_id', ['entity' => $entity]);
-        $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('institution_id');
         $this->field('code');
         $this->field('name');
@@ -1042,42 +940,19 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
         $endOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
 
-        if ($entity->building_status_id == $inUseId) {
-            // If is in use, not allow to delete if the buildings is appear in other academic period
-            $count = $this
-                ->find()
-                ->where([
-                    $this->aliasField('previous_institution_building_id') => $entity->id
-                ])
-                ->count();
-
-            if ($count > 0) {
-                $isEditable = false;
-            }
-        } elseif ($entity->building_status_id == $endOfUsageId) {    // If already end of usage, not allow to edit or delete
+        if ($entity->building_status_id == $endOfUsageId) {
             $isEditable = false;
             $isDeletable = false;
+        }
+        if ($entity->building_status_id == $inUseId) {
+            $isEditable = true;
+            $isDeletable = true;
         }
 
         return compact('isEditable', 'isDeletable');
     }
 
-    public function getPeriodOptions($params = [])
-    {
-        $periodOptions = $this->AcademicPeriods->getYearList();
-        $periodId = $this->request->getQuery('period_id');
 
-        if (is_null($periodId)) {
-            $periodId = $this->AcademicPeriods->getCurrent();
-        }
-
-        $this->request = $this->request->withQueryParams(['period_id' => $periodId]);
-
-        $selectedPeriod = $this->queryString('period_id', $periodOptions);
-        $this->advancedSelectOptions($periodOptions, $selectedPeriod);
-
-        return compact('periodOptions', 'selectedPeriod');
-    }
 
     public function getTypeOptions($params = [])
     {
@@ -1199,52 +1074,14 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function findInUse(Query $query, array $options)
     {
         $institutionId = isset($options['institution_id']) ? $options['institution_id'] : null;
-        $academicPeriodId = isset($options['academic_period_id']) ? $options['academic_period_id'] : null;
         $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
 
         $query->where([
             $this->aliasField('institution_id') => $institutionId,
-            $this->aliasField('academic_period_id') => $academicPeriodId,
             $this->aliasField('building_status_id') => $inUseId
         ]);
 
         return $query;
     }
 
-    public function academicPeriodAfterSave(Event $event, Entity $academicPeriodEntity)
-    {
-        $academicPeriodId = $academicPeriodEntity->id;
-
-        if (!$academicPeriodEntity->isNew()) {
-            $newStartDate = $academicPeriodEntity->start_date;
-            $newEndDate = $academicPeriodEntity->end_date;
-            $originalArray = $academicPeriodEntity->extractOriginal(['start_date', 'end_date']);
-            $originalStartDate = $originalArray['start_date'];
-            $originalEndDate = $originalArray['end_date'];
-
-            if ($newStartDate >= $originalStartDate) {
-                // if new start date is later than original start date, update start date
-                $this->query()
-                    ->update()
-                    ->set(['start_date' => $newStartDate])
-                    ->where([
-                        'academic_period_id' => $academicPeriodId,
-                        'start_date' . ' <= ' => $newStartDate->format('Y-m-d')
-                    ])
-                    ->execute();
-            }
-
-            if ($newEndDate <= $originalEndDate) {
-                // if new end date is earlier than original end date, update end date
-                $this->query()
-                    ->update()
-                    ->set(['end_date' => $newEndDate])
-                    ->where([
-                        'academic_period_id' => $academicPeriodId,
-                        'end_date' . ' >= ' => $newEndDate->format('Y-m-d')
-                    ])
-                    ->execute();
-            }
-        }
-    }
 }

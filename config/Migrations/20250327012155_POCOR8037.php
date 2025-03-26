@@ -18,15 +18,9 @@ class POCOR8037 extends AbstractMigration
 
         // Create backup tables
         foreach ($this->my_tables as $table => $statusField) {
-            try {
+            if (!$this->hasTable('z_8037_' . $table)) {
                 $this->execute("CREATE TABLE `z_8037_$table` LIKE `$table`");
-            } catch (\Exception $e) {
-                // Backup table may already exist
-            }
-            try {
                 $this->execute("INSERT IGNORE INTO `z_8037_$table` SELECT * FROM `$table`");
-            } catch (\Exception $e) {
-                // Handle exception if needed
             }
         }
 
