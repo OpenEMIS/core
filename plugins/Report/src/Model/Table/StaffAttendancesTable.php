@@ -12,8 +12,6 @@ use Cake\Network\Request;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
-use Cake\Datasource\ConnectionManager;
-
 
 class StaffAttendancesTable extends ControllerActionTable
 {
@@ -69,9 +67,7 @@ class StaffAttendancesTable extends ControllerActionTable
     }
 
     /**
-     *  POCOR-5181
-     * staff attendance sheet formate change in POCOR-5181
-     *  add start date end date in where condition . POCOR-7259
+     *  POCOR-9003 refactured
     **/
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -81,28 +77,10 @@ class StaffAttendancesTable extends ControllerActionTable
         // Extract and prepare parameters
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
-        $areaId = $requestData->area_education_id;
         $startDate = date("Y-m-d", strtotime($requestData->report_start_date));
         $endDate = date("Y-m-d", strtotime($requestData->report_end_date));
         $startMonth = date('m', strtotime($startDate));
         $endMonth = date('m', strtotime($endDate));
-
-        // Get related models
-        $StaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendances');
-        $SecurityUsers = TableRegistry::get('security_users');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-
-        $periodEntity = $AcademicPeriods->get($academicPeriodId);
-        $periodStartDate = $periodEntity->start_date->format('Y-m-d');
-        $periodEndDate = $periodEntity->end_date->format('Y-m-d');
-
-        $academicYear = $AcademicPeriods
-            ->find('all')
-            ->select(['name'])
-            ->where(['id' => $academicPeriodId])
-            ->firstOrFail()
-            ->name;
-
         $conditions = [];
         if (!empty($institutionId) && $institutionId != 0) {
             $conditions[] = ['Institutions.id = ' . $institutionId];
