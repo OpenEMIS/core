@@ -259,12 +259,15 @@ class TransitionTable extends ControllerActionTable
     public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['programme']);
-
+        $queryParams = $request->getQueryParams();
+        unset($queryParams['programme']);
+        $request = $request->withQueryParams($queryParams);
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_programme_id', $request->getData()[$this->getAlias()])) {
+                    $selectedGrade = $request->getData()[$this->getAlias()]['education_programme_id'];
+                    $queryParams['programme'] = $selectedGrade;
+                    $request = $request->withQueryParams($queryParams);
                 }
             }
         }

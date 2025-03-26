@@ -646,6 +646,10 @@ class Utils
     public static function getSelfRoutedURLNoQuery()
     {
         $selfURLhost = self::getSelfURLhost();
+        // Ensure HTTPS if it's not already //POCOR-8952
+        if (strpos($selfURLhost, 'http://') === 0) {
+            $selfURLhost = 'https://' . substr($selfURLhost, 7);
+        }
         $route = '';
 
         if (!empty($_SERVER['REQUEST_URI'])) {
