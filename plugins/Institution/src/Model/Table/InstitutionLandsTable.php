@@ -31,7 +31,7 @@ class InstitutionLandsTable extends ControllerActionTable
     private $landLevel = null;
 
     private $canUpdateDetails = true;
-//    private $currentAcademicPeriod = null; // POCOR-8037
+//  POCOR-8037
     private $_dynamicFieldName = 'custom_field_data';
 
     public function initialize(array $config): void
@@ -40,14 +40,14 @@ class InstitutionLandsTable extends ControllerActionTable
 
         $this->belongsTo('LandStatuses', ['className' => 'Infrastructure.InfrastructureStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        // $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']); // POCOR-8037
+        // POCOR-8037
         $this->belongsTo('LandTypes', ['className' => 'Infrastructure.LandTypes']);
         $this->belongsTo('InfrastructureOwnership', ['className' => 'FieldOption.InfrastructureOwnerships']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
         $this->belongsTo('PreviousLands', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'previous_institution_land_id']);
         $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true]);
 
-        // $this->addBehavior('AcademicPeriod.AcademicPeriod'); // POCOR-8037
+        // POCOR-8037
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 //        $this->addBehavior('CustomField.Record', [
 //            'fieldKey' => 'infrastructure_custom_field_id',
