@@ -105,14 +105,14 @@ class StaffAttendancesTable extends ControllerActionTable
 
         $conditions = [];
         if (!empty($institutionId) && $institutionId != 0) {
-            $conditions['Institutions.id'] = $institutionId;
+            $conditions[] = ['Institutions.id = ' . $institutionId];
             $conditionSQL = "AND institution_staff_attendances.institution_id = {$institutionId}";
         } else {
             $conditionSQL = '';
         }
 
         if (!empty($academicPeriodId)) {
-            $conditions['academic_periods.id'] = $academicPeriodId;
+            $conditions[] = ['academic_periods.id = ' . $academicPeriodId];
         }
 
         // Apply joins
@@ -143,11 +143,8 @@ class StaffAttendancesTable extends ControllerActionTable
             'institution_code' => 'Institutions.code',
             'institution_name' => 'Institutions.name',
             'institution_id' => 'Institutions.id',
-            'position_title' => $query->func()->concat([
-                'InstitutionPositions.position_no' => 'literal',
-                " - ",
-                'StaffPositionTitles.name' => 'literal'
-            ]),
+            'position_title' =>
+                'CONCAT(`InstitutionPositions`.`position_no`, " - ", `StaffPositionTitles`.`name`)',
             'identity_type' => 'IdentityTypes.name',
             'identity_number' => 'UserIdentity.number',
             'openemis_no' => 'security_users.openemis_no',
@@ -193,7 +190,7 @@ class StaffAttendancesTable extends ControllerActionTable
             ])
             ->leftJoin(['Nationalities' => 'nationalities'], [
                 'Nationalities.id = UserNationalities.nationality_id',
-                'AND' => ['Nationalities.default' => 1]
+                'AND' => ['Nationalities.default = 1']
             ])
             ->leftJoin(['IdentityTypes' => 'identity_types'], [
                 'IdentityTypes.id = Nationalities.identity_type_id',
