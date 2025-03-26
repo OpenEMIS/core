@@ -1,0 +1,270 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class IdpSaml extends Model
+{
+    use HasFactory;
+
+    protected $table = 'idp_saml';
+
+    // ✅ Allow mass assignment
+    protected $fillable = ['system_authentication_id', 'idp_entity_id', 'idp_sso', 'idp_sso_binding', 'idp_slo', 'idp_slo_binding', 'idp_x509cert', 'idp_cert_fingerprint', 'idp_cert_fingerprint_algorithm', 'sp_entity_id', 'sp_acs', 'sp_slo', 'sp_name_id_format', 'sp_private_key', 'sp_metadata'];
+
+    // ✅ Disable Laravel's default timestamps
+    public $timestamps = false;
+
+    // ✅ Treat 'modified' and 'created' as timestamps
+    protected $dates = ['modified', 'created'];
+
+    // ✅ Define the primary key
+
+    protected $primaryKey = 'system_authentication_id';
+    public $incrementing = false;
+
+     // Override getKeyForSaveQuery to handle composite keys
+/**
+ * @OA\PathItem(
+ *     path="/api/v5/idp-saml"
+ * )
+ */
+public function _swaggerPath() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/idp-saml",
+ *     summary="Get list of IdpSaml",
+ *     tags={"IdpSaml"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Successful."
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+                          @OA\Property(property="system_authentication_id", type="integer", example=null),
+                          @OA\Property(property="idp_entity_id", type="string", example=null),
+                          @OA\Property(property="idp_sso", type="string", example=null),
+                          @OA\Property(property="idp_sso_binding", type="string", example=null),
+                          @OA\Property(property="idp_slo", type="string", example=null),
+                          @OA\Property(property="idp_slo_binding", type="string", example=null),
+                          @OA\Property(property="idp_x509cert", type="string", example=null),
+                          @OA\Property(property="idp_cert_fingerprint", type="string", example=null),
+                          @OA\Property(property="idp_cert_fingerprint_algorithm", type="string", example=null),
+                          @OA\Property(property="sp_entity_id", type="string", example=null),
+                          @OA\Property(property="sp_acs", type="string", example=null),
+                          @OA\Property(property="sp_slo", type="string", example=null),
+                          @OA\Property(property="sp_name_id_format", type="string", example=null),
+                          @OA\Property(property="sp_private_key", type="string", example=null),
+                          @OA\Property(property="sp_metadata", type="string", example=null)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerList() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/idp-saml/{id}",
+ *     summary="Get IdpSaml by ID",
+ *     tags={"IdpSaml"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the IdpSaml",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Post(
+ *     path="/api/v5/idp-saml",
+ *     summary="Create a new IdpSaml",
+ *     tags={"IdpSaml"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="system_authentication_id", type="integer", example=null),
+                     @OA\Property(property="idp_entity_id", type="string", example=null),
+                     @OA\Property(property="idp_sso", type="string", example=null),
+                     @OA\Property(property="idp_sso_binding", type="string", example=null),
+                     @OA\Property(property="idp_slo", type="string", example=null),
+                     @OA\Property(property="idp_slo_binding", type="string", example=null),
+                     @OA\Property(property="idp_x509cert", type="string", example=null),
+                     @OA\Property(property="idp_cert_fingerprint", type="string", example=null),
+                     @OA\Property(property="idp_cert_fingerprint_algorithm", type="string", example=null),
+                     @OA\Property(property="sp_entity_id", type="string", example=null),
+                     @OA\Property(property="sp_acs", type="string", example=null),
+                     @OA\Property(property="sp_slo", type="string", example=null),
+                     @OA\Property(property="sp_name_id_format", type="string", example=null),
+                     @OA\Property(property="sp_private_key", type="string", example=null),
+                     @OA\Property(property="sp_metadata", type="string", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Created successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerCreate() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/idp-saml/{id}",
+ *     summary="Update IdpSaml",
+ *     tags={"IdpSaml"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the IdpSaml",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="system_authentication_id", type="integer", example=null),
+                     @OA\Property(property="idp_entity_id", type="string", example=null),
+                     @OA\Property(property="idp_sso", type="string", example=null),
+                     @OA\Property(property="idp_sso_binding", type="string", example=null),
+                     @OA\Property(property="idp_slo", type="string", example=null),
+                     @OA\Property(property="idp_slo_binding", type="string", example=null),
+                     @OA\Property(property="idp_x509cert", type="string", example=null),
+                     @OA\Property(property="idp_cert_fingerprint", type="string", example=null),
+                     @OA\Property(property="idp_cert_fingerprint_algorithm", type="string", example=null),
+                     @OA\Property(property="sp_entity_id", type="string", example=null),
+                     @OA\Property(property="sp_acs", type="string", example=null),
+                     @OA\Property(property="sp_slo", type="string", example=null),
+                     @OA\Property(property="sp_name_id_format", type="string", example=null),
+                     @OA\Property(property="sp_private_key", type="string", example=null),
+                     @OA\Property(property="sp_metadata", type="string", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Updated successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerUpdate() {}
+
+/**
+ * @OA\Delete(
+ *     path="/api/v5/idp-saml/{id}",
+ *     summary="Delete IdpSaml",
+ *     tags={"IdpSaml"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the IdpSaml",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Deleted successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerDelete() {}
+    protected function getKeyForSaveQuery()
+    {
+        $query = $this->newQueryWithoutScopes();
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    // Override setKeysForSaveQuery to handle composite keys
+    protected function setKeysForSaveQuery($query)
+    {
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    public static function getValidationRules(): array
+    {
+        return [
+            // Add validation rules here
+        ];
+    }
+
+
+
+
+    public function _swaggerHelper() {
+        return;
+    }
+}
