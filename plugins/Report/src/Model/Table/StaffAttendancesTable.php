@@ -134,6 +134,7 @@ class StaffAttendancesTable extends ControllerActionTable
                 return $row;
             });
         });
+        Log::debug($query->sql());
     }
 
     private function applySelectFields(Query $query)
