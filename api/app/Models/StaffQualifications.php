@@ -41,6 +41,24 @@ class StaffQualifications extends Model
         self::bootNumericId();
     }
      // Override getKeyForSaveQuery to handle composite keys
+
+
+
+
+
+
+    public static function getValidationRules(): array
+    {
+        return [
+            // Add validation rules here
+        ];
+    }
+
+
+
+
+
+
 /**
  * @OA\PathItem(
  *     path="/api/v5/staff-qualifications"
@@ -53,6 +71,41 @@ public function _swaggerPath() {}
  *     path="/api/v5/staff-qualifications",
  *     summary="Get list of StaffQualifications",
  *     tags={"StaffQualifications"},
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Maximum number of results to return",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number for paginated results",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="orderby",
+ *         in="query",
+ *         required=false,
+ *         description="Field to order results by",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order direction: asc or desc",
+ *         @OA\Schema(type="string", enum={"asc", "desc"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="_fields",
+ *         in="query",
+ *         required=false,
+ *         description="Comma-separated list of fields to include in response",
+ *         @OA\Schema(type="string")
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Successful operation",
@@ -241,17 +294,6 @@ public function _swaggerUpdate() {}
  * )
  */
 public function _swaggerDelete() {}
-
-    public static function getValidationRules(): array
-    {
-        return [
-            // Add validation rules here
-        ];
-    }
-
-
-
-
     public function _swaggerHelper() {
         return;
     }
