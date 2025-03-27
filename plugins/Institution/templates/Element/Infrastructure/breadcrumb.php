@@ -8,7 +8,7 @@
 	                'controller' => 'Institutions',
 	                'action' => 'InstitutionLands',
 	                'index',
-	                '1' => $encodedQueryString
+	                '1' => $encodedQueryString // POCOR-8037
 	            ]
 		]);
 	?>
