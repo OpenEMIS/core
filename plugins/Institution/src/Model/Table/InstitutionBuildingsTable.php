@@ -919,7 +919,14 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $params = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($params);
         $crumbs[] = [
-            'name' => $this->getQueryString('institution_land_name')
+            'name' => $params['institution_land_name'],
+            'url' => [
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
+                'action' => 'InstitutionLands',
+                '0' => 'index',
+                '1' => $encodedQueryString
+            ]
         ];
         $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => ['encodedQueryString' => $encodedQueryString, 'crumbs'=>$crumbs], 'options' => [], 'order' => 1];
 
