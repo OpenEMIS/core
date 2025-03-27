@@ -28,7 +28,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     private $roomLevel = null;
 
     private $canUpdateDetails = true;
-
+    // POCOR-8037 removed academic period code
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -36,6 +36,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->belongsTo('RoomStatuses', ['className' => 'Infrastructure.InfrastructureStatuses', 'foreignKey' => 'room_status_id']);
         $this->belongsTo('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'foreignKey' => 'institution_floor_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        // POCOR-8037 removed academic period code
         $this->belongsTo('RoomTypes', ['className' => 'Infrastructure.RoomTypes']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
         $this->belongsTo('PreviousRooms', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'previous_institution_room_id']);
@@ -50,6 +51,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        // POCOR-8037 removed academic period code
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         //comment cakephp4
         /*$this->addBehavior('CustomField.Record', [
@@ -90,13 +92,13 @@ class InstitutionRoomsTable extends ControllerActionTable
             ->add('code', [
                 'ruleUnique' => [
                     //POCOR-8060 - start_date can be empty
-                    'rule' => ['validateUnique', ['scope' => ['institution_id']]],
+                    'rule' => ['validateUnique', ['scope' => ['institution_id']]], // POCOR-8037 removed academic period code
                     'provider' => 'table'
                 ]
             ])
-
+            // POCOR-8037 removed academic period code
             ->add('end_date', [
-
+            // POCOR-8037 removed academic period code
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', true]
                 ]
@@ -155,13 +157,13 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function findSubjectRoomOptions(Query $query, array $options)
     {
-
+        // POCOR-8037 removed academic period code
         $institutionSubjectId = $options['institution_subject_id'];
         $classSubjectsTable = TableRegistry::get('Institution.InstitutionClassSubjects');
         $institution = $classSubjectsTable->find()->contain('InstitutionClasses.InstitutionShifts')->where([$classSubjectsTable->aliasField('institution_subject_id') => $institutionSubjectId])->first();
         return $query
             ->find('inUse', ['institution_id' => $institution->institution_class->institution_shift->institution_id,
-                ])
+                ]) // POCOR-8037 removed academic period code
             ->contain(['RoomTypes'])
             ->where(['RoomTypes.classification' => 1]) // classification 1 is equal to Classroom, 0 is Non_Classroom
             ->order(['RoomTypes.order', $this->aliasField('code'), $this->aliasField('name')])
@@ -177,6 +179,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
+        // POCOR-8037 removed academic period code
         $events['ControllerAction.Model.add.beforeAction'] = 'addDeleteBeforeAction';
         return $events;
     }
@@ -258,6 +261,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        // POCOR-8037 added academic period code for subjects start
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
         if ($entity->has('subjects')) {
@@ -271,6 +275,7 @@ class InstitutionRoomsTable extends ControllerActionTable
                 $academicPeriodName = $AcademicPeriods->get($obj->academic_period_id)->name;
                 $resultArray[] = $academicPeriodName . ' - ' . $className . ' - ' . $obj->name;
             }
+            // POCOR-8037 added academic period code for subjects end
 
             if (!empty($resultArray)) {
                 return implode(', ', $resultArray);
@@ -354,6 +359,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->field('start_year', ['visible' => false]);
         $this->field('end_date', ['visible' => false]);
         $this->field('end_year', ['visible' => false]);
+        // POCOR-8037 removed academic period code
         $this->field('infrastructure_condition_id', ['visible' => false]);
         $this->field('area', ['visible' => false]);
         $this->field('previous_institution_room_id', ['visible' => false]);
@@ -389,6 +395,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             $query->where([$this->aliasField('institution_floor_id IS NULL')]);
         }
 
+        // POCOR-8037 removed academic period code
         // Room Types
         list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
         if ($selectedType != '-1') {
@@ -437,6 +444,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // POCOR-8037 removed academic period code
         $query->contain(['RoomTypes', 'InfrastructureConditions', 'Subjects']);
     }
 
@@ -514,6 +522,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
         //$extra['excludedModels'] = [$this->CustomFieldValues->getAlias()];//POCOR-7485
 
+    // POCOR-8037 removed academic period code
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -623,6 +632,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     //     return $attr;
     // }
 
+    // POCOR-8037 removed academic period code
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'index' || $action == 'view') {
@@ -703,6 +713,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         $today = new DateTime();
+        // POCOR-8037 removed academic period code
         $startDate = $today->format('d-m-Y');
         $attr['date_options']['startDate'] = $startDate;
 
@@ -711,6 +722,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
+        // POCOR-8037 removed academic period code start
         if ($action == 'view') {
             $attr['visible'] = true;
         } elseif ($action == 'add' || $action == 'edit') {
@@ -731,6 +743,7 @@ class InstitutionRoomsTable extends ControllerActionTable
                 $attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');
             }
         }
+        // POCOR-8037 removed academic period code end
 
         return $attr;
     }
@@ -774,11 +787,11 @@ class InstitutionRoomsTable extends ControllerActionTable
         $attr['visible'] = $visibility;
         // end POCOR-3849
 
-        if ($visibility && ($action == 'add' || $action == 'edit')) {
+        if ($visibility && ($action == 'add' || $action == 'edit')) { // POCOR-8037 removed academic period code
 
             $institutionId = $this->getInstitutionID();
 
-            $attr['options'] = $this->getSubjectOptions(['institution_id' => $institutionId]);
+            $attr['options'] = $this->getSubjectOptions(['institution_id' => $institutionId]); // POCOR-8037 removed academic period code
         }
 
         if (!$this->canUpdateDetails) {
@@ -825,10 +838,10 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         if ($action == 'edit') {
 
-
+            // POCOR-8037 removed academic period code
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
-
+                // POCOR-8037 removed academic period code
 
                 // temporary restrict to today until have better solution
                 $today = new DateTime();
@@ -867,13 +880,14 @@ class InstitutionRoomsTable extends ControllerActionTable
     private function setupFields(Entity $entity)
     {
         $this->setFieldOrder([
-            'change_type',
+            'change_type', // POCOR-8037 removed academic period code
             'institution_id',
             'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_room_id','area', 'new_room_type', 'new_start_date'
         ]);
 
         $this->field('change_type');
         $this->field('room_status_id', ['type' => 'hidden']);
+        // POCOR-8037 removed academic period code
         $this->field('institution_id');
         $this->field('institution_floor_id');
         $this->field('code');
@@ -951,13 +965,12 @@ class InstitutionRoomsTable extends ControllerActionTable
     private function addBreadcrumbElement()
     {
         $params = $this->getQueryString();
+        // POCOR-8037 fixed urls for crumbs start
         $encodedQueryString = $this->paramsEncode(['institution_id' => $params['institution_id']]);
-        $entity = $this->InstitutionFloors->get($this->getQueryString('institution_floor_id'), ['contain' => ['InstitutionBuildings.InstitutionLands']]);
         $url = $this->url('index');
         if (isset($url[1])) {
             unset($url[1]);
         }
-        $institutionId = $this->getQueryString('institution_id');
 
         $buildingUrl = $url;
         $buildingUrl['action'] = 'InstitutionBuildings';
@@ -988,6 +1001,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $crumbs[] = [
             'name' => $params['institution_floor_name']
         ];
+        // POCOR-8037 fixed urls for crumbs end
         $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => ['encodedQueryString' => $encodedQueryString, 'crumbs'=>$crumbs], 'options' => [], 'order' => 1];
 
         return $toolbarElements;
@@ -995,6 +1009,8 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     private function addControlFilterElement()
     {
+        // POCOR-8037 fixed
+        list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
         $toolbarElements = ['name' => 'Institution.Infrastructure/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => [], 'order' => 2];
 
         return $toolbarElements;
@@ -1008,7 +1024,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
         $endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
 
-        if ($entity->room_status_id == $endOfUsageId) {    // If already end of usage, not allow to edit or delete
+        if ($entity->room_status_id == $endOfUsageId) {    // POCOR-8037 removed academic period code
             $isEditable = false;
             $isDeletable = false;
         }
@@ -1069,7 +1085,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $this->controller->redirect($url);
     }
 
-
+    // POCOR-8037 removed academic period code
     public function getTypeOptions($params = [])
     {
         $withAll = isset($params['withAll']) ? $params['withAll'] : false;
@@ -1120,6 +1136,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $options = [];
 
         $Classes = $this->Subjects->Classes;
+        // POCOR-8037 added academic period code start
         $where = [
             $Classes->aliasField('institution_id') => $institutionId,
         ];
@@ -1130,7 +1147,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             ->where($where)
             ->order(['AcademicPeriods.code' => 'ASC', $Classes->aliasField('name') => 'ASC'])
             ->toArray();
-//        dd($classOptions);
+
         foreach ($classOptions as $classKey => $class) {
             $className = $class->name;
             if ($class->has('subjects')) {
@@ -1140,7 +1157,7 @@ class InstitutionRoomsTable extends ControllerActionTable
                 }
             }
         }
-
+        // POCOR-8037 added academic period end
         return $options;
     }
 
@@ -1166,17 +1183,18 @@ class InstitutionRoomsTable extends ControllerActionTable
     public function findInUse(Query $query, array $options)
     {
         $institutionId = isset($options['institution_id']) ? $options['institution_id'] : null;
+        // POCOR-8037 removed academic period code
         $inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
 
         $query->where([
-            $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('institution_id') => $institutionId, // POCOR-8037 removed academic period code
             $this->aliasField('room_status_id') => $inUseId
         ]);
 
         return $query;
     }
 
-
+    // POCOR-8037 removed academic period code
     public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
     {
 
