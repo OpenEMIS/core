@@ -859,6 +859,7 @@ class InstitutionFloorsTable extends ControllerActionTable
 
     private function addControlFilterElement()
     {
+        list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
         $toolbarElements = ['name' => 'Institution.Infrastructure/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => [], 'order' => 2];
         return $toolbarElements;
     }
