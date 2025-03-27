@@ -85,7 +85,13 @@ class InstitutionLandsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         return $validator
-            ->allowEmpty('name')
+            ->notEmptyString('name')
+            ->notEmptyString('code')
+            ->notEmptyString('area')
+            ->notEmptyString('accessibility')
+            ->notEmptyString('year_acquired')
+            ->notEmptyString('infrastructure_condition_id')
+            ->notEmptyString('infrastructure_ownership_id')
             ->add('code', [
                 'ruleUnique' => [
                     //'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
@@ -96,8 +102,6 @@ class InstitutionLandsTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ])
-            ->allowEmptyString('area') //POCOR-8523 // POCOR-8037
-            //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
                 'rule' => function ($value, $context) {
                     // Check if datatype is 'copy'
@@ -696,7 +700,10 @@ class InstitutionLandsTable extends ControllerActionTable
                 $attr['value'] = $today->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($today);
             } else {
-                $attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');
+                $start_date = $entity->start_date;
+                if (!empty($start_date)) {
+                    $attr['date_options']['startDate'] = $start_date->format('d-m-Y');
+                }
             }
         }
         // POCOR-8037 removed academic period code end
