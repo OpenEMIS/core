@@ -39,6 +39,11 @@ use UuidId;
     
 
      // Override getKeyForSaveQuery to handle composite keys
+
+
+
+
+
 /**
  * @OA\PathItem(
  *     path="/api/v5/training-courses-target-populations"
@@ -51,6 +56,41 @@ public function _swaggerPath() {}
  *     path="/api/v5/training-courses-target-populations",
  *     summary="Get list of TrainingCoursesTargetPopulations",
  *     tags={"TrainingCoursesTargetPopulations"},
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Maximum number of results to return",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number for paginated results",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="orderby",
+ *         in="query",
+ *         required=false,
+ *         description="Field to order results by",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order direction: asc or desc",
+ *         @OA\Schema(type="string", enum={"asc", "desc"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="_fields",
+ *         in="query",
+ *         required=false,
+ *         description="Comma-separated list of fields to include in response",
+ *         @OA\Schema(type="string")
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Successful operation",
@@ -237,6 +277,8 @@ public function _swaggerDelete() {}
             // Add validation rules here
         ];
     }
+
+
 
 
 
