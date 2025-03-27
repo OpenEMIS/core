@@ -822,40 +822,33 @@ class InstitutionFloorsTable extends ControllerActionTable
     {
         $crumbs = [];
         $params = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($params);
-
-
-        $institution_building_id = $params['institution_building_id'];
-
-        $entity = $this->InstitutionBuildings->get($institution_building_id, ['contain' => ['InstitutionLands']]);
+        $institutionQueryString = $this->paramsEncode(['institution_id' => $params['institution_id']]);
         $url = $this->url('index');
         if (isset($url[1])) {
             unset($url[1]);
         }
 
-        $institutionId = $params['institution_id'];
-
-        $buildingUrl = $url;
-        $buildingUrl['action'] = 'InstitutionBuildings';
-        $buildingUrl['0'] = 'index';
-//        $buildingUrl['1'] = $encodedQueryString;
+        $landUrl = $url;
+        $landUrl['action'] = 'InstitutionBuildings';
+        $landUrl['0'] = 'index';
         $land_params = [
-            'institution_land_id' => $entity->institution_land->id,
-            'institution_land_name' => $entity->institution_land->code,
-            'institution_id' => $institutionId
+            'institution_land_id' => $params['institution_land_id'],
+            'institution_land_name' => $params['institution_land_name'],
+            'institution_id' => $params['institution_id'],
         ];
-        $buildingUrl['1'] = $this->paramsEncode($land_params);
-
-
+        $landUrl['1'] = $this->paramsEncode($land_params);
 
         $crumbs[] = [
-            'name' => $entity->institution_land->code,
-            'url' => $buildingUrl
+            'name' => $params['institution_land_name'],
+            'url' => $landUrl
         ];
         $crumbs[] = [
-            'name' => $this->getQueryString('institution_building_name')
+            'name' => $params['institution_building_name']
         ];
-        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => ['encodedQueryString' => $encodedQueryString, 'crumbs'=>$crumbs], 'options' => [], 'order' => 1];
+        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb',
+            'data' => ['encodedQueryString' => $institutionQueryString,
+            'crumbs'=>$crumbs],
+            'options' => [], 'order' => 1];
 
         return $toolbarElements;
     }
