@@ -331,6 +331,11 @@ class InstitutionRoomsTable extends ControllerActionTable
                 unset($buttons[$action]['url']['edit_type']);
             }
         }
+        $queryString = $buttons['remove']['url']['1'];
+        $params = $this->paramsDecode($queryString);
+        $params['id'] = $entity->id;
+        $queryString = $this->paramsEncode($params);
+        $buttons['remove']['url']['1'] = $queryString;
 
         return $buttons;
     }
