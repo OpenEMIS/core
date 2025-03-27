@@ -77,6 +77,13 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         return $validator
+            ->notEmptyString('name')
+            ->notEmptyString('code')
+            ->notEmptyString('area')
+            ->notEmptyString('accessibility')
+            ->notEmptyString('year_acquired')
+            ->notEmptyString('infrastructure_condition_id')
+            ->notEmptyString('infrastructure_ownership_id')
             ->add('code', [
                 'ruleUnique' => [
                     'rule' => ['validateUnique', ['scope' => ['institution_id']]], // POCOR-8037 removed academic period code
@@ -100,7 +107,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'start_date', false]
                 ]
             ])
-            ->allowEmpty('area') //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
                 'rule' => function ($value, $context) {
                     // Check if datatype is 'copy'
@@ -639,7 +645,9 @@ class InstitutionBuildingsTable extends ControllerActionTable
                 $attr['value'] = $today->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($today);
             } else {
-                $attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');
+                if (!empty($start_date)) {
+                    $attr['date_options']['startDate'] = $start_date->format('d-m-Y');
+                }
             }
         }
         // POCOR-8037 removed academic period code end
