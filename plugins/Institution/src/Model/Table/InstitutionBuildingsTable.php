@@ -612,45 +612,37 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         $today = new DateTime();
+        // POCOR-8037 removed academic period code
         $startDate = $today->format('d-m-Y');
-        if ($action == 'add') {
-
-            $today = new DateTime();
-            $startDate = $today->format('d-m-Y');
-
-            $attr['date_options']['startDate'] = $startDate;
-
-        } elseif ($action == 'edit') {
-            $entity = $attr['entity'];
-            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/
-
-            if (!empty($entity->start_date)) {
-                $sDate = $entity->start_date;
-            } else {
-                $sDate = $startDate;
-            }
-            $attr['type'] = 'readonly';
-            $attr['value'] = $sDate->format('Y-m-d');
-            $attr['attr']['value'] = $this->formatDate($sDate);
-            /**POCOR-6904 ends*/
-        }
+        $attr['date_options']['startDate'] = $startDate;
 
         return $attr;
     }
 
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
+        // POCOR-8037 removed academic period code start
         if ($action == 'view') {
             $attr['visible'] = true;
-        } elseif ($action == 'edit') {
+        } elseif ($action == 'add' || $action == 'edit') {
+
+            $entity = $attr['entity'];
+
+            //$selectedEditType = $request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
+
+                // temporary restrict to today until have better solution
                 $today = new DateTime();
+
                 $attr['type'] = 'readonly';
                 $attr['value'] = $today->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($today);
+            } else {
+                $attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');
             }
         }
+        // POCOR-8037 removed academic period code end
 
         return $attr;
     }
