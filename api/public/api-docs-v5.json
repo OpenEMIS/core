@@ -140412,13 +140412,13 @@
                 }
             }
         },
-        "/api/v5/alerts_roles/alert_rule_id/{alert_rule_id}/security_role_id/{security_role_id}": {
+        "/api/v5/alerts-roles/alert_rule_id/{alert_rule_id}/security_role_id/{security_role_id}": {
             "get": {
                 "tags": [
                     "AlertsRoles"
                 ],
                 "summary": "Get AlertsRoles record by composite key",
-                "operationId": "5413d0df75059664780d3edb69393da5",
+                "operationId": "70d73ac801db10f9efda68e9396f52f3",
                 "parameters": [
                     {
                         "name": "alert_rule_id",
@@ -140453,7 +140453,7 @@
                     "AlertsRoles"
                 ],
                 "summary": "Update AlertsRoles record by composite key",
-                "operationId": "e4f88e067c8e0c57c7832a37475f18cf",
+                "operationId": "c6a14f0c1e75de28989d740b62f48621",
                 "parameters": [
                     {
                         "name": "alert_rule_id",
@@ -140501,7 +140501,7 @@
                     "AlertsRoles"
                 ],
                 "summary": "Delete AlertsRoles record by composite key",
-                "operationId": "bf37075cf5294aac49f423efa25d4032",
+                "operationId": "227c352e571e8ad7d70b27cd617bb4f4",
                 "parameters": [
                     {
                         "name": "alert_rule_id",
@@ -140802,13 +140802,13 @@
                 }
             }
         },
-        "/api/v5/api_credentials_scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}": {
+        "/api/v5/api-credentials-scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}": {
             "get": {
                 "tags": [
                     "ApiCredentialsScopes"
                 ],
                 "summary": "Get ApiCredentialsScopes record by composite key",
-                "operationId": "6405d325235a0b32dafb8829dc4647a7",
+                "operationId": "465ce90ac57db5fb51e2583042a42a61",
                 "parameters": [
                     {
                         "name": "api_credential_id",
@@ -140843,7 +140843,7 @@
                     "ApiCredentialsScopes"
                 ],
                 "summary": "Update ApiCredentialsScopes record by composite key",
-                "operationId": "bae666eb2efd47449c565803206e8248",
+                "operationId": "928d376b8e4e9b1741ce2064e4f0d2ac",
                 "parameters": [
                     {
                         "name": "api_credential_id",
@@ -140891,7 +140891,7 @@
                     "ApiCredentialsScopes"
                 ],
                 "summary": "Delete ApiCredentialsScopes record by composite key",
-                "operationId": "f800e42afc5582f3ef574588737976b3",
+                "operationId": "1be0f1f94e0f1fd4045676aba7c2ef3a",
                 "parameters": [
                     {
                         "name": "api_credential_id",
@@ -141186,13 +141186,13 @@
                 }
             }
         },
-        "/api/v5/api_securities_scopes/api_security_id/{api_security_id}/api_scope_id/{api_scope_id}": {
+        "/api/v5/api-securities-scopes/api_security_id/{api_security_id}/api_scope_id/{api_scope_id}": {
             "get": {
                 "tags": [
                     "ApiSecuritiesScopes"
                 ],
                 "summary": "Get ApiSecuritiesScopes record by composite key",
-                "operationId": "1a00ae9c9a0c1c38a70c1ccb0180d8e5",
+                "operationId": "8ba2331662fb20188ee8023920b718b5",
                 "parameters": [
                     {
                         "name": "api_security_id",
@@ -141227,7 +141227,7 @@
                     "ApiSecuritiesScopes"
                 ],
                 "summary": "Update ApiSecuritiesScopes record by composite key",
-                "operationId": "9df8f5ee7e786d5744646cb062601402",
+                "operationId": "ce8757d765a6838cd60bfd392f190748",
                 "parameters": [
                     {
                         "name": "api_security_id",
@@ -141275,7 +141275,7 @@
                     "ApiSecuritiesScopes"
                 ],
                 "summary": "Delete ApiSecuritiesScopes record by composite key",
-                "operationId": "3326763fb75dd587d48fdfd329845aac",
+                "operationId": "7ea24db56cb945b54033bc724ffeb308",
                 "parameters": [
                     {
                         "name": "api_security_id",
@@ -141441,13 +141441,13 @@
                 }
             }
         },
-        "/api/v5/appraisal_dropdown_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}": {
+        "/api/v5/appraisal-dropdown-answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}": {
             "get": {
                 "tags": [
                     "AppraisalDropdownAnswers"
                 ],
                 "summary": "Get AppraisalDropdownAnswers record by composite key",
-                "operationId": "d10b64d79b2b6e04c1627f916f87dcce",
+                "operationId": "f87703588d560c65f81183536ca86acc",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -141491,7 +141491,7 @@
                     "AppraisalDropdownAnswers"
                 ],
                 "summary": "Update AppraisalDropdownAnswers record by composite key",
-                "operationId": "529a755b46cb3d71216bceac01f35765",
+                "operationId": "95dd5decced4c0087d9ab49d90dbe313",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -141548,7 +141548,7 @@
                     "AppraisalDropdownAnswers"
                 ],
                 "summary": "Delete AppraisalDropdownAnswers record by composite key",
-                "operationId": "1df19db3e72d25cbd1cfb727f0a6eec1",
+                "operationId": "9acdd22acb7954ead92848df84173614",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -141858,13 +141858,13 @@
                 }
             }
         },
-        "/api/v5/appraisal_forms_criterias/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}": {
+        "/api/v5/appraisal-forms-criterias/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}": {
             "get": {
                 "tags": [
                     "AppraisalFormsCriterias"
                 ],
                 "summary": "Get AppraisalFormsCriterias record by composite key",
-                "operationId": "6bbf66279c727b3fd3a2819f13700e3d",
+                "operationId": "653cc00606059f331b3057bd7b342928",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -141899,7 +141899,7 @@
                     "AppraisalFormsCriterias"
                 ],
                 "summary": "Update AppraisalFormsCriterias record by composite key",
-                "operationId": "099b9b774682ebc6e1b0ed63d24e6c70",
+                "operationId": "4cd870f1354c1a0f6e70f527208a61ed",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -141947,7 +141947,7 @@
                     "AppraisalFormsCriterias"
                 ],
                 "summary": "Delete AppraisalFormsCriterias record by composite key",
-                "operationId": "66d633f1d24958d8bf2b1eef7ec7da8e",
+                "operationId": "852c349e70e582181a19ed0841dd21c2",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -141978,13 +141978,13 @@
                 }
             }
         },
-        "/api/v5/appraisal_forms_criterias_scores/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}": {
+        "/api/v5/appraisal-forms-criterias-scores/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}": {
             "get": {
                 "tags": [
                     "AppraisalFormsCriteriasScores"
                 ],
                 "summary": "Get AppraisalFormsCriteriasScores record by composite key",
-                "operationId": "c63da1bca9af8e122b9a636ae2abc018",
+                "operationId": "246a9d49dd73217b2c6e7500f91a0da8",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142019,7 +142019,7 @@
                     "AppraisalFormsCriteriasScores"
                 ],
                 "summary": "Update AppraisalFormsCriteriasScores record by composite key",
-                "operationId": "3a0a4cc93c60ece9c785079b72a05910",
+                "operationId": "4e2f565b59d49c8251ad716ea19de408",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142067,7 +142067,7 @@
                     "AppraisalFormsCriteriasScores"
                 ],
                 "summary": "Delete AppraisalFormsCriteriasScores record by composite key",
-                "operationId": "bcc5689778730c46ef3502607bfe10ce",
+                "operationId": "5a0eb5b8b20539869fc93fcb4b9a049e",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142098,13 +142098,13 @@
                 }
             }
         },
-        "/api/v5/appraisal_forms_criterias_scores_links/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/appraisal_criteria_linked_id/{appraisal_criteria_linked_id}": {
+        "/api/v5/appraisal-forms-criterias-scores-links/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/appraisal_criteria_linked_id/{appraisal_criteria_linked_id}": {
             "get": {
                 "tags": [
                     "AppraisalFormsCriteriasScoresLinks"
                 ],
                 "summary": "Get AppraisalFormsCriteriasScoresLinks record by composite key",
-                "operationId": "af9f6205d781122444ac50824d92c5c1",
+                "operationId": "4d5ea023e75b5c003ea184bd641956cb",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142148,7 +142148,7 @@
                     "AppraisalFormsCriteriasScoresLinks"
                 ],
                 "summary": "Update AppraisalFormsCriteriasScoresLinks record by composite key",
-                "operationId": "ed2758e76f1dddd790087d43347400b2",
+                "operationId": "6ef27cced9a058f4a686f0813cfafbb6",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142205,7 +142205,7 @@
                     "AppraisalFormsCriteriasScoresLinks"
                 ],
                 "summary": "Delete AppraisalFormsCriteriasScoresLinks record by composite key",
-                "operationId": "aa08abc61f9c50a2b18446e89c87c206",
+                "operationId": "6c8071408e2e0d88f03d82d2c0060211",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142245,13 +142245,13 @@
                 }
             }
         },
-        "/api/v5/appraisal_number_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}": {
+        "/api/v5/appraisal-number-answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}": {
             "get": {
                 "tags": [
                     "AppraisalNumberAnswers"
                 ],
                 "summary": "Get AppraisalNumberAnswers record by composite key",
-                "operationId": "970150297c789ca673916b8a5b981eea",
+                "operationId": "fa4918de0acc0856c7fbbc34b46c4f1e",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142295,7 +142295,7 @@
                     "AppraisalNumberAnswers"
                 ],
                 "summary": "Update AppraisalNumberAnswers record by composite key",
-                "operationId": "0478ae829609a9798a309387e504a19b",
+                "operationId": "acf16a7d6eb63fcfee8b1c399675df0f",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142352,7 +142352,7 @@
                     "AppraisalNumberAnswers"
                 ],
                 "summary": "Delete AppraisalNumberAnswers record by composite key",
-                "operationId": "b0bafa8b5e84fbe9a4cccf7c7d5b6db7",
+                "operationId": "07580efa0ee5baa96bc4f0acba8a3700",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142680,13 +142680,13 @@
                 }
             }
         },
-        "/api/v5/appraisal_periods_types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}": {
+        "/api/v5/appraisal-periods-types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}": {
             "get": {
                 "tags": [
                     "AppraisalPeriodsTypes"
                 ],
                 "summary": "Get AppraisalPeriodsTypes record by composite key",
-                "operationId": "6308cee9929d880ffde7e153227bc437",
+                "operationId": "7ed4d8025b11e781a13e0ddb54864a9f",
                 "parameters": [
                     {
                         "name": "appraisal_period_id",
@@ -142721,7 +142721,7 @@
                     "AppraisalPeriodsTypes"
                 ],
                 "summary": "Update AppraisalPeriodsTypes record by composite key",
-                "operationId": "e3c74ff1fd1eff3285705b9d2361dc7e",
+                "operationId": "00dfd53f42cc09baf6d6910a51d8ab46",
                 "parameters": [
                     {
                         "name": "appraisal_period_id",
@@ -142769,7 +142769,7 @@
                     "AppraisalPeriodsTypes"
                 ],
                 "summary": "Delete AppraisalPeriodsTypes record by composite key",
-                "operationId": "5e1b9b6fe6368bdb6bb9886f8b8cdb99",
+                "operationId": "2190dde4733251abc733034290c9fcbd",
                 "parameters": [
                     {
                         "name": "appraisal_period_id",
@@ -142800,13 +142800,13 @@
                 }
             }
         },
-        "/api/v5/appraisal_score_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}": {
+        "/api/v5/appraisal-score-answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}": {
             "get": {
                 "tags": [
                     "AppraisalScoreAnswers"
                 ],
                 "summary": "Get AppraisalScoreAnswers record by composite key",
-                "operationId": "c218d8433a07eb83f09598423799087a",
+                "operationId": "ac5702b3ee5d10023fadd1e1c7f5f0f8",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142850,7 +142850,7 @@
                     "AppraisalScoreAnswers"
                 ],
                 "summary": "Update AppraisalScoreAnswers record by composite key",
-                "operationId": "50c8c680798a90071cfa42d55bc52feb",
+                "operationId": "3e0ca4413c53ff9d18f221646d9f6d7a",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142907,7 +142907,7 @@
                     "AppraisalScoreAnswers"
                 ],
                 "summary": "Delete AppraisalScoreAnswers record by composite key",
-                "operationId": "6b064a70af271fa0376525c4f1cefc92",
+                "operationId": "e597eaede8adb0b6c79a7a1e02e73d28",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142947,13 +142947,13 @@
                 }
             }
         },
-        "/api/v5/appraisal_slider_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}": {
+        "/api/v5/appraisal-slider-answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}": {
             "get": {
                 "tags": [
                     "AppraisalSliderAnswers"
                 ],
                 "summary": "Get AppraisalSliderAnswers record by composite key",
-                "operationId": "cff26990097dceff98bf66b80d6dcacd",
+                "operationId": "97fd2fb2ae798b602869a4aa98007184",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -142997,7 +142997,7 @@
                     "AppraisalSliderAnswers"
                 ],
                 "summary": "Update AppraisalSliderAnswers record by composite key",
-                "operationId": "ceca2c70faa73b750c4f3af629fcb46a",
+                "operationId": "b438971ffe7eb058ef357a9b96805caa",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -143054,7 +143054,7 @@
                     "AppraisalSliderAnswers"
                 ],
                 "summary": "Delete AppraisalSliderAnswers record by composite key",
-                "operationId": "6f0fbfdff3eb3d66048cc42f1a26d673",
+                "operationId": "eb6990817d9ce5ae39cd7dab034575f8",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -143211,13 +143211,13 @@
                 }
             }
         },
-        "/api/v5/appraisal_text_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}": {
+        "/api/v5/appraisal-text-answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}": {
             "get": {
                 "tags": [
                     "AppraisalTextAnswers"
                 ],
                 "summary": "Get AppraisalTextAnswers record by composite key",
-                "operationId": "7d852adc34c8a8d0a952f0d2802d3f04",
+                "operationId": "ac39201f32a44c5c04be8c73c4d9419e",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -143261,7 +143261,7 @@
                     "AppraisalTextAnswers"
                 ],
                 "summary": "Update AppraisalTextAnswers record by composite key",
-                "operationId": "f2ce791b6f1978426dd1a2cbeab3fa46",
+                "operationId": "ba81fd3b429e19923d4faf1e18ea144e",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -143318,7 +143318,7 @@
                     "AppraisalTextAnswers"
                 ],
                 "summary": "Delete AppraisalTextAnswers record by composite key",
-                "operationId": "7d90cbd05c3a65d2facfc748c20d4197",
+                "operationId": "fa49518d8ce6b6bd48f294f742b08231",
                 "parameters": [
                     {
                         "name": "appraisal_form_id",
@@ -144520,13 +144520,13 @@
                 }
             }
         },
-        "/api/v5/assessment_item_results_archived/student_id/{student_id}/assessment_id/{assessment_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/assessment_period_id/{assessment_period_id}/institution_classes_id/{institution_classes_id}": {
+        "/api/v5/assessment-item-results-archived/student_id/{student_id}/assessment_id/{assessment_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/assessment_period_id/{assessment_period_id}/institution_classes_id/{institution_classes_id}": {
             "get": {
                 "tags": [
                     "AssessmentItemResultsArchived"
                 ],
                 "summary": "Get AssessmentItemResultsArchived record by composite key",
-                "operationId": "a57e9a2043b0d5fd125c625f0bf60aff",
+                "operationId": "53bf07ba7db403684ac21ca73bb64672",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -144606,7 +144606,7 @@
                     "AssessmentItemResultsArchived"
                 ],
                 "summary": "Update AssessmentItemResultsArchived record by composite key",
-                "operationId": "10269d4832609cdd41210a8223d25b7c",
+                "operationId": "32de4f07fce83cb5da6302c5df9b9181",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -144699,7 +144699,7 @@
                     "AssessmentItemResultsArchived"
                 ],
                 "summary": "Delete AssessmentItemResultsArchived record by composite key",
-                "operationId": "7a376a3c32ca7a8a4a2a69ab33cb52bd",
+                "operationId": "0700bdbab50d2e50d14bd8b96bf21bf9",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -145061,13 +145061,13 @@
                 }
             }
         },
-        "/api/v5/assessment_items_grading_types/education_subject_id/{education_subject_id}/assessment_grading_type_id/{assessment_grading_type_id}/assessment_id/{assessment_id}/assessment_period_id/{assessment_period_id}": {
+        "/api/v5/assessment-items-grading-types/education_subject_id/{education_subject_id}/assessment_grading_type_id/{assessment_grading_type_id}/assessment_id/{assessment_id}/assessment_period_id/{assessment_period_id}": {
             "get": {
                 "tags": [
                     "AssessmentItemsGradingTypes"
                 ],
                 "summary": "Get AssessmentItemsGradingTypes record by composite key",
-                "operationId": "fd01bdc3f85246aa4117746f77424a92",
+                "operationId": "4f50dac49a04924beab904b0ed276b40",
                 "parameters": [
                     {
                         "name": "education_subject_id",
@@ -145120,7 +145120,7 @@
                     "AssessmentItemsGradingTypes"
                 ],
                 "summary": "Update AssessmentItemsGradingTypes record by composite key",
-                "operationId": "0141c03cbd154456344188429d971fac",
+                "operationId": "7453c4268ecf30f31e1d355b3c5f1a84",
                 "parameters": [
                     {
                         "name": "education_subject_id",
@@ -145186,7 +145186,7 @@
                     "AssessmentItemsGradingTypes"
                 ],
                 "summary": "Delete AssessmentItemsGradingTypes record by composite key",
-                "operationId": "f5fb6c5def295ae5fa21c7553401c335",
+                "operationId": "e331b0c1847ef01d17f24977c4c10a66",
                 "parameters": [
                     {
                         "name": "education_subject_id",
@@ -148364,13 +148364,13 @@
                 }
             }
         },
-        "/api/v5/class_profile_processes/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}": {
+        "/api/v5/class-profile-processes/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}": {
             "get": {
                 "tags": [
                     "ClassProfileProcesses"
                 ],
                 "summary": "Get ClassProfileProcesses record by composite key",
-                "operationId": "4dcb022e9c914f8d1b42bd9c9f374cd0",
+                "operationId": "c6ba06eb4ec720884b0fb8d4942d44f2",
                 "parameters": [
                     {
                         "name": "class_profile_template_id",
@@ -148405,7 +148405,7 @@
                     "ClassProfileProcesses"
                 ],
                 "summary": "Update ClassProfileProcesses record by composite key",
-                "operationId": "2a5f950329bb6473eada62a550b5107a",
+                "operationId": "5a7f1ec384e82d50a490ea1b8dece474",
                 "parameters": [
                     {
                         "name": "class_profile_template_id",
@@ -148453,7 +148453,7 @@
                     "ClassProfileProcesses"
                 ],
                 "summary": "Delete ClassProfileProcesses record by composite key",
-                "operationId": "5f6fc55405e21177c8e5ed861fae42b5",
+                "operationId": "9cf60a72f6b0306ea3bdc5c225a8dda4",
                 "parameters": [
                     {
                         "name": "class_profile_template_id",
@@ -148641,13 +148641,13 @@
                 }
             }
         },
-        "/api/v5/class_profiles/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
+        "/api/v5/class-profiles/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
             "get": {
                 "tags": [
                     "ClassProfiles"
                 ],
                 "summary": "Get ClassProfiles record by composite key",
-                "operationId": "749cdfa0df5a22d9e402acf90f5e1ca1",
+                "operationId": "d5abe3ab01599b2cbc91b28d3a1e8814",
                 "parameters": [
                     {
                         "name": "class_profile_template_id",
@@ -148700,7 +148700,7 @@
                     "ClassProfiles"
                 ],
                 "summary": "Update ClassProfiles record by composite key",
-                "operationId": "5485229f344ac02ef166bcf456ffde61",
+                "operationId": "46cdffaf22b8a611270f4b64a58bf379",
                 "parameters": [
                     {
                         "name": "class_profile_template_id",
@@ -148766,7 +148766,7 @@
                     "ClassProfiles"
                 ],
                 "summary": "Delete ClassProfiles record by composite key",
-                "operationId": "97ba0c3ea66bfabdc4188c267ccf6881",
+                "operationId": "011af905f08b09dc7f48403994d428b9",
                 "parameters": [
                     {
                         "name": "class_profile_template_id",
@@ -149518,13 +149518,13 @@
                 }
             }
         },
-        "/api/v5/competency_items_periods/competency_item_id/{competency_item_id}/competency_period_id/{competency_period_id}/academic_period_id/{academic_period_id}/competency_template_id/{competency_template_id}": {
+        "/api/v5/competency-items-periods/competency_item_id/{competency_item_id}/competency_period_id/{competency_period_id}/academic_period_id/{academic_period_id}/competency_template_id/{competency_template_id}": {
             "get": {
                 "tags": [
                     "CompetencyItemsPeriods"
                 ],
                 "summary": "Get CompetencyItemsPeriods record by composite key",
-                "operationId": "ff5e5b8a37b6cf4c26951d9155b351dd",
+                "operationId": "9956bba7f035fb6b291d63e474902a30",
                 "parameters": [
                     {
                         "name": "competency_item_id",
@@ -149577,7 +149577,7 @@
                     "CompetencyItemsPeriods"
                 ],
                 "summary": "Update CompetencyItemsPeriods record by composite key",
-                "operationId": "5f1348d0cef3c9757d7c86c7d72ec495",
+                "operationId": "61963c79c1201ab420b43f2f2b170189",
                 "parameters": [
                     {
                         "name": "competency_item_id",
@@ -149643,7 +149643,7 @@
                     "CompetencyItemsPeriods"
                 ],
                 "summary": "Delete CompetencyItemsPeriods record by composite key",
-                "operationId": "ab35d39b572f98c41bc7326866f857de",
+                "operationId": "c1a98f09018baa5b11520799d1e4dab9",
                 "parameters": [
                     {
                         "name": "competency_item_id",
@@ -152708,13 +152708,13 @@
                 }
             }
         },
-        "/api/v5/custom_table_cells/custom_field_id/{custom_field_id}/custom_table_column_id/{custom_table_column_id}/custom_table_row_id/{custom_table_row_id}/custom_record_id/{custom_record_id}": {
+        "/api/v5/custom-table-cells/custom_field_id/{custom_field_id}/custom_table_column_id/{custom_table_column_id}/custom_table_row_id/{custom_table_row_id}/custom_record_id/{custom_record_id}": {
             "get": {
                 "tags": [
                     "CustomTableCells"
                 ],
                 "summary": "Get CustomTableCells record by composite key",
-                "operationId": "e98cec5c529950c57dbcc2ae95b3ef03",
+                "operationId": "eac078055064de978af8c7274b6ec29c",
                 "parameters": [
                     {
                         "name": "custom_field_id",
@@ -152767,7 +152767,7 @@
                     "CustomTableCells"
                 ],
                 "summary": "Update CustomTableCells record by composite key",
-                "operationId": "9999d2c5077d308a68c5f8ad5ca91a29",
+                "operationId": "ca1ade037e943c613af5eca644fe03ca",
                 "parameters": [
                     {
                         "name": "custom_field_id",
@@ -152833,7 +152833,7 @@
                     "CustomTableCells"
                 ],
                 "summary": "Delete CustomTableCells record by composite key",
-                "operationId": "73b8c42b188b99087d5943b9947f21d8",
+                "operationId": "a6149d7f296fba93060f693cea1f5628",
                 "parameters": [
                     {
                         "name": "custom_field_id",
@@ -153714,13 +153714,13 @@
                 }
             }
         },
-        "/api/v5/deleted_records/id/{id}/deleted_date/{deleted_date}": {
+        "/api/v5/deleted-records/id/{id}/deleted_date/{deleted_date}": {
             "get": {
                 "tags": [
                     "DeletedRecords"
                 ],
                 "summary": "Get DeletedRecords record by composite key",
-                "operationId": "ecaf8db29a10f939d2cfbbb952de3810",
+                "operationId": "db02afbfaf0dbd8306bcc5f8adfbbc37",
                 "parameters": [
                     {
                         "name": "id",
@@ -153755,7 +153755,7 @@
                     "DeletedRecords"
                 ],
                 "summary": "Update DeletedRecords record by composite key",
-                "operationId": "970948b2bdd77fc302b44362cc907c07",
+                "operationId": "1d4504b4f1c8906e0afce265d6cc6b3c",
                 "parameters": [
                     {
                         "name": "id",
@@ -153803,7 +153803,7 @@
                     "DeletedRecords"
                 ],
                 "summary": "Delete DeletedRecords record by composite key",
-                "operationId": "d73c6f106ff78d861bae0964aa1c8704",
+                "operationId": "f8e168299cbd1d9bca5c011c6f246294",
                 "parameters": [
                     {
                         "name": "id",
@@ -154837,13 +154837,13 @@
                 }
             }
         },
-        "/api/v5/education_grades_subjects/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}": {
+        "/api/v5/education-grades-subjects/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}": {
             "get": {
                 "tags": [
                     "EducationGradesSubjects"
                 ],
                 "summary": "Get EducationGradesSubjects record by composite key",
-                "operationId": "1dc52ea75695a32cfae02eeea7d73945",
+                "operationId": "2da825d0c537e6c3196c0fea597dcdeb",
                 "parameters": [
                     {
                         "name": "education_grade_id",
@@ -154878,7 +154878,7 @@
                     "EducationGradesSubjects"
                 ],
                 "summary": "Update EducationGradesSubjects record by composite key",
-                "operationId": "906bc07b98801244f05fe3bfc90067df",
+                "operationId": "50f7644a00059ebbd8293479361aa82f",
                 "parameters": [
                     {
                         "name": "education_grade_id",
@@ -154926,7 +154926,7 @@
                     "EducationGradesSubjects"
                 ],
                 "summary": "Delete EducationGradesSubjects record by composite key",
-                "operationId": "199ff94f6cecafb52d821f773edd13a2",
+                "operationId": "726ca0affc6c86f09a09a2ffb12c5416",
                 "parameters": [
                     {
                         "name": "education_grade_id",
@@ -155932,13 +155932,13 @@
                 }
             }
         },
-        "/api/v5/education_subjects_field_of_studies/education_subject_id/{education_subject_id}/education_field_of_study_id/{education_field_of_study_id}": {
+        "/api/v5/education-subjects-field-of-studies/education_subject_id/{education_subject_id}/education_field_of_study_id/{education_field_of_study_id}": {
             "get": {
                 "tags": [
                     "EducationSubjectsFieldOfStudies"
                 ],
                 "summary": "Get EducationSubjectsFieldOfStudies record by composite key",
-                "operationId": "0987cdf594bf6490d35172b5d693c45e",
+                "operationId": "85633e46dd079eddbd9fa60c83d1597b",
                 "parameters": [
                     {
                         "name": "education_subject_id",
@@ -155973,7 +155973,7 @@
                     "EducationSubjectsFieldOfStudies"
                 ],
                 "summary": "Update EducationSubjectsFieldOfStudies record by composite key",
-                "operationId": "355c350ce2d3e6c83c120faa690820f2",
+                "operationId": "4372f5706e15713d6ab20c77b0039fdf",
                 "parameters": [
                     {
                         "name": "education_subject_id",
@@ -156021,7 +156021,7 @@
                     "EducationSubjectsFieldOfStudies"
                 ],
                 "summary": "Delete EducationSubjectsFieldOfStudies record by composite key",
-                "operationId": "c8976b6d67e0d6a4c42f536cba50cdfd",
+                "operationId": "80f397d236da39ea38f79af730de185e",
                 "parameters": [
                     {
                         "name": "education_subject_id",
@@ -156465,13 +156465,13 @@
                 }
             }
         },
-        "/api/v5/email_templates/model_alias/{model_alias}/model_reference/{model_reference}": {
+        "/api/v5/email-templates/model_alias/{model_alias}/model_reference/{model_reference}": {
             "get": {
                 "tags": [
                     "EmailTemplates"
                 ],
                 "summary": "Get EmailTemplates record by composite key",
-                "operationId": "feb616e22b5023c3682794ae34695546",
+                "operationId": "04f6c790ab68f84fdb077356b6cd594f",
                 "parameters": [
                     {
                         "name": "model_alias",
@@ -156506,7 +156506,7 @@
                     "EmailTemplates"
                 ],
                 "summary": "Update EmailTemplates record by composite key",
-                "operationId": "5111d1dfc17ac98808d2bfb6ce9b3bb6",
+                "operationId": "3adee4392a196d93efb9aab043edb06e",
                 "parameters": [
                     {
                         "name": "model_alias",
@@ -156554,7 +156554,7 @@
                     "EmailTemplates"
                 ],
                 "summary": "Delete EmailTemplates record by composite key",
-                "operationId": "48c9c3236175d1e677d6ed72c41a3aaa",
+                "operationId": "e0351eb6b19438cb51ab992113fc016e",
                 "parameters": [
                     {
                         "name": "model_alias",
@@ -156875,13 +156875,13 @@
                 }
             }
         },
-        "/api/v5/examination_centre_rooms_examinations/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}": {
+        "/api/v5/examination-centre-rooms-examinations/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}": {
             "get": {
                 "tags": [
                     "ExaminationCentreRoomsExaminations"
                 ],
                 "summary": "Get ExaminationCentreRoomsExaminations record by composite key",
-                "operationId": "da4f68cf3b0f2325baa310bfdeafd197",
+                "operationId": "59007af1af8eb0ea35fa52c56b0952cc",
                 "parameters": [
                     {
                         "name": "examination_centre_room_id",
@@ -156916,7 +156916,7 @@
                     "ExaminationCentreRoomsExaminations"
                 ],
                 "summary": "Update ExaminationCentreRoomsExaminations record by composite key",
-                "operationId": "f5d1aa1b82224fc1b05e7fc7461ba0eb",
+                "operationId": "e40b552c1955f534c2e5b24709a5c683",
                 "parameters": [
                     {
                         "name": "examination_centre_room_id",
@@ -156964,7 +156964,7 @@
                     "ExaminationCentreRoomsExaminations"
                 ],
                 "summary": "Delete ExaminationCentreRoomsExaminations record by composite key",
-                "operationId": "6c66e524eb8a39b033af9813e30d3a04",
+                "operationId": "bd1d92495b8f4d2b6b8ecd640e738f93",
                 "parameters": [
                     {
                         "name": "examination_centre_room_id",
@@ -156995,13 +156995,13 @@
                 }
             }
         },
-        "/api/v5/examination_centre_rooms_examinations_invigilators/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}/invigilator_id/{invigilator_id}": {
+        "/api/v5/examination-centre-rooms-examinations-invigilators/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}/invigilator_id/{invigilator_id}": {
             "get": {
                 "tags": [
                     "ExaminationCentreRoomsExaminationsInvigilators"
                 ],
                 "summary": "Get ExaminationCentreRoomsExaminationsInvigilators record by composite key",
-                "operationId": "375c0a7fe89fa181a60fbf45e216d7a2",
+                "operationId": "f56a54b4f1c11796fd9d5ceef77571c0",
                 "parameters": [
                     {
                         "name": "examination_centre_room_id",
@@ -157045,7 +157045,7 @@
                     "ExaminationCentreRoomsExaminationsInvigilators"
                 ],
                 "summary": "Update ExaminationCentreRoomsExaminationsInvigilators record by composite key",
-                "operationId": "4d994496a937f74a8595746c9baba053",
+                "operationId": "789a9e1db13d2721f35c9b99018a88ea",
                 "parameters": [
                     {
                         "name": "examination_centre_room_id",
@@ -157102,7 +157102,7 @@
                     "ExaminationCentreRoomsExaminationsInvigilators"
                 ],
                 "summary": "Delete ExaminationCentreRoomsExaminationsInvigilators record by composite key",
-                "operationId": "3c90e79d917befb2cef603c018d01763",
+                "operationId": "a7f1acbf878b670ecf3f9d9e66592f3f",
                 "parameters": [
                     {
                         "name": "examination_centre_room_id",
@@ -157142,13 +157142,13 @@
                 }
             }
         },
-        "/api/v5/examination_centre_rooms_examinations_students/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}/student_id/{student_id}": {
+        "/api/v5/examination-centre-rooms-examinations-students/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}/student_id/{student_id}": {
             "get": {
                 "tags": [
                     "ExaminationCentreRoomsExaminationsStudents"
                 ],
                 "summary": "Get ExaminationCentreRoomsExaminationsStudents record by composite key",
-                "operationId": "e3c7521058818d3bc11ab192f5e4d01c",
+                "operationId": "677a53aa9ff161813c5faf0e35083549",
                 "parameters": [
                     {
                         "name": "examination_centre_room_id",
@@ -157192,7 +157192,7 @@
                     "ExaminationCentreRoomsExaminationsStudents"
                 ],
                 "summary": "Update ExaminationCentreRoomsExaminationsStudents record by composite key",
-                "operationId": "870db4df01ea45b36fb76d4998707806",
+                "operationId": "79e7dd6c85514316d178f7f802e32bc4",
                 "parameters": [
                     {
                         "name": "examination_centre_room_id",
@@ -157249,7 +157249,7 @@
                     "ExaminationCentreRoomsExaminationsStudents"
                 ],
                 "summary": "Delete ExaminationCentreRoomsExaminationsStudents record by composite key",
-                "operationId": "7f0aee84517160900418512223ba91ca",
+                "operationId": "ca7b92a1785e31401a98e72307096748",
                 "parameters": [
                     {
                         "name": "examination_centre_room_id",
@@ -157289,13 +157289,13 @@
                 }
             }
         },
-        "/api/v5/examination_centre_special_needs/examination_centre_id/{examination_centre_id}/special_need_type_id/{special_need_type_id}": {
+        "/api/v5/examination-centre-special-needs/examination_centre_id/{examination_centre_id}/special_need_type_id/{special_need_type_id}": {
             "get": {
                 "tags": [
                     "ExaminationCentreSpecialNeeds"
                 ],
                 "summary": "Get ExaminationCentreSpecialNeeds record by composite key",
-                "operationId": "3ef6da204a2a521e50e4a2e7851dcae1",
+                "operationId": "0f8ba553b8b9fad4ec151918529a2803",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157330,7 +157330,7 @@
                     "ExaminationCentreSpecialNeeds"
                 ],
                 "summary": "Update ExaminationCentreSpecialNeeds record by composite key",
-                "operationId": "592479ec6e6a378c112b112c7347856e",
+                "operationId": "7e8e1bd26b596f1a79b1a001bb1bdd39",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157378,7 +157378,7 @@
                     "ExaminationCentreSpecialNeeds"
                 ],
                 "summary": "Delete ExaminationCentreSpecialNeeds record by composite key",
-                "operationId": "82f7a70c53515143a899a8a935ee5154",
+                "operationId": "4cc4409a0b77bc9ba675ca1753a08ca1",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157576,13 +157576,13 @@
                 }
             }
         },
-        "/api/v5/examination_centres_examinations/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}": {
+        "/api/v5/examination-centres-examinations/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}": {
             "get": {
                 "tags": [
                     "ExaminationCentresExaminations"
                 ],
                 "summary": "Get ExaminationCentresExaminations record by composite key",
-                "operationId": "58e382d43048364f49846fa809c36cc9",
+                "operationId": "7ab55fd4c76b3c1b295e1be150e36662",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157617,7 +157617,7 @@
                     "ExaminationCentresExaminations"
                 ],
                 "summary": "Update ExaminationCentresExaminations record by composite key",
-                "operationId": "b47ed173b8b2b1fa2c394a5af7a13534",
+                "operationId": "8c2d08dd22b169d2c1dca42128cb413c",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157665,7 +157665,7 @@
                     "ExaminationCentresExaminations"
                 ],
                 "summary": "Delete ExaminationCentresExaminations record by composite key",
-                "operationId": "0c8896bef032a3b0ac7e8daae40ce067",
+                "operationId": "dac907bba90842506adff3d33e4c2eb8",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157696,13 +157696,13 @@
                 }
             }
         },
-        "/api/v5/examination_centres_examinations_institutions/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/institution_id/{institution_id}": {
+        "/api/v5/examination-centres-examinations-institutions/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/institution_id/{institution_id}": {
             "get": {
                 "tags": [
                     "ExaminationCentresExaminationsInstitutions"
                 ],
                 "summary": "Get ExaminationCentresExaminationsInstitutions record by composite key",
-                "operationId": "90ffab6b25ac285269fd007b9f91320a",
+                "operationId": "359a0efbd392fc5526da74477479f51b",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157746,7 +157746,7 @@
                     "ExaminationCentresExaminationsInstitutions"
                 ],
                 "summary": "Update ExaminationCentresExaminationsInstitutions record by composite key",
-                "operationId": "5cb504772e7a5bbc204758b75edd3770",
+                "operationId": "38af9fc3f91a6d661fe41fb0959bac3c",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157803,7 +157803,7 @@
                     "ExaminationCentresExaminationsInstitutions"
                 ],
                 "summary": "Delete ExaminationCentresExaminationsInstitutions record by composite key",
-                "operationId": "1cc4d41327306adba00c4bc53d271bf3",
+                "operationId": "da0a16292506d91f170a209e7de31ec5",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157843,13 +157843,13 @@
                 }
             }
         },
-        "/api/v5/examination_centres_examinations_invigilators/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/invigilator_id/{invigilator_id}": {
+        "/api/v5/examination-centres-examinations-invigilators/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/invigilator_id/{invigilator_id}": {
             "get": {
                 "tags": [
                     "ExaminationCentresExaminationsInvigilators"
                 ],
                 "summary": "Get ExaminationCentresExaminationsInvigilators record by composite key",
-                "operationId": "b521ad38fe0412c5415c85858bf3a2cb",
+                "operationId": "6af81d36f574d9632bbe6060649df7d9",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157893,7 +157893,7 @@
                     "ExaminationCentresExaminationsInvigilators"
                 ],
                 "summary": "Update ExaminationCentresExaminationsInvigilators record by composite key",
-                "operationId": "a82d21c184514ba8c0fa5a233e197a27",
+                "operationId": "ce99f60f4ef3659ec16cc5663b52d8e9",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157950,7 +157950,7 @@
                     "ExaminationCentresExaminationsInvigilators"
                 ],
                 "summary": "Delete ExaminationCentresExaminationsInvigilators record by composite key",
-                "operationId": "2a27b7312ad79160d5da361b410d5f45",
+                "operationId": "d69bb76df02b19e6492481fcd8820807",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -157990,13 +157990,13 @@
                 }
             }
         },
-        "/api/v5/examination_centres_examinations_students/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/student_id/{student_id}": {
+        "/api/v5/examination-centres-examinations-students/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/student_id/{student_id}": {
             "get": {
                 "tags": [
                     "ExaminationCentresExaminationsStudents"
                 ],
                 "summary": "Get ExaminationCentresExaminationsStudents record by composite key",
-                "operationId": "d249d438a4b0904ae85ebedd79e305b9",
+                "operationId": "5f8ee33774476ccb1e7085e85257322b",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -158040,7 +158040,7 @@
                     "ExaminationCentresExaminationsStudents"
                 ],
                 "summary": "Update ExaminationCentresExaminationsStudents record by composite key",
-                "operationId": "2813aea531cf1054d2d9402437341436",
+                "operationId": "1cfee68278346ad2dd9dc7e844f24f76",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -158091,13 +158091,15 @@
                         "description": "Record not found"
                     }
                 }
-            },
+            }
+        },
+        "/api/v5/examination_centres_examinations-students/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/student_id/{student_id}": {
             "delete": {
                 "tags": [
                     "ExaminationCentresExaminationsStudents"
                 ],
                 "summary": "Delete ExaminationCentresExaminationsStudents record by composite key",
-                "operationId": "e91ab9321925192e0d4007b921dc54e4",
+                "operationId": "66f727d2f2504358a35340e5ea23bc16",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -158137,13 +158139,13 @@
                 }
             }
         },
-        "/api/v5/examination_centres_examinations_subjects/examination_centre_id/{examination_centre_id}/examination_subject_id/{examination_subject_id}": {
+        "/api/v5/examination-centres-examinations-subjects/examination_centre_id/{examination_centre_id}/examination_subject_id/{examination_subject_id}": {
             "get": {
                 "tags": [
                     "ExaminationCentresExaminationsSubjects"
                 ],
                 "summary": "Get ExaminationCentresExaminationsSubjects record by composite key",
-                "operationId": "b7b19e74bf130c2b4f6489c2762b9daf",
+                "operationId": "fe1a6b01c0ba92554376b88c136ec0bb",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -158178,7 +158180,7 @@
                     "ExaminationCentresExaminationsSubjects"
                 ],
                 "summary": "Update ExaminationCentresExaminationsSubjects record by composite key",
-                "operationId": "2be96fd827467f9b5848483ce1a8a97e",
+                "operationId": "429d93ae2c14a730873f57e6f0ddff3e",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -158226,7 +158228,7 @@
                     "ExaminationCentresExaminationsSubjects"
                 ],
                 "summary": "Delete ExaminationCentresExaminationsSubjects record by composite key",
-                "operationId": "15106996d0dd399b894d6f894a5f53dc",
+                "operationId": "d0fa0bacbe0936e08f216ecf7d3c68ff",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -158257,13 +158259,13 @@
                 }
             }
         },
-        "/api/v5/examination_centres_examinations_subjects_students/examination_centre_id/{examination_centre_id}/examination_subject_id/{examination_subject_id}/student_id/{student_id}": {
+        "/api/v5/examination-centres-examinations-subjects-students/examination_centre_id/{examination_centre_id}/examination_subject_id/{examination_subject_id}/student_id/{student_id}": {
             "get": {
                 "tags": [
                     "ExaminationCentresExaminationsSubjectsStudents"
                 ],
                 "summary": "Get ExaminationCentresExaminationsSubjectsStudents record by composite key",
-                "operationId": "da2587a307d1423035a4b95b4175da53",
+                "operationId": "fae05dc00e296fa0512432ec44f8ab0b",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -158307,7 +158309,7 @@
                     "ExaminationCentresExaminationsSubjectsStudents"
                 ],
                 "summary": "Update ExaminationCentresExaminationsSubjectsStudents record by composite key",
-                "operationId": "9c897cbd02d83c5e4dd761b32471654f",
+                "operationId": "6a03c486e4908a6a3331d8cd78479d36",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -158364,7 +158366,7 @@
                     "ExaminationCentresExaminationsSubjectsStudents"
                 ],
                 "summary": "Delete ExaminationCentresExaminationsSubjectsStudents record by composite key",
-                "operationId": "c884955e61bc6c96cbc2de255cf036b2",
+                "operationId": "1de629a61f52ebbadd31afb5585859f4",
                 "parameters": [
                     {
                         "name": "examination_centre_id",
@@ -158706,13 +158708,13 @@
                 }
             }
         },
-        "/api/v5/examination_student_subject_results/examination_subject_id/{examination_subject_id}/student_id/{student_id}": {
+        "/api/v5/examination-student-subject-results/examination_subject_id/{examination_subject_id}/student_id/{student_id}": {
             "get": {
                 "tags": [
                     "ExaminationStudentSubjectResults"
                 ],
                 "summary": "Get ExaminationStudentSubjectResults record by composite key",
-                "operationId": "666d6447d0bd13a1d3a292724ab567b0",
+                "operationId": "74efc0b05c011895a725eec52742975b",
                 "parameters": [
                     {
                         "name": "examination_subject_id",
@@ -158747,7 +158749,7 @@
                     "ExaminationStudentSubjectResults"
                 ],
                 "summary": "Update ExaminationStudentSubjectResults record by composite key",
-                "operationId": "2daa8df3cf5071cf8f01971b08ecd079",
+                "operationId": "0de65af384e996dca3b6f3529c1ffe86",
                 "parameters": [
                     {
                         "name": "examination_subject_id",
@@ -158795,7 +158797,7 @@
                     "ExaminationStudentSubjectResults"
                 ],
                 "summary": "Delete ExaminationStudentSubjectResults record by composite key",
-                "operationId": "489af3f90a1cb515f6a12a30a8193085",
+                "operationId": "0f5468b57d16bd9e9e65c3a1813e94d9",
                 "parameters": [
                     {
                         "name": "examination_subject_id",
@@ -165633,13 +165635,13 @@
                 }
             }
         },
-        "/api/v5/infrastructure_projects_needs/infrastructure_project_id/{infrastructure_project_id}/infrastructure_need_id/{infrastructure_need_id}": {
+        "/api/v5/infrastructure-projects-needs/infrastructure_project_id/{infrastructure_project_id}/infrastructure_need_id/{infrastructure_need_id}": {
             "get": {
                 "tags": [
                     "InfrastructureProjectsNeeds"
                 ],
                 "summary": "Get InfrastructureProjectsNeeds record by composite key",
-                "operationId": "53937710cd3d88e3bee6cd2e46ec16af",
+                "operationId": "d35cb8a7ef42c69f3359084ffd4df4c9",
                 "parameters": [
                     {
                         "name": "infrastructure_project_id",
@@ -165674,7 +165676,7 @@
                     "InfrastructureProjectsNeeds"
                 ],
                 "summary": "Update InfrastructureProjectsNeeds record by composite key",
-                "operationId": "4193964c8485b5a6714a9088e5f1fabf",
+                "operationId": "b267f92a43901622596cc09f7813c275",
                 "parameters": [
                     {
                         "name": "infrastructure_project_id",
@@ -165722,7 +165724,7 @@
                     "InfrastructureProjectsNeeds"
                 ],
                 "summary": "Delete InfrastructureProjectsNeeds record by composite key",
-                "operationId": "6e29b46ad32210777d3597847b881a3a",
+                "operationId": "23269e82bfeac01c345a032fbe922533",
                 "parameters": [
                     {
                         "name": "infrastructure_project_id",
@@ -169895,13 +169897,13 @@
                 }
             }
         },
-        "/api/v5/inserted_records/id/{id}/inserted_date/{inserted_date}": {
+        "/api/v5/inserted-records/id/{id}/inserted_date/{inserted_date}": {
             "get": {
                 "tags": [
                     "InsertedRecords"
                 ],
                 "summary": "Get InsertedRecords record by composite key",
-                "operationId": "4348d9fbd2901d7affabf68d8ef4344c",
+                "operationId": "33f1647cef69fb6b0283862e0895023f",
                 "parameters": [
                     {
                         "name": "id",
@@ -169936,7 +169938,7 @@
                     "InsertedRecords"
                 ],
                 "summary": "Update InsertedRecords record by composite key",
-                "operationId": "f749b4a534600b1980fd251c009eae8c",
+                "operationId": "7a809154866f0700e6fde1cdfc3e7555",
                 "parameters": [
                     {
                         "name": "id",
@@ -169984,7 +169986,7 @@
                     "InsertedRecords"
                 ],
                 "summary": "Delete InsertedRecords record by composite key",
-                "operationId": "83d73120cbc3f499c6d672ced4d1735f",
+                "operationId": "b644b1c33d6226b3c2caf7e156f49c85",
                 "parameters": [
                     {
                         "name": "id",
@@ -171728,13 +171730,13 @@
                 }
             }
         },
-        "/api/v5/institution_buses_transport_features/institution_bus_id/{institution_bus_id}/transport_feature_id/{transport_feature_id}": {
+        "/api/v5/institution-buses-transport-features/institution_bus_id/{institution_bus_id}/transport_feature_id/{transport_feature_id}": {
             "get": {
                 "tags": [
                     "InstitutionBusesTransportFeatures"
                 ],
                 "summary": "Get InstitutionBusesTransportFeatures record by composite key",
-                "operationId": "4e1af61489b02dce60888c8c5c6fcf46",
+                "operationId": "23c3241a3fcf7881ebf4f6af2bfb2d73",
                 "parameters": [
                     {
                         "name": "institution_bus_id",
@@ -171769,7 +171771,7 @@
                     "InstitutionBusesTransportFeatures"
                 ],
                 "summary": "Update InstitutionBusesTransportFeatures record by composite key",
-                "operationId": "9f4df7ed0fd056b37bcda152f1606eb1",
+                "operationId": "6da48c2df3f814aaf422cfd257ec7808",
                 "parameters": [
                     {
                         "name": "institution_bus_id",
@@ -171817,7 +171819,7 @@
                     "InstitutionBusesTransportFeatures"
                 ],
                 "summary": "Delete InstitutionBusesTransportFeatures record by composite key",
-                "operationId": "8e67a48b4d2f3330ea5d83e786d746df",
+                "operationId": "dd45ff373961134442c107915b9f5517",
                 "parameters": [
                     {
                         "name": "institution_bus_id",
@@ -172097,13 +172099,13 @@
                 }
             }
         },
-        "/api/v5/institution_case_records/institution_case_id/{institution_case_id}/record_id/{record_id}/feature/{feature}": {
+        "/api/v5/institution-case-records/institution_case_id/{institution_case_id}/record_id/{record_id}/feature/{feature}": {
             "get": {
                 "tags": [
                     "InstitutionCaseRecords"
                 ],
                 "summary": "Get InstitutionCaseRecords record by composite key",
-                "operationId": "cfda480d5dad61105bec3d4b7a54c155",
+                "operationId": "12fccacbce83c83fece76165d6b6950e",
                 "parameters": [
                     {
                         "name": "institution_case_id",
@@ -172147,7 +172149,7 @@
                     "InstitutionCaseRecords"
                 ],
                 "summary": "Update InstitutionCaseRecords record by composite key",
-                "operationId": "2aaaede8a9f0712dc8b2a812993a99c6",
+                "operationId": "379febf1b2cee45f4d914d83042e3bb0",
                 "parameters": [
                     {
                         "name": "institution_case_id",
@@ -172204,7 +172206,7 @@
                     "InstitutionCaseRecords"
                 ],
                 "summary": "Delete InstitutionCaseRecords record by composite key",
-                "operationId": "f4b2fb137ca70eb4bef156d3014f088e",
+                "operationId": "78aeda6bd9195e55d365f351baedd80e",
                 "parameters": [
                     {
                         "name": "institution_case_id",
@@ -172399,13 +172401,13 @@
                 }
             }
         },
-        "/api/v5/institution_class_attendance_records/institution_class_id/{institution_class_id}/academic_period_id/{academic_period_id}/year/{year}/month/{month}": {
+        "/api/v5/institution-class-attendance-records/institution_class_id/{institution_class_id}/academic_period_id/{academic_period_id}/year/{year}/month/{month}": {
             "get": {
                 "tags": [
                     "InstitutionClassAttendanceRecords"
                 ],
                 "summary": "Get InstitutionClassAttendanceRecords record by composite key",
-                "operationId": "0d38b116f29bb80409f36cd153ee0558",
+                "operationId": "d9b060249d0dc6253bc49d7a271739a7",
                 "parameters": [
                     {
                         "name": "institution_class_id",
@@ -172458,7 +172460,7 @@
                     "InstitutionClassAttendanceRecords"
                 ],
                 "summary": "Update InstitutionClassAttendanceRecords record by composite key",
-                "operationId": "97440345b8cbcb505e83506657f8c977",
+                "operationId": "889fa9c0ed03fb4f3bfa9038a4fcea00",
                 "parameters": [
                     {
                         "name": "institution_class_id",
@@ -172524,7 +172526,7 @@
                     "InstitutionClassAttendanceRecords"
                 ],
                 "summary": "Delete InstitutionClassAttendanceRecords record by composite key",
-                "operationId": "e76c60d861bf847170b48080b83aa024",
+                "operationId": "ccc1374f8c55ad6ea691804367478356",
                 "parameters": [
                     {
                         "name": "institution_class_id",
@@ -173317,13 +173319,13 @@
                 }
             }
         },
-        "/api/v5/institution_classes_secondary_staff/institution_class_id/{institution_class_id}/secondary_staff_id/{secondary_staff_id}": {
+        "/api/v5/institution-classes-secondary-staff/institution_class_id/{institution_class_id}/secondary_staff_id/{secondary_staff_id}": {
             "get": {
                 "tags": [
                     "InstitutionClassesSecondaryStaff"
                 ],
                 "summary": "Get InstitutionClassesSecondaryStaff record by composite key",
-                "operationId": "9b98cfba554dbc8dc132a769fc4eb11f",
+                "operationId": "ea1212de04695fb4174d1b540f899977",
                 "parameters": [
                     {
                         "name": "institution_class_id",
@@ -173358,7 +173360,7 @@
                     "InstitutionClassesSecondaryStaff"
                 ],
                 "summary": "Update InstitutionClassesSecondaryStaff record by composite key",
-                "operationId": "55eec01909d0a4847e3f742d278b325e",
+                "operationId": "ca6ce195cf1f0a32b724db227e167bc8",
                 "parameters": [
                     {
                         "name": "institution_class_id",
@@ -173406,7 +173408,7 @@
                     "InstitutionClassesSecondaryStaff"
                 ],
                 "summary": "Delete InstitutionClassesSecondaryStaff record by composite key",
-                "operationId": "d5849bb1364c00ff10d420ba3ef90539",
+                "operationId": "afa89426610d3c7d2833631369d4e724",
                 "parameters": [
                     {
                         "name": "institution_class_id",
@@ -176057,13 +176059,13 @@
                 }
             }
         },
-        "/api/v5/institution_custom_table_cells/institution_custom_field_id/{institution_custom_field_id}/institution_custom_table_column_id/{institution_custom_table_column_id}/institution_custom_table_row_id/{institution_custom_table_row_id}/institution_id/{institution_id}": {
+        "/api/v5/institution-custom-table-cells/institution_custom_field_id/{institution_custom_field_id}/institution_custom_table_column_id/{institution_custom_table_column_id}/institution_custom_table_row_id/{institution_custom_table_row_id}/institution_id/{institution_id}": {
             "get": {
                 "tags": [
                     "InstitutionCustomTableCells"
                 ],
                 "summary": "Get InstitutionCustomTableCells record by composite key",
-                "operationId": "7ed07ad4571025b4ca08c6c03500fef2",
+                "operationId": "2e4da151491eb92fa427f76b28894a96",
                 "parameters": [
                     {
                         "name": "institution_custom_field_id",
@@ -176116,7 +176118,7 @@
                     "InstitutionCustomTableCells"
                 ],
                 "summary": "Update InstitutionCustomTableCells record by composite key",
-                "operationId": "44a99176e174d729108eb26f33a48298",
+                "operationId": "9d037a2caf8515206bcb37936353ca2c",
                 "parameters": [
                     {
                         "name": "institution_custom_field_id",
@@ -176182,7 +176184,7 @@
                     "InstitutionCustomTableCells"
                 ],
                 "summary": "Delete InstitutionCustomTableCells record by composite key",
-                "operationId": "25fdd0e7b5499fcc1161426e42aed7fe",
+                "operationId": "773b3bda51a3f5cf5b4748bd6e80b447",
                 "parameters": [
                     {
                         "name": "institution_custom_field_id",
@@ -176669,13 +176671,13 @@
                 }
             }
         },
-        "/api/v5/institution_fee_types/institution_fee_id/{institution_fee_id}/fee_type_id/{fee_type_id}": {
+        "/api/v5/institution-fee-types/institution_fee_id/{institution_fee_id}/fee_type_id/{fee_type_id}": {
             "get": {
                 "tags": [
                     "InstitutionFeeTypes"
                 ],
                 "summary": "Get InstitutionFeeTypes record by composite key",
-                "operationId": "55a07453f35ed435df4f263f24ca79d2",
+                "operationId": "d3e49ec5d8e77d16a516b651c0968b6e",
                 "parameters": [
                     {
                         "name": "institution_fee_id",
@@ -176710,7 +176712,7 @@
                     "InstitutionFeeTypes"
                 ],
                 "summary": "Update InstitutionFeeTypes record by composite key",
-                "operationId": "4c1b37230f09752f5388221209d3e20c",
+                "operationId": "ca4cfeb8e03dfdf16c65d32bcfdcfb60",
                 "parameters": [
                     {
                         "name": "institution_fee_id",
@@ -176758,7 +176760,7 @@
                     "InstitutionFeeTypes"
                 ],
                 "summary": "Delete InstitutionFeeTypes record by composite key",
-                "operationId": "01d2f354817cef08dc69acae805b6ff1",
+                "operationId": "f667c3afcf8ad5bc46bab75c8a553734",
                 "parameters": [
                     {
                         "name": "institution_fee_id",
@@ -178216,13 +178218,13 @@
                 }
             }
         },
-        "/api/v5/institution_outcome_results/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/outcome_criteria_id/{outcome_criteria_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
+        "/api/v5/institution-outcome-results/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/outcome_criteria_id/{outcome_criteria_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
             "get": {
                 "tags": [
                     "InstitutionOutcomeResults"
                 ],
                 "summary": "Get InstitutionOutcomeResults record by composite key",
-                "operationId": "7f2cd63f65258f05c4d2de18e5643ccf",
+                "operationId": "1179af1a2d59d416c1c112bc9a5ee232",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -178311,7 +178313,7 @@
                     "InstitutionOutcomeResults"
                 ],
                 "summary": "Update InstitutionOutcomeResults record by composite key",
-                "operationId": "0cb232477bfd21784023919b9e57e045",
+                "operationId": "631b64cbab47909ba968f63cb704a4e4",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -178413,7 +178415,7 @@
                     "InstitutionOutcomeResults"
                 ],
                 "summary": "Delete InstitutionOutcomeResults record by composite key",
-                "operationId": "42a2fd2d20af23f897f2e8cc928f66d8",
+                "operationId": "4649dc4cc559a0aa47ed58f19f45f3e0",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -178498,13 +178500,13 @@
                 }
             }
         },
-        "/api/v5/institution_outcome_subject_comments/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
+        "/api/v5/institution-outcome-subject-comments/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
             "get": {
                 "tags": [
                     "InstitutionOutcomeSubjectComments"
                 ],
                 "summary": "Get InstitutionOutcomeSubjectComments record by composite key",
-                "operationId": "6acec4ccf2d153a6ef72c7b0fd2b3351",
+                "operationId": "8ce64c212f9f6857fd28b6e584f5318f",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -178584,7 +178586,7 @@
                     "InstitutionOutcomeSubjectComments"
                 ],
                 "summary": "Update InstitutionOutcomeSubjectComments record by composite key",
-                "operationId": "4071a19f0334130d31400d44d02ddb9a",
+                "operationId": "5d80270be437380808f19562f76c6140",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -178677,7 +178679,7 @@
                     "InstitutionOutcomeSubjectComments"
                 ],
                 "summary": "Delete InstitutionOutcomeSubjectComments record by composite key",
-                "operationId": "5286614c70243a93e82772a83c68c226",
+                "operationId": "b4025a21ccea4aa308753cf25da00fb2",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -179963,13 +179965,13 @@
                 }
             }
         },
-        "/api/v5/institution_repeater_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_repeater_survey_id/{institution_repeater_survey_id}": {
+        "/api/v5/institution-repeater-survey-table-cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_repeater_survey_id/{institution_repeater_survey_id}": {
             "get": {
                 "tags": [
                     "InstitutionRepeaterSurveyTableCells"
                 ],
                 "summary": "Get InstitutionRepeaterSurveyTableCells record by composite key",
-                "operationId": "be1b5d3c09b4c2b90e37d5e405fb15f1",
+                "operationId": "a9562c4e0949e7a5e881bf657b76cb11",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -180022,7 +180024,7 @@
                     "InstitutionRepeaterSurveyTableCells"
                 ],
                 "summary": "Update InstitutionRepeaterSurveyTableCells record by composite key",
-                "operationId": "deeabcba89ea5d6e30edeb6576dcf9f5",
+                "operationId": "f07b3e1578a7adb873342f29e9fa0858",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -180088,7 +180090,7 @@
                     "InstitutionRepeaterSurveyTableCells"
                 ],
                 "summary": "Delete InstitutionRepeaterSurveyTableCells record by composite key",
-                "operationId": "0cfe9247d6aa5f01adb2d2e4effd2f71",
+                "operationId": "a02a1a330daf3fdfdde5f497ff7f8721",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -180284,13 +180286,13 @@
                 }
             }
         },
-        "/api/v5/institution_report_card_processes/report_card_id/{report_card_id}/institution_id/{institution_id}": {
+        "/api/v5/institution-report-card-processes/report_card_id/{report_card_id}/institution_id/{institution_id}": {
             "get": {
                 "tags": [
                     "InstitutionReportCardProcesses"
                 ],
                 "summary": "Get InstitutionReportCardProcesses record by composite key",
-                "operationId": "c569ddf139e2d438173cb70a5d525851",
+                "operationId": "85cae795c826dd1b8a0a6698a20c88c8",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -180325,7 +180327,7 @@
                     "InstitutionReportCardProcesses"
                 ],
                 "summary": "Update InstitutionReportCardProcesses record by composite key",
-                "operationId": "bc1972300930beef885dccb9b0d5f60a",
+                "operationId": "5d50ee691fd0744fb5e6f7090f294fea",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -180373,7 +180375,7 @@
                     "InstitutionReportCardProcesses"
                 ],
                 "summary": "Delete InstitutionReportCardProcesses record by composite key",
-                "operationId": "fca93725818453717bdecfe5e25513af",
+                "operationId": "7515490cfa9bd9cafc4866db6c8e59c2",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -180404,13 +180406,13 @@
                 }
             }
         },
-        "/api/v5/institution_report_cards/report_card_id/{report_card_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
+        "/api/v5/institution-report-cards/report_card_id/{report_card_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
             "get": {
                 "tags": [
                     "InstitutionReportCards"
                 ],
                 "summary": "Get InstitutionReportCards record by composite key",
-                "operationId": "f29c151d1e87d4c5fd85ec9c47058f89",
+                "operationId": "fa704ec70cd5ec59e9085be87e77489e",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -180454,7 +180456,7 @@
                     "InstitutionReportCards"
                 ],
                 "summary": "Update InstitutionReportCards record by composite key",
-                "operationId": "be03845459319a070a03935b1c58cb46",
+                "operationId": "0ecd127a205991ad8cea10a3a35255a4",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -180511,7 +180513,7 @@
                     "InstitutionReportCards"
                 ],
                 "summary": "Delete InstitutionReportCards record by composite key",
-                "operationId": "2208ecfbcbbd96867eef23e2ef5e8a47",
+                "operationId": "e2b20abb5b9071f2ea10610019b52c8c",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -184566,13 +184568,13 @@
                 }
             }
         },
-        "/api/v5/institution_staff_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_staff_survey_id/{institution_staff_survey_id}": {
+        "/api/v5/institution-staff-survey-table-cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_staff_survey_id/{institution_staff_survey_id}": {
             "get": {
                 "tags": [
                     "InstitutionStaffSurveyTableCells"
                 ],
                 "summary": "Get InstitutionStaffSurveyTableCells record by composite key",
-                "operationId": "3d8d3e723a96aa38bcf8c1dfa39de4c0",
+                "operationId": "6717d3ba4f55065b2c9de61f751fee7b",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -184625,7 +184627,7 @@
                     "InstitutionStaffSurveyTableCells"
                 ],
                 "summary": "Update InstitutionStaffSurveyTableCells record by composite key",
-                "operationId": "f3eacb013c0c5ff33e3f50e0d79c95ce",
+                "operationId": "b708615bdfbf9a4ab4ac474c14e721c4",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -184691,7 +184693,7 @@
                     "InstitutionStaffSurveyTableCells"
                 ],
                 "summary": "Delete InstitutionStaffSurveyTableCells record by composite key",
-                "operationId": "71ac5e6f2ad9b467c8fb165ed94a6ff1",
+                "operationId": "75fdaad2ed1a327d04a12f8f99def0b9",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -185485,13 +185487,13 @@
                 }
             }
         },
-        "/api/v5/institution_student_absence_details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}": {
+        "/api/v5/institution-student-absence-details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}": {
             "get": {
                 "tags": [
                     "InstitutionStudentAbsenceDetails"
                 ],
                 "summary": "Get InstitutionStudentAbsenceDetails record by composite key",
-                "operationId": "07e396bcda920820401aeaff4b994627",
+                "operationId": "7149c59e02a86e5044b3992f15deb079",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -185571,7 +185573,7 @@
                     "InstitutionStudentAbsenceDetails"
                 ],
                 "summary": "Update InstitutionStudentAbsenceDetails record by composite key",
-                "operationId": "e3b73a2ae3afeb3d57b838ff9bab418d",
+                "operationId": "35186069bd44d6ce7126b4ae65240455",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -185664,7 +185666,7 @@
                     "InstitutionStudentAbsenceDetails"
                 ],
                 "summary": "Delete InstitutionStudentAbsenceDetails record by composite key",
-                "operationId": "c301b7987fb8675d5ccfeb8c4a40d5e3",
+                "operationId": "bd5fcc89fe74746e458f590472f88417",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -186545,13 +186547,13 @@
                 }
             }
         },
-        "/api/v5/institution_student_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_student_survey_id/{institution_student_survey_id}": {
+        "/api/v5/institution-student-survey-table-cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_student_survey_id/{institution_student_survey_id}": {
             "get": {
                 "tags": [
                     "InstitutionStudentSurveyTableCells"
                 ],
                 "summary": "Get InstitutionStudentSurveyTableCells record by composite key",
-                "operationId": "340250011bad1f1e95bb316fd81d20a4",
+                "operationId": "89d55969c09a7abbc1ce05ef3f870531",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -186604,7 +186606,7 @@
                     "InstitutionStudentSurveyTableCells"
                 ],
                 "summary": "Update InstitutionStudentSurveyTableCells record by composite key",
-                "operationId": "d652a18e04c244ed8aea3d3c8069db7a",
+                "operationId": "9ad9eac70b8d3e276407d65b39212fd0",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -186670,7 +186672,7 @@
                     "InstitutionStudentSurveyTableCells"
                 ],
                 "summary": "Delete InstitutionStudentSurveyTableCells record by composite key",
-                "operationId": "ea76623015f352bf206bf7dd7780b598",
+                "operationId": "05763056d220354c306d25c6ed3a2d82",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -187868,13 +187870,13 @@
                 }
             }
         },
-        "/api/v5/institution_students_report_cards/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}": {
+        "/api/v5/institution-students-report-cards/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}": {
             "get": {
                 "tags": [
                     "InstitutionStudentsReportCards"
                 ],
                 "summary": "Get InstitutionStudentsReportCards record by composite key",
-                "operationId": "5ddf6b31828c2cd30f17bd061c62f8f6",
+                "operationId": "3b8d1146fdecbbe9eb3e9b69343a1e6a",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -187936,7 +187938,7 @@
                     "InstitutionStudentsReportCards"
                 ],
                 "summary": "Update InstitutionStudentsReportCards record by composite key",
-                "operationId": "8cae766b9c9cd42580ea051ec2a42f52",
+                "operationId": "21d2e3d23200d1f1823728c099320a80",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -188011,7 +188013,7 @@
                     "InstitutionStudentsReportCards"
                 ],
                 "summary": "Delete InstitutionStudentsReportCards record by composite key",
-                "operationId": "b3a3dd64ca8522161c4b8e6c4b91ea4f",
+                "operationId": "ed35ca38acc8d0b6ad51f4dc5beacb60",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -188069,13 +188071,13 @@
                 }
             }
         },
-        "/api/v5/institution_students_report_cards_comments/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}": {
+        "/api/v5/institution-students-report-cards-comments/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}": {
             "get": {
                 "tags": [
                     "InstitutionStudentsReportCardsComments"
                 ],
                 "summary": "Get InstitutionStudentsReportCardsComments record by composite key",
-                "operationId": "b01c5c0e07e961426537604d1a8e8774",
+                "operationId": "e36582dc3c0e1a7ebe60df8df92d6991",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -188140,13 +188142,15 @@
                         "description": "Record not found"
                     }
                 }
-            },
+            }
+        },
+        "/api/v5/institution_students_report_cards-comments/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}": {
             "put": {
                 "tags": [
                     "InstitutionStudentsReportCardsComments"
                 ],
                 "summary": "Update InstitutionStudentsReportCardsComments record by composite key",
-                "operationId": "90c55fe628262e075349b082615edbc1",
+                "operationId": "f90ca01582676bb1da8916376a151905",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -188230,7 +188234,7 @@
                     "InstitutionStudentsReportCardsComments"
                 ],
                 "summary": "Delete InstitutionStudentsReportCardsComments record by composite key",
-                "operationId": "ffe7fde4a3ff7eab5029b2917d564479",
+                "operationId": "1195ef3d7cbe107126fcc1e900aabcb8",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -188561,13 +188565,13 @@
                 }
             }
         },
-        "/api/v5/institution_subject_students/student_id/{student_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}": {
+        "/api/v5/institution-subject-students/student_id/{student_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}": {
             "get": {
                 "tags": [
                     "InstitutionSubjectStudents"
                 ],
                 "summary": "Get InstitutionSubjectStudents record by composite key",
-                "operationId": "4c89cff9603b7503b4a0568986d64cbe",
+                "operationId": "f1b0cbae141f4ae951011d8dc4769115",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -188638,7 +188642,7 @@
                     "InstitutionSubjectStudents"
                 ],
                 "summary": "Update InstitutionSubjectStudents record by composite key",
-                "operationId": "33dd629a6f2577bf16ce4ca168a7c271",
+                "operationId": "d63780cf083d80dd710eaba01c35952e",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -188722,7 +188726,7 @@
                     "InstitutionSubjectStudents"
                 ],
                 "summary": "Delete InstitutionSubjectStudents record by composite key",
-                "operationId": "c0d973bd3d3669e1bec820901ef5ea6e",
+                "operationId": "2244cbaa5ee258d3691a2ed9a9dfdc4a",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -189217,13 +189221,13 @@
                 }
             }
         },
-        "/api/v5/institution_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_survey_id/{institution_survey_id}": {
+        "/api/v5/institution-survey-table-cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_survey_id/{institution_survey_id}": {
             "get": {
                 "tags": [
                     "InstitutionSurveyTableCells"
                 ],
                 "summary": "Get InstitutionSurveyTableCells record by composite key",
-                "operationId": "33f5e72247d8fe693d1e6d42552b3506",
+                "operationId": "a6c651fd42de3b0c0a13b0c5d6f1f47b",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -189276,7 +189280,7 @@
                     "InstitutionSurveyTableCells"
                 ],
                 "summary": "Update InstitutionSurveyTableCells record by composite key",
-                "operationId": "9360d7b3619ebf96eeaa7023fe5925f3",
+                "operationId": "c178a3aec270c57ce659ba4faaca99be",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -189342,7 +189346,7 @@
                     "InstitutionSurveyTableCells"
                 ],
                 "summary": "Delete InstitutionSurveyTableCells record by composite key",
-                "operationId": "173425bcb69628faf4688ba82eee241c",
+                "operationId": "af9b1a7b8f885899d490ac9c8f7a1264",
                 "parameters": [
                     {
                         "name": "survey_question_id",
@@ -189848,13 +189852,13 @@
                 }
             }
         },
-        "/api/v5/institution_trip_days/institution_trip_id/{institution_trip_id}/day/{day}": {
+        "/api/v5/institution-trip-days/institution_trip_id/{institution_trip_id}/day/{day}": {
             "get": {
                 "tags": [
                     "InstitutionTripDays"
                 ],
                 "summary": "Get InstitutionTripDays record by composite key",
-                "operationId": "40739f022fd419ed33a130ee42d5bc8a",
+                "operationId": "3e68ea4c3a7432f9cf4fa230e070ece3",
                 "parameters": [
                     {
                         "name": "institution_trip_id",
@@ -189889,7 +189893,7 @@
                     "InstitutionTripDays"
                 ],
                 "summary": "Update InstitutionTripDays record by composite key",
-                "operationId": "ebdbacd50854d4bc9abc22cc745598ef",
+                "operationId": "5030d898b9c51ac7c4096e840d146dcc",
                 "parameters": [
                     {
                         "name": "institution_trip_id",
@@ -189937,7 +189941,7 @@
                     "InstitutionTripDays"
                 ],
                 "summary": "Delete InstitutionTripDays record by composite key",
-                "operationId": "05479db2d465de5349234cad50ee7db5",
+                "operationId": "2cca1a8dedcb7a423376ae48cda529e4",
                 "parameters": [
                     {
                         "name": "institution_trip_id",
@@ -189968,13 +189972,13 @@
                 }
             }
         },
-        "/api/v5/institution_trip_passengers/student_id/{student_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/institution_id/{institution_id}/institution_trip_id/{institution_trip_id}": {
+        "/api/v5/institution-trip-passengers/student_id/{student_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/institution_id/{institution_id}/institution_trip_id/{institution_trip_id}": {
             "get": {
                 "tags": [
                     "InstitutionTripPassengers"
                 ],
                 "summary": "Get InstitutionTripPassengers record by composite key",
-                "operationId": "562b483b69b6433403d0ef37b080a55a",
+                "operationId": "004936912bf8cceb46c25484d7dcabf9",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -190036,7 +190040,7 @@
                     "InstitutionTripPassengers"
                 ],
                 "summary": "Update InstitutionTripPassengers record by composite key",
-                "operationId": "aaa5e991afafd56c23bf78d18cd22861",
+                "operationId": "9b0c8fc4ecec46918fc3a18f0f76da1c",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -190111,7 +190115,7 @@
                     "InstitutionTripPassengers"
                 ],
                 "summary": "Delete InstitutionTripPassengers record by composite key",
-                "operationId": "74e46fed1a52d6157b814da6262471a4",
+                "operationId": "28d3ef65f7c9829397c5c8a63103e633",
                 "parameters": [
                     {
                         "name": "student_id",
@@ -195641,13 +195645,13 @@
                 }
             }
         },
-        "/api/v5/outcome_criterias/id/{id}/academic_period_id/{academic_period_id}/outcome_template_id/{outcome_template_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}": {
+        "/api/v5/outcome-criterias/id/{id}/academic_period_id/{academic_period_id}/outcome_template_id/{outcome_template_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}": {
             "get": {
                 "tags": [
                     "OutcomeCriterias"
                 ],
                 "summary": "Get OutcomeCriterias record by composite key",
-                "operationId": "0139821790be4c4befa0d58679b6a843",
+                "operationId": "aa207e10dacf438f14060351d5e7fd90",
                 "parameters": [
                     {
                         "name": "id",
@@ -195709,7 +195713,7 @@
                     "OutcomeCriterias"
                 ],
                 "summary": "Update OutcomeCriterias record by composite key",
-                "operationId": "706481cb21ebe5505c864aa75a42f66b",
+                "operationId": "7301263b43e9b00a6b794054f6f52745",
                 "parameters": [
                     {
                         "name": "id",
@@ -195784,7 +195788,7 @@
                     "OutcomeCriterias"
                 ],
                 "summary": "Delete OutcomeCriterias record by composite key",
-                "operationId": "81fca2b5de6e890fe0f272bdb63a3e09",
+                "operationId": "26892dfe66cdbe35176f79051283b4f8",
                 "parameters": [
                     {
                         "name": "id",
@@ -196112,13 +196116,13 @@
                 }
             }
         },
-        "/api/v5/outcome_periods/id/{id}/academic_period_id/{academic_period_id}": {
+        "/api/v5/outcome-periods/id/{id}/academic_period_id/{academic_period_id}": {
             "get": {
                 "tags": [
                     "OutcomePeriods"
                 ],
                 "summary": "Get OutcomePeriods record by composite key",
-                "operationId": "149a9c22bb9642ae4a76905de1d77d75",
+                "operationId": "1adeb3afbb139f942977c5178c5291b0",
                 "parameters": [
                     {
                         "name": "id",
@@ -196153,7 +196157,7 @@
                     "OutcomePeriods"
                 ],
                 "summary": "Update OutcomePeriods record by composite key",
-                "operationId": "c1fe867129e82344a4f72431dafb0c44",
+                "operationId": "5677de100d16456fce4213f0d8470a59",
                 "parameters": [
                     {
                         "name": "id",
@@ -196201,7 +196205,7 @@
                     "OutcomePeriods"
                 ],
                 "summary": "Delete OutcomePeriods record by composite key",
-                "operationId": "4c645b50c820acbe08d9db45755fddf4",
+                "operationId": "a96a6dd343b54fcc5b5c8ac450f70c28",
                 "parameters": [
                     {
                         "name": "id",
@@ -196232,13 +196236,13 @@
                 }
             }
         },
-        "/api/v5/outcome_templates/id/{id}/academic_period_id/{academic_period_id}": {
+        "/api/v5/outcome-templates/id/{id}/academic_period_id/{academic_period_id}": {
             "get": {
                 "tags": [
                     "OutcomeTemplates"
                 ],
                 "summary": "Get OutcomeTemplates record by composite key",
-                "operationId": "d436a3704e56504d91233577d3bbfd7f",
+                "operationId": "9aceefd2197390b3b5362932a5fd7769",
                 "parameters": [
                     {
                         "name": "id",
@@ -196273,7 +196277,7 @@
                     "OutcomeTemplates"
                 ],
                 "summary": "Update OutcomeTemplates record by composite key",
-                "operationId": "51b7da28e41e8ceda3569c7b5936ca41",
+                "operationId": "8a39260e4e127c808fc6d49acfa4924f",
                 "parameters": [
                     {
                         "name": "id",
@@ -196321,7 +196325,7 @@
                     "OutcomeTemplates"
                 ],
                 "summary": "Delete OutcomeTemplates record by composite key",
-                "operationId": "97e99c84cb31ec02b38d448f51c4dfd6",
+                "operationId": "64d22977ebfc61d5fc0658e5848b17cd",
                 "parameters": [
                     {
                         "name": "id",
@@ -197395,13 +197399,13 @@
                 }
             }
         },
-        "/api/v5/report_card_email_processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}": {
+        "/api/v5/report-card-email-processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}": {
             "get": {
                 "tags": [
                     "ReportCardEmailProcesses"
                 ],
                 "summary": "Get ReportCardEmailProcesses record by composite key",
-                "operationId": "3eb1387159f40ce2b1fd4d8cce93987e",
+                "operationId": "d485c92e7e48a4c80c28309c62d7d47f",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -197445,7 +197449,7 @@
                     "ReportCardEmailProcesses"
                 ],
                 "summary": "Update ReportCardEmailProcesses record by composite key",
-                "operationId": "e802683f0ff61d03e53f61d874a4b8a1",
+                "operationId": "d8a932cd9d239ceac005103b7f09211a",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -197502,7 +197506,7 @@
                     "ReportCardEmailProcesses"
                 ],
                 "summary": "Delete ReportCardEmailProcesses record by composite key",
-                "operationId": "073fbed8cd73c9518b5b054322dda63a",
+                "operationId": "b859f9fb9f7f4826f378980aab5f9101",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -197655,13 +197659,13 @@
                 }
             }
         },
-        "/api/v5/report_card_processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}": {
+        "/api/v5/report-card-processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}": {
             "get": {
                 "tags": [
                     "ReportCardProcesses"
                 ],
                 "summary": "Get ReportCardProcesses record by composite key",
-                "operationId": "ae96fd3cebdaae896afe2afac65e251c",
+                "operationId": "4d50eb53970555cbf07f0c36837734cc",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -197705,7 +197709,7 @@
                     "ReportCardProcesses"
                 ],
                 "summary": "Update ReportCardProcesses record by composite key",
-                "operationId": "21f3e37b33c9bf06f764afadfca4ca22",
+                "operationId": "470ff21520bd8b0524b6b9b5ec7d2057",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -197762,7 +197766,7 @@
                     "ReportCardProcesses"
                 ],
                 "summary": "Delete ReportCardProcesses record by composite key",
-                "operationId": "18e12906acf990f1d38adaa219435571",
+                "operationId": "d05fc0bdc8750578dcd927f514a5cdea",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -197802,13 +197806,13 @@
                 }
             }
         },
-        "/api/v5/report_card_subjects/report_card_id/{report_card_id}/education_subject_id/{education_subject_id}": {
+        "/api/v5/report-card-subjects/report_card_id/{report_card_id}/education_subject_id/{education_subject_id}": {
             "get": {
                 "tags": [
                     "ReportCardSubjects"
                 ],
                 "summary": "Get ReportCardSubjects record by composite key",
-                "operationId": "a0161a2a6127e512d2e1cc9a7177da8f",
+                "operationId": "3179c4bf7eaa4617a9745c75fb58490c",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -197843,7 +197847,7 @@
                     "ReportCardSubjects"
                 ],
                 "summary": "Update ReportCardSubjects record by composite key",
-                "operationId": "8ada3efc2a56ed530bc43886ddb99843",
+                "operationId": "92fb1db2d31d900786f656d5bafa4978",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -197891,7 +197895,7 @@
                     "ReportCardSubjects"
                 ],
                 "summary": "Delete ReportCardSubjects record by composite key",
-                "operationId": "5a2af9c795fd6ca032d2300a3c51d779",
+                "operationId": "e4d8fc4c68cde282e8c17ee73563d62e",
                 "parameters": [
                     {
                         "name": "report_card_id",
@@ -200953,13 +200957,13 @@
                 }
             }
         },
-        "/api/v5/scholarship_applications/applicant_id/{applicant_id}/scholarship_id/{scholarship_id}": {
+        "/api/v5/scholarship-applications/applicant_id/{applicant_id}/scholarship_id/{scholarship_id}": {
             "get": {
                 "tags": [
                     "ScholarshipApplications"
                 ],
                 "summary": "Get ScholarshipApplications record by composite key",
-                "operationId": "6edcd8687481d0a46a1eb74a1a12e374",
+                "operationId": "59ea9790a2efbd8dbdfdeb6f52cefa5f",
                 "parameters": [
                     {
                         "name": "applicant_id",
@@ -200994,7 +200998,7 @@
                     "ScholarshipApplications"
                 ],
                 "summary": "Update ScholarshipApplications record by composite key",
-                "operationId": "3cd50af0e7a1377b3dce9c1031c191d2",
+                "operationId": "cac965c7c31f5384132c4dae26de0c3b",
                 "parameters": [
                     {
                         "name": "applicant_id",
@@ -201042,7 +201046,7 @@
                     "ScholarshipApplications"
                 ],
                 "summary": "Delete ScholarshipApplications record by composite key",
-                "operationId": "bbc70767a6cb4dbc2f5eff6b4ed1fcc0",
+                "operationId": "c8e346847fa9912c535227e6c84b2438",
                 "parameters": [
                     {
                         "name": "applicant_id",
@@ -203394,13 +203398,13 @@
                 }
             }
         },
-        "/api/v5/scholarship_recipients/recipient_id/{recipient_id}/scholarship_id/{scholarship_id}": {
+        "/api/v5/scholarship-recipients/recipient_id/{recipient_id}/scholarship_id/{scholarship_id}": {
             "get": {
                 "tags": [
                     "ScholarshipRecipients"
                 ],
                 "summary": "Get ScholarshipRecipients record by composite key",
-                "operationId": "049f3f434b9c8ed64162dc073149b414",
+                "operationId": "5b83027114a5686d06bf4f9adbe6ad93",
                 "parameters": [
                     {
                         "name": "recipient_id",
@@ -203435,7 +203439,7 @@
                     "ScholarshipRecipients"
                 ],
                 "summary": "Update ScholarshipRecipients record by composite key",
-                "operationId": "586cc2f89636ed060c1b57e27cbbd8d4",
+                "operationId": "4865742794a96fb7b75a30a54379f029",
                 "parameters": [
                     {
                         "name": "recipient_id",
@@ -203483,7 +203487,7 @@
                     "ScholarshipRecipients"
                 ],
                 "summary": "Delete ScholarshipRecipients record by composite key",
-                "operationId": "151885a45163fd89e2e13a842d540dea",
+                "operationId": "11f87faaa4f06080e98c963efe147fc0",
                 "parameters": [
                     {
                         "name": "recipient_id",
@@ -203854,13 +203858,13 @@
                 }
             }
         },
-        "/api/v5/scholarships_field_of_studies/scholarship_id/{scholarship_id}/education_field_of_study_id/{education_field_of_study_id}": {
+        "/api/v5/scholarships-field-of-studies/scholarship_id/{scholarship_id}/education_field_of_study_id/{education_field_of_study_id}": {
             "get": {
                 "tags": [
                     "ScholarshipsFieldOfStudies"
                 ],
                 "summary": "Get ScholarshipsFieldOfStudies record by composite key",
-                "operationId": "84a5d3070949740750cc4ee70af3f26e",
+                "operationId": "25b782119fc7eebd230bf52940b1ae9a",
                 "parameters": [
                     {
                         "name": "scholarship_id",
@@ -203895,7 +203899,7 @@
                     "ScholarshipsFieldOfStudies"
                 ],
                 "summary": "Update ScholarshipsFieldOfStudies record by composite key",
-                "operationId": "fa8e86b475547481127bf4c4d9e2780b",
+                "operationId": "e263e1bf89b5d223402d8466394cb852",
                 "parameters": [
                     {
                         "name": "scholarship_id",
@@ -203943,7 +203947,7 @@
                     "ScholarshipsFieldOfStudies"
                 ],
                 "summary": "Delete ScholarshipsFieldOfStudies record by composite key",
-                "operationId": "26b9f960f24d0dac4bfdee2aa845ce74",
+                "operationId": "eadb53d2712fb58673ae76f60ccc48ad",
                 "parameters": [
                     {
                         "name": "scholarship_id",
@@ -203974,13 +203978,13 @@
                 }
             }
         },
-        "/api/v5/scholarships_scholarship_attachment_types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}": {
+        "/api/v5/scholarships-scholarship-attachment-types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}": {
             "get": {
                 "tags": [
                     "ScholarshipsScholarshipAttachmentTypes"
                 ],
                 "summary": "Get ScholarshipsScholarshipAttachmentTypes record by composite key",
-                "operationId": "e9a115e7671e66d4b169688f33a02675",
+                "operationId": "dac6be9bfbde9a43affb0f10b7b2442b",
                 "parameters": [
                     {
                         "name": "scholarship_id",
@@ -204015,7 +204019,7 @@
                     "ScholarshipsScholarshipAttachmentTypes"
                 ],
                 "summary": "Update ScholarshipsScholarshipAttachmentTypes record by composite key",
-                "operationId": "cb887480d5292972de0cbf51dce02adb",
+                "operationId": "ef86c0682f7e0f015fbb937cf8822a18",
                 "parameters": [
                     {
                         "name": "scholarship_id",
@@ -204063,7 +204067,7 @@
                     "ScholarshipsScholarshipAttachmentTypes"
                 ],
                 "summary": "Delete ScholarshipsScholarshipAttachmentTypes record by composite key",
-                "operationId": "ed08b2996123336a4b26715476841bc8",
+                "operationId": "bae96391024bf68e592889c27096667f",
                 "parameters": [
                     {
                         "name": "scholarship_id",
@@ -204269,13 +204273,13 @@
                 }
             }
         },
-        "/api/v5/security_group_areas/security_group_id/{security_group_id}/area_id/{area_id}": {
+        "/api/v5/security-group-areas/security_group_id/{security_group_id}/area_id/{area_id}": {
             "get": {
                 "tags": [
                     "SecurityGroupAreas"
                 ],
                 "summary": "Get SecurityGroupAreas record by composite key",
-                "operationId": "6824a6e340f6f00a885df659b69feb84",
+                "operationId": "357958d56da53e5f04942a8f6e10210d",
                 "parameters": [
                     {
                         "name": "security_group_id",
@@ -204310,7 +204314,7 @@
                     "SecurityGroupAreas"
                 ],
                 "summary": "Update SecurityGroupAreas record by composite key",
-                "operationId": "0fe049059256c7cd57861f51ae0eac00",
+                "operationId": "c125f9cd342dd4834f08f1c9583c3835",
                 "parameters": [
                     {
                         "name": "security_group_id",
@@ -204358,7 +204362,7 @@
                     "SecurityGroupAreas"
                 ],
                 "summary": "Delete SecurityGroupAreas record by composite key",
-                "operationId": "2b02ad4eab3536dc9d3eab5c8469f071",
+                "operationId": "21d4f04f12bf2c17b04adf8eed003bfc",
                 "parameters": [
                     {
                         "name": "security_group_id",
@@ -204389,13 +204393,13 @@
                 }
             }
         },
-        "/api/v5/security_group_institutions/security_group_id/{security_group_id}/institution_id/{institution_id}": {
+        "/api/v5/security-group-institutions/security_group_id/{security_group_id}/institution_id/{institution_id}": {
             "get": {
                 "tags": [
                     "SecurityGroupInstitutions"
                 ],
                 "summary": "Get SecurityGroupInstitutions record by composite key",
-                "operationId": "afb4976dce99cbd7b13f1c81d53089dd",
+                "operationId": "cfb5c3e1f3a35516b43e458cf506a12e",
                 "parameters": [
                     {
                         "name": "security_group_id",
@@ -204430,7 +204434,7 @@
                     "SecurityGroupInstitutions"
                 ],
                 "summary": "Update SecurityGroupInstitutions record by composite key",
-                "operationId": "7d1811f69a9dd29088d00cb7afe66684",
+                "operationId": "562acfeaeadfcf54f37517d7f2f3caeb",
                 "parameters": [
                     {
                         "name": "security_group_id",
@@ -204478,7 +204482,7 @@
                     "SecurityGroupInstitutions"
                 ],
                 "summary": "Delete SecurityGroupInstitutions record by composite key",
-                "operationId": "c1ddbebbbaf6fdf3ed802712f1a3a28f",
+                "operationId": "1c7542555eb10c8dc90039075b77620b",
                 "parameters": [
                     {
                         "name": "security_group_id",
@@ -204898,13 +204902,13 @@
                 }
             }
         },
-        "/api/v5/security_role_functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}": {
+        "/api/v5/security-role-functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}": {
             "get": {
                 "tags": [
                     "SecurityRoleFunctions"
                 ],
                 "summary": "Get SecurityRoleFunctions record by composite key",
-                "operationId": "fd170c1318a23881bcff39b66fa6e11c",
+                "operationId": "bc1de9b1298fa8ed170a724a381418a4",
                 "parameters": [
                     {
                         "name": "security_role_id",
@@ -204939,7 +204943,7 @@
                     "SecurityRoleFunctions"
                 ],
                 "summary": "Update SecurityRoleFunctions record by composite key",
-                "operationId": "0a30bdc799f7f81dff3d9625970e224e",
+                "operationId": "754e7537abd94f285b9bd25d34858f6c",
                 "parameters": [
                     {
                         "name": "security_role_id",
@@ -204987,7 +204991,7 @@
                     "SecurityRoleFunctions"
                 ],
                 "summary": "Delete SecurityRoleFunctions record by composite key",
-                "operationId": "6359a326d538869b431b54310ebcc7e9",
+                "operationId": "ffd7a210eda4a30d90cec38fb50d2b10",
                 "parameters": [
                     {
                         "name": "security_role_id",
@@ -205279,13 +205283,13 @@
                 }
             }
         },
-        "/api/v5/security_user_logins/id/{id}/login_period/{login_period}": {
+        "/api/v5/security-user-logins/id/{id}/login_period/{login_period}": {
             "get": {
                 "tags": [
                     "SecurityUserLogins"
                 ],
                 "summary": "Get SecurityUserLogins record by composite key",
-                "operationId": "d7eeef3f84de6ac000a9925811dad494",
+                "operationId": "c05c7ccd11a4f442d9ff2384668f7976",
                 "parameters": [
                     {
                         "name": "id",
@@ -205320,7 +205324,7 @@
                     "SecurityUserLogins"
                 ],
                 "summary": "Update SecurityUserLogins record by composite key",
-                "operationId": "83f42828265663dfe68854dfba86f3f4",
+                "operationId": "f98b1dc69b2d1a871daf8d746342da2a",
                 "parameters": [
                     {
                         "name": "id",
@@ -205368,7 +205372,7 @@
                     "SecurityUserLogins"
                 ],
                 "summary": "Delete SecurityUserLogins record by composite key",
-                "operationId": "e1c46b6fa2586ac28ba1bee2e241c4f6",
+                "operationId": "b081182eb7d021bb1d05be723deb62ae",
                 "parameters": [
                     {
                         "name": "id",
@@ -205522,13 +205526,13 @@
                 }
             }
         },
-        "/api/v5/security_user_sessions/id/{id}/username/{username}": {
+        "/api/v5/security-user-sessions/id/{id}/username/{username}": {
             "get": {
                 "tags": [
                     "SecurityUserSessions"
                 ],
                 "summary": "Get SecurityUserSessions record by composite key",
-                "operationId": "041c5b0c3ffc50f21b49271aa479b721",
+                "operationId": "2f6968fafcca9d00185534ef88006b8e",
                 "parameters": [
                     {
                         "name": "id",
@@ -205563,7 +205567,7 @@
                     "SecurityUserSessions"
                 ],
                 "summary": "Update SecurityUserSessions record by composite key",
-                "operationId": "c144d95b0cfd5fd2acd29b64937b2023",
+                "operationId": "e34c0601d47bc85dc9a44e9fe75efc53",
                 "parameters": [
                     {
                         "name": "id",
@@ -205611,7 +205615,7 @@
                     "SecurityUserSessions"
                 ],
                 "summary": "Delete SecurityUserSessions record by composite key",
-                "operationId": "3940d0fb6545d353f431f427a7cb4c03",
+                "operationId": "03494567fdb5c5c794c4dc6f96642171",
                 "parameters": [
                     {
                         "name": "id",
@@ -208979,13 +208983,13 @@
                 }
             }
         },
-        "/api/v5/staff_custom_table_cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}": {
+        "/api/v5/staff-custom-table-cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}": {
             "get": {
                 "tags": [
                     "StaffCustomTableCells"
                 ],
                 "summary": "Get StaffCustomTableCells record by composite key",
-                "operationId": "419f9a956637155f0da3ac67fb3c40da",
+                "operationId": "464861dcf2e8f4662cc7f51ba682b375",
                 "parameters": [
                     {
                         "name": "staff_custom_field_id",
@@ -209038,7 +209042,7 @@
                     "StaffCustomTableCells"
                 ],
                 "summary": "Update StaffCustomTableCells record by composite key",
-                "operationId": "8bcd8ab037b2faa468d5b3dae408c7da",
+                "operationId": "52306b9e65e19d96734cae99c2c2174c",
                 "parameters": [
                     {
                         "name": "staff_custom_field_id",
@@ -209104,7 +209108,7 @@
                     "StaffCustomTableCells"
                 ],
                 "summary": "Delete StaffCustomTableCells record by composite key",
-                "operationId": "f032a7b5f3feebf8f7c3e8a95b8eac92",
+                "operationId": "57814022a405c85fe594386aa79b69b5",
                 "parameters": [
                     {
                         "name": "staff_custom_field_id",
@@ -210598,13 +210602,13 @@
                 }
             }
         },
-        "/api/v5/staff_licenses_classifications/staff_license_id/{staff_license_id}/license_classification_id/{license_classification_id}": {
+        "/api/v5/staff-licenses-classifications/staff_license_id/{staff_license_id}/license_classification_id/{license_classification_id}": {
             "get": {
                 "tags": [
                     "StaffLicensesClassifications"
                 ],
                 "summary": "Get StaffLicensesClassifications record by composite key",
-                "operationId": "fb691f33a0fb0cea8eccb5ab994411ad",
+                "operationId": "d8a2b20b06dec89ffcd002716bcdbff2",
                 "parameters": [
                     {
                         "name": "staff_license_id",
@@ -210639,7 +210643,7 @@
                     "StaffLicensesClassifications"
                 ],
                 "summary": "Update StaffLicensesClassifications record by composite key",
-                "operationId": "75f77f983017d875cca5f8f5a1a4823a",
+                "operationId": "dfe215b606a28600b4377dc7c29068d1",
                 "parameters": [
                     {
                         "name": "staff_license_id",
@@ -210687,7 +210691,7 @@
                     "StaffLicensesClassifications"
                 ],
                 "summary": "Delete StaffLicensesClassifications record by composite key",
-                "operationId": "e33432aa8f2d90db1a44d27cdb24255c",
+                "operationId": "1b4b3782397cb3f388d07155007b235b",
                 "parameters": [
                     {
                         "name": "staff_license_id",
@@ -211487,13 +211491,13 @@
                 }
             }
         },
-        "/api/v5/staff_position_titles_grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}": {
+        "/api/v5/staff-position-titles-grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}": {
             "get": {
                 "tags": [
                     "StaffPositionTitlesGrades"
                 ],
                 "summary": "Get StaffPositionTitlesGrades record by composite key",
-                "operationId": "79c0f0d787bb99ccd32470813fcb3ad4",
+                "operationId": "66799e2c977d00f13971d2a9aea48d27",
                 "parameters": [
                     {
                         "name": "staff_position_title_id",
@@ -211528,7 +211532,7 @@
                     "StaffPositionTitlesGrades"
                 ],
                 "summary": "Update StaffPositionTitlesGrades record by composite key",
-                "operationId": "efa98312da60c6d7579d04e51c2daffb",
+                "operationId": "1821b2f65ad3ace66fc30325f49f9638",
                 "parameters": [
                     {
                         "name": "staff_position_title_id",
@@ -211576,7 +211580,7 @@
                     "StaffPositionTitlesGrades"
                 ],
                 "summary": "Delete StaffPositionTitlesGrades record by composite key",
-                "operationId": "87ebf9212cf6ad81c42a1cd43648b22e",
+                "operationId": "53b6a989623ff0acf243d934465183ad",
                 "parameters": [
                     {
                         "name": "staff_position_title_id",
@@ -211927,13 +211931,13 @@
                 }
             }
         },
-        "/api/v5/staff_qualifications_specialisations/staff_qualification_id/{staff_qualification_id}/qualification_specialisation_id/{qualification_specialisation_id}": {
+        "/api/v5/staff-qualifications-specialisations/staff_qualification_id/{staff_qualification_id}/qualification_specialisation_id/{qualification_specialisation_id}": {
             "get": {
                 "tags": [
                     "StaffQualificationsSpecialisations"
                 ],
                 "summary": "Get StaffQualificationsSpecialisations record by composite key",
-                "operationId": "85098bcabf6bddd62f37d589bb428c52",
+                "operationId": "b48ef91968183300a85c2717185677ca",
                 "parameters": [
                     {
                         "name": "staff_qualification_id",
@@ -211968,7 +211972,7 @@
                     "StaffQualificationsSpecialisations"
                 ],
                 "summary": "Update StaffQualificationsSpecialisations record by composite key",
-                "operationId": "223fd5ed469d481632cff6708e1cc199",
+                "operationId": "c6e3ddf3dafae412fcc81093bd1f8a43",
                 "parameters": [
                     {
                         "name": "staff_qualification_id",
@@ -212016,7 +212020,7 @@
                     "StaffQualificationsSpecialisations"
                 ],
                 "summary": "Delete StaffQualificationsSpecialisations record by composite key",
-                "operationId": "f3e287c152c8575d71ae4663a51e1af4",
+                "operationId": "51b1c9f49e0f58f0cc920a0b1caae939",
                 "parameters": [
                     {
                         "name": "staff_qualification_id",
@@ -212047,13 +212051,13 @@
                 }
             }
         },
-        "/api/v5/staff_qualifications_subjects/staff_qualification_id/{staff_qualification_id}/education_subject_id/{education_subject_id}": {
+        "/api/v5/staff-qualifications-subjects/staff_qualification_id/{staff_qualification_id}/education_subject_id/{education_subject_id}": {
             "get": {
                 "tags": [
                     "StaffQualificationsSubjects"
                 ],
                 "summary": "Get StaffQualificationsSubjects record by composite key",
-                "operationId": "6954bf3410add31550f4d9695fb431f2",
+                "operationId": "e7585e7273dcc29984974456a714e08d",
                 "parameters": [
                     {
                         "name": "staff_qualification_id",
@@ -212088,7 +212092,7 @@
                     "StaffQualificationsSubjects"
                 ],
                 "summary": "Update StaffQualificationsSubjects record by composite key",
-                "operationId": "bc6791f9219b74a47a97ef7c5b64d073",
+                "operationId": "919791580232d7318a99fa98c315bb5a",
                 "parameters": [
                     {
                         "name": "staff_qualification_id",
@@ -212136,7 +212140,7 @@
                     "StaffQualificationsSubjects"
                 ],
                 "summary": "Delete StaffQualificationsSubjects record by composite key",
-                "operationId": "27c07afad83565502acc46d607e29895",
+                "operationId": "7b9d8498ac010f4e38567b25c06966fc",
                 "parameters": [
                     {
                         "name": "staff_qualification_id",
@@ -212167,13 +212171,13 @@
                 }
             }
         },
-        "/api/v5/staff_report_card_email_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}": {
+        "/api/v5/staff-report-card-email-processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}": {
             "get": {
                 "tags": [
                     "StaffReportCardEmailProcesses"
                 ],
                 "summary": "Get StaffReportCardEmailProcesses record by composite key",
-                "operationId": "deebe3beb051253cf1a280c06f3951f7",
+                "operationId": "e92e1b1e770be60d9912b62812245527",
                 "parameters": [
                     {
                         "name": "staff_profile_template_id",
@@ -212208,7 +212212,7 @@
                     "StaffReportCardEmailProcesses"
                 ],
                 "summary": "Update StaffReportCardEmailProcesses record by composite key",
-                "operationId": "3157b44eb1cb83f080f4f24ca0dff86a",
+                "operationId": "68076393cadd3ddcb46d271b27284fb0",
                 "parameters": [
                     {
                         "name": "staff_profile_template_id",
@@ -212256,7 +212260,7 @@
                     "StaffReportCardEmailProcesses"
                 ],
                 "summary": "Delete StaffReportCardEmailProcesses record by composite key",
-                "operationId": "b8aca665c633cd4d232988fbdce7136e",
+                "operationId": "a45953d6069371541f89a70a199ab77d",
                 "parameters": [
                     {
                         "name": "staff_profile_template_id",
@@ -212287,13 +212291,13 @@
                 }
             }
         },
-        "/api/v5/staff_report_card_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}": {
+        "/api/v5/staff-report-card-processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}": {
             "get": {
                 "tags": [
                     "StaffReportCardProcesses"
                 ],
                 "summary": "Get StaffReportCardProcesses record by composite key",
-                "operationId": "9051da024740cb086dc60dc0e68871a0",
+                "operationId": "34becaabeb40b01e9e6cff752d55dd2f",
                 "parameters": [
                     {
                         "name": "staff_profile_template_id",
@@ -212328,7 +212332,7 @@
                     "StaffReportCardProcesses"
                 ],
                 "summary": "Update StaffReportCardProcesses record by composite key",
-                "operationId": "99f12e12f6c2797d30b346367cdaba5a",
+                "operationId": "3e972c7191ebbefea9811eadeb3d35e2",
                 "parameters": [
                     {
                         "name": "staff_profile_template_id",
@@ -212376,7 +212380,7 @@
                     "StaffReportCardProcesses"
                 ],
                 "summary": "Delete StaffReportCardProcesses record by composite key",
-                "operationId": "aa57c01b60c2a9580550a3164ce94581",
+                "operationId": "b33a853f01244e1f79e232a7384b9924",
                 "parameters": [
                     {
                         "name": "staff_profile_template_id",
@@ -212407,13 +212411,13 @@
                 }
             }
         },
-        "/api/v5/staff_report_cards/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
+        "/api/v5/staff-report-cards/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
             "get": {
                 "tags": [
                     "StaffReportCards"
                 ],
                 "summary": "Get StaffReportCards record by composite key",
-                "operationId": "73df2d71c9fbe6d686670cc8d5323595",
+                "operationId": "3048169506e0a98231c6e97e510b8cf1",
                 "parameters": [
                     {
                         "name": "staff_profile_template_id",
@@ -212466,7 +212470,7 @@
                     "StaffReportCards"
                 ],
                 "summary": "Update StaffReportCards record by composite key",
-                "operationId": "83a7b93cd7ddc51202fc11164416cfda",
+                "operationId": "12b852edec81fdddc8dab183ef839808",
                 "parameters": [
                     {
                         "name": "staff_profile_template_id",
@@ -212532,7 +212536,7 @@
                     "StaffReportCards"
                 ],
                 "summary": "Delete StaffReportCards record by composite key",
-                "operationId": "843136c6399c49e8954bbcea56774b10",
+                "operationId": "a8ecc05dc0332470cae6ee3a61d0d91b",
                 "parameters": [
                     {
                         "name": "staff_profile_template_id",
@@ -214817,13 +214821,13 @@
                 }
             }
         },
-        "/api/v5/student_attendance_marked_records/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/education_grade_id/{education_grade_id}/date/{date}/period/{period}/subject_id/{subject_id}": {
+        "/api/v5/student-attendance-marked-records/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/education_grade_id/{education_grade_id}/date/{date}/period/{period}/subject_id/{subject_id}": {
             "get": {
                 "tags": [
                     "StudentAttendanceMarkedRecords"
                 ],
                 "summary": "Get StudentAttendanceMarkedRecords record by composite key",
-                "operationId": "861602920c4c94c8991b92f5846c1478",
+                "operationId": "e1b205ff5ff735a6e8c1a591d7cb6b9c",
                 "parameters": [
                     {
                         "name": "institution_id",
@@ -214903,7 +214907,7 @@
                     "StudentAttendanceMarkedRecords"
                 ],
                 "summary": "Update StudentAttendanceMarkedRecords record by composite key",
-                "operationId": "b04ade357ac22b9f51f9033bc27beb2a",
+                "operationId": "a0f9fc3575233a4b26d5313bbd0739a0",
                 "parameters": [
                     {
                         "name": "institution_id",
@@ -214996,7 +215000,7 @@
                     "StudentAttendanceMarkedRecords"
                 ],
                 "summary": "Delete StudentAttendanceMarkedRecords record by composite key",
-                "operationId": "6ef6dae62e42b99cf176232f1464b9d3",
+                "operationId": "dfb7e4853c6595bb8caafe5ad00ea74c",
                 "parameters": [
                     {
                         "name": "institution_id",
@@ -216798,13 +216802,13 @@
                 }
             }
         },
-        "/api/v5/student_custom_table_cells/student_custom_field_id/{student_custom_field_id}/student_custom_table_column_id/{student_custom_table_column_id}/student_custom_table_row_id/{student_custom_table_row_id}/student_id/{student_id}": {
+        "/api/v5/student-custom-table-cells/student_custom_field_id/{student_custom_field_id}/student_custom_table_column_id/{student_custom_table_column_id}/student_custom_table_row_id/{student_custom_table_row_id}/student_id/{student_id}": {
             "get": {
                 "tags": [
                     "StudentCustomTableCells"
                 ],
                 "summary": "Get StudentCustomTableCells record by composite key",
-                "operationId": "997b7b24ff0146650c645c9faa5253ce",
+                "operationId": "86757e7c7f5888e1f1ae204073de218f",
                 "parameters": [
                     {
                         "name": "student_custom_field_id",
@@ -216857,7 +216861,7 @@
                     "StudentCustomTableCells"
                 ],
                 "summary": "Update StudentCustomTableCells record by composite key",
-                "operationId": "a9d7bba2bafd46af9c350f9618b6d809",
+                "operationId": "f8f5225a294289fbf89dabf71dcaf7aa",
                 "parameters": [
                     {
                         "name": "student_custom_field_id",
@@ -216923,7 +216927,7 @@
                     "StudentCustomTableCells"
                 ],
                 "summary": "Delete StudentCustomTableCells record by composite key",
-                "operationId": "77f456a71816d5c40b452d8faeccf46f",
+                "operationId": "1e61c207250528637e50cabc6a778af0",
                 "parameters": [
                     {
                         "name": "student_custom_field_id",
@@ -218339,13 +218343,13 @@
                 }
             }
         },
-        "/api/v5/student_report_card_email_processes/student_profile_template_id/{student_profile_template_id}/student_id/{student_id}": {
+        "/api/v5/student-report-card-email-processes/student_profile_template_id/{student_profile_template_id}/student_id/{student_id}": {
             "get": {
                 "tags": [
                     "StudentReportCardEmailProcesses"
                 ],
                 "summary": "Get StudentReportCardEmailProcesses record by composite key",
-                "operationId": "56ed0c79ffa1476e6f9e33caf670b5e2",
+                "operationId": "ac93f85ab9b0bcc6968d48ab0e74b826",
                 "parameters": [
                     {
                         "name": "student_profile_template_id",
@@ -218380,7 +218384,7 @@
                     "StudentReportCardEmailProcesses"
                 ],
                 "summary": "Update StudentReportCardEmailProcesses record by composite key",
-                "operationId": "b9f9045f7902094a791be6ef7b969d0d",
+                "operationId": "ef07a643df0ecafed50d9445dd0025ce",
                 "parameters": [
                     {
                         "name": "student_profile_template_id",
@@ -218428,7 +218432,7 @@
                     "StudentReportCardEmailProcesses"
                 ],
                 "summary": "Delete StudentReportCardEmailProcesses record by composite key",
-                "operationId": "1394f5687f14b78e5c2cedd899de756c",
+                "operationId": "888321f8b4237069a3c3fe8a812fd5f0",
                 "parameters": [
                     {
                         "name": "student_profile_template_id",
@@ -218459,13 +218463,13 @@
                 }
             }
         },
-        "/api/v5/student_report_card_processes/student_profile_template_id/{student_profile_template_id}/student_id/{student_id}": {
+        "/api/v5/student-report-card-processes/student_profile_template_id/{student_profile_template_id}/student_id/{student_id}": {
             "get": {
                 "tags": [
                     "StudentReportCardProcesses"
                 ],
                 "summary": "Get StudentReportCardProcesses record by composite key",
-                "operationId": "aa687dce4e9744cbd378f3d28db3b13d",
+                "operationId": "8a95199aa1a0fa80e99c7906c72514b0",
                 "parameters": [
                     {
                         "name": "student_profile_template_id",
@@ -218500,7 +218504,7 @@
                     "StudentReportCardProcesses"
                 ],
                 "summary": "Update StudentReportCardProcesses record by composite key",
-                "operationId": "54e41a5733856effe13cc3d56fd83b84",
+                "operationId": "a2ae3a9b79560ede498892770619db2d",
                 "parameters": [
                     {
                         "name": "student_profile_template_id",
@@ -218548,7 +218552,7 @@
                     "StudentReportCardProcesses"
                 ],
                 "summary": "Delete StudentReportCardProcesses record by composite key",
-                "operationId": "15b04b06fb2992e6cd7aa925474dcc73",
+                "operationId": "04c5fef1f05b57118db9f933118da4ed",
                 "parameters": [
                     {
                         "name": "student_profile_template_id",
@@ -218579,13 +218583,13 @@
                 }
             }
         },
-        "/api/v5/student_report_cards/student_profile_template_id/{student_profile_template_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
+        "/api/v5/student-report-cards/student_profile_template_id/{student_profile_template_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}": {
             "get": {
                 "tags": [
                     "StudentReportCards"
                 ],
                 "summary": "Get StudentReportCards record by composite key",
-                "operationId": "40669e49479847248233888b03789e36",
+                "operationId": "e4673b170994ca774073233517fed83a",
                 "parameters": [
                     {
                         "name": "student_profile_template_id",
@@ -218638,7 +218642,7 @@
                     "StudentReportCards"
                 ],
                 "summary": "Update StudentReportCards record by composite key",
-                "operationId": "3437c6c15d2838cdf2edc37fc9bf8b94",
+                "operationId": "858aa91cad0305bce7add0942c527365",
                 "parameters": [
                     {
                         "name": "student_profile_template_id",
@@ -218704,7 +218708,7 @@
                     "StudentReportCards"
                 ],
                 "summary": "Delete StudentReportCards record by composite key",
-                "operationId": "aa5e0c85e3e9cab20e7e8d4268bdeba1",
+                "operationId": "cd5c2e2fc7a397019eb455d3d4d53647",
                 "parameters": [
                     {
                         "name": "student_profile_template_id",
@@ -230004,13 +230008,13 @@
                 }
             }
         },
-        "/api/v5/training_sessions_trainees/training_session_id/{training_session_id}/trainee_id/{trainee_id}": {
+        "/api/v5/training-sessions-trainees/training_session_id/{training_session_id}/trainee_id/{trainee_id}": {
             "get": {
                 "tags": [
                     "TrainingSessionsTrainees"
                 ],
                 "summary": "Get TrainingSessionsTrainees record by composite key",
-                "operationId": "11fdf334e15111674d6f3a6e07a4ba55",
+                "operationId": "13d8c2b7cfc8b5abf6d0a36a8bc5c2b8",
                 "parameters": [
                     {
                         "name": "training_session_id",
@@ -230045,7 +230049,7 @@
                     "TrainingSessionsTrainees"
                 ],
                 "summary": "Update TrainingSessionsTrainees record by composite key",
-                "operationId": "4205e3c01eb2c424822d2b6e17424127",
+                "operationId": "e197df8db9f8ec6671269999b883ace7",
                 "parameters": [
                     {
                         "name": "training_session_id",
@@ -230093,7 +230097,7 @@
                     "TrainingSessionsTrainees"
                 ],
                 "summary": "Delete TrainingSessionsTrainees record by composite key",
-                "operationId": "c3b5b1949e4698c893bfcddfbeb097fb",
+                "operationId": "51d0644453f172bafa59ee517d8fdf71",
                 "parameters": [
                     {
                         "name": "training_session_id",
@@ -231127,13 +231131,13 @@
                 }
             }
         },
-        "/api/v5/user_attachments_roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}": {
+        "/api/v5/user-attachments-roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}": {
             "get": {
                 "tags": [
                     "UserAttachmentsRoles"
                 ],
                 "summary": "Get UserAttachmentsRoles record by composite key",
-                "operationId": "5e3e8a228a21a3a0884ccc99ed17a7d4",
+                "operationId": "ad8a6e85a7b316f61cebe332332bd267",
                 "parameters": [
                     {
                         "name": "user_attachment_id",
@@ -231168,7 +231172,7 @@
                     "UserAttachmentsRoles"
                 ],
                 "summary": "Update UserAttachmentsRoles record by composite key",
-                "operationId": "c1c3ba26aa15c6abbc1ae109eb8e0606",
+                "operationId": "9e4a48a5c0647a3893c1155cf190b2f6",
                 "parameters": [
                     {
                         "name": "user_attachment_id",
@@ -231216,7 +231220,7 @@
                     "UserAttachmentsRoles"
                 ],
                 "summary": "Delete UserAttachmentsRoles record by composite key",
-                "operationId": "492b7d36a106b1df688de0c2ea78d524",
+                "operationId": "780a629be46ee296477972aa517c2cc8",
                 "parameters": [
                     {
                         "name": "user_attachment_id",
@@ -236057,13 +236061,13 @@
                 }
             }
         },
-        "/api/v5/webhook_events/webhook_id/{webhook_id}/event_key/{event_key}": {
+        "/api/v5/webhook-events/webhook_id/{webhook_id}/event_key/{event_key}": {
             "get": {
                 "tags": [
                     "WebhookEvents"
                 ],
                 "summary": "Get WebhookEvents record by composite key",
-                "operationId": "34d677d0fd75f3657df43be9a88b8bc8",
+                "operationId": "21542610ec774fc6b6b09428bbf3a78e",
                 "parameters": [
                     {
                         "name": "webhook_id",
@@ -236098,7 +236102,7 @@
                     "WebhookEvents"
                 ],
                 "summary": "Update WebhookEvents record by composite key",
-                "operationId": "c0080caca8b2e1aaeba4434082431196",
+                "operationId": "ce916521aec412bce563f0f986ea972b",
                 "parameters": [
                     {
                         "name": "webhook_id",
@@ -236146,7 +236150,7 @@
                     "WebhookEvents"
                 ],
                 "summary": "Delete WebhookEvents record by composite key",
-                "operationId": "6a68b1aa17bdcd3ba7f283508d1538cd",
+                "operationId": "1e7c1542020e75d5cb0a87d97527c901",
                 "parameters": [
                     {
                         "name": "webhook_id",
@@ -236740,13 +236744,13 @@
                 }
             }
         },
-        "/api/v5/workflow_rule_events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}": {
+        "/api/v5/workflow-rule-events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}": {
             "get": {
                 "tags": [
                     "WorkflowRuleEvents"
                 ],
                 "summary": "Get WorkflowRuleEvents record by composite key",
-                "operationId": "569564ce35c1664b74400dcd0d15cee8",
+                "operationId": "30f45246da26cb33e3535ae838814e4c",
                 "parameters": [
                     {
                         "name": "workflow_rule_id",
@@ -236781,7 +236785,7 @@
                     "WorkflowRuleEvents"
                 ],
                 "summary": "Update WorkflowRuleEvents record by composite key",
-                "operationId": "ee422f77d374fbef76e3dbf88667c319",
+                "operationId": "9c1d84e491bad677ed972416caefab6b",
                 "parameters": [
                     {
                         "name": "workflow_rule_id",
@@ -236829,7 +236833,7 @@
                     "WorkflowRuleEvents"
                 ],
                 "summary": "Delete WorkflowRuleEvents record by composite key",
-                "operationId": "035c60666b905424fadb6d6c6cf710ad",
+                "operationId": "cb3717fbcd8daa9953cadcbc6ce73ecf",
                 "parameters": [
                     {
                         "name": "workflow_rule_id",

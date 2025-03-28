@@ -137,7 +137,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/appraisal-forms_criterias_scores_links/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/appraisal_criteria_linked_id/{appraisal_criteria_linked_id}",
+ *     path="/api/v5/appraisal-forms-criterias-scores-links/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/appraisal_criteria_linked_id/{appraisal_criteria_linked_id}",
  *     summary="Get AppraisalFormsCriteriasScoresLinks record by composite key",
  *     tags={"AppraisalFormsCriteriasScoresLinks"},
  *     @OA\Parameter(
@@ -175,7 +175,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/appraisal-forms_criterias_scores_links/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/appraisal_criteria_linked_id/{appraisal_criteria_linked_id}",
+ *     path="/api/v5/appraisal-forms-criterias-scores-links/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/appraisal_criteria_linked_id/{appraisal_criteria_linked_id}",
  *     summary="Update AppraisalFormsCriteriasScoresLinks record by composite key",
  *     tags={"AppraisalFormsCriteriasScoresLinks"},
  *     @OA\Parameter(
@@ -223,7 +223,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/appraisal-forms_criterias_scores_links/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/appraisal_criteria_linked_id/{appraisal_criteria_linked_id}",
+ *     path="/api/v5/appraisal-forms-criterias-scores-links/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/appraisal_criteria_linked_id/{appraisal_criteria_linked_id}",
  *     summary="Delete AppraisalFormsCriteriasScoresLinks record by composite key",
  *     tags={"AppraisalFormsCriteriasScoresLinks"},
  *     @OA\Parameter(

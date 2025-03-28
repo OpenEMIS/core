@@ -133,7 +133,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/security-group_institutions/security_group_id/{security_group_id}/institution_id/{institution_id}",
+ *     path="/api/v5/security-group-institutions/security_group_id/{security_group_id}/institution_id/{institution_id}",
  *     summary="Get SecurityGroupInstitutions record by composite key",
  *     tags={"SecurityGroupInstitutions"},
  *     @OA\Parameter(
@@ -164,7 +164,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/security-group_institutions/security_group_id/{security_group_id}/institution_id/{institution_id}",
+ *     path="/api/v5/security-group-institutions/security_group_id/{security_group_id}/institution_id/{institution_id}",
  *     summary="Update SecurityGroupInstitutions record by composite key",
  *     tags={"SecurityGroupInstitutions"},
  *     @OA\Parameter(
@@ -205,7 +205,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/security-group_institutions/security_group_id/{security_group_id}/institution_id/{institution_id}",
+ *     path="/api/v5/security-group-institutions/security_group_id/{security_group_id}/institution_id/{institution_id}",
  *     summary="Delete SecurityGroupInstitutions record by composite key",
  *     tags={"SecurityGroupInstitutions"},
  *     @OA\Parameter(

@@ -149,7 +149,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution-survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_survey_id/{institution_survey_id}",
+ *     path="/api/v5/institution-survey-table-cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_survey_id/{institution_survey_id}",
  *     summary="Get InstitutionSurveyTableCells record by composite key",
  *     tags={"InstitutionSurveyTableCells"},
  *     @OA\Parameter(
@@ -194,7 +194,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution-survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_survey_id/{institution_survey_id}",
+ *     path="/api/v5/institution-survey-table-cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_survey_id/{institution_survey_id}",
  *     summary="Update InstitutionSurveyTableCells record by composite key",
  *     tags={"InstitutionSurveyTableCells"},
  *     @OA\Parameter(
@@ -249,7 +249,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution-survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_survey_id/{institution_survey_id}",
+ *     path="/api/v5/institution-survey-table-cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_survey_id/{institution_survey_id}",
  *     summary="Delete InstitutionSurveyTableCells record by composite key",
  *     tags={"InstitutionSurveyTableCells"},
  *     @OA\Parameter(

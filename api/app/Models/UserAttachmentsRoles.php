@@ -137,7 +137,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/user-attachments_roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}",
+ *     path="/api/v5/user-attachments-roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}",
  *     summary="Get UserAttachmentsRoles record by composite key",
  *     tags={"UserAttachmentsRoles"},
  *     @OA\Parameter(
@@ -168,7 +168,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/user-attachments_roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}",
+ *     path="/api/v5/user-attachments-roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}",
  *     summary="Update UserAttachmentsRoles record by composite key",
  *     tags={"UserAttachmentsRoles"},
  *     @OA\Parameter(
@@ -209,7 +209,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/user-attachments_roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}",
+ *     path="/api/v5/user-attachments-roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}",
  *     summary="Delete UserAttachmentsRoles record by composite key",
  *     tags={"UserAttachmentsRoles"},
  *     @OA\Parameter(

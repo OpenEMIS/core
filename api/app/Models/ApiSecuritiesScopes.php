@@ -156,7 +156,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/api-securities_scopes/api_security_id/{api_security_id}/api_scope_id/{api_scope_id}",
+ *     path="/api/v5/api-securities-scopes/api_security_id/{api_security_id}/api_scope_id/{api_scope_id}",
  *     summary="Get ApiSecuritiesScopes record by composite key",
  *     tags={"ApiSecuritiesScopes"},
  *     @OA\Parameter(
@@ -187,7 +187,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/api-securities_scopes/api_security_id/{api_security_id}/api_scope_id/{api_scope_id}",
+ *     path="/api/v5/api-securities-scopes/api_security_id/{api_security_id}/api_scope_id/{api_scope_id}",
  *     summary="Update ApiSecuritiesScopes record by composite key",
  *     tags={"ApiSecuritiesScopes"},
  *     @OA\Parameter(
@@ -228,7 +228,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/api-securities_scopes/api_security_id/{api_security_id}/api_scope_id/{api_scope_id}",
+ *     path="/api/v5/api-securities-scopes/api_security_id/{api_security_id}/api_scope_id/{api_scope_id}",
  *     summary="Delete ApiSecuritiesScopes record by composite key",
  *     tags={"ApiSecuritiesScopes"},
  *     @OA\Parameter(

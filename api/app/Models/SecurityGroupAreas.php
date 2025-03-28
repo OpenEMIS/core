@@ -131,7 +131,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/security-group_areas/security_group_id/{security_group_id}/area_id/{area_id}",
+ *     path="/api/v5/security-group-areas/security_group_id/{security_group_id}/area_id/{area_id}",
  *     summary="Get SecurityGroupAreas record by composite key",
  *     tags={"SecurityGroupAreas"},
  *     @OA\Parameter(
@@ -162,7 +162,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/security-group_areas/security_group_id/{security_group_id}/area_id/{area_id}",
+ *     path="/api/v5/security-group-areas/security_group_id/{security_group_id}/area_id/{area_id}",
  *     summary="Update SecurityGroupAreas record by composite key",
  *     tags={"SecurityGroupAreas"},
  *     @OA\Parameter(
@@ -203,7 +203,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/security-group_areas/security_group_id/{security_group_id}/area_id/{area_id}",
+ *     path="/api/v5/security-group-areas/security_group_id/{security_group_id}/area_id/{area_id}",
  *     summary="Delete SecurityGroupAreas record by composite key",
  *     tags={"SecurityGroupAreas"},
  *     @OA\Parameter(

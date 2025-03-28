@@ -151,7 +151,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/report-card_email_processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}",
+ *     path="/api/v5/report-card-email-processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}",
  *     summary="Get ReportCardEmailProcesses record by composite key",
  *     tags={"ReportCardEmailProcesses"},
  *     @OA\Parameter(
@@ -189,7 +189,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/report-card_email_processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}",
+ *     path="/api/v5/report-card-email-processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}",
  *     summary="Update ReportCardEmailProcesses record by composite key",
  *     tags={"ReportCardEmailProcesses"},
  *     @OA\Parameter(
@@ -237,7 +237,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/report-card_email_processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}",
+ *     path="/api/v5/report-card-email-processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}",
  *     summary="Delete ReportCardEmailProcesses record by composite key",
  *     tags={"ReportCardEmailProcesses"},
  *     @OA\Parameter(

@@ -161,7 +161,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/examination-student_subject_results/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
+ *     path="/api/v5/examination-student-subject-results/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
  *     summary="Get ExaminationStudentSubjectResults record by composite key",
  *     tags={"ExaminationStudentSubjectResults"},
  *     @OA\Parameter(
@@ -192,7 +192,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/examination-student_subject_results/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
+ *     path="/api/v5/examination-student-subject-results/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
  *     summary="Update ExaminationStudentSubjectResults record by composite key",
  *     tags={"ExaminationStudentSubjectResults"},
  *     @OA\Parameter(
@@ -233,7 +233,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/examination-student_subject_results/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
+ *     path="/api/v5/examination-student-subject-results/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
  *     summary="Delete ExaminationStudentSubjectResults record by composite key",
  *     tags={"ExaminationStudentSubjectResults"},
  *     @OA\Parameter(

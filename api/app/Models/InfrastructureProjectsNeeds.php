@@ -137,7 +137,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/infrastructure-projects_needs/infrastructure_project_id/{infrastructure_project_id}/infrastructure_need_id/{infrastructure_need_id}",
+ *     path="/api/v5/infrastructure-projects-needs/infrastructure_project_id/{infrastructure_project_id}/infrastructure_need_id/{infrastructure_need_id}",
  *     summary="Get InfrastructureProjectsNeeds record by composite key",
  *     tags={"InfrastructureProjectsNeeds"},
  *     @OA\Parameter(
@@ -168,7 +168,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/infrastructure-projects_needs/infrastructure_project_id/{infrastructure_project_id}/infrastructure_need_id/{infrastructure_need_id}",
+ *     path="/api/v5/infrastructure-projects-needs/infrastructure_project_id/{infrastructure_project_id}/infrastructure_need_id/{infrastructure_need_id}",
  *     summary="Update InfrastructureProjectsNeeds record by composite key",
  *     tags={"InfrastructureProjectsNeeds"},
  *     @OA\Parameter(
@@ -209,7 +209,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/infrastructure-projects_needs/infrastructure_project_id/{infrastructure_project_id}/infrastructure_need_id/{infrastructure_need_id}",
+ *     path="/api/v5/infrastructure-projects-needs/infrastructure_project_id/{infrastructure_project_id}/infrastructure_need_id/{infrastructure_need_id}",
  *     summary="Delete InfrastructureProjectsNeeds record by composite key",
  *     tags={"InfrastructureProjectsNeeds"},
  *     @OA\Parameter(

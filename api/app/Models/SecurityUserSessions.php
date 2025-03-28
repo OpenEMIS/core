@@ -135,7 +135,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/security-user_sessions/id/{id}/username/{username}",
+ *     path="/api/v5/security-user-sessions/id/{id}/username/{username}",
  *     summary="Get SecurityUserSessions record by composite key",
  *     tags={"SecurityUserSessions"},
  *     @OA\Parameter(
@@ -166,7 +166,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/security-user_sessions/id/{id}/username/{username}",
+ *     path="/api/v5/security-user-sessions/id/{id}/username/{username}",
  *     summary="Update SecurityUserSessions record by composite key",
  *     tags={"SecurityUserSessions"},
  *     @OA\Parameter(
@@ -207,7 +207,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/security-user_sessions/id/{id}/username/{username}",
+ *     path="/api/v5/security-user-sessions/id/{id}/username/{username}",
  *     summary="Delete SecurityUserSessions record by composite key",
  *     tags={"SecurityUserSessions"},
  *     @OA\Parameter(

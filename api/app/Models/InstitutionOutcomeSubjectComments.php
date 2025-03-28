@@ -159,7 +159,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution-outcome_subject_comments/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/institution-outcome-subject-comments/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Get InstitutionOutcomeSubjectComments record by composite key",
  *     tags={"InstitutionOutcomeSubjectComments"},
  *     @OA\Parameter(
@@ -225,7 +225,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution-outcome_subject_comments/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/institution-outcome-subject-comments/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Update InstitutionOutcomeSubjectComments record by composite key",
  *     tags={"InstitutionOutcomeSubjectComments"},
  *     @OA\Parameter(
@@ -301,7 +301,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution-outcome_subject_comments/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/institution-outcome-subject-comments/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Delete InstitutionOutcomeSubjectComments record by composite key",
  *     tags={"InstitutionOutcomeSubjectComments"},
  *     @OA\Parameter(

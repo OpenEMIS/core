@@ -135,7 +135,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/workflow-rule_events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}",
+ *     path="/api/v5/workflow-rule-events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}",
  *     summary="Get WorkflowRuleEvents record by composite key",
  *     tags={"WorkflowRuleEvents"},
  *     @OA\Parameter(
@@ -166,7 +166,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/workflow-rule_events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}",
+ *     path="/api/v5/workflow-rule-events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}",
  *     summary="Update WorkflowRuleEvents record by composite key",
  *     tags={"WorkflowRuleEvents"},
  *     @OA\Parameter(
@@ -207,7 +207,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/workflow-rule_events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}",
+ *     path="/api/v5/workflow-rule-events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}",
  *     summary="Delete WorkflowRuleEvents record by composite key",
  *     tags={"WorkflowRuleEvents"},
  *     @OA\Parameter(

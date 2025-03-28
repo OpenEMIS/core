@@ -153,7 +153,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/custom-table_cells/custom_field_id/{custom_field_id}/custom_table_column_id/{custom_table_column_id}/custom_table_row_id/{custom_table_row_id}/custom_record_id/{custom_record_id}",
+ *     path="/api/v5/custom-table-cells/custom_field_id/{custom_field_id}/custom_table_column_id/{custom_table_column_id}/custom_table_row_id/{custom_table_row_id}/custom_record_id/{custom_record_id}",
  *     summary="Get CustomTableCells record by composite key",
  *     tags={"CustomTableCells"},
  *     @OA\Parameter(
@@ -198,7 +198,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/custom-table_cells/custom_field_id/{custom_field_id}/custom_table_column_id/{custom_table_column_id}/custom_table_row_id/{custom_table_row_id}/custom_record_id/{custom_record_id}",
+ *     path="/api/v5/custom-table-cells/custom_field_id/{custom_field_id}/custom_table_column_id/{custom_table_column_id}/custom_table_row_id/{custom_table_row_id}/custom_record_id/{custom_record_id}",
  *     summary="Update CustomTableCells record by composite key",
  *     tags={"CustomTableCells"},
  *     @OA\Parameter(
@@ -253,7 +253,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/custom-table_cells/custom_field_id/{custom_field_id}/custom_table_column_id/{custom_table_column_id}/custom_table_row_id/{custom_table_row_id}/custom_record_id/{custom_record_id}",
+ *     path="/api/v5/custom-table-cells/custom_field_id/{custom_field_id}/custom_table_column_id/{custom_table_column_id}/custom_table_row_id/{custom_table_row_id}/custom_record_id/{custom_record_id}",
  *     summary="Delete CustomTableCells record by composite key",
  *     tags={"CustomTableCells"},
  *     @OA\Parameter(

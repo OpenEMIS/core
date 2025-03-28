@@ -137,7 +137,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/staff-licenses_classifications/staff_license_id/{staff_license_id}/license_classification_id/{license_classification_id}",
+ *     path="/api/v5/staff-licenses-classifications/staff_license_id/{staff_license_id}/license_classification_id/{license_classification_id}",
  *     summary="Get StaffLicensesClassifications record by composite key",
  *     tags={"StaffLicensesClassifications"},
  *     @OA\Parameter(
@@ -168,7 +168,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/staff-licenses_classifications/staff_license_id/{staff_license_id}/license_classification_id/{license_classification_id}",
+ *     path="/api/v5/staff-licenses-classifications/staff_license_id/{staff_license_id}/license_classification_id/{license_classification_id}",
  *     summary="Update StaffLicensesClassifications record by composite key",
  *     tags={"StaffLicensesClassifications"},
  *     @OA\Parameter(
@@ -209,7 +209,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/staff-licenses_classifications/staff_license_id/{staff_license_id}/license_classification_id/{license_classification_id}",
+ *     path="/api/v5/staff-licenses-classifications/staff_license_id/{staff_license_id}/license_classification_id/{license_classification_id}",
  *     summary="Delete StaffLicensesClassifications record by composite key",
  *     tags={"StaffLicensesClassifications"},
  *     @OA\Parameter(

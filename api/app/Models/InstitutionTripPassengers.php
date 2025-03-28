@@ -153,7 +153,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution-trip_passengers/student_id/{student_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/institution_id/{institution_id}/institution_trip_id/{institution_trip_id}",
+ *     path="/api/v5/institution-trip-passengers/student_id/{student_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/institution_id/{institution_id}/institution_trip_id/{institution_trip_id}",
  *     summary="Get InstitutionTripPassengers record by composite key",
  *     tags={"InstitutionTripPassengers"},
  *     @OA\Parameter(
@@ -205,7 +205,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution-trip_passengers/student_id/{student_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/institution_id/{institution_id}/institution_trip_id/{institution_trip_id}",
+ *     path="/api/v5/institution-trip-passengers/student_id/{student_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/institution_id/{institution_id}/institution_trip_id/{institution_trip_id}",
  *     summary="Update InstitutionTripPassengers record by composite key",
  *     tags={"InstitutionTripPassengers"},
  *     @OA\Parameter(
@@ -267,7 +267,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution-trip_passengers/student_id/{student_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/institution_id/{institution_id}/institution_trip_id/{institution_trip_id}",
+ *     path="/api/v5/institution-trip-passengers/student_id/{student_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/institution_id/{institution_id}/institution_trip_id/{institution_trip_id}",
  *     summary="Delete InstitutionTripPassengers record by composite key",
  *     tags={"InstitutionTripPassengers"},
  *     @OA\Parameter(

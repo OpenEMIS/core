@@ -153,7 +153,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution-staff_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_staff_survey_id/{institution_staff_survey_id}",
+ *     path="/api/v5/institution-staff-survey-table-cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_staff_survey_id/{institution_staff_survey_id}",
  *     summary="Get InstitutionStaffSurveyTableCells record by composite key",
  *     tags={"InstitutionStaffSurveyTableCells"},
  *     @OA\Parameter(
@@ -198,7 +198,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution-staff_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_staff_survey_id/{institution_staff_survey_id}",
+ *     path="/api/v5/institution-staff-survey-table-cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_staff_survey_id/{institution_staff_survey_id}",
  *     summary="Update InstitutionStaffSurveyTableCells record by composite key",
  *     tags={"InstitutionStaffSurveyTableCells"},
  *     @OA\Parameter(
@@ -253,7 +253,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution-staff_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_staff_survey_id/{institution_staff_survey_id}",
+ *     path="/api/v5/institution-staff-survey-table-cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_staff_survey_id/{institution_staff_survey_id}",
  *     summary="Delete InstitutionStaffSurveyTableCells record by composite key",
  *     tags={"InstitutionStaffSurveyTableCells"},
  *     @OA\Parameter(
