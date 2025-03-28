@@ -27,9 +27,6 @@ class UserAttachmentsRoles extends Model
      // Override getKeyForSaveQuery to handle composite keys
 
 
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/user-attachments-roles"
@@ -108,30 +105,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/user-attachments-roles/{id}",
- *     summary="Get UserAttachmentsRoles by ID",
- *     tags={"UserAttachmentsRoles"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the UserAttachmentsRoles",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/user-attachments-roles",
  *     summary="Create a new UserAttachmentsRoles",
@@ -161,42 +134,74 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/user-attachments-roles/{id}",
- *     summary="Update UserAttachmentsRoles",
+ * @OA\Get(
+ *     path="/api/v5/user_attachments_roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}",
+ *     summary="Get UserAttachmentsRoles record by composite key",
  *     tags={"UserAttachmentsRoles"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="user_attachment_id",
  *         in="path",
  *         required=true,
- *         description="ID of the UserAttachmentsRoles",
- *         @OA\Schema(type="integer")
+ *         description="user_attachment_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="security_role_id",
+ *         in="path",
+ *         required=true,
+ *         description="security_role_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/user_attachments_roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}",
+ *     summary="Update UserAttachmentsRoles record by composite key",
+ *     tags={"UserAttachmentsRoles"},
+ *     @OA\Parameter(
+ *         name="user_attachment_id",
+ *         in="path",
+ *         required=true,
+ *         description="user_attachment_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="security_role_id",
+ *         in="path",
+ *         required=true,
+ *         description="security_role_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="id", type="string", example=null),
-                     @OA\Property(property="user_attachment_id", type="integer", example=null),
-                     @OA\Property(property="security_role_id", type="integer", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -204,31 +209,35 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/user-attachments-roles/{id}",
- *     summary="Delete UserAttachmentsRoles",
+ *     path="/api/v5/user_attachments_roles/user_attachment_id/{user_attachment_id}/security_role_id/{security_role_id}",
+ *     summary="Delete UserAttachmentsRoles record by composite key",
  *     tags={"UserAttachmentsRoles"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="user_attachment_id",
  *         in="path",
  *         required=true,
- *         description="ID of the UserAttachmentsRoles",
- *         @OA\Schema(type="integer")
+ *         description="user_attachment_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="security_role_id",
+ *         in="path",
+ *         required=true,
+ *         description="security_role_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -265,11 +274,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

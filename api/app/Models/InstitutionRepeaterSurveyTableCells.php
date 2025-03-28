@@ -27,9 +27,6 @@ class InstitutionRepeaterSurveyTableCells extends Model
      // Override getKeyForSaveQuery to handle composite keys
 
 
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/institution-repeater-survey-table-cells"
@@ -116,30 +113,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/institution-repeater-survey-table-cells/{id}",
- *     summary="Get InstitutionRepeaterSurveyTableCells by ID",
- *     tags={"InstitutionRepeaterSurveyTableCells"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionRepeaterSurveyTableCells",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/institution-repeater-survey-table-cells",
  *     summary="Create a new InstitutionRepeaterSurveyTableCells",
@@ -177,50 +150,102 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/institution-repeater-survey-table-cells/{id}",
- *     summary="Update InstitutionRepeaterSurveyTableCells",
+ * @OA\Get(
+ *     path="/api/v5/institution_repeater_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_repeater_survey_id/{institution_repeater_survey_id}",
+ *     summary="Get InstitutionRepeaterSurveyTableCells record by composite key",
  *     tags={"InstitutionRepeaterSurveyTableCells"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="survey_question_id",
  *         in="path",
  *         required=true,
- *         description="ID of the InstitutionRepeaterSurveyTableCells",
- *         @OA\Schema(type="integer")
+ *         description="survey_question_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="survey_table_column_id",
+ *         in="path",
+ *         required=true,
+ *         description="survey_table_column_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="survey_table_row_id",
+ *         in="path",
+ *         required=true,
+ *         description="survey_table_row_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_repeater_survey_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_repeater_survey_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/institution_repeater_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_repeater_survey_id/{institution_repeater_survey_id}",
+ *     summary="Update InstitutionRepeaterSurveyTableCells record by composite key",
+ *     tags={"InstitutionRepeaterSurveyTableCells"},
+ *     @OA\Parameter(
+ *         name="survey_question_id",
+ *         in="path",
+ *         required=true,
+ *         description="survey_question_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="survey_table_column_id",
+ *         in="path",
+ *         required=true,
+ *         description="survey_table_column_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="survey_table_row_id",
+ *         in="path",
+ *         required=true,
+ *         description="survey_table_row_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_repeater_survey_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_repeater_survey_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="text_value", type="string", example=null),
-                     @OA\Property(property="number_value", type="integer", example=null),
-                     @OA\Property(property="decimal_value", type="string", example=null),
-                     @OA\Property(property="survey_question_id", type="integer", example=null),
-                     @OA\Property(property="survey_table_column_id", type="integer", example=null),
-                     @OA\Property(property="survey_table_row_id", type="integer", example=null),
-                     @OA\Property(property="institution_repeater_survey_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -228,31 +253,49 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution-repeater-survey-table-cells/{id}",
- *     summary="Delete InstitutionRepeaterSurveyTableCells",
+ *     path="/api/v5/institution_repeater_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_repeater_survey_id/{institution_repeater_survey_id}",
+ *     summary="Delete InstitutionRepeaterSurveyTableCells record by composite key",
  *     tags={"InstitutionRepeaterSurveyTableCells"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="survey_question_id",
  *         in="path",
  *         required=true,
- *         description="ID of the InstitutionRepeaterSurveyTableCells",
- *         @OA\Schema(type="integer")
+ *         description="survey_question_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="survey_table_column_id",
+ *         in="path",
+ *         required=true,
+ *         description="survey_table_column_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="survey_table_row_id",
+ *         in="path",
+ *         required=true,
+ *         description="survey_table_row_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_repeater_survey_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_repeater_survey_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -289,11 +332,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

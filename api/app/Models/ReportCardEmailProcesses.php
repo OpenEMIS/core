@@ -29,9 +29,6 @@ use InstitutionScope;
      // Override getKeyForSaveQuery to handle composite keys
 
 
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/report-card-email-processes"
@@ -116,30 +113,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/report-card-email-processes/{id}",
- *     summary="Get ReportCardEmailProcesses by ID",
- *     tags={"ReportCardEmailProcesses"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the ReportCardEmailProcesses",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/report-card-email-processes",
  *     summary="Create a new ReportCardEmailProcesses",
@@ -175,48 +148,88 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/report-card-email-processes/{id}",
- *     summary="Update ReportCardEmailProcesses",
+ * @OA\Get(
+ *     path="/api/v5/report_card_email_processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}",
+ *     summary="Get ReportCardEmailProcesses record by composite key",
  *     tags={"ReportCardEmailProcesses"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="report_card_id",
  *         in="path",
  *         required=true,
- *         description="ID of the ReportCardEmailProcesses",
- *         @OA\Schema(type="integer")
+ *         description="report_card_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_class_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_class_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="student_id",
+ *         in="path",
+ *         required=true,
+ *         description="student_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/report_card_email_processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}",
+ *     summary="Update ReportCardEmailProcesses record by composite key",
+ *     tags={"ReportCardEmailProcesses"},
+ *     @OA\Parameter(
+ *         name="report_card_id",
+ *         in="path",
+ *         required=true,
+ *         description="report_card_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_class_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_class_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="student_id",
+ *         in="path",
+ *         required=true,
+ *         description="student_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="report_card_id", type="integer", example=null),
-                     @OA\Property(property="institution_class_id", type="integer", example=null),
-                     @OA\Property(property="student_id", type="integer", example=null),
-                     @OA\Property(property="status", type="integer", example=null),
-                     @OA\Property(property="error_message", type="string", example=null),
-                     @OA\Property(property="institution_id", type="integer", example=null),
-                     @OA\Property(property="education_grade_id", type="integer", example=null),
-                     @OA\Property(property="academic_period_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -224,31 +237,42 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/report-card-email-processes/{id}",
- *     summary="Delete ReportCardEmailProcesses",
+ *     path="/api/v5/report_card_email_processes/report_card_id/{report_card_id}/institution_class_id/{institution_class_id}/student_id/{student_id}",
+ *     summary="Delete ReportCardEmailProcesses record by composite key",
  *     tags={"ReportCardEmailProcesses"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="report_card_id",
  *         in="path",
  *         required=true,
- *         description="ID of the ReportCardEmailProcesses",
- *         @OA\Schema(type="integer")
+ *         description="report_card_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_class_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_class_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="student_id",
+ *         in="path",
+ *         required=true,
+ *         description="student_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -285,11 +309,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

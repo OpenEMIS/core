@@ -17,13 +17,6 @@ class InstitutionOwnerships extends Model
     protected $table = "institution_ownerships";
 
 
-
-
-
-
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/institution-ownerships"
@@ -111,30 +104,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/institution-ownerships/{id}",
- *     summary="Get InstitutionOwnerships by ID",
- *     tags={"InstitutionOwnerships"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionOwnerships",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/institution-ownerships",
  *     summary="Create a new InstitutionOwnerships",
@@ -173,6 +142,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/institution-ownerships/{id}",
+ *     summary="Get InstitutionOwnerships by ID",
+ *     tags={"InstitutionOwnerships"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the InstitutionOwnerships",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/institution-ownerships/{id}",
@@ -183,7 +177,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionOwnerships",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -233,7 +227,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionOwnerships",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -250,7 +244,5 @@ public function _swaggerUpdate() {}
  * )
  */
 public function _swaggerDelete() {}
-    public function _swaggerHelper() {
-        return;
-    }
+private function emptyFunction() { return; }
 }

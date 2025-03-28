@@ -19,11 +19,6 @@ use InstitutionScope;
     protected $table = "institution_student_transfers";
 
 
-
-
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/institution-student-transfers"
@@ -120,30 +115,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/institution-student-transfers/{id}",
- *     summary="Get InstitutionStudentTransfers by ID",
- *     tags={"InstitutionStudentTransfers"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionStudentTransfers",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/institution-student-transfers",
  *     summary="Create a new InstitutionStudentTransfers",
@@ -191,6 +162,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/institution-student-transfers/{id}",
+ *     summary="Get InstitutionStudentTransfers by ID",
+ *     tags={"InstitutionStudentTransfers"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the InstitutionStudentTransfers",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/institution-student-transfers/{id}",
@@ -201,7 +197,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionStudentTransfers",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -260,7 +256,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionStudentTransfers",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -286,7 +282,7 @@ public function _swaggerDelete() {}
     {
         return $this->belongsTo(Institutions::class, 'previous_institution_id', 'id');
     }
-    
+
     public function assignee()
     {
         return $this->belongsTo(SecurityUsers::class, 'assignee_id', 'id');

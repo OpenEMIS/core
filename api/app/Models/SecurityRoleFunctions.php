@@ -27,12 +27,6 @@ class SecurityRoleFunctions extends Model
     protected $primaryKey = ["security_role_id","security_function_id"];
 
 
-
-
-
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/security-role-functions"
@@ -119,30 +113,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/security-role-functions/{id}",
- *     summary="Get SecurityRoleFunctions by ID",
- *     tags={"SecurityRoleFunctions"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the SecurityRoleFunctions",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/security-role-functions",
  *     summary="Create a new SecurityRoleFunctions",
@@ -180,50 +150,74 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/security-role-functions/{id}",
- *     summary="Update SecurityRoleFunctions",
+ * @OA\Get(
+ *     path="/api/v5/security_role_functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}",
+ *     summary="Get SecurityRoleFunctions record by composite key",
  *     tags={"SecurityRoleFunctions"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="security_role_id",
  *         in="path",
  *         required=true,
- *         description="ID of the SecurityRoleFunctions",
- *         @OA\Schema(type="integer")
+ *         description="security_role_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="security_function_id",
+ *         in="path",
+ *         required=true,
+ *         description="security_function_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/security_role_functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}",
+ *     summary="Update SecurityRoleFunctions record by composite key",
+ *     tags={"SecurityRoleFunctions"},
+ *     @OA\Parameter(
+ *         name="security_role_id",
+ *         in="path",
+ *         required=true,
+ *         description="security_role_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="security_function_id",
+ *         in="path",
+ *         required=true,
+ *         description="security_function_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="_view", type="integer", example=null),
-                     @OA\Property(property="_edit", type="integer", example=null),
-                     @OA\Property(property="_add", type="integer", example=null),
-                     @OA\Property(property="_delete", type="integer", example=null),
-                     @OA\Property(property="_execute", type="integer", example=null),
-                     @OA\Property(property="security_role_id", type="integer", example=null),
-                     @OA\Property(property="security_function_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -231,31 +225,35 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/security-role-functions/{id}",
- *     summary="Delete SecurityRoleFunctions",
+ *     path="/api/v5/security_role_functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}",
+ *     summary="Delete SecurityRoleFunctions record by composite key",
  *     tags={"SecurityRoleFunctions"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="security_role_id",
  *         in="path",
  *         required=true,
- *         description="ID of the SecurityRoleFunctions",
- *         @OA\Schema(type="integer")
+ *         description="security_role_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="security_function_id",
+ *         in="path",
+ *         required=true,
+ *         description="security_function_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -284,7 +282,4 @@ public function _swaggerDelete() {}
     }
 
 
-    public function _swaggerHelper() {
-        return;
-    }
 }

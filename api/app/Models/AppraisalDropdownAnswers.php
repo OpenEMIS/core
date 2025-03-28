@@ -27,9 +27,6 @@ class AppraisalDropdownAnswers extends Model
      // Override getKeyForSaveQuery to handle composite keys
 
 
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/appraisal-dropdown-answers"
@@ -113,30 +110,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/appraisal-dropdown-answers/{id}",
- *     summary="Get AppraisalDropdownAnswers by ID",
- *     tags={"AppraisalDropdownAnswers"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the AppraisalDropdownAnswers",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/appraisal-dropdown-answers",
  *     summary="Create a new AppraisalDropdownAnswers",
@@ -171,47 +144,88 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/appraisal-dropdown-answers/{id}",
- *     summary="Update AppraisalDropdownAnswers",
+ * @OA\Get(
+ *     path="/api/v5/appraisal_dropdown_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}",
+ *     summary="Get AppraisalDropdownAnswers record by composite key",
  *     tags={"AppraisalDropdownAnswers"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="appraisal_form_id",
  *         in="path",
  *         required=true,
- *         description="ID of the AppraisalDropdownAnswers",
- *         @OA\Schema(type="integer")
+ *         description="appraisal_form_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="appraisal_criteria_id",
+ *         in="path",
+ *         required=true,
+ *         description="appraisal_criteria_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_staff_appraisal_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_staff_appraisal_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/appraisal_dropdown_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}",
+ *     summary="Update AppraisalDropdownAnswers record by composite key",
+ *     tags={"AppraisalDropdownAnswers"},
+ *     @OA\Parameter(
+ *         name="appraisal_form_id",
+ *         in="path",
+ *         required=true,
+ *         description="appraisal_form_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="appraisal_criteria_id",
+ *         in="path",
+ *         required=true,
+ *         description="appraisal_criteria_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_staff_appraisal_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_staff_appraisal_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="appraisal_form_id", type="integer", example=null),
-                     @OA\Property(property="appraisal_criteria_id", type="integer", example=null),
-                     @OA\Property(property="institution_staff_appraisal_id", type="integer", example=null),
-                     @OA\Property(property="answer", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -219,31 +233,42 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/appraisal-dropdown-answers/{id}",
- *     summary="Delete AppraisalDropdownAnswers",
+ *     path="/api/v5/appraisal_dropdown_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}",
+ *     summary="Delete AppraisalDropdownAnswers record by composite key",
  *     tags={"AppraisalDropdownAnswers"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="appraisal_form_id",
  *         in="path",
  *         required=true,
- *         description="ID of the AppraisalDropdownAnswers",
- *         @OA\Schema(type="integer")
+ *         description="appraisal_form_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="appraisal_criteria_id",
+ *         in="path",
+ *         required=true,
+ *         description="appraisal_criteria_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_staff_appraisal_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_staff_appraisal_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -280,11 +305,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

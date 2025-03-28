@@ -25,6 +25,8 @@ class WorkflowRuleEvents extends Model
     public $incrementing = false;
 
      // Override getKeyForSaveQuery to handle composite keys
+
+
 /**
  * @OA\PathItem(
  *     path="/api/v5/workflow-rule-events"
@@ -102,30 +104,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/workflow-rule-events/{id}",
- *     summary="Get WorkflowRuleEvents by ID",
- *     tags={"WorkflowRuleEvents"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the WorkflowRuleEvents",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/workflow-rule-events",
  *     summary="Create a new WorkflowRuleEvents",
@@ -154,41 +132,74 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/workflow-rule-events/{id}",
- *     summary="Update WorkflowRuleEvents",
+ * @OA\Get(
+ *     path="/api/v5/workflow_rule_events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}",
+ *     summary="Get WorkflowRuleEvents record by composite key",
  *     tags={"WorkflowRuleEvents"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="workflow_rule_id",
  *         in="path",
  *         required=true,
- *         description="ID of the WorkflowRuleEvents",
- *         @OA\Schema(type="integer")
+ *         description="workflow_rule_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="event_key",
+ *         in="path",
+ *         required=true,
+ *         description="event_key",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/workflow_rule_events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}",
+ *     summary="Update WorkflowRuleEvents record by composite key",
+ *     tags={"WorkflowRuleEvents"},
+ *     @OA\Parameter(
+ *         name="workflow_rule_id",
+ *         in="path",
+ *         required=true,
+ *         description="workflow_rule_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="event_key",
+ *         in="path",
+ *         required=true,
+ *         description="event_key",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="workflow_rule_id", type="integer", example=null),
-                     @OA\Property(property="event_key", type="string", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -196,31 +207,35 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/workflow-rule-events/{id}",
- *     summary="Delete WorkflowRuleEvents",
+ *     path="/api/v5/workflow_rule_events/workflow_rule_id/{workflow_rule_id}/event_key/{event_key}",
+ *     summary="Delete WorkflowRuleEvents record by composite key",
  *     tags={"WorkflowRuleEvents"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="workflow_rule_id",
  *         in="path",
  *         required=true,
- *         description="ID of the WorkflowRuleEvents",
- *         @OA\Schema(type="integer")
+ *         description="workflow_rule_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="event_key",
+ *         in="path",
+ *         required=true,
+ *         description="event_key",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -257,9 +272,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }
