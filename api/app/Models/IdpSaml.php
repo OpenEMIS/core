@@ -28,9 +28,6 @@ class IdpSaml extends Model
      // Override getKeyForSaveQuery to handle composite keys
 
 
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/idp-saml"
@@ -121,30 +118,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/idp-saml/{id}",
- *     summary="Get IdpSaml by ID",
- *     tags={"IdpSaml"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the IdpSaml",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/idp-saml",
  *     summary="Create a new IdpSaml",
@@ -186,6 +159,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/idp-saml/{id}",
+ *     summary="Get IdpSaml by ID",
+ *     tags={"IdpSaml"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the IdpSaml",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/idp-saml/{id}",
@@ -196,7 +194,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the IdpSaml",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -249,7 +247,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the IdpSaml",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -302,11 +300,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

@@ -25,13 +25,6 @@ use InstitutionScope;
     protected $primaryKey = ["student_id","institution_id","academic_period_id","institution_class_id","date","period","subject_id"];
 
 
-
-
-
-
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/institution-student-absence-details"
@@ -122,30 +115,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/institution-student-absence-details/{id}",
- *     summary="Get InstitutionStudentAbsenceDetails by ID",
- *     tags={"InstitutionStudentAbsenceDetails"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionStudentAbsenceDetails",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/institution-student-absence-details",
  *     summary="Create a new InstitutionStudentAbsenceDetails",
@@ -187,54 +156,144 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/institution-student-absence-details/{id}",
- *     summary="Update InstitutionStudentAbsenceDetails",
+ * @OA\Get(
+ *     path="/api/v5/institution_student_absence_details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}",
+ *     summary="Get InstitutionStudentAbsenceDetails record by composite key",
  *     tags={"InstitutionStudentAbsenceDetails"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="student_id",
  *         in="path",
  *         required=true,
- *         description="ID of the InstitutionStudentAbsenceDetails",
- *         @OA\Schema(type="integer")
+ *         description="student_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="academic_period_id",
+ *         in="path",
+ *         required=true,
+ *         description="academic_period_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_class_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_class_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="date",
+ *         in="path",
+ *         required=true,
+ *         description="date",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="period",
+ *         in="path",
+ *         required=true,
+ *         description="period",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="subject_id",
+ *         in="path",
+ *         required=true,
+ *         description="subject_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/institution_student_absence_details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}",
+ *     summary="Update InstitutionStudentAbsenceDetails record by composite key",
+ *     tags={"InstitutionStudentAbsenceDetails"},
+ *     @OA\Parameter(
+ *         name="student_id",
+ *         in="path",
+ *         required=true,
+ *         description="student_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="academic_period_id",
+ *         in="path",
+ *         required=true,
+ *         description="academic_period_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_class_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_class_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="date",
+ *         in="path",
+ *         required=true,
+ *         description="date",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="period",
+ *         in="path",
+ *         required=true,
+ *         description="period",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="subject_id",
+ *         in="path",
+ *         required=true,
+ *         description="subject_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="student_id", type="integer", example=null),
-                     @OA\Property(property="institution_id", type="integer", example=null),
-                     @OA\Property(property="academic_period_id", type="integer", example=null),
-                     @OA\Property(property="institution_class_id", type="integer", example=null),
-                     @OA\Property(property="education_grade_id", type="integer", example=null),
-                     @OA\Property(property="date", type="string", format="date", example=null),
-                     @OA\Property(property="period", type="integer", example=null),
-                     @OA\Property(property="comment", type="string", example=null),
-                     @OA\Property(property="absence_type_id", type="integer", example=null),
-                     @OA\Property(property="student_absence_reason_id", type="integer", example=null),
-                     @OA\Property(property="subject_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -242,31 +301,70 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution-student-absence-details/{id}",
- *     summary="Delete InstitutionStudentAbsenceDetails",
+ *     path="/api/v5/institution_student_absence_details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}",
+ *     summary="Delete InstitutionStudentAbsenceDetails record by composite key",
  *     tags={"InstitutionStudentAbsenceDetails"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="student_id",
  *         in="path",
  *         required=true,
- *         description="ID of the InstitutionStudentAbsenceDetails",
- *         @OA\Schema(type="integer")
+ *         description="student_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="academic_period_id",
+ *         in="path",
+ *         required=true,
+ *         description="academic_period_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="institution_class_id",
+ *         in="path",
+ *         required=true,
+ *         description="institution_class_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="date",
+ *         in="path",
+ *         required=true,
+ *         description="date",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="period",
+ *         in="path",
+ *         required=true,
+ *         description="period",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="subject_id",
+ *         in="path",
+ *         required=true,
+ *         description="subject_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     public function securityUser()
     {
         return $this->belongsTo(SecurityUsers::class, 'student_id', 'id');

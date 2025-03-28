@@ -17,11 +17,6 @@ class EducationGrades extends Model
     protected $table = "education_grades";
 
 
-
-
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/education-grades"
@@ -109,30 +104,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/education-grades/{id}",
- *     summary="Get EducationGrades by ID",
- *     tags={"EducationGrades"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the EducationGrades",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/education-grades",
  *     summary="Create a new EducationGrades",
@@ -171,6 +142,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/education-grades/{id}",
+ *     summary="Get EducationGrades by ID",
+ *     tags={"EducationGrades"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the EducationGrades",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/education-grades/{id}",
@@ -181,7 +177,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the EducationGrades",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -231,7 +227,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the EducationGrades",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,

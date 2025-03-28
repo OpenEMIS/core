@@ -19,12 +19,6 @@ class WebhookEvents extends Model
     protected $primaryKey = ["webhook_id", "event_key"];
 
 
-
-
-
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/webhook-events"
@@ -102,30 +96,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/webhook-events/{id}",
- *     summary="Get WebhookEvents by ID",
- *     tags={"WebhookEvents"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the WebhookEvents",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/webhook-events",
  *     summary="Create a new WebhookEvents",
@@ -154,41 +124,74 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/webhook-events/{id}",
- *     summary="Update WebhookEvents",
+ * @OA\Get(
+ *     path="/api/v5/webhook_events/webhook_id/{webhook_id}/event_key/{event_key}",
+ *     summary="Get WebhookEvents record by composite key",
  *     tags={"WebhookEvents"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="webhook_id",
  *         in="path",
  *         required=true,
- *         description="ID of the WebhookEvents",
- *         @OA\Schema(type="integer")
+ *         description="webhook_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="event_key",
+ *         in="path",
+ *         required=true,
+ *         description="event_key",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/webhook_events/webhook_id/{webhook_id}/event_key/{event_key}",
+ *     summary="Update WebhookEvents record by composite key",
+ *     tags={"WebhookEvents"},
+ *     @OA\Parameter(
+ *         name="webhook_id",
+ *         in="path",
+ *         required=true,
+ *         description="webhook_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="event_key",
+ *         in="path",
+ *         required=true,
+ *         description="event_key",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="webhook_id", type="integer", example=null),
-                     @OA\Property(property="event_key", type="string", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -196,31 +199,35 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/webhook-events/{id}",
- *     summary="Delete WebhookEvents",
+ *     path="/api/v5/webhook_events/webhook_id/{webhook_id}/event_key/{event_key}",
+ *     summary="Delete WebhookEvents record by composite key",
  *     tags={"WebhookEvents"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="webhook_id",
  *         in="path",
  *         required=true,
- *         description="ID of the WebhookEvents",
- *         @OA\Schema(type="integer")
+ *         description="webhook_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="event_key",
+ *         in="path",
+ *         required=true,
+ *         description="event_key",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -249,7 +256,4 @@ public function _swaggerDelete() {}
     }
 
 
-    public function _swaggerHelper() {
-        return;
-    }
 }

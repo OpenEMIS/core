@@ -44,11 +44,6 @@ class StaffLeavePolicyTypes extends Model
     }
 
 
-
-
-
-
-
     // Override setKeysForSaveQuery to handle composite keys
 
 
@@ -132,30 +127,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/staff-leave-policy-types/{id}",
- *     summary="Get StaffLeavePolicyTypes by ID",
- *     tags={"StaffLeavePolicyTypes"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the StaffLeavePolicyTypes",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/staff-leave-policy-types",
  *     summary="Create a new StaffLeavePolicyTypes",
@@ -187,6 +158,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/staff-leave-policy-types/{id}",
+ *     summary="Get StaffLeavePolicyTypes by ID",
+ *     tags={"StaffLeavePolicyTypes"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the StaffLeavePolicyTypes",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/staff-leave-policy-types/{id}",
@@ -197,7 +193,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the StaffLeavePolicyTypes",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -240,7 +236,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the StaffLeavePolicyTypes",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -285,7 +281,4 @@ public function _swaggerDelete() {}
     }
 
 
-    public function _swaggerHelper() {
-        return;
-    }
 }

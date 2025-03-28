@@ -27,9 +27,6 @@ class ExaminationCentreRoomsExaminationsStudents extends Model
      // Override getKeyForSaveQuery to handle composite keys
 
 
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/examination-centre-rooms-examinations-students"
@@ -112,30 +109,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/examination-centre-rooms-examinations-students/{id}",
- *     summary="Get ExaminationCentreRoomsExaminationsStudents by ID",
- *     tags={"ExaminationCentreRoomsExaminationsStudents"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the ExaminationCentreRoomsExaminationsStudents",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/examination-centre-rooms-examinations-students",
  *     summary="Create a new ExaminationCentreRoomsExaminationsStudents",
@@ -169,46 +142,88 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/examination-centre-rooms-examinations-students/{id}",
- *     summary="Update ExaminationCentreRoomsExaminationsStudents",
+ * @OA\Get(
+ *     path="/api/v5/examination_centre_rooms_examinations_students/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}/student_id/{student_id}",
+ *     summary="Get ExaminationCentreRoomsExaminationsStudents record by composite key",
  *     tags={"ExaminationCentreRoomsExaminationsStudents"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="examination_centre_room_id",
  *         in="path",
  *         required=true,
- *         description="ID of the ExaminationCentreRoomsExaminationsStudents",
- *         @OA\Schema(type="integer")
+ *         description="examination_centre_room_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="examination_id",
+ *         in="path",
+ *         required=true,
+ *         description="examination_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="student_id",
+ *         in="path",
+ *         required=true,
+ *         description="student_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/examination_centre_rooms_examinations_students/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}/student_id/{student_id}",
+ *     summary="Update ExaminationCentreRoomsExaminationsStudents record by composite key",
+ *     tags={"ExaminationCentreRoomsExaminationsStudents"},
+ *     @OA\Parameter(
+ *         name="examination_centre_room_id",
+ *         in="path",
+ *         required=true,
+ *         description="examination_centre_room_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="examination_id",
+ *         in="path",
+ *         required=true,
+ *         description="examination_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="student_id",
+ *         in="path",
+ *         required=true,
+ *         description="student_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="id", type="string", example=null),
-                     @OA\Property(property="examination_centre_room_id", type="integer", example=null),
-                     @OA\Property(property="examination_id", type="integer", example=null),
-                     @OA\Property(property="student_id", type="integer", example=null),
-                     @OA\Property(property="examination_centre_id", type="integer", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -216,31 +231,42 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/examination-centre-rooms-examinations-students/{id}",
- *     summary="Delete ExaminationCentreRoomsExaminationsStudents",
+ *     path="/api/v5/examination_centre_rooms_examinations_students/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}/student_id/{student_id}",
+ *     summary="Delete ExaminationCentreRoomsExaminationsStudents record by composite key",
  *     tags={"ExaminationCentreRoomsExaminationsStudents"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="examination_centre_room_id",
  *         in="path",
  *         required=true,
- *         description="ID of the ExaminationCentreRoomsExaminationsStudents",
- *         @OA\Schema(type="integer")
+ *         description="examination_centre_room_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="examination_id",
+ *         in="path",
+ *         required=true,
+ *         description="examination_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="student_id",
+ *         in="path",
+ *         required=true,
+ *         description="student_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -277,11 +303,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

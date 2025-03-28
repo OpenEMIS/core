@@ -14,14 +14,9 @@ use InstitutionScope;
     protected $fillable = ['id', 'description', 'action', 'date_of_behaviour', 'time_of_behaviour', 'academic_period_id', 'student_id', 'institution_id', 'status_id', 'student_behaviour_category_id', 'assignee_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'student_behaviour_classification_id', 'academic_period_id', 'student_id', 'institution_id', 'status_id', 'student_behaviour_category_id', 'assignee_id', 'modified_user_id', 'created_user_id', 'student_behaviour_classification_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
     protected $dates = ['modified', 'created'];
-    
+
     public $timestamps = false;
     protected $table = "student_behaviours";
-
-
-
-
-
 
 
 /**
@@ -115,30 +110,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/student-behaviours/{id}",
- *     summary="Get StudentBehaviours by ID",
- *     tags={"StudentBehaviours"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the StudentBehaviours",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/student-behaviours",
  *     summary="Create a new StudentBehaviours",
@@ -181,6 +152,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/student-behaviours/{id}",
+ *     summary="Get StudentBehaviours by ID",
+ *     tags={"StudentBehaviours"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the StudentBehaviours",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/student-behaviours/{id}",
@@ -191,7 +187,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the StudentBehaviours",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -245,7 +241,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the StudentBehaviours",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -266,7 +262,7 @@ public function _swaggerDelete() {}
     {
         return $this->belongsTo(Institutions::class, 'institution_id', 'id');
     }
-    
+
     public function assignee()
     {
         return $this->belongsTo(SecurityUsers::class, 'assignee_id', 'id');

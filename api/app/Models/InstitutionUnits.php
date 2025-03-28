@@ -16,13 +16,6 @@ class InstitutionUnits extends Model
     public $timestamps = false;
 
 
-
-
-
-
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/institution-units"
@@ -110,30 +103,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/institution-units/{id}",
- *     summary="Get InstitutionUnits by ID",
- *     tags={"InstitutionUnits"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionUnits",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/institution-units",
  *     summary="Create a new InstitutionUnits",
@@ -172,6 +141,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/institution-units/{id}",
+ *     summary="Get InstitutionUnits by ID",
+ *     tags={"InstitutionUnits"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the InstitutionUnits",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/institution-units/{id}",
@@ -182,7 +176,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionUnits",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -232,7 +226,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionUnits",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -249,7 +243,5 @@ public function _swaggerUpdate() {}
  * )
  */
 public function _swaggerDelete() {}
-    public function _swaggerHelper() {
-        return;
-    }
+private function emptyFunction() { return; }
 }

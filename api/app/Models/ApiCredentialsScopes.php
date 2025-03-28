@@ -27,9 +27,6 @@ class ApiCredentialsScopes extends Model
      // Override getKeyForSaveQuery to handle composite keys
 
 
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/api-credentials-scopes"
@@ -107,30 +104,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/api-credentials-scopes/{id}",
- *     summary="Get ApiCredentialsScopes by ID",
- *     tags={"ApiCredentialsScopes"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the ApiCredentialsScopes",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/api-credentials-scopes",
  *     summary="Create a new ApiCredentialsScopes",
@@ -159,41 +132,74 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/api-credentials-scopes/{id}",
- *     summary="Update ApiCredentialsScopes",
+ * @OA\Get(
+ *     path="/api/v5/api_credentials_scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}",
+ *     summary="Get ApiCredentialsScopes record by composite key",
  *     tags={"ApiCredentialsScopes"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="api_credential_id",
  *         in="path",
  *         required=true,
- *         description="ID of the ApiCredentialsScopes",
- *         @OA\Schema(type="integer")
+ *         description="api_credential_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="api_scope_id",
+ *         in="path",
+ *         required=true,
+ *         description="api_scope_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/api_credentials_scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}",
+ *     summary="Update ApiCredentialsScopes record by composite key",
+ *     tags={"ApiCredentialsScopes"},
+ *     @OA\Parameter(
+ *         name="api_credential_id",
+ *         in="path",
+ *         required=true,
+ *         description="api_credential_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="api_scope_id",
+ *         in="path",
+ *         required=true,
+ *         description="api_scope_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="api_credential_id", type="integer", example=null),
-                     @OA\Property(property="api_scope_id", type="integer", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -201,31 +207,35 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/api-credentials-scopes/{id}",
- *     summary="Delete ApiCredentialsScopes",
+ *     path="/api/v5/api_credentials_scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}",
+ *     summary="Delete ApiCredentialsScopes record by composite key",
  *     tags={"ApiCredentialsScopes"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="api_credential_id",
  *         in="path",
  *         required=true,
- *         description="ID of the ApiCredentialsScopes",
- *         @OA\Schema(type="integer")
+ *         description="api_credential_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="api_scope_id",
+ *         in="path",
+ *         required=true,
+ *         description="api_scope_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -262,11 +272,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

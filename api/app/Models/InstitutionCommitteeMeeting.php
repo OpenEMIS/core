@@ -21,13 +21,9 @@ class InstitutionCommitteeMeeting extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
 
      // Override getKeyForSaveQuery to handle composite keys
-
-
-
 
 
 /**
@@ -113,30 +109,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/institution-committee-meeting/{id}",
- *     summary="Get InstitutionCommitteeMeeting by ID",
- *     tags={"InstitutionCommitteeMeeting"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionCommitteeMeeting",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/institution-committee-meeting",
  *     summary="Create a new InstitutionCommitteeMeeting",
@@ -171,6 +143,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/institution-committee-meeting/{id}",
+ *     summary="Get InstitutionCommitteeMeeting by ID",
+ *     tags={"InstitutionCommitteeMeeting"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the InstitutionCommitteeMeeting",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/institution-committee-meeting/{id}",
@@ -181,7 +178,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionCommitteeMeeting",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -227,7 +224,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionCommitteeMeeting",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -280,11 +277,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

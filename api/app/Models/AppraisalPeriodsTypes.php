@@ -27,9 +27,6 @@ class AppraisalPeriodsTypes extends Model
      // Override getKeyForSaveQuery to handle composite keys
 
 
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/appraisal-periods-types"
@@ -107,30 +104,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/appraisal-periods-types/{id}",
- *     summary="Get AppraisalPeriodsTypes by ID",
- *     tags={"AppraisalPeriodsTypes"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the AppraisalPeriodsTypes",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/appraisal-periods-types",
  *     summary="Create a new AppraisalPeriodsTypes",
@@ -159,41 +132,74 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/appraisal-periods-types/{id}",
- *     summary="Update AppraisalPeriodsTypes",
+ * @OA\Get(
+ *     path="/api/v5/appraisal_periods_types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}",
+ *     summary="Get AppraisalPeriodsTypes record by composite key",
  *     tags={"AppraisalPeriodsTypes"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="appraisal_period_id",
  *         in="path",
  *         required=true,
- *         description="ID of the AppraisalPeriodsTypes",
- *         @OA\Schema(type="integer")
+ *         description="appraisal_period_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="appraisal_type_id",
+ *         in="path",
+ *         required=true,
+ *         description="appraisal_type_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/appraisal_periods_types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}",
+ *     summary="Update AppraisalPeriodsTypes record by composite key",
+ *     tags={"AppraisalPeriodsTypes"},
+ *     @OA\Parameter(
+ *         name="appraisal_period_id",
+ *         in="path",
+ *         required=true,
+ *         description="appraisal_period_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="appraisal_type_id",
+ *         in="path",
+ *         required=true,
+ *         description="appraisal_type_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="appraisal_period_id", type="integer", example=null),
-                     @OA\Property(property="appraisal_type_id", type="integer", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -201,31 +207,35 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/appraisal-periods-types/{id}",
- *     summary="Delete AppraisalPeriodsTypes",
+ *     path="/api/v5/appraisal_periods_types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}",
+ *     summary="Delete AppraisalPeriodsTypes record by composite key",
  *     tags={"AppraisalPeriodsTypes"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="appraisal_period_id",
  *         in="path",
  *         required=true,
- *         description="ID of the AppraisalPeriodsTypes",
- *         @OA\Schema(type="integer")
+ *         description="appraisal_period_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="appraisal_type_id",
+ *         in="path",
+ *         required=true,
+ *         description="appraisal_type_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -262,11 +272,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

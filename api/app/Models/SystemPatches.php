@@ -26,12 +26,7 @@ class SystemPatches extends Model
     public $incrementing = false;
 
 
-
      // Override getKeyForSaveQuery to handle composite keys
-
-
-
-
 
 
     public static function getValidationRules(): array
@@ -40,11 +35,6 @@ class SystemPatches extends Model
             // Add validation rules here
         ];
     }
-
-
-
-
-
 
 /**
  * @OA\PathItem(
@@ -124,30 +114,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/system-patches/{id}",
- *     summary="Get SystemPatches by ID",
- *     tags={"SystemPatches"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the SystemPatches",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/system-patches",
  *     summary="Create a new SystemPatches",
@@ -177,6 +143,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/system-patches/{id}",
+ *     summary="Get SystemPatches by ID",
+ *     tags={"SystemPatches"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the SystemPatches",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/system-patches/{id}",
@@ -187,7 +178,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the SystemPatches",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -228,7 +219,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the SystemPatches",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -245,7 +236,6 @@ public function _swaggerUpdate() {}
  * )
  */
 public function _swaggerDelete() {}
-    public function _swaggerHelper() {
-        return;
-    }
+public function _swaggerHelper(){}
+
 }

@@ -17,13 +17,6 @@ use InstitutionScope;
     protected $table = "institution_student_absence_days";
 
 
-
-
-
-
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/institution-student-absence-days"
@@ -106,30 +99,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/institution-student-absence-days/{id}",
- *     summary="Get InstitutionStudentAbsenceDays by ID",
- *     tags={"InstitutionStudentAbsenceDays"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionStudentAbsenceDays",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/institution-student-absence-days",
  *     summary="Create a new InstitutionStudentAbsenceDays",
@@ -163,6 +132,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/institution-student-absence-days/{id}",
+ *     summary="Get InstitutionStudentAbsenceDays by ID",
+ *     tags={"InstitutionStudentAbsenceDays"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the InstitutionStudentAbsenceDays",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/institution-student-absence-days/{id}",
@@ -173,7 +167,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionStudentAbsenceDays",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -218,7 +212,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionStudentAbsenceDays",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -235,7 +229,5 @@ public function _swaggerUpdate() {}
  * )
  */
 public function _swaggerDelete() {}
-    public function _swaggerHelper() {
-        return;
-    }
+private function emptyFunction() { return; }
 }

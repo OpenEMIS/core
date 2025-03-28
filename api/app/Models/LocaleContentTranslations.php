@@ -17,11 +17,6 @@ class LocaleContentTranslations extends Model
     protected $table = "locale_content_translations";
 
 
-
-
-
-
-
 /**
  * @OA\PathItem(
  *     path="/api/v5/locale-content-translations"
@@ -105,30 +100,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/locale-content-translations/{id}",
- *     summary="Get LocaleContentTranslations by ID",
- *     tags={"LocaleContentTranslations"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the LocaleContentTranslations",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/locale-content-translations",
  *     summary="Create a new LocaleContentTranslations",
@@ -163,6 +134,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/locale-content-translations/{id}",
+ *     summary="Get LocaleContentTranslations by ID",
+ *     tags={"LocaleContentTranslations"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the LocaleContentTranslations",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/locale-content-translations/{id}",
@@ -173,7 +169,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the LocaleContentTranslations",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -219,7 +215,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the LocaleContentTranslations",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
