@@ -145,7 +145,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/education1-2subjects_field_of_studies/education_subject_id/{education_subject_id}/education_field_of_study_id/{education_field_of_study_id}",
+ *     path="/api/v5/education-subjects_field_of_studies/education_subject_id/{education_subject_id}/education_field_of_study_id/{education_field_of_study_id}",
  *     summary="Get EducationSubjectsFieldOfStudies record by composite key",
  *     tags={"EducationSubjectsFieldOfStudies"},
  *     @OA\Parameter(
@@ -176,7 +176,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/education1-2subjects_field_of_studies/education_subject_id/{education_subject_id}/education_field_of_study_id/{education_field_of_study_id}",
+ *     path="/api/v5/education-subjects_field_of_studies/education_subject_id/{education_subject_id}/education_field_of_study_id/{education_field_of_study_id}",
  *     summary="Update EducationSubjectsFieldOfStudies record by composite key",
  *     tags={"EducationSubjectsFieldOfStudies"},
  *     @OA\Parameter(
@@ -217,7 +217,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/education1-2subjects_field_of_studies/education_subject_id/{education_subject_id}/education_field_of_study_id/{education_field_of_study_id}",
+ *     path="/api/v5/education-subjects_field_of_studies/education_subject_id/{education_subject_id}/education_field_of_study_id/{education_field_of_study_id}",
  *     summary="Delete EducationSubjectsFieldOfStudies record by composite key",
  *     tags={"EducationSubjectsFieldOfStudies"},
  *     @OA\Parameter(

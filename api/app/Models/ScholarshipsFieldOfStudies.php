@@ -135,7 +135,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/scholarships1-2field_of_studies/scholarship_id/{scholarship_id}/education_field_of_study_id/{education_field_of_study_id}",
+ *     path="/api/v5/scholarships-field_of_studies/scholarship_id/{scholarship_id}/education_field_of_study_id/{education_field_of_study_id}",
  *     summary="Get ScholarshipsFieldOfStudies record by composite key",
  *     tags={"ScholarshipsFieldOfStudies"},
  *     @OA\Parameter(
@@ -166,7 +166,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/scholarships1-2field_of_studies/scholarship_id/{scholarship_id}/education_field_of_study_id/{education_field_of_study_id}",
+ *     path="/api/v5/scholarships-field_of_studies/scholarship_id/{scholarship_id}/education_field_of_study_id/{education_field_of_study_id}",
  *     summary="Update ScholarshipsFieldOfStudies record by composite key",
  *     tags={"ScholarshipsFieldOfStudies"},
  *     @OA\Parameter(
@@ -207,7 +207,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/scholarships1-2field_of_studies/scholarship_id/{scholarship_id}/education_field_of_study_id/{education_field_of_study_id}",
+ *     path="/api/v5/scholarships-field_of_studies/scholarship_id/{scholarship_id}/education_field_of_study_id/{education_field_of_study_id}",
  *     summary="Delete ScholarshipsFieldOfStudies record by composite key",
  *     tags={"ScholarshipsFieldOfStudies"},
  *     @OA\Parameter(

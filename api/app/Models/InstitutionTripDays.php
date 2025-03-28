@@ -145,7 +145,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution1-2trip_days/institution_trip_id/{institution_trip_id}/day/{day}",
+ *     path="/api/v5/institution-trip_days/institution_trip_id/{institution_trip_id}/day/{day}",
  *     summary="Get InstitutionTripDays record by composite key",
  *     tags={"InstitutionTripDays"},
  *     @OA\Parameter(
@@ -176,7 +176,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution1-2trip_days/institution_trip_id/{institution_trip_id}/day/{day}",
+ *     path="/api/v5/institution-trip_days/institution_trip_id/{institution_trip_id}/day/{day}",
  *     summary="Update InstitutionTripDays record by composite key",
  *     tags={"InstitutionTripDays"},
  *     @OA\Parameter(
@@ -217,7 +217,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution1-2trip_days/institution_trip_id/{institution_trip_id}/day/{day}",
+ *     path="/api/v5/institution-trip_days/institution_trip_id/{institution_trip_id}/day/{day}",
  *     summary="Delete InstitutionTripDays record by composite key",
  *     tags={"InstitutionTripDays"},
  *     @OA\Parameter(

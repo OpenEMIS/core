@@ -161,7 +161,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution1-2outcome_results/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/outcome_criteria_id/{outcome_criteria_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/institution-outcome_results/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/outcome_criteria_id/{outcome_criteria_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Get InstitutionOutcomeResults record by composite key",
  *     tags={"InstitutionOutcomeResults"},
  *     @OA\Parameter(
@@ -234,7 +234,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution1-2outcome_results/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/outcome_criteria_id/{outcome_criteria_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/institution-outcome_results/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/outcome_criteria_id/{outcome_criteria_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Update InstitutionOutcomeResults record by composite key",
  *     tags={"InstitutionOutcomeResults"},
  *     @OA\Parameter(
@@ -317,7 +317,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution1-2outcome_results/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/outcome_criteria_id/{outcome_criteria_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/institution-outcome_results/student_id/{student_id}/outcome_template_id/{outcome_template_id}/outcome_period_id/{outcome_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}/outcome_criteria_id/{outcome_criteria_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Delete InstitutionOutcomeResults record by composite key",
  *     tags={"InstitutionOutcomeResults"},
  *     @OA\Parameter(

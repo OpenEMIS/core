@@ -149,7 +149,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/competency1-2items_periods/competency_item_id/{competency_item_id}/competency_period_id/{competency_period_id}/academic_period_id/{academic_period_id}/competency_template_id/{competency_template_id}",
+ *     path="/api/v5/competency-items_periods/competency_item_id/{competency_item_id}/competency_period_id/{competency_period_id}/academic_period_id/{academic_period_id}/competency_template_id/{competency_template_id}",
  *     summary="Get CompetencyItemsPeriods record by composite key",
  *     tags={"CompetencyItemsPeriods"},
  *     @OA\Parameter(
@@ -194,7 +194,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/competency1-2items_periods/competency_item_id/{competency_item_id}/competency_period_id/{competency_period_id}/academic_period_id/{academic_period_id}/competency_template_id/{competency_template_id}",
+ *     path="/api/v5/competency-items_periods/competency_item_id/{competency_item_id}/competency_period_id/{competency_period_id}/academic_period_id/{academic_period_id}/competency_template_id/{competency_template_id}",
  *     summary="Update CompetencyItemsPeriods record by composite key",
  *     tags={"CompetencyItemsPeriods"},
  *     @OA\Parameter(
@@ -249,7 +249,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/competency1-2items_periods/competency_item_id/{competency_item_id}/competency_period_id/{competency_period_id}/academic_period_id/{academic_period_id}/competency_template_id/{competency_template_id}",
+ *     path="/api/v5/competency-items_periods/competency_item_id/{competency_item_id}/competency_period_id/{competency_period_id}/academic_period_id/{academic_period_id}/competency_template_id/{competency_template_id}",
  *     summary="Delete CompetencyItemsPeriods record by composite key",
  *     tags={"CompetencyItemsPeriods"},
  *     @OA\Parameter(

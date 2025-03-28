@@ -155,7 +155,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/education1-2grades_subjects/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
+ *     path="/api/v5/education-grades_subjects/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
  *     summary="Get EducationGradesSubjects record by composite key",
  *     tags={"EducationGradesSubjects"},
  *     @OA\Parameter(
@@ -186,7 +186,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/education1-2grades_subjects/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
+ *     path="/api/v5/education-grades_subjects/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
  *     summary="Update EducationGradesSubjects record by composite key",
  *     tags={"EducationGradesSubjects"},
  *     @OA\Parameter(
@@ -227,7 +227,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/education1-2grades_subjects/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
+ *     path="/api/v5/education-grades_subjects/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
  *     summary="Delete EducationGradesSubjects record by composite key",
  *     tags={"EducationGradesSubjects"},
  *     @OA\Parameter(

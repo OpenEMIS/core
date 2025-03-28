@@ -135,7 +135,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/appraisal1-2periods_types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}",
+ *     path="/api/v5/appraisal-periods_types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}",
  *     summary="Get AppraisalPeriodsTypes record by composite key",
  *     tags={"AppraisalPeriodsTypes"},
  *     @OA\Parameter(
@@ -166,7 +166,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/appraisal1-2periods_types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}",
+ *     path="/api/v5/appraisal-periods_types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}",
  *     summary="Update AppraisalPeriodsTypes record by composite key",
  *     tags={"AppraisalPeriodsTypes"},
  *     @OA\Parameter(
@@ -207,7 +207,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/appraisal1-2periods_types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}",
+ *     path="/api/v5/appraisal-periods_types/appraisal_period_id/{appraisal_period_id}/appraisal_type_id/{appraisal_type_id}",
  *     summary="Delete AppraisalPeriodsTypes record by composite key",
  *     tags={"AppraisalPeriodsTypes"},
  *     @OA\Parameter(

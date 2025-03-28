@@ -153,7 +153,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/student1-2custom_table_cells/student_custom_field_id/{student_custom_field_id}/student_custom_table_column_id/{student_custom_table_column_id}/student_custom_table_row_id/{student_custom_table_row_id}/student_id/{student_id}",
+ *     path="/api/v5/student-custom_table_cells/student_custom_field_id/{student_custom_field_id}/student_custom_table_column_id/{student_custom_table_column_id}/student_custom_table_row_id/{student_custom_table_row_id}/student_id/{student_id}",
  *     summary="Get StudentCustomTableCells record by composite key",
  *     tags={"StudentCustomTableCells"},
  *     @OA\Parameter(
@@ -198,7 +198,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/student1-2custom_table_cells/student_custom_field_id/{student_custom_field_id}/student_custom_table_column_id/{student_custom_table_column_id}/student_custom_table_row_id/{student_custom_table_row_id}/student_id/{student_id}",
+ *     path="/api/v5/student-custom_table_cells/student_custom_field_id/{student_custom_field_id}/student_custom_table_column_id/{student_custom_table_column_id}/student_custom_table_row_id/{student_custom_table_row_id}/student_id/{student_id}",
  *     summary="Update StudentCustomTableCells record by composite key",
  *     tags={"StudentCustomTableCells"},
  *     @OA\Parameter(
@@ -253,7 +253,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/student1-2custom_table_cells/student_custom_field_id/{student_custom_field_id}/student_custom_table_column_id/{student_custom_table_column_id}/student_custom_table_row_id/{student_custom_table_row_id}/student_id/{student_id}",
+ *     path="/api/v5/student-custom_table_cells/student_custom_field_id/{student_custom_field_id}/student_custom_table_column_id/{student_custom_table_column_id}/student_custom_table_row_id/{student_custom_table_row_id}/student_id/{student_id}",
  *     summary="Delete StudentCustomTableCells record by composite key",
  *     tags={"StudentCustomTableCells"},
  *     @OA\Parameter(

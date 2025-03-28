@@ -147,7 +147,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/email1-2templates/model_alias/{model_alias}/model_reference/{model_reference}",
+ *     path="/api/v5/email-templates/model_alias/{model_alias}/model_reference/{model_reference}",
  *     summary="Get EmailTemplates record by composite key",
  *     tags={"EmailTemplates"},
  *     @OA\Parameter(
@@ -178,7 +178,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/email1-2templates/model_alias/{model_alias}/model_reference/{model_reference}",
+ *     path="/api/v5/email-templates/model_alias/{model_alias}/model_reference/{model_reference}",
  *     summary="Update EmailTemplates record by composite key",
  *     tags={"EmailTemplates"},
  *     @OA\Parameter(
@@ -219,7 +219,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/email1-2templates/model_alias/{model_alias}/model_reference/{model_reference}",
+ *     path="/api/v5/email-templates/model_alias/{model_alias}/model_reference/{model_reference}",
  *     summary="Delete EmailTemplates record by composite key",
  *     tags={"EmailTemplates"},
  *     @OA\Parameter(

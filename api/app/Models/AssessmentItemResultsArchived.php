@@ -163,7 +163,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/assessment1-2item_results_archived/student_id/{student_id}/assessment_id/{assessment_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/assessment_period_id/{assessment_period_id}/institution_classes_id/{institution_classes_id}",
+ *     path="/api/v5/assessment-item_results_archived/student_id/{student_id}/assessment_id/{assessment_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/assessment_period_id/{assessment_period_id}/institution_classes_id/{institution_classes_id}",
  *     summary="Get AssessmentItemResultsArchived record by composite key",
  *     tags={"AssessmentItemResultsArchived"},
  *     @OA\Parameter(
@@ -229,7 +229,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/assessment1-2item_results_archived/student_id/{student_id}/assessment_id/{assessment_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/assessment_period_id/{assessment_period_id}/institution_classes_id/{institution_classes_id}",
+ *     path="/api/v5/assessment-item_results_archived/student_id/{student_id}/assessment_id/{assessment_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/assessment_period_id/{assessment_period_id}/institution_classes_id/{institution_classes_id}",
  *     summary="Update AssessmentItemResultsArchived record by composite key",
  *     tags={"AssessmentItemResultsArchived"},
  *     @OA\Parameter(
@@ -305,7 +305,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/assessment1-2item_results_archived/student_id/{student_id}/assessment_id/{assessment_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/assessment_period_id/{assessment_period_id}/institution_classes_id/{institution_classes_id}",
+ *     path="/api/v5/assessment-item_results_archived/student_id/{student_id}/assessment_id/{assessment_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}/academic_period_id/{academic_period_id}/assessment_period_id/{assessment_period_id}/institution_classes_id/{institution_classes_id}",
  *     summary="Delete AssessmentItemResultsArchived record by composite key",
  *     tags={"AssessmentItemResultsArchived"},
  *     @OA\Parameter(

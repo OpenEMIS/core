@@ -184,7 +184,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution1-2subject_students/student_id/{student_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}",
+ *     path="/api/v5/institution-subject_students/student_id/{student_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}",
  *     summary="Get InstitutionSubjectStudents record by composite key",
  *     tags={"InstitutionSubjectStudents"},
  *     @OA\Parameter(
@@ -243,7 +243,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution1-2subject_students/student_id/{student_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}",
+ *     path="/api/v5/institution-subject_students/student_id/{student_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}",
  *     summary="Update InstitutionSubjectStudents record by composite key",
  *     tags={"InstitutionSubjectStudents"},
  *     @OA\Parameter(
@@ -312,7 +312,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution1-2subject_students/student_id/{student_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}",
+ *     path="/api/v5/institution-subject_students/student_id/{student_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_subject_id/{education_subject_id}/education_grade_id/{education_grade_id}",
  *     summary="Delete InstitutionSubjectStudents record by composite key",
  *     tags={"InstitutionSubjectStudents"},
  *     @OA\Parameter(
