@@ -137,7 +137,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution1-2buses_transport_features/institution_bus_id/{institution_bus_id}/transport_feature_id/{transport_feature_id}",
+ *     path="/api/v5/institution-buses_transport_features/institution_bus_id/{institution_bus_id}/transport_feature_id/{transport_feature_id}",
  *     summary="Get InstitutionBusesTransportFeatures record by composite key",
  *     tags={"InstitutionBusesTransportFeatures"},
  *     @OA\Parameter(
@@ -168,7 +168,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution1-2buses_transport_features/institution_bus_id/{institution_bus_id}/transport_feature_id/{transport_feature_id}",
+ *     path="/api/v5/institution-buses_transport_features/institution_bus_id/{institution_bus_id}/transport_feature_id/{transport_feature_id}",
  *     summary="Update InstitutionBusesTransportFeatures record by composite key",
  *     tags={"InstitutionBusesTransportFeatures"},
  *     @OA\Parameter(
@@ -209,7 +209,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution1-2buses_transport_features/institution_bus_id/{institution_bus_id}/transport_feature_id/{transport_feature_id}",
+ *     path="/api/v5/institution-buses_transport_features/institution_bus_id/{institution_bus_id}/transport_feature_id/{transport_feature_id}",
  *     summary="Delete InstitutionBusesTransportFeatures record by composite key",
  *     tags={"InstitutionBusesTransportFeatures"},
  *     @OA\Parameter(

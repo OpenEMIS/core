@@ -147,7 +147,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/inserted1-2records/id/{id}/inserted_date/{inserted_date}",
+ *     path="/api/v5/inserted-records/id/{id}/inserted_date/{inserted_date}",
  *     summary="Get InsertedRecords record by composite key",
  *     tags={"InsertedRecords"},
  *     @OA\Parameter(
@@ -178,7 +178,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/inserted1-2records/id/{id}/inserted_date/{inserted_date}",
+ *     path="/api/v5/inserted-records/id/{id}/inserted_date/{inserted_date}",
  *     summary="Update InsertedRecords record by composite key",
  *     tags={"InsertedRecords"},
  *     @OA\Parameter(
@@ -219,7 +219,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/inserted1-2records/id/{id}/inserted_date/{inserted_date}",
+ *     path="/api/v5/inserted-records/id/{id}/inserted_date/{inserted_date}",
  *     summary="Delete InsertedRecords record by composite key",
  *     tags={"InsertedRecords"},
  *     @OA\Parameter(

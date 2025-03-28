@@ -135,7 +135,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/api1-2credentials_scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}",
+ *     path="/api/v5/api-credentials_scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}",
  *     summary="Get ApiCredentialsScopes record by composite key",
  *     tags={"ApiCredentialsScopes"},
  *     @OA\Parameter(
@@ -166,7 +166,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/api1-2credentials_scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}",
+ *     path="/api/v5/api-credentials_scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}",
  *     summary="Update ApiCredentialsScopes record by composite key",
  *     tags={"ApiCredentialsScopes"},
  *     @OA\Parameter(
@@ -207,7 +207,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/api1-2credentials_scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}",
+ *     path="/api/v5/api-credentials_scopes/api_credential_id/{api_credential_id}/api_scope_id/{api_scope_id}",
  *     summary="Delete ApiCredentialsScopes record by composite key",
  *     tags={"ApiCredentialsScopes"},
  *     @OA\Parameter(

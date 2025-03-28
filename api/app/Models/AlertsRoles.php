@@ -137,7 +137,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/alerts1-2roles/alert_rule_id/{alert_rule_id}/security_role_id/{security_role_id}",
+ *     path="/api/v5/alerts-roles/alert_rule_id/{alert_rule_id}/security_role_id/{security_role_id}",
  *     summary="Get AlertsRoles record by composite key",
  *     tags={"AlertsRoles"},
  *     @OA\Parameter(
@@ -168,7 +168,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/alerts1-2roles/alert_rule_id/{alert_rule_id}/security_role_id/{security_role_id}",
+ *     path="/api/v5/alerts-roles/alert_rule_id/{alert_rule_id}/security_role_id/{security_role_id}",
  *     summary="Update AlertsRoles record by composite key",
  *     tags={"AlertsRoles"},
  *     @OA\Parameter(
@@ -209,7 +209,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/alerts1-2roles/alert_rule_id/{alert_rule_id}/security_role_id/{security_role_id}",
+ *     path="/api/v5/alerts-roles/alert_rule_id/{alert_rule_id}/security_role_id/{security_role_id}",
  *     summary="Delete AlertsRoles record by composite key",
  *     tags={"AlertsRoles"},
  *     @OA\Parameter(

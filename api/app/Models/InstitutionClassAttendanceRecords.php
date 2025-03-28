@@ -201,7 +201,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution1-2class_attendance_records/institution_class_id/{institution_class_id}/academic_period_id/{academic_period_id}/year/{year}/month/{month}",
+ *     path="/api/v5/institution-class_attendance_records/institution_class_id/{institution_class_id}/academic_period_id/{academic_period_id}/year/{year}/month/{month}",
  *     summary="Get InstitutionClassAttendanceRecords record by composite key",
  *     tags={"InstitutionClassAttendanceRecords"},
  *     @OA\Parameter(
@@ -246,7 +246,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution1-2class_attendance_records/institution_class_id/{institution_class_id}/academic_period_id/{academic_period_id}/year/{year}/month/{month}",
+ *     path="/api/v5/institution-class_attendance_records/institution_class_id/{institution_class_id}/academic_period_id/{academic_period_id}/year/{year}/month/{month}",
  *     summary="Update InstitutionClassAttendanceRecords record by composite key",
  *     tags={"InstitutionClassAttendanceRecords"},
  *     @OA\Parameter(
@@ -301,7 +301,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution1-2class_attendance_records/institution_class_id/{institution_class_id}/academic_period_id/{academic_period_id}/year/{year}/month/{month}",
+ *     path="/api/v5/institution-class_attendance_records/institution_class_id/{institution_class_id}/academic_period_id/{academic_period_id}/year/{year}/month/{month}",
  *     summary="Delete InstitutionClassAttendanceRecords record by composite key",
  *     tags={"InstitutionClassAttendanceRecords"},
  *     @OA\Parameter(

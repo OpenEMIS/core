@@ -143,7 +143,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/examination1-2centres_examinations_invigilators/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/invigilator_id/{invigilator_id}",
+ *     path="/api/v5/examination-centres_examinations_invigilators/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/invigilator_id/{invigilator_id}",
  *     summary="Get ExaminationCentresExaminationsInvigilators record by composite key",
  *     tags={"ExaminationCentresExaminationsInvigilators"},
  *     @OA\Parameter(
@@ -181,7 +181,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/examination1-2centres_examinations_invigilators/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/invigilator_id/{invigilator_id}",
+ *     path="/api/v5/examination-centres_examinations_invigilators/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/invigilator_id/{invigilator_id}",
  *     summary="Update ExaminationCentresExaminationsInvigilators record by composite key",
  *     tags={"ExaminationCentresExaminationsInvigilators"},
  *     @OA\Parameter(
@@ -229,7 +229,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/examination1-2centres_examinations_invigilators/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/invigilator_id/{invigilator_id}",
+ *     path="/api/v5/examination-centres_examinations_invigilators/examination_centre_id/{examination_centre_id}/examination_id/{examination_id}/invigilator_id/{invigilator_id}",
  *     summary="Delete ExaminationCentresExaminationsInvigilators record by composite key",
  *     tags={"ExaminationCentresExaminationsInvigilators"},
  *     @OA\Parameter(

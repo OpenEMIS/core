@@ -145,7 +145,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/staff1-2report_card_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
+ *     path="/api/v5/staff-report_card_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
  *     summary="Get StaffReportCardProcesses record by composite key",
  *     tags={"StaffReportCardProcesses"},
  *     @OA\Parameter(
@@ -176,7 +176,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/staff1-2report_card_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
+ *     path="/api/v5/staff-report_card_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
  *     summary="Update StaffReportCardProcesses record by composite key",
  *     tags={"StaffReportCardProcesses"},
  *     @OA\Parameter(
@@ -217,7 +217,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/staff1-2report_card_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
+ *     path="/api/v5/staff-report_card_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
  *     summary="Delete StaffReportCardProcesses record by composite key",
  *     tags={"StaffReportCardProcesses"},
  *     @OA\Parameter(
