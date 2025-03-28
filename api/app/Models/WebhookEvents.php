@@ -127,7 +127,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/webhook_events/webhook_id/{webhook_id}/event_key/{event_key}",
+ *     path="/api/v5/webhook1-2events/webhook_id/{webhook_id}/event_key/{event_key}",
  *     summary="Get WebhookEvents record by composite key",
  *     tags={"WebhookEvents"},
  *     @OA\Parameter(
@@ -158,7 +158,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/webhook_events/webhook_id/{webhook_id}/event_key/{event_key}",
+ *     path="/api/v5/webhook1-2events/webhook_id/{webhook_id}/event_key/{event_key}",
  *     summary="Update WebhookEvents record by composite key",
  *     tags={"WebhookEvents"},
  *     @OA\Parameter(
@@ -199,7 +199,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/webhook_events/webhook_id/{webhook_id}/event_key/{event_key}",
+ *     path="/api/v5/webhook1-2events/webhook_id/{webhook_id}/event_key/{event_key}",
  *     summary="Delete WebhookEvents record by composite key",
  *     tags={"WebhookEvents"},
  *     @OA\Parameter(

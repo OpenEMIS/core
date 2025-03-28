@@ -153,7 +153,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution_student_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_student_survey_id/{institution_student_survey_id}",
+ *     path="/api/v5/institution1-2student_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_student_survey_id/{institution_student_survey_id}",
  *     summary="Get InstitutionStudentSurveyTableCells record by composite key",
  *     tags={"InstitutionStudentSurveyTableCells"},
  *     @OA\Parameter(
@@ -198,7 +198,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution_student_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_student_survey_id/{institution_student_survey_id}",
+ *     path="/api/v5/institution1-2student_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_student_survey_id/{institution_student_survey_id}",
  *     summary="Update InstitutionStudentSurveyTableCells record by composite key",
  *     tags={"InstitutionStudentSurveyTableCells"},
  *     @OA\Parameter(
@@ -253,7 +253,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution_student_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_student_survey_id/{institution_student_survey_id}",
+ *     path="/api/v5/institution1-2student_survey_table_cells/survey_question_id/{survey_question_id}/survey_table_column_id/{survey_table_column_id}/survey_table_row_id/{survey_table_row_id}/institution_student_survey_id/{institution_student_survey_id}",
  *     summary="Delete InstitutionStudentSurveyTableCells record by composite key",
  *     tags={"InstitutionStudentSurveyTableCells"},
  *     @OA\Parameter(

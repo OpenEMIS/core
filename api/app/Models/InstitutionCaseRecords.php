@@ -147,7 +147,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution_case_records/institution_case_id/{institution_case_id}/record_id/{record_id}/feature/{feature}",
+ *     path="/api/v5/institution1-2case_records/institution_case_id/{institution_case_id}/record_id/{record_id}/feature/{feature}",
  *     summary="Get InstitutionCaseRecords record by composite key",
  *     tags={"InstitutionCaseRecords"},
  *     @OA\Parameter(
@@ -185,7 +185,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution_case_records/institution_case_id/{institution_case_id}/record_id/{record_id}/feature/{feature}",
+ *     path="/api/v5/institution1-2case_records/institution_case_id/{institution_case_id}/record_id/{record_id}/feature/{feature}",
  *     summary="Update InstitutionCaseRecords record by composite key",
  *     tags={"InstitutionCaseRecords"},
  *     @OA\Parameter(
@@ -233,7 +233,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution_case_records/institution_case_id/{institution_case_id}/record_id/{record_id}/feature/{feature}",
+ *     path="/api/v5/institution1-2case_records/institution_case_id/{institution_case_id}/record_id/{record_id}/feature/{feature}",
  *     summary="Delete InstitutionCaseRecords record by composite key",
  *     tags={"InstitutionCaseRecords"},
  *     @OA\Parameter(

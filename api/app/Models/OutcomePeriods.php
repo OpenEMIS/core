@@ -157,7 +157,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/outcome_periods/id/{id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/outcome1-2periods/id/{id}/academic_period_id/{academic_period_id}",
  *     summary="Get OutcomePeriods record by composite key",
  *     tags={"OutcomePeriods"},
  *     @OA\Parameter(
@@ -188,7 +188,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/outcome_periods/id/{id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/outcome1-2periods/id/{id}/academic_period_id/{academic_period_id}",
  *     summary="Update OutcomePeriods record by composite key",
  *     tags={"OutcomePeriods"},
  *     @OA\Parameter(
@@ -229,7 +229,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/outcome_periods/id/{id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/outcome1-2periods/id/{id}/academic_period_id/{academic_period_id}",
  *     summary="Delete OutcomePeriods record by composite key",
  *     tags={"OutcomePeriods"},
  *     @OA\Parameter(

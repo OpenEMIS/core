@@ -141,7 +141,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution_fee_types/institution_fee_id/{institution_fee_id}/fee_type_id/{fee_type_id}",
+ *     path="/api/v5/institution1-2fee_types/institution_fee_id/{institution_fee_id}/fee_type_id/{fee_type_id}",
  *     summary="Get InstitutionFeeTypes record by composite key",
  *     tags={"InstitutionFeeTypes"},
  *     @OA\Parameter(
@@ -172,7 +172,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution_fee_types/institution_fee_id/{institution_fee_id}/fee_type_id/{fee_type_id}",
+ *     path="/api/v5/institution1-2fee_types/institution_fee_id/{institution_fee_id}/fee_type_id/{fee_type_id}",
  *     summary="Update InstitutionFeeTypes record by composite key",
  *     tags={"InstitutionFeeTypes"},
  *     @OA\Parameter(
@@ -213,7 +213,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution_fee_types/institution_fee_id/{institution_fee_id}/fee_type_id/{fee_type_id}",
+ *     path="/api/v5/institution1-2fee_types/institution_fee_id/{institution_fee_id}/fee_type_id/{fee_type_id}",
  *     summary="Delete InstitutionFeeTypes record by composite key",
  *     tags={"InstitutionFeeTypes"},
  *     @OA\Parameter(

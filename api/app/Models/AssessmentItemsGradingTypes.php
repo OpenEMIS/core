@@ -149,7 +149,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/assessment_items_grading_types/education_subject_id/{education_subject_id}/assessment_grading_type_id/{assessment_grading_type_id}/assessment_id/{assessment_id}/assessment_period_id/{assessment_period_id}",
+ *     path="/api/v5/assessment1-2items_grading_types/education_subject_id/{education_subject_id}/assessment_grading_type_id/{assessment_grading_type_id}/assessment_id/{assessment_id}/assessment_period_id/{assessment_period_id}",
  *     summary="Get AssessmentItemsGradingTypes record by composite key",
  *     tags={"AssessmentItemsGradingTypes"},
  *     @OA\Parameter(
@@ -194,7 +194,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/assessment_items_grading_types/education_subject_id/{education_subject_id}/assessment_grading_type_id/{assessment_grading_type_id}/assessment_id/{assessment_id}/assessment_period_id/{assessment_period_id}",
+ *     path="/api/v5/assessment1-2items_grading_types/education_subject_id/{education_subject_id}/assessment_grading_type_id/{assessment_grading_type_id}/assessment_id/{assessment_id}/assessment_period_id/{assessment_period_id}",
  *     summary="Update AssessmentItemsGradingTypes record by composite key",
  *     tags={"AssessmentItemsGradingTypes"},
  *     @OA\Parameter(
@@ -249,7 +249,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/assessment_items_grading_types/education_subject_id/{education_subject_id}/assessment_grading_type_id/{assessment_grading_type_id}/assessment_id/{assessment_id}/assessment_period_id/{assessment_period_id}",
+ *     path="/api/v5/assessment1-2items_grading_types/education_subject_id/{education_subject_id}/assessment_grading_type_id/{assessment_grading_type_id}/assessment_id/{assessment_id}/assessment_period_id/{assessment_period_id}",
  *     summary="Delete AssessmentItemsGradingTypes record by composite key",
  *     tags={"AssessmentItemsGradingTypes"},
  *     @OA\Parameter(

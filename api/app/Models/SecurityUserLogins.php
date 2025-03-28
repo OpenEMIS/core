@@ -143,7 +143,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/security_user_logins/id/{id}/login_period/{login_period}",
+ *     path="/api/v5/security-user_logins/id/{id}/login_period/{login_period}",
  *     summary="Get SecurityUserLogins record by composite key",
  *     tags={"SecurityUserLogins"},
  *     @OA\Parameter(
@@ -174,7 +174,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/security_user_logins/id/{id}/login_period/{login_period}",
+ *     path="/api/v5/security-user_logins/id/{id}/login_period/{login_period}",
  *     summary="Update SecurityUserLogins record by composite key",
  *     tags={"SecurityUserLogins"},
  *     @OA\Parameter(
@@ -215,7 +215,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/security_user_logins/id/{id}/login_period/{login_period}",
+ *     path="/api/v5/security-user_logins/id/{id}/login_period/{login_period}",
  *     summary="Delete SecurityUserLogins record by composite key",
  *     tags={"SecurityUserLogins"},
  *     @OA\Parameter(

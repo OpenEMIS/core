@@ -145,7 +145,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/class_profile_processes/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}",
+ *     path="/api/v5/class1-2profile_processes/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}",
  *     summary="Get ClassProfileProcesses record by composite key",
  *     tags={"ClassProfileProcesses"},
  *     @OA\Parameter(
@@ -176,7 +176,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/class_profile_processes/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}",
+ *     path="/api/v5/class1-2profile_processes/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}",
  *     summary="Update ClassProfileProcesses record by composite key",
  *     tags={"ClassProfileProcesses"},
  *     @OA\Parameter(
@@ -217,7 +217,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/class_profile_processes/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}",
+ *     path="/api/v5/class1-2profile_processes/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}",
  *     summary="Delete ClassProfileProcesses record by composite key",
  *     tags={"ClassProfileProcesses"},
  *     @OA\Parameter(

@@ -155,7 +155,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution_custom_table_cells/institution_custom_field_id/{institution_custom_field_id}/institution_custom_table_column_id/{institution_custom_table_column_id}/institution_custom_table_row_id/{institution_custom_table_row_id}/institution_id/{institution_id}",
+ *     path="/api/v5/institution1-2custom_table_cells/institution_custom_field_id/{institution_custom_field_id}/institution_custom_table_column_id/{institution_custom_table_column_id}/institution_custom_table_row_id/{institution_custom_table_row_id}/institution_id/{institution_id}",
  *     summary="Get InstitutionCustomTableCells record by composite key",
  *     tags={"InstitutionCustomTableCells"},
  *     @OA\Parameter(
@@ -200,7 +200,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution_custom_table_cells/institution_custom_field_id/{institution_custom_field_id}/institution_custom_table_column_id/{institution_custom_table_column_id}/institution_custom_table_row_id/{institution_custom_table_row_id}/institution_id/{institution_id}",
+ *     path="/api/v5/institution1-2custom_table_cells/institution_custom_field_id/{institution_custom_field_id}/institution_custom_table_column_id/{institution_custom_table_column_id}/institution_custom_table_row_id/{institution_custom_table_row_id}/institution_id/{institution_id}",
  *     summary="Update InstitutionCustomTableCells record by composite key",
  *     tags={"InstitutionCustomTableCells"},
  *     @OA\Parameter(
@@ -255,7 +255,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution_custom_table_cells/institution_custom_field_id/{institution_custom_field_id}/institution_custom_table_column_id/{institution_custom_table_column_id}/institution_custom_table_row_id/{institution_custom_table_row_id}/institution_id/{institution_id}",
+ *     path="/api/v5/institution1-2custom_table_cells/institution_custom_field_id/{institution_custom_field_id}/institution_custom_table_column_id/{institution_custom_table_column_id}/institution_custom_table_row_id/{institution_custom_table_row_id}/institution_id/{institution_id}",
  *     summary="Delete InstitutionCustomTableCells record by composite key",
  *     tags={"InstitutionCustomTableCells"},
  *     @OA\Parameter(

@@ -147,7 +147,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/staff_report_card_email_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
+ *     path="/api/v5/staff1-2report_card_email_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
  *     summary="Get StaffReportCardEmailProcesses record by composite key",
  *     tags={"StaffReportCardEmailProcesses"},
  *     @OA\Parameter(
@@ -178,7 +178,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/staff_report_card_email_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
+ *     path="/api/v5/staff1-2report_card_email_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
  *     summary="Update StaffReportCardEmailProcesses record by composite key",
  *     tags={"StaffReportCardEmailProcesses"},
  *     @OA\Parameter(
@@ -219,7 +219,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/staff_report_card_email_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
+ *     path="/api/v5/staff1-2report_card_email_processes/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}",
  *     summary="Delete StaffReportCardEmailProcesses record by composite key",
  *     tags={"StaffReportCardEmailProcesses"},
  *     @OA\Parameter(
