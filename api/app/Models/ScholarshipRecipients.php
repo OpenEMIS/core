@@ -147,7 +147,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/scholarship_recipients/recipient_id/{recipient_id}/scholarship_id/{scholarship_id}",
+ *     path="/api/v5/scholarship1-2recipients/recipient_id/{recipient_id}/scholarship_id/{scholarship_id}",
  *     summary="Get ScholarshipRecipients record by composite key",
  *     tags={"ScholarshipRecipients"},
  *     @OA\Parameter(
@@ -178,7 +178,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/scholarship_recipients/recipient_id/{recipient_id}/scholarship_id/{scholarship_id}",
+ *     path="/api/v5/scholarship1-2recipients/recipient_id/{recipient_id}/scholarship_id/{scholarship_id}",
  *     summary="Update ScholarshipRecipients record by composite key",
  *     tags={"ScholarshipRecipients"},
  *     @OA\Parameter(
@@ -219,7 +219,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/scholarship_recipients/recipient_id/{recipient_id}/scholarship_id/{scholarship_id}",
+ *     path="/api/v5/scholarship1-2recipients/recipient_id/{recipient_id}/scholarship_id/{scholarship_id}",
  *     summary="Delete ScholarshipRecipients record by composite key",
  *     tags={"ScholarshipRecipients"},
  *     @OA\Parameter(

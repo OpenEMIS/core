@@ -155,7 +155,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/outcome_criterias/id/{id}/academic_period_id/{academic_period_id}/outcome_template_id/{outcome_template_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
+ *     path="/api/v5/outcome1-2criterias/id/{id}/academic_period_id/{academic_period_id}/outcome_template_id/{outcome_template_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
  *     summary="Get OutcomeCriterias record by composite key",
  *     tags={"OutcomeCriterias"},
  *     @OA\Parameter(
@@ -207,7 +207,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/outcome_criterias/id/{id}/academic_period_id/{academic_period_id}/outcome_template_id/{outcome_template_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
+ *     path="/api/v5/outcome1-2criterias/id/{id}/academic_period_id/{academic_period_id}/outcome_template_id/{outcome_template_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
  *     summary="Update OutcomeCriterias record by composite key",
  *     tags={"OutcomeCriterias"},
  *     @OA\Parameter(
@@ -269,7 +269,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/outcome_criterias/id/{id}/academic_period_id/{academic_period_id}/outcome_template_id/{outcome_template_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
+ *     path="/api/v5/outcome1-2criterias/id/{id}/academic_period_id/{academic_period_id}/outcome_template_id/{outcome_template_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
  *     summary="Delete OutcomeCriterias record by composite key",
  *     tags={"OutcomeCriterias"},
  *     @OA\Parameter(

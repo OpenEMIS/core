@@ -159,7 +159,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution_student_absence_details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}",
+ *     path="/api/v5/institution1-2student_absence_details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}",
  *     summary="Get InstitutionStudentAbsenceDetails record by composite key",
  *     tags={"InstitutionStudentAbsenceDetails"},
  *     @OA\Parameter(
@@ -225,7 +225,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution_student_absence_details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}",
+ *     path="/api/v5/institution1-2student_absence_details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}",
  *     summary="Update InstitutionStudentAbsenceDetails record by composite key",
  *     tags={"InstitutionStudentAbsenceDetails"},
  *     @OA\Parameter(
@@ -301,7 +301,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution_student_absence_details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}",
+ *     path="/api/v5/institution1-2student_absence_details/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/date/{date}/period/{period}/subject_id/{subject_id}",
  *     summary="Delete InstitutionStudentAbsenceDetails record by composite key",
  *     tags={"InstitutionStudentAbsenceDetails"},
  *     @OA\Parameter(

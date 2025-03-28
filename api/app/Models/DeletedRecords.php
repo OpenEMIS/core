@@ -145,7 +145,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/deleted_records/id/{id}/deleted_date/{deleted_date}",
+ *     path="/api/v5/deleted1-2records/id/{id}/deleted_date/{deleted_date}",
  *     summary="Get DeletedRecords record by composite key",
  *     tags={"DeletedRecords"},
  *     @OA\Parameter(
@@ -176,7 +176,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/deleted_records/id/{id}/deleted_date/{deleted_date}",
+ *     path="/api/v5/deleted1-2records/id/{id}/deleted_date/{deleted_date}",
  *     summary="Update DeletedRecords record by composite key",
  *     tags={"DeletedRecords"},
  *     @OA\Parameter(
@@ -217,7 +217,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/deleted_records/id/{id}/deleted_date/{deleted_date}",
+ *     path="/api/v5/deleted1-2records/id/{id}/deleted_date/{deleted_date}",
  *     summary="Delete DeletedRecords record by composite key",
  *     tags={"DeletedRecords"},
  *     @OA\Parameter(

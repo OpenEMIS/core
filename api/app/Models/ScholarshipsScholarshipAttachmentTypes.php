@@ -147,7 +147,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/scholarships_scholarship_attachment_types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}",
+ *     path="/api/v5/scholarships1-2scholarship_attachment_types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}",
  *     summary="Get ScholarshipsScholarshipAttachmentTypes record by composite key",
  *     tags={"ScholarshipsScholarshipAttachmentTypes"},
  *     @OA\Parameter(
@@ -178,7 +178,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/scholarships_scholarship_attachment_types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}",
+ *     path="/api/v5/scholarships1-2scholarship_attachment_types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}",
  *     summary="Update ScholarshipsScholarshipAttachmentTypes record by composite key",
  *     tags={"ScholarshipsScholarshipAttachmentTypes"},
  *     @OA\Parameter(
@@ -219,7 +219,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/scholarships_scholarship_attachment_types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}",
+ *     path="/api/v5/scholarships1-2scholarship_attachment_types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}",
  *     summary="Delete ScholarshipsScholarshipAttachmentTypes record by composite key",
  *     tags={"ScholarshipsScholarshipAttachmentTypes"},
  *     @OA\Parameter(

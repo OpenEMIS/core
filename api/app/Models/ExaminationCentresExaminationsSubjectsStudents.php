@@ -149,7 +149,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/examination_centres_examinations_subjects_students/examination_centre_id/{examination_centre_id}/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
+ *     path="/api/v5/examination1-2centres_examinations_subjects_students/examination_centre_id/{examination_centre_id}/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
  *     summary="Get ExaminationCentresExaminationsSubjectsStudents record by composite key",
  *     tags={"ExaminationCentresExaminationsSubjectsStudents"},
  *     @OA\Parameter(
@@ -187,7 +187,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/examination_centres_examinations_subjects_students/examination_centre_id/{examination_centre_id}/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
+ *     path="/api/v5/examination1-2centres_examinations_subjects_students/examination_centre_id/{examination_centre_id}/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
  *     summary="Update ExaminationCentresExaminationsSubjectsStudents record by composite key",
  *     tags={"ExaminationCentresExaminationsSubjectsStudents"},
  *     @OA\Parameter(
@@ -235,7 +235,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/examination_centres_examinations_subjects_students/examination_centre_id/{examination_centre_id}/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
+ *     path="/api/v5/examination1-2centres_examinations_subjects_students/examination_centre_id/{examination_centre_id}/examination_subject_id/{examination_subject_id}/student_id/{student_id}",
  *     summary="Delete ExaminationCentresExaminationsSubjectsStudents record by composite key",
  *     tags={"ExaminationCentresExaminationsSubjectsStudents"},
  *     @OA\Parameter(

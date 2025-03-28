@@ -143,7 +143,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/examination_centre_rooms_examinations/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}",
+ *     path="/api/v5/examination1-2centre_rooms_examinations/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}",
  *     summary="Get ExaminationCentreRoomsExaminations record by composite key",
  *     tags={"ExaminationCentreRoomsExaminations"},
  *     @OA\Parameter(
@@ -174,7 +174,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/examination_centre_rooms_examinations/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}",
+ *     path="/api/v5/examination1-2centre_rooms_examinations/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}",
  *     summary="Update ExaminationCentreRoomsExaminations record by composite key",
  *     tags={"ExaminationCentreRoomsExaminations"},
  *     @OA\Parameter(
@@ -215,7 +215,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/examination_centre_rooms_examinations/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}",
+ *     path="/api/v5/examination1-2centre_rooms_examinations/examination_centre_room_id/{examination_centre_room_id}/examination_id/{examination_id}",
  *     summary="Delete ExaminationCentreRoomsExaminations record by composite key",
  *     tags={"ExaminationCentreRoomsExaminations"},
  *     @OA\Parameter(

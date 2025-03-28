@@ -147,7 +147,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/appraisal_text_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}",
+ *     path="/api/v5/appraisal1-2text_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}",
  *     summary="Get AppraisalTextAnswers record by composite key",
  *     tags={"AppraisalTextAnswers"},
  *     @OA\Parameter(
@@ -185,7 +185,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/appraisal_text_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}",
+ *     path="/api/v5/appraisal1-2text_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}",
  *     summary="Update AppraisalTextAnswers record by composite key",
  *     tags={"AppraisalTextAnswers"},
  *     @OA\Parameter(
@@ -233,7 +233,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/appraisal_text_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}",
+ *     path="/api/v5/appraisal1-2text_answers/appraisal_form_id/{appraisal_form_id}/appraisal_criteria_id/{appraisal_criteria_id}/institution_staff_appraisal_id/{institution_staff_appraisal_id}",
  *     summary="Delete AppraisalTextAnswers record by composite key",
  *     tags={"AppraisalTextAnswers"},
  *     @OA\Parameter(

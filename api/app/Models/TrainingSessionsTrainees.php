@@ -139,7 +139,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/training_sessions_trainees/training_session_id/{training_session_id}/trainee_id/{trainee_id}",
+ *     path="/api/v5/training1-2sessions_trainees/training_session_id/{training_session_id}/trainee_id/{trainee_id}",
  *     summary="Get TrainingSessionsTrainees record by composite key",
  *     tags={"TrainingSessionsTrainees"},
  *     @OA\Parameter(
@@ -170,7 +170,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/training_sessions_trainees/training_session_id/{training_session_id}/trainee_id/{trainee_id}",
+ *     path="/api/v5/training1-2sessions_trainees/training_session_id/{training_session_id}/trainee_id/{trainee_id}",
  *     summary="Update TrainingSessionsTrainees record by composite key",
  *     tags={"TrainingSessionsTrainees"},
  *     @OA\Parameter(
@@ -211,7 +211,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/training_sessions_trainees/training_session_id/{training_session_id}/trainee_id/{trainee_id}",
+ *     path="/api/v5/training1-2sessions_trainees/training_session_id/{training_session_id}/trainee_id/{trainee_id}",
  *     summary="Delete TrainingSessionsTrainees record by composite key",
  *     tags={"TrainingSessionsTrainees"},
  *     @OA\Parameter(

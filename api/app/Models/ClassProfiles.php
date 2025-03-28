@@ -163,7 +163,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/class_profiles/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/class1-2profiles/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Get ClassProfiles record by composite key",
  *     tags={"ClassProfiles"},
  *     @OA\Parameter(
@@ -208,7 +208,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/class_profiles/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/class1-2profiles/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Update ClassProfiles record by composite key",
  *     tags={"ClassProfiles"},
  *     @OA\Parameter(
@@ -263,7 +263,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/class_profiles/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/class1-2profiles/class_profile_template_id/{class_profile_template_id}/institution_class_id/{institution_class_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Delete ClassProfiles record by composite key",
  *     tags={"ClassProfiles"},
  *     @OA\Parameter(

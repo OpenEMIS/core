@@ -135,7 +135,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/staff_position_titles_grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}",
+ *     path="/api/v5/staff1-2position_titles_grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}",
  *     summary="Get StaffPositionTitlesGrades record by composite key",
  *     tags={"StaffPositionTitlesGrades"},
  *     @OA\Parameter(
@@ -166,7 +166,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/staff_position_titles_grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}",
+ *     path="/api/v5/staff1-2position_titles_grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}",
  *     summary="Update StaffPositionTitlesGrades record by composite key",
  *     tags={"StaffPositionTitlesGrades"},
  *     @OA\Parameter(
@@ -207,7 +207,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/staff_position_titles_grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}",
+ *     path="/api/v5/staff1-2position_titles_grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}",
  *     summary="Delete StaffPositionTitlesGrades record by composite key",
  *     tags={"StaffPositionTitlesGrades"},
  *     @OA\Parameter(

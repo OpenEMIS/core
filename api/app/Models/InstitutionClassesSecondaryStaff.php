@@ -145,7 +145,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution_classes_secondary_staff/institution_class_id/{institution_class_id}/secondary_staff_id/{secondary_staff_id}",
+ *     path="/api/v5/institution1-2classes_secondary_staff/institution_class_id/{institution_class_id}/secondary_staff_id/{secondary_staff_id}",
  *     summary="Get InstitutionClassesSecondaryStaff record by composite key",
  *     tags={"InstitutionClassesSecondaryStaff"},
  *     @OA\Parameter(
@@ -176,7 +176,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution_classes_secondary_staff/institution_class_id/{institution_class_id}/secondary_staff_id/{secondary_staff_id}",
+ *     path="/api/v5/institution1-2classes_secondary_staff/institution_class_id/{institution_class_id}/secondary_staff_id/{secondary_staff_id}",
  *     summary="Update InstitutionClassesSecondaryStaff record by composite key",
  *     tags={"InstitutionClassesSecondaryStaff"},
  *     @OA\Parameter(
@@ -217,7 +217,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution_classes_secondary_staff/institution_class_id/{institution_class_id}/secondary_staff_id/{secondary_staff_id}",
+ *     path="/api/v5/institution1-2classes_secondary_staff/institution_class_id/{institution_class_id}/secondary_staff_id/{secondary_staff_id}",
  *     summary="Delete InstitutionClassesSecondaryStaff record by composite key",
  *     tags={"InstitutionClassesSecondaryStaff"},
  *     @OA\Parameter(

@@ -161,7 +161,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution_students_report_cards_comments/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
+ *     path="/api/v5/institution1-2students_report_cards_comments/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
  *     summary="Get InstitutionStudentsReportCardsComments record by composite key",
  *     tags={"InstitutionStudentsReportCardsComments"},
  *     @OA\Parameter(
@@ -220,7 +220,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution_students_report_cards_comments/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
+ *     path="/api/v5/institution1-2students_report_cards_comments/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
  *     summary="Update InstitutionStudentsReportCardsComments record by composite key",
  *     tags={"InstitutionStudentsReportCardsComments"},
  *     @OA\Parameter(
@@ -289,7 +289,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution_students_report_cards_comments/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
+ *     path="/api/v5/institution1-2students_report_cards_comments/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}/education_subject_id/{education_subject_id}",
  *     summary="Delete InstitutionStudentsReportCardsComments record by composite key",
  *     tags={"InstitutionStudentsReportCardsComments"},
  *     @OA\Parameter(
