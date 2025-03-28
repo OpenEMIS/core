@@ -143,7 +143,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/student-attendance_marked_records/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/education_grade_id/{education_grade_id}/date/{date}/period/{period}/subject_id/{subject_id}",
+ *     path="/api/v5/student-attendance-marked-records/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/education_grade_id/{education_grade_id}/date/{date}/period/{period}/subject_id/{subject_id}",
  *     summary="Get StudentAttendanceMarkedRecords record by composite key",
  *     tags={"StudentAttendanceMarkedRecords"},
  *     @OA\Parameter(
@@ -209,7 +209,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/student-attendance_marked_records/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/education_grade_id/{education_grade_id}/date/{date}/period/{period}/subject_id/{subject_id}",
+ *     path="/api/v5/student-attendance-marked-records/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/education_grade_id/{education_grade_id}/date/{date}/period/{period}/subject_id/{subject_id}",
  *     summary="Update StudentAttendanceMarkedRecords record by composite key",
  *     tags={"StudentAttendanceMarkedRecords"},
  *     @OA\Parameter(
@@ -285,7 +285,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/student-attendance_marked_records/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/education_grade_id/{education_grade_id}/date/{date}/period/{period}/subject_id/{subject_id}",
+ *     path="/api/v5/student-attendance-marked-records/institution_id/{institution_id}/academic_period_id/{academic_period_id}/institution_class_id/{institution_class_id}/education_grade_id/{education_grade_id}/date/{date}/period/{period}/subject_id/{subject_id}",
  *     summary="Delete StudentAttendanceMarkedRecords record by composite key",
  *     tags={"StudentAttendanceMarkedRecords"},
  *     @OA\Parameter(

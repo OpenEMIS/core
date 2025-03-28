@@ -171,7 +171,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution-students_report_cards/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}",
+ *     path="/api/v5/institution-students-report-cards/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}",
  *     summary="Get InstitutionStudentsReportCards record by composite key",
  *     tags={"InstitutionStudentsReportCards"},
  *     @OA\Parameter(
@@ -223,7 +223,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution-students_report_cards/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}",
+ *     path="/api/v5/institution-students-report-cards/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}",
  *     summary="Update InstitutionStudentsReportCards record by composite key",
  *     tags={"InstitutionStudentsReportCards"},
  *     @OA\Parameter(
@@ -285,7 +285,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution-students_report_cards/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}",
+ *     path="/api/v5/institution-students-report-cards/report_card_id/{report_card_id}/student_id/{student_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}/education_grade_id/{education_grade_id}",
  *     summary="Delete InstitutionStudentsReportCards record by composite key",
  *     tags={"InstitutionStudentsReportCards"},
  *     @OA\Parameter(

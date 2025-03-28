@@ -153,7 +153,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/staff-custom_table_cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}",
+ *     path="/api/v5/staff-custom-table-cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}",
  *     summary="Get StaffCustomTableCells record by composite key",
  *     tags={"StaffCustomTableCells"},
  *     @OA\Parameter(
@@ -198,7 +198,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/staff-custom_table_cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}",
+ *     path="/api/v5/staff-custom-table-cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}",
  *     summary="Update StaffCustomTableCells record by composite key",
  *     tags={"StaffCustomTableCells"},
  *     @OA\Parameter(
@@ -253,7 +253,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/staff-custom_table_cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}",
+ *     path="/api/v5/staff-custom-table-cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}",
  *     summary="Delete StaffCustomTableCells record by composite key",
  *     tags={"StaffCustomTableCells"},
  *     @OA\Parameter(

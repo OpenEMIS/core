@@ -163,7 +163,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/staff-report_cards/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/staff-report-cards/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Get StaffReportCards record by composite key",
  *     tags={"StaffReportCards"},
  *     @OA\Parameter(
@@ -208,7 +208,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/staff-report_cards/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/staff-report-cards/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Update StaffReportCards record by composite key",
  *     tags={"StaffReportCards"},
  *     @OA\Parameter(
@@ -263,7 +263,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/staff-report_cards/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
+ *     path="/api/v5/staff-report-cards/staff_profile_template_id/{staff_profile_template_id}/staff_id/{staff_id}/institution_id/{institution_id}/academic_period_id/{academic_period_id}",
  *     summary="Delete StaffReportCards record by composite key",
  *     tags={"StaffReportCards"},
  *     @OA\Parameter(

@@ -153,7 +153,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/security-role_functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}",
+ *     path="/api/v5/security-role-functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}",
  *     summary="Get SecurityRoleFunctions record by composite key",
  *     tags={"SecurityRoleFunctions"},
  *     @OA\Parameter(
@@ -184,7 +184,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/security-role_functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}",
+ *     path="/api/v5/security-role-functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}",
  *     summary="Update SecurityRoleFunctions record by composite key",
  *     tags={"SecurityRoleFunctions"},
  *     @OA\Parameter(
@@ -225,7 +225,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/security-role_functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}",
+ *     path="/api/v5/security-role-functions/security_role_id/{security_role_id}/security_function_id/{security_function_id}",
  *     summary="Delete SecurityRoleFunctions record by composite key",
  *     tags={"SecurityRoleFunctions"},
  *     @OA\Parameter(

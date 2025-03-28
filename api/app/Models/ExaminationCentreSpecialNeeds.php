@@ -141,7 +141,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/examination-centre_special_needs/examination_centre_id/{examination_centre_id}/special_need_type_id/{special_need_type_id}",
+ *     path="/api/v5/examination-centre-special-needs/examination_centre_id/{examination_centre_id}/special_need_type_id/{special_need_type_id}",
  *     summary="Get ExaminationCentreSpecialNeeds record by composite key",
  *     tags={"ExaminationCentreSpecialNeeds"},
  *     @OA\Parameter(
@@ -172,7 +172,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/examination-centre_special_needs/examination_centre_id/{examination_centre_id}/special_need_type_id/{special_need_type_id}",
+ *     path="/api/v5/examination-centre-special-needs/examination_centre_id/{examination_centre_id}/special_need_type_id/{special_need_type_id}",
  *     summary="Update ExaminationCentreSpecialNeeds record by composite key",
  *     tags={"ExaminationCentreSpecialNeeds"},
  *     @OA\Parameter(
@@ -213,7 +213,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/examination-centre_special_needs/examination_centre_id/{examination_centre_id}/special_need_type_id/{special_need_type_id}",
+ *     path="/api/v5/examination-centre-special-needs/examination_centre_id/{examination_centre_id}/special_need_type_id/{special_need_type_id}",
  *     summary="Delete ExaminationCentreSpecialNeeds record by composite key",
  *     tags={"ExaminationCentreSpecialNeeds"},
  *     @OA\Parameter(

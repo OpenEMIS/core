@@ -137,7 +137,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/staff-qualifications_specialisations/staff_qualification_id/{staff_qualification_id}/qualification_specialisation_id/{qualification_specialisation_id}",
+ *     path="/api/v5/staff-qualifications-specialisations/staff_qualification_id/{staff_qualification_id}/qualification_specialisation_id/{qualification_specialisation_id}",
  *     summary="Get StaffQualificationsSpecialisations record by composite key",
  *     tags={"StaffQualificationsSpecialisations"},
  *     @OA\Parameter(
@@ -168,7 +168,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/staff-qualifications_specialisations/staff_qualification_id/{staff_qualification_id}/qualification_specialisation_id/{qualification_specialisation_id}",
+ *     path="/api/v5/staff-qualifications-specialisations/staff_qualification_id/{staff_qualification_id}/qualification_specialisation_id/{qualification_specialisation_id}",
  *     summary="Update StaffQualificationsSpecialisations record by composite key",
  *     tags={"StaffQualificationsSpecialisations"},
  *     @OA\Parameter(
@@ -209,7 +209,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/staff-qualifications_specialisations/staff_qualification_id/{staff_qualification_id}/qualification_specialisation_id/{qualification_specialisation_id}",
+ *     path="/api/v5/staff-qualifications-specialisations/staff_qualification_id/{staff_qualification_id}/qualification_specialisation_id/{qualification_specialisation_id}",
  *     summary="Delete StaffQualificationsSpecialisations record by composite key",
  *     tags={"StaffQualificationsSpecialisations"},
  *     @OA\Parameter(

@@ -143,7 +143,7 @@ public function _swaggerCreate() {}
 
 /**
  * @OA\Get(
- *     path="/api/v5/institution-report_card_processes/report_card_id/{report_card_id}/institution_id/{institution_id}",
+ *     path="/api/v5/institution-report-card-processes/report_card_id/{report_card_id}/institution_id/{institution_id}",
  *     summary="Get InstitutionReportCardProcesses record by composite key",
  *     tags={"InstitutionReportCardProcesses"},
  *     @OA\Parameter(
@@ -174,7 +174,7 @@ public function _swaggerView() {}
 
 /**
  * @OA\Put(
- *     path="/api/v5/institution-report_card_processes/report_card_id/{report_card_id}/institution_id/{institution_id}",
+ *     path="/api/v5/institution-report-card-processes/report_card_id/{report_card_id}/institution_id/{institution_id}",
  *     summary="Update InstitutionReportCardProcesses record by composite key",
  *     tags={"InstitutionReportCardProcesses"},
  *     @OA\Parameter(
@@ -215,7 +215,7 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/institution-report_card_processes/report_card_id/{report_card_id}/institution_id/{institution_id}",
+ *     path="/api/v5/institution-report-card-processes/report_card_id/{report_card_id}/institution_id/{institution_id}",
  *     summary="Delete InstitutionReportCardProcesses record by composite key",
  *     tags={"InstitutionReportCardProcesses"},
  *     @OA\Parameter(
