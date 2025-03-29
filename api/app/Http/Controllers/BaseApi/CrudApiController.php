@@ -688,8 +688,6 @@ class CrudApiController extends Controller
 
     public function __construct(PermissionService $permissionService)
     {
-        $this->user = JWTAuth::user();
-        Log::info("user: " . print_r($this->user, true));
         $this->permissionService = $permissionService;
     }
     /**
@@ -805,12 +803,14 @@ class CrudApiController extends Controller
             return $this->errorResponse($e->getMessage(), 404);
         }
 
-        $pagination = $this->getPaginationParams($request);
+        $pagination = $this->getPaginationParams($request, $segments);
         $filters = $this->parseFilters($request, $segments);
         $order = $this->parseOrderParams($request, $segments);
 
+        $query = $this->parseSelectParams($request, $segments, $query, $model);
         $query = $this->applyFilters($query, $filters);
-        $query = $this->applyOrder($query, $order);
+        $query = $this->applyFilters($query, $filters);
+        $query = $this->applyOrder($query, $order, $model);
         $query = $this->applyInstitutionFilter($query, $model);
 
         return $this->paginateResults($query, $pagination['limit'], $pagination['page']);
@@ -907,38 +907,96 @@ class CrudApiController extends Controller
     }
 
     /**
-     * Get pagination parameters from the request.
+     * Get pagination parameters from the request and segments.
+     *
+     * This function retrieves pagination parameters (page and limit) from both the query parameters
+     * and URL segments. If pagination parameters are found in the URL segments, they are removed
+     * from the segments array.
      *
      * @param \Illuminate\Http\Request $request
-     * @return array
+     * @param array $segments Remaining URL segments.
+     * @return array Pagination parameters as an associative array.
      */
-    private function getPaginationParams(Request $request)
+    private function getPaginationParams(Request $request, array &$segments)
     {
-        return [
+        $pagination = [
             'page' => $request->input('page', 1),
             'limit' => $request->input('limit', 20),
         ];
+
+        // Check for pagination parameters in URL segments
+        for ($i = 0; $i < count($segments); $i += 2) {
+            $key = $segments[$i];
+            $value = $segments[$i + 1] ?? null;
+            if ($value !== null) {
+                if ($key === 'page') {
+                    $pagination['page'] = (int)$value;
+                    // Unset page from segments
+                    unset($segments[$i], $segments[$i + 1]);
+                    // Reindex the array to maintain proper indexing
+                    $segments = array_values($segments);
+                    // Decrement $i by 2 to account for the removed elements
+                    $i -= 2;
+                } elseif ($key === 'limit') {
+                    $pagination['limit'] = (int)$value;
+                    // Unset limit from segments
+                    unset($segments[$i], $segments[$i + 1]);
+                    // Reindex the array to maintain proper indexing
+                    $segments = array_values($segments);
+                    // Decrement $i by 2 to account for the removed elements
+                    $i -= 2;
+                }
+            }
+        }
+
+        return $pagination;
     }
 
     /**
      * Parse filters from the request and segments.
      *
+     * This function retrieves filters from both the URL segments and query parameters,
+     * excluding specific parameters like order, orderby, _fields, _conditions, page, and limit.
+     *
      * @param \Illuminate\Http\Request $request
      * @param array $segments Remaining URL segments.
-     * @return array
+     * @return array Parsed filters as an associative array.
      */
-    private function parseFilters(Request $request, array $segments)
+    private function parseFilters(Request $request, array &$segments)
     {
         $filters = [];
-        $conditionsParam = $request->input('_conditions');
+        $excludedParams = ['order', 'orderby', '_fields', '_conditions', 'page', 'limit'];
 
+        // Parse conditions from the query parameter
+        $conditionsParam = $request->input('_conditions');
         if ($conditionsParam) {
-            $filters = $this->parseConditions($conditionsParam);
+            $filters = array_merge($filters, $this->parseConditions($conditionsParam));
         }
 
-        foreach ($segments as $index => $segment) {
-            if ($index % 2 == 0 && isset($segments[$index + 1])) {
-                $filters[$segment] = $segments[$index + 1];
+        // Parse other filters from query parameters
+        foreach ($request->all() as $key => $value) {
+            if (!in_array($key, $excludedParams)) {
+                $filters[$key] = $value;
+            }
+        }
+
+        // Parse conditions from the URL segments
+        for ($i = 0; $i < count($segments); $i += 2) {
+            $key = $segments[$i];
+            $value = $segments[$i + 1] ?? null;
+            if ($value !== null) {
+                if ($key === '_conditions') {
+                    // Parse conditions from the URL segment
+                    $filters = array_merge($filters, $this->parseConditions($value));
+                    // Unset _conditions from segments
+                    unset($segments[$i], $segments[$i + 1]);
+                    // Reindex the array to maintain proper indexing
+                    $segments = array_values($segments);
+                    // Decrement $i by 2 to account for the removed elements
+                    $i -= 2;
+                } else {
+                    $filters[$key] = $value;
+                }
             }
         }
 
@@ -977,6 +1035,94 @@ class CrudApiController extends Controller
 
         return $conditions;
     }
+
+    /**
+     * Parse select parameters from the request and segments.
+     *
+     * This function retrieves select parameters (_fields and _scope) from both the query parameters
+     * and URL segments. It modifies the query to select specific fields and apply scopes.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param array $segments Remaining URL segments.
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $model Fully qualified model class.
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function parseSelectParams(Request $request, array &$segments, $query, $model)
+    {
+        $fields = $request->query('_fields');
+        $scopeParam = $request->query('_scope');
+
+        // Process _fields from query parameters or segments
+        if (!$fields) {
+            for ($i = 0; $i < count($segments); $i += 2) {
+                $key = $segments[$i];
+                $value = $segments[$i + 1] ?? null;
+                if ($value !== null && $key === '_fields') {
+                    $fields = $value;
+                    // Unset _fields from segments
+                    unset($segments[$i], $segments[$i + 1]);
+                    // Reindex the array to maintain proper indexing
+                    $segments = array_values($segments);
+                    // Decrement $i by 2 to account for the removed elements
+                    $i -= 2;
+                    break;
+                }
+            }
+        }
+
+        if ($fields) {
+            $fieldsArray = array_map('trim', explode(',', $fields));
+            if (!empty($fieldsArray)) {
+                try {
+                    $query->select($fieldsArray);
+                } catch (\Exception $e) {
+                    return response()->json(['error' => $e->getMessage()], 422);
+                }
+            }
+        }
+
+        // Process _scope from query parameters or segments
+        if (!$scopeParam) {
+            for ($i = 0; $i < count($segments); $i += 2) {
+                $key = $segments[$i];
+                $value = $segments[$i + 1] ?? null;
+                if ($value !== null && $key === '_scope') {
+                    $scopeParam = $value;
+                    // Unset _scope from segments
+                    unset($segments[$i], $segments[$i + 1]);
+                    // Reindex the array to maintain proper indexing
+                    $segments = array_values($segments);
+                    // Decrement $i by 2 to account for the removed elements
+                    $i -= 2;
+                    break;
+                }
+            }
+        }
+
+        if ($scopeParam) {
+            // Allow multiple scopes separated by commas.
+            $scopes = array_map('trim', explode(',', $scopeParam));
+            if (is_string($model)) {
+                $model = new $model;
+            }
+            foreach ($scopes as $scopeMethod) {
+                $methodName = 'scope' . ucfirst($scopeMethod);
+                // Use the provided model class to check for the scope.
+                if (method_exists($model, $methodName)) {
+                    try {
+                        $query->{$scopeMethod}();
+                    } catch (\Exception $e) {
+                        return response()->json(['error' => $e->getMessage()], 404);
+                    }
+                }
+            }
+        }
+
+        return $query;
+    }
+
+
     /**
      * Apply filters to the query.
      *
@@ -1002,7 +1148,17 @@ class CrudApiController extends Controller
                 if (count($range) === 2) {
                     $query->whereBetween($field, $range);
                 }
+            } elseif (substr($field, -3) === '_id' && $this->isValidIdentifier($value)) {
+                // If field ends with '_id' and value is numeric, use exact match
+                $query->where($field, '=', $value);
+            } elseif ($field === 'id'  && $this->isValidIdentifier($value)) {
+                // If field is 'code', use exact match
+                $query->where($field, '=', $value);
+            } elseif ($field === 'code') {
+                // If field is 'code', use exact match
+                $query->where($field, '=', $value);
             } else {
+                // Default to 'like' for other fields
                 $query->where($field, 'like', '%' . $value . '%');
             }
         }
@@ -1020,6 +1176,9 @@ class CrudApiController extends Controller
      */
     private function applyOrder($query, array $order, $model)
     {
+        if (is_string($model)) {
+            $model = new $model;
+        }
         $hasOrderParam = !empty($order['columns']);
 
         if (!$hasOrderParam && in_array('order', $model->getFillable())) {
@@ -1038,21 +1197,53 @@ class CrudApiController extends Controller
     /**
      * Parse order parameters from the request and segments.
      *
+     * This function retrieves order parameters (orderby and order) from both the query parameters
+     * and URL segments. If order parameters are found in the URL segments, they are removed
+     * from the segments array.
+     *
      * @param \Illuminate\Http\Request $request
      * @param array $segments Remaining URL segments.
-     * @return array
+     * @return array Order parameters as an associative array.
      */
-    private function parseOrderParams(Request $request, array $segments)
+    private function parseOrderParams(Request $request, array &$segments)
     {
         $orderColumns = [];
         $orderDirections = [];
 
+        // Parse order parameters from query parameters
+        $orderByParam = $request->input('orderby');
+        $orderParam = $request->input('order');
+
+        if ($orderByParam) {
+            $orderColumns = array_merge($orderColumns, explode(',', $orderByParam));
+        }
+
+        if ($orderParam) {
+            $orderDirections = array_merge($orderDirections, explode(',', $orderParam));
+        }
+
+        // Parse order parameters from URL segments
         for ($i = 0; $i < count($segments); $i += 2) {
-            if ($segments[$i] === 'orderby') {
-                $orderColumns[] = $segments[$i + 1];
-            }
-            if ($segments[$i] === 'order') {
-                $orderDirections[] = strtolower($segments[$i + 1]);
+            $key = $segments[$i];
+            $value = $segments[$i + 1] ?? null;
+            if ($value !== null) {
+                if ($key === 'orderby') {
+                    $orderColumns = array_merge($orderColumns, explode(',', $value));
+                    // Unset orderby from segments
+                    unset($segments[$i], $segments[$i + 1]);
+                    // Reindex the array to maintain proper indexing
+                    $segments = array_values($segments);
+                    // Decrement $i by 2 to account for the removed elements
+                    $i -= 2;
+                } elseif ($key === 'order') {
+                    $orderDirections = array_merge($orderDirections, explode(',', $value));
+                    // Unset order from segments
+                    unset($segments[$i], $segments[$i + 1]);
+                    // Reindex the array to maintain proper indexing
+                    $segments = array_values($segments);
+                    // Decrement $i by 2 to account for the removed elements
+                    $i -= 2;
+                }
             }
         }
 
@@ -1061,6 +1252,7 @@ class CrudApiController extends Controller
             'directions' => $orderDirections,
         ];
     }
+
 
     /**
      * Apply institution filter to the query.
@@ -1071,9 +1263,12 @@ class CrudApiController extends Controller
      */
     private function applyInstitutionFilter($query, $model)
     {
+        if (is_string($model)) {
+            $model = new $model;
+        }
         $institutionIds = $this->permissionService->getInstitutionIds();
-//        Log::info("Institution IDs: " . json_encode($institutionIds));
-        if (!$this->permissionService->getAllowAllInstitutions()) {
+        $allowAllInstitutions = $this->permissionService->getAllowAllInstitutions();
+        if (!$allowAllInstitutions) {
             if (in_array('institution_id', $model->getFillable())) {
                 $query->whereIn('institution_id', $institutionIds);
             } elseif (in_array('institution_class_id', $model->getFillable())) {
