@@ -19,7 +19,9 @@ class PermissionService
     // POCOR-8966 common modules removed
     public function __construct()
     {
+
         $this->user = JWTAuth::user();
+//        Log::info("user: " . print_r($this->user, true));
         if ($this->user) {
             $this->loadUserPermissions();
         }
@@ -62,7 +64,8 @@ class PermissionService
 
     public function checkPermission($modelName, $action): bool
     {
-        $user = JWTAuth::user();
+        $user = $this->user;
+
         if (!$user) {
             return false;
         }
@@ -78,7 +81,7 @@ class PermissionService
             return $this->loadPermissionsFromDb($user->id);
         });
 //        $permissions = $this->loadPermissionsFromDb($user->id);
-
+        Log::info("Permissions: " . print_r($permissions, true));
         return $this->hasPermission($permissions, $modelName, $action);
     }
 

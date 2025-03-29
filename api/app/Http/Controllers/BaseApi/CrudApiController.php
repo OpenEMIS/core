@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use App\Services\PermissionService;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CrudApiController extends Controller
 {
@@ -687,6 +688,8 @@ class CrudApiController extends Controller
 
     public function __construct(PermissionService $permissionService)
     {
+        $this->user = JWTAuth::user();
+        Log::info("user: " . print_r($this->user, true));
         $this->permissionService = $permissionService;
     }
     /**
@@ -786,283 +789,53 @@ class CrudApiController extends Controller
         return null; // Return null if neither condition is met
     }
 
+    /**
+     * Handle GET requests to retrieve records.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param string $model Fully qualified model class.
+     * @param array $segments Remaining URL segments.
+     * @return \Illuminate\Http\JsonResponse
+     */
     protected function handleGetRequest(Request $request, $model, array $segments)
     {
         try {
-            $query = $model::query();
+            $query = $this->initializeQuery($model);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 404);
+            return $this->errorResponse($e->getMessage(), 404);
         }
 
-        // Default pagination values.
-        $page   = $request->input('page', 1);
-        $limit  = $request->input('limit', 20);
+        $pagination = $this->getPaginationParams($request);
+        $filters = $this->parseFilters($request, $segments);
+        $order = $this->parseOrderParams($request, $segments);
 
-        // Retrieve _fields and _scope from query parameters.
-        $fields     = $request->query('_fields');
-        $scopeParam = $request->query('_scope');
-        $conditionsParam = $request->input('_conditions');
+        $query = $this->applyFilters($query, $filters);
+        $query = $this->applyOrder($query, $order);
+        $query = $this->applyInstitutionFilter($query, $model);
 
-        // Initialize ordering arrays.
-        $orderColumnsPath    = [];
-        $orderDirectionsPath = [];
-
-        // If there's an odd number of segments, treat the first segment as a potential record identifier.
-        if (count($segments) % 2 === 1) {
-            $possibleId = array_shift($segments);
-            if ($this->isValidIdentifier($possibleId)) {
-                try {
-                    $possibleIdField = $this->getPossibleIdField($model);
-                    $record = $model::where($possibleIdField, $possibleId)->first();
-                    return response()->json($record);
-                } catch (\Exception $e) {
-                    return response()->json(['error' => $e->getMessage()], 404);
-                }
-            } else {
-                array_unshift($segments, $possibleId);
-            }
-        }
-
-        // Process segments in pairs.
-        for ($i = 0; $i < count($segments); $i += 2) {
-            $key   = strtolower($segments[$i]);
-            $value = $segments[$i + 1] ?? null;
-            if ($value === null) {
-                continue;
-            }
-            if ($key === 'limit') {
-                $limit = $value;
-                continue;
-            }
-            if ($key === 'page') {
-                $page = $value;
-                continue;
-            }
-            if ($key === 'orderby') {
-                $orderColumnsPath[] = $value;
-                continue;
-            }
-            if ($key === 'order') {
-                $orderDirectionsPath[] = strtolower($value);
-                continue;
-            }
-            if ($key === '_fields') {
-                // Override query parameter value if provided in segments.
-                $fields = $value;
-                continue;
-            }
-            if ($key === '_scope') {
-                $scopeParam = $value;
-                continue;
-            }
-            if ($key === '_conditions') {
-                $conditionsParam = $value;
-                continue;
-            }
-            // Apply other keys as filters with a LIKE clause.
-            try {
-                $query->where($key, 'like', '%' . $value . '%');
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 404);
-            }
-
-        }
-        if ($conditionsParam) {
-            // Parse the custom _conditions format.
-            try {
-                // Remove the surrounding brackets (if any).
-                $trimmed = trim($conditionsParam, '[]');
-
-                // Split the string by semicolon to get each key-value pair.
-                $pairs = explode(';', $trimmed);
-                $conditions = [];
-
-                // Process each key-value pair.
-                foreach ($pairs as $pair) {
-                    // Split by colon, limiting to 2 parts in case values contain colons.
-                    $parts = explode(':', $pair, 2);
-                    if (count($parts) === 2) {
-                        $conditions[$parts[0]] = $parts[1];
-                    }
-                }
-            } catch (\Exception $e) {
-                // Return a 500 error if something goes wrong during parsing.
-                return response()->json(['error' => $e->getMessage()], 500);
-            }
-
-            // If conditions were parsed successfully, apply each condition to the query.
-            if (is_array($conditions)) {
-                foreach ($conditions as $field => $value) {
-                    // Handle array values (for WHERE IN queries).
-                    if (is_array($value)) {
-                        try {
-                            $query->whereIn($field, $value);
-                        } catch (\Exception $e) {
-                            return response()->json(['error' => $e->getMessage()], 404);
-                        }
-                    }
-                    // Handle values starting with '>' for greater-than comparisons.
-                    elseif (strpos($value, '>') === 0) {
-                        try {
-                            $query->where($field, '>', substr($value, 1));
-                        } catch (\Exception $e) {
-                            return response()->json(['error' => $e->getMessage()], 404);
-                        }
-                    }
-                    // Handle values starting with '<' for less-than comparisons.
-                    elseif (strpos($value, '<') === 0) {
-                        try {
-                            $query->where($field, '<', substr($value, 1));
-                        } catch (\Exception $e) {
-                            return response()->json(['error' => $e->getMessage()], 404);
-                        }
-                    }
-                    // Default: use a LIKE query.
-                    else {
-                        try {
-                            $query->where($field, 'like', '%' . $value . '%');
-                        } catch (\Exception $e) {
-                            return response()->json(['error' => $e->getMessage()], 404);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Process _fields regardless of segments.
-        if ($fields) {
-            $fieldsArray = array_map('trim', explode(',', $fields));
-            if (!empty($fieldsArray)) {
-                try {
-                    $query->select($fieldsArray);
-                } catch (\Exception $e) {
-                    return response()->json(['error' => $e->getMessage()], 422);
-                }
-            }
-        }
-
-        // Process _scope regardless of segments.
-        if ($scopeParam) {
-            // Allow multiple scopes separated by commas.
-            $scopes = array_map('trim', explode(',', $scopeParam));
-            foreach ($scopes as $scopeMethod) {
-                $methodName = 'scope' . ucfirst($scopeMethod);
-                // Use the provided model class (replace $model if necessary) to check for the scope.
-                if (method_exists($model, $methodName)) {
-                    try {
-                        $query->{$scopeMethod}();
-                    } catch (\Exception $e) {
-                        return response()->json(['error' => $e->getMessage()], 404);
-                    }
-                }
-            }
-        }
-
-        // Handle ordering if provided.
-        if (!empty($orderColumnsPath)) {
-            foreach ($orderColumnsPath as $index => $column) {
-                $direction = $orderDirectionsPath[$index] ?? 'asc';
-                try {
-                    $query->orderBy($column, $direction);
-                } catch (\Exception $e) {
-                    return response()->json(['error' => $e->getMessage()], 404);
-                }
-            }
-        }
-
-        // Apply pagination.
-        try {
-            $results = $query->paginate($limit, ['*'], 'page', $page);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 404);
-        }
-        return response()->json(
-//            [
-//            'sql' => $query->toSql(),
-//            'bindings' => $query->getBindings(),
-//            'data' => $results
-//        ]
-               $results
-        );
+        return $this->paginateResults($query, $pagination['limit'], $pagination['page']);
     }
-
 
     /**
      * Handle POST requests to create a new record.
      *
      * @param \Illuminate\Http\Request $request
-     * @param $model // Fully qualified model class.
+     * @param string $model Fully qualified model class.
      * @return \Illuminate\Http\JsonResponse
      */
-    public function handlePostRequest(Request $request, $model)
+    protected function handlePostRequest(Request $request, $model)
     {
         $data = $request->all();
 
-        // Check if the request payload is an array of records
-        if (isset($data[0]) && is_array($data)) {
-            $records = [];
-            \DB::beginTransaction();
-            try {
-                foreach ($data as $recordData) {
-                    $records[] = $model::create($recordData);
-                }
-                \DB::commit();
-            } catch (\Exception $e) {
-                \DB::rollBack();
-                return $this->sendServerErrorResponse($e->getMessage());
-            }
-            return $this->sendCreateSuccessResponse('Successful.', $records);
-        } else {
-            // Otherwise, treat it as a single record
-            try {
-                $record = $model::create($data);
-            } catch (\Exception $e) {
-                return $this->sendServerErrorResponse($e->getMessage());
-            }
-            return $this->sendCreateSuccessResponse('Successful.', $record);
-        }
-    }
-
-
-    /**
-     * Check if a field is unique in the model's table.
-     *
-     * @param  $model  // The model instance or class name.
-     * @param  string  $field  The field to check.
-     * @return bool
-     */
-    function isFieldUnique($model, $field)
-    {
-        // If a model class name is provided, instantiate it.
-        if (is_string($model)) {
-            $model = new $model;
+        if ($this->isBatchRequest($data)) {
+            return $this->handleBatchCreate($model, $data);
         }
 
-        // Get the table name from the model.
-        try {
-            // Query the database for unique indexes on the given column.
-            $table = $model->getTable();
-        } catch (\Exception $e) {
-            // You might want to log the error here or handle it differently.
-            return false;
-        }
-
-        try {
-            // Query the database for unique indexes on the given column.
-            $indexes = \DB::select("SHOW INDEX FROM {$table} WHERE Column_name = ? AND Non_unique = 0", [$field]);
-        } catch (\Exception $e) {
-            // You might want to log the error here or handle it differently.
-            return false;
-        }
-
-        return count($indexes) > 0;
+        return $this->handleSingleCreate($model, $data);
     }
 
     /**
      * Handle PUT requests to update an existing record.
-     *
-     * If one segment is provided and it is a valid identifier, update by ID.
-     * If two segments are provided, treat the first as a unique field and the second as its value.
      *
      * @param \Illuminate\Http\Request $request
      * @param string $model Fully qualified model class.
@@ -1071,84 +844,27 @@ class CrudApiController extends Controller
      */
     protected function handlePutRequest(Request $request, $model, array $segments)
     {
-//        Log::info('segments: '.json_encode($segments));
         if (empty($segments)) {
-            return response()->json(['error' => 'Missing identifier for update'], 400);
+            return $this->errorResponse('Missing identifier for update', 400);
         }
-//        Log::info('request: '.json_encode($request->all()));
-        // Determine the record to update based on the provided segments.
-        if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
-            // Case 1: Update by numeric (or UUID) ID.
-            try {
-                $possibleIdField = $this->getPossibleIdField($model);
-//                Log::info('possibleIdField: '.json_encode($possibleIdField));
-                $record = $model::where($possibleIdField, $segments[0])->first();
-//                Log::info('$record: '.json_encode($record));
-//                $record = $model::findOrFail($segments[0]);
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 404);
-            }
-        } elseif (count($segments) >= 2) {
-            // Case 2: Update by multiple unique fields.
-            $conditions = [];
-            for ($i = 0; $i < count($segments); $i += 2) {
-                $field = $segments[$i];
-                $value = $segments[$i + 1];
 
-//                if (!$this->isFieldUnique($model, $field)) {
-//                    return response()->json(['error' => __('The specified field is not unique.')], 404);
-//                }
-
-                $conditions[$field] = $value;
-            }
-
-            try {
-                $record = $model::where($conditions)->first();
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 404);
-            }
-
-            if (!$record) {
-                return response()->json(['error' => __('Record not found.')], 404);
-            }
-        } else {
-            return response()->json(['error' => 'Invalid update identifier'], 400);
-        }
+        $record = $this->findRecord($model, $segments);
         if (!$record) {
-            return response()->json(['error' => 'Record not found'], 404);
+            return $this->errorResponse('Record not found', 404);
         }
-        // Retrieve update data from the request.
+
         $data = $request->all();
-//        Log::info('data: '.json_encode($data) .'; record ' . json_encode($record));
-        // Update the record using the model's update method.
         try {
             $record->update($data);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
 
-        return $this->sendSuccessResponse('Record updated successfully.', $record);
-
+        return $this->successResponse('Record updated successfully.', $record);
     }
 
     /**
      * Handle DELETE requests to remove an existing record.
-     *
-     * If one valid identifier is provided, delete by ID.
-     * If two segments are provided, treat the first as a unique field and the second as its value.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param string $model Fully qualified model class.
-     * @param array $segments Remaining URL segments.
-     * @return \Illuminate\Http\JsonResponse
-     */
-    /**
-     * Handle DELETE requests to remove existing records.
-     *
-     * Supports deletion by:
-     * - A single valid identifier (ID or UUID).
-     * - A unique field/value pair.
-     * - Multiple IDs (comma-separated) for bulk deletion.
      *
      * @param \Illuminate\Http\Request $request
      * @param string $model Fully qualified model class.
@@ -1157,108 +873,373 @@ class CrudApiController extends Controller
      */
     protected function handleDeleteRequest(Request $request, $model, array $segments)
     {
-        if (is_string($model)) {
-            $model = new $model;
-        }
-
-        // Check if segments are provided.
         if (empty($segments)) {
-            return response()->json(['error' => 'Missing identifier for delete'], 400);
+            return $this->errorResponse('Missing identifier for delete', 400);
         }
 
-        // Case 1: Bulk deletion by comma-separated IDs (e.g., /appraisal-types/47,48)
+        if ($this->isBulkDeleteRequest($segments)) {
+            return $this->handleBulkDelete($model, $segments);
+        }
 
-        if (count($segments) === 1
-            && strpos($segments[0], ',') !== false) {
-            $ids = explode(',', $segments[0]);
-//            Log::info('segments: '.json_encode($ids));
+        $record = $this->findRecord($model, $segments);
+        if (!$record) {
+            return $this->errorResponse('Record not found', 404);
+        }
 
-            // Validate each ID.
+        try {
+            $record->delete();
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 403);
+        }
+
+        return $this->successResponse('Deleted successfully', [], 204);
+    }
+
+    /**
+     * Initialize a query for the given model.
+     *
+     * @param string $model Fully qualified model class.
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function initializeQuery($model)
+    {
+        return $model::query();
+    }
+
+    /**
+     * Get pagination parameters from the request.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return array
+     */
+    private function getPaginationParams(Request $request)
+    {
+        return [
+            'page' => $request->input('page', 1),
+            'limit' => $request->input('limit', 20),
+        ];
+    }
+
+    /**
+     * Parse filters from the request and segments.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param array $segments Remaining URL segments.
+     * @return array
+     */
+    private function parseFilters(Request $request, array $segments)
+    {
+        $filters = [];
+        $conditionsParam = $request->input('_conditions');
+
+        if ($conditionsParam) {
+            $filters = $this->parseConditions($conditionsParam);
+        }
+
+        foreach ($segments as $index => $segment) {
+            if ($index % 2 == 0 && isset($segments[$index + 1])) {
+                $filters[$segment] = $segments[$index + 1];
+            }
+        }
+
+        return $filters;
+    }
+
+    /**
+     * Parse conditions from the _conditions parameter.
+     *
+     * This function parses a string of conditions formatted as key-value pairs separated by semicolons.
+     * Each condition can specify different types of comparisons, such as equals, greater than, less than,
+     * greater than or equal to, less than or equal to, and between.
+     *
+     * Examples of _conditions strings:
+     * - "field:value" -> Equals condition.
+     * - "field:>value" -> Greater than condition.
+     * - "field:<value" -> Less than condition.
+     * - "field:>=value" -> Greater than or equal to condition.
+     * - "field:<=value" -> Less than or equal to condition.
+     * - "field:BETWEENvalue1,value2" -> Between condition.
+     *
+     * @param string $conditionsParam The conditions parameter string.
+     * @return array Parsed conditions as an associative array.
+     */
+    private function parseConditions($conditionsParam)
+    {
+        $conditions = [];
+        $pairs = explode(';', trim($conditionsParam, '[]'));
+
+        foreach ($pairs as $pair) {
+            $parts = explode(':', $pair, 2);
+            if (count($parts) === 2) {
+                $conditions[$parts[0]] = $parts[1];
+            }
+        }
+
+        return $conditions;
+    }
+    /**
+     * Apply filters to the query.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array $filters
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function applyFilters($query, array $filters)
+    {
+        foreach ($filters as $field => $value) {
+            if (is_array($value)) {
+                $query->whereIn($field, $value);
+            } elseif (strpos($value, '>=') === 0) {
+                $query->where($field, '>=', substr($value, 2));
+            } elseif (strpos($value, '<=') === 0) {
+                $query->where($field, '<=', substr($value, 2));
+            } elseif (strpos($value, '>') === 0) {
+                $query->where($field, '>', substr($value, 1));
+            } elseif (strpos($value, '<') === 0) {
+                $query->where($field, '<', substr($value, 1));
+            } elseif (strpos($value, 'BETWEEN') === 0) {
+                $range = explode(',', substr($value, 8));
+                if (count($range) === 2) {
+                    $query->whereBetween($field, $range);
+                }
+            } else {
+                $query->where($field, 'like', '%' . $value . '%');
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * Apply order to the query.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array $order
+     * @param string $model Fully qualified model class.
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function applyOrder($query, array $order, $model)
+    {
+        $hasOrderParam = !empty($order['columns']);
+
+        if (!$hasOrderParam && in_array('order', $model->getFillable())) {
+            // Default ordering by 'order' field if no order params are provided
+            $query->orderBy('order', 'asc');
+        } else {
+            foreach ($order['columns'] as $index => $column) {
+                $direction = $order['directions'][$index] ?? 'asc';
+                $query->orderBy($column, $direction);
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * Parse order parameters from the request and segments.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param array $segments Remaining URL segments.
+     * @return array
+     */
+    private function parseOrderParams(Request $request, array $segments)
+    {
+        $orderColumns = [];
+        $orderDirections = [];
+
+        for ($i = 0; $i < count($segments); $i += 2) {
+            if ($segments[$i] === 'orderby') {
+                $orderColumns[] = $segments[$i + 1];
+            }
+            if ($segments[$i] === 'order') {
+                $orderDirections[] = strtolower($segments[$i + 1]);
+            }
+        }
+
+        return [
+            'columns' => $orderColumns,
+            'directions' => $orderDirections,
+        ];
+    }
+
+    /**
+     * Apply institution filter to the query.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $model Fully qualified model class.
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function applyInstitutionFilter($query, $model)
+    {
+        $institutionIds = $this->permissionService->getInstitutionIds();
+//        Log::info("Institution IDs: " . json_encode($institutionIds));
+        if (!$this->permissionService->getAllowAllInstitutions()) {
+            if (in_array('institution_id', $model->getFillable())) {
+                $query->whereIn('institution_id', $institutionIds);
+            } elseif (in_array('institution_class_id', $model->getFillable())) {
+                $query->join('institution_classes', 'institution_classes.id', '=', $model->getTable() . '.institution_class_id')
+                    ->whereIn('institution_classes.institution_id', $institutionIds);
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * Paginate the results of the query.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $limit
+     * @param int $page
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function paginateResults($query, $limit, $page)
+    {
+        try {
+            $results = $query->paginate($limit, ['*'], 'page', $page);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 404);
+        }
+
+        return $this->successResponse('Data retrieved successfully.', $results);
+    }
+
+    /**
+     * Check if the request is a batch create request.
+     *
+     * @param array $data
+     * @return bool
+     */
+    private function isBatchRequest(array $data)
+    {
+        return isset($data[0]) && is_array($data);
+    }
+
+    /**
+     * Handle batch create requests.
+     *
+     * @param string $model Fully qualified model class.
+     * @param array $data
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function handleBatchCreate($model, array $data)
+    {
+        \DB::beginTransaction();
+        try {
+            $records = [];
+            foreach ($data as $recordData) {
+                $records[] = $model::create($recordData);
+            }
+            \DB::commit();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return $this->errorResponse($e->getMessage(), 500);
+        }
+
+        return $this->successResponse('Records created successfully.', $records, 201);
+    }
+
+    /**
+     * Handle single create requests.
+     *
+     * @param string $model Fully qualified model class.
+     * @param array $data
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function handleSingleCreate($model, array $data)
+    {
+        try {
+            $record = $model::create($data);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
+
+        return $this->successResponse('Record created successfully.', $record, 201);
+    }
+
+    /**
+     * Check if the request is a bulk delete request.
+     *
+     * @param array $segments Remaining URL segments.
+     * @return bool
+     */
+    private function isBulkDeleteRequest(array $segments)
+    {
+        return count($segments) === 1 && strpos($segments[0], ',') !== false;
+    }
+
+    /**
+     * Handle bulk delete requests.
+     *
+     * @param string $model Fully qualified model class.
+     * @param array $segments Remaining URL segments.
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function handleBulkDelete($model, array $segments)
+    {
+        $ids = explode(',', $segments[0]);
+        \DB::beginTransaction();
+        try {
+            $possibleIdField = $this->getPossibleIdField($model);
             foreach ($ids as $id) {
-                if (!$this->isValidIdentifier($id)) {
-                    return response()->json(['error' => "Invalid identifier: $id"], 400);
+                if ($this->isValidIdentifier($id)) {
+                    $model->where($possibleIdField, $id)->delete();
                 }
             }
-
-            // Use a transaction to ensure atomicity.
-            \DB::beginTransaction();
-            try {
-                $possibleIdField = $this->getPossibleIdField($model);
-                foreach ($ids as $id) {
-//                    $record = $model::findOrFail($id);
-                    $possibleId = $id;
-                    $record = $model->where($possibleIdField, $possibleId)->delete();
-//                    Log::info('record: '.json_encode($record));
-
-                }
-                \DB::commit();
-            } catch (\Exception $e) {
-                \DB::rollBack();
-                return response()->json(['error' => $e->getMessage()], 403);
-            }
-
-            return response()->json(['message' => 'Records deleted successfully'], 204);
+            \DB::commit();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return $this->errorResponse($e->getMessage(), 403);
         }
 
-        // Case 2: Deletion by a single identifier.
+        return $this->successResponse('Records deleted successfully.', [], 204);
+    }
+
+    /**
+     * Find a record based on the segments.
+     *
+     * @param string $model Fully qualified model class.
+     * @param array $segments Remaining URL segments.
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
+    private function findRecord($model, array $segments)
+    {
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
-            try {
-                $possibleId = $segments[0];
-                $possibleIdField = $this->getPossibleIdField($model);
-//                Log::info('possibleIdField: '.$possibleIdField);
-//                Log::info('possibleId: '.$possibleId);
-                $record = $model::where($possibleIdField, $possibleId)->first();
-
-//                Log::info('record: '.json_encode($record));
-
-//                $record = $model::findOrFail($segments[0]);
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 404);
-            }
-            try {
-                if($record){
-                    $record->delete();
-                }
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 403);
-            }
-            return response()->json(['message' => 'Deleted successfully'], 204);
+            $possibleIdField = $this->getPossibleIdField($model);
+            return $model::where($possibleIdField, $segments[0])->first();
         }
 
-        // Case 3: Deletion by unique field (e.g., /resource/field/value)
-        if (count($segments) >= 2) {
-            // Case 2: Update by multiple unique fields.
-            $conditions = [];
-            for ($i = 0; $i < count($segments); $i += 2) {
-                $field = $segments[$i];
-                $value = $segments[$i + 1];
-
-//                if (!$this->isFieldUnique($model, $field)) {
-//                    return response()->json(['error' => __('The specified field is not unique.')], 404);
-//                }
-
-                $conditions[$field] = $value;
-            }
-
-            try {
-                $record = $model::where($conditions)->first();
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 404);
-            }
-
-            if (!$record) {
-                return response()->json(['error' => __('Record not found.')], 404);
-            }
-            try {
-                $model->where($conditions)->delete();
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 403);
-            }
-
-            return response()->json(['message' => 'Deleted successfully'], 204);
+        $conditions = [];
+        for ($i = 0; $i < count($segments); $i += 2) {
+            $conditions[$segments[$i]] = $segments[$i + 1];
         }
 
-        return response()->json(['error' => 'Invalid delete identifier'], 400);
+        return $model::where($conditions)->first();
+    }
+
+    /**
+     * Return a JSON error response.
+     *
+     * @param string $message
+     * @param int $statusCode
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function errorResponse($message, $statusCode)
+    {
+        return response()->json(['error' => $message], $statusCode);
+    }
+
+    /**
+     * Return a JSON success response.
+     *
+     * @param string $message
+     * @param mixed $data
+     * @param int $statusCode
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function successResponse($message, $data, $statusCode = 200)
+    {
+        return response()->json(['message' => $message, 'data' => $data], $statusCode);
     }
 
 
