@@ -1,16 +1,15 @@
 <?php
 
 namespace Tests\Feature;
+
 use Tests\Traits\PrimaryKeyStringTrait;
-
-
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use App\Models\InstitutionClassStudents;
 use App\Models\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class InstitutionClassStudentsApiTest extends TestCase
 {
@@ -18,17 +17,28 @@ class InstitutionClassStudentsApiTest extends TestCase
     use DatabaseTransactions, WithFaker;
 
     protected $token;
+    protected $username;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $user = TestSecurityUser::where('id', 2)->first();
+        // Get the username from the environment variable or use a default admin username
+        $this->username = env('TEST_USERNAME', 'admin');
+
+        $user = $this->getUserByUsername($this->username);
+//        Log::info("User: " . print_r($user, true));
         if (!$user) {
-            $this->markTestSkipped('User with id 2 not found.');
+            $this->markTestSkipped("User with username {$this->username} not found.");
             return;
         }
         $this->token = JWTAuth::fromUser($user);
+//        Log::info("Token: " . print_r($this->token, true));
+    }
+
+    private function getUserByUsername($username)
+    {
+        return TestSecurityUser::where('username', $username)->first();
     }
 
     public function test_can_list_InstitutionClassStudents()
@@ -36,6 +46,10 @@ class InstitutionClassStudentsApiTest extends TestCase
         if (InstitutionClassStudents::count() === 0) {
             InstitutionClassStudents::factory()->count(1)->create();
         }
+
+        $clearResponse = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('v4/clear-cache');
 
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
