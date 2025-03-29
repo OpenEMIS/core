@@ -26,8 +26,17 @@ class InstitutionClassStudentsApiTest extends TestCase
         // Get the username from the environment variable or use a default admin username
         $this->username = env('TEST_USERNAME', 'admin');
 
+        // Check if cache reset is enabled
+        $resetCache = env('RESET_CACHE', false);
+
+        if ($resetCache) {
+            // Clear the cache
+            \Cache::flush();
+//            Log::info("Cache cleared.");
+        }
+
         $user = $this->getUserByUsername($this->username);
-//        Log::info("User: " . print_r($user, true));
+//        Log::info("User: " . print_r($user->id, true));
         if (!$user) {
             $this->markTestSkipped("User with username {$this->username} not found.");
             return;
@@ -46,10 +55,6 @@ class InstitutionClassStudentsApiTest extends TestCase
         if (InstitutionClassStudents::count() === 0) {
             InstitutionClassStudents::factory()->count(1)->create();
         }
-
-        $clearResponse = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}",
-        ])->getJson('v4/clear-cache');
 
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
