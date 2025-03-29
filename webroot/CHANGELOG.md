@@ -1,3 +1,19 @@
+### [4.18.0] - 2025-03-21
+- Implemented: Develop changes to security_users database table to make email and phone unique
+- Implemented: Develop changes to examinations database tables
+- Implemented: Develop a placeholder in the student profile feature to generate the candidate number
+- Bug Fixed: SAML: After the 1st attempt, the SAML works well but after a second attempt, it becomes unsuccessful and returns
+- Bug Fixed: Administration > Meals > Add: When clicking the add button to create meals, the page gives a 404 error
+- Bug Fixed: Institutions > Finance > Consumables : Fix Permissions and validations
+
+### [4.17.0] - 2025-03-20
+- Implemented: Develop a new External Data Source - OpenEMIS Core in the Administration module to allow OpenEMIS Core to connect to another instance of OpenEMIS Core to retrieve student data
+- Implemented: Administrations > Performances > Outcomes > Criteria : Add "Code" to Label feature so that users can rename this text
+- Bug Fixed: Institutions>Report Card>Comments: All comments permission not working properly
+- Bug Fixed: Institutions > Students > Transfer Out: When transferring students to an only gender school, the system gives an error message of "The selected institution only accepts Female students" or "The selected institution only accepts Male students."
+- Bug Fixed: Institutions > Academic > Schedules > Timetables > Timetables: When accessing timetable module, the page navigate to the home page even when permission is given 
+- Bug Fixed: API: Staff attendance is not working when using non admin
+
 ### [4.16.2] - 2025-03-18
 - Big Fixed: Institutions>Report Card>Comments: Permission for Teachers are not working correctly
 - Big Fixed: Administrations>Performance>Report Cards: GPA placeholder naming should be updated

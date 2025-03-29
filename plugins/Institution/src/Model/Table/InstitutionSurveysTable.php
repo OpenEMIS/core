@@ -871,6 +871,10 @@ class InstitutionSurveysTable extends ControllerActionTable
     //POCOR-7290:: End
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('s_form', [
+            'type' => 'element',
+            'element' => 'surveyform',
+        ]); //POCOR-8956
         $surveyFormId = $entity->survey_form_id;
 
         $this->field('status_id', [
@@ -887,6 +891,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         ]);
         // this extra field is use by repeater type to know user click add on which repeater question
         $this->field('repeater_question_id');
+        
     }
 
     public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request)
