@@ -809,11 +809,10 @@ class CrudApiController extends Controller
 
         $query = $this->parseSelectParams($request, $segments, $query, $model);
         $query = $this->applyFilters($query, $filters);
-        $query = $this->applyFilters($query, $filters);
         $query = $this->applyOrder($query, $order, $model);
         $query = $this->applyInstitutionFilter($query, $model);
 
-        return $this->paginateResults($query, $pagination['limit'], $pagination['page']);
+        return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments);
     }
 
     /**
@@ -1288,8 +1287,18 @@ class CrudApiController extends Controller
      * @param int $page
      * @return \Illuminate\Http\JsonResponse
      */
-    private function paginateResults($query, $limit, $page)
+    private function paginateResults($query, $limit, $page, $model, $segments)
     {
+
+        if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
+            $record = $this->findRecord($model, $segments);
+            if (!$record) {
+                return $this->errorResponse('Record not found', 404);
+            }
+            return $this->successResponse('Record retrieved successfully.', $record);
+        }
+
+        // Proceed with pagination if no single valid identifier is found
         try {
             $results = $query->paginate($limit, ['*'], 'page', $page);
         } catch (\Exception $e) {
@@ -1298,6 +1307,7 @@ class CrudApiController extends Controller
 
         return $this->successResponse('Data retrieved successfully.', $results);
     }
+
 
     /**
      * Check if the request is a batch create request.
