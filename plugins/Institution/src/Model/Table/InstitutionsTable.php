@@ -173,9 +173,9 @@ class InstitutionsTable extends ControllerActionTable
             'dependent' => true
         ]);
         //POCOR-6520 starts: add isset condition only
-        
-        $request = Router::getRequest();   
-        if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel' && $request->getParam('action')=="Institutions"){//POCOR-8538    
+
+        $request = Router::getRequest();
+        if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel' && $request->getParam('action')=="Institutions"){//POCOR-8538
             $this->addBehavior('CustomField.Record', [
                 'fieldKey' => 'institution_custom_field_id',
                 'tableColumnKey' => 'institution_custom_table_column_id',
@@ -1384,6 +1384,8 @@ class InstitutionsTable extends ControllerActionTable
         //webhook event
         $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
         if ($this->Auth->user()) {
+            $user = $this->Auth->user();
+            $username = $user['username']; // POCOR-8919
             $Webhooks->triggerShell('institutions_delete', ['username' => $username], $body);
         }
     }
@@ -2192,17 +2194,14 @@ class InstitutionsTable extends ControllerActionTable
 
     public function findNotExamCentres(Query $query, array $options)
     {
-        if (isset($options['academic_period_id'])) {
+        // POCOR-8919start
             $query
-                ->leftJoinWith('ExaminationCentres', function ($q) use ($options) {
-                    return $q
-                        ->where(['ExaminationCentres.academic_period_id' => $options['academic_period_id']]);
-                })
+                ->leftJoinWith('ExaminationCentres')
                 ->where([
                     'ExaminationCentres.institution_id IS NULL'
                 ]);
             return $query;
-        }
+// POCOR-8919 end
     }
 
     public function findMap(Query $query, array $options)
@@ -2719,6 +2718,8 @@ class InstitutionsTable extends ControllerActionTable
             if ($this->webhookAction == 'add') {
                 $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                 if ($this->Auth->user()) {
+                    $user = $this->Auth->user();
+                    $username = $user['username']; // POCOR-8919
                     $Webhooks->triggerShell($event_name, ['username' => $username], $body);
                 }
             }

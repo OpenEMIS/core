@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Http\Client;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Routing\Router;
 use Cake\Utility\Text;
 use Cake\Log\Log;
@@ -28,7 +28,7 @@ class SingleLogoutTable extends Table
         }
     }
 
-    public function afterLogin($user, $autoLogoutUrl, Request $request)
+    public function afterLogin($user, $autoLogoutUrl, ServerRequest $request)
     {
         $sessionId = $request->session()->id();
         $username = isset($user['username']) ? $user['username'] : null;

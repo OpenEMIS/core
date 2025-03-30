@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BaseApi\CrudApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,15 +15,48 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['prefix' => 'v4'], function () {
+    Route::get(
+        'clear-cache',
+        function () {
+            Artisan::call('route:clear');
+            Artisan::call('clear-compiled');
+            Artisan::call('config:cache');
+            Artisan::call('cache:clear');
+            return "Cache is cleared";
+        }
+    );
+});
+Route::group(['prefix' => 'v5'], function () {
+    Route::get(
+        'clear-cache',
+        function () {
+            Artisan::call('route:clear');
+            Artisan::call('clear-compiled');
+            Artisan::call('config:cache');
+            Artisan::call('cache:clear');
+            return "Cache is cleared";
+        }
+    );
+});
+Route::group(['prefix' => 'v4'], function () {
+    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    Route::post('login', 'Authentication\LoginController@login');
 });
 
-Route::post('login', 'Authentication\LoginController@login');
+Route::group(['prefix' => 'v5'], function () {
+    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        return $request->user();
+    });
 
+    Route::post('login', 'Authentication\LoginController@login');
+});
 
 Route::group(
-    ["middleware" => "auth.jwt"],
+    ["middleware" => "auth.jwt",'prefix' => 'v4'],
     function () {
         //POCOR-7545 starts
         Route::get('institutions/{institutionId}/students/meals', 'InstitutionController@getStudentsMealsByInstitutionId');
@@ -553,13 +587,6 @@ Route::group(
         Route::post('scanned', 'ScannedController@addScannedUserData');
         Route::get('scanned', 'ScannedController@scannedUserListing');
         //POCOR-8666 end
-        //POCOR-8030 start
-        Route::get('institutions/{institutionId}/departments', 'DepartmentController@getDepartmentList');
-        Route::get('institutions/{institutionId}/departments/{departmentId}', 'DepartmentController@institutionDepartmentDetails');
-        Route::post('institutions/{institutionId}/departments', 'DepartmentController@institutionDepartmentSave');
-        Route::post('institutions/{departmentId}/updatedepartments', 'DepartmentController@updateInstitutionDepartment');
-        Route::get('institutions/department/edit', 'DepartmentController@institutionDepartmentEditMessage');
-        //POCOR-8030 end
         Route::get('scanned/data/export', 'ScannedController@institutionScannedExport');//POCOR-8793
         Route::get('scanned/user/{scannedId}', 'ScannedController@scannedUserDetails');//POCOR-8824
         Route::get('students/{openemis_no}/absences', 'StudentController@getStudentAbsencesDetails'); //POCOR-8880
@@ -572,5 +599,29 @@ Route::group(
         Route::get('guardians/{openemisId}', 'UserController@getGuardianByOpenemisNo')->where('openemisNo', '[\pL0-9]+'); // POCOR-8840
         Route::get('users/username/{username}', 'UserController@getUserByUsername')->where('username', '[^\s]+'); // POCOR-8862
         // POCOR8862 end
+
+        // POCOR-8896 start
+        Route::match(['post', 'patch', 'put'], 'users/openemisId/{openemis_no}', 'UserController@updateUserByOpenemisId')
+            ->where('openemis_no', '[\pL0-9]+');
+        // POCOR-8896 end
+
+        // POCOR-8912 start
+        Route::get('users/email/{email}', 'UserController@getUserByEmail'); // POCOR-8912
+        // POCOR-8912 end
+
     }
 );
+
+Route::group(["middleware" => "auth.jwt", "prefix" => "v5"], function () {
+    // POCOR-8915 start
+    // should be always the last, as it is all-consuming
+    Route::group(
+        ['namespace' => 'BaseApi', 'middleware' => 'auth.jwt'],
+        function () {
+            Route::match(['GET', 'POST', 'PUT', 'DELETE'], '/{any}', [CrudApiController::class, 'common'])
+                ->where('any', '.*');
+        });
+    // POCOR-8915 end
+    // for v5 apis
+        //Route::match(['get', 'post', 'put', 'delete'], '{action}', [TestController::class, 'handle']);
+});

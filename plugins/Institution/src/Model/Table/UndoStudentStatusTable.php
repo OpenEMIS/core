@@ -108,7 +108,6 @@ class UndoStudentStatusTable extends AppTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
-
         $alias = $this->getAlias();
         $studentIds = [];
         $errors = $entity->getErrors();
@@ -137,8 +136,12 @@ class UndoStudentStatusTable extends AppTable
         } else {
             return $this->Alert->warning('general.notSelected', ['reset' => true]);;
         }
-
-
+        //POCOR-8829 starts
+        $params = $this->ControllerAction->getQueryString();
+        if(empty($params)){
+            $params = $this->getQueryString();
+        }
+        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);//POCOR-8829 ends
         if (is_array($theStudents)) {
             foreach ($theStudents as $key => $obj) {
                 $studentId = $obj['id'];
@@ -156,14 +159,17 @@ class UndoStudentStatusTable extends AppTable
 
                     $studentPromoteRecord = $institutionStudent->find()->where(['student_status_id' => $promoteId, 'student_id' => $studentId, 'academic_period_id' => $entity->academic_period_id])->first();
                     $promoteInstitutionId = $studentPromoteRecord->institution_id;
-                    if ($promoteInstitutionId != $enrolledInstitutionId && !empty($enrolledInstitutionId)) {
-                        $message = __('There is an existing enrolment. Please contact ') . "$institutionCode" . ' - ' . $institutionName;
-                        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                        $url = $this->ControllerAction->url('view');
-                        $url[0] = 'add';
-                        $event->stopPropagation();
-                        return $this->controller->redirect($url);
-                    } //POCOR-6992 end
+                    if(!empty($studentPromoteRecord)) { //POCOR-8564
+                        if ($promoteInstitutionId != $enrolledInstitutionId && !empty($enrolledInstitutionId)) {
+                            $message = __('There is an existing enrolment. Please contact ') . "$institutionCode" . ' - ' . $institutionName;
+                            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                            $url = $this->ControllerAction->url('view');
+                            $url[0] = 'add';
+                            $url[1] = $encodedQueryParams;//POCOR-8829
+                            $event->stopPropagation();
+                            return $this->controller->redirect($url);
+                        } //POCOR-6992 end
+                    }                    
                 } else {
                     unset($theStudents[$key]);
                 }
@@ -171,14 +177,8 @@ class UndoStudentStatusTable extends AppTable
         } else {//POCOR-5670 starts
             $studentIds = $theStudents;
         }//POCOR-5670 ends
-//        $id = $entity->id;
-        $params = $this->ControllerAction->getQueryString();
-        if(empty($params)){
-            $params = $this->getQueryString();
-        }        
-//        $params['id'] = $id;
-        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
-
+        //  $id = $entity->id;
+        //  $params['id'] = $id;
         if (empty($studentIds)) {
             return $this->Alert->warning('general.notSelected', ['reset' => true]);
         } else {
@@ -195,8 +195,8 @@ class UndoStudentStatusTable extends AppTable
             $session->write($this->getRegistryAlias() . '.confirmData', $data->getArrayCopy());
             $this->Alert->success('UndoStudentStatus.success', ['reset' => true]);
             $event->stopPropagation();
-//            echo "<pre>"; print_r($this->controller->redirect($url));
-//            die;
+            //  echo "<pre>"; print_r($this->controller->redirect($url));
+            //  die;
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -622,8 +622,8 @@ class UndoStudentStatusTable extends AppTable
                     $data->find('UndoTransferredStudent',
                         $transferOptions
                     );
-//                    echo "<pre>"; print_r($pata->all());
-//                    die;
+//  echo "<pre>"; print_r($pata->all());
+//  die;
                 } else if ($selectedStatus == $this->statuses['WITHDRAWN']) {
                     $data = $data
                         /** START: POCOR-6469
