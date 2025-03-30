@@ -15,14 +15,24 @@ class POCOR8030 extends AbstractMigration
         //  add permission in security function
 
         $createdAt = (new DateTime())->format('Y-m-d H:i:s');
-        $order = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions` WHERE `module` = 'Institutions' AND `category` = 'Report Cards'");
-        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions` WHERE `module` = 'Institutions' AND `category` = 'Report Cards'");
+        $order = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions`
+                    WHERE `module` = 'Institutions'
+                      AND `category` = 'Report Cards'");
+        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions`
+                        WHERE `module` = 'Institutions' AND `category` = 'Report Cards'");
         $parent_id = $parent_id[0] + 1;
         $order = $order[0] + 1;
 
         $record = [
             [
-                'name' => 'Departments', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Appointment', 'parent_id' => $parent_id,'_view' => 'InstitutionDepartments.index|InstitutionDepartments.view', '_edit' => 'InstitutionDepartments.edit', '_add' => 'InstitutionDepartments.add', '_delete' => 'InstitutionDepartments.remove', '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => $createdAt,
+                'name' => 'Departments', 'controller' => 'Institutions',
+                'module' => 'Institutions', 'category' => 'Appointment',
+                'parent_id' => $parent_id,'_view' => 'InstitutionDepartments.index|InstitutionDepartments.view',
+                '_edit' => 'InstitutionDepartments.edit', '_add' => 'InstitutionDepartments.add',
+                '_delete' => 'InstitutionDepartments.remove', '_execute' => NULL,
+                'order' => $order, 'visible' => 1, 'description' => NULL,
+                'modified_user_id' => NULL, 'modified' => NULL,
+                'created_user_id' => 1, 'created' => $createdAt,
             ]
         ];
         $this->table('security_functions')->insert($record)->save();
@@ -51,17 +61,17 @@ class POCOR8030 extends AbstractMigration
             FOREIGN KEY (`staff_id`) REFERENCES `security_users`(`id`)");
 
         // Assigning Staff to Multiple Departments system configuration
-        $this->execute('INSERT INTO `config_items` 
-            (`name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES 
+        $this->execute('INSERT INTO `config_items`
+            (`name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES
             ("Assigning Staff to Multiple Departments", "AssigningStafftoMultipleDepartments", "Departments", "Assigning Staff to Multiple Departments", "Enable", "1", "0", 1, 1, "Dropdown", "department_type", 1, CURRENT_DATE())');
 
-        $this->execute("INSERT INTO `config_item_options` 
-            (`option_type`, `option`, `value`, `order`, `visible`) VALUES 
+        $this->execute("INSERT INTO `config_item_options`
+            (`option_type`, `option`, `value`, `order`, `visible`) VALUES
             ('department_type', 'Enable', 'Enable', 1, 1)"
         );
 
-        $this->execute("INSERT INTO `config_item_options` 
-            (`option_type`, `option`, `value`, `order`, `visible`) VALUES 
+        $this->execute("INSERT INTO `config_item_options`
+            (`option_type`, `option`, `value`, `order`, `visible`) VALUES
             ('department_type', 'Disable', 'Disable', 2, 1)"
         );
 
