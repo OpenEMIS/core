@@ -17,6 +17,8 @@ class PermissionService
     protected $institutionIds = [];
     protected $allowAllInstitutions = 0;
 
+    // POCOR-8966
+
     public function __construct()
     {
 
@@ -29,18 +31,18 @@ class PermissionService
     private function loadUserPermissions()
     {
         $userId = $this->user->id;
-        Log::info("User ID: $userId");
-        Log::info("User: " . print_r($this->user, true));
+        // POCOR-8966 start
         // If user is super admin, override permissions
         if ($this->user->super_admin ?? 0) {
             $this->allowAllInstitutions = 1;
             return;
         }
+        // POCOR-8966 end
         $this->roleIds = SecurityGroupUsers::where('security_user_id', $userId)
             ->pluck('security_role_id')
             ->unique()
             ->toArray();
-        Log::info("Role IDS: " . print_r($this->roleIds, true));
+
         $securityGroupUsers = SecurityGroupUsers::join('security_groups', 'security_groups.id', '=', 'security_group_users.security_group_id')
             ->join('security_group_institutions', 'security_group_institutions.security_group_id', '=', 'security_groups.id')
             ->where('security_group_users.security_user_id', $userId)
@@ -50,7 +52,7 @@ class PermissionService
                 'security_group_institutions.institution_id'
             )
             ->get();
-        Log::info("Security Group Users: " . print_r($securityGroupUsers, true));
+
         $this->institutionIds = $securityGroupUsers->pluck('institution_id')->unique()->toArray();
 
 
@@ -66,6 +68,7 @@ class PermissionService
 
     public function checkPermission($modelName, $action): bool
     {
+        // POCOR-8966 start
         if (!$this->user) {
             $this->user = JWTAuth::user();
             if ($this->user) {
@@ -73,6 +76,7 @@ class PermissionService
             }
         }
         $user = $this->user;
+        // POCOR-8966 end
         if (!$user) {
             return false;
         }
@@ -88,9 +92,11 @@ class PermissionService
             return $this->loadPermissionsFromDb($user->id);
         });
 //        $permissions = $this->loadPermissionsFromDb($user->id);
+//        Log::info("Permissions: " . print_r($permissions, true));
 
-
-        return $this->hasPermission($permissions, $modelName, $action);
+        $hasPermission = $this->hasPermission($permissions, $modelName, $action);
+//        Log::info("Has permission: $hasPermission");
+        return $hasPermission;
     }
 
     private function loadPermissionsFromDb($userId): array
@@ -161,26 +167,15 @@ class PermissionService
             foreach (['_view', '_edit', '_add', '_delete', '_execute'] as $perm) {
                 if (isset($permTypes[$perm])) {
                     $permValues = $permTypes[$perm];
-//                    Log::info("Checking permission: $module.$action");
-                    // 🔹 Check for general permission like "Institutions.view"
-                    if (in_array("$module.$action", $permValues, true)) {
-                        return true;
-                    }
-
+                    // POCOR-8966 start
                     // 🔹 Check for specific model-based permission like "InstitutionStudents.view"
                     if (in_array("$modelName.$action", $permValues, true)) {
                         return true;
                     }
-
-                    // 🔹 Check if only "view", "edit", etc. exists (without module prefix)
-//                    if (in_array($action, $permValues, true)) {
-//                        return true;
-//                    }
+                    // POCOR-8966 end
                 }
-                // POCOR-8966 end
             }
         }
-
         return false;
     }
 

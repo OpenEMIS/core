@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use App\Services\PermissionService;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CrudApiController extends Controller
 {
@@ -787,6 +786,7 @@ class CrudApiController extends Controller
         return null; // Return null if neither condition is met
     }
 
+    // POCOR-8966 start
     /**
      * Handle GET requests to retrieve records.
      *
@@ -1437,7 +1437,7 @@ class CrudApiController extends Controller
         return response()->json(['message' => $message, 'data' => $data], $statusCode);
     }
 
-
+// POCOR-8966 end
 
 
     /**
