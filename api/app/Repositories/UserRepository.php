@@ -2140,4 +2140,209 @@ class UserRepository extends Controller
         }
     }
     //For POCOR-8536 Ends
+
+    // POCOR-8896 starts
+    /**
+     * Updates user information based on provided data.
+     *
+     * @param array $data User update data
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function patchUser(array $data)
+    {
+        DB::beginTransaction();
+
+        try {
+            // Get the user ID based on ID or OpenEMIS number
+
+
+            // Define allowed fields
+            $allowedFields = [
+                'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name',
+                'gender_id', 'date_of_birth', 'identity_number', 'nationality_id', 'username',
+                'password', 'postal_code', 'address', 'birthplace_area_id', 'address_area_id',
+                'identity_type_id', 'email' // POCOR-8953
+            ];
+
+            // Filter and process update data
+            $updateData = array_intersect_key($data, array_flip($allowedFields));
+
+            if (empty($updateData)) {
+                return response()->json(['error' => 'No updatable fields provided.'], 400);
+            }
+
+            $security_user_id = $this->getUserId($data);
+            if (!$security_user_id) {
+                return response()->json(['error' => 'User not found.'], 404);
+            }
+            $updateData = $this->setUserPassword($updateData);
+
+            // Add modification metadata
+            $current_user_id = JWTAuth::user()->id;
+            $updateData['modified_user_id'] = $current_user_id;
+            $updateData['modified'] = Carbon::now()->toDateTimeString();
+
+            // Update the user record
+            $updated = SecurityUsers::where('id', $security_user_id)->update($updateData);
+            if (!$updated) {
+                DB::rollBack();
+                return response()->json(['error' => 'No changes applied.'], 400);
+            }
+
+            // Retrieve updated user data
+            $updatedUser = SecurityUsers::find($security_user_id)->only($allowedFields);
+
+            // Process nationality and identity updates
+            $this->updateUserNationality($security_user_id, $updateData, $current_user_id);
+            $this->updateUserIdentity($security_user_id, $updateData, $current_user_id);
+
+            // Mask password field if it was changed
+            if (isset($updateData['password'])) {
+                $updatedUser['password'] = 'New Password';
+            }else{
+                $updatedUser['password'] = 'Old Password';
+            }
+
+            DB::commit();
+            return response()->json([
+                'message' => 'User updated successfully.',
+                'data' => $updatedUser
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('User update failed.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json(['error' => 'User update failed.'], 500);
+        }
+    }
+
+    /**
+     * Retrieves the user ID based on ID or OpenEMIS number.
+     *
+     * @param array $data
+     * @return int|null
+     */
+    private function getUserId(array $data): ?int
+    {
+        if (!empty($data['id'])) {
+            return SecurityUsers::where('id', $data['id'])->value('id');
+        }
+
+        if (!empty($data['openemis_no'])) {
+            return SecurityUsers::where('openemis_no', $data['openemis_no'])->value('id');
+        }
+
+        return null;
+    }
+
+    /**
+     * Hashes the user's password before saving.
+     *
+     * @param array $updateData
+     * @return array
+     */
+    private function setUserPassword(array $updateData): array
+    {
+        if (!empty($updateData['password'])) {
+            $updateData['password'] = Hash::make($updateData['password']);
+        }
+        return $updateData;
+    }
+
+    /**
+     * Updates the user's nationality if applicable.
+     *
+     * @param int $security_user_id
+     * @param array $updateData
+     * @param int $current_user_id
+     * @return void
+     */
+    private function updateUserNationality(int $security_user_id, array $updateData, int $current_user_id): void
+    {
+        if (empty($updateData['nationality_id'])) {
+            return;
+        }
+
+        $nationality_id = $updateData['nationality_id'];
+        $existingRecord = UserNationalities::where([
+            'security_user_id' => $security_user_id,
+            'nationality_id' => $nationality_id
+        ])->exists();
+
+        if (!$existingRecord) {
+            $userNationality = new UserNationalities();
+            $userNationality->id = Str::uuid();
+            $userNationality->preferred = 1;
+            $userNationality->nationality_id = $nationality_id;
+            $userNationality->security_user_id = $security_user_id;
+            $userNationality->created_user_id = $current_user_id;
+            $userNationality->created = Carbon::now();
+            $userNationality->save();
+        }
+    }
+
+    /**
+     * Updates the user's identity if applicable.
+     *
+     * @param int $security_user_id
+     * @param array $updateData
+     * @param int $current_user_id
+     * @return void
+     */
+    private function updateUserIdentity(int $security_user_id, array $updateData, int $current_user_id): void
+    {
+        if (empty($updateData['nationality_id']) || empty($updateData['identity_type_id']) || empty($updateData['identity_number'])) {
+            return;
+        }
+
+        $exists = UserIdentities::where([
+            'security_user_id' => $security_user_id,
+            'nationality_id' => $updateData['nationality_id'],
+            'identity_type_id' => $updateData['identity_type_id'],
+            'number' => $updateData['identity_number']
+        ])->exists();
+
+        if (!$exists) {
+            $userIdentity = new UserIdentities();
+            $userIdentity->identity_type_id = $updateData['identity_type_id'];
+            $userIdentity->nationality_id = $updateData['nationality_id'];
+            $userIdentity->number = $updateData['identity_number'];
+            $userIdentity->security_user_id = $security_user_id;
+            $userIdentity->created_user_id = $current_user_id;
+            $userIdentity->created = Carbon::now();
+            $userIdentity->save();
+        }
+    }
+
+    // POCOR-8896 ends
+
+
+    //POCOR-8912 start
+    public function getUserIdByEmail(string $email)
+    {
+        try {
+            $user = SecurityUsers::
+            where('email', $email)
+                ->where('super_admin', 0)
+                ->first();
+            if (isset($user)) {
+                return $user->id;
+            }
+            return $this->sendErrorResponse('User Not Found');
+
+        } catch (\Exception $e) {
+
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User Not Found');
+        }
+    }
+    //POCOR-8912 end
 }
