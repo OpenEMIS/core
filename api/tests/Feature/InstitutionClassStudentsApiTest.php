@@ -1,15 +1,16 @@
 <?php
 
 namespace Tests\Feature;
-
 use Tests\Traits\PrimaryKeyStringTrait;
+
+
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use App\Models\InstitutionClassStudents;
 use App\Models\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class InstitutionClassStudentsApiTest extends TestCase
 {
@@ -17,37 +18,17 @@ class InstitutionClassStudentsApiTest extends TestCase
     use DatabaseTransactions, WithFaker;
 
     protected $token;
-    protected $username;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Get the username from the environment variable or use a default admin username
-        $this->username = env('TEST_USERNAME', 'admin');
-
-        // Check if cache reset is enabled
-        $resetCache = env('RESET_CACHE', false);
-
-        if ($resetCache) {
-            // Clear the cache
-            \Cache::flush();
-//            Log::info("Cache cleared.");
-        }
-
-        $user = $this->getUserByUsername($this->username);
-//        Log::info("User: " . print_r($user->id, true));
+        $user = TestSecurityUser::where('id', 2)->first();
         if (!$user) {
-            $this->markTestSkipped("User with username {$this->username} not found.");
+            $this->markTestSkipped('User with id 2 not found.');
             return;
         }
         $this->token = JWTAuth::fromUser($user);
-//        Log::info("Token: " . print_r($this->token, true));
-    }
-
-    private function getUserByUsername($username)
-    {
-        return TestSecurityUser::where('username', $username)->first();
     }
 
     public function test_can_list_InstitutionClassStudents()
