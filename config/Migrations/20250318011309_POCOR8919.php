@@ -1,141 +1,72 @@
 <?php
 
-use Migrations\AbstractMigration;
 
-class POCOR8030 extends AbstractMigration
+use Phinx\Migration\AbstractMigration;
+
+class POCOR8919 extends AbstractMigration
 {
+
     public function up(): void
     {
-        $this->createBackupTables();
-        $this->addSecurityFunction();
-        $this->createInstitutionDepartmentsTable();
-        $this->addConfigItems();
+        $this->updateCreateZTable();
+        $this->updateDateFields();
+
     }
 
-    private function createBackupTables(): void
+    private function updateCreateZTable(): void
     {
-        $tables = ['security_functions', 'config_items', 'config_item_options'];
-
-        foreach ($tables as $table) {
-            if (!$this->hasTable("z_8030_{$table}")) {
-                $this->execute("CREATE TABLE IF NOT EXISTS `z_8030_{$table}` LIKE `{$table}`");
-                $this->execute("INSERT IGNORE INTO `z_8030_{$table}` SELECT * FROM `{$table}`");
-            }
+        if (!$this->hasTable('z_8919_examination_centres')) {
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+            $this->execute('CREATE TABLE `z_8919_examination_centres` LIKE `examination_centres`');
+            $this->execute('INSERT IGNORE INTO `z_8919_examination_centres` SELECT * FROM `examination_centres`');
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+        }
+        if (!$this->hasTable('z_8919_examination_centres_examinations')) {
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+            $this->execute('CREATE TABLE `z_8919_examination_centres_examinations` LIKE `examination_centres_examinations`');
+            $this->execute('INSERT IGNORE INTO `z_8919_examination_centres_examinations` SELECT * FROM `examination_centres_examinations`');
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
     }
 
-    private function addSecurityFunction(): void
+    private function updateDateFields(): void
     {
-        $createdAt = (new DateTime())->format('Y-m-d H:i:s');
-        $order = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions`
-                WHERE `module` = 'Institutions'
-                  AND `category` = 'Report Cards'");
-        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions`
-                    WHERE `module` = 'Institutions' AND `category` = 'Report Cards'");
-        $parent_id = $parent_id[0] + 1;
-        $order = $order[0] + 1;
 
-        $record = [
-            [
-                'name' => 'Departments', 'controller' => 'Institutions',
-                'module' => 'Institutions', 'category' => 'Appointment',
-                'parent_id' => $parent_id,
-                '_view' => 'InstitutionDepartments.index|InstitutionDepartments.view|DepartmentStaff.index|DepartmentStaff.view',
-                '_edit' => 'InstitutionDepartments.edit|DepartmentStaff.edit',
-                '_add' => 'InstitutionDepartments.add|DepartmentStaff.add',
-                '_delete' => 'InstitutionDepartments.remove|DepartmentStaff.remove',
-                '_execute' => NULL,
-                'order' => $order,
-                'visible' => 1,
-                'description' => NULL,
-                'modified_user_id' => NULL,
-                'modified' => NULL,
-                'created_user_id' => 1,
-                'created' => $createdAt,
-            ]
-        ];
-        $this->table('security_functions')->insert($record)->save();
-    }
-
-
-    private function createInstitutionDepartmentsTable(): void
-    {
-        if (!$this->hasTable('institution_departments')) {
-            $this->execute("CREATE TABLE `institution_departments`
-                      (`id` int(11) NOT NULL AUTO_INCREMENT,
-                      `name` varchar(100) NOT NULL,
-                      `code` varchar(50) NOT NULL,
-                      `institution_id` int(11) NOT NULL,
-                      `manager_id` int(11) NOT NULL,
-                      `modified_user_id` int(11) DEFAULT NULL,
-                      `modified` datetime DEFAULT NULL,
-                      `created_user_id` int(11) NOT NULL,
-                      `created` datetime NOT NULL,
-                       PRIMARY KEY (`id`)
-                    ) ENGINE=InnoDB");
-
-            $this->execute("ALTER TABLE `institution_departments`
-                ADD CONSTRAINT `fk_institution_departments_institution_id`
-                FOREIGN KEY (`institution_id`) REFERENCES `institutions`(`id`)");
-            $this->execute("ALTER TABLE `institution_departments`
-                ADD CONSTRAINT `fk_manager_id`
-                FOREIGN KEY (`manager_id`) REFERENCES `security_users`(`id`)");
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        if ($this->table('examination_centres_examinations')->hasForeignKey('academic_period_id')) {
+            $this->query("alter table examination_centres_examinations
+            drop foreign key exami_centr_exami_fk_aca_per_id;");
         }
-
-        if (!$this->hasTable('department_staff')) {
-            $this->execute("CREATE TABLE `department_staff`
-                      (`id` int(11) NOT NULL AUTO_INCREMENT,
-                      `department_id` int(11) NOT NULL,
-                      `staff_id` int(11) NOT NULL,
-                      PRIMARY KEY (`id`),
-                      FOREIGN KEY (`department_id`) REFERENCES `institution_departments`(`id`),
-                      FOREIGN KEY (`staff_id`) REFERENCES `security_users`(`id`)
-                    ) ENGINE=InnoDB");
+        if ($this->table('examination_centres_examinations')->hasColumn('academic_period_id')) {
+            $this->query("ALTER TABLE examination_centres_examinations DROP COLUMN academic_period_id;");
         }
-    }
+        $this->execute('SET FOREIGN_KEY_CHECKS=1;');
 
-    private function addConfigItems(): void
-    {
-        $this->execute("INSERT INTO `config_items`
-            (`name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `created_user_id`, `created`) VALUES
-            ('Assigning Staff to Multiple Departments', 'AssigningStafftoMultipleDepartments', 'Departments', 'Assigning Staff to Multiple Departments', 'Enable', '1', '0', 1, 1, 'Dropdown', 'department_type', 1, CURRENT_DATE())");
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        if ($this->table('examination_centres')->hasForeignKey('academic_period_id')) {
+            $this->query("alter table examination_centres
+    drop foreign key exami_centr_fk_aca_per_id;");
 
-        $this->execute("INSERT INTO `config_item_options`
-            (`option_type`, `option`, `value`, `order`, `visible`) VALUES
-            ('department_type', 'Enable', 'Enable', 1, 1)");
+        }
+        if ($this->table('examination_centres')->hasColumn('academic_period_id')) {
+            $this->query("ALTER TABLE examination_centres DROP COLUMN academic_period_id;");
 
-        $this->execute("INSERT INTO `config_item_options`
-            (`option_type`, `option`, `value`, `order`, `visible`) VALUES
-            ('department_type', 'Disable', 'Disable', 2, 1)");
+        }
+        $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+
     }
 
     public function down(): void
     {
-        $this->restoreBackupTables();
-        $this->dropInstitutionDepartmentsTable();
-    }
-
-    private function restoreBackupTables(): void
-    {
-        $tables = ['security_functions', 'config_items', 'config_item_options'];
-
-        foreach ($tables as $table) {
-            if ($this->hasTable("z_8030_{$table}")) {
-                $this->execute("SET FOREIGN_KEY_CHECKS=0;");
-                $this->execute("DROP TABLE IF EXISTS `{$table}`");
-                $this->execute("RENAME TABLE `z_8030_{$table}` TO `{$table}`");
-                $this->execute("SET FOREIGN_KEY_CHECKS=1;");
-            }
+        if ($this->hasTable('z_8919_examination_centres')) {
+            $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+            $this->execute('DROP TABLE IF EXISTS `examination_centres`');
+            $this->execute('RENAME TABLE `z_8919_examination_centres` TO `examination_centres`');
         }
-    }
-
-    private function dropInstitutionDepartmentsTable(): void
-    {
-        if ($this->hasTable('department_staff')) {
-            $this->execute("DROP TABLE IF EXISTS `department_staff`");
-        }
-        if ($this->hasTable('institution_departments')) {
-            $this->execute("DROP TABLE IF EXISTS `institution_departments`");
+        if ($this->hasTable('z_8919_examination_centres_examinations')) {
+            $this->execute('DROP TABLE IF EXISTS `examination_centres_examinations`');
+            $this->execute('RENAME TABLE `z_8919_examination_centres_examinations` TO `examination_centres_examinations`');
+            $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
     }
 }
