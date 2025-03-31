@@ -11,6 +11,8 @@ use App\Services\PermissionService;
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
+        'department-staff' => \App\Models\DepartmentStaff::class,
+        'institution-departments' => \App\Models\InstitutionDepartments::class,
         'staff-leave-entitlements' => \App\Models\StaffLeaveEntitlements::class,
         'staff-leave-policies' => \App\Models\StaffLeavePolicies::class,
         'staff-leave-policy-types' => \App\Models\StaffLeavePolicyTypes::class,

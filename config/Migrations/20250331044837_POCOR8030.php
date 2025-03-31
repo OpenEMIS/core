@@ -66,7 +66,7 @@ class POCOR8030 extends AbstractMigration
                       `name` varchar(100) NOT NULL,
                       `code` varchar(50) NOT NULL,
                       `institution_id` int(11) NOT NULL,
-                      `manager_id` int(11) NOT NULL,
+                      `manager_id` int(11) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,

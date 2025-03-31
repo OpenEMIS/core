@@ -373,15 +373,45 @@ public function _swaggerDelete() {}
         return $this->belongsTo(IdentityTypes::class, 'identity_type_id', 'id');
     }
 
+    public function getFullName()
+    {
+        $nameParts = [
+            $this->attributes['first_name'] ?? '',
+            isset($this->attributes['middle_name']) ? $this->attributes['middle_name'] : '',
+            isset($this->attributes['third_name']) ? $this->attributes['third_name'] : '',
+            $this->attributes['last_name'] ?? '',
+        ];
+
+        // Filter out empty parts and join with a single space
+        return implode(' ', array_filter($nameParts));
+    }
+
     public function getFullNameAttribute()
     {
-        return $this->attributes['first_name'] . ' ' . $this->attributes['middle_name'] . $this->attributes['third_name']  . ' ' . $this->attributes['last_name'];
+        $nameParts = [
+            $this->attributes['first_name'] ?? '',
+            isset($this->attributes['middle_name']) ? $this->attributes['middle_name'] : '',
+            isset($this->attributes['third_name']) ? $this->attributes['third_name'] : '',
+            $this->attributes['last_name'] ?? '',
+        ];
+
+        // Filter out empty parts and join with a single space
+        return implode(' ', array_filter($nameParts));
     }
 
 
     public function getNameWithIdAttribute()
     {
-        return $this->attributes['openemis_no']. ' - ' .$this->attributes['first_name'] . ' ' . $this->attributes['middle_name'] . $this->attributes['third_name']  . ' ' . $this->attributes['last_name'];
+        $nameParts = [
+            $this->attributes['openemis_no'] ?? '',
+            $this->attributes['first_name'] ?? '',
+            isset($this->attributes['middle_name']) ? $this->attributes['middle_name'] : '',
+            isset($this->attributes['third_name']) ? $this->attributes['third_name'] : '',
+            $this->attributes['last_name'] ?? '',
+        ];
+
+        // Filter out empty parts and join with a single space
+        return implode(' ', array_filter($nameParts));
     }
 
 
@@ -394,7 +424,6 @@ public function _swaggerDelete() {}
     public function institutionStaff()
     {
         return $this->belongsTo(InstitutionStaff::class, 'id', 'staff_id');
-
     }
 
 
@@ -416,4 +445,11 @@ public function _swaggerDelete() {}
     {
         return $this->hasMany(UserContacts::class, 'security_user_id'); // Use 'security_user_id' as the foreign key
     }
+
+    // Scope to include gender details
+    public function scopeWithGender($query)
+    {
+        return $query->with('gender:id,name');
+    }
+
 }
