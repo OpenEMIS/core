@@ -832,29 +832,20 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         //single student
         // POCOR-8946 start
         if (in_array($action, ['add', 'edit', 'approve'])) {
-            $entity = $attr['entity'];
             // POCOR-9012 start
+            $entity = $attr['entity'];
             $student_id = $entity->student_id;
-            Log::write('debug', 'student_id: ' . $student_id);
+//            Log::write('debug', 'student_id: ' . $student_id);
             $institution_id = $entity->institution_id;
-            if($student_id === null){
+            if($student_id == null){
                 $student_id = $this->getQueryString('student_id');
             }
-            if($student_id === null){
-                $student_id = $this->getQueryString('institution_student_id');
-            }
-            if($student_id === null){
-                $student_id = $this->getQueryString('security_user_id');
-            }
-            if($student_id === null){
-                $student_id = $this->getQueryString('user_id');
-            }
-            if($student_id === null){
-                $attr['type'] = 'readonly';
-                $attr['value'] = $institution_id;
-                $attr['attr']['value'] = $entity->institution->code_name;
-                return $attr;
-            }
+//            if($student_id === null){
+//                $attr['type'] = 'readonly';
+//                $attr['value'] = $institution_id;
+//                $attr['attr']['value'] = $entity->institution->code_name;
+//                return $attr;
+//            }
             // POCOR-9012 end
             $student_gender_id = $this->Users->get($student_id)->gender_id;
             $next_period_id = $entity->academic_period_id;
