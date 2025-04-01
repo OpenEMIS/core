@@ -23,7 +23,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getNoticesList($request);
-            
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -58,7 +58,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['institution_id'] = $d['institution_id'];
                 $resp[$k]['institution'] = $d['institution']['name'];
                 $resp[$k]['request_title'] = $d['staff_leave_type']['name']. ' of ' .$d['staff']['name_with_id'];
-                
+
                 if(!is_null($d['modified'])){
                     $date = $d['modified'];
                 } else {
@@ -77,8 +77,8 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
             }
 
-            $data['data'] = $resp; 
-            
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -95,7 +95,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getInstitutionStaffSurveys($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -113,7 +113,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['institution_id'] = $d['institution_id'];
                 $resp[$k]['institution'] = $d['institution']['name'];
                 $resp[$k]['request_title'] = $d['survey_form']['name']. ' of ' .$d['academic_period']['name'];
-                    
+
                 if(!is_null($d['modified'])){
                     $date = $d['modified'];
                 } else {
@@ -132,8 +132,8 @@ class WorkbenchService extends Controller
 
             }
 
-            $data['data'] = $resp; 
-            
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -150,7 +150,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getInstitutionStudentWithdraw($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -168,7 +168,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['institution_id'] = $d['institution_id'];
                 $resp[$k]['institution'] = $d['institution']['name'];
                 $resp[$k]['request_title'] = 'Withdraw request of ' .$d['user']['name_with_id'];
-                
+
                 if(!is_null($d['modified'])){
                     $date = $d['modified'];
                 } else {
@@ -186,8 +186,8 @@ class WorkbenchService extends Controller
 
             }
 
-            $data['data'] = $resp; 
-            
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -204,7 +204,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getInstitutionStudentAdmission($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -222,7 +222,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['institution_id'] = $d['institution_id'];
                 $resp[$k]['institution'] = $d['institution']['name'];
                 $resp[$k]['request_title'] = 'Admission of student ' .$d['user']['name_with_id'];
-                
+
                 if(!is_null($d['modified'])){
                     $date = $d['modified'];
                 } else {
@@ -240,8 +240,8 @@ class WorkbenchService extends Controller
 
             }
 
-            $data['data'] = $resp; 
-            
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -259,7 +259,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getInstitutionStudentTransferOut($request);
-            
+
             $resp = [];
             //dd($data);
             foreach($data['data'] as $k=> $d){
@@ -272,14 +272,14 @@ class WorkbenchService extends Controller
                     $d['id'],
                     'institution_id' => $d['previous_institution']['id']
                 ];
-                    
+
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['institution_id'] = $d['institution_id'];
                 $resp[$k]['institution'] = $d['previous_institution']['code_name'];
                 $resp[$k]['previous_institution'] = $d['previous_institution'];
                 $resp[$k]['previous_institution_id'] = $d['previous_institution']['id'];
                 $resp[$k]['request_title'] = 'Transfer of student ' .$d['user']['name_with_id']. ' to '.$d['institution']['code_name'];
-                
+
                 if(!is_null($d['modified'])){
                     $date = $d['modified'];
                 } else {
@@ -297,8 +297,8 @@ class WorkbenchService extends Controller
 
             }
 
-            $data['data'] = $resp; 
-            
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -315,7 +315,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getInstitutionStudentTransferIn($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -352,8 +352,8 @@ class WorkbenchService extends Controller
 
             }
 
-            $data['data'] = $resp; 
-            
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -371,7 +371,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getInstitutionStudentBehaviour($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -406,8 +406,8 @@ class WorkbenchService extends Controller
 
             }
 
-            $data['data'] = $resp; 
-            
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -425,7 +425,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getInstitutionStaffBehaviour($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -460,8 +460,8 @@ class WorkbenchService extends Controller
 
             }
 
-            $data['data'] = $resp; 
-            
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -478,7 +478,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getStaffAppraisals($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -516,9 +516,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['appraisal_period'] = $d['appraisal_period'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -535,7 +535,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getStaffRelease($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -574,9 +574,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -593,7 +593,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getStaffTransferOut($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -633,9 +633,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -653,7 +653,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getStaffTransferIn($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -694,9 +694,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -714,7 +714,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getChangeInAssignment($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -748,9 +748,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -768,7 +768,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getStaffTrainingNeeds($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k=> $d){
@@ -792,7 +792,7 @@ class WorkbenchService extends Controller
                     $type = ucfirst($d['type']). " Category";
                     $preTitle = $d['training_need_category']['name']??"";
                 }
-                
+
                 $resp[$k]['id'] = $d['id'];
 
                 $resp[$k]['request_title'] = $preTitle.' from '. $type. ' of '.$d['user']['name_with_id'];
@@ -820,9 +820,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -839,7 +839,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getStaffLicenses($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k => $d){
@@ -860,7 +860,7 @@ class WorkbenchService extends Controller
 
 
                 if(isset($d['license_number']) && strlen($d['license_number']) > 0){
-                    
+
                     $resp[$k]['request_title'] = $d['license_type']['name'].' of '.$d['license_number'].' for '.$d['user']['name_with_id'];
                 } else {
                     $resp[$k]['request_title'] = $d['license_type']['name'].' for '.$d['user']['name_with_id'];
@@ -876,7 +876,7 @@ class WorkbenchService extends Controller
 
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['security_user_id'] = $d['security_user_id'];
-                
+
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
@@ -885,9 +885,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -904,7 +904,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getTrainingCourses($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k => $d){
@@ -935,7 +935,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
 
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
-                
+
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
@@ -943,9 +943,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -962,7 +962,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getTrainingSessions($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k => $d){
@@ -992,7 +992,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
 
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
-                
+
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
@@ -1000,9 +1000,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -1019,7 +1019,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getTrainingResults($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k => $d){
@@ -1047,7 +1047,7 @@ class WorkbenchService extends Controller
 
                 $resp[$k]['session'] = $d['training_session'];
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
-                
+
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
@@ -1055,9 +1055,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -1075,7 +1075,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getVisitRequests($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k => $d){
@@ -1112,7 +1112,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['academic_period'] = $d['academic_period'];
                 $resp[$k]['academic_period_id'] = $d['academic_period_id'];
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
-                
+
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
@@ -1120,9 +1120,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -1140,7 +1140,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getTrainingApplications($request);
-            
+
             $resp = [];
             $loggedInUser = JWTAuth::user();
             $superAdmin = $loggedInUser->super_admin??0;
@@ -1182,7 +1182,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
 
                 $resp[$k]['session'] = $d['session'];
-                
+
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
@@ -1191,9 +1191,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['staff'] = $d['staff'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -1211,11 +1211,11 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getScholarshipApplications($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k => $d){
-                
+
                 $url = [
                     'plugin' => 'Scholarship',
                     'controller' => 'Scholarships',
@@ -1245,7 +1245,7 @@ class WorkbenchService extends Controller
 
                 $resp[$k]['scholarship'] = $d['scholarship'];
                 $resp[$k]['scholarship_id'] = $d['scholarship_id'];
-                
+
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
@@ -1253,9 +1253,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -1273,7 +1273,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getInstitutionCases($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k => $d){
@@ -1303,7 +1303,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
 
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
-                
+
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
@@ -1311,9 +1311,9 @@ class WorkbenchService extends Controller
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -1331,7 +1331,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getInstitutionPositions($request);
-            
+
             $resp = [];
 
             foreach($data['data'] as $k => $d){
@@ -1343,7 +1343,7 @@ class WorkbenchService extends Controller
                     $d['id'],
                     'institution_id' => $d['institution_id']
                 ];
-                    
+
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['institution'] = $d['institution']['name'];
                 $resp[$k]['institution_id'] = $d['institution_id'];
@@ -1363,16 +1363,16 @@ class WorkbenchService extends Controller
                 $resp[$k]['position_no'] = $d['position_no'];
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['staff_position_title'] = $d['staff_position_title'];
-                
+
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }
-            
-            $data['data'] = $resp; 
-            
+
+            $data['data'] = $resp;
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -1390,7 +1390,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getMinidashboardData($request);
-            
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -1409,7 +1409,7 @@ class WorkbenchService extends Controller
     {
         try {
             $data = $this->workbenchRepository->getAllWorkbenches($params);
-            
+
             return $data;
         } catch (\Exception $e) {
             Log::error(
