@@ -840,12 +840,12 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             if($student_id == null){
                 $student_id = $this->getQueryString('student_id');
             }
-//            if($student_id === null){
-//                $attr['type'] = 'readonly';
-//                $attr['value'] = $institution_id;
-//                $attr['attr']['value'] = $entity->institution->code_name;
-//                return $attr;
-//            }
+            if($student_id === null){
+                $attr['type'] = 'readonly';
+                $attr['value'] = $institution_id;
+                $attr['attr']['value'] = $entity->institution->code_name;
+                return $attr;
+            }
             // POCOR-9012 end
             $student_gender_id = $this->Users->get($student_id)->gender_id;
             $next_period_id = $entity->academic_period_id;
