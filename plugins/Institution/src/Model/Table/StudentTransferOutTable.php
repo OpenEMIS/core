@@ -13,6 +13,7 @@ use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
+use Cake\Log\Log;
 
 
 class StudentTransferOutTable extends InstitutionStudentTransfersTable
