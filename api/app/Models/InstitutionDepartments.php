@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rule;
+
 
 class InstitutionDepartments extends Model
 {
@@ -28,12 +30,22 @@ class InstitutionDepartments extends Model
 
     public static function getValidationRules(): array
     {
+        if (request()->isMethod('post')) {
+            $required = 'required';
+        } else {
+            $required = 'sometimes';
+        }
         return [
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50',
-            'institution_id' => 'required|exists:institutions,id',
+
+            'name' => [$required, 'string', 'max:255',
+                Rule::unique('institution_departments', 'name')
+                    ->ignore(request()->get('id'))],
+            'code' => [$required, 'string', 'max:50',
+                Rule::unique('institution_departments', 'code')
+                    ->ignore(request()->get('id'))],
+            'institution_id' => $required . '|exists:institutions,id',
             'manager_id' => 'nullable|exists:security_users,id',
-            'created_user_id' => 'required|exists:security_users,id',
+            'created_user_id' => $required . '|exists:security_users,id',
             'modified_user_id' => 'nullable|exists:security_users,id',
         ];
     }
@@ -269,8 +281,7 @@ class InstitutionDepartments extends Model
                     $join->on('security_users.id', '=', 'institution_staff.staff_id')
                         ->orderBy('institution_staff.id', 'desc')
                         ->whereColumn('institution_staff.institution_id', '=', 'institution_departments.institution_id');
-                })->groupBy('security_users.id')
-            ;
+                })->groupBy('security_users.id');
         }]);
     }
 

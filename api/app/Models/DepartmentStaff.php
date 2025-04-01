@@ -238,6 +238,21 @@ public function _swaggerDelete() {}
         return $this->belongsTo(SecurityUsers::class, 'staff_id');
     }
 
+    public function scopeWithStaff($query)
+        {
+            return $query->with(['staff' => function ($query) {
+                $query->select('security_users.id',
+                    'security_users.first_name',
+                    'security_users.last_name',
+                    'security_users.openemis_no',
+                    'genders.name as gender_name',
+                )
+                    ->join('genders', 'security_users.gender_id', '=', 'genders.id')
+                    ->groupBy('security_users.id');
+            }, 'department']);
+        }
+
+
     // Add validation rules
     public static function getValidationRules(): array
     {

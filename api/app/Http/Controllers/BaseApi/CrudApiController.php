@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use App\Services\PermissionService;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CrudApiController extends Controller
 {
@@ -861,7 +862,20 @@ class CrudApiController extends Controller
             }
             // Apply other keys as filters with a LIKE clause.
             try {
-                $query->where($key, 'like', '%' . $value . '%');
+                $field = $key;
+                if (substr($field, -3) === '_id' && $this->isValidIdentifier($value)) {
+                    // If field ends with '_id' and value is numeric, use exact match
+                    $query->where($field, '=', $value);
+                } elseif ($field === 'id' && $this->isValidIdentifier($value)) {
+                    // If field is 'code', use exact match
+                    $query->where($field, '=', $value);
+                } elseif ($field === 'code') {
+                    // If field is 'code', use exact match
+                    $query->where($field, '=', $value);
+                } else {
+                    // Default to 'like' for other fields
+                    $query->where($field, 'like', '%' . $value . '%');
+                }
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 404);
             }
@@ -998,12 +1012,41 @@ class CrudApiController extends Controller
     {
         $data = $request->all();
 
+        // Define validation rules
+        $rules = $model::getValidationRules();
+        // Validate the request data
+        $user = JWTAuth::user();
+        $user_id = (int) ($user->id ?? -1); // Ensure $userId is always an integer
+        if (is_string($model)) {
+            $themodel = new $model;
+            $fillable = $themodel->getFillable();
+        }
+
         // Check if the request payload is an array of records
         if (isset($data[0]) && is_array($data)) {
             $records = [];
             \DB::beginTransaction();
             try {
                 foreach ($data as $recordData) {
+
+
+                    if (in_array('created', $fillable) &&
+                        (!array_key_exists('created', $recordData) || empty($recordData['created']))) {
+                        $recordData['created'] = now();
+                    }
+                    if (in_array('created_user_id', $fillable) && !array_key_exists('created_user_id', $recordData)) {
+                        $recordData['created_user_id'] = $user_id;
+                    }
+
+                    $validator = \Validator::make($recordData, $rules);
+
+                    if ($validator->fails()) {
+                        return response()->json(['errors' => $validator->errors()], 422);
+                    }
+                    $records[] = $model::create($recordData);
+                    if ($validator->fails()) {
+                        return response()->json(['errors' => $validator->errors()], 422);
+                    }
                     $records[] = $model::create($recordData);
                 }
                 \DB::commit();
@@ -1015,6 +1058,19 @@ class CrudApiController extends Controller
         } else {
             // Otherwise, treat it as a single record
             try {
+                if (in_array('created', $fillable) &&
+                    (!array_key_exists('created', $data) || empty($data['created']))) {
+                    $data['created'] = now();
+                }
+                if (in_array('created_user_id', $fillable) &&
+                    (!array_key_exists('created_user_id', $data) || empty($data['created_user_id']))) {
+                    $data['created_user_id'] = $user_id;
+                }
+                $validator = \Validator::make($data, $rules);
+
+                if ($validator->fails()) {
+                    return response()->json(['errors' => $validator->errors()], 422);
+                }
                 $record = $model::create($data);
             } catch (\Exception $e) {
                 return $this->sendServerErrorResponse($e->getMessage());
@@ -1122,6 +1178,37 @@ class CrudApiController extends Controller
 //        Log::info('data: '.json_encode($data) .'; record ' . json_encode($record));
         // Update the record using the model's update method.
         try {
+//            $record = $record->toArray();
+            $rules = $model::getValidationRules();
+            // Validate the request data
+            $user = JWTAuth::user();
+            $user_id = (int) ($user->id ?? -1); // Ensure $userId is always an integer
+            if (is_string($model)) {
+                $themodel = new $model;
+                $fillable = $themodel->getFillable();
+            }
+            if (in_array('created', $fillable) &&
+                empty($record->created)) {
+                $data['created'] = now();
+            }
+            if (in_array('created_user_id', $fillable) &&
+                  empty($record->created_user_id)) {
+                $data['created_user_id'] = $user_id;
+            }
+            if (in_array('modified', $fillable) &&
+                (!array_key_exists('modified', $data) || empty($data['modified']))) {
+                $data['modified'] = now();
+            }
+            if (in_array('modified_user_id', $fillable) &&
+                (!array_key_exists('modified_user_id', $data) || empty($data['modified_user_id']))) {
+                $data['modified_user_id'] = $user_id;
+            }
+            $validator = \Validator::make($data, $rules);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+//            $record = $model::create($data);
             $record->update($data);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
