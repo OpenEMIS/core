@@ -833,12 +833,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         // POCOR-8946 start
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
-            $queryString = $this->getQueryString();
-//            Log::debug('InstitutionTransferInstitutionId onUpdateField ' . print_r($queryString, true));
-            Log::debug('InstitutionTransferInstitutionId onUpdateField ' . print_r($attr, true));
-            $student_id = $this->getQueryString('student_id');
             $institution_id = $entity->institution_id;
-
+            Log::debug(print_r($entity, true));
+            $student_id = $this->getQueryString('student_id');
+            // POCOR-9012 start
             if(!$student_id){
                 $student_id = $this->getQueryString('institution_student_id');
             }
@@ -854,8 +852,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 $attr['attr']['value'] = $entity->institution->code_name;
                 return $attr;
             }
+            // POCOR-9012 end
             $student_gender_id = $this->Users->get($student_id)->gender_id;
-
             $next_period_id = $entity->academic_period_id;
             $next_grade_id = $entity->education_grade_id;
             $InstitutionGrades = self::getDynamicTableInstance('institution_grades');
