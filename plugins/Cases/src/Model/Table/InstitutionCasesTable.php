@@ -631,7 +631,10 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function findWorkbench(Query $query, array $options)
     {
-        $userId = $this->getUserID();
+        // POCOR-9014
+        $controller = $options['_controller'];
+        $session = $controller->getRequest()->getSession();
+        $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
         if($userId) {
