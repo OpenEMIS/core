@@ -832,9 +832,13 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         //single student
         // POCOR-8946 start
         if (in_array($action, ['add', 'edit', 'approve'])) {
+            $entity = $attr['entity'];
             $queryString = $this->getQueryString();
-            Log::debug('InstitutionTransferInstitutionId onUpdateField ' . print_r($queryString, true));
+//            Log::debug('InstitutionTransferInstitutionId onUpdateField ' . print_r($queryString, true));
+            Log::debug('InstitutionTransferInstitutionId onUpdateField ' . print_r($attr, true));
             $student_id = $this->getQueryString('student_id');
+            $institution_id = $entity->institution_id;
+
             if(!$student_id){
                 $student_id = $this->getQueryString('institution_student_id');
             }
@@ -845,13 +849,15 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 $student_id = $this->getQueryString('user_id');
             }
             if(!$student_id){
+                $attr['type'] = 'readonly';
+                $attr['value'] = $institution_id;
+                $attr['attr']['value'] = $entity->institution->code_name;
                 return $attr;
             }
             $student_gender_id = $this->Users->get($student_id)->gender_id;
-            $entity = $attr['entity'];
+
             $next_period_id = $entity->academic_period_id;
             $next_grade_id = $entity->education_grade_id;
-            $institution_id = $entity->institution_id;
             $InstitutionGrades = self::getDynamicTableInstance('institution_grades');
             $InstitutionStatuses = self::getDynamicTableInstance('Institution.Statuses');
             $InstitutionGenders = self::getDynamicTableInstance('institution_genders');
