@@ -837,19 +837,19 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             $student_id = $entity->student_id;
             Log::write('debug', 'student_id: ' . $student_id);
             $institution_id = $entity->institution_id;
-            if(!$student_id){
+            if($student_id === null){
                 $student_id = $this->getQueryString('student_id');
             }
-            if(!$student_id){
+            if($student_id === null){
                 $student_id = $this->getQueryString('institution_student_id');
             }
-            if(!$student_id){
+            if($student_id === null){
                 $student_id = $this->getQueryString('security_user_id');
             }
-            if(!$student_id){
+            if($student_id === null){
                 $student_id = $this->getQueryString('user_id');
             }
-            if(!$student_id){
+            if($student_id === null){
                 $attr['type'] = 'readonly';
                 $attr['value'] = $institution_id;
                 $attr['attr']['value'] = $entity->institution->code_name;
