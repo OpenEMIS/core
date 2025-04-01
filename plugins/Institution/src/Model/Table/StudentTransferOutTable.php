@@ -835,6 +835,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             $entity = $attr['entity'];
             // POCOR-9012 start
             $student_id = $entity->student_id;
+            Log::write('debug', 'student_id: ' . $student_id);
             $institution_id = $entity->institution_id;
             if(!$student_id){
                 $student_id = $this->getQueryString('student_id');
