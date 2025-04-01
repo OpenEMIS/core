@@ -85,142 +85,75 @@ class FieldOptionComponent extends Component
         $Words = trim(preg_replace('/(?<!\ )[A-Z]/', ' $0', $key));
         //echo $key;die;
         $FieldOptions = $FieldOptionTable->find('all', ['conditions' => ['name' => $Words]])->first();
-        if ($FieldOptions->category == "Finance") {
-            $FieldOptions->category = "FieldOption";
-        } elseif ($FieldOptions->category == "Qualification") {
-            $FieldOptions->category = "FieldOption";
-        } elseif ($FieldOptions->category == "Quality") {
-            $FieldOptions->category = "FieldOption";
-        } elseif ($FieldOptions->category == "Others") {
-            $FieldOptions->category = "FieldOption";
-        } elseif ($FieldOptions->category == "Infrastructure") {
-            $FieldOptions->category = "Institution";
+        // POCOR-8995 start
+        $category = $FieldOptions->category;
+
+        // Normalize category
+        $fieldOptionCategories = ["Finance", "Qualification", "Quality", "Others"];
+        if (in_array($category, $fieldOptionCategories)) {
+            $category = "FieldOption";
+        } elseif ($category === "Infrastructure") {
+            $category = "Institution";
+        } elseif ($category === "Special Needs") {
+            $category = "SpecialNeeds";
         }
 
-        if ($key == "Duties") {
-            return "Institution.StaffDuties";
-        } elseif ($key == "TextbookConditions") {
-            return "Textbook.TextbookConditions";
-        } elseif ($key == "TextbookDimensions") {
-            return "Textbook.TextbookDimensions";  // POCOR 7362
+// Predefined key-to-class mappings
+        $keyMappings = [
+            "Duties" => "Institution.StaffDuties",
+            "TextbookConditions" => "Textbook.TextbookConditions",
+            "TextbookDimensions" => "Textbook.TextbookDimensions",
+            "TextbookStatuses" => "Textbook.TextbookStatuses",
+            "ReportCardCommentCodes" => "ReportCard.ReportCardCommentCodes",
+            "StudentAbsenceReasons" => "Institution.StudentAbsenceReasons",
+            "VisitPurposeTypes" => "Student.StudentVisitPurposeTypes",
+            "MealTypes" => "Meal.MealType",
+            "MealTargets" => "Meal.MealTarget",
+            "FoodTypes" => "Meal.FoodTypes",
+            "MealRatings" => "Meal.MealRatings",
+            "MealNutritions" => "Meal.MealNutritions",
+            "MealImplementers" => "Meal.MealImplementer",
+            "MealBenefitTypes" => "Meal.MealBenefit",
+            "GuardianRelations" => "Student.GuardianRelations",
+            "StaffPositionGrades" => "Institution.StaffPositionGrades",
+            "StaffPositionTitles" => "Institution.StaffPositionTitles",
+            "SalaryAdditionTypes" => "Staff.SalaryAdditionTypes",
+            "SalaryDeductionTypes" => "Staff.SalaryDeductionTypes",
+            "ContactTypes" => "User.ContactTypes",
+            "Languages" => "Languages",
+            "LanguageProficiencies" => "User.LanguageProficiencies",
+            "CommentTypes" => "User.CommentTypes",
+            "BehaviourClassifications" => "Student.BehaviourClassifications",
+            "DemographicWealthQuantileTypes" => "FieldOption.DemographicTypes",
+            "ScholarshipFundingSources" => "Scholarship.FundingSources",
+            "ScholarshipAttachmentTypes" => "Scholarship.AttachmentTypes",
+            "ScholarshipPaymentFrequencies" => "Scholarship.PaymentFrequencies",
+            "ScholarshipRecipientActivityStatuses" => "Scholarship.RecipientActivityStatuses",
+            "ScholarshipDisbursementCategories" => "Scholarship.DisbursementCategories",
+            "ScholarshipSemesters" => "Scholarship.Semesters",
+            "ScholarshipInstitutionChoices" => "Scholarship.InstitutionChoiceTypes",
+            "InfrastructureWashSewageFunctionalities" => "Institution.InfrastructureWashSewageFunctionalities",
+            "InfrastructureOwnerships" => "FieldOption.InfrastructureOwnerships",
+            "InfrastructureConditions" => "FieldOption.InfrastructureConditions",
+            "PlanTypes" => "SpecialNeeds.SpecialNeedsPlanTypes",
+            "DiagnosticTypeOfDisability" => "SpecialNeeds.SpecialNeedsDiagnosticsTypes",
+            "DiagnosticDisabilityDegree" => "SpecialNeeds.SpecialNeedsDiagnosticsDegree",
+            "AssetMakes" => "FieldOption.AssetMakes",
+            "AssetModels" => "FieldOption.AssetModels",
+            "CaseTypes" => "Cases.CaseTypes",
+            "CasePriorities" => "Cases.CasePriorities",
+            "ItemTypes" => "FieldOption.ItemTypes",
+            "StockUnits" => "FieldOption.StockUnits",
+        ];
 
-        } elseif ($key == "TextbookStatuses") {
-            return "Textbook.TextbookStatuses";  // POCOR 7362
+// Return mapped value if it exists
+        if (isset($keyMappings[$key])) {
+            return $keyMappings[$key];
+        }
+        Log::write('debug', "{$category}.{$key}");
+// Default fallback
+        return "{$category}.{$key}";
+        // POCOR-8995 end
 
-        } elseif ($key == "ReportCardCommentCodes") {
-            return "ReportCard.ReportCardCommentCodes";
-        } elseif ($key == "StudentAbsenceReasons") {
-            return "Institution.StudentAbsenceReasons";
-        } elseif ($key == "VisitPurposeTypes") {
-            return "Student.StudentVisitPurposeTypes";
-        } elseif ($key == "MealTypes") {
-            return "Meal.MealType";
-        } elseif ($key == "MealTargets") {
-            return "Meal.MealTarget";
-            //POCOR-7363 start
-        } elseif ($key == "FoodTypes") {
-            return "Meal.FoodTypes";
-        } elseif ($key == "MealRatings") {
-            return "Meal.MealRatings";
-            //POCOR-7363 end
-        } elseif ($key == "MealNutritions") {
-            return "Meal.MealNutritions";
-        } elseif ($key == "MealImplementers") {
-            return "Meal.MealImplementer";
-        } elseif ($key == "MealBenefitTypes") {
-            return "Meal.MealBenefit";
-        } elseif ($key == "GuardianRelations") {
-            return "Student.GuardianRelations";
-        } elseif ($key == "StaffPositionGrades") {
-            return "Institution.StaffPositionGrades";
-        } elseif ($key == "StaffPositionTitles") {
-            return "Institution.StaffPositionTitles";
-        } elseif ($key == "SalaryAdditionTypes") {
-            return "Staff.SalaryAdditionTypes";
-        } elseif ($key == "SalaryDeductionTypes") {
-            return "Staff.SalaryDeductionTypes";
-        } elseif ($key == "ContactTypes") {
-            return "User.ContactTypes";
-        } elseif ($key == "Languages") {
-            return "Languages";
-        } elseif ($key == "LanguageProficiencies") {
-            return "User.LanguageProficiencies";
-        } elseif ($key == "CommentTypes") {
-            return "User.CommentTypes";
-        } elseif ($key == "BehaviourClassifications") {
-            return "Student.BehaviourClassifications";
-        } elseif ($key == "DemographicWealthQuantileTypes") {
-            return "FieldOption.DemographicTypes";
-        } elseif ($key == "ScholarshipFundingSources") {
-            return "Scholarship.FundingSources";
-        } elseif ($key == "ScholarshipAttachmentTypes") {
-            return "Scholarship.AttachmentTypes";
-        } elseif ($key == "ScholarshipPaymentFrequencies") {
-            return "Scholarship.PaymentFrequencies";
-        } elseif ($key == "ScholarshipRecipientActivityStatuses") {
-            return "Scholarship.RecipientActivityStatuses";
-        } elseif ($key == "InfrastructureWashSewageFunctionalities") {
-            return "Institution.InfrastructureWashSewageFunctionalities";
-        } elseif ($key == "ScholarshipFundingSources") {
-            return "Scholarship.FundingSources";
-        } elseif ($key == "ScholarshipAttachmentTypes") {
-            return "Scholarship.AttachmentTypes";
-        } elseif ($key == "ScholarshipPaymentFrequencies") {
-            return "Scholarship.PaymentFrequencies";
-        } elseif ($key == "ScholarshipRecipientActivityStatuses") {
-            return "Scholarship.RecipientActivityStatuses";
-        } elseif ($key == "ScholarshipDisbursementCategories") {
-            return "Scholarship.DisbursementCategories";
-        } elseif ($key == "ScholarshipSemesters") {
-            return "Scholarship.Semesters";
-        } elseif ($key == "ScholarshipInstitutionChoices") {
-            return "Scholarship.InstitutionChoiceTypes";
-        } elseif ($key == "InfrastructureOwnerships") {
-            return "FieldOption.InfrastructureOwnerships";
-        } elseif ($key == "InfrastructureConditions") {
-            return "FieldOption.InfrastructureConditions";
-        } elseif ($key == "PlanTypes") {
-            return "SpecialNeeds.SpecialNeedsPlanTypes";
-        } elseif ($key == "DiagnosticTypeOfDisability") {
-            return "SpecialNeeds.SpecialNeedsDiagnosticsTypes";
-        } elseif ($key == "DiagnosticDisabilityDegree") {
-            return "SpecialNeeds.SpecialNeedsDiagnosticsDegree";
-        } elseif ($key == "SpecialNeedsDifficulties") { // POCOR-8995 start
-            return "SpecialNeeds.SpecialNeedsDifficulties";
-        } elseif ($key == "SpecialNeedsAssessmentsTypes") {
-            return "SpecialNeeds.SpecialNeedsAssessmentsTypes";
-        } elseif ($key == "SpecialNeedsDeviceTypes") {
-            return "SpecialNeeds.SpecialNeedsDeviceTypes";
-        } elseif ($key == "SpecialNeedsReferrerTypes") {
-            return "SpecialNeeds.SpecialNeedsReferrerTypes";
-        } elseif ($key == "SpecialNeedsServiceClassification") {
-            return "SpecialNeeds.SpecialNeedsServiceClassification";
-        } elseif ($key == "SpecialNeedsServiceTypes") {
-            return "SpecialNeeds.SpecialNeedsServiceTypes";
-        } elseif ($key == "SpecialNeedsTypes") {
-            return "SpecialNeeds.SpecialNeedsTypes"; // POCOR-8995 end
-        } elseif ($key == "AssetMakes") {
-            return "FieldOption.AssetMakes";
-        } elseif ($key == "AssetModels") {
-            return "FieldOption.AssetModels";
-            //POCOR-7613 start
-        } elseif ($key == "CaseTypes") {
-            return "Cases.CaseTypes";
-        } elseif ($key == "CasePriorities") {
-            return "Cases.CasePriorities";
-        }
-        //POCOR-7613 end
-        //POCOR-8873 start
-        elseif ($key == "ItemTypes") {
-            return "FieldOption.ItemTypes";
-        } elseif ($key == "StockUnits") {
-            return "FieldOption.StockUnits";
-        }
-        //POCOR-8873 end
-        else {
-            $className =  $FieldOptions->category . "." . $key;
-            return $className;
-        }
-        return $this->fieldOptions[$key]['className'];
     }
 }
