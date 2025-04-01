@@ -208,6 +208,11 @@ class ImportStaffTable extends AppTable
     public function onImportPopulateInstitutionPositionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $institutionId = ($this->_institution instanceof Entity) ? $this->_institution->id : false;
+        //POCOR-8947 -- START
+        if (!$institutionId) {
+            $institutionId = $this->getQueryString('institution_id');
+        }
+        //POCOR-8947 -- END
         $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);//POCOR-8856
         $activeStatusId = $this->Workflow->getStepsByModelCode($lookedUpTable->getRegistryAlias(), 'ACTIVE');//POCOR-8856
 
