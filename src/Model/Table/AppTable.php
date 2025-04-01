@@ -281,10 +281,8 @@ class AppTable extends Table
                     ->first();
             if ($field == 'openemis_no' && !empty($fieldLabel['name'])) {
                  return $fieldLabel['name'];
-
             } else if ($field == 'openemis_no') {
                 return self::OpenEMIS;
-
     		} else if ($field == 'fax' && !empty($fieldLabel['name'])) {
     		    return $fieldLabel['name'];
             }

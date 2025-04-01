@@ -20,7 +20,21 @@ class LabelsTable extends AppTable
         $label = false;
         $keyFetch = $module.'.'.$field;
         $label = Cache::read($keyFetch, $this->defaultConfig);
-
+        // POCOR-9022 check if label is empty
+        if (!$label) {
+            $entity = $this->find()
+                ->where([
+                    $this->aliasField('module') => $module,
+                    $this->aliasField('field') => $field
+                ])
+                ->first();
+            if (!empty($entity)) {
+                $label = $entity->name;
+                $keyValue = self::concatenateLabel($entity);
+                Cache::write($keyFetch, $keyValue, $this->defaultConfig);
+            }
+        }
+        // POCOR-9022 end
         if ($label !== false) {
             $label =  __(ucfirst($label));
         } else {
@@ -47,7 +61,7 @@ class LabelsTable extends AppTable
                 $filteredFiles[] = $value;
             }
         }
-        
+
         if (empty($filteredFiles)) {
             $keyArray = [];
             $allLabels = $this->find();
