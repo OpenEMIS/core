@@ -831,7 +831,21 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         //single student
         // POCOR-8946 start
         if (in_array($action, ['add', 'edit', 'approve'])) {
+            $queryString = $this->getQueryString();
+            Log::debug('InstitutionTransferInstitutionId onUpdateField ' . print_r($queryString, true));
             $student_id = $this->getQueryString('student_id');
+            if(!$student_id){
+                $student_id = $this->getQueryString('institution_student_id');
+            }
+            if(!$student_id){
+                $student_id = $this->getQueryString('security_user_id');
+            }
+            if(!$student_id){
+                $student_id = $this->getQueryString('user_id');
+            }
+            if(!$student_id){
+                return $attr;
+            }
             $student_gender_id = $this->Users->get($student_id)->gender_id;
             $entity = $attr['entity'];
             $next_period_id = $entity->academic_period_id;
