@@ -397,9 +397,13 @@ if (!function_exists('checkPermission')) {
     function checkPermission(array $params, array $additionalParams = []): bool
     {
 
-
         $user = JWTAuth::user();
 
+        // POCOR-8965
+        // Super admin bypasses all checks
+        if ($user['super_admin'] == 1) {
+            return true;
+        }
         // Cache key based on user ID
         $cacheKey = "user_permissions_{$user->id}";
 
@@ -408,16 +412,17 @@ if (!function_exists('checkPermission')) {
             return checkAccess();
         });
 
-
-        // Super admin bypasses all checks
-        if ($user['super_admin'] == 1) {
-            return true;
-        }
-        // Log::info("Permissions: " . print_r($permissions,true));
+        // POCOR-8965 start
         // If institution ID is required, check it
-        if (!empty($params['institution_id'])) {
-            return $permissions['allowAllInstitutions'] == 1 || in_array($params['institution_id'], $permissions['institutionIds']);
+        $institutionId = $params['institution_id'] ?? ($additionalParams['institution_id'] ?? null);
+        if (!empty($institutionId)) {
+
+            $permission = $permissions['allowAllInstitutions'] == 1 || in_array($institutionId, $permissions['institutionIds']);
+            if(!$permission){
+                return false;
+            }
         }
+        // POCOR-8965 end
 
         if (!$permissions || !isset($permissions['permissions'][$params[0]][$params[1]][$params[2]])) {
             return false;

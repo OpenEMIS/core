@@ -12,6 +12,7 @@ use App\Http\Requests\StudentAbsenceAdd;
 use App\Http\Requests\StaffAttendanceAdd;
 use App\Http\Requests\UpdateStaffDetails;
 use App\Http\Requests\StudentTransferAddRequest;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 
 class StudentController extends Controller
@@ -156,7 +157,7 @@ class StudentController extends Controller
         try {
             $data = $this->studentService->getStudents($request);
             return $this->sendSuccessResponse("Institutions Students List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -306,7 +307,7 @@ class StudentController extends Controller
         try {
             $data = $this->studentService->getInstitutionStudents($request, $institutionId);
             return $this->sendSuccessResponse("Institutions Students List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -430,7 +431,7 @@ class StudentController extends Controller
         try {
             $data = $this->studentService->getInstitutionStudentData($request, $institutionId, $studentId);
             return $this->sendSuccessResponse("Institutions Student Data Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
@@ -526,7 +527,7 @@ class StudentController extends Controller
      *                      @OA\Property(property="created_user_id", type="integer", example=2),
      *                      @OA\Property(property="created", type="string", example="2019-11-25 18:23:42")
      *                  )
-     *              ) 
+     *              )
      *              )
      *          )
      *      ),
@@ -541,7 +542,7 @@ class StudentController extends Controller
         try {
             $data = $this->studentService->getStudentAbsences($request);
             return $this->sendSuccessResponse("Institutions Student Absences List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -660,7 +661,7 @@ class StudentController extends Controller
         try {
             $data = $this->studentService->getInstitutionStudentAbsences($request, $institutionId);
             return $this->sendSuccessResponse("Institutions Student Absences List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -752,7 +753,7 @@ class StudentController extends Controller
         try {
             $data = $this->studentService->getInstitutionStudentAbsencesData($request, $institutionId, $studentId);
             return $this->sendSuccessResponse("Institutions Student Absences Data Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
@@ -830,7 +831,7 @@ class StudentController extends Controller
         try {
             $data = $this->studentService->getEducationGrades($request);
             return $this->sendSuccessResponse("Education Grade List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -840,7 +841,7 @@ class StudentController extends Controller
             return $this->sendErrorResponse('Education Grade List Not Found');
         }
     }
-    
+
 
     /**
      * @OA\Get(
@@ -917,7 +918,7 @@ class StudentController extends Controller
         try {
             $data = $this->studentService->getClassesSubjects($request, $institutionId);
             return $this->sendSuccessResponse("Class Subjects List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -969,14 +970,14 @@ class StudentController extends Controller
 
             //For POCOR-7772 Start
             $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'edit'], ['institution_id' => $request['institution_id']]);
-            
+
             if(!$checkPermission){
                 return $this->sendAuthorizationErrorResponse();
             }
             //For POCOR-7772 End
 
             $data = $this->studentService->addClassAttendances($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("Class attendances data added.", $data);
             } elseif($data == 2) {
@@ -984,7 +985,7 @@ class StudentController extends Controller
             } else {
                 return $this->sendErrorResponse('Failed to add class attendance details.');
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to add data in DB.',
@@ -1039,7 +1040,7 @@ class StudentController extends Controller
         try {
             //For POCOR-7772 Start
             $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'edit'], ['institution_id' => $request['institution_id']]);
-            
+
             if(!$checkPermission){
                 return $this->sendAuthorizationErrorResponse();
             }
@@ -1063,7 +1064,7 @@ class StudentController extends Controller
             } else {
                 return $this->sendErrorResponse('Failed to add student absences details.');
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to add data in DB.',
@@ -1108,18 +1109,45 @@ class StudentController extends Controller
      */
     public function addStaffAttendances(StaffAttendanceAdd $request)
     {
+        // POCOR-8965 start
         try {
+            $user = JWTAuth::user();
+            $userId = (int) ($user->id ?? -1); // Ensure $userId is always an integer
 
-            //For POCOR-7772 Start
-            $checkPermission = checkPermission(['Institutions', 'InstitutionStaffAttendances', 'add'], ['institution_id' => $request['institution_id']]);
-            
-            if(!$checkPermission){
+// Check base permission for editing staff attendances
+            $checkPermission = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'edit'],
+                ['institution_id' => $request['institution_id']]
+            );
+
+            if ($checkPermission) {
+                $staffId = (int) ($request->get('staff_id') ?? 0);
+
+                // If the user is trying to edit their own attendance
+                if ($staffId === $userId) {
+                    $checkPermission = checkPermission(
+                        ['Institutions', 'InstitutionStaffAttendances', 'ownedit'],
+                        ['institution_id' => $request['institution_id']]
+                    );
+                }
+                // If the user is trying to edit another staff member's attendance
+                else {
+                    $checkPermission = checkPermission(
+                        ['Institutions', 'InstitutionStaffAttendances', 'otheredit'],
+                        ['institution_id' => $request['institution_id']]
+                    );
+                }
+            }
+
+// Deny access if the final permission check fails
+            // POCOR-8965 end
+            if (!$checkPermission) {
                 return $this->sendAuthorizationErrorResponse();
             }
-            //For POCOR-7772 End
+
 
             $data = $this->studentService->addStaffAttendances($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("Staff attendances data added.");
             } elseif($data == 2) {
@@ -1127,7 +1155,7 @@ class StudentController extends Controller
             } else {
                 return $this->sendErrorResponse('Failed to add staff attendances details.');
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to add data in DB.',
@@ -1177,14 +1205,14 @@ class StudentController extends Controller
 
             //For POCOR-7772 Start
             $checkPermission = checkPermission(['Institutions', 'Staff', 'add']);
-            
+
             if(!$checkPermission){
                 return $this->sendAuthorizationErrorResponse();
             }
             //For POCOR-7772 End
 
             $data = $this->studentService->updateStaffDetails($request);
-            
+
             if($data == 1){
                 return $this->sendSuccessResponse("Staff data updated.", $data);
             } elseif($data == 0){
@@ -1192,7 +1220,7 @@ class StudentController extends Controller
             } else {
                 return $this->sendErrorResponse('Failed to update staff data details.');
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to update data in DB.',
@@ -1213,7 +1241,7 @@ class StudentController extends Controller
             $params = $request->all();
             $data = $this->studentService->getStudentTransferData($params, $institutionId, $studentId);
             return $this->sendSuccessResponse("Student Transfer List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -1241,7 +1269,7 @@ class StudentController extends Controller
             } else{
                 return $this->sendErrorResponse('Failed to add student tranfer data.');
             }
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to add student tranfer data.',

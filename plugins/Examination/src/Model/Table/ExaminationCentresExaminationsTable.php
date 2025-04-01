@@ -20,11 +20,11 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-      
+
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+// POCOR-8919 removed academic period
         $this->belongsToMany('ExaminationSubjects', [
             'className' => 'Examination.ExaminationSubjects',
             'joinTable' => 'examination_centres_examinations_subjects',
@@ -147,10 +147,12 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         $this->field('education_grade_id');
         $this->field('registration_start_date', ['type' => 'date']);
         $this->field('registration_end_date', ['type' => 'date']);
-        $this->setFieldOrder(['academic_period_id', 'examination_id', 'education_grade_id', 'registration_start_date', 'registration_end_date', 'total_registered']);
+// POCOR-8919 removed academic period
+        $this->setFieldOrder([
+            'examination_id', 'education_grade_id', 'registration_start_date', 'registration_end_date', 'total_registered']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Exam Centre Exams','Examinations');       
+		$is_manual_exist = $this->getManualUrl('Administration','Exam Centre Exams','Examinations');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -224,34 +226,24 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             $extra['toolbarButtons']['back']['url']['action'] = 'ExamCentres';
         }
 
-        $this->field('academic_period_id');
         $this->field('examination_id');
         $this->field('examination_centre_type');
         $this->field('link_all_examination_centres');
         $this->field('examination_centres');
         $this->fields['total_registered']['visible'] = false;
-        $this->setFieldOrder(['academic_period_id', 'examination_id', 'examination_centre_type', 'link_all_examination_centres', 'examination_centres']);
+// POCOR-8919 removed academic period
+        $this->setFieldOrder([
+            'examination_id', 'examination_centre_type', 'link_all_examination_centres', 'examination_centres']);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        if ($action == 'add') {
-            $attr['options'] = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-            $attr['onChangeReload'] = true;
-            $attr['default'] = $this->AcademicPeriods->getCurrent();
-            $attr['type'] = 'select';
-            return $attr;
-        }
-    }
 
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $todayDate = Time::now();
-            $academicPeriodId = isset($this->request->getData($this->getAlias())['academic_period_id']) ? $this->request->getData($this->getAlias())['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
             $Examinations = $this->Examinations;
-            $examOptions = $Examinations->getExaminationOptions($academicPeriodId);
+            $examOptions = $Examinations->getExaminationOptions(); // POCOR-8919 removed academic period
 
             $examinationId = isset($this->request->getData($this->getAlias())['examination_id']) ? $this->request->getData($this->getAlias())['examination_id'] : null;
             $this->advancedSelectOptions($examOptions, $examinationId, [
@@ -296,11 +288,11 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
     {
         if ($action == 'add') {
             $examinationId = isset($this->request->getData($this->getAlias())['examination_id']) ? $this->request->getData($this->getAlias())['examination_id'] : 0;
-            $academicPeriodId = isset($this->request->getData($this->getAlias())['academic_period_id']) ? $this->request->getData($this->getAlias())['academic_period_id'] : $this->AcademicPeriods->getCurrent();
             $type = isset($this->request->getData($this->getAlias())['examination_centre_type']) ? $this->request->getData($this->getAlias())['examination_centre_type'] : 0;
 
             $examCentreOptions = $this->ExaminationCentres
-                ->find('NotLinkedExamCentres', ['examination_id' => $examinationId, 'academic_period_id' => $academicPeriodId, 'examination_centre_type' => $type])
+                ->find('NotLinkedExamCentres', ['examination_id' => $examinationId,
+                    'examination_centre_type' => $type])
                 ->count();
 
             $selectOptions = [];
@@ -338,11 +330,11 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
 
             } else {
                 $examinationId = isset($this->request->getData($this->getAlias())['examination_id']) ? $this->request->getData($this->getAlias())['examination_id'] : 0;
-                $academicPeriodId = isset($this->request->getData($this->getAlias())['academic_period_id']) ? $this->request->getData($this->getAlias())['academic_period_id'] : $this->AcademicPeriods->getCurrent();
                 $type = isset($this->request->getData($this->getAlias())['examination_centre_type']) ? $this->request->getData($this->getAlias())['examination_centre_type'] : 0;
 
                 $examCentreOptions = $this->ExaminationCentres
-                    ->find('NotLinkedExamCentres', ['examination_id' => $examinationId, 'academic_period_id' => $academicPeriodId, 'examination_centre_type' => $type])
+                    ->find('NotLinkedExamCentres', ['examination_id' => $examinationId,
+                        'examination_centre_type' => $type])
                     ->order([$this->ExaminationCentres->aliasField('code')])
                     ->toArray();
 
@@ -385,10 +377,10 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
-        
+
         $process = function ($model, $entity) use ($requestData) {
             if (isset($requestData[$model->getAlias()]['examination_centres']) && !empty($requestData[$model->getAlias()]['examination_centres'])) {
-              
+
                 $examCentreIds = $requestData[$model->getAlias()]['examination_centres'];
                 $newEntities = [];
 
@@ -400,14 +392,13 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
                         $newEntities[] = $model->newEntity($requestData->getArrayCopy(), $patchOptions);
                     }
                 }
-         
+
                 return $model->saveMany($newEntities);
 
             } else if (isset($requestData[$model->getAlias()]['link_all_examination_centres']) && $requestData[$model->getAlias()]['link_all_examination_centres'] == 1) {
-             
+
                 if (!empty($requestData[$this->getAlias()]['examination_id'])) {
                     $examinationId = $requestData[$model->getAlias()]['examination_id'];
-                    $academicPeriodId = $requestData[$model->getAlias()]['academic_period_id'];
                     $examCentreTypeId = !empty($requestData[$model->getAlias()]['examination_centre_type']) ? $requestData[$model->getAlias()]['examination_centre_type'] : '';
 
                     $examItems = [];
@@ -430,7 +421,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
                     $params = json_encode($passArray);
                     $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
 
-                    $this->triggerLinkAllExamCentresShell($systemProcessId, $examinationId, $academicPeriodId, $examCentreTypeId);
+                    $this->triggerLinkAllExamCentresShell($systemProcessId, $examinationId, $examCentreTypeId);
                     $this->Alert->warning($this->aliasField('savingProcessStarted'), ['reset' => true]);
                     return true;
                 }
@@ -459,12 +450,11 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         ];
     }
 
-    private function triggerLinkAllExamCentresShell($systemProcessId, $examinationId, $academicPeriodId, $examCentreTypeId = null)
+    private function triggerLinkAllExamCentresShell($systemProcessId, $examinationId, $examCentreTypeId = null)
     {
         $args = '';
         $args .= !is_null($systemProcessId) ? ''.$systemProcessId : '';
         $args .= !is_null($examinationId) ? ' '.$examinationId : '';
-        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
         $args .= !is_null($examCentreTypeId) ? ' '.$examCentreTypeId : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake LinkAllExamCentres "'.$args.'"';
@@ -483,8 +473,6 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
     {
         if ($field == 'examination_id') {
             return __('Examination');
-        } elseif ($field == 'academic_period_id') {
-            return __('Academic Period');
         } elseif ($field == 'examination_centre_type') {
             return __('Examination Centre Type');
         } elseif ($field == 'institution_type') {
@@ -509,9 +497,9 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             return __('Registration Start Date');
         }elseif ($field == 'registration_end_date') {
             return __('Registration Start Date');
-        }elseif ($field == 'education_grade_id') {  
+        }elseif ($field == 'education_grade_id') {
             return __('Education Grade');
-        }elseif ($field == 'total_registered') { 
+        }elseif ($field == 'total_registered') {
             return __('Total Registered');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
