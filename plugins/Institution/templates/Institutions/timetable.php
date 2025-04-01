@@ -192,7 +192,13 @@ $panelHeader = $this->fetch('panelHeader');
 
 <div class="panel">
     <div class="panel-body" style="position: relative;">
-        <bg-splitter orientation="horizontal" class="content-splitter timetable" elements="getSplitterElements" ng-init="$ctrl.timetableId=<?= $timetable_id; ?>;$ctrl.institutionId=<?= $institutionDefaultId; ?>;$ctrl.academicPeriodId=<?= $academicPeriodId; ?>; $ctrl.action='<?= $_action; ?>';" float-btn="false" collapse="{{$ctrl.hideSplitter}}">
+        <bg-splitter orientation="horizontal" class="content-splitter timetable" elements="getSplitterElements"
+                     ng-init="$ctrl.timetableId=<?= $timetable_id; ?>;
+        $ctrl.institutionId=<?= $institutionDefaultId; ?>;
+        $ctrl.academicPeriodId=<?= $academicPeriodId; ?>;
+        $ctrl.action='<?= $_action; ?>';
+        $ctrl.canEdit='<?= $_edit; ?>';"
+                     float-btn="false" collapse="{{$ctrl.hideSplitter}}">
             <bg-pane class="main-content" min-size-p="70" max-size-p="100">
                 <table id="tblTimetable" ng-if="$ctrl.tableReady" class="timetable-table">
                     <thead>
@@ -218,7 +224,9 @@ $panelHeader = $this->fetch('panelHeader');
                             <td class="timetable-timeslot">
                                 <h5>{{$ctrl.toTimeAmPm(timeslot.start_time) | date:'hh:mm a'}} - {{$ctrl.toTimeAmPm(timeslot.end_time) | date:'hh:mm a'}}</h5>
                             </td>
-                            <td class="timetable-lesson {{$ctrl.getClassName(timeslot, day)}} {{($ctrl.getClassName(timeslot, day) == $ctrl.currentSelectedCell.class) ? 'lesson-selected' : ''}}" ng-repeat="(key, day) in $ctrl.dayOfWeekList" ng-click="$ctrl.onTimeslotCellClicked(timeslot, day)">
+                            <td class="timetable-lesson {{$ctrl.getClassName(timeslot, day)}} {{($ctrl.getClassName(timeslot, day) == $ctrl.currentSelectedCell.class) ? 'lesson-selected' : ''}}" ng-repeat="(key, day) in $ctrl.dayOfWeekList"
+                                ng-click="$ctrl.onTimeslotCellClicked(timeslot, day)"
+                                >
                                 <span ng-repeat="(key, lessons) in $ctrl.timetableLessons">
 
                                     <div ng-if="lessons.timeslot.start_time==timeslot.start_time && lessons.day_of_week==day.day_of_week">
@@ -226,7 +234,7 @@ $panelHeader = $this->fetch('panelHeader');
 
                                             <div class="input-selection-inline" style="background-color:{{$ctrl.timetableCustomizeColors['subject_bg_'+schedule.schedule_curriculum_lesson.institution_subject_id]}};color:{{$ctrl.timetableCustomizeColors['subject_txt_'+schedule.schedule_curriculum_lesson.institution_subject_id]}};">
 
-												<div class="onDeleteTimeTableCellData"><i class="fa fa-trash" ng-click="$ctrl.onDeleteTimeTableCellData($event,schedule.id)"></i></div>
+                                                <div ng-show="$ctrl.canEdit" class="onDeleteTimeTableCellData"><i class="fa fa-trash" ng-click="$ctrl.onDeleteTimeTableCellData($event,schedule.id)"></i></div>
 
                                                 <span><strong>{{schedule.schedule_non_curriculum_lesson.name}}</strong></span>
                                                 <span ng-if="schedule.schedule_curriculum_lesson.code_only == 1"><strong>{{schedule.schedule_curriculum_lesson.institution_subject.education_subject_code}}</strong></span>
