@@ -967,7 +967,14 @@ class CrudApiController extends Controller
     private function parseFilters(Request $request, array &$segments)
     {
         $filters = [];
-        $excludedParams = ['order', 'orderby', '_fields', '_conditions', 'page', 'limit'];
+        $excludedParams = ['order',
+            'orderby',
+            '_fields',
+            '_conditions',
+            'page',
+            'limit',
+            '_scope',
+            '_fields'];
 
         // Parse conditions from the query parameter
         $conditionsParam = $request->input('_conditions');
@@ -997,7 +1004,9 @@ class CrudApiController extends Controller
                     // Decrement $i by 2 to account for the removed elements
                     $i -= 2;
                 } else {
-                    $filters[$key] = $value;
+                    if (!in_array($key, $excludedParams)) {
+                        $filters[$key] = $value;
+                    }
                 }
             }
         }
@@ -1054,7 +1063,7 @@ class CrudApiController extends Controller
     {
         $fields = $request->query('_fields');
         $scopeParam = $request->query('_scope');
-
+        Log::info("segments before:" . print_r($segments, true));
         // Process _fields from query parameters or segments
         if (!$fields) {
             for ($i = 0; $i < count($segments); $i += 2) {
@@ -1120,6 +1129,7 @@ class CrudApiController extends Controller
                 }
             }
         }
+        Log::info("segments after:" . print_r($segments, true));
 
         return $query;
     }
