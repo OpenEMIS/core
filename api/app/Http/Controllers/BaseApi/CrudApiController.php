@@ -1171,7 +1171,11 @@ class CrudApiController extends Controller
                 $query->where($field, '=', $value);
             } else {
                 // Default to 'like' for other fields
-                $query->where($field, 'like', '%' . $value . '%');
+               if (strpos($value, '*') !== false) {
+                    $query->where($field, 'like', str_replace('*', '%', $value));
+                } else {
+                    $query->where($field, '=', $value);
+                }
             }
         }
 
