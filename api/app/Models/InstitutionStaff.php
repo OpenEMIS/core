@@ -238,6 +238,11 @@ public function _swaggerDelete() {}
         return $this->belongsTo(StaffStatuses::class, 'staff_status_id', 'id');
     }
 
+    public function scopeWithStatus($query)
+    {
+        return $query->with('staffStatus:id,code,name');
+    }
+
     public function staffType()
     {
         return $this->belongsTo(StaffTypes::class, 'staff_type_id', 'id');
@@ -248,11 +253,22 @@ public function _swaggerDelete() {}
     {
         return $this->belongsTo(InstitutionPositions::class, 'institution_position_id', 'id');
     }
+    public function scopeWithPosition($query)
+    {
+        return $query->with([
+            'institutionPosition:id,position_no,staff_position_title_id',
+            'institutionPosition.staffPositionTitle:id,name'
+        ]);
+    }
 
 
     public function user()
     {
         return $this->belongsTo(SecurityUsers::class, 'staff_id', 'id');
+    }
+    public function scopeWithUser($query)
+    {
+        return $query->with('user:id,openemis_no,first_name,last_name');
     }
 
 
