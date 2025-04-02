@@ -25,6 +25,8 @@ class ScholarshipApplications extends Model
     public $incrementing = false;
 
      // Override getKeyForSaveQuery to handle composite keys
+
+
 /**
  * @OA\PathItem(
  *     path="/api/v5/scholarship-applications"
@@ -37,6 +39,41 @@ public function _swaggerPath() {}
  *     path="/api/v5/scholarship-applications",
  *     summary="Get list of ScholarshipApplications",
  *     tags={"ScholarshipApplications"},
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Maximum number of results to return",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number for paginated results",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="orderby",
+ *         in="query",
+ *         required=false,
+ *         description="Field to order results by",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order direction: asc or desc",
+ *         @OA\Schema(type="string", enum={"asc", "desc"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="_fields",
+ *         in="query",
+ *         required=false,
+ *         description="Comma-separated list of fields to include in response",
+ *         @OA\Schema(type="string")
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Successful operation",
@@ -76,30 +113,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/scholarship-applications/{id}",
- *     summary="Get ScholarshipApplications by ID",
- *     tags={"ScholarshipApplications"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the ScholarshipApplications",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/scholarship-applications",
  *     summary="Create a new ScholarshipApplications",
@@ -137,50 +150,74 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/scholarship-applications/{id}",
- *     summary="Update ScholarshipApplications",
+ * @OA\Get(
+ *     path="/api/v5/scholarship-applications/applicant_id/{applicant_id}/scholarship_id/{scholarship_id}",
+ *     summary="Get ScholarshipApplications record by composite key",
  *     tags={"ScholarshipApplications"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="applicant_id",
  *         in="path",
  *         required=true,
- *         description="ID of the ScholarshipApplications",
- *         @OA\Schema(type="integer")
+ *         description="applicant_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="scholarship_id",
+ *         in="path",
+ *         required=true,
+ *         description="scholarship_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/scholarship-applications/applicant_id/{applicant_id}/scholarship_id/{scholarship_id}",
+ *     summary="Update ScholarshipApplications record by composite key",
+ *     tags={"ScholarshipApplications"},
+ *     @OA\Parameter(
+ *         name="applicant_id",
+ *         in="path",
+ *         required=true,
+ *         description="applicant_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="scholarship_id",
+ *         in="path",
+ *         required=true,
+ *         description="scholarship_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="id", type="string", example=null),
-                     @OA\Property(property="applicant_id", type="integer", example=null),
-                     @OA\Property(property="scholarship_id", type="integer", example=null),
-                     @OA\Property(property="requested_amount", type="number", example=null),
-                     @OA\Property(property="comments", type="string", example=null),
-                     @OA\Property(property="status_id", type="integer", example=null),
-                     @OA\Property(property="assignee_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -188,31 +225,35 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/scholarship-applications/{id}",
- *     summary="Delete ScholarshipApplications",
+ *     path="/api/v5/scholarship-applications/applicant_id/{applicant_id}/scholarship_id/{scholarship_id}",
+ *     summary="Delete ScholarshipApplications record by composite key",
  *     tags={"ScholarshipApplications"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="applicant_id",
  *         in="path",
  *         required=true,
- *         description="ID of the ScholarshipApplications",
- *         @OA\Schema(type="integer")
+ *         description="applicant_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="scholarship_id",
+ *         in="path",
+ *         required=true,
+ *         description="scholarship_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -249,9 +290,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

@@ -25,6 +25,8 @@ class EmailTemplates extends Model
     public $incrementing = false;
 
      // Override getKeyForSaveQuery to handle composite keys
+
+
 /**
  * @OA\PathItem(
  *     path="/api/v5/email-templates"
@@ -37,6 +39,41 @@ public function _swaggerPath() {}
  *     path="/api/v5/email-templates",
  *     summary="Get list of EmailTemplates",
  *     tags={"EmailTemplates"},
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Maximum number of results to return",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number for paginated results",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="orderby",
+ *         in="query",
+ *         required=false,
+ *         description="Field to order results by",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order direction: asc or desc",
+ *         @OA\Schema(type="string", enum={"asc", "desc"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="_fields",
+ *         in="query",
+ *         required=false,
+ *         description="Comma-separated list of fields to include in response",
+ *         @OA\Schema(type="string")
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Successful operation",
@@ -73,30 +110,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/email-templates/{id}",
- *     summary="Get EmailTemplates by ID",
- *     tags={"EmailTemplates"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the EmailTemplates",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/email-templates",
  *     summary="Create a new EmailTemplates",
@@ -131,47 +144,74 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/email-templates/{id}",
- *     summary="Update EmailTemplates",
+ * @OA\Get(
+ *     path="/api/v5/email-templates/model_alias/{model_alias}/model_reference/{model_reference}",
+ *     summary="Get EmailTemplates record by composite key",
  *     tags={"EmailTemplates"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="model_alias",
  *         in="path",
  *         required=true,
- *         description="ID of the EmailTemplates",
- *         @OA\Schema(type="integer")
+ *         description="model_alias",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="model_reference",
+ *         in="path",
+ *         required=true,
+ *         description="model_reference",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/email-templates/model_alias/{model_alias}/model_reference/{model_reference}",
+ *     summary="Update EmailTemplates record by composite key",
+ *     tags={"EmailTemplates"},
+ *     @OA\Parameter(
+ *         name="model_alias",
+ *         in="path",
+ *         required=true,
+ *         description="model_alias",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="model_reference",
+ *         in="path",
+ *         required=true,
+ *         description="model_reference",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="model_alias", type="string", example=null),
-                     @OA\Property(property="model_reference", type="integer", example=null),
-                     @OA\Property(property="subject", type="string", example=null),
-                     @OA\Property(property="message", type="string", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -179,31 +219,35 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/email-templates/{id}",
- *     summary="Delete EmailTemplates",
+ *     path="/api/v5/email-templates/model_alias/{model_alias}/model_reference/{model_reference}",
+ *     summary="Delete EmailTemplates record by composite key",
  *     tags={"EmailTemplates"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="model_alias",
  *         in="path",
  *         required=true,
- *         description="ID of the EmailTemplates",
- *         @OA\Schema(type="integer")
+ *         description="model_alias",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="model_reference",
+ *         in="path",
+ *         required=true,
+ *         description="model_reference",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -240,9 +284,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }
