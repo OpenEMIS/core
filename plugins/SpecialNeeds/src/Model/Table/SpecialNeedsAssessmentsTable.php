@@ -303,7 +303,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             'key' => '',
             'field' => 'special_need_difficulty_id',
             'type' => 'string',
-//            'label' => __('Difficulty')
+//            'label' => __('Difficulty') // POCOR-9022
         ];
         $extraField[] = [
             'key' => '',
