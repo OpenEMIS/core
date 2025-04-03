@@ -38,9 +38,7 @@ class ExcelBehavior extends Behavior
         'autoFields' => true,
         'orientation' => 'landscape', // or portrait
         'sheet_limit' =>  1000000, // 1 mil rows and header row
-        'auto_contain' => true,
-        'batch_size' => 50000,//POCOR-8845
-        'memory_monitor' => true //POCOR-8845       
+        'auto_contain' => true  
     ];
 
     public function initialize(array $config): void
@@ -67,8 +65,6 @@ class ExcelBehavior extends Behavior
         if ($pages !== false && empty($pages)) {
             $this->setConfig('pages', ['index', 'view']);
         }
-        $this->setConfig('batch_size', 50000); // Default batch size// POCOR-8845
-        $this->setConfig('memory_monitor', true); // Enable memory monitoring// POCOR-8845
     }
 
     private function eventMap($method)
@@ -120,9 +116,7 @@ class ExcelBehavior extends Behavior
             'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
             'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
-            'purge' => true,
-            'batch_size' => $this->config('batch_size', 5000), // Add batch size setting// POCOR-8845
-            'memory_monitor' => $this->config('memory_monitor', true) // Add memory monitoring// POCOR-8845
+            'purge' => true
         ];
         $_settings = new ArrayObject(array_merge($_settings, $settings));
 
@@ -159,10 +153,6 @@ class ExcelBehavior extends Behavior
         if ($_settings['purge']) {
             $this->purge($filepath);
         }
-        // Cleanup
-        if ($this->setConfig('memory_monitor', true)) { //POCOR-8845 starts
-            gc_collect_cycles();
-        }//POCOR-8845 ends
         return $_settings;
     }
 
