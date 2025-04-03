@@ -92,7 +92,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
         $month = (int) $explodedData[1];
         $day = (int) $explodedData[2];
 
-        $StudentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records_archived');
+        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecordsArchived');
         $totalMarkedCount = $StudentAttendanceMarkedRecords
             ->find()
             ->where([

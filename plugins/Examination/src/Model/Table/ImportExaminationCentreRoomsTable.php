@@ -24,7 +24,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
             'backUrl' => ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres']
         ]);
 
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        // POCOR-8919
         $this->ExaminationCentres = TableRegistry::get('Examination.ExaminationCentres');
     }
 
@@ -36,71 +36,18 @@ class ImportExaminationCentreRoomsTable extends AppTable
         return $events;
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
-    {
-        $this->ControllerAction->field('academic_period_id', [
-            'type' => 'select',
-            'select' => false,
-            'before' => 'select_file'
-        ]);
-    }
-
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriod($this->request->getQuery('period'), true));
-
-        if ($action == 'add') {
-            $attr['default'] = $selectedPeriod;
-            $attr['options'] = $periodOptions;
-            $attr['onChangeReload'] = 'changeAcademicPeriod';
-        }
-        return $attr;
-    }
-
-    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $request = $this->request;
-        
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $request->getData())) {
-                $requestData = $request->getData(); // Assigning to a variable
-                if (array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
-                    $requestData['period'] = $requestData[$this->getAlias()]['academic_period_id']; // Assigning to a variable
-                    $request->setQuery('period', $requestData['period']); // Setting the query parameter
-                }
-            }
-        }
-    }
-
-
-    public function getAcademicPeriod($querystringPeriod, $withOptions = false)
-    {
-        if ($querystringPeriod) {
-            $selectedPeriod = $querystringPeriod;
-        } else {
-            $selectedPeriod = $this->AcademicPeriods->getCurrent();
-        }
-
-        if ($withOptions){
-            $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-            return compact('periodOptions', 'selectedPeriod');
-        } else {
-            return $selectedPeriod;
-        }
-    }
+// POCOR-8919
 
     public function onImportPopulateExaminationCentresData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $selectedPeriod = $this->getAcademicPeriod($this->request->getQuery('period'));
-        
+// POCOR-8919
+
         $selectFields = [
             $lookedUpTable->aliasField($lookupColumn),
-            $lookedUpTable->aliasField('code'), 
-            $lookedUpTable->aliasField('name'), 
-            $this->AcademicPeriods->aliasField('code'), 
-            $this->AcademicPeriods->aliasField('name'),
-            $this->AcademicPeriods->aliasField('name')
+            $lookedUpTable->aliasField('code'),
+            $lookedUpTable->aliasField('name'),
+// POCOR-8919
         ];
 
         $order = [$lookedUpTable->aliasField('name')];
@@ -109,10 +56,10 @@ class ImportExaminationCentreRoomsTable extends AppTable
         $modelData = $lookedUpTable
                     ->find('all')
                     ->select($selectFields)
-                    ->matching($this->AcademicPeriods->getAlias())
-                    ->where([
-                        $this->AcademicPeriods->aliasField('id') => $selectedPeriod
-                    ])
+// POCOR-8919
+            ->where([
+// POCOR-8919
+            ])
                     ->group([
                         $lookedUpTable->aliasField('id')
                     ])
@@ -120,26 +67,27 @@ class ImportExaminationCentreRoomsTable extends AppTable
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 1;
-        $data[$columnOrder]['data'][] = [__('ID'), $translatedReadableCol, __('Academic Period')];
+        $data[$columnOrder]['data'][] = [__('ID'), $translatedReadableCol,
+// POCOR-8919
+        ];
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->id,
                     $row->code . ' - ' . $row->name,
-                    $row->_matchingData[$this->AcademicPeriods->getAlias()]->name
+// POCOR-8919
                 ];
             }
-        }    
+        }
     }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        $selectedPeriod = $this->getAcademicPeriod($this->request->getQuery('period'));
-        
+// POCOR-8919
+
         //since academic period is pre-selected and mandatory, then we pass the academic period manually.
-        if ($selectedPeriod) {
-            $tempRow['academic_period_id'] = $selectedPeriod;
-        }
+// POCOR-8919
+
 
         //match selected academic period with examination centres selected.
         if ($tempRow->offsetExists('examination_centre_id') && !empty($tempRow['examination_centre_id'])) {
@@ -148,7 +96,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
                                 ->find()
                                 ->where([
                                     $this->ExaminationCentres->aliasField('id') => $tempRow['examination_centre_id'],
-                                    $this->ExaminationCentres->aliasField('academic_period_id') => $selectedPeriod
+// POCOR-8919
                                 ]);
 
             if ($ExaminationCentre->isEmpty()) {
