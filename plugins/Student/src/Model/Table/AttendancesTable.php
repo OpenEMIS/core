@@ -198,7 +198,13 @@ class AttendancesTable extends ControllerActionTable
 
     public function onGetPeriodName(Event $event, Entity $entity)
     {
+        // POCOR-9024 start
+        if(is_numeric($entity->subject_id) && $entity->subject_id > 0){
+            return '';
+        }
+        // POCOR-9024 end
         return __('Period {0}', $entity->period);
+
 //        return $this->getShortComment($entity->comment);
     }
 
@@ -292,7 +298,9 @@ class AttendancesTable extends ControllerActionTable
                 ['Absences' => 'institution_student_absence_details'],
                 [
                     'Absences.student_id = ' . $this->aliasField('student_id'),
-                    'Absences.date = AttendanceMarkedRecords.date'
+                    'Absences.date = AttendanceMarkedRecords.date', // POCOR-9024
+                    'Absences.period = AttendanceMarkedRecords.period', // POCOR-9024
+                    'Absences.subject_id = AttendanceMarkedRecords.subject_id', // POCOR-9024
                 ]
             )
             ->leftJoin(
@@ -310,7 +318,7 @@ class AttendancesTable extends ControllerActionTable
             ->leftJoin(
                 ['Subjects' => 'institution_subjects'],
                 [
-                    'Absences.subject_id = Subjects.id'
+                    'AttendanceMarkedRecords.subject_id = Subjects.id' // POCOR-9024
                 ]
             )
             ->leftJoin(
@@ -318,7 +326,13 @@ class AttendancesTable extends ControllerActionTable
                 [
                     'Absences.absence_type_id = ' . $Types->aliasField('id')
                 ]
-            )->group(['AttendanceMarkedRecords.date', 'Absences.absence_type_id', 'Absences.student_absence_reason_id', 'Absences.period', 'Absences.subject_id']);
+            )->group([ // POCOR-9024 start
+                'AttendanceMarkedRecords.date',
+                'Absences.absence_type_id',
+                'Absences.student_absence_reason_id',
+                'AttendanceMarkedRecords.period',
+                'Absences.subject_id'
+            ]); // POCOR-9024 end
         ;
         return $query;
     }
