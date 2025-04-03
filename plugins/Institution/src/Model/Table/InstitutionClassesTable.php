@@ -659,7 +659,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 }
 
                 foreach ($newStudents as $key => $student) {
-                    if(!set($student['id'])) {
+                    if(!isset($student['id'])) {
                         $student['id'] = Text::uuid();
                     }
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
