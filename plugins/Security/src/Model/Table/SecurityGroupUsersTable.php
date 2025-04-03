@@ -55,7 +55,7 @@ class SecurityGroupUsersTable extends AppTable {
         ->leftJoin([$SecurityInstitutions->getAlias() => $SecurityInstitutions->getTable()], [
             $SecurityInstitutions->aliasField('security_group_id = ') . $this->aliasField('security_group_id'),
         ])
-        ->where(['security_user_id' => $security_user_id]);
+        ->where(['security_user_id IS' => $security_user_id]);
         return $query;
     }
 
