@@ -658,11 +658,6 @@ class InstitutionClassesTable extends ControllerActionTable
                 }
 
                 foreach ($newStudents as $key => $student) {
-                    // POCOR-9024 start
-                    if(!isset($student['id'])) {
-                        $student['id'] = Text::uuid();
-                    }
-                    // POCOR-9024 end
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $store = $this->ClassStudents->save($newClassStudentEntity);
                     if ($store) {
