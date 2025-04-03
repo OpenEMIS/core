@@ -6798,7 +6798,13 @@ class InstitutionsController extends AppController
      */
     private function handleIdentities($requestData, $userRecordId, $userId)
     {
-        if (!empty($requestData['identity_number']) && !empty($requestData['identity_type_id'])) {
+        // POCOR-9027 start
+        $identity_number = $requestData['identity_number'] ?? null;
+        $identity_type_id = $requestData['identity_type_id'] ?? null;
+        $nationality_id = $requestData['nationality_id'] ?? null;
+        if ($identity_number
+            && $identity_type_id
+            && $nationality_id) { // POCOR-9027 end
             $identityTypesTbl = self::getDynamicTableInstance('identity_types');
             $identityTypes = $identityTypesTbl->find()
                 ->where(['name' => $requestData['identity_type_name']])
@@ -6808,16 +6814,16 @@ class InstitutionsController extends AppController
                 $userIdentities = self::getDynamicTableInstance('user_identities');
                 $checkExistingIdentities = $userIdentities->find()
                     ->where([
-                        'nationality_id' => $requestData['nationality_id'],
-                        'identity_type_id' => $requestData['identity_type_id'],
-                        'number' => $requestData['identity_number'],
+                        'nationality_id' => $nationality_id,
+                        'identity_type_id' => $identity_type_id,
+                        'number' => $identity_number,
                     ])->first();
 
                 if (!$checkExistingIdentities) {
                     $entityIdentitiesData = [
                         'identity_type_id' => $identityTypes->id,
-                        'number' => $requestData['identity_number'],
-                        'nationality_id' => $requestData['nationality_id'],
+                        'number' => $identity_number,
+                        'nationality_id' => $nationality_id,
                         'security_user_id' => $userRecordId,
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s')
@@ -6827,7 +6833,6 @@ class InstitutionsController extends AppController
                         return $userIdentities->save($entityIdentitiesData, ['associated' => false]);
                     } catch (\Exception $e) {
                         Log::debug(__FUNCTION__);
-
                         Log::debug('Error: ' . $e->getMessage());
                         return $e;
                     }
@@ -8030,7 +8035,7 @@ class InstitutionsController extends AppController
 
             $message = $this->validateCustomIdentityNumber($requestData);
             if (!empty($message)) {
-                return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => $message]);  // POCOR-8989 
+                return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => $message]);  // POCOR-8989
             }
 
             return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]); // POCOR-8989 invalid ID by configuration
