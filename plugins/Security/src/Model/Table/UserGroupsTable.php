@@ -321,7 +321,7 @@ class UserGroupsTable extends ControllerActionTable
             $record = $InstitutionsTable
                 ->find()
                 ->select($InstitutionsTable->aliasField('name'))
-                ->where(['id' => $value['institution_id']])
+                ->where(['id IS' => $value['institution_id']])
                 ->first();
             $InstitutionsTableData[] = $record;
         }
