@@ -663,7 +663,7 @@ class InstitutionClassesTable extends ControllerActionTable
                         $student['id'] = Text::uuid();
                     }
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
-                    $store = $newClassStudentEntity->save();
+                    $store = $this->ClassStudents->save($newClassStudentEntity);
                     Log::debug(print_r(['newClassStudentEntity' => $newClassStudentEntity], true));
                     Log::debug(print_r(['store' => $store], true));
                     Log::debug(print_r(['errors' => $store->getErrors()], true));
