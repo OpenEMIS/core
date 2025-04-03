@@ -1,3 +1,27 @@
+### [4.19.0] - 2025-03-03
+- Implemented: Develop a new report: Reports > Students > Graduation Summary
+- Implemented: Develop changes to swagger documentation for Core v5 APIs to show URL for View/Edit/Delete APIs for models with complex keys
+- Bug Fixed: Institutions>Scanned: Showing Openemis ID instead of OpenEMIS ID in view page and export
+- Bug Fixed: Institutions > Performance > Report Cards > PDF: There is an issue with the alignment format of PDF report card
+- Bug Fixed: Administration > System Setup > System Configuration > Student Admission Age > Edit: When editing Student Admission Age, the page gives a 404 error
+- Bug Fixed: Directory: When viewing a student account, the page gives a 404 error
+- Bug Fixed: Administration > Security > Groups > View: When viewing any security groups, the page gives a 404 error
+- Bug Fixed: API: Getting 404 error when retrieve student report card
+- Bug Fixed: Administration > Appraisals > Criterias > Note type question: There is no description box for the note
+- Bug Fixed: Directory > Add: The word "undefined" is showing under User Type field when adding users under Directory
+- Bug Fixed: Reports > Students > Subjects and Book List: Duplicates showing for Students Subjects and Book List report
+- Bug Fixed: Institutions > Students > Add: When adding students that have nationality, identity type and identity number, a pop up message of "User already exists with this nationality, identity type & identity number." is showing
+- Bug Fixed: Institutions > Students > Counselling: When user is given permission to view the counselling tab, the counselling tab does not show
+- Bug Fixed: Institutions > Performance > Assessments > Subjects column:The number of subjects in Institutions Assessments is not showing the correct number of subjects
+- Bug Fixed: Institutions > General > Calendar: When adding Calendar under Administrative module, the Calendar did not show up under Institution Calendar
+- Bug Fixed: Email: Attendance Alert Email is showing placeholder instead of data
+- Bug Fixed: Directory>Merge: All the records of the merge accounts should be deleted once merge is successful.
+- Bug Fixed: Homepage: Cases notification is showing on the workbench for users who are not assignee to the Cases
+- Bug Fixed: Administration>Examinations>Students: Getting 404 error when bulk registering
+- Bug Fixed: Institutions > Students > Transfer Out > Pending Approval From Sending Institution: When clicking on approve button for student transfer under workflow "Pending Approval From Sending Institution", the page give a 404 error. 
+- Bug Fixed: Reports > Institutions > Guardians: When generating Institutions Guardians report, the status goes error
+- Bug Fixed: System Configuration > Authentication > Authentication Provider > Other Identity Provider > Edit: When editing authentication identity, the page gives a 404 error
+
 ### [4.18.0] - 2025-03-21
 - Implemented: Develop changes to security_users database table to make email and phone unique
 - Implemented: Develop changes to examinations database tables
