@@ -122,7 +122,7 @@ class InstitutionClassesTable extends ControllerActionTable
             'tableCellClass' => null
                 ,'events' => [
                 'ControllerAction.Model.add.onInitialize'       => [],
-//                'ControllerAction.Model.add.beforeSave'         => [],
+                'ControllerAction.Model.add.beforeSave'         => [],
                 'ControllerAction.Model.addEdit.beforePatch'    => [],
                 'ControllerAction.Model.addEdit.afterAction'    => [],
                 'ControllerAction.Model.add.beforeSave'         => ['callable' => 'addBeforeSave', 'priority' => 500]
@@ -609,9 +609,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 if($this->action == 'add') {
 
                     $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                    $user = $this->Auth->user();
-                    if ($user) {
-                        $Webhooks->triggerShell('class_create', ['username' => $user->username], $body);
+                    if ($this->Auth->user()) {
+                        $Webhooks->triggerShell('class_create', ['username' => $username], $body);
                     }
                 }
                 // POCOR-5435 ->Webhook Feature class (create) -- end
@@ -648,7 +647,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     if (!array_key_exists($classStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
                         $this->ClassStudents->delete($classStudentEntity);
                         /** POCOR-6768 starts - removing student from institution_subject_students which is unassigned from class*/
-                            $SubjectStudents->deleteAll([
+                        $SubjectStudents->deleteAll([
                             $SubjectStudents->aliasField('institution_class_id') => $institutionClassId,
                             $SubjectStudents->aliasField('student_id') => $classStudentEntity->student_id,
                         ]);
@@ -659,18 +658,16 @@ class InstitutionClassesTable extends ControllerActionTable
                 }
 
                 foreach ($newStudents as $key => $student) {
+                    // POCOR-9024 start
                     if(!isset($student['id'])) {
                         $student['id'] = Text::uuid();
                     }
+                    // POCOR-9024 end
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $store = $this->ClassStudents->save($newClassStudentEntity);
-                    Log::debug(print_r(['newClassStudentEntity' => $newClassStudentEntity], true));
-                    Log::debug(print_r(['store' => $store], true));
-                    Log::debug(print_r(['errors' => $store->getErrors()], true));
-                    if (empty($store->getErrors())) {
+                    if ($store) {
                         /** POCOR-6768 starts- updating student's class in institution_subject_students table which is reassigning into a class*/
-                        $SubjectStudents->updateAll(['institution_class_id' => $newClassStudentEntity->institution_class_id],
-                            ['id' => $newClassStudentEntity->id]);
+                        $SubjectStudents->updateAll(['institution_class_id' => $newClassStudentEntity->institution_class_id], ['id' => $newClassStudentEntity->id]);
                         /**POCOR-6768 ends*/
                     }
                 }
