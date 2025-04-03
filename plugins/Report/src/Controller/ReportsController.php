@@ -143,6 +143,7 @@ class ReportsController extends AppController
                 'Report.SpecialNeeds' => __('Special Needs'),
                 'Report.Outcomes' => __('Outcomes'), //POCOR-5791
                 'Report.Competencies' => __('Competencies'), //POCOR-5791
+                'Report.StudentsGraduationSummary' => __('Graduation Summary'),//POCOR-8868
 
             ];
         } elseif ($module == 'Staff') {

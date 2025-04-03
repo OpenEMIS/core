@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'default' => 'v4', // Set the default API version
+    'default' => 'v5', // Set the default API version
 
     'documentations' => [
         'v4' => [
