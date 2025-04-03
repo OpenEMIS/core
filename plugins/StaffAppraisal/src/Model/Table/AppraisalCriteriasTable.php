@@ -90,10 +90,11 @@ class AppraisalCriteriasTable extends ControllerActionTable
     {
         $this->field('code');
         $this->field('name');
+        $this->field('description', ['type' => 'text']);//POCOR-8864
         $this->field('field_type_id', [
             'type' => 'select',
             'entity' => $entity
-        ]);
+        ]);     
     }
 
     public function onGetMin(Event $event, Entity $entity)
@@ -303,6 +304,8 @@ class AppraisalCriteriasTable extends ControllerActionTable
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];//POCOR-8864
+        $this->field('description', ['visible' => $visible,'after'=>'field_type_id']);//POCOR-8864
 		$is_manual_exist = $this->getManualUrl('Administration','Criterias','Staff Appraisals');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
@@ -330,7 +333,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
         }else if ($field == 'name') {
             return __('Name');
         }else if ($field == 'field_type_id') {
-            return __('Field Typeles');
+            return __('Field Type');//POCOR-8864
         }else if ($field == 'modified_user_id') {
             return __('Modified By');
         }else if ($field == 'modified') {
