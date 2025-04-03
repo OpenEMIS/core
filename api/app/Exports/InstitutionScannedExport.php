@@ -31,7 +31,7 @@ class InstitutionScannedExport implements FromArray, WithHeadings, WithEvents
     public function headings(): array
     {
         return [
-            'Openemis ID',
+            'OpenEMIS ID',//POCOR-8900
             'DateTime',
             'Latitude',
             'Longitude',
