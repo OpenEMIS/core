@@ -25,6 +25,8 @@ class StaffPositionTitlesGrades extends Model
     public $incrementing = false;
 
      // Override getKeyForSaveQuery to handle composite keys
+
+
 /**
  * @OA\PathItem(
  *     path="/api/v5/staff-position-titles-grades"
@@ -37,6 +39,41 @@ public function _swaggerPath() {}
  *     path="/api/v5/staff-position-titles-grades",
  *     summary="Get list of StaffPositionTitlesGrades",
  *     tags={"StaffPositionTitlesGrades"},
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Maximum number of results to return",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number for paginated results",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="orderby",
+ *         in="query",
+ *         required=false,
+ *         description="Field to order results by",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order direction: asc or desc",
+ *         @OA\Schema(type="string", enum={"asc", "desc"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="_fields",
+ *         in="query",
+ *         required=false,
+ *         description="Comma-separated list of fields to include in response",
+ *         @OA\Schema(type="string")
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Successful operation",
@@ -67,30 +104,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/staff-position-titles-grades/{id}",
- *     summary="Get StaffPositionTitlesGrades by ID",
- *     tags={"StaffPositionTitlesGrades"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the StaffPositionTitlesGrades",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/staff-position-titles-grades",
  *     summary="Create a new StaffPositionTitlesGrades",
@@ -119,41 +132,74 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/staff-position-titles-grades/{id}",
- *     summary="Update StaffPositionTitlesGrades",
+ * @OA\Get(
+ *     path="/api/v5/staff-position-titles-grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}",
+ *     summary="Get StaffPositionTitlesGrades record by composite key",
  *     tags={"StaffPositionTitlesGrades"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="staff_position_title_id",
  *         in="path",
  *         required=true,
- *         description="ID of the StaffPositionTitlesGrades",
- *         @OA\Schema(type="integer")
+ *         description="staff_position_title_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_position_grade_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_position_grade_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/staff-position-titles-grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}",
+ *     summary="Update StaffPositionTitlesGrades record by composite key",
+ *     tags={"StaffPositionTitlesGrades"},
+ *     @OA\Parameter(
+ *         name="staff_position_title_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_position_title_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_position_grade_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_position_grade_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="staff_position_title_id", type="integer", example=null),
-                     @OA\Property(property="staff_position_grade_id", type="integer", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -161,31 +207,35 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/staff-position-titles-grades/{id}",
- *     summary="Delete StaffPositionTitlesGrades",
+ *     path="/api/v5/staff-position-titles-grades/staff_position_title_id/{staff_position_title_id}/staff_position_grade_id/{staff_position_grade_id}",
+ *     summary="Delete StaffPositionTitlesGrades record by composite key",
  *     tags={"StaffPositionTitlesGrades"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="staff_position_title_id",
  *         in="path",
  *         required=true,
- *         description="ID of the StaffPositionTitlesGrades",
- *         @OA\Schema(type="integer")
+ *         description="staff_position_title_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_position_grade_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_position_grade_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -222,9 +272,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

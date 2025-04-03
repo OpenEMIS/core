@@ -13,6 +13,7 @@ use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
+use Cake\Log\Log;
 
 
 class StudentTransferOutTable extends InstitutionStudentTransfersTable
@@ -831,12 +832,24 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         //single student
         // POCOR-8946 start
         if (in_array($action, ['add', 'edit', 'approve'])) {
-            $student_id = $this->getQueryString('student_id');
-            $student_gender_id = $this->Users->get($student_id)->gender_id;
+            // POCOR-9012 start
             $entity = $attr['entity'];
+            $student_id = $entity->student_id;
+//            Log::write('debug', 'student_id: ' . $student_id);
+            $institution_id = $entity->institution_id;
+            if($student_id == null){
+                $student_id = $this->getQueryString('student_id');
+            }
+            if($student_id === null){
+                $attr['type'] = 'readonly';
+                $attr['value'] = $institution_id;
+                $attr['attr']['value'] = $entity->institution->code_name;
+                return $attr;
+            }
+            // POCOR-9012 end
+            $student_gender_id = $this->Users->get($student_id)->gender_id;
             $next_period_id = $entity->academic_period_id;
             $next_grade_id = $entity->education_grade_id;
-            $institution_id = $entity->institution_id;
             $InstitutionGrades = self::getDynamicTableInstance('institution_grades');
             $InstitutionStatuses = self::getDynamicTableInstance('Institution.Statuses');
             $InstitutionGenders = self::getDynamicTableInstance('institution_genders');
