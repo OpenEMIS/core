@@ -29,7 +29,6 @@ class FieldOptionComponent extends Component
     private $fieldOptions = [];
 
 
-
     public $components = ['AccessControl'];
 
     // Is called before the controller's beforeFilter method.
@@ -91,16 +90,16 @@ class FieldOptionComponent extends Component
 
 // Normalize category
         $fieldOptionCategories = ["Finance",
-        "Qualification",
-         "Quality",
-         "Others",
-         "InfrastructureOwnerships",
-         "InfrastructureConditions",
-         "AssetMakes",
-         "AssetModels",
-         "ItemTypes",
-         "StockUnits"
-         ];
+            "Qualification",
+"Quality",
+            "Others",
+            "InfrastructureOwnerships",
+            "InfrastructureConditions",
+            "AssetMakes",
+            "AssetModels",
+            "ItemTypes",
+            "StockUnits"
+        ];
         if (in_array($category, $fieldOptionCategories)) {
             $category = "FieldOption";
         } elseif ($category === "Infrastructure") {
