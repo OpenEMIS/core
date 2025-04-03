@@ -79,8 +79,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         if (Controller.classId != null) {
             InstitutionClassStudentsSvc.getClassDetails(Controller.classId)
             .then(function(response) {
-                console.log('getClassDetails')
-                console.log(response)
+                // console.log('getClassDetails')
+                // console.log(response)
                 Controller.selectedTeacher = response.staff_id;
 
                 var secondaryTeachers = [];
@@ -201,7 +201,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         InstitutionClassStudentsSvc.getClassCustomFields(classId).then(function(resp){
             Controller.customFields = resp.data;
             Controller.customFieldsArray = Controller.createCustomFieldsArray();
-            console.log(Controller.customFieldsArray);
+            // console.log(Controller.customFieldsArray);
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.error(error);
