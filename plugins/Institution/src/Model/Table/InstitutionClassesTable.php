@@ -660,9 +660,13 @@ class InstitutionClassesTable extends ControllerActionTable
                 foreach ($newStudents as $key => $student) {
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $store = $this->ClassStudents->save($newClassStudentEntity);
-                    if ($store) {
+                    Log::debug(print_r(['newClassStudentEntity' => $newClassStudentEntity], true));
+                    Log::debug(print_r(['store' => $store], true));
+                    Log::debug(print_r(['errors' => $store->getErrors()], true));
+                    if (empty($store->getErrors())) {
                         /** POCOR-6768 starts- updating student's class in institution_subject_students table which is reassigning into a class*/
-                        $SubjectStudents->updateAll(['institution_class_id' => $newClassStudentEntity->institution_class_id], ['id' => $newClassStudentEntity->id]);
+                        $SubjectStudents->updateAll(['institution_class_id' => $newClassStudentEntity->institution_class_id],
+                            ['id' => $newClassStudentEntity->id]);
                         /**POCOR-6768 ends*/
                     }
                 }
