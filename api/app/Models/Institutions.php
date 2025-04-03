@@ -378,7 +378,7 @@ use InstitutionScope;
 
             // Apply institution filter only if the user does not have access to all institutions
             if (!$permissionService->getAllowAllInstitutions()) {
-                $query->whereIn('id', $allowedInstitutions);
+                $query->whereIn('institutions.id', $allowedInstitutions);
             }
         });
     }
