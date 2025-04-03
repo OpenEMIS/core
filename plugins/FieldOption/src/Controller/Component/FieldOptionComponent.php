@@ -83,13 +83,24 @@ class FieldOptionComponent extends Component
     {
         $FieldOptionTable = TableRegistry::get('FieldOption.FieldOptions');
         $Words = trim(preg_replace('/(?<!\ )[A-Z]/', ' $0', $key));
-        //echo $key;die;
+// echo $key;die;
         $FieldOptions = $FieldOptionTable->find('all', ['conditions' => ['name' => $Words]])->first();
-        // POCOR-8995 start
-        $category = $FieldOptions->category;
 
-        // Normalize category
-        $fieldOptionCategories = ["Finance", "Qualification", "Quality", "Others"];
+// POCOR-8995 start
+        $category = $FieldOptions->category ?? null;
+
+// Normalize category
+        $fieldOptionCategories = ["Finance",
+        "Qualification",
+         "Quality",
+         "Others",
+         "InfrastructureOwnerships",
+         "InfrastructureConditions",
+         "AssetMakes",
+         "AssetModels",
+         "ItemTypes",
+         "StockUnits"
+         ];
         if (in_array($category, $fieldOptionCategories)) {
             $category = "FieldOption";
         } elseif ($category === "Infrastructure") {
@@ -100,60 +111,79 @@ class FieldOptionComponent extends Component
 
 // Predefined key-to-class mappings
         $keyMappings = [
+            // Cases
+            "CasePriorities" => "Cases.CasePriorities",
+            "CaseTypes" => "Cases.CaseTypes",
+
+            // FieldOption
+            "DemographicWealthQuantileTypes" => "FieldOption.DemographicTypes",
+
+            // Institution
             "Duties" => "Institution.StaffDuties",
+            "InfrastructureWashSewageFunctionalities" => "Institution.InfrastructureWashSewageFunctionalities",
+            "StaffPositionGrades" => "Institution.StaffPositionGrades",
+            "StaffPositionTitles" => "Institution.StaffPositionTitles",
+            "StudentAbsenceReasons" => "Institution.StudentAbsenceReasons",
+
+            // Meal
+            "FoodTypes" => "Meal.FoodTypes",
+            "MealBenefitTypes" => "Meal.MealBenefit",
+            "MealImplementers" => "Meal.MealImplementer",
+            "MealNutritions" => "Meal.MealNutritions",
+            "MealRatings" => "Meal.MealRatings",
+            "MealTargets" => "Meal.MealTarget",
+            "MealTypes" => "Meal.MealType",
+
+            // ReportCard
+            "ReportCardCommentCodes" => "ReportCard.ReportCardCommentCodes",
+
+            // Scholarship
+            "ScholarshipAttachmentTypes" => "Scholarship.AttachmentTypes",
+            "ScholarshipDisbursementCategories" => "Scholarship.DisbursementCategories",
+            "ScholarshipFundingSources" => "Scholarship.FundingSources",
+            "ScholarshipInstitutionChoices" => "Scholarship.InstitutionChoiceTypes",
+            "ScholarshipPaymentFrequencies" => "Scholarship.PaymentFrequencies",
+            "ScholarshipRecipientActivityStatuses" => "Scholarship.RecipientActivityStatuses",
+            "ScholarshipSemesters" => "Scholarship.Semesters",
+
+            // SpecialNeeds
+            "DiagnosticDisabilityDegree" => "SpecialNeeds.SpecialNeedsDiagnosticsDegree",
+            "DiagnosticTypeOfDisability" => "SpecialNeeds.SpecialNeedsDiagnosticsTypes",
+            "PlanTypes" => "SpecialNeeds.SpecialNeedsPlanTypes",
+
+            // Staff
+            "SalaryAdditionTypes" => "Staff.SalaryAdditionTypes",
+            "SalaryDeductionTypes" => "Staff.SalaryDeductionTypes",
+
+            // Student
+            "BehaviourClassifications" => "Student.BehaviourClassifications",
+            "GuardianRelations" => "Student.GuardianRelations",
+            "VisitPurposeTypes" => "Student.StudentVisitPurposeTypes",
+
+            // Textbook
             "TextbookConditions" => "Textbook.TextbookConditions",
             "TextbookDimensions" => "Textbook.TextbookDimensions",
             "TextbookStatuses" => "Textbook.TextbookStatuses",
-            "ReportCardCommentCodes" => "ReportCard.ReportCardCommentCodes",
-            "StudentAbsenceReasons" => "Institution.StudentAbsenceReasons",
-            "VisitPurposeTypes" => "Student.StudentVisitPurposeTypes",
-            "MealTypes" => "Meal.MealType",
-            "MealTargets" => "Meal.MealTarget",
-            "FoodTypes" => "Meal.FoodTypes",
-            "MealRatings" => "Meal.MealRatings",
-            "MealNutritions" => "Meal.MealNutritions",
-            "MealImplementers" => "Meal.MealImplementer",
-            "MealBenefitTypes" => "Meal.MealBenefit",
-            "GuardianRelations" => "Student.GuardianRelations",
-            "StaffPositionGrades" => "Institution.StaffPositionGrades",
-            "StaffPositionTitles" => "Institution.StaffPositionTitles",
-            "SalaryAdditionTypes" => "Staff.SalaryAdditionTypes",
-            "SalaryDeductionTypes" => "Staff.SalaryDeductionTypes",
-            "ContactTypes" => "User.ContactTypes",
-            "Languages" => "Languages",
-            "LanguageProficiencies" => "User.LanguageProficiencies",
+
+            // User
             "CommentTypes" => "User.CommentTypes",
-            "BehaviourClassifications" => "Student.BehaviourClassifications",
-            "DemographicWealthQuantileTypes" => "FieldOption.DemographicTypes",
-            "ScholarshipFundingSources" => "Scholarship.FundingSources",
-            "ScholarshipAttachmentTypes" => "Scholarship.AttachmentTypes",
-            "ScholarshipPaymentFrequencies" => "Scholarship.PaymentFrequencies",
-            "ScholarshipRecipientActivityStatuses" => "Scholarship.RecipientActivityStatuses",
-            "ScholarshipDisbursementCategories" => "Scholarship.DisbursementCategories",
-            "ScholarshipSemesters" => "Scholarship.Semesters",
-            "ScholarshipInstitutionChoices" => "Scholarship.InstitutionChoiceTypes",
-            "InfrastructureWashSewageFunctionalities" => "Institution.InfrastructureWashSewageFunctionalities",
-            "InfrastructureOwnerships" => "FieldOption.InfrastructureOwnerships",
-            "InfrastructureConditions" => "FieldOption.InfrastructureConditions",
-            "PlanTypes" => "SpecialNeeds.SpecialNeedsPlanTypes",
-            "DiagnosticTypeOfDisability" => "SpecialNeeds.SpecialNeedsDiagnosticsTypes",
-            "DiagnosticDisabilityDegree" => "SpecialNeeds.SpecialNeedsDiagnosticsDegree",
-            "AssetMakes" => "FieldOption.AssetMakes",
-            "AssetModels" => "FieldOption.AssetModels",
-            "CaseTypes" => "Cases.CaseTypes",
-            "CasePriorities" => "Cases.CasePriorities",
-            "ItemTypes" => "FieldOption.ItemTypes",
-            "StockUnits" => "FieldOption.StockUnits",
+            "ContactTypes" => "User.ContactTypes",
+            "LanguageProficiencies" => "User.LanguageProficiencies",
+
+            // Ungrouped or Core
+            "Languages" => "Languages",
         ];
 
 // Return mapped value if it exists
         if (isset($keyMappings[$key])) {
             return $keyMappings[$key];
         }
-        Log::write('debug', "{$category}.{$key}");
+
+// Log fallback
+        // Log::write('debug', "{$category}.{$key}");
+
 // Default fallback
         return "{$category}.{$key}";
-        // POCOR-8995 end
-
+// POCOR-8995 end
     }
 }
