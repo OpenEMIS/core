@@ -27,7 +27,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     angular.element(document).ready(function() {
         InstitutionsCommentsSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
-        InstitutionsCommentsSvc.getCommentCodeOptions()// getCommentCodeOptions
+        InstitutionsCommentsSvc.getCommentCodeOptions()// getCommentCodeOptions POCOR-9031 moved to the start
             .then(function(response)
             {
                 // console.log('getCommentCodeOptions ctrl==>>>');
@@ -370,7 +370,6 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 }
             },
             onGridReady: function() {
-                console.log('Grid is ready');
                 vm.onChangeSubject(tab);
                 this.api.sizeColumnsToFit();
                 vm.addPageSizeDropdown();
@@ -407,7 +406,6 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 var page = parseInt(params.startRow / limit) + 1;
 
                 UtilsSvc.isAppendSpinner(true, 'institution-comment-table');
-                console.log(vm.commentCodeOptions);
                 InstitutionsCommentsSvc.getRowData(vm.academicPeriodId, $scope.institutionId, $scope.classId, vm.educationGradeId, $scope.reportCardId, vm.commentCodeOptions, tab, limit, page)
                 .then(function(response) {
                     var lastRowIndex = response.data.total;
