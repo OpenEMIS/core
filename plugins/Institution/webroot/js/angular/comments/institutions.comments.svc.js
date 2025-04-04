@@ -1516,7 +1516,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                             // show option name only when it is a valid option from options list
                             angular.forEach(options, function(obj, key) {
                                 if (params.value == obj.id) {
-                                    cellValue = options[key]['name'] . 'algo';
+                                    cellValue = options[key]['name'] + 'algo';
                                 }
                             });
                         }
