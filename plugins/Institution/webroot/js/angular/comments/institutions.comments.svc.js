@@ -1436,7 +1436,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var currentUserName = extra.currentUserName;
         var editPermission = extra.editPermission;
         console.log('renderSelect');
-        console.log(editPermission);
+        console.log(extra.selectOptions);
         console.log(allowEdit);
         if (allowEdit && editPermission) {
             cols = angular.merge(cols, {
@@ -1512,7 +1512,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     if (angular.isDefined(params.data)) {
                         var cellValue = '';
                         if (params.value.length != 0 && params.value != 0) {
-                            console.log(params);
+                            console.log(options);
                             // show option name only when it is a valid option from options list
                             angular.forEach(options, function(obj, key) {
                                 if (params.value == obj.id) {
