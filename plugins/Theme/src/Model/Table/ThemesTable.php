@@ -37,6 +37,7 @@ class ThemesTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->toggle('add', false);
+        $this->addBehavior('Configuration.ConfigItems'); //POCOR-8951
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)

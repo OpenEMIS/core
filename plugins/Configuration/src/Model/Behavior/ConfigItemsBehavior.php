@@ -44,6 +44,14 @@ class ConfigItemsBehavior extends Behavior
         ];
         $this->model->controller->set('toolbarElements', $toolbarElements);
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $themeRecord = $ConfigItem
+            ->find('list', [
+                'keyField' => 'name',
+                'valueField' => 'name'
+            ])
+            ->order('type')
+            ->where([$ConfigItem->aliasField('code') => 'online_services'])
+            ->toArray();
 
         $typeList = $ConfigItem
             ->find('list', [
@@ -76,9 +84,16 @@ class ConfigItemsBehavior extends Behavior
         if(empty($typeValue)){
            $typeValue = $this->model->request->getQueryParams()['type'];
         }
-        if($typeValue !== 'Custom Validation'){
+        if($typeValue == 'Themes'){ //POCOR-8951 start
             $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
-
+            $this->model->advancedSelectOptions($typeOptions, $selectedType);
+            $this->model->controller->set('typeOptions', $typeOptions);
+            $controlElement = $toolbarElements[0];
+            $controlElement['data'] = ['typeOptions' => $typeOptions, 'themeRecord' => $themeRecord];
+            $controlElement['order'] = 1;
+            return $controlElement; //POCOR-8951 end
+        }elseif($typeValue !== 'Custom Validation'){
+            $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
             $this->model->advancedSelectOptions($typeOptions, $selectedType);
             $this->model->controller->set('typeOptions', $typeOptions);
             $controlElement = $toolbarElements[0];
