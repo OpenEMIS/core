@@ -1577,9 +1577,11 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                             if (reportCardStudent.comments != null) {
                                 studentsData['comments'] = reportCardStudent.comments;
                             }
+                            console.log(reportCardStudent);
 
                             if (isSubjectTab) {
                                 if (reportCardStudent.comment_code != null) {
+                                    console.log('comment_code');
                                     studentsData['comment_code'] = reportCardStudent.comment_code;
                                 }
 
