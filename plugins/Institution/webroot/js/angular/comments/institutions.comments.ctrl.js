@@ -27,7 +27,19 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     angular.element(document).ready(function() {
         InstitutionsCommentsSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
-
+        InstitutionsCommentsSvc.getCommentCodeOptions()// getCommentCodeOptions
+            .then(function(response)
+            {
+                // console.log('getCommentCodeOptions ctrl==>>>');
+                // console.log(response);
+                if (typeof response !== 'undefined'){
+                    vm.commentCodeOptions = response.data;
+                }
+            }, function(error)
+            {
+                // No Comment Codes
+                console.error(error);
+            });
         InstitutionsCommentsSvc.getReportCard($scope.reportCardId)
         // getReportCard
         .then(function(response)
@@ -266,26 +278,14 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 var tab = tabs[0];
                 vm.initGrid(tab);
             }
-            return InstitutionsCommentsSvc.getCommentCodeOptions();
+
         }, function(error)
         {
             // No Tabs
             console.error(error);
             AlertSvc.warning(vm, error);
         })
-        // getCommentCodeOptions
-        .then(function(response)
-        {
-            // console.log('getCommentCodeOptions ctrl==>>>');
-            // console.log(response);
-            if (typeof response !== 'undefined'){
-                vm.commentCodeOptions = response.data;
-            }
-        }, function(error)
-        {
-            // No Comment Codes
-            console.error(error);
-        })
+
         .finally(function(){
             UtilsSvc.isAppendLoader(false);
         });
