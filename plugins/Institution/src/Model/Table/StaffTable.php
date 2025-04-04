@@ -3319,6 +3319,28 @@ class StaffTable extends ControllerActionTable
                                                                 $InstitutionSubjectStaff->aliasField('institution_id') => $institutionId,
                                                                 $InstitutionSubjectStaff->aliasField('staff_id') => $staffId
                                                             ])->first();
+                            //POCOR-9028
+                            if (empty($InstitutionSubjectStaffData)) {
+                                $InstitutionSubjectStaffData = $InstitutionSubjectStaff
+                                    ->find()
+                                    ->select([
+                                        $InstitutionSubjectStaff->aliasField('staff_id'),
+                                        $InstitutionSubjectStaff->aliasField('institution_subject_id')
+                                    ])
+                                    ->innerJoin([$institutionSubjectsTbl->getAlias() => $institutionSubjectsTbl->getTable()], [
+                                        $InstitutionSubjectStaff->aliasField('institution_subject_id') . ' = ' . $institutionSubjectsTbl->aliasField('id'),
+                                        $InstitutionSubjectStaff->aliasField('institution_id') . ' = ' . $institutionSubjectsTbl->aliasField('institution_id')
+                                    ])
+                                    ->innerJoin([$institutionClassSubjectsTbl->getAlias() => $institutionClassSubjectsTbl->getTable()], [
+                                        $institutionClassSubjectsTbl->aliasField('institution_subject_id') . ' = ' . $InstitutionSubjectStaff->aliasField('institution_subject_id')
+                                    ])
+                                    ->where([
+                                        
+                                        $institutionClassSubjectsTbl->aliasField('institution_class_id') => $classId,
+                                        
+                                    ])->first();
+                            }
+                            //POCOR-9028
                             $homeroomTeacherPermissionArr = ['result' => 'Not homeroom class', 'subject_edit_data' =>  $InstitutionSubjectStaffData];
                         }
                     }
