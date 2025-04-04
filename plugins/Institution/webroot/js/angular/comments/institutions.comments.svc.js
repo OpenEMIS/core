@@ -1139,6 +1139,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     };
 
     function getCommentCodeOptions() {
+        console.log('getCommentCodeOptions');
         return ReportCardCommentCodesTable
             .select()
             .find('commentCodeOptionsData')
@@ -1435,9 +1436,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var options = extra.selectOptions;
         var currentUserName = extra.currentUserName;
         var editPermission = extra.editPermission;
-        console.log('renderSelect');
-        console.log(extra.selectOptions);
-        console.log(allowEdit);
+        // console.log('renderSelect');
+        // console.log(extra.selectOptions);
+        // console.log(allowEdit);
         if (allowEdit && editPermission) {
             cols = angular.merge(cols, {
                 cellClass: 'oe-cell-highlight',
@@ -1512,7 +1513,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     if (angular.isDefined(params.data)) {
                         var cellValue = '';
                         if (params.value.length != 0 && params.value != 0) {
-                            console.log(options);
+                            // console.log(options);
                             // show option name only when it is a valid option from options list
                             angular.forEach(options, function(obj, key) {
                                 if (params.value == obj.id) {
@@ -1580,11 +1581,11 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                             if (reportCardStudent.comments != null) {
                                 studentsData['comments'] = reportCardStudent.comments;
                             }
-                            console.log(reportCardStudent);
+                            // console.log(reportCardStudent);
 
                             if (isSubjectTab) {
                                 if (reportCardStudent.comment_code != null) {
-                                    console.log('comment_code');
+                                    // console.log('comment_code');
                                     studentsData['comment_code'] = reportCardStudent.comment_code;
                                 }
 

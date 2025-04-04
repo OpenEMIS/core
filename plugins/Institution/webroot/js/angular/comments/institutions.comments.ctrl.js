@@ -276,6 +276,8 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         // getCommentCodeOptions
         .then(function(response)
         {
+            console.log('getCommentCodeOptions ctrl==>>>');
+            console.log(response);
             if (typeof response !== 'undefined'){
                 vm.commentCodeOptions = response.data;
             }
