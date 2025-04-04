@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use App\Services\PermissionService;
+use Illuminate\Support\Carbon;
 
 class CrudApiController extends Controller
 {
@@ -853,6 +854,15 @@ class CrudApiController extends Controller
         }
 
         $data = $request->all();
+        $current_user_id = auth()->id(); // Assuming you have a way to get the current user ID
+        if (is_string($model)) {
+            $model = new $model;
+        }
+        if (in_array('modified_user_id', $model->getFillable()) && in_array('modified', $model->getFillable())) {
+            $data['modified_user_id'] = $current_user_id;
+            $data['modified'] = Carbon::now();
+        }
+
         try {
             $record->update($data);
         } catch (\Exception $e) {
@@ -1345,8 +1355,16 @@ class CrudApiController extends Controller
     {
         \DB::beginTransaction();
         try {
+            $current_user_id = auth()->id(); // Assuming you have a way to get the current user ID
+            if (is_string($model)) {
+                $model = new $model;
+            }
             $records = [];
             foreach ($data as $recordData) {
+                if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
+                    $recordData['created_user_id'] = $current_user_id;
+                    $recordData['created'] = Carbon::now();
+                }
                 $records[] = $model::create($recordData);
             }
             \DB::commit();
@@ -1367,6 +1385,15 @@ class CrudApiController extends Controller
      */
     private function handleSingleCreate($model, array $data)
     {
+
+        $current_user_id = auth()->id(); // Assuming you have a way to get the current user ID
+        if (is_string($model)) {
+            $model = new $model;
+        }
+        if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
+            $data['created_user_id'] = $current_user_id;
+            $data['created'] = Carbon::now();
+        }
         try {
             $record = $model::create($data);
         } catch (\Exception $e) {
