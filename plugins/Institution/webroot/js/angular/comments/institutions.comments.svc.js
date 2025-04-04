@@ -1435,7 +1435,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var options = extra.selectOptions;
         var currentUserName = extra.currentUserName;
         var editPermission = extra.editPermission;
-
+        console.log('renderSelect');
+        console.log(editPermission);
+        console.log(allowEdit);
         if (allowEdit && editPermission) {
             cols = angular.merge(cols, {
                 cellClass: 'oe-cell-highlight',
@@ -1510,10 +1512,11 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     if (angular.isDefined(params.data)) {
                         var cellValue = '';
                         if (params.value.length != 0 && params.value != 0) {
+                            console.log(params);
                             // show option name only when it is a valid option from options list
                             angular.forEach(options, function(obj, key) {
                                 if (params.value == obj.id) {
-                                    cellValue = options[key]['name'];
+                                    cellValue = options[key]['name'] . 'algo';
                                 }
                             });
                         }
