@@ -276,8 +276,8 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         // getCommentCodeOptions
         .then(function(response)
         {
-            console.log('getCommentCodeOptions ctrl==>>>');
-            console.log(response);
+            // console.log('getCommentCodeOptions ctrl==>>>');
+            // console.log(response);
             if (typeof response !== 'undefined'){
                 vm.commentCodeOptions = response.data;
             }
@@ -370,6 +370,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 }
             },
             onGridReady: function() {
+                console.log('Grid is ready');
                 vm.onChangeSubject(tab);
                 this.api.sizeColumnsToFit();
                 vm.addPageSizeDropdown();
@@ -406,6 +407,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 var page = parseInt(params.startRow / limit) + 1;
 
                 UtilsSvc.isAppendSpinner(true, 'institution-comment-table');
+                console.log(vm.commentCodeOptions);
                 InstitutionsCommentsSvc.getRowData(vm.academicPeriodId, $scope.institutionId, $scope.classId, vm.educationGradeId, $scope.reportCardId, vm.commentCodeOptions, tab, limit, page)
                 .then(function(response) {
                     var lastRowIndex = response.data.total;
