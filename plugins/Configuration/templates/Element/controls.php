@@ -15,6 +15,15 @@
 				'url' => $baseUrl,
 				'data-named-key' => 'type'
 			));
+			if($this->request->getParam('action') == 'Themes') { //POCOR-8951
+				echo $this->Form->input('config_item_type', array(
+					'class' => 'form-control',
+					'label' => false,
+					'options' => $themeRecord,
+					'url' => $baseUrl,
+					'data-named-key' => 'type'
+				));
+			}
 		?>
 	</div>
 </div>
