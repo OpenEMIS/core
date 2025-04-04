@@ -859,8 +859,12 @@ class CrudApiController extends Controller
             $model = new $model;
         }
         if (in_array('modified_user_id', $model->getFillable()) && in_array('modified', $model->getFillable())) {
-            $data['modified_user_id'] = $current_user_id;
-            $data['modified'] = Carbon::now();
+            if (!isset($data['modified_user_id'])) {
+                $data['modified_user_id'] = $current_user_id;
+            }
+            if (!isset($data['modified'])) {
+                $data['modified'] = Carbon::now();
+            }
         }
 
         try {
@@ -1362,8 +1366,12 @@ class CrudApiController extends Controller
             $records = [];
             foreach ($data as $recordData) {
                 if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
-                    $recordData['created_user_id'] = $current_user_id;
-                    $recordData['created'] = Carbon::now();
+                    if (!isset($recordData['created_user_id'])) {
+                        $recordData['created_user_id'] = $current_user_id;
+                    }
+                    if (!isset($recordData['created'])) {
+                        $recordData['created'] = Carbon::now();
+                    }
                 }
                 $records[] = $model::create($recordData);
             }
@@ -1391,8 +1399,12 @@ class CrudApiController extends Controller
             $model = new $model;
         }
         if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
-            $data['created_user_id'] = $current_user_id;
-            $data['created'] = Carbon::now();
+            if (!isset($data['created_user_id'])) {
+                $data['created_user_id'] = $current_user_id;
+            }
+            if (!isset($data['created'])) {
+                $data['created'] = Carbon::now();
+            }
         }
         try {
             $record = $model::create($data);
