@@ -1,4 +1,8 @@
-### [4.19.0] - 2025-03-03
+### [4.19.1] - 2025-04-04
+- Bug Fixed: Institutions>Report Card>Comments: Report card All Comments permission is not working properly
+- Bug Fixed: Institutions>Performance>Assessments: Data is displayed wrongly
+
+### [4.19.0] - 2025-04-03
 - Implemented: Develop a new report: Reports > Students > Graduation Summary
 - Implemented: Develop changes to swagger documentation for Core v5 APIs to show URL for View/Edit/Delete APIs for models with complex keys
 - Bug Fixed: Institutions>Scanned: Showing Openemis ID instead of OpenEMIS ID in view page and export
