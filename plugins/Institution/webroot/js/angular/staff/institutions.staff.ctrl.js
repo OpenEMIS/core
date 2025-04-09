@@ -589,6 +589,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function changePositionType() {
+        userCtrl.institutionPositionOptions.selectedOption = null;
+        userCtrl.selectedUserData.institution_position_id = null;
         userCtrl.selectedUserData.fte_id = null;
         var positionType = userCtrl.selectedUserData.position_type_id;
         var positionTypeOptions = userCtrl.positionTypeOptions;
@@ -658,6 +660,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function changeFte() {
         userCtrl.institutionPositionOptions.selectedOption = null;
+        userCtrl.selectedUserData.institution_position_id = null;
         var fte = userCtrl.selectedUserData.fte_id;
         var fteOptions = userCtrl.fteOptions;
         for (var i = 0; i < fteOptions.length; i++) {
@@ -789,6 +792,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (userCtrl.selectedUserData.fte_id === 'Part-Time' && !userCtrl.selectedUserData.position_type_id) {
                 userCtrl.error.fte_id = 'This field cannot be left empty';
             }//POCOR-5069 starts
+            if (!userCtrl.selectedUserData.institution_position_id) {
+                userCtrl.error.institution_position_id = 'This field cannot be left empty';
+            }
+            if (!userCtrl.selectedUserData.is_homeroom) {
+                userCtrl.error.is_homeroom = 'This field cannot be left empty';
+            }
             if (!userCtrl.selectedUserData.staff_position_grade_id) {
                 userCtrl.error.staff_position_grade_id = 'This field cannot be left empty';
             }//POCOR-5069 ends
@@ -804,7 +813,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 }
             });
             if (shouldPositionRequired && !userCtrl.institutionPositionOptions.selectedOption) {
-                userCtrl.error.position_id = 'This field cannot be left empty';
+                userCtrl.error.institution_position_id = 'This field cannot be left empty';
             }
             userCtrl.customFieldsArray.forEach((customField) => {
                 customField.data.forEach((field) => {
@@ -823,7 +832,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     }
                 })
             });
-            if (!userCtrl.selectedUserData.startDate || !userCtrl.selectedUserData.position_type_id || !userCtrl.selectedUserData.staff_position_grade_id || !userCtrl.selectedUserData.staff_type_id || !userCtrl.staffShiftsId.length === 0 || userCtrl.error.fte_id || userCtrl.error.position_id || isCustomFieldNotValidated) { //POCOR-5069 add staff_position_grade_id condition
+            if (Object.keys(userCtrl.error).length > 0) { // Check if error object is not empty
+                console.error(userCtrl.error);
+                return;
+            }
+            if (!userCtrl.selectedUserData.startDate
+                || !userCtrl.selectedUserData.position_type_id || !userCtrl.selectedUserData.staff_position_grade_id || !userCtrl.selectedUserData.staff_type_id || !userCtrl.staffShiftsId.length === 0 || userCtrl.error.fte_id
+                || userCtrl.error.institution_position_id
+                || isCustomFieldNotValidated) { //POCOR-5069 add staff_position_grade_id condition
                 return;
             }
             if (
