@@ -88,7 +88,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     userCtrl.initGrid = initGrid;
     userCtrl.getPositions = getPositions;
     userCtrl.changePositionType = changePositionType;
-    userCtrl.changePositionGrade = changePositionGrade; //POCOR-8108
     userCtrl.changePosition = changePosition;
     userCtrl.changeStaffType = changeStaffType;
     userCtrl.changeStaffGradePosition = changeStaffGradePosition;//POCOR-5069
@@ -200,12 +199,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 });
         }
 
-        function getStaffPosititonGrades() {
-            return userSvc.getStaffPosititonGrades()
-                .then(resp => {
-                    userCtrl.staffGradePositionOptions = resp.data;
-                });
-        }
 
         function handleConfigItem(configCode, configValue) {
             switch (configCode) {
@@ -255,7 +248,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 .then(getFtes)
                 .then(getStaffTypes)
                 .then(getShifts)
-                .then(getStaffPosititonGrades)
                 .then(() => {
                     UtilsSvc.isAppendLoader(false);
                 })
@@ -269,6 +261,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         initUserCtrl();
     });
 
+    userCtrl.getStaffPosititonGrades = function() {
+        var params = {};
+        if (userCtrl.institutionPositionOptions.selectedOption === null) {
+            params = {};
+        } else {
+            params = {"institution_position_id": userCtrl.institutionPositionOptions.selectedOption.value};
+        }
+        return userSvc.getStaffPosititonGrades(params)
+            .then(resp => {
+                userCtrl.staffGradePositionOptions = resp.data;
+            });
+    }
     userCtrl.changeNationality = function() {
         directorySvc.changeNationality($scope);
     };
@@ -601,26 +605,31 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
-    //POCOR-8108
-    function changePositionGrade() {
-        var institution_position_id = userCtrl.institutionPositionOptions.selectedOption.value;
-        userSvc.getStaffPosititonGradesids(institution_position_id).then(function (resp) {
-            userCtrl.staffGradePositionOptions = resp.data;
-        }, function (error) {
-            console.error(error);
-        });
-    }
-
-    //POCOR-8108
-
     function changePosition() {
-        var position = userCtrl.selectedUserData.position_id;
-        var positionOptions = userCtrl.institutionPositionOptions;
-        for (var i = 0; i < positionOptions.length; i++) {
-            if (positionOptions[i].id == position) {
-                userCtrl.selectedUserData.position_name = positionOptions[i].name;
-                break;
-            }
+
+
+        const selectedPositionId = userCtrl.institutionPositionOptions.selectedOption?.value;
+        userCtrl.selectedUserData.institution_position_id = selectedPositionId;
+
+        if (!selectedPositionId) {
+            return;
+        }
+
+        const positionOptions = userCtrl.institutionPositionOptions.availableOptions;
+
+
+        const selectedPosition = positionOptions.find(option => option.value === selectedPositionId);
+
+        if (selectedPosition) {
+            userCtrl.selectedUserData.position_name = selectedPosition.name;
+            userCtrl.getStaffPosititonGrades().then(() => {
+                console.log('Staff position grades loaded successfully.');
+            }).catch(error => {
+                console.error('Error loading staff position grades:', error);
+            });
+        } else {
+            userCtrl.selectedUserData.position_name = "";
+            console.log('Position not found in options');
         }
     }
 
