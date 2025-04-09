@@ -5591,17 +5591,58 @@ class InstitutionsController extends AppController
     public
     function getStaffPosititonGrades()
     {
-        $staff_position_grades = self::getDynamicTableInstance('Institution.StaffPositionGrades');
-        $staff_position_grades_result = $staff_position_grades
-            ->find()
-            ->select(['id', 'name'])
-            ->where(['visible' => 1])
-            ->toArray();
-        foreach ($staff_position_grades_result as $result) {
-            $result_array[] = array("id" => $result['id'], "name" => __($result['name']));
+        // POCOR-9037 start
+        $requestData = $this->request->input('json_decode', true);
+        $insPostionData = null;
+        if ($requestData) {
+            $requestData = $requestData['params'];
+            $institution_position_id = $requestData['institution_position_id'];
+            $institution_positions_tbl = self::getDynamicTableInstance('Institution.InstitutionPositions');
+            if($institution_position_id){
+            $insPostionData = $institution_positions_tbl->find('all', ['conditions' => ['id' => $institution_position_id]])->first();
+            }
         }
-        echo json_encode($result_array);
+
+
+        if ($insPostionData) {
+            $staff_position_title_id = $insPostionData->staff_position_title_id;
+
+            $staff_position_titles_grades_tbl = self::getDynamicTableInstance('staff_position_titles_grades');
+            $staff_position_titles_grades_data = $staff_position_titles_grades_tbl->find('all')->where(['staff_position_title_id' => $staff_position_title_id])->toArray();
+
+            $grade_ids_array = [];
+            foreach ($staff_position_titles_grades_data as $grade_id => $data1) {
+                $grade_ids_array[$grade_id] = $data1->staff_position_grade_id;
+            }
+
+            $staff_position_grades = self::getDynamicTableInstance('staff_position_grades');
+            $result_array = [];
+
+            if (!empty($grade_ids_array) && $grade_ids_array[0] == '-1') {
+                $staff_position_grades_result = $staff_position_grades
+                    ->find()
+                    ->select(['id', 'name'])
+                    ->where(['visible' => 1])
+                    ->toArray();
+            } else {
+                $staff_position_grades_result = $staff_position_grades
+                    ->find()
+                    ->select(['id', 'name'])
+                    ->where(['visible' => 1, 'id IN' => $grade_ids_array])
+                    ->toArray();
+            }
+
+            foreach ($staff_position_grades_result as $result) {
+                $result_array[] = ["id" => $result['id'], "name" => __($result['name'])];
+            }
+
+            echo json_encode($result_array);
+        } else {
+            echo json_encode([]); // Handle the case where no position data is found
+        }
+        // POCOR-9037 end
         die;
+
     }
 
     /**
@@ -8030,7 +8071,7 @@ class InstitutionsController extends AppController
 
             $message = $this->validateCustomIdentityNumber($requestData);
             if (!empty($message)) {
-                return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => $message]);  // POCOR-8989 
+                return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => $message]);  // POCOR-8989
             }
 
             return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]); // POCOR-8989 invalid ID by configuration
