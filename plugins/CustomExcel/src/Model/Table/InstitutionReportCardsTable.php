@@ -6409,191 +6409,171 @@ class InstitutionReportCardsTable extends AppTable
     private function fetchStudentAttendanceDetails($connection, $academicPeriodId, $institutionId, $gradeId, $genderId, $date)
     {
         $query = "SELECT IFNULL(CASE WHEN MAX(IFNULL(marked_attendance.present_count,0)) - MAX(IFNULL(marked_absence.absent_count,0)) < 0 THEN 0  ELSE MAX(IFNULL(marked_attendance.present_count,0)) - MAX(IFNULL(marked_absence.absent_count,0)) END, 0) present_count
-                FROM
-                (
-                    SELECT  attendance_details.institution_id
-                        ,attendance_details.academic_period_id
-                        ,attendance_details.institution_class_id
-                        ,attendance_details.education_programme_id
-                        ,attendance_details.education_grade_id
-                        ,attendance_details.date
-                        ,attendance_details.period
-                        ,attendance_details.subject_id
-                        ,class_counter.present_count
                     FROM
                     (
-                        SELECT  student_attendance_marked_records.institution_id
-                            ,student_attendance_marked_records.academic_period_id
-                            ,student_attendance_marked_records.institution_class_id
-                            ,education_programmes.id education_programme_id
-                            ,student_attendance_marked_records.education_grade_id
-                            ,student_attendance_marked_records.date
-                            ,student_attendance_marked_records.period
-                            ,IFNULL(education_subjects.id,0) subject_id
-                        FROM student_attendance_marked_records
-                        INNER JOIN education_grades
-                        ON education_grades.id = student_attendance_marked_records.education_grade_id
-                        INNER JOIN education_programmes
-                        ON education_programmes.id = education_grades.education_programme_id
-                        LEFT JOIN institution_subjects
-                        ON institution_subjects.id = student_attendance_marked_records.subject_id
-                        LEFT JOIN education_subjects
-                        ON education_subjects.id = institution_subjects.education_subject_id
-                        WHERE student_attendance_marked_records.no_scheduled_class = 0 
-                        AND student_attendance_marked_records.academic_period_id = ".$academicPeriodId."
-                        AND student_attendance_marked_records.institution_id = ".$institutionId."
-                        AND student_attendance_marked_records.education_grade_id = ".$gradeId."
-                        AND student_attendance_marked_records.date = '".$date."'
-                    ) attendance_details
-                    INNER JOIN
-                    (
-                        SELECT  institution_class_students.education_grade_id
-                            ,institution_class_students.institution_id
-                            ,institution_class_students.academic_period_id
-                            ,institution_class_students.institution_class_id
-                            ,COUNT(DISTINCT(institution_class_students.student_id)) present_count
-                        FROM institution_class_students
-                        INNER JOIN security_users
-                        ON security_users.id = institution_class_students.student_id
-                        INNER JOIN education_grades
-                        ON education_grades.id = institution_class_students.education_grade_id
-                        INNER JOIN education_programmes
-                        ON education_programmes.id = education_grades.education_programme_id
-                        INNER JOIN academic_periods
-                        ON academic_periods.id = institution_class_students.academic_period_id
-                        WHERE academic_periods.id = ".$academicPeriodId."
-                        AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
-                        AND institution_class_students.institution_id = ".$institutionId."
-                        AND institution_class_students.education_grade_id = ".$gradeId."
-                        AND security_users.gender_id = ".$genderId."
-                        GROUP BY  institution_class_students.education_grade_id
+                        SELECT  attendance_details.institution_id
+                            ,attendance_details.academic_period_id
+                            ,attendance_details.institution_class_id
+                            ,attendance_details.education_programme_id
+                            ,attendance_details.education_grade_id
+                            ,attendance_details.date
+                            ,attendance_details.period
+                            ,attendance_details.subject_id
+                            ,class_counter.present_count
+                        FROM
+                        (
+                            SELECT  student_attendance_marked_records.institution_id
+                                ,student_attendance_marked_records.academic_period_id
+                                ,student_attendance_marked_records.institution_class_id
+                                ,education_programmes.id education_programme_id
+                                ,student_attendance_marked_records.education_grade_id
+                                ,student_attendance_marked_records.date
+                                ,student_attendance_marked_records.period
+                                ,IFNULL(education_subjects.id,0) subject_id
+                            FROM student_attendance_marked_records
+                            INNER JOIN education_grades
+                            ON education_grades.id = student_attendance_marked_records.education_grade_id
+                            INNER JOIN education_programmes
+                            ON education_programmes.id = education_grades.education_programme_id
+                            LEFT JOIN institution_subjects
+                            ON institution_subjects.id = student_attendance_marked_records.subject_id
+                            LEFT JOIN education_subjects
+                            ON education_subjects.id = institution_subjects.education_subject_id
+                            WHERE student_attendance_marked_records.no_scheduled_class = 0 
+                            AND student_attendance_marked_records.academic_period_id = ".$academicPeriodId."
+                            AND student_attendance_marked_records.institution_id = ".$institutionId."
+                            AND student_attendance_marked_records.education_grade_id = ".$gradeId."
+                            AND student_attendance_marked_records.date = '".$date."'
+                        ) attendance_details
+                        INNER JOIN
+                        (
+                            SELECT  institution_class_students.education_grade_id
                                 ,institution_class_students.institution_id
                                 ,institution_class_students.academic_period_id
                                 ,institution_class_students.institution_class_id
-                    ) class_counter
-                    ON class_counter.education_grade_id = attendance_details.education_grade_id AND class_counter.institution_id = attendance_details.institution_id AND class_counter.institution_class_id = attendance_details.institution_class_id AND class_counter.academic_period_id = attendance_details.academic_period_id
-                ) marked_attendance
-                INNER JOIN
-                (
-                    SELECT  student_mark_type_status_grades.education_grade_id
-                        ,student_mark_type_statuses.academic_period_id
-                        ,student_attendance_mark_types.attendance_per_day
-                        ,IFNULL(student_attendance_per_day_periods.period,1) period_id
-                        ,IFNULL(student_attendance_per_day_periods.name,'') period_name
-                        ,IFNULL(subjects_info.education_subject_id,0) subject_id
-                        ,IFNULL(subjects_info.education_subject_name,'') subject_name
-                    FROM student_mark_type_status_grades
-                    INNER JOIN student_mark_type_statuses
-                    ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
-                    INNER JOIN student_attendance_mark_types
-                    ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
-                    LEFT JOIN student_attendance_per_day_periods
-                    ON student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types.id
+                                ,COUNT(DISTINCT(institution_class_students.student_id)) present_count
+                            FROM institution_class_students
+                            INNER JOIN security_users
+                            ON security_users.id = institution_class_students.student_id
+                            INNER JOIN education_grades
+                            ON education_grades.id = institution_class_students.education_grade_id
+                            INNER JOIN education_programmes
+                            ON education_programmes.id = education_grades.education_programme_id
+                            INNER JOIN academic_periods
+                            ON academic_periods.id = institution_class_students.academic_period_id
+                            WHERE academic_periods.id = ".$academicPeriodId."
+                            AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
+                            AND institution_class_students.institution_id = ".$institutionId."
+                            AND institution_class_students.education_grade_id = ".$gradeId."
+                            AND security_users.gender_id = ".$genderId."
+                            GROUP BY  institution_class_students.education_grade_id
+                                    ,institution_class_students.institution_id
+                                    ,institution_class_students.academic_period_id
+                                    ,institution_class_students.institution_class_id
+                        ) class_counter
+                        ON class_counter.education_grade_id = attendance_details.education_grade_id AND class_counter.institution_id = attendance_details.institution_id AND class_counter.institution_class_id = attendance_details.institution_class_id AND class_counter.academic_period_id = attendance_details.academic_period_id
+                    ) marked_attendance
                     LEFT JOIN
                     (
-                        SELECT  education_systems.academic_period_id
-                            ,education_grades_subjects.education_grade_id
-                            ,education_grades_subjects.education_subject_id
-                            ,education_subjects.name education_subject_name
-                        FROM education_grades_subjects
-                        INNER JOIN education_subjects
-                        ON education_subjects.id = education_grades_subjects.education_subject_id
-                        INNER JOIN education_grades
-                        ON education_grades.id = education_grades_subjects.education_grade_id
-                        INNER JOIN education_programmes
-                        ON education_programmes.id = education_grades.education_programme_id
-                        INNER JOIN education_cycles
-                        ON education_cycles.id = education_programmes.education_cycle_id
-                        INNER JOIN education_levels
-                        ON education_levels.id = education_cycles.education_level_id
-                        INNER JOIN education_systems
-                        ON education_systems.id = education_levels.education_system_id
-                        INNER JOIN academic_periods
-                        ON academic_periods.id = education_systems.academic_period_id
-                        WHERE academic_periods.id = ".$academicPeriodId."
-                        AND education_grades.id = ".$gradeId."
-                    ) subjects_info
-                    ON subjects_info.academic_period_id = student_mark_type_statuses.academic_period_id AND subjects_info.education_grade_id = student_mark_type_status_grades.education_grade_id AND student_attendance_mark_types.attendance_per_day = 0
-                    WHERE student_mark_type_statuses.academic_period_id = ".$academicPeriodId."
-                    AND student_mark_type_status_grades.education_grade_id = ".$gradeId."
-                ) attendance_marking_type
-                ON attendance_marking_type.academic_period_id = marked_attendance.academic_period_id 
-                AND attendance_marking_type.education_grade_id = marked_attendance.education_grade_id
-                LEFT JOIN
-                (
-                    SELECT  institution_student_absence_details.academic_period_id
-                        ,institution_student_absence_details.institution_id
-                        ,education_programmes.id education_programme_id
-                        ,institution_student_absence_details.education_grade_id
-                        ,institution_student_absence_details.institution_class_id
-                        ,institution_student_absence_details.date
-                        ,institution_student_absence_details.period
-                        ,IFNULL(education_subjects.id,0) subject_id
-                        ,COUNT(DISTINCT(institution_student_absence_details.student_id)) absent_count
-                    FROM institution_student_absence_details
-                    INNER JOIN
-                    (
-                        SELECT  institution_class_students.education_grade_id
-                            ,institution_class_students.institution_id
-                            ,institution_class_students.academic_period_id
-                            ,institution_class_students.institution_class_id
-                            ,institution_class_students.student_id
-                        FROM institution_class_students
-                        INNER JOIN security_users
-                        ON security_users.id = institution_class_students.student_id
-                        INNER JOIN academic_periods
-                        ON academic_periods.id = institution_class_students.academic_period_id
-                        WHERE academic_periods.id = ".$academicPeriodId."
-                        AND institution_class_students.institution_id = ".$institutionId."
-                        AND institution_class_students.education_grade_id = ".$gradeId."
-                        AND security_users.gender_id = ".$genderId."
-                        AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
-                        GROUP BY  institution_class_students.education_grade_id
-                                ,institution_class_students.institution_id
-                                ,institution_class_students.academic_period_id
-                                ,institution_class_students.institution_class_id
-                                ,institution_class_students.student_id
-                    ) current_students
-                    ON current_students.education_grade_id = institution_student_absence_details.education_grade_id AND current_students.institution_id = institution_student_absence_details.institution_id AND current_students.academic_period_id = institution_student_absence_details.academic_period_id AND current_students.institution_class_id = institution_student_absence_details.institution_class_id AND current_students.student_id = institution_student_absence_details.student_id
-                    INNER JOIN security_users
-                    ON security_users.id = institution_student_absence_details.student_id
-                    INNER JOIN education_grades
-                    ON education_grades.id = institution_student_absence_details.education_grade_id
-                    INNER JOIN education_programmes
-                    ON education_programmes.id = education_grades.education_programme_id
-                    LEFT JOIN institution_subjects
-                    ON institution_subjects.id = institution_student_absence_details.subject_id
-                    LEFT JOIN education_subjects
-                    ON education_subjects.id = institution_subjects.education_subject_id
-                    WHERE institution_student_absence_details.academic_period_id = ".$academicPeriodId."
-                    AND institution_student_absence_details.institution_id = ".$institutionId."
-                    AND institution_student_absence_details.education_grade_id = ".$gradeId."
-                    AND security_users.gender_id = ".$genderId."
-                    AND institution_student_absence_details.date = '".$date."'
-                    GROUP BY  institution_student_absence_details.academic_period_id
-                            ,institution_student_absence_details.institution_id
-                            ,institution_student_absence_details.education_grade_id
-                            ,institution_student_absence_details.institution_class_id
-                            ,institution_student_absence_details.date
-                            ,institution_student_absence_details.period
-                            ,IFNULL(education_subjects.id,0)
-                ) marked_absence
-                ON marked_absence.institution_id = marked_attendance.institution_id 
-                AND marked_absence.academic_period_id = marked_attendance.academic_period_id 
-                AND marked_absence.institution_class_id = marked_attendance.institution_class_id 
-                AND marked_absence.education_grade_id = marked_attendance.education_grade_id 
-                AND marked_absence.date = marked_attendance.date 
-                AND marked_absence.period = attendance_marking_type.period_id 
-                AND marked_absence.subject_id = attendance_marking_type.subject_id
-                GROUP BY marked_attendance.academic_period_id
-                    ,marked_attendance.institution_id
-                    ,marked_attendance.education_grade_id
-                    ,marked_attendance.date;";
+                        SELECT attend_info.academic_period_id
+                            ,attend_info.institution_id
+                            ,attend_info.education_grade_id
+                            ,attend_info.institution_class_id
+                            ,attend_info.absence_date
+                            ,COUNT(DISTINCT(attend_info.student_id)) absent_count
+                        FROM 
+                        (
+                            SELECT institution_student_absence_details.academic_period_id
+                                ,institution_student_absence_details.institution_id
+                                ,institution_student_absence_details.education_grade_id
+                                ,institution_student_absence_details.institution_class_id
+                                ,institution_student_absence_details.student_id
+                                ,institution_student_absence_details.date absence_date
+                                ,institution_student_absence_details.subject_id
+                                ,subject_counter.subjects_taken
+                                ,attendance_type.value 
+                            FROM institution_student_absence_details
+                            INNER JOIN security_users
+                            ON security_users.id = institution_student_absence_details.student_id
+                            LEFT JOIN 
+                            (
+                                SELECT institution_subject_students.academic_period_id
+                                    ,institution_subject_students.institution_id
+                                    ,institution_subject_students.education_grade_id
+                                    ,institution_subject_students.institution_class_id
+                                    ,institution_subject_students.student_id
+                                    ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken
+                                FROM institution_subject_students
+                                INNER JOIN security_users
+                                ON security_users.id = institution_subject_students.student_id
+                                INNER JOIN academic_periods
+                                ON academic_periods.id = institution_subject_students.academic_period_id
+                                WHERE institution_subject_students.academic_period_id = ".$academicPeriodId."
+                                AND institution_subject_students.institution_id = ".$institutionId."
+                                AND institution_subject_students.education_grade_id = ".$gradeId."
+                                AND security_users.gender_id = ".$genderId."
+                                AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+                                GROUP BY institution_subject_students.academic_period_id
+                                    ,institution_subject_students.institution_id
+                                    ,institution_subject_students.education_grade_id
+                                    ,institution_subject_students.institution_class_id
+                                    ,institution_subject_students.student_id
+                            ) subject_counter
+                            ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id
+                            AND subject_counter.institution_id = institution_student_absence_details.institution_id
+                            AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id
+                            AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id
+                            AND subject_counter.student_id = institution_student_absence_details.student_id
+                            CROSS JOIN
+                            (
+                                SELECT config_items.value
+                                FROM config_items
+                                WHERE config_items.code LIKE 'calculate_daily_attendance'
+                            ) attendance_type
+                            WHERE institution_student_absence_details.academic_period_id = ".$academicPeriodId."
+                            AND institution_student_absence_details.absence_type_id != 3
+                            AND institution_student_absence_details.institution_id = ".$institutionId."
+                            AND institution_student_absence_details.education_grade_id = ".$gradeId."
+                            AND institution_student_absence_details.date = '".$date."'
+                            AND security_users.gender_id = ".$genderId."
+                            GROUP BY institution_student_absence_details.academic_period_id
+                                ,institution_student_absence_details.institution_id
+                                ,institution_student_absence_details.education_grade_id
+                                ,institution_student_absence_details.institution_class_id
+                                ,institution_student_absence_details.student_id
+                                ,institution_student_absence_details.date
+                            HAVING 
+                                CASE 
+                                    WHEN attendance_type.value = 1 
+                                    THEN COUNT(*) >= 1 
+                                    ELSE 
+                                        CASE WHEN institution_student_absence_details.subject_id = 0 
+                                        THEN COUNT(*) >= 2
+                                        ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
+                                        END
+                                END
+                        ) attend_info
+                        GROUP BY attend_info.academic_period_id
+                            ,attend_info.institution_id
+                            ,attend_info.education_grade_id
+                            ,attend_info.institution_class_id
+                            ,attend_info.absence_date
+                    ) marked_absence
+                    ON marked_absence.institution_id = marked_attendance.institution_id 
+                    AND marked_absence.academic_period_id = marked_attendance.academic_period_id 
+                    AND marked_absence.institution_class_id = marked_attendance.institution_class_id 
+                    AND marked_absence.education_grade_id = marked_attendance.education_grade_id 
+                    AND marked_absence.absence_date = marked_attendance.date 
+                    GROUP BY marked_attendance.academic_period_id
+                        ,marked_attendance.institution_id
+                        ,marked_attendance.education_grade_id
+                        ,marked_attendance.date;";
             //  echo "<pre>"; print_r($query);
             //  die;
         return $connection->execute($query)->fetch('assoc');
 
-    }// POCOR-8845 ends
+    }
+    // POCOR-8845 ends
 
 
 
