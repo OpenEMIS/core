@@ -1,3 +1,13 @@
+### [4.19.2] - 2025-04-10
+- Bug Fixed: Institutions > Attendances > Students : Insert back triggers for attendance modules
+- Bug Fixed: Administrations > Field Options > Staff Position Title: System displays all Staff Position Grade, even though the Staff Position that was saved is Pay Scale 2.
+- Bug Fixed: Report Card>Comments: Subject Teacher is not seeing all Subjects that they are teaching
+- Bug Fixed: Institutions > Staff > Add: If staff nationality, identity type and identity number is the same as the student being added, the pop-up message does not need to show up  
+- Bug Fixed: Reports > Institutions: Institutions: When users have permission to generate the institutions report, the report goes to error status
+- Bug Fixed: Institutions > Academic > Classes: When changing labels for homeroom teacher name in Institution Classes page, the label does not change according to what it is configured
+- Bug Fixed: Administration > System Setup > Field Options > Special Needs Difficulties: When navigating to Special Needs Difficulties page under Option Fields page, the page gives a 404 error 
+- Bug Fixed: Registrations API: Institution API not working
+
 ### [4.19.1] - 2025-04-04
 - Bug Fixed: Institutions>Report Card>Comments: Report card All Comments permission is not working properly
 - Bug Fixed: Institutions>Performance>Assessments: Data is displayed wrongly
