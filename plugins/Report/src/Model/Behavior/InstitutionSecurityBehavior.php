@@ -71,7 +71,7 @@ class InstitutionSecurityBehavior extends Behavior {
 		$requestData = json_decode($settings['process']['params']);
 		$superAdmin = $requestData->super_admin;
 		$userId = $requestData->user_id;
-		if (!$superAdmin) {
+		/*if (!$superAdmin) {
 		    $model = $this->_table;
 		    $institutionsAssociation = $model->getAssociation('Institutions');
 
@@ -81,7 +81,21 @@ class InstitutionSecurityBehavior extends Behavior {
 		            'institution_field_alias' => $model->aliasField($institutionsAssociation->getForeignKey())
 		        ]);
 		    }
-		}
-
+		}*/
+		//POCOR-9016 start
+		$model = $this->_table;
+		if(!$superAdmin) {
+			if ($model !== null) {
+			    if ($model->associations()->has('Institutions')) {
+			        $institutionsAssociation = $model->getAssociation('Institutions');
+			        $query->find('ByAccess', [
+			            'user_id' => $userId,
+			            'institution_field_alias' => $model->aliasField($institutionsAssociation->getForeignKey())
+			        ]);
+			    } 
+			} else {
+			    return null;
+			}
+		} //POCOR-9016 end
 	}
 }
