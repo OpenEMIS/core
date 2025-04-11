@@ -980,7 +980,7 @@ class CrudApiController extends Controller
 //            'bindings' => $query->getBindings(),
 //            'data' => $results
 //        ]
-               $results
+            $results
         );
     }
 

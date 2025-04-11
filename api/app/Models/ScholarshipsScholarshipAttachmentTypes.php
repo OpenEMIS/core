@@ -33,189 +33,220 @@ class ScholarshipsScholarshipAttachmentTypes extends Model
         ];
     }
 
-    /**
-     * @OA\PathItem(
-     *     path="/api/v5/scholarships-scholarship-attachment-types"
-     * )
-     */
-    public function _swaggerPath()
-    {
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/api/v5/scholarships-scholarship-attachment-types",
-     *     summary="Get list of ScholarshipsScholarshipAttachmentTypes",
-     *     tags={"ScholarshipsScholarshipAttachmentTypes"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Successful operation",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(
-     *                 property="message",
-     *                 type="string",
-     *                 example="Successful."
-     *             ),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-    @OA\Property(property="scholarship_id", type="integer", example=null),
-    @OA\Property(property="scholarship_attachment_type_id", type="integer", example=null),
-    @OA\Property(property="is_mandatory", type="integer", example=null)
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
-     *     )
-     * )
-     */
-    public function _swaggerList()
-    {
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/api/v5/scholarships-scholarship-attachment-types/{id}",
-     *     summary="Get ScholarshipsScholarshipAttachmentTypes by ID",
-     *     tags={"ScholarshipsScholarshipAttachmentTypes"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the ScholarshipsScholarshipAttachmentTypes",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Successful operation"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Not found"
-     *     )
-     * )
-     */
-    public function _swaggerView()
-    {
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/v5/scholarships-scholarship-attachment-types",
-     *     summary="Create a new ScholarshipsScholarshipAttachmentTypes",
-     *     tags={"ScholarshipsScholarshipAttachmentTypes"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             type="object",
-    @OA\Property(property="scholarship_id", type="integer", example=null),
-    @OA\Property(property="scholarship_attachment_type_id", type="integer", example=null),
-    @OA\Property(property="is_mandatory", type="integer", example=null)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Created successfully"
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Invalid data"
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
-     *     )
-     * )
-     */
-    public function _swaggerCreate()
-    {
-    }
-
-    /**
-     * @OA\Put(
-     *     path="/api/v5/scholarships-scholarship-attachment-types/{id}",
-     *     summary="Update ScholarshipsScholarshipAttachmentTypes",
-     *     tags={"ScholarshipsScholarshipAttachmentTypes"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the ScholarshipsScholarshipAttachmentTypes",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             type="object",
-    @OA\Property(property="scholarship_id", type="integer", example=null),
-    @OA\Property(property="scholarship_attachment_type_id", type="integer", example=null),
-    @OA\Property(property="is_mandatory", type="integer", example=null)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Updated successfully"
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Invalid data"
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Not found"
-     *     )
-     * )
-     */
-    public function _swaggerUpdate()
-    {
-    }
-
-    /**
-     * @OA\Delete(
-     *     path="/api/v5/scholarships-scholarship-attachment-types/{id}",
-     *     summary="Delete ScholarshipsScholarshipAttachmentTypes",
-     *     tags={"ScholarshipsScholarshipAttachmentTypes"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the ScholarshipsScholarshipAttachmentTypes",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=204,
-     *         description="Deleted successfully"
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Not found"
-     *     )
-     * )
-     */
-    public function _swaggerDelete()
-    {
-    }
 
     // Override setKeysForSaveQuery to handle composite keys
 
-    public function _swaggerHelper()
-    {
-        return;
-    }
+
+/**
+ * @OA\PathItem(
+ *     path="/api/v5/scholarships-scholarship-attachment-types"
+ * )
+ */
+public function _swaggerPath() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/scholarships-scholarship-attachment-types",
+ *     summary="Get list of ScholarshipsScholarshipAttachmentTypes",
+ *     tags={"ScholarshipsScholarshipAttachmentTypes"},
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Maximum number of results to return",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number for paginated results",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="orderby",
+ *         in="query",
+ *         required=false,
+ *         description="Field to order results by",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order direction: asc or desc",
+ *         @OA\Schema(type="string", enum={"asc", "desc"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="_fields",
+ *         in="query",
+ *         required=false,
+ *         description="Comma-separated list of fields to include in response",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Successful."
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+                          @OA\Property(property="scholarship_id", type="integer", example=null),
+                          @OA\Property(property="scholarship_attachment_type_id", type="integer", example=null),
+                          @OA\Property(property="is_mandatory", type="integer", example=null)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerList() {}
+
+/**
+ * @OA\Post(
+ *     path="/api/v5/scholarships-scholarship-attachment-types",
+ *     summary="Create a new ScholarshipsScholarshipAttachmentTypes",
+ *     tags={"ScholarshipsScholarshipAttachmentTypes"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="scholarship_id", type="integer", example=null),
+                     @OA\Property(property="scholarship_attachment_type_id", type="integer", example=null),
+                     @OA\Property(property="is_mandatory", type="integer", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Created successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerCreate() {}
+
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/scholarships-scholarship-attachment-types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}",
+ *     summary="Get ScholarshipsScholarshipAttachmentTypes record by composite key",
+ *     tags={"ScholarshipsScholarshipAttachmentTypes"},
+ *     @OA\Parameter(
+ *         name="scholarship_id",
+ *         in="path",
+ *         required=true,
+ *         description="scholarship_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="scholarship_attachment_type_id",
+ *         in="path",
+ *         required=true,
+ *         description="scholarship_attachment_type_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/scholarships-scholarship-attachment-types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}",
+ *     summary="Update ScholarshipsScholarshipAttachmentTypes record by composite key",
+ *     tags={"ScholarshipsScholarshipAttachmentTypes"},
+ *     @OA\Parameter(
+ *         name="scholarship_id",
+ *         in="path",
+ *         required=true,
+ *         description="scholarship_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="scholarship_attachment_type_id",
+ *         in="path",
+ *         required=true,
+ *         description="scholarship_attachment_type_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+ *              *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record updated successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data provided"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerUpdate() {}
+
+/**
+ * @OA\Delete(
+ *     path="/api/v5/scholarships-scholarship-attachment-types/scholarship_id/{scholarship_id}/scholarship_attachment_type_id/{scholarship_attachment_type_id}",
+ *     summary="Delete ScholarshipsScholarshipAttachmentTypes record by composite key",
+ *     tags={"ScholarshipsScholarshipAttachmentTypes"},
+ *     @OA\Parameter(
+ *         name="scholarship_id",
+ *         in="path",
+ *         required=true,
+ *         description="scholarship_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="scholarship_attachment_type_id",
+ *         in="path",
+ *         required=true,
+ *         description="scholarship_attachment_type_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Record deleted successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerDelete() {}
 
     protected function getKeyForSaveQuery()
     {
@@ -243,4 +274,6 @@ class ScholarshipsScholarshipAttachmentTypes extends Model
 
         return $query;
     }
+
+
 }
