@@ -32,7 +32,7 @@ export class StudentListComponent implements OnInit {
       'value': '',
       'key': 'openemis_no',
       'visible': true,
-      'label': 'Openemis No.',
+      'label': 'OpenEMIS ID',
       'type': 'string'
     },
     {

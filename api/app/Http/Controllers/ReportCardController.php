@@ -467,41 +467,41 @@ class ReportCardController extends Controller
      *     path="/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf",
      *     summary="Get a student's report card in PDF format",
      *     description="Retrieve a student's report card for a specific academic period and report card ID in PDF format.",
-     *     tags={"Report card"},
+     *     tags={"Report Card"},
      *     @OA\Parameter(
      *         name="institutionId",
      *         in="path",
      *         required=true,
-     *         @OA\Schema(type="integer", example=6),
-     *         description="The ID of the institution"
+     *         description="The ID of the institution",
+     *         @OA\Schema(type="integer", example=6)
      *     ),
      *     @OA\Parameter(
      *         name="classId",
      *         in="path",
      *         required=true,
-     *         @OA\Schema(type="integer", example=591),
-     *         description="The ID of the class"
+     *         description="The ID of the class",
+     *         @OA\Schema(type="integer", example=591)
      *     ),
      *     @OA\Parameter(
      *         name="studentId",
      *         in="path",
      *         required=true,
-     *         @OA\Schema(type="integer", example=13685),
-     *         description="The ID of the student"
+     *         description="The ID of the student",
+     *         @OA\Schema(type="integer", example=13685)
      *     ),
      *     @OA\Parameter(
      *         name="academic_period_id",
      *         in="query",
      *         required=true,
-     *         @OA\Schema(type="integer", example=33),
-     *         description="The ID of the academic period"
+     *         description="The ID of the academic period",
+     *         @OA\Schema(type="integer", example=33)
      *     ),
      *     @OA\Parameter(
      *         name="report_card_id",
      *         in="query",
      *         required=true,
-     *         @OA\Schema(type="integer", example=8),
-     *         description="The ID of the report card"
+     *         description="The ID of the report card",
+     *         @OA\Schema(type="integer", example=8)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -527,6 +527,15 @@ class ReportCardController extends Controller
     {
         try {
             $params = $request->all();
+            //POCOR-8728 starts
+            if (empty($params['academic_period_id'])) {
+                return $this->sendErrorResponse('Please send academic period in request.', 400);
+            }
+    
+            if (empty($params['report_card_id'])) {
+                return $this->sendErrorResponse('Please send Report Card Id in request.', 400);
+            }//POCOR-8728 ends
+            
             $data = $this->reportCardService->studentReportCardPdfDownload($params, $institutionId, $classId, $studentId);
 
             if(!empty($data)){
@@ -549,43 +558,43 @@ class ReportCardController extends Controller
     /**
      * @OA\Get(
      *     path="/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls",
-     *     summary="Get a student's report card in excel format",
-     *     description="Retrieve a student's report card for a specific academic period and report card ID in excel format.",
-     *     tags={"Report card"},
+     *     summary="Get a student's report card in Excel format",
+     *     description="Retrieve a student's report card for a specific academic period and report card ID in Excel format.",
+     *     tags={"Report Card"},
      *     @OA\Parameter(
      *         name="institutionId",
      *         in="path",
      *         required=true,
-     *         @OA\Schema(type="integer", example=6),
-     *         description="The ID of the institution"
+     *         description="The ID of the institution",
+     *         @OA\Schema(type="integer", example=6)
      *     ),
      *     @OA\Parameter(
      *         name="classId",
      *         in="path",
      *         required=true,
-     *         @OA\Schema(type="integer", example=591),
-     *         description="The ID of the class"
+     *         description="The ID of the class",
+     *         @OA\Schema(type="integer", example=591)
      *     ),
      *     @OA\Parameter(
      *         name="studentId",
      *         in="path",
      *         required=true,
-     *         @OA\Schema(type="integer", example=13685),
-     *         description="The ID of the student"
+     *         description="The ID of the student",
+     *         @OA\Schema(type="integer", example=13685)
      *     ),
      *     @OA\Parameter(
      *         name="academic_period_id",
      *         in="query",
      *         required=true,
-     *         @OA\Schema(type="integer", example=33),
-     *         description="The ID of the academic period"
+     *         description="The ID of the academic period",
+     *         @OA\Schema(type="integer", example=33)
      *     ),
      *     @OA\Parameter(
      *         name="report_card_id",
      *         in="query",
      *         required=true,
-     *         @OA\Schema(type="integer", example=8),
-     *         description="The ID of the report card"
+     *         description="The ID of the report card",
+     *         @OA\Schema(type="integer", example=8)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -611,6 +620,14 @@ class ReportCardController extends Controller
     {
         try {
             $params = $request->all();
+            //POCOR-8728 starts
+            if (empty($params['academic_period_id'])) {
+                return $this->sendErrorResponse('Please send academic period in request.', 400);
+            }
+    
+            if (empty($params['report_card_id'])) {
+                return $this->sendErrorResponse('Please send Report Card Id in request.', 400);
+            }//POCOR-8728 ends
             $data = $this->reportCardService->studentReportCardExcelDownload($params, $institutionId, $classId, $studentId);
 
             if(!empty($data)){
