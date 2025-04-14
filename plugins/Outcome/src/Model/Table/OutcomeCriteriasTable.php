@@ -281,7 +281,7 @@ class OutcomeCriteriasTable extends ControllerActionTable
          }elseif ($field == 'code') {
             $codeName = $LabelTable->find()->where(['module_name' =>'Outcome -> Criterias' , 'field_name' =>'code'])->first();
             if($codeName != null){
-               $codeName =  $codeName->name;//add this name from Adminsitration > System Setup > Labels
+               $codeName =  $codeName->name;
             }
             return  __((string)$codeName);
          } elseif ($field == 'outcome_template_id') {
