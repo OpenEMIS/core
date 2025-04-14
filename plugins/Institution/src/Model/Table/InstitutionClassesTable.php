@@ -265,7 +265,11 @@ class InstitutionClassesTable extends ControllerActionTable
             return  __((string)$Courses);
 
         }else if ($field == 'staff_id') {
-            return __('Class Teacher');
+            $teacher = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field' =>'staff_id'])->first();
+            if($teacher != null){
+               $teacher =  $teacher->name;//add this name from Adminsitration > System Setup > Labels
+            }
+            return  __((string)$teacher);
         }else if ($field == 'name') {
             return __('Class Name');
         }else if ($field == 'multigrade') {
