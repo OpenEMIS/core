@@ -233,6 +233,10 @@ class ReportCardGpaTable extends ControllerActionTable
         if($selectedName != -1){
           // $where[$gradeGpa->aliasField('education_grades_gpa_id')] = $selectedName; //POCOR-8699
         }
+        //POCOR-9038 -- display records when gpa_name is selected.
+        if($selectedName == -1){
+            $where[$gradeGpa->aliasField('education_grades_gpa_id')] = $selectedName; 
+        }
         $query
             ->select([
                 'id' => $this->aliasField('id'),
@@ -1173,7 +1177,10 @@ class ReportCardGpaTable extends ControllerActionTable
         
         if(!empty($this->request->getQuery('gpa_name')) &&  $this->request->getQuery('gpa_name') != -1) {
             $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') => $this->request->getQuery('gpa_name')]); 
-        }
+        } else {
+            $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') . ' IS NOT' => null]);
+
+        } //POCOR-9038
         $findGpa = $query->first();
         if ($findGpa !== null) {
             return number_format((float)$findGpa->gpa, 2);
