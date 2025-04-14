@@ -291,6 +291,7 @@ class ReportCardGpaTable extends ControllerActionTable
     {
         $gradeId = $this->request->getQuery('education_grade_id');
         $classId = $this->request->getQuery('class_id');
+        $gpaName = $this->request->getQuery('gpa_name'); //POCOR-9038
         $loginUserIdUser = $this->Auth->User('id');
         $securityRoles = $this->AccessControl->getRolesByUser($loginUserIdUser)->toArray();
         $securityRoleIds = [];
@@ -333,11 +334,13 @@ class ReportCardGpaTable extends ControllerActionTable
                         ->count();
                     
                     // Generate all button
-                    $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-                    $generateButton['type'] = 'button';
-                    $generateButton['label'] = '<i class="fa fa-refresh"></i>';
-                    $generateButton['attr'] = $toolbarAttr;
-                    $generateButton['attr']['title'] = __('Generate All');
+                    if(isset($gpaName)){ //POCOR-9038
+                        $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
+                        $generateButton['type'] = 'button';
+                        $generateButton['label'] = '<i class="fa fa-refresh"></i>';
+                        $generateButton['attr'] = $toolbarAttr;
+                        $generateButton['attr']['title'] = __('Generate All');
+                    }
                     //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
                     if (!is_null($this->request->getQuery('education_grade_id'))) {
                         $gradeId = $this->request->getQuery('education_grade_id');
@@ -423,11 +426,13 @@ class ReportCardGpaTable extends ControllerActionTable
                         ->count();
                     
                     // Generate all button
-                    $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-                    $generateButton['type'] = 'button';
-                    $generateButton['label'] = '<i class="fa fa-refresh"></i>';
-                    $generateButton['attr'] = $toolbarAttr;
-                    $generateButton['attr']['title'] = __('Generate All');
+                    if(isset($gpaName)){ //POCOR-9038
+                        $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
+                        $generateButton['type'] = 'button';
+                        $generateButton['label'] = '<i class="fa fa-refresh"></i>';
+                        $generateButton['attr'] = $toolbarAttr;
+                        $generateButton['attr']['title'] = __('Generate All');
+                    }
                     //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
                     if (!is_null($this->request->getQuery('education_grade_id'))) {
                         $gradeId = $this->request->getQuery('education_grade_id');
