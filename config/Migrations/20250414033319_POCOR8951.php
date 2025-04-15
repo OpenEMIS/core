@@ -10,6 +10,7 @@ class POCOR8951 extends AbstractMigration
         $this->backupTables();
         $this->insertConfigItems();
         $this->insertConfigItemOptions();
+        $this->modifyThemesTable();
     }
 
     /**
@@ -22,7 +23,7 @@ class POCOR8951 extends AbstractMigration
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         $this->backupTable('config_items', 'z_8951_config_items');
         $this->backupTable('config_item_options', 'z_8951_config_item_options');
-
+        $this->backupTable('themes', 'z_8951_themes'); // Backup themes table
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
     }
 
@@ -52,17 +53,40 @@ class POCOR8951 extends AbstractMigration
         $existingRecord = $this->fetchRow("
         SELECT * FROM `config_items`
         WHERE `name` = 'OpenEMIS Registration'
-          AND `code` = 'online_services'
+          AND `code` = 'openemis_registration'
           AND `type` = 'Online Services'
-          AND `label` = 'Online Services'
     ");
 
         if (empty($existingRecord)) {
             $this->execute("
-            INSERT INTO `config_items`
-            (`id`, `name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+            INSERT IGNORE INTO `config_items`
+            (`id`, `name`, `code`, `type`, `label`,
+                   `value`, `value_selection`, `default_value`, `editable`, `visible`,
+                   `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
             VALUES
-            (NULL, 'OpenEMIS Registration', 'online_services', 'Online Services', 'Online Services', '1', '', '1', 0, 1, 'Dropdown', 'online_services', NULL, NULL, 1, CURRENT_TIMESTAMP)
+            (NULL, 'OpenEMIS Registration', 'openemis_registration', 'Online Services', 'OpenEMIS Registration',
+                   '1', '', '1', 0, 1,
+                   'Dropdown', 'online_services', NULL, NULL, 1, CURRENT_TIMESTAMP)
+        ");
+        }
+
+        $existingRecord = $this->fetchRow("
+        SELECT * FROM `config_items`
+        WHERE `name` = 'OpenEMIS Core'
+          AND `code` = 'openemis_core'
+          AND `type` = 'Online Services'
+    ");
+
+        if (empty($existingRecord)) {
+            $this->execute("
+            INSERT IGNORE INTO `config_items`
+            (`id`, `name`, `code`, `type`, `label`,
+                   `value`, `value_selection`, `default_value`, `editable`, `visible`,
+                   `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+            VALUES
+            (NULL, 'OpenEMIS Core', 'openemis_core', 'Online Services', 'OpenEMIS Core',
+                   '1', '', '1', 0, 0,
+                   'Dropdown', 'online_services', NULL, NULL, 1, CURRENT_TIMESTAMP)
         ");
         }
     }
@@ -98,10 +122,49 @@ class POCOR8951 extends AbstractMigration
         }
     }
 
+    /**
+     * Modify the themes table to add config_item_id and set default value.
+     *
+     * @return void
+     */
+    private function modifyThemesTable(): void
+    {
+        // Check if the config_item_id column already exists
+        if (!$this->table('themes')->hasColumn('config_item_id')) {
+            // Add config_item_id column
+            $this->execute("ALTER TABLE `themes` ADD COLUMN `config_item_id` INT AFTER `id`");
+
+            // Retrieve the ID of 'OpenEMIS Core'
+            $openemisCoreId = $this->fetchRow("
+            SELECT `id` FROM `config_items`
+            WHERE `name` = 'OpenEMIS Core'
+              AND `code` = 'openemis_core'
+              AND `type` = 'Online Services'
+        ");
+
+            if (!empty($openemisCoreId)) {
+                // Set default value for existing records
+                $this->execute("
+                UPDATE `themes` SET `config_item_id` = {$openemisCoreId['id']}
+            ");
+            }
+        }
+
+        // Check if the foreign key already exists
+        if (!$this->table('themes')->hasForeignKey('config_item_id')) {
+            // Add foreign key constraint
+            $this->execute("
+            ALTER TABLE `themes`
+            ADD CONSTRAINT `fk_themes_config_item`
+            FOREIGN KEY (`config_item_id`) REFERENCES `config_items`(`id`)
+        ");
+        }
+    }
+
+
     public function down()
     {
         $this->restoreTables();
-        $this->cleanupBackupTables();
     }
 
     /**
@@ -115,6 +178,12 @@ class POCOR8951 extends AbstractMigration
 
         $this->restoreTable('config_items', 'z_8951_config_items');
         $this->restoreTable('config_item_options', 'z_8951_config_item_options');
+        if ($this->table('themes')->hasForeignKey('config_item_id')) {
+            $this->execute("
+            ALTER TABLE `themes` DROP FOREIGN KEY `fk_themes_config_item`
+        ");
+        }
+        $this->restoreTable('themes', 'z_8951_themes'); // Restore themes table
 
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
     }
@@ -134,6 +203,4 @@ class POCOR8951 extends AbstractMigration
             $this->execute("DROP TABLE IF EXISTS `$backupTable`");
         }
     }
-
-
 }

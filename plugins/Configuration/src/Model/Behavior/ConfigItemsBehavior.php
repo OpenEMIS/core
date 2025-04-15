@@ -21,7 +21,7 @@ class ConfigItemsBehavior extends Behavior
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
         $events['Model.custom.onUpdateToolbarButtons'] =  ['callable' => 'onUpdateToolbarButtons'];//POCOR-8751
-        if ($this->isCAv4()) {          
+        if ($this->isCAv4()) {
             $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
         }
         return $events;
@@ -44,14 +44,7 @@ class ConfigItemsBehavior extends Behavior
         ];
         $this->model->controller->set('toolbarElements', $toolbarElements);
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
-        $themeRecord = $ConfigItem
-            ->find('list', [
-                'keyField' => 'name',
-                'valueField' => 'name'
-            ])
-            ->order('type')
-            ->where([$ConfigItem->aliasField('code') => 'online_services'])
-            ->toArray();
+
 
         $typeList = $ConfigItem
             ->find('list', [
@@ -62,14 +55,6 @@ class ConfigItemsBehavior extends Behavior
             ->where([$ConfigItem->aliasField('visible') => 1])
             ->toArray();
 
-        $typeLists = $ConfigItem
-            ->find('all', [
-                // 'fields' => 'label','type'
-            ])
-            ->order('label')
-            ->where([$ConfigItem->aliasField('visible') => 1,'type' => 'Coordinates'])
-            ->toArray();   
-             
         $typeOptions = array_keys($typeList);
         foreach ($typeOptions as $key => $value) {
             $value = $value != 'Authentication' ? $value : 'Sso';
@@ -78,18 +63,35 @@ class ConfigItemsBehavior extends Behavior
             }
         }
         //POCOR-8883 code logic change start
+//        dd($this->model->request->getQueryParams());
         $selectedType = $this->model->queryString('type', $typeOptions);
         $this->selectedType = $selectedType;
         $typeValue = $typeOptions[$selectedType];
         if(empty($typeValue)){
            $typeValue = $this->model->request->getQueryParams()['type'];
         }
+//
         if($typeValue == 'Themes'){ //POCOR-8951 start
-            $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
+            $productThemes = $ConfigItem
+                ->find('list', [
+                    'keyField' => 'code',
+                    'valueField' => 'name'
+                ])
+                ->order('type')
+                ->where([$ConfigItem->aliasField('type') => 'Online Services'])
+                ->toArray();
+            $this->model->request = $this->model->request->withQueryParams(
+                array_merge($this->model->request->getQueryParams(),
+                ['type_value' => $typeValue]));
             $this->model->advancedSelectOptions($typeOptions, $selectedType);
             $this->model->controller->set('typeOptions', $typeOptions);
             $controlElement = $toolbarElements[0];
-            $controlElement['data'] = ['typeOptions' => $typeOptions, 'themeRecord' => $themeRecord];
+            $selectedProduct = $this->model->request->getQueryParams();
+//            dd($this->model->request->getQueryParams());
+            $controlElement['data'] = [
+                'typeOptions' => $typeOptions,
+                'productThemes' => $productThemes,
+                'selectedProduct' => $selectedProduct];
             $controlElement['order'] = 1;
             return $controlElement; //POCOR-8951 end
         }elseif($typeValue !== 'Custom Validation'){
@@ -120,7 +122,7 @@ class ConfigItemsBehavior extends Behavior
     public function checkController()
     {
         $typeValue = $this->model->request->getQuery('type_value');
-        
+
         $typeValue = Inflector::camelize($typeValue, ' ');
         $action = '';
         if ($this->isCAv4()) {
@@ -136,9 +138,9 @@ class ConfigItemsBehavior extends Behavior
         // print_r($action);
         // echo '<br/>';
         // echo $typeValue;
-        
+
         // die;
- 
+
         // Start POCOR-7507
         if($typeValue == 'ExternalDataSource-Identity'){
             $typeValue = 'ExternalDataSourceIdentity';
@@ -160,7 +162,7 @@ class ConfigItemsBehavior extends Behavior
         // Start POCOR-8689
 
         if (method_exists($this->model->controller, $typeValue) && $action != $typeValue) {
-           
+
             $url['action'] = $typeValue;
             $url['type_value'] = $typeValue;  // POCOR-7507
             $this->model->controller->redirect($url);
@@ -210,10 +212,10 @@ class ConfigItemsBehavior extends Behavior
                 if (isset($toolbarButtons['edit'])) {
                     unset($toolbarButtons['edit']);
                 }
-            }  
+            }
         }
-        
-    } 
+
+    }
      //POCOR-8751 end
 
 }
