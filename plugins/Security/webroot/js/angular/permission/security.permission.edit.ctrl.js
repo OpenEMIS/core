@@ -32,7 +32,11 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
         {
             'key': 'Guardian',
             'name': 'Guardian'
-        }
+        },
+        { // POCOR-8966 start
+            'key': 'API',
+            'name': 'API'
+        } // POCOR-8966 end
     ];
     Controller.selectedModule = 'Institutions';
     Controller.roleId = 0;
