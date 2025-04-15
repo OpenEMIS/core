@@ -273,10 +273,17 @@ class OutcomeCriteriasTable extends ControllerActionTable
      //POCOR-8875 start
      public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
      {
+        $LabelTable = TableRegistry::get('Labels');
          if ($field == 'academic_period_id') {
              return __('Academic Period');
          } elseif ($field == 'name') {
              return __('Name');
+         }elseif ($field == 'code') {
+            $codeName = $LabelTable->find()->where(['module_name' =>'Outcome -> Criterias' , 'field_name' =>'code'])->first();
+            if($codeName != null){
+               $codeName =  $codeName->name;
+            }
+            return  __((string)$codeName);
          } elseif ($field == 'outcome_template_id') {
              return __('Outcome Template');
          } elseif ($field == 'education_subject_id') {
