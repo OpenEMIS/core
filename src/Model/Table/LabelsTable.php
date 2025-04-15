@@ -9,6 +9,7 @@ use Cake\Cache\Cache;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Filesystem\Folder;
+use Cake\Log\Log;
 
 class LabelsTable extends AppTable
 {
@@ -78,9 +79,13 @@ class LabelsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        Log::debug('LabelsTable::afterSave()');
         $keyFetch = $entity->module.'.'.$entity->field;
         $keyValue = self::concatenateLabel($entity);
+        Log::debug('LabelsTable::afterSave() keyFetch: '.$keyFetch);
+        Log::debug('LabelsTable::afterSave() keyValue: '.$keyValue);
         Cache::write($keyFetch, $keyValue, $this->defaultConfig);
+
     }
 
     public function concatenateLabel($entity)
