@@ -1,0 +1,895 @@
+@charset "UTF-8";
+
+/* Form Kdx V1.2.0 */
+
+%default-input {
+    width: 100%;
+    font-size: $bodyTextSize;
+    display: inline-block;
+    padding: $padding5 $padding10;
+    margin-bottom: $margin15;
+
+    &[disabled],
+    &[readonly],
+    &[disabled="disabled"] {
+        @extend .disabled-style;
+    }
+}
+
+%input-rounded-border {
+    @extend %default-input;
+
+    border-radius: 3px;
+    outline: none !important;
+    border: $greyCBorder !important;
+    color: #555;
+}
+
+.kdx {
+    label {
+        font-size: $bodyTextSize !important;
+        line-height: calc(#{$bodyTextSize} + #{$textLineHeightDiff}) !important;
+        font-weight: bold;
+        text-align: left;
+        width: 100%;
+
+        .rtl &{
+            font-size: calc(#{$bodyTextSize} + #{$textSizeDiffArabic}) !important;
+            line-height: calc(#{$bodyTextSize} + #{$textSizeDiffArabic} + #{$textLineHeightDiff}) !important;
+        }
+    }
+
+    input {
+        @extend %input-rounded-border;
+
+        height: 30px; 
+        margin: $noMargin $noMargin $margin15;
+
+        &[type="file"] {
+            cursor: pointer;
+        }
+
+        &[type="text"] {
+            &::-ms-clear {
+                display: none;
+            }
+        }
+
+        &:focus {
+            outline: 0 !important;
+        }
+    } 
+
+    .input-group,
+    .chosen-container,
+    .fileinput-preview{
+        @extend %default-input;
+    }
+
+    .kdx-fileinput {
+        @extend %default-input;
+        padding: $noPadding;
+    }
+
+    textarea {
+        @extend %input-rounded-border;
+
+        height: 100px;
+    }
+
+    select {
+        @extend %input-rounded-border;
+    }
+
+    .kdx-button-group {
+        margin-bottom: $margin15;
+    }
+
+    .kdx-input-select-wrapper {
+        position: relative;
+        width: 100%;
+        height: 30px;
+        display: inline-block;
+        margin-bottom: $margin15;
+        padding: $noPadding !important;
+
+        select {
+            background: none;
+            padding: $padding5 $padding25 $padding5 $padding10 !important;
+            height: 100%;
+            cursor: pointer;
+            appearance: none;
+
+            &::-ms-expand {
+                display: none;
+            }
+
+            &:focus {
+                outline: none !important;
+            }
+
+            optgroup {
+                padding: 3px;
+            }
+
+            option {
+                padding: $padding5 $padding10;
+                direction: ltr;
+            }
+        }
+
+        &.kdx-loading-class:after {
+            font-family: FontAwesome;
+            content: '\f110';
+            border: none;
+            position: absolute;
+            right: 5px;
+            top: 20%;
+            margin: auto;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            font-size: 14px;
+
+            animation: rotating 2s infinite steps(8), rotatingFixPosition;
+        }
+
+        &:after,
+        .font-size-select:after {
+            border-left: 5px solid rgba(0, 0, 0, 0);
+            border-right: 5px solid rgba(0, 0, 0, 0);
+            border-top: 5px solid;
+            color: #555;
+            content: "";
+            height: 0;
+            margin-right: 14px;
+            pointer-events: none;
+            position: absolute;
+            width: 0;
+            right: -5px;
+            top: 48%;
+        }
+    }
+
+    .form-symbol {
+        font-size: $bodyTextSize;
+        padding: $padding5;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .form-buttons {
+        .button-label {
+            display: inline-block;
+            width: 15%;
+            margin: $noMargin $margin10 $margin15 $noMargin;
+
+            @media #{$tabletLandscape} {
+                width: 20% !important;
+            }
+
+            @media #{$tabletPortrait} {
+                display: none;
+            }
+        }
+    }
+
+    &.form-vertical,
+    .form-vertical {
+
+        &.stacked{
+
+            .input{
+                flex-direction: column;
+
+                input,
+                textarea,
+                .input-group,
+                .kdx-text-input,
+                .kdx-input-select-wrapper,
+                .kdx-input-table-wrapper,
+                .kdx-datepicker,
+                .input-selection-inline,
+                .chosen-container,
+                .fileinput-preview,
+                .kdx-form-slider,
+                .kdx-fileinput,
+                .form-label {
+                    width: 100% !important;
+                }
+
+                .form-label{
+                    padding: $padding5 $padding10;
+                }
+
+                h6{
+                    padding-left: 0 !important;
+
+                    .rtl &{
+                        padding-right: 0 !important;
+                        padding-left: $padding20 !important;
+                    }
+                }
+            }
+
+
+            .form-buttons .button-label{
+                display: none;
+                margin: none;
+                width: unset;
+            }
+        }
+
+        input,
+        textarea,
+        .input-group,
+        .kdx-input-select-wrapper,
+        .chosen-container,
+        .fileinput-preview,
+        .kdx-form-slider,
+        .kdx-fileinput {
+            width: 25%;
+
+            @media #{$tabletLandscape} {
+                width: 30% !important;
+            }
+        }
+        input.ngb-tp-input{width:100%}
+        .kdx-form-slider .kdx-slider-container{
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        &.kdx-input,
+        .kdx-input {
+            width: 100%;
+
+            .required .selection-wrapper label:before {
+                content: "";
+                margin: auto;
+            }
+
+            .kdx-text-input{
+
+                input {
+                    @media #{$tabletLandscape} {
+                        width: 100% !important;
+                    }
+                }
+                &+.kdx-tooltip {
+                    @media #{$tabletPortrait} {
+                        position: absolute;
+                        top: 0;
+                        right: 0;
+                    }
+                }
+            }
+            
+        }
+
+        .form-row {
+            margin: 0;
+            
+            &:first-child() {
+                margin-top: $margin15;
+            }
+
+            &.section-header {
+                margin-top: $noMargin;
+            }
+
+            .kdx-tooltip {
+                @media #{$tabletPortrait} {
+                    flex: 0 0 auto;
+                    order: 2;
+                }
+                @media #{$tabletPortrait} {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                }
+            }
+
+            .kdx-timepicker-wrapper {
+                .ngb-tp {
+                    .ngb-tp-hour,
+                    .ngb-tp-spacer,
+                    .ngb-tp-minute {
+                        button {
+                            width: auto;
+
+                            @media #{$tabletPortrait} {
+                                right: 5px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .row:nth-of-type(odd) {
+            background-color: $whiteColor;
+            border-left: 2px solid $whiteColor;
+        }
+
+        .required {
+            .form-label:before {
+                content: "*";
+                // font-size: $textSizeS;
+
+                font-size: $bodyTextSize;
+                line-height: calc(#{$bodyTextSize} + #{$textLineHeightDiff});
+
+
+                color: $errorColor;
+                margin-left: -9px;
+                margin-right: 3px;
+            }
+
+            .kdx-input-table-wrapper {
+                .ag-filter-header-container,
+                .ag-virtual-list-item {
+                    label:before {
+                        content: "";
+                        margin: $noMargin;
+                        font-size: unset;
+                    }
+                }
+            }
+        }
+
+
+        .form-label {
+            display: inline-block;
+            width: 15%;
+            vertical-align: top;
+            border-bottom: 2px solid #EEE;
+            min-height: 30px;
+            margin: $noMargin $margin10 $margin15 $noMargin;
+            padding: $padding5 $padding20;
+
+            &,
+            .row:nth-of-type(even) {
+                background-color: #F9F9F9;
+                border-bottom: 1px solid #F2F2F2;
+            }
+
+            @media #{$tabletLandscape} {
+                width: 20% !important;
+            }
+
+            @media #{$tabletPortrait} {
+                padding: $padding5 $padding10;
+            }
+
+            .rtl & {
+                margin: $noMargin $noMargin $margin15 $margin10;
+
+                padding: calc(#{$padding5} - 1px) $padding20;
+            }
+        }
+
+        // .form-input {
+        //     min-height: 30px;
+        //     width: calc(80% - 10px);
+        //     padding: 7px $noPadding;
+        //     display: inline-block;
+        //     font-size: $bodyTextSize;
+
+        //     @media #{$tabletPortrait} {
+        //         padding: $padding5 $padding10 !important;
+        //     }
+        // }
+
+        .input {
+            clear: both;
+            font-size: 0;
+            position: relative;
+
+            @media only screen and (min-width: 801px) {
+                display: flex;
+                flex-flow: row nowrap;
+                align-items: flex-start;
+            }
+        }
+
+        .chosen-choices {
+            font-size: $bodyTextSize;
+            border: $greyCBorder !important;
+        }
+
+        .chosen-container {
+            width: 25% !important;
+            margin-bottom: $margin15;
+        }
+
+        .input-group {
+            position: relative;
+            width: 25%;
+            margin: $noMargin $noMargin $margin15;
+            display: inline-block;
+        }
+
+        .textarea,
+        .file {
+            label {
+                vertical-align: top;
+            }
+        }
+
+        .file {
+            width: 100%;
+            clear: both;
+
+            label {
+                display: inline-block;
+            }
+        }
+
+        .fileinput-filename {
+            @extend .ellipsis;
+
+            display: inline-block;
+            vertical-align: middle;
+            width: 100%;
+            position: absolute;
+            left: 0;
+            padding: $noPadding 80px $noPadding $padding25;
+        }
+
+        .file-input-text {
+            clear: both;
+
+            p,
+            .file-input-buttons p,
+            .kdx-input-text p {
+                clear: both;
+                padding: 8px $noPadding $noPadding;
+                font-style: italic;
+                font-size: $textSizeXXS !important;
+                color: #777;
+            }
+        }
+
+        .input-group-addon {
+            position: absolute;
+            right: 0;
+            line-height: 0;
+            cursor: pointer;
+            font-size: $textSizeS;
+            width: 52px;
+            height: 30px;
+
+            span {
+                width: 15px;
+            }
+        }
+
+        .datepicker {
+            table {
+                th {
+                    text-align: center !important;
+                }
+
+                tr {
+                    td {
+                        &.active {
+                            background: none !important;
+                            background-color: #6B6B6B !important;
+                        }
+                    }
+                }
+            }
+
+            &,
+            .bootstrap-timepicker-widget {
+                z-index: 10 !important;
+            }
+        }
+
+        .form-control {
+            padding: $padding5 6px 3px;
+            font-size: $bodyTextSize;
+            background: $whiteColor;
+            font-weight: normal;
+            height: 30px;
+
+            &:focus {
+                box-shadow: none !important;
+            }
+        }
+
+        .select {
+            position: relative;
+            display: block;
+            width: 100%;
+        } 
+
+        .input-inline-wrapper {
+            display: inline-block;
+            width: calc(80% - 15px);
+
+            .error-message {
+
+                @media #{$tabletLandscape} {
+                    margin: $noMargin !important;
+                    float: none;
+                    clear: both;
+                    width: 100%;
+                }
+
+                @media #{$tabletPortrait} {
+                    margin: $noMargin !important;
+                }
+            }
+        }
+
+        .input-inline {
+            @media #{$tabletPortrait} {
+                width: 30% !important;
+            }
+
+            @media #{$mobileLandscape} {
+                width: 100% !important;
+                margin-left: $noMargin !important;
+            }
+
+            &.input-prefix {
+                width: 10%;
+                margin-right: $margin10;
+
+                @media #{$tabletLandscape} {
+                    width: 15% !important;
+                }
+
+                @media #{$tabletPortrait} {
+                    width: 20% !important;
+                }
+            }
+        }
+
+        .input-inline-prefix {
+            width: calc(28% - 12px);
+            margin-bottom: $margin15;
+
+            @media #{$tabletPortrait} {
+                width: 75% !important;
+            }
+        }
+
+        .input-inline-btn {
+            position: relative;
+            width: 25%;
+            margin-left: $margin10;
+            display: inline-block;
+
+            @media #{$tabletLandscape} {
+                width: 45% !important;
+            }
+
+            @media #{$tabletPortrait} {
+                width: 65% !important;
+            }
+
+            @media #{$mobileLandscape} {
+                width: 100% !important;
+                margin-left: $noMargin !important;
+            }
+
+            .input-inline {
+                width: 100%;
+                padding-right: 110px;
+            }
+
+            .error-message {
+                position: absolute;
+                left: 0;
+                margin-left: 270px;
+                width: 100%;
+            }
+
+            .tooltip {
+                width: 80px;
+            }
+        }
+
+        .kdx-input-table-wrapper {
+            display: inline-block;
+            width: calc(100% - 17%);
+            margin-bottom: $margin15;
+
+            @media #{$tabletLandscape} {
+                width: calc(100% - 22%);
+            }
+
+            @media #{$tabletPortrait} {
+                width: 100%;
+            }
+        }
+
+        .row-reset {
+            background-color: transparent !important;
+            border: 0 !important;
+        }
+
+        .error-wrapper {
+            background-color: $whiteColor;
+            border: 1px solid $errorColor;
+            display: inline-block;
+            vertical-align: top;
+            border-radius: 3px;
+            margin: $noMargin $noMargin $margin10 $margin10;
+            padding: 6px $padding10;
+            position: relative;
+
+            @media #{$tabletPortrait} {
+                margin: $noMargin $noMargin $margin10 $noMargin;
+                width: 100%;
+            }
+
+            &:before,
+            &:after {
+                position: absolute;
+                display: block;
+                font-family: $fontAwesome;
+                content: "\f0d9";
+
+                @media #{$tabletPortrait} {
+                    transform: rotate(90deg);
+                }
+            }
+
+            &:before {
+                font-size: $iconSizeM;
+                color: $errorColor;
+                top: 0;
+                left: -8px;
+
+                @media #{$tabletPortrait} {
+                    top: -20px !important;
+                    left: 10px !important;
+                }
+            }
+
+            &:after {
+                font-size: $textSizeXL;
+                color: $whiteColor;
+                top: 1px;
+                left: -6px;
+
+                @media #{$tabletPortrait} {
+                    top: -17px !important;
+                    left: 11px !important;
+                }
+            }
+
+            .error-message {
+                display: block;
+                font-size: $textSizeXXS;
+                color: $errorColor;
+                padding: $noPadding;
+
+                &:before {
+                    font-family: $fontAwesome;
+                    content: "\f111";
+                    vertical-align: middle;
+                    font-size: iconSizeXXS;
+                    margin-right: $margin5;
+                }
+
+                @media #{$tabletPortrait} {
+                    margin: $noMargin;
+                    padding: $noPadding;
+                }
+            }
+        }
+
+        @media #{$tabletLandscape} {
+            .chosen-container input,
+            .chosen-container .search-field,
+            .input-group input,
+            .input-inline-btn input,
+            .fileinput-preview {
+                width: 100% !important;
+            }
+        }
+
+        @media #{$tabletPortrait} {
+            label,
+            input,
+            textarea,
+            .input-group,
+            .kdx-input-select-wrapper,
+            .chosen-container,
+            .input-selection-inline,
+            .input-selection,
+            .chosen-container input,
+            .chosen-container .search-field,
+            .input-group input,
+            .input-inline-btn .input-inline,
+            .form-label,
+            // .form-input,
+            .input-inline-wrapper,
+            .kdx-fileinput,
+            .fileinput-preview {
+                width: 100% !important;
+            }
+        }
+    }
+}
+
+
+.rtl {
+    .form-vertical .kdx {
+        .required {
+            label:before {
+                float: right;
+                margin-left: 3px;
+                margin-right: -9px;
+            }
+        }
+
+        // label,
+        // .form-label {
+        //     padding: 8px $padding20;
+        //     text-align: right;
+        //     margin-left: $margin10;
+        //     margin-right: $noMargin;
+        //     border-left: 0 !important;
+        //     border-right: 2px solid #F5F5F5;
+        // }
+
+        // .form-control,
+        // input,
+        // textarea,
+        // .chosen-choices,
+        // label,
+        // .form-label,
+        // // .form-input,
+        // select {
+        //     font-size: $textSizeS !important;
+        // }
+
+        // .form-label,
+        // .form-input,
+        // .file .form-control {
+        //     line-height: 14px !important;
+        // }
+
+        .fileinput-filename {
+            padding-bottom: 3px;
+        }
+
+        .file-input-text,
+        .file-input-buttons,
+        .kdx-input-text {
+            p {
+                font-size: $textSizeXS !important;
+            }
+        }
+
+        // .form-input {
+        //     padding: $padding5 $noPadding;
+        // }
+
+        option {
+            direction: ltr;
+        }
+
+        .form-control {
+            padding: $padding5 6px 3px;
+            height: 30px;
+        }
+
+        .kdx-input-select-wrapper {
+            display: inline-block;
+
+            &:after {
+                left: 8px;
+                right: auto;
+            }
+
+            select {
+                padding: 4px $padding10 $padding5 $padding25 !important;
+            }
+        }
+
+        .input-inline-btn {
+            .input-inline {
+                padding-left: 110px;
+                padding-right: $padding10 !important;
+            }
+
+            .error-message {
+                left: auto !important;
+                right: 0;
+                margin-right: 270px;
+                margin-left: $noMargin;
+                width: 102%;
+            }
+        }
+
+        .input-inline {
+            margin-right: $noMargin;
+            margin-left: $margin10;
+
+            &.input-prefix {
+                margin-right: $noMargin !important;
+                margin-left: $margin10 !important;
+            }
+        }
+
+        .error-wrapper {
+            margin: $noMargin $margin10 $margin10 $noMargin;
+
+            @media #{$tabletPortrait} {
+                margin: $noMargin $noMargin $margin10 $margin10;
+            }
+
+            &:before,
+            &:after {
+                content: "\f0da";
+                left: auto !important;
+
+                @media #{$tabletPortrait} {
+                    transform: rotate(-90deg);
+                }
+            }
+
+            &:before {
+                top: 1px;
+                right: -8px;
+
+                @media #{$tabletPortrait} {
+                    top: -20px !important;
+                    right: 10px !important;
+                }
+            }
+
+            &:after {
+                top: 2px;
+                right: -6px;
+
+                @media #{$tabletPortrait} {
+                    top: -17px !important;
+                    right: 11px !important;
+                }
+            }
+
+            .error-message {
+                font-size: $textSizeXS;
+
+                &:before {
+                    display: none;
+                }
+
+                &:after {
+                    font-family: $fontAwesome;
+                    content: "\f111";
+                    vertical-align: middle;
+                    font-size: 5px;
+                    margin-right: $margin5;
+                    margin-left: $margin5;
+                }
+            }
+        }
+
+        .kdx-tooltip {
+            @media #{$tabletPortrait} {
+                order: 1;
+                right: unset !important;
+                left: 0px;
+            }
+        }
+
+        .kdx-input-table-wrapper {
+            .ag-virtual-list-item {
+                label {
+                    padding-left: $noPadding;
+                    padding-right: $noPadding;
+                    border: 0;
+                }
+            }
+        }
+    }
+}
