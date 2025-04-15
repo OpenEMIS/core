@@ -2332,7 +2332,7 @@ class UserRepository extends Controller
             if (isset($user)) {
                 return $user->id;
             }
-            return $this->sendErrorResponse('User Not Found');
+            return '';
 
         } catch (\Exception $e) {
 
