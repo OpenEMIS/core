@@ -18,13 +18,18 @@ class POCOR7510 extends AbstractMigration
     {
         // Create a backup table like `security_functions`
         $this->execute('CREATE TABLE IF NOT EXISTS `zz_7510_security_functions` LIKE `security_functions`');
-        
+
         // Copy data from `security_functions` to `zz_7510_security_functions`
         $this->execute('INSERT IGNORE INTO `zz_7510_security_functions` SELECT * FROM `security_functions`');
 
         // Add Sync records for different modules
         $this->addSyncRecordIfNotExists('Examinations', 'Examinations', 'Administration', 'syncResultFromExam.execute');
         $this->addSyncRecordIfNotExists('Institutions', 'Examinations', 'Institutions', 'syncStudentsToExam.execute');
+
+        $this->execute('CREATE TABLE IF NOT EXISTS `zz_7510_examination_centres_examinations_students` LIKE `examination_centres_examinations_students`');
+        $this->execute('INSERT IGNORE INTO `zz_7510_examination_centres_examinations_students` SELECT * FROM `examination_centres_examinations_students`');
+        $this->execute('ALTER TABLE `examination_centres_examinations_students` ADD `sync_status` INT NULL DEFAULT NULL AFTER `academic_period_id`');
+        $this->execute('ALTER TABLE `examination_centres_examinations_students` ADD `last_synced` DATETIME NULL AFTER `sync_status``');
     }
 
     /**
@@ -109,5 +114,7 @@ class POCOR7510 extends AbstractMigration
         // Revert the table to its previous state by renaming
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `zz_7510_security_functions` TO `security_functions`');
+        $this->execute('DROP TABLE IF EXISTS `examination_centres_examinations_students`');
+        $this->execute('RENAME TABLE `zz_7510_examination_centres_examinations_students` TO `examination_centres_examinations_students`');
     }
 }
