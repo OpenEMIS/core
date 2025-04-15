@@ -122,7 +122,7 @@ class InstitutionClassesTable extends ControllerActionTable
             'tableCellClass' => null
                 ,'events' => [
                 'ControllerAction.Model.add.onInitialize'       => [],
-//                'ControllerAction.Model.add.beforeSave'         => [],
+                'ControllerAction.Model.add.beforeSave'         => [],
                 'ControllerAction.Model.addEdit.beforePatch'    => [],
                 'ControllerAction.Model.addEdit.afterAction'    => [],
                 'ControllerAction.Model.add.beforeSave'         => ['callable' => 'addBeforeSave', 'priority' => 500]
@@ -613,11 +613,12 @@ class InstitutionClassesTable extends ControllerActionTable
                 if($this->action == 'add') {
 
                     $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                    $user = $this->Auth->user();
+                    $user = $this->Auth->user(); // POCOR-9024
                     if ($user) {
                         $Webhooks->triggerShell('class_create', ['username' => $user->username], $body);
                     }
-                    // POCOR-5435 ->Webhook Feature class (create) -- end
+                }
+                // POCOR-5435 ->Webhook Feature class (create) -- end
             }
         } else {
             $editAction  = json_decode(json_encode($options), true);
@@ -663,19 +664,15 @@ class InstitutionClassesTable extends ControllerActionTable
 
                 foreach ($newStudents as $key => $student) {
                     // POCOR-9024 start
-                    if(!isset($student['id'])) {
-                        if(!isset($student['id'])) {
-                            $student['id'] = Text::uuid();
-                        }
+                    if (!isset($student['id'])) {
+                        $student['id'] = Text::uuid();
                     }
                     // POCOR-9024 end
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $store = $this->ClassStudents->save($newClassStudentEntity);
                     if ($store) {
                         /** POCOR-6768 starts- updating student's class in institution_subject_students table which is reassigning into a class*/
-                        $SubjectStudents->updateAll(
-                            ['institution_class_id' => $newClassStudentEntity->institution_class_id],
-                            ['id' => $newClassStudentEntity->id]);
+                        $SubjectStudents->updateAll(['institution_class_id' => $newClassStudentEntity->institution_class_id], ['id' => $newClassStudentEntity->id]);
                         /**POCOR-6768 ends*/
                     }
                 }
