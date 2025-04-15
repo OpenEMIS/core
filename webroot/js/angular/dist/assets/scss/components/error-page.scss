@@ -1,0 +1,52 @@
+@charset "UTF-8";
+
+/* Error V1.1.0 */
+
+.kdx-error {
+    padding: $padding20;
+    min-height: 145px;
+    width: 50%;
+    margin: $noMargin auto;
+    .kdx-error-page-icon {
+        width: 100%;
+        display: inline-block;
+        float: left;
+        margin: $noMargin auto;
+        text-align: center;
+        padding: $padding20;
+        i {
+            font-size: $logoSizeXXL;
+            color: #999;
+        }
+    }
+    .kdx-error-page-text {
+        width: 100%;
+        text-align: center;
+        margin-bottom: $margin30;
+        h5 {
+            color: #CC5C5C;
+            margin: $margin15 $noMargin;
+            line-height: 1.4em;
+        }
+
+        a {
+            color: #CC5C5C;
+            text-decoration: underline;
+        }
+    }
+    .kdx-error-page-buttons {
+        width: 100%;
+        text-align: center;
+        margin-bottom: $margin30;
+    }
+}
+
+.ui-tooltip {
+    .error-page-tooltip-text {
+        font-size: $bodyTextSize;
+        font-family: $bodyFont !important;
+        font-weight: bold;
+        padding-top: 3px;
+        padding-bottom: 3px;
+    }
+}
