@@ -78,119 +78,119 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         UtilsSvc.isAppendLoader(true);
         if (Controller.classId != null) {
             InstitutionClassStudentsSvc.getClassDetails(Controller.classId)
-            .then(function(response) {
-                // console.log('getClassDetails')
-                // console.log(response)
-                Controller.selectedTeacher = response.staff_id;
+                .then(function(response) {
+                    // console.log('getClassDetails')
+                    // console.log(response)
+                    Controller.selectedTeacher = response.staff_id;
 
-                var secondaryTeachers = [];
-                angular.forEach(response.classes_secondary_staff, function(value, key) {
-                    this.push(value.secondary_staff_id);
-                }, secondaryTeachers);
-                Controller.selectedSecondaryTeacher = secondaryTeachers;
-                Controller.selectedShift = response.institution_shift_id;
-                Controller.selectedUnit = response.institution_unit_id;
-                Controller.selectedCourse = response.institution_course_id;
-                Controller.className = response.name;
-                Controller.academicPeriodId = response.academic_period_id;
-                Controller.institutionId = response.institution_id;
-                Controller.academicPeriodName = response.academic_period.name;
-                Controller.classCapacity = response.capacity;
+                    var secondaryTeachers = [];
+                    angular.forEach(response.classes_secondary_staff, function(value, key) {
+                        this.push(value.secondary_staff_id);
+                    }, secondaryTeachers);
+                    Controller.selectedSecondaryTeacher = secondaryTeachers;
+                    Controller.selectedShift = response.institution_shift_id;
+                    Controller.selectedUnit = response.institution_unit_id;
+                    Controller.selectedCourse = response.institution_course_id;
+                    Controller.className = response.name;
+                    Controller.academicPeriodId = response.academic_period_id;
+                    Controller.institutionId = response.institution_id;
+                    Controller.academicPeriodName = response.academic_period.name;
+                    Controller.classCapacity = response.capacity;
 
-                var assignedStudents = [];
-                angular.forEach(response.class_students, function(value, key) {
-                    var toPush = {
-                        openemis_no: value.user.openemis_no,
-                        name: value.user.name,
-                        education_grade_name: value.education_grade.name,
-                        student_status_name: value.student_status.name,
-                        gender_name: value.user.gender.name,
-                        student_id: value.student_id,
-                        special_needs: (value.user.has_special_needs) ? "<i class='fa fa-check'></i>" : "<i class='fa fa-times'></i>",
-                        encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
-                            {
-                                student_id: value.student_id,
-                                institution_class_id: value.institution_class_id,
-                                education_grade_id: value.education_grade_id,
-                                academic_period_id: value.academic_period_id,
-                                institution_id: value.institution_id,
-                                student_status_id: value.student_status_id,
-                                gender_id: value.user.gender.id
-                            }
-                        ))
-                    };
-                    this.push(toPush);
-                }, assignedStudents);
-                Controller.assignedStudents = assignedStudents;
+                    var assignedStudents = [];
+                    angular.forEach(response.class_students, function(value, key) {
+                        var toPush = {
+                            openemis_no: value.user.openemis_no,
+                            name: value.user.name,
+                            education_grade_name: value.education_grade.name,
+                            student_status_name: value.student_status.name,
+                            gender_name: value.user.gender.name,
+                            student_id: value.student_id,
+                            special_needs: (value.user.has_special_needs) ? "<i class='fa fa-check'></i>" : "<i class='fa fa-times'></i>",
+                            encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
+                                {
+                                    student_id: value.student_id,
+                                    institution_class_id: value.institution_class_id,
+                                    education_grade_id: value.education_grade_id,
+                                    academic_period_id: value.academic_period_id,
+                                    institution_id: value.institution_id,
+                                    student_status_id: value.student_status_id,
+                                    gender_id: value.user.gender.id
+                                }
+                            ))
+                        };
+                        this.push(toPush);
+                    }, assignedStudents);
+                    Controller.assignedStudents = assignedStudents;
 
-                var promises = [];
-                promises[0] = InstitutionClassStudentsSvc.getUnassignedStudent(Controller.classId);
-                promises[1] = InstitutionClassStudentsSvc.getInstitutionShifts(response.institution_id, response.academic_period_id);
-                promises[2] = InstitutionClassStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
-                promises[3] = InstitutionClassStudentsSvc.getConfigItemValue('max_students_per_class');
-                promises[4] = InstitutionClassStudentsSvc.getInstitutionUnits(response.institution_id, response.academic_period_id);
-                promises[5] = InstitutionClassStudentsSvc.getInstitutionCourses(response.institution_id, response.academic_period_id);
-                return $q.all(promises);
-            }, function(error) {
-                console.log(error);
-            })
-            .then(function (promises) {
-                var unassignedStudentsArr = [];
-                angular.forEach(promises[0], function(value, key) {
-                    var toPush = {
-                        openemis_no: value.openemis_no,
-                        name: value.name,
-                        education_grade_name: value.education_grade_name,
-                        student_status_name: value.student_status_name,
-                        gender_name: value.gender_name,
-                        student_id: value.id,
-                        special_needs: (value.has_special_needs) ? "<i class='fa fa-check'></i>" : "<i class='fa fa-times'></i>",
-                        encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
-                            {
-                                student_id: value.id,
-                                institution_class_id: value.institution_class_id,
-                                education_grade_id: value.education_grade_id,
-                                academic_period_id: value.academic_period_id,
-                                institution_id: value.institution_id,
-                                student_status_id: value.student_status_id,
-                                gender_id: value.gender_id
-                            }
-                        ))
-                    };
-                    this.push(toPush);
-                }, unassignedStudentsArr);
-                Controller.unassignedStudents = unassignedStudentsArr;
-                Controller.shiftOptions = promises[1];
-                Controller.mainTeacherOptions = promises[2];
-                Controller.maxStudentsPerClass = parseInt(promises[3]);
-                Controller.unitOptions = promises[4];
-                Controller.courseOptions = promises[5];
+                    var promises = [];
+                    promises[0] = InstitutionClassStudentsSvc.getUnassignedStudent(Controller.classId);
+                    promises[1] = InstitutionClassStudentsSvc.getInstitutionShifts(response.institution_id, response.academic_period_id);
+                    promises[2] = InstitutionClassStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
+                    promises[3] = InstitutionClassStudentsSvc.getConfigItemValue('max_students_per_class');
+                    promises[4] = InstitutionClassStudentsSvc.getInstitutionUnits(response.institution_id, response.academic_period_id);
+                    promises[5] = InstitutionClassStudentsSvc.getInstitutionCourses(response.institution_id, response.academic_period_id);
+                    return $q.all(promises);
+                }, function(error) {
+                    console.log(error);
+                })
+                .then(function (promises) {
+                    var unassignedStudentsArr = [];
+                    angular.forEach(promises[0], function(value, key) {
+                        var toPush = {
+                            openemis_no: value.openemis_no,
+                            name: value.name,
+                            education_grade_name: value.education_grade_name,
+                            student_status_name: value.student_status_name,
+                            gender_name: value.gender_name,
+                            student_id: value.id,
+                            special_needs: (value.has_special_needs) ? "<i class='fa fa-check'></i>" : "<i class='fa fa-times'></i>",
+                            encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
+                                {
+                                    student_id: value.id,
+                                    institution_class_id: value.institution_class_id,
+                                    education_grade_id: value.education_grade_id,
+                                    academic_period_id: value.academic_period_id,
+                                    institution_id: value.institution_id,
+                                    student_status_id: value.student_status_id,
+                                    gender_id: value.gender_id
+                                }
+                            ))
+                        };
+                        this.push(toPush);
+                    }, unassignedStudentsArr);
+                    Controller.unassignedStudents = unassignedStudentsArr;
+                    Controller.shiftOptions = promises[1];
+                    Controller.mainTeacherOptions = promises[2];
+                    Controller.maxStudentsPerClass = parseInt(promises[3]);
+                    Controller.unitOptions = promises[4];
+                    Controller.courseOptions = promises[5];
 
-                Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
-                Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
+                    Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
+                    Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
 
-                var toTranslate = [];
-                angular.forEach(Controller.colDef, function(value, key) {
-                    this.push(value.headerName);
-                }, toTranslate);
-                return InstitutionClassStudentsSvc.translate(toTranslate);
-            }, function (error) {
-                console.log(error);
-            })
-            .then(function (translatedText) {
-                angular.forEach(translatedText, function(value, key) {
-                    Controller.colDef[key]['headerName'] = value;
+                    var toTranslate = [];
+                    angular.forEach(Controller.colDef, function(value, key) {
+                        this.push(value.headerName);
+                    }, toTranslate);
+                    return InstitutionClassStudentsSvc.translate(toTranslate);
+                }, function (error) {
+                    console.log(error);
+                })
+                .then(function (translatedText) {
+                    angular.forEach(translatedText, function(value, key) {
+                        Controller.colDef[key]['headerName'] = value;
+                    });
+                    Controller.setTop(Controller.colDef, Controller.unassignedStudents);
+                    Controller.setBottom(Controller.colDef, Controller.assignedStudents);
+                }, function (error) {
+                    console.log(error);
+                })
+                .then(Controller.getClassCustomFields)
+                .finally(function(){
+                    Controller.dataReady = true;
+                    UtilsSvc.isAppendLoader(false);
                 });
-                Controller.setTop(Controller.colDef, Controller.unassignedStudents);
-                Controller.setBottom(Controller.colDef, Controller.assignedStudents);
-            }, function (error) {
-                console.log(error);
-            })
-            .then(Controller.getClassCustomFields)
-            .finally(function(){
-                Controller.dataReady = true;
-                UtilsSvc.isAppendLoader(false);
-            });
         }
 
     });
@@ -404,27 +404,27 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
             AlertSvc.error(Controller, 'The number of students has reached the capacity limit of '+postData.capacity+' students.');
         } else {
             InstitutionClassStudentsSvc.saveClass(postData)
-            .then(function(response) {
-                var error = response.data.error;
-                if (error instanceof Array && error.length == 0) {
-                    Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
-                    Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
-                    $http.get(Controller.alertUrl)
-                    .then(function(response) {
-                        //alert(Controller.redirectUrl);
-                        $window.location.href = Controller.redirectUrl;
-                    }, function (error) {
-                        console.log(error);
-                    });
-                } else {
-                    AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
-                    angular.forEach(error, function(value, key) {
-                        Controller.postError[key] = value;
-                    })
-                }
-            }, function(error){
-                console.log(error);
-            });
+                .then(function(response) {
+                    var error = response.data.error;
+                    if (error instanceof Array && error.length == 0) {
+                        Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
+                        Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
+                        $http.get(Controller.alertUrl)
+                            .then(function(response) {
+                                //alert(Controller.redirectUrl);
+                                $window.location.href = Controller.redirectUrl;
+                            }, function (error) {
+                                console.log(error);
+                            });
+                    } else {
+                        AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
+                        angular.forEach(error, function(value, key) {
+                            Controller.postError[key] = value;
+                        })
+                    }
+                }, function(error){
+                    console.log(error);
+                });
         }
     }
 
