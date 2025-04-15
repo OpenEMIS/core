@@ -267,6 +267,11 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
+        $userId = $this->getQueryString('user_id');
+        if (!empty($userId)) { //POCOR-9020
+            $queryString['staff_id'] = $userId;
+            $queryString['id'] = $userId;
+        }
 //         echo "<pre>"; print_r($queryString);
 // die;
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -281,7 +286,8 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             // url to redirect to staffUser page
             $staffUserUrl = $this->url('view');
             $staffUserUrl['action'] = 'StaffUser';
-            $staffUserUrl[1] = $encodedQueryString;
+            $staffUserUrl['?']['queryString'] = $encodedQueryString; //POCOR-9020
+            // $staffUserUrl[1] = $encodedQueryString;
             //$staffUserUrl[2] = $this->paramsEncode(['id' => $userId]);
 
             // check pending transfers
