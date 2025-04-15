@@ -437,7 +437,6 @@ class SurveyStatusesTable extends ControllerActionTable
     **/
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-       //echo "<pre>"; print_r($entity);die;
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $Areas = TableRegistry::get('Area.Areas');// POCOR-7549

@@ -1,0 +1,188 @@
+@charset "UTF-8";
+
+
+/* Datepicker V1.1.1 */
+
+.kdx-datepicker {
+    display: inline-block;
+    position: relative;
+    width: 25%;
+    height: 30px;
+    cursor: pointer;
+    margin-bottom: $margin15;
+
+    @media #{$tabletPortrait} {
+        width: 100%;
+    }
+
+    .kdx-datepicker-wrapper {
+        height: 30px;
+
+        .kdx-datepicker-input {
+            width: 100%;
+            border-radius: 3px;
+
+            @media #{$tabletLandscape} {
+                width: 100% !important;
+            }
+        }
+
+        .btn-input {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 30px;
+            width: 50px;
+            padding: $noPadding $padding10;
+            margin: $noMargin;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+
+            .rtl & {
+                left: 0;
+                right: auto !important;
+                border-top-left-radius: 3px;
+                border-bottom-left-radius: 3px;
+                border-top-right-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+        }
+    }
+}
+
+.kdx-datepicker-range {
+
+    .rtl & {
+        span {
+            font-size: $textSizeS;
+        }
+    }
+
+    .kdx-datepicker {
+        display: inline-flex;
+        width: 20%;
+
+        @media #{$tabletLandscape} {
+            width: 30% !important;
+        }
+
+        @media #{$tabletPortrait} {
+            width: 100% !important;
+        }
+
+        .kdx-datepicker-wrapper {
+            width: 100%;
+
+            .rtl & .kdx-datepicker-input {
+                font-size: $textSizeS;
+            }
+
+            .rtl & .btn-input {
+                left: 0;
+                right: auto !important;
+                border-top-left-radius: 3px;
+                border-bottom-left-radius: 3px;
+                border-top-right-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+        }
+    }
+
+    span {
+        font-size: $bodyTextSize;
+        margin: $noMargin $margin20;
+
+        @media #{$tabletPortrait} {
+            display: block;
+            margin: $noMargin;
+            padding: $padding10 $noPadding;
+        }
+    }
+}
+
+
+ngb-datepicker.dropdown-menu {
+    outline: 0;
+    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+
+    .ngb-dp-header {
+        padding: 2px !important;
+
+        ngb-datepicker-navigation {
+            display: inline-flex;
+            flex-flow: row nowrap;
+            width: 100%;
+
+            .ngb-dp-arrow {
+
+                .btn-link {
+                    background: transparent !important;
+                    color: #000;
+                    font-weight: normal;
+                    flex: 0 auto;
+                    font-size: $bodyTextSize;
+                    width: 100%;
+                    height: 100%;
+                    border: none !important;
+
+                    .ngb-dp-navigation-chevron {
+                        // margin: $margin5 $margin5 $margin5 $noMargin;
+                        line-height: 12px;
+
+                        .rtl & {
+                            margin: $margin5 $margin5 $margin5 $noMargin;
+                            line-height: 12px;
+
+                            &:before {
+                                transform: rotate(45deg);
+                            }
+                        }
+                    }
+                }
+                &.right {
+
+                    .rtl & {
+
+                        .btn-link .ngb-dp-navigation-chevron:before {
+                            transform: rotate(226deg);
+                        }
+                    }
+                }
+            }
+
+            ngb-datepicker-navigation-select {
+                margin: $noMargin;
+                flex: 1 auto;
+
+                select {
+                    width: 45% !important;
+                    padding: $margin5 $margin25 $margin5 8px;
+                    margin: $noMargin 3px;
+                    font-size: $bodyTextSize;
+                    background-position-x: 50px;
+
+                    .rtl & {
+                        background-position-x: 5px;
+                        padding: $padding5 8px $padding5 $padding15;
+                        font-size: $bodyTextSize;
+                    }
+                }
+            }
+        }
+    }
+
+    .ngb-dp-day {
+        font-size: $bodyTextSize;
+
+        .btn-light {
+            &,
+            &:hover,
+            &:active,
+            &:focus {
+                background: transparent;
+                outline: 0;
+                border-radius: 50%;
+            }
+        }
+    }
+}
