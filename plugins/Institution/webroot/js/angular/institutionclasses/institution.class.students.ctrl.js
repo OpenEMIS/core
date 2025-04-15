@@ -132,7 +132,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     promises[5] = InstitutionClassStudentsSvc.getInstitutionCourses(response.institution_id, response.academic_period_id);
                     return $q.all(promises);
                 }, function(error) {
-                    console.log(error);
+                    console.error(error);
                 })
                 .then(function (promises) {
                     var unassignedStudentsArr = [];
@@ -175,7 +175,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     }, toTranslate);
                     return InstitutionClassStudentsSvc.translate(toTranslate);
                 }, function (error) {
-                    console.log(error);
+                    console.error(error);
                 })
                 .then(function (translatedText) {
                     angular.forEach(translatedText, function(value, key) {
@@ -184,7 +184,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     Controller.setTop(Controller.colDef, Controller.unassignedStudents);
                     Controller.setBottom(Controller.colDef, Controller.assignedStudents);
                 }, function (error) {
-                    console.log(error);
+                    console.error(error);
                 })
                 .then(Controller.getClassCustomFields)
                 .finally(function(){
@@ -414,7 +414,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                                 //alert(Controller.redirectUrl);
                                 $window.location.href = Controller.redirectUrl;
                             }, function (error) {
-                                console.log(error);
+                                console.error(error);
                             });
                     } else {
                         AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
@@ -423,7 +423,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                         })
                     }
                 }, function(error){
-                    console.log(error);
+                    console.error(error);
                 });
         }
     }
