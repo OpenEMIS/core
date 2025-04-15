@@ -16,19 +16,12 @@ class PermissionService
     protected $roleIds = [];
     protected $institutionIds = [];
     protected $allowAllInstitutions = 0;
-    private array $commonViewModules = [
-        'Areas',
-        'Genders',
-        'AreaAdministratives',
-        'AreaLevels',
-        'AcademicPeriods',
-        'AcademicPeriodLevels',
-        'ContactTypes'
-        // Add more modules that should be always viewable
-    ];
+
+    // POCOR-8966
 
     public function __construct()
     {
+
         $this->user = JWTAuth::user();
         if ($this->user) {
             $this->loadUserPermissions();
@@ -38,6 +31,13 @@ class PermissionService
     private function loadUserPermissions()
     {
         $userId = $this->user->id;
+        // POCOR-8966 start
+        // If user is super admin, override permissions
+        if ($this->user->super_admin ?? 0) {
+            $this->allowAllInstitutions = 1;
+            return;
+        }
+        // POCOR-8966 end
         $this->roleIds = SecurityGroupUsers::where('security_user_id', $userId)
             ->pluck('security_role_id')
             ->unique()
@@ -64,15 +64,19 @@ class PermissionService
         $this->allowAllInstitutions = $groupAreaInstitutions['allowAllInstitutions'] ?? 0;
         $this->institutionIds = array_unique(array_merge($this->institutionIds, $groupAreaInstitutions['institutionIds'] ?? []));
 
-        // If user is super admin, override permissions
-        if ($this->user->super_admin ?? 0) {
-            $this->allowAllInstitutions = 1;
-        }
     }
 
     public function checkPermission($modelName, $action): bool
     {
-        $user = JWTAuth::user();
+        // POCOR-8966 start
+        if (!$this->user) {
+            $this->user = JWTAuth::user();
+            if ($this->user) {
+                $this->loadUserPermissions();
+            }
+        }
+        $user = $this->user;
+        // POCOR-8966 end
         if (!$user) {
             return false;
         }
@@ -88,9 +92,11 @@ class PermissionService
             return $this->loadPermissionsFromDb($user->id);
         });
 //        $permissions = $this->loadPermissionsFromDb($user->id);
+//        Log::info("Permissions: " . print_r($permissions, true));
 
-
-        return $this->hasPermission($permissions, $modelName, $action);
+        $hasPermission = $this->hasPermission($permissions, $modelName, $action);
+//        Log::info("Has permission: $hasPermission");
+        return $hasPermission;
     }
 
     private function loadPermissionsFromDb($userId): array
@@ -157,34 +163,19 @@ class PermissionService
 
     private function hasPermission($permissions, $modelName, $action): bool
     {
-        if ($action === 'view' && in_array($modelName, $this->commonViewModules, true)) {
-            return true;
-        }
-//        Log::info("Checking permission: $modelName.$action");
-//        Log::info("Permissions: " . print_r($permissions,true));
         foreach ($permissions as $module => $permTypes) {
             foreach (['_view', '_edit', '_add', '_delete', '_execute'] as $perm) {
                 if (isset($permTypes[$perm])) {
                     $permValues = $permTypes[$perm];
-//                    Log::info("Checking permission: $module.$action");
-                    // 🔹 Check for general permission like "Institutions.view"
-                    if (in_array("$module.$action", $permValues, true)) {
-                        return true;
-                    }
-
+                    // POCOR-8966 start
                     // 🔹 Check for specific model-based permission like "InstitutionStudents.view"
                     if (in_array("$modelName.$action", $permValues, true)) {
                         return true;
                     }
-
-                    // 🔹 Check if only "view", "edit", etc. exists (without module prefix)
-//                    if (in_array($action, $permValues, true)) {
-//                        return true;
-//                    }
+                    // POCOR-8966 end
                 }
             }
         }
-
         return false;
     }
 

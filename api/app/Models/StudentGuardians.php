@@ -249,5 +249,28 @@ public function _swaggerDelete() {}
     {
         return $this->belongsTo(SecurityUsers::class, 'student_id', 'id');
     }
+
+    // POCOR-8966, POCOR-9030 start
+    public function guardianRelation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(GuardianRelations::class, 'guardian_relation_id', 'id');
+    }
     // POCOR-8840 end
+    public function scopeWithGuardian($query)
+    {
+        return $query->with('guardian');
+    }
+    public function scopeWithStudent($query)
+    {
+        return $query->with('student');
+    }
+    public function scopeWithRelation($query)
+    {
+        return $query->with('guardianRelation');
+    }
+    public function scopeFull($query)
+    {
+        return $query->with('guardianRelation')->with('guardian')->with('student');
+    }
+    // POCOR-8966, POCOR-9030 end
 }
