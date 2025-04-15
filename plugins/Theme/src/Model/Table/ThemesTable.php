@@ -26,7 +26,7 @@ class ThemesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-      
+
         parent::initialize($config);
         $this->addBehavior('ControllerAction.FileUpload', [
             // 'name' => 'file_name',
@@ -37,7 +37,9 @@ class ThemesTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->toggle('add', false);
+//        dd('a');
         $this->addBehavior('Configuration.ConfigItems'); //POCOR-8951
+//        dd('b');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -53,7 +55,7 @@ class ThemesTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('content', ['visible' => false]);  
+        $this->field('content', ['visible' => false]);
         $this->field('default_content', ['visible' => false]);
 
         // $this->setFieldOrder(['name','db_type_id','host','host_port','db_name','username','conn_status_id','status_checked','modified_user_id','modified','created_user_id','created']);
@@ -61,6 +63,7 @@ class ThemesTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $encodedString = explode(".", $this->request->getAttribute('params')['pass'][1]);
         $encodedStringFirstValue = $encodedString[0];
         $id = base64_decode($encodedStringFirstValue);
@@ -122,13 +125,13 @@ class ThemesTable extends ControllerActionTable
                 'visible' => 'false'
             ]);
         }
-        
+
     }
 
     /**
      * POCOR-8652
      * This function handles the action to add or edit after performing some operations.
-     * It modifies the 'color_themes' field by setting its type to 'element' 
+     * It modifies the 'color_themes' field by setting its type to 'element'
      * and associates it with a custom element named 'themecolor'.
      *
      * @param Event $event The event that triggered the action
@@ -139,9 +142,9 @@ class ThemesTable extends ControllerActionTable
             $this->field('color_themes', [
                 'type' => 'element',
                 'element' => 'themecolor',
-                
-            ]); 
-        } 
+
+            ]);
+        }
     }
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -152,7 +155,7 @@ class ThemesTable extends ControllerActionTable
                 // Read the file contents
                 $fileContent = file_get_contents($filePath);
                 $fileName = $entity->content->getClientFilename();
-                
+
                 // Now $fileContent contains the content of the uploaded file
                 $entity->content =  $fileContent;
                 $entity->value = $fileName;
@@ -167,7 +170,7 @@ class ThemesTable extends ControllerActionTable
                 // Read the file contents
                 $fileContent = file_get_contents($filePath);
                 $fileName = $entity->content->getClientFilename();
-                
+
                 // Now $fileContent contains the content of the uploaded file
                 $entity->content =  $fileContent;
                 $entity->value = $fileName;
@@ -207,7 +210,7 @@ class ThemesTable extends ControllerActionTable
         $configItems->save($themeConfigItemRecord);
     }
 
-    public function validationDefault(Validator $validator): Validator 
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);

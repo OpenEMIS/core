@@ -16,12 +16,15 @@
 				'data-named-key' => 'type'
 			));
 			if($this->request->getParam('action') == 'Themes') { //POCOR-8951
-				echo $this->Form->input('config_item_type', array(
+//                dd($productThemes);
+				echo $this->Form->input('online_service', array(
 					'class' => 'form-control',
 					'label' => false,
-					'options' => $themeRecord,
+					'options' => $productThemes,
+                    'default' => $selectedProduct,
 					'url' => $baseUrl,
-					'data-named-key' => 'type'
+					'data-named-key' => 'online_service',
+                    'data-named-group' => 'type'
 				));
 			}
 		?>
