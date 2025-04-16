@@ -99,7 +99,23 @@ class ProgrammesTable extends ControllerActionTable
 	{
 		$this->field('previous_institution_student_id', ['visible' => false]);
 
-		$this->field('registration_number',['after' => 'student_id']); //POCOR-8870
+		$LabelsTable = TableRegistry::get('System.Labels');
+		// Find existing record
+		//POCOR-9048[START]
+		$LabelsTableData = $LabelsTable
+		->find()
+		->where(['field' => 'registration_number'])
+		->first();
+		$LabelsCode = $LabelsTableData->code;
+		$LabelsName = $LabelsTableData->name;
+		if((empty($LabelsCode) && empty($LabelsName))){
+			$this->field('registration_number',['after' => 'student_id']); 
+		}else{
+			if(!empty($LabelsName)){
+				$this->field($LabelsName,['after' => 'student_id']); 
+			}
+		}
+		//POCOR-9048[END]
 	}
 
 
