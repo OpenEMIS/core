@@ -34,8 +34,158 @@ class InstitutionSubjectsTable extends AppTable  {
         $this->ControllerAction->field('format');
     }
 
-    //POCOR-8157 refactored
+    //POCOR-8999 changes in logic for count.
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+        $institutionId = $requestData->institution_id;
+        $areaId = $requestData->area_education_id;
+    //    $areaLevelId = $requestData->area_level_id;
+        $AreaAdministratives = $this->getDynamicTableInstance('area_administratives');
+        $Institutions = $this->getDynamicTableInstance('institutions');
+        $Areas = $this->getDynamicTableInstance('areas');
+        $AreaLevels = $this->getDynamicTableInstance('area_levels');
+        $conditions = $this->buildConditions($academicPeriodId, $institutionId, $requestData->education_subject_id, $areaId);
+
+        $InstitutionClassSubjects = $this->getDynamicTableInstance('Institution.InstitutionClassSubjects');
+        $InstitutionClasses = $this->getDynamicTableInstance('Institution.InstitutionClasses');
+        $EducationGrades = $this->getDynamicTableInstance('Education.EducationGrades');
+        $Users = $this->getDynamicTableInstance('security_users');
+        $InstitutionSubjectStudents = $this->getDynamicTableInstance('institution_subject_students');
+
+        $total_condition = [
+            $InstitutionSubjectStudents->aliasField('student_status_id = 1'),
+            $InstitutionSubjectStudents->aliasField('academic_period_id = ') . $academicPeriodId,
+        ];
+        if ($institutionId > 0) {
+            $total_condition[] = $InstitutionSubjectStudents->aliasField('institution_id = ') . $institutionId;
+        }
+
+        $totalStudentsSubquery = $InstitutionSubjectStudents->find()
+            ->select([
+                'institution_subject_id' => $InstitutionSubjectStudents->aliasField('institution_subject_id'),
+                'institution_class_id' => $InstitutionSubjectStudents->aliasField('institution_class_id'),
+                'total_students' => $InstitutionSubjectStudents->find()->func()->count('DISTINCT student_id')
+            ])
+            ->where($total_condition)
+            ->group(['institution_subject_id', 'institution_class_id']);
+
+        // Subquery to count male students
+        $maleStudentsSubquery = $InstitutionSubjectStudents->find()
+            ->select([
+                'institution_subject_id' => $InstitutionSubjectStudents->aliasField('institution_subject_id'),
+                'institution_class_id' => $InstitutionSubjectStudents->aliasField('institution_class_id'),
+                'total_male_students' => $InstitutionSubjectStudents->find()->func()->count('DISTINCT student_id')
+            ])
+            ->innerJoin(
+                [$Users->getAlias() => $Users->getTable()],
+                [$Users->aliasField('id') . ' = ' . $InstitutionSubjectStudents->aliasField('student_id')]
+            )
+            ->where([
+                $total_condition,
+                $Users->aliasField('gender_id = 1') // Male
+            ])
+            ->group(['institution_subject_id', 'institution_class_id']);
+
+        // Subquery to count female students
+        $femaleStudentsSubquery = $InstitutionSubjectStudents->find()
+            ->select([
+                'institution_subject_id' => $InstitutionSubjectStudents->aliasField('institution_subject_id'),
+                'institution_class_id' => $InstitutionSubjectStudents->aliasField('institution_class_id'),
+                'total_female_students' => $InstitutionSubjectStudents->find()->func()->count('DISTINCT student_id')
+            ])
+            ->innerJoin(
+                [$Users->getAlias() => $Users->getTable()],
+                [$Users->aliasField('id') . ' = ' . $InstitutionSubjectStudents->aliasField('student_id')]
+            )
+            ->where([
+                $total_condition,
+                $Users->aliasField('gender_id = 2') // Female
+            ])
+            ->group(['institution_subject_id', 'institution_class_id']);
+
+        $query
+            ->select(array_merge(
+                $this->getSelectFields(),
+                [
+                    'x_students' => 'TotalStudents.total_students',
+                    'x_male_students' => 'MaleStudents.total_male_students',
+                    'x_female_students' => 'FemaleStudents.total_female_students'
+                ]
+            ))
+            ->contain($this->getContainModels())
+
+            // 🔹 FIRST: Ensure InstitutionClasses is joined before subqueries reference it
+            ->innerJoin(
+                [$InstitutionClassSubjects->getAlias() => $InstitutionClassSubjects->getTable()],
+                [$this->aliasField('id') . ' = ' . $InstitutionClassSubjects->aliasField('institution_subject_id')]
+            )
+            ->innerJoin(
+                [$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()],
+                [$InstitutionClassSubjects->aliasField('institution_class_id') . ' = ' . $InstitutionClasses->aliasField('id')]
+            )
+
+            // Add the subquery joins
+            ->leftJoin(
+                ['TotalStudents' => $totalStudentsSubquery],
+                ['TotalStudents.institution_subject_id = ' . $this->aliasField('id'),
+                'TotalStudents.institution_class_id = ' . $InstitutionClasses->aliasField('id')]
+            )
+            ->leftJoin(
+                ['MaleStudents' => $maleStudentsSubquery],
+                ['MaleStudents.institution_subject_id = ' . $this->aliasField('id'),
+                'MaleStudents.institution_class_id = ' . $InstitutionClasses->aliasField('id')]
+            )
+            ->leftJoin(
+                ['FemaleStudents' => $femaleStudentsSubquery],
+                ['FemaleStudents.institution_subject_id = ' . $this->aliasField('id'),
+                'FemaleStudents.institution_class_id = ' . $InstitutionClasses->aliasField('id')]
+            )
+
+            // rest of the joins
+            ->innerJoin(
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
+                [$EducationGrades->aliasField('id') . ' = ' . $this->aliasField('education_grade_id')]
+            )
+            ->innerJoin(
+                ['Institutions' => $Institutions->getTable()],
+                [
+                    'Institutions.id = ' . $this->aliasField('institution_id'),
+                ]
+            )
+            ->leftJoin(
+                ['AreaAdministratives' => $AreaAdministratives->getTable()],
+                [
+                    'AreaAdministratives.id = Institutions.area_administrative_id',
+                ]
+            )
+            ->leftJoin(
+                ['Areas' => $Areas->getTable()],
+                [
+                    'Areas.id = Institutions.area_id',
+                ]
+            )
+            ->leftJoin(
+                ['ParentAreas' => $Areas->getTable()],
+                [
+                    'ParentAreas.id = Areas.parent_id',
+                ]
+            )
+            ->leftJoin(
+                ['AreaLevels' => $AreaLevels->getTable()],
+                ['ParentAreas.area_level_id = AreaLevels.id',
+                'AreaLevels.level != 1']
+            )
+            ->where([
+                $conditions,
+                'TotalStudents.total_students > 0'
+            ]);
+    }
+
+
+    //POCOR-8157 refactored
+    public function onExcelBeforeQueryOld(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -300,6 +450,7 @@ class InstitutionSubjectsTable extends AppTable  {
             $this->aliasField('education_grade_id') => $entity->education_grade_id,
             $this->aliasField('academic_period_id') => $entity->academic_period_id,
             $InstitutionClassSubjects->aliasField('institution_class_id =') => $entity->institution_class_id,
+            $InstitutionClassSubjects->aliasField('institution_subject_id =') => $entity->id, //POCOR-8999
             ];
 
         $staffResult = $InstitutionSubjects
@@ -430,12 +581,13 @@ class InstitutionSubjectsTable extends AppTable  {
                     'label' => __('Subject Teacher')
                 ];
 
+                /* POCOR-8999
                 $newFields[] = [
                     'key' => 'InstitutionSubjects.no_of_seats',
                     'field' => 'no_of_seats',
                     'type' => 'integer',
                     'label' => __('Number of seats')
-                ];
+                ];*/
 
                 $newFields[] = [
                     'key' => 'x_male_students',

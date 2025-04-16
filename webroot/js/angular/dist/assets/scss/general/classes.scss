@@ -1,0 +1,64 @@
+@charset "UTF-8";
+
+/* Classes v.1.0.0 */
+
+//-------- {{ Start of Text }} --------//
+.centralised-element {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.align-header {
+    display: inline-block !important;
+    vertical-align: middle;
+}
+
+.toast-icon {
+    font-family: "FontAwesome";
+    font-size: 36px;
+    font-style: normal;
+    opacity: 0.3;
+}
+
+.important-note {
+    display: inline-block !important;
+    font-size: 13px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-wrap: normal;
+}
+
+.disabled-style {
+    background-color: #F2F2F2 !important;
+    border: 1px solid #CCC !important;
+    color: #999 !important;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.clear {
+    clear: both;
+    display: block !important;
+}
+
+.align-center {
+    text-align: center !important;
+}
+
+.no-border-left {
+    border-left: 0 !important;
+}
+
+.rtl .no-border-left {
+    border-right: 0 !important;
+}
