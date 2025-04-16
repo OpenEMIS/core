@@ -74,8 +74,9 @@ class WebhooksTable extends Table
                 $this->aliasField('status') => self::ACTIVE
             ])
             ->toArray();
-		if(!empty($body)) { 
+		if (!empty($body)) {
             $body = json_encode($body);
+            $body = escapeshellarg($body); // POCOR-8994 <-- wrap & escape properly
         }
 	
         $username = isset($params['username']) ? $params['username'] : null;
