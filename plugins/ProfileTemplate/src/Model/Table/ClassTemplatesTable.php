@@ -169,11 +169,25 @@ class ClassTemplatesTable extends ControllerActionTable
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
-        } else {
-            // attr for template download button
+        } elseif($action == 'edit') { //POCOR-8903
+            $requestId = $this->request->getParam('pass')[1]; 
+            $paramsDecode = $this->paramsDecode($requestId);
+            $recordId = $paramsDecode['id']; // Added semicolon
+
+            $record = $this->find()
+                ->where([$this->aliasField('id') => $recordId])
+                ->first();
+            $excelName = $record ? $record->excel_template_name : null;
+            $attr['startWithOneLeftButton'] = 'download';
+            $attr['type'] = 'binary';
+            $attr['value'] = $excelName;
+            $attr['attr']['value'] = $excelName;
+        }else{
             $attr['startWithOneLeftButton'] = 'download';
             $attr['type'] = 'binary';
         }
+
+        return $attr;
 
         return $attr;
     }

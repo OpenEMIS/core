@@ -45,7 +45,7 @@ class ReportsController extends AppController
     }
 
     public function beforeFilter(EventInterface $event)
-    { 
+    {
         if ($this->getPlugin() == 'Report') {
             $this->Security->setConfig('validatePost', false);
         }
@@ -124,6 +124,7 @@ class ReportsController extends AppController
                 'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
                 'Report.Curriculars' => __('Curriculars'), //POCOR-6673
                 'Report.InstitutionInfrastructureSummaryReport' => __('Institution Infrastructure Summary Report'), //POCOR-8006
+                'Report.StudentBehaviours' => __('Student Behaviours'),
             ];
         } elseif ($module == 'Students') {
             $options = [
@@ -142,6 +143,7 @@ class ReportsController extends AppController
                 'Report.SpecialNeeds' => __('Special Needs'),
                 'Report.Outcomes' => __('Outcomes'), //POCOR-5791
                 'Report.Competencies' => __('Competencies'), //POCOR-5791
+                'Report.StudentsGraduationSummary' => __('Graduation Summary'),//POCOR-8868
 
             ];
         } elseif ($module == 'Staff') {
@@ -340,7 +342,7 @@ class ReportsController extends AppController
         $institutionId = $this->getInstitutionID();
 
         if ($data['module'] == NULL) {
-           $dataModule =  $data['amp;module'];
+            $dataModule =  $data['amp;module'];
         } else {
             $dataModule = $data['module'];
         }
@@ -433,7 +435,7 @@ class ReportsController extends AppController
 
     public function StudentGuardians()
     {
-        $this->ControllerAction->process(['alias' => _FUNCTION_, 'className' => 'Student.Guardians']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']);
     }
 
     private function getInstitutionID()
@@ -441,9 +443,7 @@ class ReportsController extends AppController
         $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
-            $encodedInstitutionIDFromSession;
+        $encodedInstitutionID = $this->request->getParam('institutionId') ??  $encodedInstitutionIDFromSession;
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
         } catch (\Exception $exception) {

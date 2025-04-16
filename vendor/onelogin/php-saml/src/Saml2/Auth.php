@@ -18,7 +18,8 @@ namespace OneLogin\Saml2;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 
 use Exception;
-
+//This class need to be updated
+//remove unwanted code
 /**
  * Main class of OneLogin's PHP Toolkit
  */

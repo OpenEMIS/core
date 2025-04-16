@@ -147,9 +147,9 @@ class ReportCardController extends Controller
     {
         try {
             $data = $this->reportCardService->getReportCardStudents($request);
-            
+
             return $this->sendSuccessResponse("Report card student list found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list.',
@@ -231,9 +231,9 @@ class ReportCardController extends Controller
     {
         try {
             $data = $this->reportCardService->getReportCardSubjects($request);
-            
+
             return $this->sendSuccessResponse("Report card subject list found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list.',
@@ -246,7 +246,7 @@ class ReportCardController extends Controller
 
     //pocor-7856 ends
 
-    
+
     //For pocor-8260 start...
 
     /**
@@ -314,9 +314,9 @@ class ReportCardController extends Controller
         try {
             $params = $request->all();
             $data = $this->reportCardService->getReportCardCommentCodes($params);
-            
+
             return $this->sendSuccessResponse("Report card comment codes list found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list.',
@@ -377,9 +377,9 @@ class ReportCardController extends Controller
         try {
             $params = $request->all();
             $data = $this->reportCardService->getSecurityRoleData($params, $roleId);
-            
+
             return $this->sendSuccessResponse("Security role data found.", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data.',
@@ -446,9 +446,9 @@ class ReportCardController extends Controller
         try {
             $params = $request->all();
             $data = $this->reportCardService->getReportCardData($params, $reportCardId);
-            
+
             return $this->sendSuccessResponse("Report card data found.", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data.',
@@ -458,4 +458,192 @@ class ReportCardController extends Controller
         }
     }
     //For pocor-8270 end...
+
+
+
+    //For POCOR-8617 Start...
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf",
+     *     summary="Get a student's report card in PDF format",
+     *     description="Retrieve a student's report card for a specific academic period and report card ID in PDF format.",
+     *     tags={"Report Card"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the institution",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="classId",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the class",
+     *         @OA\Schema(type="integer", example=591)
+     *     ),
+     *     @OA\Parameter(
+     *         name="studentId",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the student",
+     *         @OA\Schema(type="integer", example=13685)
+     *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=true,
+     *         description="The ID of the academic period",
+     *         @OA\Schema(type="integer", example=33)
+     *     ),
+     *     @OA\Parameter(
+     *         name="report_card_id",
+     *         in="query",
+     *         required=true,
+     *         description="The ID of the report card",
+     *         @OA\Schema(type="integer", example=8)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=75),
+     *                 @OA\Property(property="file_name", type="string", example="P1002_Report Card_2382817301_Asher Ayers.pdf"),
+     *                 @OA\Property(property="file_content", type="string", example="JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9UeXBlIC9QYWdlCi9QYXJlbnQgMSAwIFIKL01lZGlhQm94IFswIDAgNjIzLjYyMiAxMTMzLjg1OF0KL1RyaW1Cb3ggWzAuMDAwIDAuMDAwIDYyMy42MjIgMTEzMy44NThdCi9SZXNvdXJjZXMgMiAwIFIKL0dyb3VwIDw8IC9UeXBlIC9Hcm91cCAvUyAvVHJhbnNwYXJlbmN5IC9DUyAvRGV2aWNlUkdCID4+IAovQ29udGVudHMgNCAwIFIl")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
+    public function studentReportCardPdfDownload(Request $request, $institutionId, $classId, $studentId)
+    {
+        try {
+            $params = $request->all();
+            //POCOR-8728 starts
+            if (empty($params['academic_period_id'])) {
+                return $this->sendErrorResponse('Please send academic period in request.', 400);
+            }
+    
+            if (empty($params['report_card_id'])) {
+                return $this->sendErrorResponse('Please send Report Card Id in request.', 400);
+            }//POCOR-8728 ends
+            
+            $data = $this->reportCardService->studentReportCardPdfDownload($params, $institutionId, $classId, $studentId);
+
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Report card pdf file found.", $data);
+            } else {
+                return $this->sendErrorResponse('Report card pdf file not found.');
+            }
+
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card in PDF.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card in PDF.');
+        }
+    }
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls",
+     *     summary="Get a student's report card in Excel format",
+     *     description="Retrieve a student's report card for a specific academic period and report card ID in Excel format.",
+     *     tags={"Report Card"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the institution",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="classId",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the class",
+     *         @OA\Schema(type="integer", example=591)
+     *     ),
+     *     @OA\Parameter(
+     *         name="studentId",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the student",
+     *         @OA\Schema(type="integer", example=13685)
+     *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=true,
+     *         description="The ID of the academic period",
+     *         @OA\Schema(type="integer", example=33)
+     *     ),
+     *     @OA\Parameter(
+     *         name="report_card_id",
+     *         in="query",
+     *         required=true,
+     *         description="The ID of the report card",
+     *         @OA\Schema(type="integer", example=8)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=75),
+     *                 @OA\Property(property="file_name", type="string", example="P1002_Report Card_2382817301_Asher Ayers.xlsx"),
+     *                 @OA\Property(property="file_content", type="string", example="JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9UeXBlIC9QYWdlCi9QYXJlbnQgMSAwIFIKL01lZGlhQm94IFswIDAgNjIzLjYyMiAxMTMzLjg1OF0KL1RyaW1Cb3ggWzAuMDAwIDAuMDAwIDYyMy42MjIgMTEzMy44NThdCi9SZXNvdXJjZXMgMiAwIFIKL0dyb3VwIDw8IC9UeXBlIC9Hcm91cCAvUyAvVHJhbnNwYXJlbmN5IC9DUyAvRGV2aWNlUkdCID4+IAovQ29udGVudHMgNCAwIFIl")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
+    public function studentReportCardExcelDownload(Request $request, $institutionId, $classId, $studentId)
+    {
+        try {
+            $params = $request->all();
+            //POCOR-8728 starts
+            if (empty($params['academic_period_id'])) {
+                return $this->sendErrorResponse('Please send academic period in request.', 400);
+            }
+    
+            if (empty($params['report_card_id'])) {
+                return $this->sendErrorResponse('Please send Report Card Id in request.', 400);
+            }//POCOR-8728 ends
+            $data = $this->reportCardService->studentReportCardExcelDownload($params, $institutionId, $classId, $studentId);
+
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Report card excel file found.", $data);
+            } else {
+                return $this->sendErrorResponse('Report card excel file not found.');
+            }
+
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card in excel.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card in excel.');
+        }
+    }
+    //For POCOR-8617 End...
 }

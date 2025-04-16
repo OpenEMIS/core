@@ -234,7 +234,8 @@ return [
             'plugins/Angular/config/routes.php',
             'plugins/ControllerAction/config/routes.php',
             'plugins/OpenEmis/config/routes.php',
-            'vendor/cakephp/cakephp/src/Routing/Router.php'
+            'vendor/cakephp/cakephp/src/Routing/Router.php',
+            'plugins/Gpa/config/routes.php'
         ],
     ],
 
@@ -430,11 +431,11 @@ return [
     'installerCensus' => false,
     'installerVaccinations' => false,
     //POCOR-7485 for angular build start
-    'BUILD_MAIN' => define('BUILD_MAIN', 'angular/main.9a15e32718b41b091888'),
-    'BUILD_POLYFILLS' => define('BUILD_POLYFILLS', 'angular/polyfills.0947d4c9434ec41ea5bf'),
-    'BUILD_RUNTIME' => define('BUILD_RUNTIME', 'angular/runtime.7b63b9fd40098a2e8207'),
-    'BUILD_SCRIPTS' => define('BUILD_SCRIPTS', 'angular/scripts.986023b5d731304047cb'),
-    'STYLE_GUIDE' => define('STYLE_GUIDE', 'angular/main/styles.58e9d6e518c5b52d1e43'),
+    'BUILD_MAIN' => define('BUILD_MAIN', 'angular/dist/main'),
+    'BUILD_POLYFILLS' => define('BUILD_POLYFILLS', 'angular/dist/polyfills'),
+    'BUILD_RUNTIME' => define('BUILD_RUNTIME', 'angular/dist/runtime'),
+    'BUILD_SCRIPTS' => define('BUILD_SCRIPTS', 'angular/dist/scripts'),
+    'STYLE_GUIDE' => define('STYLE_GUIDE', 'angular/main/styles'),
     'BUILD_STYLE' => define('BUILD_STYLE', 'angular/main/newStyles'),
 
     'Application' => [

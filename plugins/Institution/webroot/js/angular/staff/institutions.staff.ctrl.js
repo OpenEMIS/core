@@ -88,7 +88,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     userCtrl.initGrid = initGrid;
     userCtrl.getPositions = getPositions;
     userCtrl.changePositionType = changePositionType;
-    userCtrl.changePositionGrade = changePositionGrade; //POCOR-8108
     userCtrl.changePosition = changePosition;
     userCtrl.changeStaffType = changeStaffType;
     userCtrl.changeStaffGradePosition = changeStaffGradePosition;//POCOR-5069
@@ -119,9 +118,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         let fileReader = new FileReader();
         fileReader.readAsDataURL(photo);
         fileReader.onload = () => {
-            // console.log(fileReader.result);
-            userCtrl.selectedUserData.photo_base_64 = fileReader.result;
-        }
+            const base64String = fileReader.result.split(',')[1];
+
+            // POCOR-8917 Manually trigger AngularJS digest cycle
+            $scope.$apply(() => {
+                userCtrl.selectedUserData.photo_base_64 = base64String;
+            });
+        };
     }
 
     angular.element(document).ready(function () {
@@ -196,12 +199,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 });
         }
 
-        function getStaffPosititonGrades() {
-            return userSvc.getStaffPosititonGrades()
-                .then(resp => {
-                    userCtrl.staffGradePositionOptions = resp.data;
-                });
-        }
 
         function handleConfigItem(configCode, configValue) {
             switch (configCode) {
@@ -251,7 +248,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 .then(getFtes)
                 .then(getStaffTypes)
                 .then(getShifts)
-                .then(getStaffPosititonGrades)
                 .then(() => {
                     UtilsSvc.isAppendLoader(false);
                 })
@@ -265,6 +261,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         initUserCtrl();
     });
 
+    userCtrl.getStaffPosititonGrades = function() {
+        var params = {};
+        if (userCtrl.institutionPositionOptions.selectedOption === null) {
+            params = {};
+        } else {
+            params = {"institution_position_id": userCtrl.institutionPositionOptions.selectedOption.value};
+        }
+        return userSvc.getStaffPosititonGrades(params)
+            .then(resp => {
+                userCtrl.staffGradePositionOptions = resp.data;
+            });
+    }
     userCtrl.changeNationality = function() {
         directorySvc.changeNationality($scope);
     };
@@ -581,6 +589,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function changePositionType() {
+        userCtrl.institutionPositionOptions.selectedOption = null;
+        userCtrl.selectedUserData.institution_position_id = null;
         userCtrl.selectedUserData.fte_id = null;
         var positionType = userCtrl.selectedUserData.position_type_id;
         var positionTypeOptions = userCtrl.positionTypeOptions;
@@ -597,26 +607,31 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
     }
 
-    //POCOR-8108
-    function changePositionGrade() {
-        var institution_position_id = userCtrl.institutionPositionOptions.selectedOption.value;
-        userSvc.getStaffPosititonGradesids(institution_position_id).then(function (resp) {
-            userCtrl.staffGradePositionOptions = resp.data;
-        }, function (error) {
-            console.error(error);
-        });
-    }
-
-    //POCOR-8108
-
     function changePosition() {
-        var position = userCtrl.selectedUserData.position_id;
-        var positionOptions = userCtrl.institutionPositionOptions;
-        for (var i = 0; i < positionOptions.length; i++) {
-            if (positionOptions[i].id == position) {
-                userCtrl.selectedUserData.position_name = positionOptions[i].name;
-                break;
-            }
+
+
+        const selectedPositionId = userCtrl.institutionPositionOptions.selectedOption?.value;
+        userCtrl.selectedUserData.institution_position_id = selectedPositionId;
+
+        if (!selectedPositionId) {
+            return;
+        }
+
+        const positionOptions = userCtrl.institutionPositionOptions.availableOptions;
+
+
+        const selectedPosition = positionOptions.find(option => option.value === selectedPositionId);
+
+        if (selectedPosition) {
+            userCtrl.selectedUserData.position_name = selectedPosition.name;
+            userCtrl.getStaffPosititonGrades().then(() => {
+                console.log('Staff position grades loaded successfully.');
+            }).catch(error => {
+                console.error('Error loading staff position grades:', error);
+            });
+        } else {
+            userCtrl.selectedUserData.position_name = "";
+            console.log('Position not found in options');
         }
     }
 
@@ -645,6 +660,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function changeFte() {
         userCtrl.institutionPositionOptions.selectedOption = null;
+        userCtrl.selectedUserData.institution_position_id = null;
         var fte = userCtrl.selectedUserData.fte_id;
         var fteOptions = userCtrl.fteOptions;
         for (var i = 0; i < fteOptions.length; i++) {
@@ -776,6 +792,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (userCtrl.selectedUserData.fte_id === 'Part-Time' && !userCtrl.selectedUserData.position_type_id) {
                 userCtrl.error.fte_id = 'This field cannot be left empty';
             }//POCOR-5069 starts
+            if (!userCtrl.selectedUserData.institution_position_id) {
+                userCtrl.error.institution_position_id = 'This field cannot be left empty';
+            }
+            if (!userCtrl.selectedUserData.is_homeroom) {
+                userCtrl.error.is_homeroom = 'This field cannot be left empty';
+            }
             if (!userCtrl.selectedUserData.staff_position_grade_id) {
                 userCtrl.error.staff_position_grade_id = 'This field cannot be left empty';
             }//POCOR-5069 ends
@@ -791,7 +813,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 }
             });
             if (shouldPositionRequired && !userCtrl.institutionPositionOptions.selectedOption) {
-                userCtrl.error.position_id = 'This field cannot be left empty';
+                userCtrl.error.institution_position_id = 'This field cannot be left empty';
             }
             userCtrl.customFieldsArray.forEach((customField) => {
                 customField.data.forEach((field) => {
@@ -810,7 +832,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     }
                 })
             });
-            if (!userCtrl.selectedUserData.startDate || !userCtrl.selectedUserData.position_type_id || !userCtrl.selectedUserData.staff_position_grade_id || !userCtrl.selectedUserData.staff_type_id || !userCtrl.staffShiftsId.length === 0 || userCtrl.error.fte_id || userCtrl.error.position_id || isCustomFieldNotValidated) { //POCOR-5069 add staff_position_grade_id condition
+            if (Object.keys(userCtrl.error).length > 0) { // Check if error object is not empty
+                console.error(userCtrl.error);
+                return;
+            }
+            if (!userCtrl.selectedUserData.startDate
+                || !userCtrl.selectedUserData.position_type_id || !userCtrl.selectedUserData.staff_position_grade_id || !userCtrl.selectedUserData.staff_type_id || !userCtrl.staffShiftsId.length === 0 || userCtrl.error.fte_id
+                || userCtrl.error.institution_position_id
+                || isCustomFieldNotValidated) { //POCOR-5069 add staff_position_grade_id condition
                 return;
             }
             if (
@@ -994,11 +1023,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
                     userCtrl.staffData.requestedBy = value.institution_code + ' - ' + value.institution_name;
 
-                    userCtrl.setUserData(value);
                 }
-                if (userCtrl.isExternalSearchSelected) {
-                    userCtrl.setUserDataFromExternalSearchData(value);
-                }
+                userCtrl.setUserData(value);
             }
         }, log);
     }

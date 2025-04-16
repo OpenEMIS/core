@@ -67,6 +67,7 @@
                                     echo $this->Form->input($field_weight, [
                                         'type' => 'float',
                                         'label' => false,
+                                        'placeholder' => '0.00',
                                         'onblur' => "return utility.checkDecimal(this, 2);",
                                         'onkeypress' => "return utility.floatCheck(event)",
                                     ]);
@@ -164,7 +165,9 @@
                                             'onblur' => "return utility.checkDecimal(this, 2);",
                                             'onkeypress' => "return utility.floatCheck(event)",
                                             'required' => false,
-                                            'value' => $weight
+                                            'value' => $weight,
+                                            'placeholder' => '0.00'
+
                                         ]);
                                     }
                                     if (!$present) {
@@ -174,7 +177,8 @@
                                             'onblur' => "return utility.checkDecimal(this, 2);",
                                             'onkeypress' => "return utility.floatCheck(event)",
                                             'required' => false,
-                                            'value' => '0.00'
+                                            'value' => '0.00',
+                                            'placeholder' => '0.00'
                                         ]);
                                     }
                                     ?>
@@ -209,11 +213,28 @@
         </div>
     </div>
 <?php endif ?>
-<!-- <script>
-    $(document).ready(function(){
-        $("#selectAll").click(function(){
-                $("input[type=checkbox]").prop('checked', $(this).prop('checked'));
+<!--POCOR-8889-->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    let errorAlert = document.querySelector(".alert.alert-danger");
+    let assessmentError = document.getElementById("assessments-education-grade-id-error");
 
-        });
-    });
-</script> -->
+    if (errorAlert) {
+        let errorText = errorAlert.innerHTML;
+        let hasAddError = errorText.includes("The record is not added due to errors encountered");
+        let hasUpdateError = errorText.includes("The record is not updated due to errors encountered");
+        let hasAssessmentError = assessmentError !== null && assessmentError.innerHTML.includes("Assessment already created for the selected grade.");
+        let weightErrorMessage = "Please check weight value. Value must be positive and less than 2.0";
+
+        if ((hasAddError && hasAssessmentError) || (hasUpdateError && hasAssessmentError)) {
+            errorAlert.innerHTML = hasAddError 
+                ? "The record is not added due to errors encountered" 
+                : "The record is not updated due to errors encountered";
+
+        } else if ((hasAddError || hasUpdateError || hasAssessmentError) && !errorText.includes(weightErrorMessage)) {
+            errorAlert.innerHTML += " " + weightErrorMessage;
+        }
+    }
+});
+</script>
+

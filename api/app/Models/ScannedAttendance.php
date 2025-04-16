@@ -30,4 +30,15 @@ class ScannedAttendance extends Model
     {
         return $this->belongsTo(SecurityUsers::class, 'openemis_no', 'openemis_no');
     }
+
+    public function createdUser()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'created_user_id', 'id');
+    }
+
+    public function modifiedUser()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'modified_user_id', 'id');
+    }
+    
 }

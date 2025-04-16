@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Http\ServerRequestFactory;
 
 class InstitutionTabBehavior extends Behavior
 {
@@ -119,6 +120,12 @@ class InstitutionTabBehavior extends Behavior
     {
         $model = $this->_table;
         $institutionID = $model->getQueryString('institution_id');
+        if(empty($institutionID)) { //POCOR-8890
+            $request = ServerRequestFactory::fromGlobals();
+            if ($request instanceof \Cake\Http\ServerRequest) {  // Ensure request exists
+                $institutionID = $request->getQuery('institution_id') ?? $institutionID;
+            }
+        }
         return $institutionID;
     }
 
@@ -182,13 +189,13 @@ class InstitutionTabBehavior extends Behavior
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($workflowStep->id);
                 $securityRoleAllowedEdit=!empty(array_intersect($roles, $stepRoles));
             }
-           
+
             if (!empty($workflowStep)) {
                 $isEditable = $workflowStep->is_editable == 1 ? true : false;
                 $isDeletable = $workflowStep->is_removable == 1 ? true : false;
             }
 
-            
+
             if (isset($buttons['edit'])) {
                 if (!$isEditable || !$securityRoleAllowedEdit) {
                     unset($buttons['edit']);
@@ -199,7 +206,7 @@ class InstitutionTabBehavior extends Behavior
                     unset($buttons['remove']);
                 }
             }
-  
+
         }
         //POCOR-8561 -- End
         return $buttons;
@@ -270,6 +277,8 @@ class InstitutionTabBehavior extends Behavior
                             }//PCOOR-8324 ends
                             else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
                                 $queryString['academic_period_id'] = $entity->academic_period->id;
+                            } else if ($url_action == 'ExaminationStudents' && $additionalParam == 'student_id') { //POCOR-8813
+                                $queryString['student_id'] = $entity->getOriginal('student_id');
                             }
                             else{
                                 $queryString[$additionalParam] = $entity->{$additionalParam};
@@ -467,7 +476,7 @@ class InstitutionTabBehavior extends Behavior
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
             'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
+            'Absences' => ['text' => __('Attendance')], // POCOR-8299
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
             'Competencies' => ['text' => __('Competencies')],

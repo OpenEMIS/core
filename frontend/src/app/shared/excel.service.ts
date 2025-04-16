@@ -71,8 +71,6 @@ export class ExcelService {
     this.workbook = new ExcelJS.Workbook();
     this.dataSheet = this.workbook.addWorksheet("Data");
     // this.referenceSheet = this.workbook.addWorksheet("Reference");
-    console.log(referenceData, "referenceData");
-
     this.addOELogo([this.dataSheet]);
     this.addTitle([
       { title: title, sheet: this.dataSheet },
@@ -209,12 +207,8 @@ export class ExcelService {
       // j is the number of row where we will begin to add references after adding logo, subtitle and col heading. hence j=4.
       let j = 3;
       let refData = referenceData[referenceDataArr].data;
-      console.log(refData, "refData");
-      console.log(this.idAsKey, "this.idAsKey");
 
       for (let x in refData) {
-        console.log(j, col, "topa", refData[x]);
-
         // this.dataSheet.getCell(j, col).value = this.idAsKey
         //   ? refData[x].Name
         //   : x;
@@ -237,8 +231,6 @@ export class ExcelService {
   }
 
   protected setDataValidations(dataValidationHeadings, referenceData) {
-    console.log(dataValidationHeadings, "dataValidationHeadings");
-
     this.dataSheet.getRow(2).eachCell((cell, colNumber) => {
       // finding the headings in datasheet by looping over the headings row.
       if (Object.keys(dataValidationHeadings).indexOf(cell.value) > -1) {

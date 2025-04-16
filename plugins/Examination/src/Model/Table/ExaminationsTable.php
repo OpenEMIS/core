@@ -95,8 +95,12 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+//        dd($selectedAcademicPeriod);
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->getAttribute('query')['academic_period_id']) ? $this->request->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        // POCOR-8919 start
+        $serverRequest = $this->request;
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        // POCOR-8919 end
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -355,13 +359,18 @@ class ExaminationsTable extends ControllerActionTable {
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    public function getExaminationOptions($selectedAcademicPeriod)
+    public function getExaminationOptions($selectedAcademicPeriod = null)
     {
+        // POCOR-8919 start
+        $where = [];
+        if($selectedAcademicPeriod) {
+            $where = [$this->aliasField('academic_period_id') => $selectedAcademicPeriod];
+        }
         $examinationOptions = $this
             ->find('list')
-            ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod])
+            ->where($where)
             ->toArray();
-
+        // POCOR-8919 end
         return $examinationOptions;
     }
 

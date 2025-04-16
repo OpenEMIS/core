@@ -86,10 +86,32 @@ class InstitutionSurveysTable extends ControllerActionTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
-    {
+    { //POCOR-8926 start
+        $pass = $this->request->getAttribute('params')['pass'][1] ?? null;
+
+        if ($pass) {
+            $params = $this->paramsDecode($pass);
+            $id = $params['id'] ?? null;
+        }
+
         $query
-            ->select(['id','code' => 'Institutions.code', 'description' => 'SurveyForms.description', 'area_id' => 'Areas.name', 'area_administrative_id' => 'AreaAdministratives.name'])
-            ->contain(['Institutions.Areas', 'Institutions.AreaAdministratives']);
+            ->select([
+                'id',
+                'code' => 'Institutions.code',
+                'description' => 'SurveyForms.description',
+                'area_id' => 'Areas.name',
+                'area_administrative_id' => 'AreaAdministratives.name'
+            ])
+            ->contain([
+                'Institutions.Areas',
+                'Institutions.AreaAdministratives',
+                'SurveyForms'
+            ]);
+
+        if (!empty($id)) {
+            $query->where([$this->aliasField('id') => $id]);
+        }
+        //POCOR-8926  end
     }
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -828,11 +850,31 @@ class InstitutionSurveysTable extends ControllerActionTable
             unset($buttons['edit']);  //POCOR-8095
         }
         //POCOR-8515 ends
+
+        // POCOR-8430 starts (Remove edit and delete from select for users that are not assignees)
+        $session = $this->request->getSession();
+        $userId = $session->read('Auth.User.id');
+    
+        // Create an array of user IDs (you can modify this array as per your requirements)
+        $userIdsArray = [$userId];  // Add any additional user IDs if necessary
+    
+        // Check if the assignee_id exists in the user ID array
+        if (!in_array($entity->assignee_id, $userIdsArray)) {
+            // If the assignee_id matches
+            unset($buttons['remove']);
+            unset($buttons['edit']);
+        }
+        // POCOR-8430 ends
+        
         return $buttons;
     }
     //POCOR-7290:: End
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('s_form', [
+            'type' => 'element',
+            'element' => 'surveyform',
+        ]); //POCOR-8956
         $surveyFormId = $entity->survey_form_id;
 
         $this->field('status_id', [
@@ -849,6 +891,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         ]);
         // this extra field is use by repeater type to know user click add on which repeater question
         $this->field('repeater_question_id');
+        
     }
 
     public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request)
@@ -1202,6 +1245,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function findWorkbench(Query $query, array $options)
     {
+        ini_set('memory_limit', '1G');//POCOR-8821
         $controller = $options['_controller'];
         $session = $controller->getRequest()->getSession();
         $userId = $session->read('Auth.User.id');

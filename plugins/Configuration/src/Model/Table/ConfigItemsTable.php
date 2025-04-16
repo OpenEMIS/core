@@ -178,11 +178,11 @@ class ConfigItemsTable extends AppTable
              */
             $validationRules = 'validate' . Inflector::camelize($entity->code);
             if (isset($this->{$validationRules})) {
-                $this->validator()->add('value', $this->{$validationRules});
+                $this->getValidator()->add('value', $this->{$validationRules});
             } else {
                 $validationRules = 'validate' . Inflector::camelize($entity->type);
                 if (isset($this->{$validationRules})) {
-                    $this->validator()->add('value', $this->{$validationRules});
+                    $this->getValidator()->add('value', $this->{$validationRules});
                 }
             }
         }
@@ -208,7 +208,7 @@ class ConfigItemsTable extends AppTable
         // Start POCOR-7446
         if ($entity->code == 'report_outlier_min_student') {
             $val = $data[$this->getAlias()]['value'];
-            $this->validator()->add('value', 'custom', [
+            $this->getValidator()->add('value', 'custom', [
                 'rule' => function ($value, $context) use ($val) {
                     $max_record_student_number = $this->find()
                         ->where([
@@ -230,7 +230,7 @@ class ConfigItemsTable extends AppTable
 
         if ($entity->code == 'report_outlier_max_student') {
             $val = $data[$this->getAlias()]['value'];
-            $this->validator()->add('value', 'custom', [
+            $this->getValidator()->add('value', 'custom', [
                 'rule' => function ($value, $context) use ($val) {
                     $max_record_student_number = $this->find()
                         ->where([
@@ -453,7 +453,7 @@ class ConfigItemsTable extends AppTable
     {
         $this->ControllerAction->field('value_selection', ['visible' => ['view' => true], 'after' => 'value']);
 
-        $identity_types = TableRegistry::get('identity_types');
+        $identity_types = TableRegistry::get('FieldOption.IdentityTypes');
         $option_types = $identity_types
             ->find()
             ->where(['id' => $entity->value_selection])
@@ -1031,13 +1031,40 @@ class ConfigItemsTable extends AppTable
         $query = $workflowStepsTable->find()->contain('Workflows')
             ->where([
                 $workflowStepsTable->aliasField('category IN') => [1, 2],
-                "Workflows.code" => "STUDENT-ADMISSION-1001"
+                "Workflows.code IN" => ["STUDENT-ADMISSION-1001","STUDENT-ENROLMENT-1001"]//POCOR-8434
             ])->toArray();
-        $customOptions[0] = "Enrolled";
         foreach ($query as $key => $value) {
-            $customOptions[$value->id] = $value->name;
+            //POCOR-8434 starts
+            if($value->workflow->name == 'Student Admission'){
+                $valName = 'Pending Admission : '.$value->name;
+            }else{
+                $valName = 'Pending Enrolment : '.$value->name;
+            }
+            $customOptions[$value->id] = $valName;
         }
+        $customOptions[0] = 'Pending Enrolment : '."Enrolled";//POCOR-8434 ends
         return $customOptions;
     }
-    //POCOR-7716 end
+    //POCOR-8751 start
+        /**
+     * Handles updating the action buttons for a specific entity.
+     *
+     * @param Event $event The event triggered during the action.
+     * @param Entity $entity The entity associated with the action.
+     * @param array $buttons The existing action buttons that will be modified.
+     * @return array Modified action buttons.
+     */
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+      
+                if($entity->code=="edition" && $entity->type=="System"){
+                    if (isset($buttons['edit'])) {
+                        unset($buttons['edit']);
+                    }
+                }
+               
+        return $buttons;
+    }
+    //POCOR-8751 end 
 }

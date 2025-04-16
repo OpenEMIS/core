@@ -10,6 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
+use Cake\Datasource\Exception\RecordNotFoundException; // POCOR-8985
 
 class ScheduleTimetablesTable extends ControllerActionTable
 {
@@ -91,6 +92,16 @@ class ScheduleTimetablesTable extends ControllerActionTable
                 },
                 'message' => __('There is existing published timetable for the class.')
             ]);
+        // POCOR-8985 start
+         $validator
+             ->notEmptyString('name')
+             ->notEmptyString('institution_schedule_term_id')
+             ->notEmptyString('institution_class_id')
+             ->notEmptyString('shift')
+             ->notEmptyString('grade')
+             ->notEmptyString('institution_schedule_interval_id')
+         ;
+        // POCOR-8985 end
         return $validator;
     }
 
@@ -303,15 +314,70 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id', ['type' => 'select']);
-        $this->field('institution_schedule_term_id', ['type' => 'select']);
-        $this->field('name');
-        $this->field('education_grade_id');
-        $this->field('institution_class_id');
-        $this->field('shift');
-        $this->field('institution_schedule_interval_id');
+        // POCOR-8985 start
+        $this->field('academic_period_id', ['type' => 'select', 'attr' => ['required' => true]]);
+        $this->field('institution_schedule_term_id', ['type' => 'select', 'attr' => ['required' => true]]);
+        $this->field('name', ['attr' => ['required' => true]]);
+        $this->field('education_grade_id', ['attr' => ['required' => true]]);
+        $this->field('institution_class_id', ['attr' => ['required' => true]]);
+        $this->field('shift', ['attr' => ['required' => true]]);
+        $this->field('institution_schedule_interval_id', ['attr' => ['required' => true]]);
+        // POCOR-8985 end
         $this->field('status');
         $this->setFieldOrder(['academic_period_id', 'institution_schedule_term_id', 'name', 'education_grade_id', 'institution_class_id', 'shift', 'institution_schedule_interval_id', 'status']);
+    }
+
+    /**
+     * // POCOR-8985
+     * common proc to show related field in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @return string
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function getRelatedName($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return "";
+        }
+        $Table = TableRegistry::getTableLocator()->get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            $name = strval($related->name);
+            return $name;
+        } catch (RecordNotFoundException $e) {
+            return $relatedField;
+        }
+    }
+    public function editAfterAction(Event $event, Entity $entity)
+    {
+        $this->field('academic_period_id',
+            ['type' => 'readonly',
+                'attr' => ['value' =>
+                    self::getRelatedName('AcademicPeriod.AcademicPeriods',
+                        $entity->academic_period_id )]]);
+        $this->field('institution_schedule_term_id',
+            ['type' => 'readonly',
+                'attr' => ['value' =>
+                    self::getRelatedName('Schedule.ScheduleTerms',
+                        $entity->institution_schedule_term_id )]]);
+        $this->field('name', ['attr' => ['required' => true]]);
+        $this->field('institution_class_id',
+            ['type' => 'readonly',
+                'attr' => ['value' =>
+                    self::getRelatedName('Institution.InstitutionClasses',
+                        $entity->institution_class_id )]]);
+        $this->field('institution_schedule_interval_id',
+            ['type' => 'readonly',
+                'attr' => ['value' =>
+                    self::getRelatedName('Schedule.ScheduleIntervals',
+                        $entity->institution_schedule_interval_id )]]);
+        $this->field('status',
+            ['type' => 'readonly',
+                'attr' => ['value' =>
+                    $this->_status[$entity->status]]]);
+        $this->setFieldOrder(['academic_period_id', 'institution_schedule_term_id', 'name',
+            'institution_class_id', 'institution_schedule_interval_id', 'status']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -496,7 +562,10 @@ class ScheduleTimetablesTable extends ControllerActionTable
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
             $educationGradeId = $this->extractRequestData($request, 'education_grade_id');
-
+            // POCOR-8985 start
+            $attr['onChangeReload'] = true;
+            $attr['attr']['required'] = true;
+            // POCOR-8985 end
             $attr['type'] = 'select';
             $attr['options'] = $this->getInstitutionClassOptions($academicPeriodId, $educationGradeId);
         }
@@ -508,7 +577,6 @@ class ScheduleTimetablesTable extends ControllerActionTable
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
-
             $attr['onChangeReload'] = true;
             $attr['type'] = 'select';
             $attr['attr']['required'] = true;
@@ -525,6 +593,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
             $attr['attr']['label'] = __('Interval');
             $attr['type'] = 'select';
+            $attr['attr']['required'] = true; // POCOR-8985
             $attr['options'] = $this->getScheduleIntervalOptions($academicPeriodId, $shiftId);
 
         }

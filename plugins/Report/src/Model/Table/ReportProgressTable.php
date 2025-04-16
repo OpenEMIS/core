@@ -2,6 +2,7 @@
 namespace Report\Model\Table;
 use ArrayObject;
 use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
@@ -60,7 +61,7 @@ class ReportProgressTable extends AppTable  {
 			$this->updateAll(
 			['status' => self::PENDING, //POCOR-7939
                 'file_path' => null,
-                'expiry_date' => $expiryDate, 'modified' => new Time()],
+                'expiry_date' => $expiryDate, 'modified' => new FrozenTime()],
 			['id' => $result->id]
 		);
 		}

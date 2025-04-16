@@ -11,6 +11,7 @@ use App\Models\Assessments;
 use App\Models\InstitutionSubjectStaff;
 use App\Models\InstitutionSubjectStudents;
 use App\Models\InstitutionSubjects;
+use App\Models\AssessmentItemStudentExemption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -509,6 +510,56 @@ class AssessmentRepository extends Controller
         }
     }
     //POCOR-8292 end...
+
+    //POCOR-8619 [START]
+    public function saveAssessmentItemExemption($request)
+    {
+        DB::beginTransaction();
+        try {
+            $params = $request->all();
+            $currentTimestamp = Carbon::now()->toDateTimeString();
+            $userId = JWTAuth::user()->id;
+
+            $checkExemptedStudent = AssessmentItemStudentExemption::where('student_id',$params['student_id'])
+            ->where('assessment_id',$params['assessment_id'])
+            ->where('education_subject_id',$params['education_subject_id'])
+            ->where('institution_class_id',$params['institution_class_id'])
+            ->where('education_grade_id',$params['education_grade_id'])
+            ->where('assessment_period_id',$params['assessment_period_id'])->first();
+            if(empty($checkExemptedStudent)){
+                $data = [
+                    'assessment_id' => $params['assessment_id'],
+                    'education_subject_id' => $params['education_subject_id'] ?? NULL,
+                    'student_id' => $params['student_id'] ?? NULL,
+                    'institution_class_id' => $params['institution_class_id'] ?? NULL,
+                    'education_grade_id' => $params['education_grade_id'] ?? NULL,
+                    'assessment_period_id' => $params['assessment_period_id'] ?? NULL,
+                    'modified_user_id' => $userId,
+                    'modified' => $currentTimestamp,
+                    'created_user_id' => $userId,
+                    'created' => $currentTimestamp,
+                ];
+    
+                // Insert the data
+                AssessmentItemStudentExemption::create($data);
+    
+                DB::commit();
+                return 1;
+            }else{
+                return 2;
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            Log::error(
+                'Failed to save Exempted User Data in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Failed to save Exempted User Data in DB.');
+        }
+    }
+    //POCOR-8619 [END]
 
 }
 

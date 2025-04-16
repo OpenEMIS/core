@@ -25,7 +25,6 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function initialize(array $config): void
     {
         parent::initialize($config);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -53,12 +52,11 @@ class ExaminationCentresTable extends ControllerActionTable {
         $validator->setProvider('custom', $this);
         $validator
             ->requirePresence('create_as', 'create')
-            ->requirePresence('academic_period_id')
             ->requirePresence('code')
             ->requirePresence('name')
             ->requirePresence('area_id')
             ->add('code', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                'rule' => ['validateUnique'],
                 'provider' => 'table'
             ])
             ->requirePresence('institutions', 'create')
@@ -127,18 +125,18 @@ class ExaminationCentresTable extends ControllerActionTable {
             ])
             ->group($this->aliasField('id'))
             ->having(['count =' => count($selectedSpecialNeeds)])
-            ->autoFields(true);
+            ->enableAutoFields(true);
         return $query;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'view' || $this->action == 'edit') {
-            $examCentreId = $this->ControllerAction->getQueryString['examination_centre_id'];
+            $examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
             if($examCentreId==null){
                 $examCentreId = 1;
             }
-            $this->request->getAttribute('Params')['pass'][1] = $this->paramsEncode(['id' => $examCentreId]);
+            $this->request = $this->request->withParam('pass.1', $this->paramsEncode(['id' => $examCentreId]));
             $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'ExamCentres', 'index'];
             $this->examCentreName = $this->get($examCentreId)->name;
         }
@@ -174,11 +172,11 @@ class ExaminationCentresTable extends ControllerActionTable {
         $linkExamButton['attr']['title'] = __('Link Examination');
         $extra['toolbarButtons']['linkExam'] = $linkExamButton;
 
-        $this->setFieldOrder(['code', 'name', 'academic_period_id']);
+        $this->setFieldOrder(['code', 'name']);
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Exam Centres','Examinations');       
+		$is_manual_exist = $this->getManualUrl('Administration','Exam Centres','Examinations');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -200,21 +198,21 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // Academic period filter
-        $serverRequest = $this->request;
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
+        $serverRequest = $this->request;
         // Examination filter
-        $examinationOptions = $this->Examinations->getExaminationOptions($selectedAcademicPeriod);
+        $examinationOptions = $this->Examinations->getExaminationOptions();
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $selectedExamination = !is_null($serverRequest->getQuery('examination_id')) ? $serverRequest->getQuery('examination_id') : -1;
+        $selectedExamination = $serverRequest->getQuery('examination_id') ?? -1;
+        if($selectedExamination == -1){
+            $selectedExamination = $this->ControllerAction->getQueryString('examination_id') ?? -1;
+        }
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
             $query->matching('Examinations');
             $where[$this->Examinations->aliasField('id')] = $selectedExamination;
+        }else{
+
         }
 
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -242,10 +240,10 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-            ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedsTypes']) 
+            ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedsTypes'])
             ->contain('Examinations')
             ->matching('Areas')
-            ->matching('AcademicPeriods');
+        ;
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -274,7 +272,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         if (!array_key_exists($specialNeedsFieldKey, $data[$this->getAlias()])) {
             $data[$this->getAlias()][$specialNeedsFieldKey] = [];
         }
-        
+
         // Get special need type ids POCOR-4231
         $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedsTypes;
         $allSpecialNeeds = $SpecialNeedTypesTable->getVisibleNeedTypes();
@@ -282,18 +280,18 @@ class ExaminationCentresTable extends ControllerActionTable {
 
         $specialNeedIds = array_column($data[$this->getAlias()][$specialNeedsFieldKey], 'special_need_type_id');
         $originalSpecialNeeds = $entity->extractOriginal([$specialNeedsFieldKey])[$specialNeedsFieldKey];
-        
+
         // Get unique ids which are not present for remove POCOR-4231
         $RemoveSpecialNeedIds = array_diff($allSpecialNeedsData, $specialNeedIds);
         if (count($RemoveSpecialNeedIds) > 0 && $entity->institution_id > 0) {
             foreach ($RemoveSpecialNeedIds as $removeSNI) {
                 $this->ExaminationCentreSpecialNeeds->deleteAll(
-                       [  'special_need_type_id' => $removeSNI, 
+                       [  'special_need_type_id' => $removeSNI,
                           'examination_centre_id' => $entity->institution_id
                         ]);
             }
         }
-        
+
         // Get unique ids for new special need type ids and save in table  POCOR-4231
         $associatedSpecialNeedsTemp = [];
         $associatedSpecialNeeds = $this->ExaminationCentreSpecialNeeds
@@ -303,12 +301,12 @@ class ExaminationCentresTable extends ControllerActionTable {
         foreach ($associatedSpecialNeeds as $associatedSpecialNeed) {
             $associatedSpecialNeedsTemp[] = $associatedSpecialNeed->special_need_type_id;
         }
-        
+
         $AddNewSpecialNeedIds = array_diff($specialNeedIds, $associatedSpecialNeedsTemp);
-        
+
         foreach($AddNewSpecialNeedIds as $AddNewSpecialNeedId) {
-            $data = [];            
-            $data = $this->ExaminationCentreSpecialNeeds->newEntity();            
+            $data = [];
+            $data = $this->ExaminationCentreSpecialNeeds->newEntity();
             $data['examination_centre_id'] = $entity->institution_id;
             $data['special_need_type_id'] = $AddNewSpecialNeedId;
             $data['created_user_id'] = $entity->created_user_id;
@@ -324,7 +322,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->field('special_needs_section', ['type' => 'section', 'title' => __('Special Need Accommodations'), 'visible' => false]);
 
         if ($this->action == 'edit' || $this->action == 'add') {
-            $this->field('academic_period_id', ['entity' => $entity]);
             $this->field('special_need_type_id', ['type' => 'custom_exam_centre_special_needs']);
             $this->field('create_as', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('create_as')), 'entity' => $entity]);
             $this->fields['institution_id']['visible'] = true;
@@ -355,7 +352,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->fields['special_needs_section']['visible'] = true;
 
                 // field order
-                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'institution_type', 'add_all_institutions', 'institutions', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_needs_section', 'special_need_type_id']);
+                $this->setFieldOrder(['exam_centre_info_section', 'create_as',
+                    'institution_type', 'add_all_institutions', 'institutions', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_needs_section', 'special_need_type_id']);
 
             } else if ($this->action == 'edit') {
                 $this->field('area_id', ['entity' => $entity, 'visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
@@ -386,7 +384,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->fields['exam_centre_info_section']['visible'] = true;
 
                 // field order
-                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_needs_section', 'special_need_type_id']);
+                $this->setFieldOrder(['exam_centre_info_section', 'create_as',
+                    'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_needs_section', 'special_need_type_id']);
             }
 
         } else if ($this->action == 'view') {
@@ -402,22 +401,9 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['email']['visible'] = true;
             $this->fields['website']['visible'] = true;
 
-            $this->setFieldOrder(['exam_centre_info_section', 'code', 'name', 'academic_period_id', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_need_type_id']);
+            $this->setFieldOrder(['exam_centre_info_section', 'code', 'name',
+                'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_need_type_id']);
         }
-    }
-
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        if ($action == 'add') {
-            $attr['options'] = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-            $attr['onChangeReload'] = true;
-        } else if ($action == 'edit') {
-            if (isset($attr['entity'])) {
-                $attr['attr']['value'] = $attr['entity']->_matchingData['AcademicPeriods']->name;
-            }
-            $attr['type'] = 'readonly';
-        }
-        return $attr;
     }
 
     public function addEditOnSelectSpecialNeedType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
@@ -554,7 +540,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             $attr['options'] = $specialNeedsOptions;
             $attr['addAll'] = true;
         }
-        
+
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
         return $event->getSubject()->renderElement('../ControllerAction/table_with_dropdown', ['attr' => $attr]);
@@ -587,11 +573,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function onUpdateFieldAddAllInstitutions(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            //POCOR-8674 start
-            // $academicPeriodId = isset($request->data[$this->getAlias()]['academic_period_id']) ? $request->data[$this->getAlias()]['academic_period_id'] : 0;
-            $academicPeriodId = isset($request->getData()[$this->getAlias()]['academic_period_id']) ? $request->getData()[$this->getAlias()]['academic_period_id'] : 0;
-            //POCOR-8674 end
-            $institutionOptions = $this->Institutions->find('NotExamCentres', ['academic_period_id' => $academicPeriodId]);
+            $institutionOptions = $this->Institutions->find('NotExamCentres');
 
             //POCOR-8674 start
             // if (!empty($request->data[$this->getAlias()]['institution_type'])) {
@@ -649,13 +631,9 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $attr['type'] = 'hidden';
 
             } else {
-                //POCOR-8674 start
-                // $academicPeriodId = isset($request->data[$this->getAlias()]['academic_period_id']) ? $request->data[$this->getAlias()]['academic_period_id'] : 0;
-                $academicPeriodId = isset($request->getData()[$this->getAlias()]['academic_period_id']) ? $request->getData()[$this->getAlias()]['academic_period_id'] : 0;
-                //POCOR-8674 end
                 $institutionQuery = $this->Institutions
                     ->find()
-                    ->find('NotExamCentres', ['academic_period_id' => $academicPeriodId])
+                    ->find('NotExamCentres')
                     ->contain(['Statuses'])
                     ->order([$this->Institutions->aliasField('name')]);
 
@@ -688,7 +666,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $attr['type'] = 'chosenSelect';
                 $attr['options'] = $institutionOptions;
                 $attr['fieldName'] = $this->getAlias().'.institutions';
-                
+
             }
 
             return $attr;
@@ -751,12 +729,12 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $requestData['email'] = $institutionRecord->email;
                         $requestData['website'] = $institutionRecord->website;
                         $newEntity = $model->newEntity($requestData->getArrayCopy());
-                        
+
                         if ($newEntity->getErrors('telephone')) {
                             $this->Alert->getErrors('general.contactInstitution.telephone', ['reset' => 'override']);
                             return false;
                         }
-                        
+
                         $newEntities[] = $newEntity;
                     }
                 }
@@ -764,30 +742,28 @@ class ExaminationCentresTable extends ControllerActionTable {
 
             } else if (isset($requestData[$model->getAlias()]['add_all_institutions']) && $requestData[$model->getAlias()]['add_all_institutions'] == 1) {
                 if (empty($entity->getErrors())) {
-                    if (!empty($requestData[$this->getAlias()]['academic_period_id'])) {
-                        $academicPeriodId = $requestData[$model->getAlias()]['academic_period_id'];
-                        $institutionTypeId = $requestData['ExaminationCentres']['institution_type'];
-                        $institutionTypeId = !empty($requestData[$model->getAlias()]['institution_type']) ? $requestData[$model->getAlias()]['institution_type'] : $institutionTypeId;
+                    $institutionTypeId = $requestData['ExaminationCentres']['institution_type'];
+                    $institutionTypeId = !empty($requestData[$model->getAlias()]['institution_type']) ? $requestData[$model->getAlias()]['institution_type'] : $institutionTypeId;
 
-                        $specialNeedIds = [];
-                        if (isset($requestData[$model->getAlias()]['examination_centre_special_needs'])) {
-                            $specialNeedIds = array_column($requestData[$model->getAlias()]['examination_centre_special_needs'], 'special_need_type_id');
-                        }
-                        // put special needs into System Processes params
-                        $SystemProcesses = TableRegistry::get('SystemProcesses');
-                        $name = 'AddAllInstitutionsExamCentre';
-                        $pid = '';
-                        $processModel = $model->getRegistryAlias();
-                        $eventName = '';
-                        $passArray = ['special_needs' => $specialNeedIds, 'institution_type_id' => $institutionTypeId];
-                        //$passArray = ['special_needs' => $specialNeedIds];
-                        $params = json_encode($passArray);
-                        $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
-
-                        $this->triggerAddAllInstitutionsExamCentreShell($systemProcessId, $academicPeriodId, $institutionTypeId);
-                        $this->Alert->warning($this->aliasField('savingProcessStarted'), ['reset' => true]);
-                        return true;
+                    $specialNeedIds = [];
+                    if (isset($requestData[$model->getAlias()]['examination_centre_special_needs'])) {
+                        $specialNeedIds = array_column($requestData[$model->getAlias()]['examination_centre_special_needs'], 'special_need_type_id');
                     }
+                    // put special needs into System Processes params
+                    $SystemProcesses = TableRegistry::get('SystemProcesses');
+                    $name = 'AddAllInstitutionsExamCentre';
+                    $pid = '';
+                    $processModel = $model->getRegistryAlias();
+                    $eventName = '';
+                    $passArray = ['special_needs' => $specialNeedIds, 'institution_type_id' => $institutionTypeId];
+                    //$passArray = ['special_needs' => $specialNeedIds];
+                    $params = json_encode($passArray);
+                    $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
+
+                    $this->triggerAddAllInstitutionsExamCentreShell($systemProcessId, $institutionTypeId);
+                    $this->Alert->warning($this->aliasField('savingProcessStarted'), ['reset' => true]);
+                    return true;
+
                 }
             } else {
                 return $model->save($entity);
@@ -797,11 +773,10 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $process;
     }
 
-    private function triggerAddAllInstitutionsExamCentreShell($systemProcessId, $academicPeriodId, $institutionTypeId = null)
+    private function triggerAddAllInstitutionsExamCentreShell($systemProcessId, $institutionTypeId = null)
     {
         $args = '';
         $args .= !is_null($systemProcessId) ? ' '.$systemProcessId : '';
-        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
         $args .= !is_null($institutionTypeId) ? ' '.$institutionTypeId : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake AddAllInstitutionsExamCentre '.$args;
@@ -827,7 +802,6 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         if (isset($options['examination_id'])) {
             $examinationId = $options['examination_id'];
-            $academicPeriodId = $options['academic_period_id'];
 
             $query
                 ->find('list', [
@@ -837,7 +811,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 ->notMatching('Examinations', function ($q) use ($examinationId) {
                     return $q->where(['Examinations.id' => $examinationId]);
                 })
-                ->where(['ExaminationCentres.academic_period_id' => $academicPeriodId]);
+            ;
 
             if (isset($options['examination_centre_type']) && !empty($options['examination_centre_type'])) {
                 $type = $options['examination_centre_type'];
@@ -874,9 +848,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         if ($field == 'create_as') {
             return __('Created As');
-        } elseif ($field == 'academic_period_id') {
-            return __('Academic Period');
-        } elseif ($field == 'special_need_type_id') {
+        }  elseif ($field == 'special_need_type_id') {
             return __('Special Need Type');
         } elseif ($field == 'institution_type') {
             return __('Institution Type');

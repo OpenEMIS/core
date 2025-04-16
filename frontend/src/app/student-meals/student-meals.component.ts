@@ -516,7 +516,8 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         }, 1500);
       } else {
         var decodedPassword = atob(password);
-        decodedPassword = decodedPassword.replace(/^"(.*)"$/, '$1');
+        // decodedPassword = decodedPassword.replace(/^"(.*)"$/, '$1');
+        decodedPassword = decodedPassword.replace(/[\[\]"]/g, '');
         console.log(decodedPassword,"decodedPassword");
         if (userName && decodedPassword) {
           this.loginApi(userName, decodedPassword);
