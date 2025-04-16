@@ -17,7 +17,6 @@
 			));
         // POCOR-8951 start
 			if($this->request->getParam('action') == 'Themes') {
-//                dd($selectedProduct);
 				echo $this->Form->input('online_service', array(
 					'class' => 'form-control',
 					'label' => false,

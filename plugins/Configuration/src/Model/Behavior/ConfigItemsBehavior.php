@@ -86,7 +86,6 @@ class ConfigItemsBehavior extends Behavior
             $this->model->controller->set('typeOptions', $typeOptions);
             $controlElement = $toolbarElements[0];
             $selectedProduct = $this->model->request->getQueryParams()['online_service'] ?? 'openemis_core';
-//            dd($this->model->request->getQueryParams());
             $controlElement['data'] = [
                 'typeOptions' => $typeOptions,
                 'productThemes' => $productThemes,
