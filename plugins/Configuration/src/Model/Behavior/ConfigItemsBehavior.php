@@ -63,15 +63,14 @@ class ConfigItemsBehavior extends Behavior
             }
         }
         //POCOR-8883 code logic change start
-//        dd($this->model->request->getQueryParams());
         $selectedType = $this->model->queryString('type', $typeOptions);
         $this->selectedType = $selectedType;
         $typeValue = $typeOptions[$selectedType];
         if(empty($typeValue)){
            $typeValue = $this->model->request->getQueryParams()['type'];
         }
-//
-        if($typeValue == 'Themes'){ //POCOR-8951 start
+        //POCOR-8951 start
+        if($typeValue == 'Themes'){
             $productThemes = $ConfigItem
                 ->find('list', [
                     'keyField' => 'code',
@@ -93,7 +92,8 @@ class ConfigItemsBehavior extends Behavior
                 'productThemes' => $productThemes,
                 'selectedProduct' => $selectedProduct];
             $controlElement['order'] = 1;
-            return $controlElement; //POCOR-8951 end
+            return $controlElement;
+            //POCOR-8951 end
         }elseif($typeValue !== 'Custom Validation'){
             $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
             $this->model->advancedSelectOptions($typeOptions, $selectedType);

@@ -37,9 +37,10 @@ class ThemesTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->toggle('add', false);
-//        dd('a');
+// POCOR-8951 start
+        $this->belongsTo('ConfigItems', ['className' => 'Configuration.ConfigItems']);
         $this->addBehavior('Configuration.ConfigItems'); //POCOR-8951
-//        dd('b');
+// POCOR-8951 end
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -57,79 +58,11 @@ class ThemesTable extends ControllerActionTable
     {
         $this->field('content', ['visible' => false]);
         $this->field('default_content', ['visible' => false]);
-
-        // $this->setFieldOrder(['name','db_type_id','host','host_port','db_name','username','conn_status_id','status_checked','modified_user_id','modified','created_user_id','created']);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
-    {
-
-        $encodedString = explode(".", $this->request->getAttribute('params')['pass'][1]);
-        $encodedStringFirstValue = $encodedString[0];
-        $id = base64_decode($encodedStringFirstValue);
-        $jsondecodeValue = json_decode($id);
-        $dbId = $jsondecodeValue->id;
-        if($dbId == 2){
-            $this->field('default_content', [
-                'type' => 'readonly',
-            ]);
-            $this->field('name', [
-                'type' => 'readonly'
-            ]);
-            $this->field('value', [
-                'visible' => 'false'
-            ]);
-            $this->field('default_value', [
-                'visible' => 'false'
-            ]);
-        }else if($dbId == 3){
-            $this->field('default_content', [
-                'type' => 'readonly',
-            ]);
-            $this->field('name', [
-                'type' => 'readonly'
-            ]);
-            $this->field('value', [
-                'visible' => 'false'
-            ]);
-            $this->field('default_value', [
-                'visible' => 'false'
-            ]);
-        }else if($dbId == 5){
-            $this->field('name', [
-                'type' => 'readonly'
-            ]);
-            $this->field('default_value', [
-                'type' => 'readonly',
-            ]);
-            $this->field('default_content', [
-                'visible' => 'false'
-            ]);
-            $this->field('content', [
-                'visible' => 'false'
-            ]);
-            $this->field('value', [ //POCOR-8268
-                'visible' => 'false'
-            ]);
-        }else{
-            $this->field('name', [
-                'type' => 'readonly'
-            ]);
-            $this->field('default_value', [
-                'type' => 'readonly'
-            ]);
-            $this->field('content', [
-                'visible' => 'false'
-            ]);
-            $this->field('default_content', [
-                'visible' => 'false'
-            ]);
-        }
-
-    }
 
     /**
-     * POCOR-8652
+     * POCOR-8951 refactured
      * This function handles the action to add or edit after performing some operations.
      * It modifies the 'color_themes' field by setting its type to 'element'
      * and associates it with a custom element named 'themecolor'.
@@ -137,56 +70,76 @@ class ThemesTable extends ControllerActionTable
      * @param Event $event The event that triggered the action
      * @param Entity $entity The entity being processed
      */
-    public function addEditAfterAction(Event $event, Entity $entity) {
-        if($entity->id == 5){
-            $this->field('color_themes', [
-                'type' => 'element',
-                'element' => 'themecolor',
+    public function addEditAfterAction(Event $event, Entity $entity)
+    {
+        $configName = $entity->name;
 
-            ]);
+        // Common field configurations
+        $this->configureField('config_item_id', ['type' => 'select', 'entity' => $entity]);
+        $this->configureField('name', ['type' => 'readonly']);
+        $this->configureField('default_value', ['type' => 'readonly', 'entity' => $entity]);
+        $this->configureField('content', ['visible' => 'false']);
+        $this->configureField('default_content', ['visible' => 'false']);
+
+        // Configuration based on entity name
+        switch ($configName) {
+            case 'Color':
+            case 'Colour':
+                $this->configureField('color_themes', ['type' => 'element', 'element' => 'themecolor']);
+                $this->configureField('value', ['visible' => 'false']); // POCOR-8268
+                break;
+
+            case 'Login Page Image':
+            case 'Logo':
+                $this->configureField('default_content', ['type' => 'readonly']);
+                $this->configureField('value', ['visible' => 'false']);
+                $this->configureField('default_value', ['visible' => 'false']);
+                break;
         }
     }
+
+    /**
+     * POCOR-8951 refactured
+     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if($entity->id == 2){
+        $entityName = $entity->name;
+
+        // Handle file content for specific entity names
+        if (in_array($entityName, ['Login Page Image', 'Logo'])) {
             $filePath = $entity->content->getStream()->getMetadata('uri');
 
             if (file_exists($filePath)) {
-                // Read the file contents
                 $fileContent = file_get_contents($filePath);
                 $fileName = $entity->content->getClientFilename();
 
-                // Now $fileContent contains the content of the uploaded file
-                $entity->content =  $fileContent;
+                $entity->content = $fileContent;
                 $entity->value = $fileName;
             } else {
                 echo "File does not exist or could not be accessed.";
             }
         }
-        if($entity->id == 3){
-            $filePath = $entity->content->getStream()->getMetadata('uri');
 
-            if (file_exists($filePath)) {
-                // Read the file contents
-                $fileContent = file_get_contents($filePath);
-                $fileName = $entity->content->getClientFilename();
-
-                // Now $fileContent contains the content of the uploaded file
-                $entity->content =  $fileContent;
-                $entity->value = $fileName;
-            } else {
-                echo "File does not exist or could not be accessed.";
-            }
-        }
-        if($entity->id == 5){ //POCOR-8268
-            $colorValue = $this->request->getData($this->aliasField('value'));
-            $entity->value = ltrim($colorValue, '#');
+        // Handle color value formatting
+        if (in_array($entityName, ['Color', 'Colour'])) { // POCOR-8268
+            $entity->value = ltrim($entity->value, '#');
         }
     }
+
+    /**
+     * POCOR-8951
+     * Helper method to configure fields
+     */
+    private function configureField(string $fieldName, array $options)
+    {
+        $this->field($fieldName, $options);
+    }
+
 
 
     public function onGetDefaultValue(Event $event, Entity $entity)
     {
+
         if($entity->name == 'Colour'){
             $entity->default_value = '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->default_value.';"></div>';
             return $entity->default_value;
@@ -197,6 +150,7 @@ class ThemesTable extends ControllerActionTable
     {
         if($entity->name == 'Colour'){
             $entity->value = '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->value.';"></div>';
+
             return $entity->value;
         }
     }
@@ -242,5 +196,21 @@ class ThemesTable extends ControllerActionTable
         if ($data->offsetExists('default_value')) {
             $data->offsetUnset('default_value');
         }
+    }
+
+    /**
+     * POCOR-8951
+     */
+    public function onUpdateFieldConfigItemId(Event $event, array $attr, $action)
+    {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $configOptions = $ConfigItems->find('list')
+            ->toArray();
+        $entity = $attr['entity'];
+        $configItemId = $entity->config_item_id;
+        $attr['type'] = 'disabled';
+        $attr['attr']['label'] = __('Theme For Product');
+        $attr['attr']['value'] = $configOptions[$configItemId];
+        return $attr;
     }
 }

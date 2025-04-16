@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use Migrations\AbstractMigration;
+use Cake\Log\Log;
 
 class POCOR8951 extends AbstractMigration
 {
@@ -136,17 +137,16 @@ class POCOR8951 extends AbstractMigration
 
             // Retrieve the ID of 'OpenEMIS Core'
             $openemisCoreId = $this->fetchRow("
-            SELECT `id` FROM `config_items`
-            WHERE `name` = 'OpenEMIS Core'
-              AND `code` = 'openemis_core'
-              AND `type` = 'Online Services'
-        ");
+        SELECT `id` FROM `config_items`
+        WHERE `code` = 'openemis_core'
+          AND `type` = 'Online Services'
+    ");
 
             if (!empty($openemisCoreId)) {
                 // Set default value for existing records
                 $this->execute("
-                UPDATE `themes` SET `config_item_id` = {$openemisCoreId['id']}
-            ");
+            UPDATE `themes` SET `config_item_id` = {$openemisCoreId['id']}
+        ");
             }
         }
 
@@ -154,12 +154,49 @@ class POCOR8951 extends AbstractMigration
         if (!$this->table('themes')->hasForeignKey('config_item_id')) {
             // Add foreign key constraint
             $this->execute("
-            ALTER TABLE `themes`
-            ADD CONSTRAINT `fk_themes_config_item`
-            FOREIGN KEY (`config_item_id`) REFERENCES `config_items`(`id`)
-        ");
+        ALTER TABLE `themes`
+        ADD CONSTRAINT `fk_themes_config_item`
+        FOREIGN KEY (`config_item_id`) REFERENCES `config_items`(`id`)
+    ");
+        }
+
+        // Retrieve the ID of 'OpenEMIS Registration'
+        $openemisRegistrationId = $this->fetchRow("
+    SELECT `id` FROM `config_items`
+    WHERE `code` = 'openemis_registration'
+      AND `type` = 'Online Services'
+    ");
+
+        if (!empty($openemisRegistrationId)) {
+            // Fetch all themes
+            $themes = $this->fetchAll("SELECT * FROM `themes`");
+
+            foreach ($themes as &$theme) {
+                // Filter out numeric keys
+                $theme = array_filter($theme, function($key) {
+                    return !is_int($key);
+                }, ARRAY_FILTER_USE_KEY);
+
+                unset($theme['id']); // Remove the primary key to allow duplication
+                $theme['config_item_id'] = $openemisRegistrationId['id'];
+                $theme['created'] = date('Y-m-d H:i:s');
+
+                // Prepare column names and values for the SQL insert
+                $columns = implode(", ", array_keys($theme));
+                $values = implode(', ', array_map(function ($v) {
+                    if (is_null($v)) {
+                        return 'NULL';
+                    }
+                    return is_string($v) ? "'" . addslashes($v) . "'" : $v;
+                }, $theme));
+
+                // Insert each new theme individually using SQL
+                $this->execute("INSERT INTO `themes` ($columns) VALUES ($values)");
+            }
         }
     }
+
+
 
 
     public function down()
