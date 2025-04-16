@@ -34,6 +34,7 @@
                         'default' => $selectedReportStatus,
                         'url' => $baseUrl,
                         'data-named-key' => 'status',
+                        'data-named-group' => 'academic_period_id,status' //POCOR-8820
 
                     ));
                 }
@@ -46,7 +47,7 @@
                         'default' => $selectedArea,
                         'url' => $baseUrl,
                         'data-named-key' => 'area_id',
-                        'data-named-group' => 'status,area_id'
+                        'data-named-group' => 'academic_period_id,status,area_id' //POCOR-8820
                     ));
                 }
 				 if (!empty($institutionOptions)) {
@@ -58,7 +59,7 @@
                         'default' => $selectedInstitution,
                         'url' => $baseUrl,
                         'data-named-key' => 'institution_id',
-                        'data-named-group' => 'status,area_id,institution_id'
+                        'data-named-group' => 'academic_period_id,status,area_id,institution_id' //POCOR-8820
                                        ));
                 }
                  if (!empty($EducationGradeOptions)) {
@@ -70,7 +71,7 @@
                         'default' =>$selectedEducationGrade,
                         'url' => $baseUrl,
                         'data-named-key' => 'education_grade_id',
-                        'data-named-group' => 'status,area_id,institution_id,education_grade_id'
+                        'data-named-group' => 'academic_period_id,status,area_id,institution_id,education_grade_id' //POCOR-8820
                     ));
                 }
             ?>

@@ -36,6 +36,7 @@ export class SharedService {
   public importCommponentList: any;
   public gridType: any;
   public importList: any;
+  openEmisList: any;
 
   constructor(
     public router: Router,
@@ -159,6 +160,14 @@ export class SharedService {
   }
   getComponentDataList() {
     return this.importCommponentList;
+  }
+
+  setOpenEmisScannedList(event: any) {
+    this.openEmisList = event;
+  }
+
+  getOpenEmisScannedList() {
+    return this.openEmisList;
   }
 
   setGradingType(data) {

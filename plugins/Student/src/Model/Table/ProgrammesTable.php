@@ -1,4 +1,5 @@
 <?php
+
 namespace Student\Model\Table;
 
 use ArrayObject;
@@ -25,21 +26,22 @@ class ProgrammesTable extends ControllerActionTable
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
+		$this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 
 		$this->toggle('remove', false);
 		$this->toggle('add', false);
 		$this->toggle('search', false);
 
-        $this->addBehavior('User.User');
-        $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['StudentProgrammes' =>['id','education_programme_id']
-            ]
-        ]);
+		$this->addBehavior('User.User');
+		$this->addBehavior('Institution.InstitutionTab', [
+			'appliedAction' => [
+				'StudentProgrammes' => ['id', 'education_programme_id']
+			]
+		]);
 		// $this->addBehavior('Student.StudentTab', [
-        //     'appliedAction' => ['StudentProgrammes' =>['id','education_programme_id']
-        //     ]
-        // ]);
+		//     'appliedAction' => ['StudentProgrammes' =>['id','education_programme_id']
+		//     ]
+		// ]);
 
 	}
 
@@ -56,13 +58,13 @@ class ProgrammesTable extends ControllerActionTable
 		$periodId = $entity->academic_period_id;
 		$studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
 		$record = $studentWithdraw->find()
-					->select([$studentWithdraw->aliasField('effective_date')])
-					->where([
-						$studentWithdraw->aliasField('student_id') => $studentId,
-						$studentWithdraw->aliasField('academic_period_id') => $periodId,
-						$studentWithdraw->aliasField('education_grade_id') => $gradeId
-					])
-					->first();
+			->select([$studentWithdraw->aliasField('effective_date')])
+			->where([
+				$studentWithdraw->aliasField('student_id') => $studentId,
+				$studentWithdraw->aliasField('academic_period_id') => $periodId,
+				$studentWithdraw->aliasField('education_grade_id') => $gradeId
+			])
+			->first();
 		$statuses = $this->StudentStatuses->findCodeList();
 		$studentStatusId = $entity->student_status->id;
 		if (!empty($record) && $studentStatusId == $statuses['WITHDRAWN']) {
@@ -80,10 +82,26 @@ class ProgrammesTable extends ControllerActionTable
 		return $entity->institution->code_name;
 	}
 
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('previous_institution_student_id', ['visible' => false]);
-    }
+	//POCOR-8870 start
+	public function onGetRegistrationNumber(Event $event, Entity $entity)
+	{
+		$InstitutionStudentProgrammesTable = TableRegistry::get('Student.InstitutionStudentProgrammes');
+		// Find existing record
+		$institutionStudentProgramme = $InstitutionStudentProgrammesTable
+		->find()
+		->where(['education_programme_id' => $entity->education_grade->education_programme_id,'student_id' => $entity->student_id,'institution_id'=>$entity->institution_id])
+		->first();
+		return $institutionStudentProgramme->registration_number;
+	}
+	//POCOR-8870 end
+
+	public function beforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('previous_institution_student_id', ['visible' => false]);
+
+		$this->field('registration_number',['after' => 'student_id']); //POCOR-8870
+	}
+
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
@@ -94,21 +112,27 @@ class ProgrammesTable extends ControllerActionTable
 		$this->fields['openemis_no']['visible'] = 'false';
 		$this->fields['institution_id']['type'] = 'integer';
 		$this->fields['academic_period_id']['sort'] = ['field' => 'AcademicPeriods.name'];
+		$this->fields['registration_number']['visible'] = 'false'; //POCOR-8870
 
 		$this->setFieldOrder([
-			'academic_period_id', 'institution_id', 'education_grade_id', 'start_date', 'end_date', 'student_status_id'
+			'academic_period_id',
+			'institution_id',
+			'education_grade_id',
+			'start_date',
+			'end_date',
+			'student_status_id'
 		]);
 
 		// Start POCOR-5188
-		if($this->request->getParam('controller') == 'Institutions'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');
-			if(!empty($is_manual_exist)){
+		if ($this->request->getParam('controller') == 'Institutions') {
+			$is_manual_exist = $this->getManualUrl('Institutions', 'Programmes', 'Students - Academic');
+			if (!empty($is_manual_exist)) {
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
 					'data-toggle' => 'tooltip',
 					'data-placement' => 'bottom',
 					'escape' => false,
-					'target'=>'_blank'
+					'target' => '_blank'
 				];
 
 				$helpBtn['url'] = $is_manual_exist['url'];
@@ -118,15 +142,15 @@ class ProgrammesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}else if($this->request->getParam('controller') == 'Students'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');
-			if(!empty($is_manual_exist)){
+		} else if ($this->request->getParam('controller') == 'Students') {
+			$is_manual_exist = $this->getManualUrl('Institutions', 'Programmes', 'Students - Academic');
+			if (!empty($is_manual_exist)) {
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
 					'data-toggle' => 'tooltip',
 					'data-placement' => 'bottom',
 					'escape' => false,
-					'target'=>'_blank'
+					'target' => '_blank'
 				];
 
 				$helpBtn['url'] = $is_manual_exist['url'];
@@ -136,15 +160,15 @@ class ProgrammesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){
-			$is_manual_exist = $this->getManualUrl('Directory','Programmes','Students - Academic');
-			if(!empty($is_manual_exist)){
+		} elseif ($this->request->getParam('controller') == 'Directories') {
+			$is_manual_exist = $this->getManualUrl('Directory', 'Programmes', 'Students - Academic');
+			if (!empty($is_manual_exist)) {
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
 					'data-toggle' => 'tooltip',
 					'data-placement' => 'bottom',
 					'escape' => false,
-					'target'=>'_blank'
+					'target' => '_blank'
 				];
 
 				$helpBtn['url'] = $is_manual_exist['url'];
@@ -154,7 +178,6 @@ class ProgrammesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-
 		}
 		// End POCOR-5188
 	}
@@ -166,7 +189,7 @@ class ProgrammesTable extends ControllerActionTable
 		if ($this->controller->getName() == 'Profiles') {
 			if ($session->read('Auth.User.is_guardian') == 1) {
 				$sId = $session->read('Student.ExaminationResults.student_id');
-			}else {
+			} else {
 				$sId = $this->getStudentID();
 			}
 			if (!empty($sId)) {
@@ -179,32 +202,32 @@ class ProgrammesTable extends ControllerActionTable
 		} else {
 			$queryString = $this->getQueryString();
 			$studentId = $queryString['student_id'];
-			if($this->controller->getName() == 'GuardianNavs' && isset($this->request->getQueryParams()['studentId'])) {
+			if ($this->controller->getName() == 'GuardianNavs' && isset($this->request->getQueryParams()['studentId'])) {
 				//POCOR-8379 starts
 				$session = $this->request->getSession();
 				$studentId = $session->read('Student.Students.id');
-				if(empty($studentId)){
+				if (empty($studentId)) {
 					$encodeStudentId = $this->request->getQueryParams()['studentId'];
 					$studentId = $this->paramsDecode($encodeStudentId);
-				}//POCOR-8379 ends
+				} //POCOR-8379 ends
 			}
 		}
-		if(empty($studentId)){ //POCOR-8316
-            $studentId = $this->Auth->user('id');
-        }
+		if (empty($studentId)) { //POCOR-8316
+			$studentId = $this->Auth->user('id');
+		}
 		// end POCOR-1893
 		$sortList = ['AcademicPeriods.name'];
 
-        if (array_key_exists('sortWhitelist', $extra['options'])) {
-            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
-        }
-        $extra['options']['sortWhitelist'] = $sortList;
-        $institutionId = $this->getInstitutionID();
-        $query
-        		->where([
-        			$this->aliasField('student_id') => $studentId,
-        			//$this->aliasField('institution_id') => $institutionId
-        		]);
+		if (array_key_exists('sortWhitelist', $extra['options'])) {
+			$sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+		}
+		$extra['options']['sortWhitelist'] = $sortList;
+		$institutionId = $this->getInstitutionID();
+		$query
+			->where([
+				$this->aliasField('student_id') => $studentId,
+				//$this->aliasField('institution_id') => $institutionId
+			]);
 		//POCOR-8704 -- Commenting code as it is fetching limited data		
 		// if(!empty($institutionId)) {
 		// 	$query
@@ -213,20 +236,20 @@ class ProgrammesTable extends ControllerActionTable
 		// 	]);
 		// }
 		//POCOR-8704 -- END
-        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
-
+		$extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
-        $this->field('openemis_no',['before' => 'student_id']);
-        $this->field('student_status_id',['after' => 'student_id']);
-        $this->field('start_year', ['visible' => 'false']);
-        $this->field('end_year', ['visible' => 'false']);
-        $this->setupTabElements();
-        //POCOR-5671
-        $statuses = $this->StudentStatuses->findCodeList();
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
+		$this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
+		$this->field('openemis_no', ['before' => 'student_id']);
+		$this->field('student_status_id', ['after' => 'student_id']);
+		$this->field('start_year', ['visible' => 'false']);
+		$this->field('end_year', ['visible' => 'false']);
+
+		$this->setupTabElements();
+		//POCOR-5671
+		$statuses = $this->StudentStatuses->findCodeList();
 		$studentStatusId = $entity->student_status_id;
 		if ($studentStatusId == $statuses['CURRENT']) {
 			$queryString   = $this->getQueryString();
@@ -234,46 +257,58 @@ class ProgrammesTable extends ControllerActionTable
 			$entity->institution->id = $institutionId;
 			$encodedQueryString = $this->paramsEncode($queryString);
 
-	        $btnAttr = [
-	            'class' => 'btn btn-xs btn-default icon-big',
-	            'data-toggle' => 'tooltip',
-	            'data-placement' => 'bottom',
-	            'escape' => false
-	        ];
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false
+			];
 
-	        $extraButtons = [
-	            'process' => [
-	                'Institution' => ['Institution', 'Institutions'],
-	                'action' => 'StudentTransition',
-	                'icon' => '<i class="kd-process"></i>',
-	                'title' => __('Transition')
-	            ]
-	        ];
+			$extraButtons = [
+				'process' => [
+					'Institution' => ['Institution', 'Institutions'],
+					'action' => 'StudentTransition',
+					'icon' => '<i class="kd-process"></i>',
+					'title' => __('Transition')
+				]
+			];
 
-	        foreach ($extraButtons as $key => $attr) {
-	            if ($this->AccessControl->check($attr['permission'])) {
-	                $button = [
-	                    'type' => 'button',
-	                    'attr' => $btnAttr,
-	                    'url' => [0 => 'edit',
-					1 =>$encodedQueryString]
-	                ];
-	                $button['url']['action'] = $attr['action'];
-	                $button['attr']['title'] = $attr['title'];
-	                $button['label'] = $attr['icon'];
+			foreach ($extraButtons as $key => $attr) {
+				if ($this->AccessControl->check($attr['permission'])) {
+					$button = [
+						'type' => 'button',
+						'attr' => $btnAttr,
+						'url' => [
+							0 => 'edit',
+							1 => $encodedQueryString
+						]
+					];
+					$button['url']['action'] = $attr['action'];
+					$button['attr']['title'] = $attr['title'];
+					$button['label'] = $attr['icon'];
 
-	                $extra['toolbarButtons'][$key] = $button;
-	            }
-	        }
+					$extra['toolbarButtons'][$key] = $button;
+				}
+			}
 		}
-        //POCOR-5671
-    }
+		//POCOR-5671
+	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
 	{
 		$queryString   = $this->getQueryString();
 		$institutionId  = $queryString['institution_id'];
-		$entity->institution->id = $institutionId;
+		$studentId = $queryString['student_id'];
+		//entity->institution->id = $institutionId;
+		if (!empty($entity->institution)) {
+			$entity->institution->id = $institutionId;
+		} else {
+			$result = $this->Institutions
+				->find()
+				->where(['id' =>  $institutionId])
+				->first();
+			$entity->institution = $result;
+		}
 		$encodedQueryString = $this->paramsEncode($queryString);
 
 		if (isset($buttons['view'])) {
@@ -306,38 +341,38 @@ class ProgrammesTable extends ControllerActionTable
 		}
 		//POCOR-5671
 		if (isset($buttons['view']) && $this->AccessControl->check(['Institutions', 'StudentTransition']) && $studentStatusId == $statuses['CURRENT']) {
-            $icon = '<i class="kd-process"></i>';
-            $url = [
+			$icon = '<i class="kd-process"></i>';
+			$url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'StudentTransition',
 				'edit',
-				$this->paramsEncode(['id' => $entity->id]),
-				'institution_id' => $entity->institution->id
+				$this->paramsEncode(['id' => $entity->id, 'institution_id' => $institutionId, 'student_id' => $studentId]),
+				'institution_id' => $institutionId
 			];
-            $buttons['transition'] = $buttons['view'];
-            $buttons['transition']['label'] = $icon . __('Transition');
-            $buttons['transition']['url'] = $url;
-        }
+			$buttons['transition'] = $buttons['view'];
+			$buttons['transition']['label'] = $icon . __('Transition');
+			$buttons['transition']['url'] = $url;
+		}
 		//POCOR-5671
 
 		return parent::onUpdateActionButtons($event, $entity, $buttons);
 	}
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
-    {
-        $value = '';
-        if ($entity->has('user')) {
-            $value = $entity->user->openemis_no;
-        }
-        return $value;
-    }
+	public function onGetOpenemisNo(Event $event, Entity $entity)
+	{
+		$value = '';
+		if ($entity->has('user')) {
+			$value = $entity->user->openemis_no;
+		}
+		return $value;
+	}
 
 	private function setupTabElements()
 	{
 		$options['type'] = 'student';
 		$tabElements = $this->getAcademicTabElements($options);
-		if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+		if ($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
 			$tabElements = $this->controller->getAcademicTabElements($options);
 		}
 		$this->controller->set('tabElements', $tabElements);
@@ -349,60 +384,99 @@ class ProgrammesTable extends ControllerActionTable
 		$this->setupTabElements();
 	}
 
-    public function editBeforeQuery(Event $event, Query $query)
-    {
-        $query->contain(['Users', 'EducationGrades', 'AcademicPeriods', 'StudentStatuses']);
-    }
+	public function editBeforeQuery(Event $event, Query $query)
+	{
+		$query->contain(['Users', 'EducationGrades', 'AcademicPeriods', 'StudentStatuses']);
+	}
 
-    public function editAfterAction(Event $event, Entity $entity)
-    {
-        $this->field('start_year', ['visible' => 'false']);
-        $this->field('end_year', ['visible' => 'false']);
+	public function editAfterAction(Event $event, Entity $entity)
+	{
+		$this->field('start_year', ['visible' => 'false']);
+		$this->field('end_year', ['visible' => 'false']);
 
-        // Start PHPOE-1897
-        $statuses = $this->StudentStatuses->findCodeList();
-        if ($entity->student_status_id != $statuses['CURRENT']) {
-            $event->stopPropagation();
-            $urlParams = $this->url('view');
-            return $this->controller->redirect($urlParams);
-        // End PHPOE-1897
-        } else {
-            $this->field('student_id', [
-                'type' => 'readonly',
-                'order' => 10,
-                'attr' => ['value' => $entity->user->name_with_id]
-            ]);
+		// Start PHPOE-1897
+		$statuses = $this->StudentStatuses->findCodeList();
+		if ($entity->student_status_id != $statuses['CURRENT']) {
+			$event->stopPropagation();
+			$urlParams = $this->url('view');
+			return $this->controller->redirect($urlParams);
+			// End PHPOE-1897
+		} else {
+			$this->field('student_id', [
+				'type' => 'readonly',
+				'order' => 10,
+				'attr' => ['value' => $entity->user->name_with_id]
+			]);
 
-            $this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $entity->education_grade->programme_grade_name]]);
-            $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $entity->academic_period->name]]);
-            $this->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
+			$this->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $entity->education_grade->programme_grade_name]]);
+			$this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $entity->academic_period->name]]);
+			$this->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 
-            $period = $entity->academic_period;
-            $dateOptions = [
-                'startDate' => $period->start_date->format('d-m-Y'),
-                'endDate' => $period->end_date->format('d-m-Y')
-            ];
+			//POCOR-8870 start
+			$InstitutionStudentProgrammesTable = TableRegistry::get('Student.InstitutionStudentProgrammes');
+			// Find existing record
+			$institutionStudentProgramme = $InstitutionStudentProgrammesTable
+			->find()
+			->where(['education_programme_id' => $entity->education_grade->education_programme_id,'student_id' => $entity->student_id,'institution_id'=>$entity->institution_id])
+			->first();
 
-            $this->fields['start_date']['date_options'] = $dateOptions;
-            $this->fields['end_date']['date_options'] = $dateOptions;
+			$this->field('registration_number',['attr' => ['value' => $institutionStudentProgramme->registration_number]]);
+			//POCOR-8870 end
 
-            $this->Session->write('Student.Students.id', $entity->student_id);
-            $this->Session->write('Student.Students.name', $entity->user->name);
-            $this->setupTabElements($entity);
-        }
-    }
+			$period = $entity->academic_period;
+			$dateOptions = [
+				'startDate' => $period->start_date->format('d-m-Y'),
+				'endDate' => $period->end_date->format('d-m-Y')
+			];
 
-    //POCOR-8414 start
-    public function afterAction(Event $event, ArrayObject $options)
-    {
-        $plugin = __($this->controller->getPlugin());
-		if($plugin != 'Profile' && $plugin != 'GuardianNav'){
+			$this->fields['start_date']['date_options'] = $dateOptions;
+			$this->fields['end_date']['date_options'] = $dateOptions;
+
+			$this->Session->write('Student.Students.id', $entity->student_id);
+			$this->Session->write('Student.Students.name', $entity->user->name);
+			$this->setupTabElements($entity);
+
+		}
+	}
+
+	// POCOR-8870 start
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+	{
+		if ($this->action == 'edit') {
+			$InstitutionStudentProgrammesTable = TableRegistry::get('Student.InstitutionStudentProgrammes');
+			// Find existing record or create a new one
+			$institutionStudentProgramme = $InstitutionStudentProgrammesTable
+				->find()
+				->where(['education_programme_id' => $entity->education_grade->education_programme_id])
+				->first();
+
+			if (!$institutionStudentProgramme) {
+				$institutionStudentProgramme = $InstitutionStudentProgrammesTable->newEmptyEntity();
+				$institutionStudentProgramme->education_programme_id = $entity->education_grade->education_programme_id;
+			}
+
+			// Set values
+			$institutionStudentProgramme->student_id = $entity->student_id;
+			$institutionStudentProgramme->registration_number = $entity->registration_number;
+			$institutionStudentProgramme->institution_id = $entity->institution_id;
+			
+			$InstitutionStudentProgrammesTable->save($institutionStudentProgramme);
+
+		}
+	}
+	//POCOR-8870 end
+
+	//POCOR-8414 start
+	public function afterAction(Event $event, ArrayObject $options)
+	{
+		$plugin = __($this->controller->getPlugin());
+		if ($plugin != 'Profile' && $plugin != 'GuardianNav') {
 			$id = $this->request->getAttribute('params')['pass'][1];
 			//POCOR-8489 --Start
-			if(isset($id)) {
+			if (isset($id)) {
 				$DecodedQueryString = $this->paramsDecode($id);
 				$userId = $DecodedQueryString['user_id'] ?? $DecodedQueryString['student_id'];
-			}else {
+			} else {
 				$queryString = $this->getQueryString();
 				$userId = $queryString['student_id'];
 			}
@@ -410,10 +484,10 @@ class ProgrammesTable extends ControllerActionTable
 			$Users = TableRegistry::get('User.Users');
 			$result = $Users
 				->find()
-				->select(['first_name','last_name'])
+				->select(['first_name', 'last_name'])
 				->where(['id' =>  $userId])
 				->first();
-			$fullName = $result->first_name.' '.$result->last_name;
+			$fullName = $result->first_name . ' ' . $result->last_name;
 			try {
 
 				$gettabName = 'Student Programmes';
@@ -423,6 +497,5 @@ class ProgrammesTable extends ControllerActionTable
 				Log::write('error', $e->getMessage());
 			}
 		}
-    }
-
+	}
 }

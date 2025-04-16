@@ -64,6 +64,10 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         $validator
+            // POCOR-8985 start
+            ->notEmptyString('name')
+            ->notEmptyString('institution_shift_id')
+            // POCOR-8985 end
             ->requirePresence('timeslots', 'create');
 
         return $validator;
@@ -124,8 +128,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
         $requestQuery = $this->request->getQuery();
+
         if (isset($requestQuery) && isset($requestQuery['period'])) {
-            $selectedPeriodId = $requestQuery('period');
+            $selectedPeriodId = $requestQuery['period']; // POCOR-8985
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
@@ -133,7 +138,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $shiftOptions = $this->getShiftOptions($selectedPeriodId, true);
 
         if (isset($requestQuery) && isset($requestQuery['shift'])) {
-            $selectedShiftId = $requestQuery('shift');
+            $selectedShiftId = $requestQuery['shift']; // POCOR-8985
         } else {
             $selectedShiftId = -1;
         }
@@ -329,8 +334,11 @@ class ScheduleIntervalsTable extends ControllerActionTable
                     }
                 }
             }
-            $scheduleId = $this->request->getData()['ScheduleIntervals']['id'];
-            $timeslotList = $this->request->getData()['ScheduleIntervals']['timeslots'];
+            // POCOR-8985 start
+             $alias = 'ScheduleIntervals';
+             $requestData = $this->request->getData();
+            $timeslotList = $requestData[$alias]['timeslots'];
+             // POCOR-8985 end
             $tableLocator = new TableLocator();
             $institutionSchedule = $tableLocator->get('institution_schedule_timeslots');
             // $institutionSchedule =  TableRegistry::get('institution_schedule_timeslots');
@@ -505,7 +513,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
             ->contain('ShiftOptions')
             ->where([
                 $this->Shifts->aliasField('academic_period_id') => $academicPeriodId,
-                $this->Shifts->aliasField('Institution_id') => $institutionId
+                $this->Shifts->aliasField('institution_id') => $institutionId // POCOR-8985
             ])
             ->toArray();
 

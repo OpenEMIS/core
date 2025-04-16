@@ -125,6 +125,10 @@ class WorkflowActionsTable extends AppTable
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
+        // POCOR-8128
+        if (!property_exists($this, 'request') || !$this->request) {
+            return;
+        }
         $queryParams = $this->request->getQuery();
         unset($queryParams['model']);
         unset($queryParams['workflow']);
@@ -150,6 +154,10 @@ class WorkflowActionsTable extends AppTable
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
         if (!$isDeletable) {
+            // POCOR-8128
+            if (!property_exists($this, 'request') || !$this->request) {
+                return;
+            }
             $session = $this->request->getSession();
             $sessionKey = $this->getRegistryAlias() . '.warning';
             $session->write($sessionKey, $this->aliasField('restrictDelete'));
@@ -365,6 +373,10 @@ class WorkflowActionsTable extends AppTable
 
     public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+        // POCOR-8128
+        if (!property_exists($this, 'request') || !$this->request) {
+            return;
+        }
         $request = $this->request;
         $queryParams = $request->getQuery();
         unset($queryParams['model']);
@@ -387,6 +399,10 @@ class WorkflowActionsTable extends AppTable
 
     public function addEditOnChangeWorkflow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+        // POCOR-8128
+        if (!property_exists($this, 'request') || !$this->request) {
+            return;
+        }
         $request = $this->request;
         $queryParams = $request->getQuery();
         unset($queryParams['workflow']);
@@ -408,6 +424,10 @@ class WorkflowActionsTable extends AppTable
 
     public function addEditOnChangeWorkflowStep(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+        // POCOR-8128
+        if (!property_exists($this, 'request') || !$this->request) {
+            return;
+        }
         $request = $this->request;
         $queryParams = $request->getQuery();
         unset($queryParams['workflow_step']);
@@ -610,7 +630,7 @@ class WorkflowActionsTable extends AppTable
             }
             //POCOR-7016 end
             if ($subjectEvent->isStopped()) {
-                return $subjectEvent->result;
+                return $subjectEvent->getResult(); // POCOR-8128
             }
 
             $events = $eventsObject;
@@ -695,6 +715,22 @@ class WorkflowActionsTable extends AppTable
 
         return ($existingEventCount == 0);
     }
-
-
+    //POCOR-8434 starts
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+        // POCOR-8128, POCOR-9047
+        if (!property_exists($this, 'request') || !method_exists($this, 'getRequest') || !$this->getRequest()) {
+            return;
+        }
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $url = ['plugin' => 'Workflow',
+                'controller' => 'Workflows',
+                'action' => 'Actions',
+                '0' => 'view',
+            ];
+        $url['1'] = $encodedQueryString;
+        $url['?'] = $this->request->getQuery();
+        $event->stopPropagation();
+        return $this->controller->redirect($url);
+    }//POCOR-8434 ends
 }

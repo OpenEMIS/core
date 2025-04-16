@@ -32,48 +32,55 @@ class AppraisalFormsTable extends ControllerActionTable
         $this->hasMany('StaffAppraisals', ['className' => 'Institution.StaffAppraisals', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->hasMany('AppraisalFormsCriteriasScores', ['className' => 'StaffAppraisal.AppraisalFormsCriteriasScores', 'foreignKey' => 'appraisal_form_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        if ($this->behaviors()->has('Reorder')) {
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+            $reorderBehavior->setConfig('filter', 'parent_id');
+        }
         $this->setDeleteStrategy('restrict');
     }
 
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        return $validator
+        $validator->setProvider('custom', $this);
+
+        $validator
+            ->notEmptyString('code')
+            ->notEmptyString('name')
             ->add('appraisal_criterias', 'checkAppraisalFormSection', [
                 'rule' => function ($value, $context) {
-                    $hasNoSectionCriteriasKey = [];
-                    $hasSection = true;
-                    $hasEnteredfirstCriteria = false;
+                    $hasSection = false;
+                    $missingSections = [];
 
-                    foreach ($value as $appraisalCriteriasKey => $criteria) {
-                        $criteria = $criteria['_joinData'];
-                        if (!$hasEnteredfirstCriteria) {
-                            if (empty($criteria['section'])) {
-                                $hasSection = false;
-                                $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
-                            } else {
-                                $hasSection = true;
-                            }
-                            $hasEnteredfirstCriteria = true;
-                        } else {
-                            if (empty($criteria['section'])) {
-                                $hasNoSectionCriteriasKey[$appraisalCriteriasKey] = $appraisalCriteriasKey;
-                            }
+                    foreach ($value as $key => $criteria) {
+                        $joinData = $criteria['_joinData'] ?? [];
+                        $sectionExists = !empty($joinData['section']);
+
+                        if (!$sectionExists) {
+                            $missingSections[] = $key;
                         }
 
-                        // Form exists a has section but this criteria don't have section
-                        if ($hasSection && empty($criteria['section'])) {
-                            $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
-                            return false;
-                        } elseif (!$hasSection && !empty($criteria['section'])) {   // Form does not exist a section but this criteria have have section
-                            $this->request->data[$this->alias()]['appraisal_criterias_section_error'] = $hasNoSectionCriteriasKey;
+                        if (!$hasSection && $sectionExists) {
+                            $hasSection = true;
+                        }
+
+                        // Inconsistent section assignment check
+                        if (($hasSection && !$sectionExists) || (!$hasSection && $sectionExists)) {
                             return false;
                         }
                     }
+
+                    // If needed, add errors to the context for use elsewhere
+                    if (!empty($missingSections)) {
+                        $context['errors']['appraisal_criterias_section_error'] = $missingSections;
+                    }
+
                     return true;
                 },
+                'message' => 'Inconsistent section assignment in appraisal criterias.',
             ]);
+
+        return $validator;
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -306,11 +313,64 @@ class AppraisalFormsTable extends ControllerActionTable
         $appraisalScore->dispatchEvent('Model.Appraisal.add.afterSave', [$entity, $requestData, $this->getAlias()], $appraisalScore);
     }
 
+    /*public function editBeforeSave(Event $event, $entity, $requestData, $extra)
+    {
+        echo "<pre>"; print_r($requestData); die;
+        $appraisalScore = $this->AppraisalCriterias->AppraisalScores;
+        $appraisalScore->dispatchEvent('Model.Appraisal.edit.beforeSave', [$entity, $requestData, $this->getAlias()], $appraisalScore);
+    }*/
+
+    /**
+     * POCOR-8848
+     * This method is triggered before saving the Form.
+     * It processes the new sections added in the request and ensures they are properly added 
+     * to the existing appraisal criterias while avoiding duplicates.
+     * @param array $requestData The request data containing appraisal form details
+     * @param array $extra Additional data passed to the event
+     */
     public function editBeforeSave(Event $event, $entity, $requestData, $extra)
     {
+        // Extract appraisal criterias and new sections data
+        $appraisalCriterias = $requestData['AppraisalForms']['appraisal_criterias'] ?? [];
+        $newSections = $requestData['AppraisalFormssectionTxt'] ?? null;
+        if (!is_array($newSections)) {
+            $newSections = [$newSections];
+        }
+        $existingSections = [];
+        foreach ($appraisalCriterias as $criteria) {
+            $joinData = $criteria['_joinData'] ?? [];
+            if (!empty($joinData['section'])) {
+                $existingSections[] = $joinData['section'];
+            }
+        }
+        foreach ($newSections as $newSection) {
+            if ($newSection && !in_array($newSection, $existingSections, true)) {
+                $newSectionData = [
+                    'id' => null, 
+                    '_joinData' => [
+                        'name' => $newSection,
+                        'field_type' => null,
+                        'field_type_id' => null,
+                        'appraisal_form_id' => $entity->id,
+                        'appraisal_criteria_id' => null,
+                        'order' => count($appraisalCriterias) + 1, 
+                        'section' => $newSection,
+                        'is_mandatory' => 0,
+                    ],
+                ];
+                $appraisalCriterias[] = $newSectionData;
+            }
+        }
+        usort($appraisalCriterias, function ($a, $b) {
+            $orderA = $a['_joinData']['order'] ?? 0;
+            $orderB = $b['_joinData']['order'] ?? 0;
+            return $orderA <=> $orderB;
+        });
+        $requestData['AppraisalForms']['appraisal_criterias'] = $appraisalCriterias;
         $appraisalScore = $this->AppraisalCriterias->AppraisalScores;
         $appraisalScore->dispatchEvent('Model.Appraisal.edit.beforeSave', [$entity, $requestData, $this->getAlias()], $appraisalScore);
     }
+
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
     {

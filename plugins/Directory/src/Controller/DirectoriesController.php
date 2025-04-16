@@ -32,7 +32,7 @@ class DirectoriesController extends AppController
             // Student
             //'StudentAbsences'       => ['className' => 'Directory.Absences', 'actions' => ['index', 'view']],
             //'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
-           // 'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+            // 'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             //'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 
             // Staff
@@ -479,9 +479,9 @@ class DirectoriesController extends AppController
     {
         //POCOR-7231 :: Start
         $qs = $this->request->getQuery('queryString');
-        if($qs){
-        $requestDataa = base64_decode($this->request->getQuery('queryString'));
-        $requestDataa = json_decode($requestDataa, true);
+        if ($qs) {
+            $requestDataa = base64_decode($this->request->getQuery('queryString'));
+            $requestDataa = json_decode($requestDataa, true);
         }
         if (empty($requestDataa) && isset($this->request->getParam('pass')[0])) {
             $requestDataa = base64_decode($this->request->getParam('pass')[0]);
@@ -521,6 +521,62 @@ class DirectoriesController extends AppController
         $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
     }
 
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+    // End
+
     public function StudentResults()
     {
         $session = $this->request->getSession();
@@ -554,8 +610,6 @@ class DirectoriesController extends AppController
             // End POCOR-5188
         }
     }
-
-    // End
 
     public function getAcademicTabElements($options = [])
     {
@@ -715,7 +769,7 @@ class DirectoriesController extends AppController
         $getQuery = $this->request->getParam('pass');
         $furtherAction = $getQuery[0];
         $query = $this->request->getQuery();
-        if($action == 'StudentGuardians' && ($furtherAction == 'view' || $furtherAction == 'edit')) {
+        if ($action == 'StudentGuardians' && ($furtherAction == 'view' || $furtherAction == 'edit')) {
             return;
         }
         if (isset($query['user_id'])) {
@@ -815,9 +869,9 @@ class DirectoriesController extends AppController
         $action = $this->request->getParam('action');
 
         $furtherAction = $getQuery[0];
-        if($action == 'StudentGuardians' && ($furtherAction == 'view' || $furtherAction == 'edit')) {
+        if ($action == 'StudentGuardians' && ($furtherAction == 'view' || $furtherAction == 'edit')) {
             $studentGuardiansID = $this->getQueryString();
-            if(!$studentGuardiansID){
+            if (!$studentGuardiansID) {
                 return;
             }
 //            die(print_r($studentGuardiansID, true));
@@ -826,10 +880,10 @@ class DirectoriesController extends AppController
             $StudentGuardiansRelationship = $StudentGuardians->get($studentGuardiansID);
             $studentId = $StudentGuardiansRelationship->student_id;
             $students = $this->getDynamicTableInstance('User.Users');
-            if(!$studentId){
+            if (!$studentId) {
                 return;
             }
-            $student= $students->get($studentId);
+            $student = $students->get($studentId);
             $name = $student->name . ' - ' . __("Student's Guardian");
             $this->set('contentHeader', $name);
             return;
@@ -1143,13 +1197,13 @@ class DirectoriesController extends AppController
                 if ($key == 'UserNationalities') {
                     $actionURL = 'Nationalities';
                 }
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
-                    'plugin' => $plugin,
+                // POCOR-8989 changed from ?queryString to /queryString/ for better compliance
+                $tabElements[$key]['url'] = ['plugin' => $plugin,
                     'controller' => $name,
                     'action' => $actionURL,
-                    'index'],
-                    ['security_user_id' => $id]
-                );
+                    '0' => 'index',
+                    '1' => $this->ControllerAction->paramsEncode(['security_user_id' => $id])]
+                ;
             }
         }
 
@@ -1200,6 +1254,8 @@ class DirectoriesController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
+    // For staff
+
     public function getStudentGuardianTabElements($options = [])
     {
         $type = (isset($options['type'])) ? $options['type'] : null;
@@ -1209,22 +1265,6 @@ class DirectoriesController extends AppController
             'Guardians' => [
                 'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentGuardians', 'type' => $type],
                 'text' => __('Guardians')
-            ],
-        ];
-        return $this->TabPermission->checkTabPermission($tabElements);
-    }
-
-    // For staff
-
-    public function getGuardianStudentTabElements($options = [])
-    {
-        // $type = (isset($options['type']))? $options['type']: null;
-        $plugin = $this->getPlugin();
-        $name = $this->getName();
-        $tabElements = [
-            'Students' => [
-                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'GuardianStudents'],
-                'text' => __('Students')
             ],
         ];
         return $this->TabPermission->checkTabPermission($tabElements);
@@ -1281,6 +1321,20 @@ class DirectoriesController extends AppController
 //        }
 //        return $this->TabPermission->checkTabPermission($tabElements);
 //    }
+
+    public function getGuardianStudentTabElements($options = [])
+    {
+        // $type = (isset($options['type']))? $options['type']: null;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
+        $tabElements = [
+            'Students' => [
+                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'GuardianStudents'],
+                'text' => __('Students')
+            ],
+        ];
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
 
     public function getFinanceTabElements($options = [])
     {
@@ -1465,60 +1519,6 @@ class DirectoriesController extends AppController
     }
 
     /**
-     * Get a dynamic table instance with all associations.
-     *
-     * @param string $tableName . POCOR-8231
-     * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    public function getDynamicTableInstance(string $tableName): Table
-    {
-        // Parse plugin and table names if dot notation is used
-        // Create a TableLocator instance
-        $locator = TableRegistry::getTableLocator();
-
-        try {
-            // Try to get the table instance directly
-            return $locator->get($tableName);
-        } catch (\Exception $e) {
-            Log::debug('Error: ' . $e->getMessage());
-        }
-
-        $parts = explode('.', $tableName);
-        $plugin = count($parts) > 1 ? $parts[0] : null;
-        $table = count($parts) > 1 ? $parts[1] : $parts[0];
-
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableFullAlias = Inflector::camelize($tableName);
-        $tableAlias = Inflector::camelize($table);
-
-        // Create the fully qualified class name if a plugin is specified
-        if ($plugin) {
-            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
-        } else {
-            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
-        }
-
-        // Check if the table instance already exists
-        if (!$locator->exists($tableFullAlias)) {
-            // Check if the specific table class exists
-            if (!class_exists($className)) {
-                $className = Table::class; // Fallback to generic Table class
-            }
-
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
-                'className' => $className,
-                'table' => $table,
-                'alias' => $tableAlias,
-            ]);
-        }
-
-        // Return the table instance
-        return $locator->get($tableFullAlias);
-    }
-
-    /**
      * Gets the list of genders. POCOR-8231-C4
      *
      * @return \Cake\Http\Response The JSON response containing the list of genders
@@ -1603,10 +1603,10 @@ class DirectoriesController extends AppController
     public function directoryInternalSearch(): Response
     {
 //        if($this->searchingAJAX > 0){
-            $this->searchingAJAX = $this->searchingAJAX + 1;
-            if($this->searchingAJAX < 2){
+        $this->searchingAJAX = $this->searchingAJAX + 1;
+        if ($this->searchingAJAX < 2) {
             return $this->sendJsonResponse(['searching' => $this->searchingAJAX]);
-            }
+        }
 //        }
         $this->searchingAJAX = 1;
         $Directories = $this->getDynamicTableInstance('Directory.Directories');
@@ -1928,7 +1928,7 @@ class DirectoriesController extends AppController
     public function directoryExternalSearch(): Response
     {
         $requestInput = $this->getRequestData();
-        $params = $requestInput['params'];
+        $params = $requestInput['params'] ?? $requestInput;
         $firstName = $params['first_name'] ?? null;
         $lastName = $params['last_name'] ?? null;
         $openemisNo = $params['openemis_no'] ?? null;
@@ -1956,16 +1956,161 @@ class DirectoriesController extends AppController
 
         $noData = json_encode(['data' => [], 'total' => 0]);
         try {
-            if ($searchType !== 'UNHCR') {
-                $response = $this->getTokenedData($attributes, $identityNumber, $noData, $id);
-            } else {
+            if ($searchType === 'UNHCR') {
                 $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
+            } elseif ($searchType === 'OpenEMIS Core') {
+//                $response = ['data' => ['first_name' => 'Pablo']];
+
+                $response = $this->getOECoreData($attributes, $noData, $identityNumber);
+            } else {
+                $response = $this->getTokenedData($attributes, $identityNumber, $noData, $id);
             }
         } catch (\Exception $exception) {
             return $this->sendJsonResponse(['error' => $exception->getMessage()]);
         }
 
         return $this->sendJsonResponse($response);
+    }
+
+    /**
+     * Fetches data from the UNHCR API. POCOR-8231
+     *
+     * @param array $attributes External data source attributes
+     * @param string $noData JSON string for empty data response
+     * @param string $identityNumber Identity number for the search
+     * @param string $dateOfBirth Date of birth for the search
+     * @return array Data fetched from UNHCR API or no data message
+     * @throws \Exception If there is an error during the data fetching process
+     * @author Khindol Madraimov
+     */
+    private function getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth): array
+    {
+        $applicationId = $attributes['application_id'];
+        $apiKey = $attributes['secret_code'];
+        $url = $attributes['url'];
+        $tokenUri = $url . "login";
+        $userDataUri = $url . "validate/identity-number";
+
+        $tokenRequestBody = [
+            'api_key' => $apiKey
+        ];
+
+        $headers = [
+            'Authorization' => 'Basic ' . $applicationId,
+            'Content-Type' => 'application/json'
+        ];
+
+        $http = new \Cake\Http\Client();
+        $response = $http->post($tokenUri, json_encode($tokenRequestBody), ['headers' => $headers]);
+
+        $decodedResponse = $response->getJson();
+        $responseData = json_decode($noData, true);
+
+        if ($response->isOk() && isset($decodedResponse['data']['token'])) {
+            $token = $decodedResponse['data']['token'];
+
+            $headers = [
+                'token' => $token,
+                'Content-Type' => 'application/json'
+            ];
+
+            $userRequestBody = json_encode([
+                "identity_number" => $identityNumber,
+                "date_of_birth" => $dateOfBirth
+            ]);
+
+            $response = $http->post($userDataUri,
+                $userRequestBody, [
+                    'headers' => $headers,
+                    'type' => 'json'
+                ]);
+
+            $decodedResponse = $response->getJson();
+            if ($response->isOk() && isset($decodedResponse['result'])) {
+                $answer = [];
+                if ($decodedResponse['result']) {
+                    $answer['identity_number'] = $identityNumber;
+                }
+                $responseData = ['data' => [$answer]];
+            }
+        }
+
+        return $responseData;
+    }
+
+    //POCOR-5673 starts
+
+    /**
+     * Fetches data from the OpenEMIS Core API v5. POCOR-8872
+     *
+     * @param array $attributes External data source attributes
+     * @param string $noData JSON string for empty data response
+     * @param string $identityNumber Identity number for the search
+     * @return array Data fetched from UNHCR API or no data message
+     * @throws \Exception If there is an error during the data fetching process
+     * @author Khindol Madraimov
+     */
+    private function getOECoreData(array $attributes, string $noData, string $identityNumber): array
+    {
+//        Log::debug(print_r(['getOECoreData' => $attributes], true));
+        $username = $attributes['username'];
+        $password = $attributes['password'];
+        $apiKey = $attributes['api_key'];
+        $url = $attributes['api_url'];
+        $tokenUri = $url . "/login";
+        $userDataEndpoint = $url . "/security-users/openemis_no/";
+
+
+        $tokenRequestBody = [
+            'username' => $username,
+            'password' => $password,
+            'api_key' => $apiKey
+        ];
+        $headers = [
+            'Content-Type' => 'application/json'
+        ];
+
+        $http = new \Cake\Http\Client();
+        $response = $http->post($tokenUri, json_encode($tokenRequestBody), ['headers' => $headers]);
+
+        $decodedResponse = $response->getJson();
+//        Log::debug(print_r(['getOECoreData' => $decodedResponse], true));
+        $responseData = json_decode($noData, true);
+//        Log::debug(print_r([$response->isOk() => $decodedResponse['data'],
+//            $tokenUri => $tokenRequestBody], true));
+
+        if ($response->isOk() && isset($decodedResponse['data']['token'])) {
+            $token = $decodedResponse['data']['token'];
+            $headers = [
+                'authorization' => "Bearer " . $token,
+                'type' => 'application/json'
+            ];
+//            Log::debug(print_r(['getOECoreHeaders' => $headers], true));
+            $userDataUri = $userDataEndpoint . $identityNumber;
+            $userDataUri = $userDataUri . "/_fields/first_name,middle_name,third_name,last_name,identity_number,date_of_birth,gender_id,openemis_no";
+
+            $response = $http->get($userDataUri, [], [
+                'headers' => $headers
+            ]);
+
+            $decodedResponse = $response->getJson();
+            $decodedData = $decodedResponse['data'] ?? [];
+            if ($response->isOk() && isset($decodedData)) {
+                $responseData = ['data' => [], 'total' => 0];
+                if (!empty($decodedData)) {
+                    foreach ($decodedData as &$answer) {
+                        $answer['identity_number'] = $answer['openemis_no'];
+                        unset($answer['openemis_no']);
+                    }
+                    $responseData = ['data' => $decodedData, 'total' => count($decodedData)];
+                }
+
+            } else {
+                $responseData = ['data' => [], 'total' => 0];
+            }
+        }
+
+        return $responseData;
     }
 
     /**
@@ -2040,74 +2185,6 @@ class DirectoriesController extends AppController
         if (!empty($id)) {
             $singleUserData = array_filter($responseData['data'], fn($value) => $value['id'] == $id);
             $responseData = ['data' => $singleUserData];
-        }
-
-        return $responseData;
-    }
-
-    //POCOR-5673 starts
-
-    /**
-     * Fetches data from the UNHCR API. POCOR-8231
-     *
-     * @param array $attributes External data source attributes
-     * @param string $noData JSON string for empty data response
-     * @param string $identityNumber Identity number for the search
-     * @param string $dateOfBirth Date of birth for the search
-     * @return array Data fetched from UNHCR API or no data message
-     * @throws \Exception If there is an error during the data fetching process
-     * @author Khindol Madraimov
-     */
-    private function getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth): array
-    {
-        $applicationId = $attributes['application_id'];
-        $apiKey = $attributes['secret_code'];
-        $url = $attributes['url'];
-        $tokenUri = $url . "login";
-        $userDataUri = $url . "validate/identity-number";
-
-        $tokenRequestBody = [
-            'api_key' => $apiKey
-        ];
-
-        $headers = [
-            'Authorization' => 'Basic ' . $applicationId,
-            'Content-Type' => 'application/json'
-        ];
-
-        $http = new \Cake\Http\Client();
-        $response = $http->post($tokenUri, json_encode($tokenRequestBody), ['headers' => $headers]);
-
-        $decodedResponse = $response->getJson();
-        $responseData = json_decode($noData, true);
-
-        if ($response->isOk() && isset($decodedResponse['data']['token'])) {
-            $token = $decodedResponse['data']['token'];
-
-            $headers = [
-                'token' => $token,
-                'Content-Type' => 'application/json'
-            ];
-
-            $userRequestBody = json_encode([
-                "identity_number" => $identityNumber,
-                "date_of_birth" => $dateOfBirth
-            ]);
-
-            $response = $http->post($userDataUri,
-                $userRequestBody, [
-                    'headers' => $headers,
-                    'type' => 'json'
-                ]);
-
-            $decodedResponse = $response->getJson();
-            if ($response->isOk() && isset($decodedResponse['result'])) {
-                $answer = [];
-                if ($decodedResponse['result']) {
-                    $answer['identity_number'] = $identityNumber;
-                }
-                $responseData = ['data' => [$answer]];
-            }
         }
 
         return $responseData;

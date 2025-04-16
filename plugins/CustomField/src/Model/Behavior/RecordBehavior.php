@@ -77,54 +77,96 @@ class RecordBehavior extends Behavior
 
     public function initialize(array $config): void
     {
+        // POCOR-8917 start
         parent::initialize($config);
+        $model = $this->_table;
+//        dd($model);
         if (is_null($this->getConfig('moduleKey'))) {
-            $this->_table->belongsTo('CustomForms', $this->getConfig('formClass'));
+            $model->belongsTo('CustomForms', $this->getConfig('formClass'));
         }
-        $this->_table->hasMany('CustomFieldValues', $this->getConfig('fieldValueClass'));
-        $this->CustomFieldValues = $this->_table->CustomFieldValues;
 
+
+
+// Check if the incorrect association exists
+        $needToReplaceAssociation = false;
+        if ($model->getAlias() == 'StudentUser') {
+            $associationName = 'CustomFieldValues';
+//            dd($model->associations());
+            if ($model->hasAssociation($associationName)) {
+                $association = $model->getAssociation($associationName);
+
+                if ($association->getClassName() != 'StudentCustomField.StudentCustomFieldValues') {
+                    $needToReplaceAssociation = true;
+                }
+            }
+// Now add the correct association
+        }
+
+        if ($model->getAlias() == 'StudentAdmission') {
+
+            $associationName = 'CustomFieldValues';
+//            dd($model->associations());
+            if ($model->hasAssociation($associationName)) {
+                $association = $model->getAssociation($associationName);
+//                dd($association->getClassName());
+                if ($association->getClassName() != 'StudentCustomField.StudentAdmissionCustomFieldValues') {
+                    $needToReplaceAssociation = true;
+                }
+            }
+// Now add the correct association
+        }
+        if($needToReplaceAssociation){
+            $model->associations()->remove($associationName);
+        }
+
+        $model->hasMany('CustomFieldValues', $this->getConfig('fieldValueClass'));
+
+        $this->CustomFieldValues = $model->CustomFieldValues;
         if (!is_null($this->getConfig('tableCellClass'))) {
-            $this->_table->hasMany('CustomTableCells', $this->getConfig('tableCellClass'));
-            $this->CustomTableCells = $this->_table->CustomTableCells;
+            $model->hasMany('CustomTableCells', $this->getConfig('tableCellClass'));
+            $this->CustomTableCells = $model->CustomTableCells;
         }
         $this->firstTabName = null;
         $this->CustomModules = TableRegistry::get('CustomField.CustomModules');
         $this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
-
-        $this->CustomFields = $this->CustomFieldValues->CustomFields;
+        try{
+            $this->CustomFields = $this->CustomFieldValues->CustomFields;
+        }catch (\Exception $exception){
+            Log::debug($exception->getMessage());
+        }
         $this->CustomFieldOptions = $this->CustomFieldValues->CustomFields->CustomFieldOptions;
         $this->CustomForms = $this->CustomFields->CustomForms;
         $this->CustomFormsFields = TableRegistry::get($this->getConfig('formFieldClass.className'));
         $this->CustomFormsFilters = TableRegistry::get($this->getConfig('formFilterClass.className'));
 
         // Each field type will have one behavior attached
-        $this->_table->addBehavior('CustomField.RenderText');
-        $this->_table->addBehavior('CustomField.RenderNumber');
-        $this->_table->addBehavior('CustomField.RenderDecimal');
-        $this->_table->addBehavior('CustomField.RenderTextarea');
-        $this->_table->addBehavior('CustomField.RenderDropdown');
-        $this->_table->addBehavior('CustomField.RenderCheckbox');
-        $this->_table->addBehavior('CustomField.RenderTable');
-        $this->_table->addBehavior('CustomField.RenderDate');
-        $this->_table->addBehavior('CustomField.RenderTime');
-        $this->_table->addBehavior('CustomField.RenderStudentList');
-        $this->_table->addBehavior('CustomField.RenderCoordinates');
-        $this->_table->addBehavior('CustomField.RenderFile');
-        $this->_table->addBehavior('CustomField.RenderRepeater');
-        $this->_table->addBehavior('CustomField.RenderNote');
-        $this->_table->addBehavior('CustomField.RenderStaffList');//POCOR-2135
+        $model->addBehavior('CustomField.RenderText');
+        $model->addBehavior('CustomField.RenderNumber');
+        $model->addBehavior('CustomField.RenderDecimal');
+        $model->addBehavior('CustomField.RenderTextarea');
+        $model->addBehavior('CustomField.RenderDropdown');
+        $model->addBehavior('CustomField.RenderCheckbox');
+        $model->addBehavior('CustomField.RenderTable');
+        $model->addBehavior('CustomField.RenderDate');
+        $model->addBehavior('CustomField.RenderTime');
+        $model->addBehavior('CustomField.RenderStudentList');
+        $model->addBehavior('CustomField.RenderCoordinates');
+        $model->addBehavior('CustomField.RenderFile');
+        $model->addBehavior('CustomField.RenderRepeater');
+        $model->addBehavior('CustomField.RenderNote');
+        $model->addBehavior('CustomField.RenderStaffList');//POCOR-2135
         // End
 
         // If tabSection is not set, added to handle Section Header
         if (!$this->getConfig('tabSection')) {
-            $this->_table->addBehavior('OpenEmis.Section');
+            $model->addBehavior('OpenEmis.Section');
         }
 
-        $model = $this->getConfig('model');
-        if (empty($model)) {
-            $this->setConfig('model', $this->_table->getRegistryAlias());
+        $theModel = $this->getConfig('model');
+        if (empty($theModel)) {
+            $this->setConfig('model', $model->getRegistryAlias());
         }
+        // POCOR-8917 end
     }
 
     private function isCAv4()
@@ -156,10 +198,13 @@ class RecordBehavior extends Behavior
 
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
+
+
         // do not contain CustomFieldValues
         if (!is_null($this->getConfig('tableCellClass'))) {
             $query->contain(['CustomTableCells']);
         }
+
     }
 
     public function editAfterQuery(Event $event, Entity $entity)
@@ -169,8 +214,8 @@ class RecordBehavior extends Behavior
 
     public function viewAfterAction(Event $event, Entity $entity)
     {
+
         $model = $this->_table;
-        // add here to make view has the same format in edit
         $this->formatEntity($entity);
         $this->setupCustomFields($entity);
         // check if the query string contains tab_section if tab_section exists for a particular survey
@@ -333,7 +378,13 @@ class RecordBehavior extends Behavior
 
     private function processSave(Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
+
         $model = $this->_table;
+        //POCOR-8538 start
+        if($model->getRegistryAlias()=="Institution.InstitutionClasses"){
+            return;
+        }
+        //POCOR-8538 end
         $process = function ($model, $entity) use ($data) {
             try {
                 $repeaterSuccess = true;
@@ -711,19 +762,30 @@ class RecordBehavior extends Behavior
         if (!empty($customFormQuery)) {
             $customFormIds = $customFormQuery
                 ->toArray();
+            //POCOR-8434 starts
+            if($model == 'Institution.StudentAdmission' && !empty($customFormIds)){
+                $customFormIds = $this->getcustomFormIdByStudentFormFilters($customFormIds, $entity, $moduleId);
+            }//POCOR-8434 ends
 
             if (!empty($customFormIds)) {
+                //POCOR-8434 starts
                 $query = $this->CustomFormsFields
-                    ->find('all')
-                    ->find('order')
-                    ->where([
-                        $this->CustomFormsFields->aliasField($this->getConfig('formKey') . ' IN') => $customFormIds
-                    ])
-                    ->group([
+                        ->find('all')
+                        ->find('order')
+                        ->where([
+                            $this->CustomFormsFields->aliasField($this->getConfig('formKey') . ' IN') => $customFormIds
+                        ]);
+                    $group = [
                         $this->CustomFormsFields->aliasField($this->getConfig('fieldKey'))
-                    ]);
+                    ];
+                    //POCOR-8434 starts
+                    if ($model == 'Institution.StudentAdmission') {
+                        $group[] = $this->CustomFormsFields->aliasField($this->getConfig('formKey')); // POCOR-8434 add formkey condition
+                    }//POCOR-8434 ends
 
-                if ($withContain) {
+                    $query->group($group);
+                    //POCOR-8434 ends
+                    if ($withContain) {
                     if (is_array($withContain)) {
                         $query->contain($withContain);
                     } else {
@@ -762,6 +824,28 @@ class RecordBehavior extends Behavior
         return $query;
     }
 
+    //POCOR-8434 starts
+    public function getcustomFormIdByStudentFormFilters($customFormIds, $entity, $moduleId){
+        $EducationGradesTbl = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $EducationGrades = $EducationGradesTbl
+             ->find()
+             ->where([$EducationGradesTbl->aliasField('id') => $entity->education_grade_id])
+             ->first();
+        $customFormData = [];
+        if(!empty($EducationGrades) && !empty($entity->academic_period_id) && !empty($customFormIds)){
+            $StudentCustomFiltersTbl = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFilters');
+            $customFormData = $StudentCustomFiltersTbl
+                ->find('list', ['keyField' => 'student_custom_form_id', 'valueField' => 'student_custom_form_id'])
+                ->where([
+                    $StudentCustomFiltersTbl->aliasField('education_programme_id') => $EducationGrades->education_programme_id,
+                    $StudentCustomFiltersTbl->aliasField('academic_period_id') => $entity->academic_period_id,
+                    $StudentCustomFiltersTbl->aliasField('custom_module_id') => $moduleId,
+                    $StudentCustomFiltersTbl->aliasField('student_custom_form_id IN') => $customFormIds
+                ])->toArray();
+        }
+        return $customFormData;
+    }//POCOR-8434 ends
+
     public function formatEntity(Entity $entity)
     {
         $model = $this->_table;
@@ -778,8 +862,8 @@ class RecordBehavior extends Behavior
                 foreach ($newEntity->custom_field_values as $key => $obj) {
                     $fieldId = $obj->{$this->getConfig('fieldKey')};
                     $customField = $obj->custom_field;
-
-                    if ($customField->field_type == 'CHECKBOX') {
+                    $isCheckbox = $customField->field_type == 'CHECKBOX';//POCOR-8434
+                    if ($isCheckbox) {
                         $checkboxValues = [$obj['number_value']];
                         if (isset($values[$fieldId])) {
                             $checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
@@ -809,7 +893,9 @@ class RecordBehavior extends Behavior
                 ->toArray();
 
             foreach ($customFields as $key => $obj) {
+                //$obj->custom_field['student_custom_form_id'] = $obj->student_custom_form_id;
                 $customField = $obj->custom_field;
+                //$customField['student_custom_form_id'] = $obj->student_custom_form_id;
                 $fieldTypeCode = $customField->field_type;
                 $section = $obj->section ?? "section";
                 $slug = Text::slug($section);
@@ -818,26 +904,31 @@ class RecordBehavior extends Behavior
                 if (in_array($fieldTypeCode, $this->fieldValueArray)) {
 					if(empty($tabSection) || ($slug == $tabSection)) {
 						$fieldId = $customField->id;
+                        //$formId = $customField->student_custom_form_id;//not useable
+                        //POCOR-8434 starts
+                        $recordKey = $entity->id;
+                        $fieldValue = $values[$fieldId] ?? null;
+                        if ($fieldValue) {
+                            //$fieldValues['student_custom_form_id'] = $formId;//not useable
+                            $fieldValues[] = $fieldValue;
+                        } else {
+                            $valueData = [
+                                'text_value' => null,
+                                'number_value' => null,
+                                'decimal_value' => null,
+                                'textarea_value' => null,
+                                'date_value' => null,
+                                'time_value' => null,
+                                $this->getConfig('fieldKey') => $fieldId,
+                                $this->getConfig('recordKey') => $recordKey,
+                                'custom_field' => null, // set after data is patched else will be lost
+                            ];
 
-						if (isset($values[$fieldId])) {
-							$fieldValues[] = $values[$fieldId];
-						} else {
-							$valueData = [
-								'text_value' => null,
-								'number_value' => null,
-								'decimal_value' => null,
-								'textarea_value' => null,
-								'date_value' => null,
-								'time_value' => null,
-								$this->getConfig('fieldKey') => $fieldId,
-								$this->getConfig('recordKey') => $entity->id,
-								'custom_field' => null // set after data is patched else will lost
-							];
-							$valueEntity = $this->CustomFieldValues->newEntity($valueData, ['validate' => false]);
-							$valueEntity->custom_field = $customField;
-							$fieldValues[] = $valueEntity;
-						}
-					}
+                            $valueEntity = $this->CustomFieldValues->newEntity($valueData, ['validate' => false]);
+                            $valueEntity->custom_field = $customField;
+                            $fieldValues[] = $valueEntity;
+                        }//POCOR-8434 ends
+                    }
                 } else {
                     $fieldType = Inflector::camelize(strtolower($fieldTypeCode));
                     $settings = new ArrayObject([
@@ -1058,7 +1149,9 @@ class RecordBehavior extends Behavior
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
 
-                            if (!empty($sectionName)&&$model->request->getParam('action')!="Surveys") {
+                            if (!empty($sectionName)
+                                &&$model->request->getParam('action')!="Surveys"
+                                && $model->request->getParam('action')!="Classes") {//POCOR-8538
                                 $ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName[$key]]);
                                 $fieldOrder[++$order] = $fieldName;
                                // echo "<pre>";print_r($customFields);die;
@@ -1138,7 +1231,11 @@ class RecordBehavior extends Behavior
                     $fieldOrder[++$order] = $field;
                 }
             }
-            ksort($fieldOrder);
+            //POCOR-8538 start
+            if($model->request->getParam('action')=="Classes"){
+              $fieldOrder=$this->setUpFieldOrderForClasses($fieldOrder);
+            }
+            //POCOR-8538 end
             $ControllerAction->setFieldOrder($fieldOrder);
         }
     }
@@ -1546,5 +1643,14 @@ class RecordBehavior extends Behavior
         return null;
     }
     //POCOR-2135 end
+    //POCOR-8538 start
+    public function setUpFieldOrderForClasses($fieldOrder){
 
+        $position = array_search('institution_shift_id', $fieldOrder);
+        $customFields = array_values(array_filter($fieldOrder, fn($field) => strpos($field, 'custom') === 0));
+        $fieldOrder = array_values(array_filter($fieldOrder, fn($field) => strpos($field, 'custom') !== 0));
+        array_splice($fieldOrder, $position + 1, 0, $customFields);
+        return $fieldOrder;
+    }
+    //POCOR-8538 end
 }

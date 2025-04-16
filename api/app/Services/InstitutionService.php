@@ -66,9 +66,13 @@ class InstitutionService extends Controller
                 $resp[$k]['area_name'] = $data['area_education']['name'];
                 $resp[$k]['area_code'] = $data['area_education']['code'];
                 $resp[$k]['area_administrative_id'] = $data['area_administrative_id'];
-                $resp[$k]['area_administrative_name'] = $data['area_administratives']['name'];
-                $resp[$k]['area_administrative_code'] = $data['area_administratives']['code'];
-
+                if($data['area_administrative_id'] != 0 || $data['area_administrative_id'] != null){
+                    $resp[$k]['area_administrative_name'] = $data['area_administratives']['name'];
+                    $resp[$k]['area_administrative_code'] = $data['area_administratives']['code'];
+                }else{
+                  $resp[$k]['area_administrative_name'] = "N/A"; 
+                  $resp[$k]['area_administrative_code'] = "N/A";
+                } //POCOR-8990
                 $resp[$k]['institution_locality_id'] = $data['institution_locality_id'];
                 $resp[$k]['institution_locality_name'] = $data['institution_localities']['name']??"";
                 $resp[$k]['institution_locality_international_code'] = $data['institution_localities']['international_code']??"";
@@ -790,7 +794,6 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getInstitutionStaffList($request, $institutionId);
-            
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
@@ -850,6 +853,10 @@ class InstitutionService extends Controller
                     $list[$k]['institution_name'] = $d['institution']['name']??"";
                     $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_position_name'] = $d['institution_position']['staff_position_title']['name']??"";
+                    $list[$k]['staff_position_type'] = (isset($d['institution_position']['staff_position_title']['type']) && $d['institution_position']['staff_position_title']['type'] == 1) 
+                                    ? 'Teaching' 
+                                    : 'Non-teaching'; //POCOR-8601
+
                 }
             }
             

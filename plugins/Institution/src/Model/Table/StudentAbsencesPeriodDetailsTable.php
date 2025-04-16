@@ -54,7 +54,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     {
         //For Import StudentAbsenceExcel only. Insert into student_attendace_mark_records once import sucessfully as attendance is counted as marked
         if ($entity->has('record_source') && $entity->record_source == 'import_student_attendances') {
-            $StudentAttendanceMarkedRecords = TableRegistry::get('StudentAttendanceMarkedRecords');
+            $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
 
             $date = $entity->date->i18nFormat('YYY-MM-dd');
 
@@ -69,7 +69,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             ];
 
             $markRecord = $StudentAttendanceMarkedRecords->newEntity($markRecordsData);
-            if (!$markRecord->errors()) {
+            if (!$markRecord->getErrors()) {
                 $StudentAttendanceMarkedRecords->save($markRecord);
             }
         }
@@ -270,180 +270,205 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                         $threshold = $alertRuleData1->threshold;
 
                                         $alertRuleMessage = $alertRuleData1->message;
+                                        
 
-                                        $searchKey1 = "/${total_days}/i";
-                                        $searchKey11 = '${total_days}';
-                                        if (preg_match($searchKey1, $alertRuleMessage)) {
+                                        $searchKey1 = "/{$total_days}/i";  // Corrected syntax
+                                        $searchKey11 = '${total_days}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchKey1)) {
                                             $alertRuleMessage = str_replace($searchKey11, $absenceCount, $alertRuleMessage);
                                         }
 
-                                        $searchKey2 = "/${threshold}/i";
-                                        $searchKey22 = '${threshold}';
-                                        if (preg_match($searchKey2, $alertRuleMessage)) {
+                                        
+                                        $searchKey2 = "/{$threshold}/i";  // Corrected syntax
+                                        $searchKey22 = '${threshold}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchKey2)) {
                                             $alertRuleMessage = str_replace($searchKey22, $threshold, $alertRuleMessage);
                                         }
+                                        
+                                        // Ensure that $userData is an object, not an array
+                                        $searchKey3 = "/{$userData->openemis_no}/i";  // Corrected syntax
+                                        $searchKey33 = '${user.openemis_no}';  // Corrected variable assignment
 
-                                        // $searchKey3 = "/${user.openemis_no}/i";
-                                        // $searchKey33 = '${user.openemis_no}';  //Commented for php 8 working with php 7.4 but not working with php version 8
-                                        $searchKey3 = "/{$userData->openemis_no}/i";
-                                        $searchKey33 = $userData->openemis_no;
-                                        if (preg_match($searchKey3, $alertRuleMessage)) {
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchKey3)) {
                                             $alertRuleMessage = str_replace($searchKey33, $StudentOpenemis_no, $alertRuleMessage);
                                         }
 
-                                        // $searchKey4 = "/${user.first_name}/i";
-                                        // $searchKey44 = '${user.first_name}';
-                                        $searchKey4 = "/{$userData->first_name}/i";
-                                        $searchKey44 = $userData->first_name;
-                                        if (preg_match($searchKey4, $alertRuleMessage)) {
+                                        $searchKey4 = "/{$userData->first_name}/i";  // Corrected syntax
+                                        $searchKey44 = '${user.first_name}';
+                                        if (!empty($searchKey4)) {
                                             $alertRuleMessage = str_replace($searchKey44, $StudentFirstName, $alertRuleMessage);
                                         }
 
-                                        // $searchKey5 = "/${user.middle_name}/i";
-                                        // $searchKey55 = '${user.middle_name}';
-                                        $searchKey5 = "/{$userData->middle_name}/i";
-                                        $searchKey55 = $userData->middle_name;
-                                        if (preg_match($searchKey5, $alertRuleMessage)) {
+                                        $searchKey5 = "/{$userData->middle_name}/i";  // Corrected syntax
+                                        $searchKey55 = '${user.middle_name}';
+                                        if (!empty($searchKey5)) {
                                             $alertRuleMessage = str_replace($searchKey55, $StudentMiddleName, $alertRuleMessage);
                                         }
 
-                                        // $searchKey6 = "/${user.third_name}/i";
-                                        // $searchKey66 = '${user.third_name}';
-                                        $searchKey6 = "/{$userData->third_name}/i";
-                                        $searchKey66 = $userData->third_name;
-                                        if (preg_match($searchKey6, $alertRuleMessage)) {
+                                        $searchKey6 = "/{$userData->third_name}/i";  // Corrected syntax
+                                        $searchKey66 = '${user.third_name}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchKey6)) {
                                             $alertRuleMessage = str_replace($searchKey66, $StudentThirdName, $alertRuleMessage);
                                         }
 
-                                        // $searchKey7 = "/${user.last_name}/i";
-                                        // $searchKey77 = '${user.last_name}';
-                                        $searchKey7 = "/{$userData->last_name}/i";
-                                        $searchKey77 = $userData->last_name;
-                                        if (preg_match($searchKey7, $alertRuleMessage)) {
+                                        $searchKey7 = "/{$userData->last_name}/i";  // Corrected syntax
+                                        $searchKey77 = '${user.last_name}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchKey7)) {
                                             $alertRuleMessage = str_replace($searchKey77, $StudentLastName, $alertRuleMessage);
                                         }
 
-                                        // $searchKey8 = "/${user.preferred_name}/i";
-                                        // $searchKey88 = '${user.preferred_name}';
-                                        $searchKey8 = "/{$userData->preferred_name}/i";
-                                        $searchKey88 = $userData->preferred_name;
-                                        if (preg_match($searchKey8, $alertRuleMessage)) {
+                                        $searchKey8 = "/{$userData->preferred_name}/i";  // Corrected syntax
+                                        $searchKey88 = '${user.preferred_name}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchKey8)) {
                                             $alertRuleMessage = str_replace($searchKey88, $StudentPreferredName, $alertRuleMessage);
                                         }
 
-                                        // $searchEmail = "/${user.email}/i";
-                                        // $searchKeyEmail = '${user.email}';
-                                        $searchEmail = "/{$userData->email}/i";
-                                        $searchKeyEmail = $userData->email;
-                                        if (preg_match($searchEmail, $alertRuleMessage)) {
+                                        $searchEmail = "/{$userData->email}/i";  // Corrected syntax
+                                        $searchKeyEmail = '${user.email}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchEmail)) {
                                             $alertRuleMessage = str_replace($searchKeyEmail, $StudentEmail, $alertRuleMessage);
                                         }
 
-                                        // $searchAddress = "/${user.address}/i";
-                                        // $searchKeyAddress = '${user.address}';
-                                        $searchAddress = "/{$userData->address}/i";
-                                        $searchKeyAddress = $userData->address;
-                                        if (preg_match($searchAddress, $alertRuleMessage)) {
+                                        $searchAddress = "/{$userData->address}/i";  // Corrected syntax
+                                        $searchKeyAddress = '${user.address}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchAddress)) {
                                             $alertRuleMessage = str_replace($searchKeyAddress, $StudentAddress, $alertRuleMessage);
                                         }
 
-                                        // $searchPC = "/${user.postal_code}/i";
-                                        // $searchKeyPC = '${user.postal_code}';
-                                        $searchPC = "/{$userData->postal_code}/i";
-                                        $searchKeyPC = $userData->postal_code;
-                                        if (preg_match($searchPC, $alertRuleMessage)) {
+                                        $searchPC = "/{$userData->postal_code}/i";  // Corrected syntax
+                                        $searchKeyPC = '${user.postal_code}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchPC)) {
                                             $alertRuleMessage = str_replace($searchKeyPC, $StudentPostalCode, $alertRuleMessage);
                                         }
 
-                                        // $searchDOB = "/${user.date_of_birth}/i";
-                                        // $searchKeyDOB = '${user.date_of_birth}';
-                                        $searchDOB = "/{$userData->date_of_birth}/i";
-                                        $searchKeyDOB = $userData->date_of_birth;
-                                        if (preg_match($searchDOB, $alertRuleMessage)) {
+                                        $searchDOB = "/{$userData->date_of_birth}/i";  // Corrected syntax
+                                        $searchKeyDOB = '${user.date_of_birth}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchDOB)) {
                                             $alertRuleMessage = str_replace($searchKeyDOB, $StudentDOB, $alertRuleMessage);
                                         }
-                                        
-                                        // $searchIDNO = "/${user.identity_number}/i";
-                                        // $searchKeyIDNO = '${user.identity_number}';
-                                        $searchIDNO = "/{$userData->identity_number}/i";
-                                        $searchKeyIDNO = $userData->identity_number;
-                                        if (preg_match($searchIDNO, $alertRuleMessage)) {
+
+                                        $searchIDNO = "/{$userData->identity_number}/i";  // Corrected syntax
+                                        $searchKeyIDNO = '${user.identity_number}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchIDNO)) {
                                             $alertRuleMessage = str_replace($searchKeyIDNO, $StudentIDNO, $alertRuleMessage);
                                         }
 
-                                        // Need to cross verfiy for php version 8[START]
-                                        // $searchIDTypeName = "/${user.main_identity_type.name}/i";
-                                        // $searchKeyIDTypeName = '${user.main_identity_type.name}';
-                                        // if (preg_match($searchIDTypeName, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyIDTypeName, $idTypeName, $alertRuleMessage);
-                                        // }
+                                        $searchIDTypeName = "/{$idtypeData->identity_number}/i";  // Corrected syntax
+                                        $searchKeyIDTypeName = '${user.main_identity_type.name}';  // Corrected variable assignment
 
-                                        // $searchNationality = "/${user.main_nationality.name}/i";
-                                        // $searchKeyNationality = '${user.main_nationality.name}';
-                                        // if (preg_match($searchNationality, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyNationality, $nationalName, $alertRuleMessage);
-                                        // }
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchIDTypeName)) {
+                                            $alertRuleMessage = str_replace($searchKeyIDTypeName, $idTypeName, $alertRuleMessage);
+                                        }
+                                        $searchGender = "/{$genderData->name}/i";  // Corrected syntax
+                                        $searchKeyGender = '${user.gender.name}';  // Corrected variable assignment
 
-                                        // $searchGender = "/${user.gender.name}/i";
-                                        // $searchKeyGender = '${user.gender.name}';
-                                        // if (preg_match($searchGender, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyGender, $genderName, $alertRuleMessage);
-                                        // }
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchGender)) {
+                                            $alertRuleMessage = str_replace($searchKeyGender, $genderName, $alertRuleMessage);
+                                        }
+                                        
+                                        $searchNationality = "/{$nationalData->name}/i";  // Corrected syntax
+                                        $searchKeyNationality = '${user.main_nationality.name}';  // Corrected variable assignment
 
-                                        // $searchName = "/${institution.name}/i";
-                                        // $searchKeyInsName = '${institution.name}';
-                                        // if (preg_match($searchName, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyInsName, $insName, $alertRuleMessage);
-                                        // }
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchNationality)) {
+                                            $alertRuleMessage = str_replace($searchKeyNationality, $nationalName, $alertRuleMessage);
+                                        }
 
-                                        // $searchCode = "/${institution.code}/i";
-                                        // $searchKeyCode = '${institution.code}';
-                                        // if (preg_match($searchCode, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyCode, $insCode, $alertRuleMessage);
-                                        // }
+                                        $searchName = "/{$institutionData->name}/i";  // Corrected syntax
+                                        $searchKeyInsName = '${institution.name}';  // Corrected variable assignment
 
-                                        // $searchInsAddress = "/${institution.address}/i";
-                                        // $searchKeyInsAddress = '${institution.address}';
-                                        // if (preg_match($searchInsAddress, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyInsAddress, $InsAddress, $alertRuleMessage);
-                                        // }
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchName)) {
+                                            $alertRuleMessage = str_replace($searchKeyInsName, $insName, $alertRuleMessage);
+                                        }
 
-                                        // $searchPCode = "/${institution.postal_code}/i";
-                                        // $searchKeyPCode = '${institution.postal_code}';
-                                        // if (preg_match($searchPCode, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyPCode, $InsPostalCode, $alertRuleMessage);
-                                        // }
+                                        $searchCode = "/{$institutionData->code}/i";  // Corrected syntax
+                                        $searchKeyCode = '${institution.code}';  // Corrected variable assignment
 
-                                        // $searchContactPerson = "/${institution.contact_person}/i";
-                                        // $searchKeyContactPerson = '${institution.contact_person}';
-                                        // if (preg_match($searchContactPerson, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyContactPerson, $InsContactPerson, $alertRuleMessage);
-                                        // }
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchCode)) {
+                                            $alertRuleMessage = str_replace($searchKeyCode, $insCode, $alertRuleMessage);
+                                        }
 
-                                        // $searchPhone = "/${institution.telephone}/i";
-                                        // $searchKeyPhone = '${institution.telephone}';
-                                        // if (preg_match($searchPhone, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyPhone, $InsPhone, $alertRuleMessage);
-                                        // }
+                                        $searchInsAddress = "/{$institutionData->address}/i";  // Corrected syntax
+                                        $searchKeyInsAddress = '${institution.address}';  // Corrected variable assignment
 
-                                        // $searchFax = "/${institution.fax}/i";
-                                        // $searchKeyFax = '${institution.fax}';
-                                        // if (preg_match($searchFax, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyFax, $InsFax, $alertRuleMessage);
-                                        // }
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchInsAddress)) {
+                                            $alertRuleMessage = str_replace($searchKeyInsAddress, $InsAddress, $alertRuleMessage);
+                                        }
 
-                                        // $searchInsEmail = "/${institution.email}/i";
-                                        // $searchKeyInsEmail = '${institution.email}';
-                                        // if (preg_match($searchInsEmail, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyInsEmail, $InsEmail, $alertRuleMessage);
-                                        // }
+                                        $searchPCode = "/{$institutionData->postal_code}/i";  // Corrected syntax
+                                        $searchKeyPCode = '${institution.postal_code}';  // Corrected variable assignment
 
-                                        // $searchWebsite = "/${institution.website}/i";
-                                        // $searchKeyWebsite = '${institution.website}';
-                                        // if (preg_match($searchWebsite, $alertRuleMessage)) {
-                                        //     $alertRuleMessage = str_replace($searchKeyWebsite, $InsWebsite, $alertRuleMessage);
-                                        // }
-                                        // Need to cross verfiy for php version 8[END]
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchPCode)) {
+                                            $alertRuleMessage = str_replace($searchKeyPCode, $InsPostalCode, $alertRuleMessage);
+                                        }
+
+                                        $searchContactPerson = "/{$institutionData->contact_person}/i";  // Corrected syntax
+                                        $searchKeyContactPerson = '${institution.contact_person}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchContactPerson)) {
+                                            $alertRuleMessage = str_replace($searchKeyContactPerson, $InsContactPerson, $alertRuleMessage);
+                                        }
+
+                                        $searchPhone = "/{$institutionData->telephone}/i";  // Corrected syntax
+                                        $searchKeyPhone = '${institution.telephone}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchPhone)) {
+                                            $alertRuleMessage = str_replace($searchKeyPhone, $InsPhone, $alertRuleMessage);
+                                        }
+
+                                        $searchFax = "/{$institutionData->fax}/i";  // Corrected syntax
+                                        $searchKeyFax = '${institution.fax}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchFax)) {
+                                            $alertRuleMessage = str_replace($searchKeyFax, $InsFax, $alertRuleMessage);
+                                        }
+
+                                        $searchInsEmail = "/{$institutionData->email}/i";  // Corrected syntax
+                                        $searchKeyInsEmail = '${institution.email}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchInsEmail)) {
+                                            $alertRuleMessage = str_replace($searchKeyInsEmail, $InsEmail, $alertRuleMessage);
+                                        }
+
+                                        $searchWebsite = "/{$institutionData->website}/i";  // Corrected syntax
+                                        $searchKeyWebsite = '${institution.website}';  // Corrected variable assignment
+
+                                        // Ensure $searchKey3 is a valid regex pattern
+                                        if (!empty($searchWebsite)) {
+                                            $alertRuleMessage = str_replace($searchKeyWebsite, $InsWebsite, $alertRuleMessage);
+                                        }
+                                        
                                         //Comment for V4[START]
                                         //POCOR-7266::End
                                          //POCOR-8650::START
@@ -510,6 +535,24 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 $absenceEntity = $InstitutionStudentAbsences->patchEntity($absenceEntity, $data);
                 $InstitutionStudentAbsences->save($absenceEntity);
             }
+            //POCOR-8631[START] webhook implementation 
+            if (!empty($studentId)) {
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+
+                $body = [
+                    'institution_class_id' => $classId,
+                    'education_grade_id' => $educationGradeId,
+                    'academic_period_id' => $academicPeriodId,
+                    'date' => $date,
+                    'institution_id' => $institutionId,
+                    'student_id' => $studentId,
+                    'absence_type_id' => $absenceTypeId,
+                ];
+
+                $body = json_encode($body);
+                $Webhooks->triggerShell('attendance_update', ['username' => ''], $body);
+            }
+            //POCOR-8631[END]
         }
     }
 

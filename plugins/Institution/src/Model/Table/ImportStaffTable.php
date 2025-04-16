@@ -158,7 +158,7 @@ class ImportStaffTable extends AppTable
                 'id' => 'StaffPositionGrades.id',
                 'name' => 'StaffPositionGrades.name'
             ])
-            ->autoFields(false)
+            ->enableAutoFields(false)//POCOR-8856
             ->all();
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -208,11 +208,9 @@ class ImportStaffTable extends AppTable
     public function onImportPopulateInstitutionPositionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $institutionId = ($this->_institution instanceof Entity) ? $this->_institution->id : false;
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);//POCOR-8856
+        $activeStatusId = $this->Workflow->getStepsByModelCode($lookedUpTable->getRegistryAlias(), 'ACTIVE');//POCOR-8856
 
-        $activeStatusId = $this->Workflow->getStepsByModelCode($lookedUpTable->registryAlias(), 'ACTIVE');
-
-        //select necessary field for position which total FTE not used of not fully used based on the end_date of the staff
         $modelData = $lookedUpTable->find();
         $modelData = $modelData
                     ->select([

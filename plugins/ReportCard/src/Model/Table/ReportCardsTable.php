@@ -13,6 +13,7 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
+use Cake\I18n\FrozenTime;
 
 class ReportCardsTable extends ControllerActionTable
 {
@@ -38,15 +39,15 @@ class ReportCardsTable extends ControllerActionTable
             'allowable_file_types' => 'document',
             'useDefaultName' => true
         ]);
-        $this->behaviors()->get('Download')->getConfig(
+        $this->behaviors()->get('Download')->setConfig(
             'name',
             'excel_template_name'
         );
-        $this->behaviors()->get('Download')->getConfig(
+        $this->behaviors()->get('Download')->setConfig(
             'content',
             'excel_template'
         );
-        $this->behaviors()->get('ControllerAction')->getConfig(
+        $this->behaviors()->get('ControllerAction')->setConfig(
             'actions.download.show',
             true
         );
@@ -66,7 +67,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
-        $validator->setProvider('custom', $this);//POCOR-8529 
+        $validator->setProvider('custom', $this);//POCOR-8529
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
@@ -138,7 +139,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'excel_template']);
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Administration','Templates','Report Cards');       
+        $is_manual_exist = $this->getManualUrl('Administration','Templates','Report Cards');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -184,7 +185,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->field('principal_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('homeroom_teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
-        
+
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -213,7 +214,7 @@ class ReportCardsTable extends ControllerActionTable
     {
         //POCOR-7400 start
         $query->contain(['ReportCardSubjects.EducationSubjects','ReportCardExcludedSecurityRoles']);
-       
+
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 $arr =[];
@@ -221,7 +222,7 @@ class ReportCardsTable extends ControllerActionTable
                     $arr[$key] = ['id'=>$role['security_role_id']];
                 }
                 $row['excluded_security_roles'] = $arr;
-              
+
                 return $row;
             });
         });
@@ -306,8 +307,20 @@ class ReportCardsTable extends ControllerActionTable
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
-        } else {
-            // attr for template download button
+        } elseif($action == 'edit') { //POCOR-8903
+            $requestId = $this->request->getParam('pass')[1];
+            $paramsDecode = $this->paramsDecode($requestId);
+            $recordId = $paramsDecode['id']; // Added semicolon
+
+            $record = $this->find()
+                ->where([$this->aliasField('id') => $recordId])
+                ->first();
+            $excelName = $record ? $record->excel_template_name : null;
+            $attr['startWithOneLeftButton'] = 'download';
+            $attr['type'] = 'binary';
+            $attr['value'] = $excelName;
+            $attr['attr']['value'] = $excelName;
+        }else{
             $attr['startWithOneLeftButton'] = 'download';
             $attr['type'] = 'binary';
         }
@@ -359,10 +372,10 @@ class ReportCardsTable extends ControllerActionTable
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
         if ($action == 'add') {
-            
+
             $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();	                    
-                
+			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+
             $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                 ->find('visible')
@@ -479,12 +492,13 @@ class ReportCardsTable extends ControllerActionTable
     public function onUpdateFieldSubjects(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
+            $data = $request->getData(); // POCOR-8969
             if ($action == 'add') {
-                $teacherComments = isset($request->data[$this->getAlias()]['teacher_comments_required']) ? $request->data[$this->getAlias()]['teacher_comments_required'] : 0;
-                $selectedGrade = isset($request->data[$this->getAlias()]['education_grade_id']) ? $request->data[$this->getAlias()]['education_grade_id'] : null;
+                $teacherComments = isset($data[$this->getAlias()]['teacher_comments_required']) ? $data[$this->getAlias()]['teacher_comments_required'] : 0;
+                $selectedGrade = isset($data[$this->getAlias()]['education_grade_id']) ? $data[$this->getAlias()]['education_grade_id'] : null;
 
             } else if($action == 'edit') {
-                $teacherComments = isset($request->data[$this->getAlias()]['teacher_comments_required']) ? $request->data[$this->getAlias()]['teacher_comments_required'] : $attr['entity']->teacher_comments_required;
+                $teacherComments = isset($data[$this->getAlias()]['teacher_comments_required']) ? $data[$this->getAlias()]['teacher_comments_required'] : $attr['entity']->teacher_comments_required;
                 $selectedGrade = $attr['entity']->education_grade_id;
             }
 
@@ -517,7 +531,7 @@ class ReportCardsTable extends ControllerActionTable
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {   
+    {
         //POCOR-7860 :: Start
         $string = $data['ReportCards']['name'];
         if (preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $string))
@@ -605,12 +619,12 @@ class ReportCardsTable extends ControllerActionTable
     // POCOR-8572 Start
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
         $extra['excludedModels'] = [$this->ReportCardSubjects->getAlias()];
-       
+
         if ($this->hasAssociatedRecords($this, $entity, $extra)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
-        } 
+        }
     }
     // POCOR-8572 End
 
@@ -654,15 +668,16 @@ class ReportCardsTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $entity->generate_start_date =  (new Date($this->request->getData('ReportCards')['generate_start_date']))->modify('+1 day')->format('Y-m-d H:i:s');
-        $entity->generate_end_date =  (new Date($this->request->getData('ReportCards')['generate_end_date']))->modify('+1 day')->format('Y-m-d H:i:s');  
-    } 
+// POCOR-8969
+//    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+//    {
+//        $entity->generate_start_date =  (new Date($this->request->getData('ReportCards')['generate_start_date']))->modify('+1 day')->format('Y-m-d H:i:s');
+//        $entity->generate_end_date =  (new Date($this->request->getData('ReportCards')['generate_end_date']))->modify('+1 day')->format('Y-m-d H:i:s');
+//    }
 
     /**
      * * POCOR-6916
-     * add number of pages print while pdf generate 
+     * add number of pages print while pdf generate
      */
     public function onUpdateFieldPdfPageNumber(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -690,27 +705,27 @@ class ReportCardsTable extends ControllerActionTable
         $entityData=$table->find()->where([$table->aliasField('code')=>$entity->code,
                                 $table->aliasField('academic_period_id')=>$entity->academic_period_id
                                 ])->first();
-       
+
         $ReportCardExcludedSecurityRolesTable = TableRegistry::get('ReportCard.ReportCardExcludedSecurityRoles');
-  
+
         if($this->request->getParam('pass')[0] == 'edit'){
-           
+
         $ExcludedSecurityRoleData =  $ReportCardExcludedSecurityRolesTable->find()->where(['report_card_id'=>$entityData->id])->toArray();
         if($ExcludedSecurityRoleData){
            foreach($ExcludedSecurityRoleData as $ExcludedSecurityRoleEntity){
                $deleteEntity =  $ReportCardExcludedSecurityRolesTable->delete($ExcludedSecurityRoleEntity);
            }}
         }
-   
+
         foreach($entity->excluded_security_roles['_ids'] as $one){
-            
+
             $ExcludedSecurityRoleEntity = [ 'report_card_id' => $entityData->id,
                                             'security_role_id'=> $one
                                           ];
             $ExcludedSecurityRoles = $ReportCardExcludedSecurityRolesTable ->newEntity($ExcludedSecurityRoleEntity);
             $ExcludedSecurityRoleResult = $ReportCardExcludedSecurityRolesTable->save($ExcludedSecurityRoles);
-   
-        }    
+
+        }
     }
 
     public function onGetExcludedSecurityRoles(Event $event, Entity $entity)
@@ -718,20 +733,20 @@ class ReportCardsTable extends ControllerActionTable
         $table=TableRegistry::get('Security.SecurityRoles');
         $obj = [];
         if ($entity->has('excluded_security_roles')) {
-           
+
             foreach ($entity->excluded_security_roles as $role) {
                $res= $table->find('list')->where(['id'=>$role['id']])->first();
                $obj[] = $res;
             }
         }
-          
+
         $values = !empty($obj) ? implode(', ', $obj) : __('No Excluded Security Roles ');
         return $values;
     }
 
     public static function getInstitutionSecurityStaff($institutionId, $staffPosnId)
      {
- 
+
          $Staff = TableRegistry::get('Institution.Staff');
          $institutionSecurityGroupsIds = self::getInstitutionSecurityGroupsIds($institutionId);
  //        Log::debug('$institutionSecurityGroupsIds');
@@ -745,7 +760,7 @@ class ReportCardsTable extends ControllerActionTable
              'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
              $Staff->aliasField('staff_status_id') => $assignedStatus
          ];
- 
+
          $staffQuery = $Staff
              ->find()
              ->select([
@@ -783,7 +798,7 @@ class ReportCardsTable extends ControllerActionTable
              ->where($where);
          $entity = $staffQuery
              ->first();
- 
+
          // POCOR-7033[START]
          if (!empty($entity)) {
              if ($entity->user->gender_id == '1') {

@@ -80,12 +80,22 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $schoolClosedDays = $this->schoolClosedDays;
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $selectedArea = $requestData->area_education_id;
         $where = [];
+        //POCOR-8825 start
+        if ($areaId != -1 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+                $where['Institutions.area_id IN'] = $allselectedAreas;
+        } //POCOR-8825 end
         if ($institution_id != 0) {
             $where['Institutions.id'] = $institution_id;
-        }
-        if ($areaId != -1) {
-            $where['Institutions.area_id'] = $areaId;
         }
         $query
             ->find('byGrades', [
@@ -284,7 +294,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             'table' => 'institution_class_grades',
             'alias' => 'InstitutionClassGrades',
             'conditions' => [
-                'InstitutionClassGrades.institution_class_id = ' . $this->aliasField('id')
+                // 'InstitutionClassGrades.institution_class_id IS = ' . $this->aliasField('id')
+                'InstitutionClassGrades.institution_class_id = ' . $this->aliasField('id') //POCOR-8902 
             ]
         ];
 
@@ -407,7 +418,14 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                     ->distinct(['institution_id']);
 
         $institutionList =  $institutionListData->all()->toList();
-
+        //POCOR-8803 start
+        if($institutionList)
+        {
+            $institutionList = array_map(function($entity) {
+                return $entity->institution_id;
+            }, $institutionList);
+        }  
+        //POCOR-8803 end
         return $this->getInstitutionClosedDates($startDate, $endDate, $institutionList);
     }
 
@@ -454,5 +472,26 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ];
         }
         return $sheets;
+    }
+
+    /**
+     * POCOR-8825
+     * Recursively retrieves all child areas of a given area ID.
+     *
+     * This function is used to build a hierarchical list of child areas
+     * @param int $id The parent area ID to fetch children for.
+     * @param array $idArray An array of IDs to track already retrieved areas.
+     * @return array Updated list of area IDs including the children.
+    */
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                        ->where([$Areas->aliasField('parent_id') => $id
+                            ])->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 }

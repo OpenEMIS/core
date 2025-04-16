@@ -11,8 +11,8 @@ use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use App\Model\Traits\OptionsTrait;
-
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\RulesChecker;
 
 class ContactsTable extends ControllerActionTable
 {
@@ -247,7 +247,6 @@ class ContactsTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator
     {
-
         // POCOR-8080-1
         $validator->setProvider('custom', $this) //POCOR-8080 here is the
             ->setStopOnFailure()
@@ -310,7 +309,7 @@ class ContactsTable extends ControllerActionTable
                 },
             ])
             ->add('value', 'ruleValidateEmail', [
-                'rule' => ['email', 'notBlank'],
+                'rule' => ['email'],
                 'on' => function ($context) {
                     // POCOR-8080-1 start
                     // I've cleaned the new code
@@ -351,8 +350,40 @@ class ContactsTable extends ControllerActionTable
             ])
             ->add('preferred', 'ruleValidatePreferred', [
                 'rule' => ['validateContact'],
-            ]);
+            ])
+            ->add('value', 'unique', [
+            'rule' => function ($value, $context) {
+                $users = TableRegistry::getTableLocator()->get('User.Users');
+                if (!$users) {
+                    throw new \RuntimeException('Users table could not be found.');
+                }
+                if (!isset($context['data']['contact_type_id'])) {
+                    return false;
+                }
 
+                $userId = $context['data']['security_user_id'] ?? null;
+                $contactTypeId = $context['data']['contact_option_id'];
+                $query = $users->find();
+                if ($contactTypeId == 4) {
+                    $query->where(['email' => $value]);
+                } elseif ($contactTypeId == 1) {
+                    $query->where(['mobile_number' => $value]);
+                } else {
+                    return true; 
+                }
+
+                // Exclude the current user if editing
+                if (!empty($userId)) {
+                    $query->where(['id !=' => $userId]);
+                }
+
+                // Fetch the first matching record
+                $existing = $query->first();
+
+                return empty($existing); // Return true if no duplicate is found
+            },
+            'message' => 'This Record is already in use.'
+        ]); //POCOR-8911 add validation email, mobile_number
         return $validator;
     }
 
