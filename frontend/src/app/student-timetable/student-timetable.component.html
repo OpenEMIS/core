@@ -12,7 +12,7 @@
                             <table class="m-4" *ngIf="displayTable">
                                 <thead>
                                     <tr>
-                                        <th colspan="6">Timetable<br><span style="font-size: 15px;">Grade: {{ education_grade_name }} |
+                                        <th colspan="6">{{timetable_name}}<br><span style="font-size: 15px;">Grade: {{ education_grade_name }} |
                                                 Class: Primary 1-A</span>
                                         </th>
                                     </tr>
@@ -126,7 +126,7 @@
                                         </div>
                                         <div style="padding: 10px;">
                                             <label for="nonCurriculumName" class="font-size15">Name</label><br>
-                                            <input #nonCurriculumName value="Activity" type="text"
+                                            <input #nonCurriculumName value="" placeholder="Name" type="text"
                                                 name="nonCurriculumName"
                                                 style="width: 100%; height: 30px; padding: 5px; font-size: 14px;"
                                                 id="nonCurriculumName"
@@ -211,9 +211,9 @@
                             <kd-view displayType="stacked-form" [inputData]="term" [button]="filterButtons"
                                 [api]="termApi" (change)="_submitEvent($event)"></kd-view>
                             <kd-view displayType="stacked-form" [inputData]="status" [button]="filterButtons"
-                                (change)="_submitEvent($event)"></kd-view>
+                                (change)="_submitEvent($event, 'status')"></kd-view>
                             <kd-view displayType="stacked-form" [inputData]="name" [button]="filterButtons"
-                                [api]="nameApi" (change)="_submitEvent($event)"></kd-view>
+                                [api]="nameApi" (change)="_submitEvent($event, 'name')"></kd-view>
                             <kd-view displayType="stacked-form" [inputData]="grade" [button]="filterButtons"
                                 [api]="gradeApi" (change)="_submitEvent($event)"></kd-view>
                             <kd-view displayType="stacked-form" [inputData]="class" [button]="filterButtons"

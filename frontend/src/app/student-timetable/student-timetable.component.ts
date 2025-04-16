@@ -181,6 +181,7 @@ export class StudentTimetableComponent implements OnInit {
     institution_id: any;
     timetable_id: any;
     institution_name: any = '';
+    timetable_name: string = '';
 
     constructor(
         public dialog: MatDialog,
@@ -195,9 +196,9 @@ export class StudentTimetableComponent implements OnInit {
         }, 0);
         this.counter = 0;
         this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
-        // this.institution_id = 6;
+        // this.institution_id = 6; //need to comment
         this.timetable_id = JSON.parse(localStorage.getItem("timetable_id"));
-        // this.timetable_id = 1;
+        // this.timetable_id = 1; //need to comment
         this.institution_name = localStorage.getItem("institutionName");
         this.pageheader.pageheaderText = `${this.institution_name} - Schedule Timetable`
         this.loginData();
@@ -338,6 +339,7 @@ export class StudentTimetableComponent implements OnInit {
                 if (response) {
                     console.log(response, "response");
                     if (response) {
+                        this.timetable_name = response?.data?.name;
                         this.academic_period_id = response?.data?.academic_period_id;
                         this.institution_class_id = response?.data?.institution_class_id;
                         this.timeSlotById();
@@ -489,6 +491,7 @@ export class StudentTimetableComponent implements OnInit {
                 console.log(response.data.data[0], "response");
                 if (response.data.data[0]) {
                     let responseData = response.data.data[0];
+                    // this.timetable_name = responseData.name ? responseData.name : 'NA';
                     this.academicPeriodApi.setProperty('academic_period', 'value', responseData.academic_period_name ? responseData.academic_period_name : 'NA');
                     this.termApi.setProperty('term', 'value', responseData.schedule_term ? responseData.schedule_term : 'NA')
                     this.nameApi.setProperty('name', 'value', responseData.name ? responseData.name : 'NA');
@@ -747,7 +750,37 @@ export class StudentTimetableComponent implements OnInit {
         }
     }
 
-    _submitEvent(event: any) {
-
+    _submitEvent(event: any, key?: string) {
+        // console.log(key, event)
+        let data = {};
+        data[key] = event.target.value;
+        // console.log(data)
+        this.Rest.putWithToken(`institution-schedule-timetables/${this.timetable_id}`, data, true).subscribe({
+            next: (response: any) => {
+                // console.log(response)
+                let toasterConfig: any = {
+                    title: response.message,
+                    showCloseButton: true,
+                    tapToDismiss: true,
+                };
+        
+                this._kdAlertEvent.success(toasterConfig);
+            },
+            error: (error: any) => {
+                if (error) {
+                    if (error.message == "Token has expired") {
+                        localStorage.removeItem("loginToken");
+                        this.loginData();
+                    }
+                    let toasterConfig: any = {
+                        title: 'Something went wrong, Please try again later',
+                        showCloseButton: true,
+                        tapToDismiss: true,
+                    };
+            
+                    this._kdAlertEvent.warn(toasterConfig);
+                }
+            }
+        })
     }
 }
