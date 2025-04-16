@@ -35,10 +35,12 @@ class ProgrammesTable extends ControllerActionTable
 		$this->addBehavior('User.User');
 		$this->addBehavior('Institution.InstitutionTab', [
 			'appliedAction' => [
+                // POCOR-8980 start
 				'StudentProgrammes' => ['id',
                     'education_programme_id',
                     'institution_id',
                     'student_id']
+                // POCOR-8980 end
 			]
 		]);
 		// $this->addBehavior('Student.StudentTab', [
@@ -80,6 +82,7 @@ class ProgrammesTable extends ControllerActionTable
 	}
 	//POCOR-5742 ends
 
+    // POCOR-8980
 	public function onGetInstitution(Event $event, Entity $entity)
 	{
 
@@ -114,15 +117,15 @@ class ProgrammesTable extends ControllerActionTable
 		$this->fields['end_year']['visible'] = 'false';
 		$this->fields['photo_content']['visible'] = 'false';
 		$this->fields['openemis_no']['visible'] = 'false';
-		$this->fields['institution_id']['type'] = 'hidden';
-		$this->field('institution');
+		$this->fields['institution_id']['type'] = 'hidden'; // POCOR-8980 start
+		$this->field('institution'); // POCOR-8980 end
 		$this->fields['academic_period_id']['sort'] = ['field' => 'AcademicPeriods.name'];
 		$this->fields['registration_number']['visible'] = 'false'; //POCOR-8870
 
 		$this->setFieldOrder([
 			'academic_period_id',
 			'institution_id',
-			'institution',
+			'institution', // POCOR-8980
 			'education_grade_id',
 			'start_date',
 			'end_date',
@@ -199,9 +202,9 @@ class ProgrammesTable extends ControllerActionTable
 				$sId = $this->getStudentID();
 			}
 			if (!empty($sId)) {
-                $studentId = $this->paramsDecode($sId);
+                $studentId = $this->paramsDecode($sId); // POCOR-8980
 				if ($studentId['id']) {
-					$studentId = $studentId['id'];
+					$studentId = $studentId['id']; // POCOR-8980
 				}
 			} else {
 				$studentId = $this->getUserID();
@@ -303,6 +306,7 @@ class ProgrammesTable extends ControllerActionTable
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
 	{
+        // POCOR-8980 start
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		$queryString   = $this->getQueryString();
 		$institutionId  = $queryString['institution_id'];
@@ -374,6 +378,7 @@ class ProgrammesTable extends ControllerActionTable
 		//POCOR-5671
 
 		return $buttons;
+        // POCOR-8980 end
 	}
 
 	public function onGetOpenemisNo(Event $event, Entity $entity)
