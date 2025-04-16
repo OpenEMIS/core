@@ -15,8 +15,8 @@
 				'url' => $baseUrl,
 				'data-named-key' => 'type'
 			));
-			if($this->request->getParam('action') == 'Themes') { //POCOR-8951
-//                dd($productThemes);
+        // POCOR-8951 start
+			if($this->request->getParam('action') == 'Themes') {
 				echo $this->Form->input('online_service', array(
 					'class' => 'form-control',
 					'label' => false,
@@ -27,6 +27,7 @@
                     'data-named-group' => 'type'
 				));
 			}
+        // POCOR-8951 end
 		?>
 	</div>
 </div>
