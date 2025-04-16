@@ -14,6 +14,7 @@ use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Http\ServerRequest;
+use Cake\Datasource\ConnectionManager; //POCOR-9023
 
 class TrainingCoursesTable extends ControllerActionTable
 {
@@ -139,6 +140,9 @@ class TrainingCoursesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-9023
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 0');
         // Type / Visible
         $visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
         $this->field('description', ['visible' => $visible]);
@@ -241,18 +245,54 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
+    //POCOR-9023 -- changes made for array_key_exists() issue.
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $keywords = ['target_populations', 'training_providers', 'result_types'];
-        foreach ($keywords as $key => $value) {
-            if (array_key_exists($this->getAlias(), $requestData) && array_key_exists($value, $requestData[$this->getAlias()])) {
-                if ($requestData[$this->getAlias()][$value] != self::SELECT_ALL_TARGET_POPULATIONS && array_key_exists('_ids', $requestData[$this->getAlias()][$value]) && empty($requestData[$this->getAlias()][$value]['_ids'])) {
+
+        // Convert ArrayObject to an array
+        $requestDataArray = $requestData->getArrayCopy();
+
+        foreach ($keywords as $value) {
+            if (
+                array_key_exists($this->getAlias(), $requestDataArray) &&
+                is_array($requestDataArray[$this->getAlias()]) && // Ensure it's an array
+                array_key_exists($value, $requestDataArray[$this->getAlias()])
+            ) {
+                if (
+                    $requestDataArray[$this->getAlias()][$value] != self::SELECT_ALL_TARGET_POPULATIONS &&
+                    is_array($requestDataArray[$this->getAlias()][$value]) && // Ensure it's an array
+                    array_key_exists('_ids', $requestDataArray[$this->getAlias()][$value]) &&
+                    empty($requestDataArray[$this->getAlias()][$value]['_ids'])
+                ) {
                     $requestData[$this->getAlias()][$value] = [];
                 }
             }
         }
 
-        $newOptions = ['associated' => ['TargetPopulations' ,'TrainingProviders', 'ResultTypes', 'CoursePrerequisites', 'Specialisations']]; //so during patch entity, it can get the necessary datas
+        //Validating the training_course_category_id before assigning
+        if (
+            array_key_exists($this->getAlias(), $requestDataArray) &&
+            is_array($requestDataArray[$this->getAlias()]) && 
+            !empty($requestDataArray[$this->getAlias()]['training_course_category_id'])
+        ) {
+            $categoryId = $requestDataArray[$this->getAlias()]['training_course_category_id'];
+
+            // Check if category exists
+            $exists = $this->TrainingCourseCategories->exists(['id' => $categoryId]);
+
+            if (!$exists) {
+                throw new Exception("Invalid training_course_category_id: $categoryId does not exist.");
+            }
+        }
+
+        //Merging the new associated options for patching entity
+        $newOptions = [
+            'associated' => [
+                'TargetPopulations', 'TrainingProviders', 'ResultTypes', 'CoursePrerequisites', 'Specialisations'
+            ]
+        ];
+
         $arrayOptions = $patchOptions->getArrayCopy();
         $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
         $patchOptions->exchangeArray($arrayOptions);
