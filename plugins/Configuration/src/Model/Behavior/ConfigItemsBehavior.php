@@ -85,7 +85,7 @@ class ConfigItemsBehavior extends Behavior
             $this->model->advancedSelectOptions($typeOptions, $selectedType);
             $this->model->controller->set('typeOptions', $typeOptions);
             $controlElement = $toolbarElements[0];
-            $selectedProduct = $this->model->request->getQueryParams();
+            $selectedProduct = $this->model->request->getQueryParams()['online_service'] ?? 'openemis_core';
 //            dd($this->model->request->getQueryParams());
             $controlElement['data'] = [
                 'typeOptions' => $typeOptions,

@@ -47,11 +47,23 @@ class ThemesTable extends ControllerActionTable
     {
         $this->field('content', ['visible' => false]);
         $this->field('default_content', ['visible' => false]);
+
         //POCOR-8741 start(remove add button)
         if(isset($extra['toolbarButtons']['add'])){
             unset($extra['toolbarButtons']['add']);
         }
         //POCOR-8741 end
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        //$selectedFeature = $extra['selectedFeature'];
+
+        $data = $this->request->getQuery();
+        $selectedFeature = $data['online_service'] ?? 'openemis_core';
+        $query->contain('ConfigItems')
+        ->where(['ConfigItems.code' => $selectedFeature]);
+
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)

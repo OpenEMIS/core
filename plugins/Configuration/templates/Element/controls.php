@@ -17,11 +17,12 @@
 			));
         // POCOR-8951 start
 			if($this->request->getParam('action') == 'Themes') {
+//                dd($selectedProduct);
 				echo $this->Form->input('online_service', array(
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $productThemes,
-                    'default' => $selectedProduct,
+                    'default' => $selectedProduct ?? 'openemis_core',
 					'url' => $baseUrl,
 					'data-named-key' => 'online_service',
                     'data-named-group' => 'type'
