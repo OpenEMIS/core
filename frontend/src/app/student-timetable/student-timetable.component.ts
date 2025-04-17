@@ -267,6 +267,7 @@ export class StudentTimetableComponent implements OnInit {
             next: (response: any) => {
                 if (response) {
                     localStorage.setItem("loginToken", response?.data?.token);
+                    this.setTheme();
                     this.getAPIData();
                     this.removeSession();
                 }
@@ -758,6 +759,9 @@ export class StudentTimetableComponent implements OnInit {
         this.Rest.putWithToken(`institution-schedule-timetables/${this.timetable_id}`, data, true).subscribe({
             next: (response: any) => {
                 // console.log(response)
+                if(key == 'name'){
+                    this.timetable_name = response?.data?.name;
+                }
                 let toasterConfig: any = {
                     title: response.message,
                     showCloseButton: true,
