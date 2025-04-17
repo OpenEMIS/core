@@ -406,7 +406,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->ControllerAction->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->getQuery['term'];
+            $term = $this->request->getQuery()['term'];
 
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
 
@@ -433,7 +433,6 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 ->limit(100);
 
             $term = trim($term);
-
             if (!empty($term)) {
                 $query = $this->addSearchConditions($query, ['alias' => 'Assessor', 'searchTerm' => $term, 'OR' => ['`Identities`.number LIKE ' => $term . '%']]);
             }
