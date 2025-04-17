@@ -1219,8 +1219,10 @@ class StudentReportCardsTable extends AppTable
                     "academic_period_name" => 'AcademicPeriods.name',
                     "academic_period_id" => 'AcademicPeriods.id',
                     "education_programme_name" => 'EducationProgrammes.name',
+                    "education_programme_code" => 'EducationProgrammes.code',//POCOR-9062
                     "education_programme_id" => 'EducationProgrammes.id',
                     "education_grade_name" => 'EducationGrades.name',
+                    "education_grade_code" => 'EducationGrades.code',
                     "education_grade_id" => 'EducationGrades.id',
                     "education_level_id" => 'EducationLevels.id',
                     "education_level_name" => 'EducationLevels.name',
@@ -1323,6 +1325,7 @@ class StudentReportCardsTable extends AppTable
                         'assessment_id' => $subject['assessment_id'],
                         "academic_period_name" => $subject["academic_period_name"],
                         "education_programme_name" => $subject["education_programme_name"],
+                        "education_programme_code" => $subject["education_programme_code"], //POCOR-9062
                         "education_grade_name" => $subject["education_grade_name"],
                         "institution_subject_name" => $subject["institution_subject_name"],
                         "education_subject_name" => $subject["education_subject_name"],
