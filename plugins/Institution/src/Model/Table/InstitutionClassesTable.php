@@ -2606,7 +2606,6 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         $requestQuery = $this->request->getQuery();
         $institutionID = $this->getInstitutionID();
-        Log::debug('Excel Query: '.json_encode($requestQuery), 'debug');
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         //Start:POCOR-6678 add institution_class_id in field
         $query
@@ -2625,8 +2624,8 @@ class InstitutionClassesTable extends ControllerActionTable
         */
         //$encodedClassId = $this->request->getAttribute('params')['pass'][1];//POCOR-8323
         $checkEncodedClassId = $this->request->getAttribute('params')['pass'][1] ?? null;//POCOR-8323
-        if($checkEncodedClassId){
-        $encodedClassId = $this->paramsDecode($checkEncodedClassId);//POCOR-8323
+        if ($checkEncodedClassId) {
+            $encodedClassId = $this->paramsDecode($checkEncodedClassId);//POCOR-8323
             if (isset($encodedClassId['institution_class_id'])) {//POCOR-8323
                 $query;
             } else {
