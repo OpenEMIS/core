@@ -998,6 +998,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $exemptPerStudent = $Results::getClassExemptions($options);
         $query = $query->formatResults(function ($results) use ($marksPerStudent, $exemptPerStudent) {
             return $results->map(function ($row) use ($marksPerStudent, $exemptPerStudent) {
+
                 $education_subject_id = $row->education_subject_id;
                 $student_id = $row->student_id;
                 $assessment_period_id = $row->assessment_period_id;
