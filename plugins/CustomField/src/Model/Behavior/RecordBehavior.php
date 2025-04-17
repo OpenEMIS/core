@@ -1263,8 +1263,9 @@ class RecordBehavior extends Behavior
     // Model.excel.onExcelUpdateFields
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        Log::debug('onExcelUpdateFields called');
+
         $recordId = $settings['id'];
+        // POCOR-9067 start: problem for class or institution
         if(!isset($recordId)) {
             $checkEncodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
             $encodedClassId = $this->_table->paramsDecode($checkEncodedClassId);//POCOR-8323
@@ -1277,12 +1278,12 @@ class RecordBehavior extends Behavior
             }
         }
         try {
-//            Log::info('Fetching entity for record ID: ' . print_r($settings, true));
             $entity = $this->_table->get($recordId);
         } catch (\Exception $e) {
             Log::error('Error fetching entity: ' . $e->getMessage());
             return $fields;
         }
+        // POCOR-9067 end
 
         $tableCustomFieldIds = [];
         $customFieldQuery = $this->getCustomFieldQuery($entity);
@@ -1338,8 +1339,8 @@ class RecordBehavior extends Behavior
 
         // Set the available options for dropdown and checkbox type
         $this->_customFieldOptions = $settings['sheet']['customFieldOptions'];
+        // POCOR-9067 start
         $request = $this->_table->request;
-        // Set the fetched table cell values to avoid multiple call to the database
         if ($request->getParam('controller') == 'Institutions' && $request->getParam('action') == 'Classes') {
             $this->_fieldValues = $tableCustomFieldIds;
         } else {
@@ -1350,6 +1351,7 @@ class RecordBehavior extends Behavior
             $fieldValues = $this->getFieldValue($entity->id) + $tableCellValues;
             ksort($fieldValues);
         }
+        // POCOR-9067 end
         $this->_fieldValues = $fieldValues;
     }
 
@@ -1387,10 +1389,9 @@ class RecordBehavior extends Behavior
     // Model.excel.onExcelRenderCustomField
     public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr)
     {
-//        Log::debug('onExcelRenderCustomField called 1:' . print_r($entity, true));
-//        Log::debug('onExcelRenderCustomField called 2:' . print_r($attr, true));
+        // POCOR-9067 start
         $request = $this->_table->request; //POCOR-8409
-
+        $answer = '';
         if ($request->getParam('controller') == 'Institutions' && $request->getParam('action') == 'Classes') {
             $tableCustomFieldIds = $this->_fieldValues;
             $tableCellValues = $this->getTableCellValues($tableCustomFieldIds, $entity->institution_class_id);
@@ -1400,7 +1401,7 @@ class RecordBehavior extends Behavior
             $field_values = $this->_fieldValues;
         }
         if (!empty($field_values)) {
-            $answer = '';
+
             $type = strtolower($attr['customField']['field_type']);
             if (method_exists($this, $type)) {
                 $request = $this->_table->request; //POCOR-8409
@@ -1414,7 +1415,7 @@ class RecordBehavior extends Behavior
             }
             return $answer;
         }
-
+    // POCOR-9067 start
     }
 
     /**

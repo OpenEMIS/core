@@ -242,10 +242,9 @@ class ClassExcelBehavior extends Behavior
             //$encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8323
             $checkEncodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
             $encodedClassId = $this->_table->paramsDecode($checkEncodedClassId);//POCOR-8323
-            Log::debug('encodedClassId: '.print_r($encodedClassId, true));
             if (isset($encodedClassId['institution_class_id'])) {//POCOR-8323
                 //$decodedClassId = $this->_table->paramsDecode($encodedClassId);//POCOR-8323
-                $classId = $encodedClassId['institution_class_id'];
+                $classId = $encodedClassId['institution_class_id']; // POCOR-9067
                 $where[$InstitutionClasses->aliasField('InstitutionClasses.id')] = $classId;
                 $query = $Query
                         ->contain([
@@ -267,7 +266,7 @@ class ClassExcelBehavior extends Behavior
                                 ]
                         ])
                         ->select([
-                            'institution_class_id' => 'InstitutionClasses.id',
+                            'institution_class_id' => 'InstitutionClasses.id', // POCOR-9067
                             'academic_period_id' => 'InstitutionClasses.academic_period_id',
                             'education_grade' => 'EducationGrades.name',
                             'institution_code' => 'Institutions.code',
@@ -329,11 +328,11 @@ class ClassExcelBehavior extends Behavior
                             'ClassesStudents.gender_id = Genders.id'
                         ])
                         ->where([$conditions, $where])
-                        ->group(['InstitutionClasses.id']);
+                        ->group(['InstitutionClasses.id']); // POCOR-9067
             } else {
                 $query = $Query
                         ->select([
-                            'institution_class_id' => 'InstitutionClasses.id',
+                            'institution_class_id' => 'InstitutionClasses.id', // POCOR-9067
                             'academic_period_id' => 'InstitutionClasses.academic_period_id',
                             'education_grade' => 'EducationGrades.name',
                             'institution_code' => 'Institutions.code',
@@ -944,6 +943,7 @@ class ClassExcelBehavior extends Behavior
         $pages = $this->getConfig('pages') ?? [];//POCOR-8480
         //POCOR-5852 starts add  || $action == 'index' condition
         $queryString = $this->_table->getQueryString();
+        // POCOR-9067 start
 //        dd($queryString);
         if($action == 'index'){
             $queryString['id'] = $queryString['institution_id'];
@@ -952,6 +952,7 @@ class ClassExcelBehavior extends Behavior
             }
         }
         $encodedQueryString = $this->_table->paramsEncode($queryString);
+        // POCOR-9067 end
         if (in_array($action, $pages) || $action == 'index') {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
@@ -971,11 +972,11 @@ class ClassExcelBehavior extends Behavior
 
             $url = $this->_table->url($action);
             $url[0] = 'excel';
-            unset($url['1']);
-            $url['1'] = $encodedQueryString;
+            unset($url['1']); // POCOR-9067
+            $url['1'] = $encodedQueryString; // POCOR-9067
             $toolbarButtons['export']['url'] = $url;
             $extra['toolbarButtons'] = $toolbarButtons;
-//            dd($extra['toolbarButtons']);
+
         }
         //POCOR-5852 ends
     }
