@@ -2177,7 +2177,10 @@ class InstitutionsController extends AppController
             $viewUrl['action'] = 'Classes';
             $viewUrl[0] = 'view';
             //$viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId]);//POCOR-8323
-            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId, 'institution_class_id' => $classId['id']]);//POCOR-8323
+            $viewUrl[1] = $this->ControllerAction->paramsEncode([
+                'id' => $classId['id'],
+                'institution_id' => $institutionId,
+                'institution_class_id' => $classId['id']]);//POCOR-8323
             //POCOR-8107
             $configItems = self::getDynamicTableInstance('Configuration.ConfigItems');
             $configItemsData = $configItems->find()->where(['type' => 'Fields for Institutions Classes Details Page'])->toArray();

@@ -15,7 +15,10 @@ use XLSXWriter;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 use Cake\Http\Session;
-use Cake\ORM\Locator\TableLocator;//POCOR-8323
+use Cake\ORM\Locator\TableLocator;
+use Cake\Log\Log;
+
+//POCOR-8323
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
 // public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
@@ -239,9 +242,10 @@ class ClassExcelBehavior extends Behavior
             //$encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8323
             $checkEncodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
             $encodedClassId = $this->_table->paramsDecode($checkEncodedClassId);//POCOR-8323
+            Log::debug('encodedClassId: '.print_r($encodedClassId, true));
             if (isset($encodedClassId['institution_class_id'])) {//POCOR-8323
                 //$decodedClassId = $this->_table->paramsDecode($encodedClassId);//POCOR-8323
-                $classId = $decodedClassId['id'];
+                $classId = $encodedClassId['institution_class_id'];
                 $where[$InstitutionClasses->aliasField('InstitutionClasses.id')] = $classId;
                 $query = $Query
                         ->contain([
@@ -263,6 +267,7 @@ class ClassExcelBehavior extends Behavior
                                 ]
                         ])
                         ->select([
+                            'institution_class_id' => 'InstitutionClasses.id',
                             'academic_period_id' => 'InstitutionClasses.academic_period_id',
                             'education_grade' => 'EducationGrades.name',
                             'institution_code' => 'Institutions.code',
@@ -324,10 +329,11 @@ class ClassExcelBehavior extends Behavior
                             'ClassesStudents.gender_id = Genders.id'
                         ])
                         ->where([$conditions, $where])
-                        ->group(['InstitutionClassesStudents.student_id']);
+                        ->group(['InstitutionClasses.id']);
             } else {
                 $query = $Query
                         ->select([
+                            'institution_class_id' => 'InstitutionClasses.id',
                             'academic_period_id' => 'InstitutionClasses.academic_period_id',
                             'education_grade' => 'EducationGrades.name',
                             'institution_code' => 'Institutions.code',
@@ -933,9 +939,19 @@ class ClassExcelBehavior extends Behavior
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+
         $action = $this->_table->action;
         $pages = $this->getConfig('pages') ?? [];//POCOR-8480
         //POCOR-5852 starts add  || $action == 'index' condition
+        $queryString = $this->_table->getQueryString();
+//        dd($queryString);
+        if($action == 'index'){
+            $queryString['id'] = $queryString['institution_id'];
+            if(isset($queryString['institution_class_id'])){
+                unset($queryString['institution_class_id']);
+            }
+        }
+        $encodedQueryString = $this->_table->paramsEncode($queryString);
         if (in_array($action, $pages) || $action == 'index') {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
@@ -955,14 +971,18 @@ class ClassExcelBehavior extends Behavior
 
             $url = $this->_table->url($action);
             $url[0] = 'excel';
+            unset($url['1']);
+            $url['1'] = $encodedQueryString;
             $toolbarButtons['export']['url'] = $url;
             $extra['toolbarButtons'] = $toolbarButtons;
+//            dd($extra['toolbarButtons']);
         }
         //POCOR-5852 ends
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
+
         if ($buttons->offsetExists('view')) {
             $export = $buttons['view'];
             $export['type'] = 'button';
