@@ -29,9 +29,9 @@ class POCOR9033 extends AbstractMigration
             [
                 'id'              => Text::uuid(),
                 'module'          => 'InstitutionsSurvey',
-                'field'           => 'institution_survey',
+                'field'           => 'institution_surveys',
                 'module_name'     => 'Institutions>Survey',
-                'field_name'      => 'Institution Survey',
+                'field_name'      => 'Institution Surveys',
                 'created_user_id' => 1,
                 'created'         => $now,
             ],
