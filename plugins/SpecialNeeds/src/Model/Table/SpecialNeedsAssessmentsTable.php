@@ -57,7 +57,8 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         return $validator
-            ->notEmpty('assessor_id')
+            // ->notEmpty('assessor_id')//POCOR-9026
+            ->allowEmptyString('comment') //POCOR-9026
             ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
