@@ -257,6 +257,17 @@ class InstitutionClassesTable extends AppTable
                     $areaLevels = self::getDynamicTableInstance('area_levels'); // POCOR-8929
                     $institutions = self::getDynamicTableInstance('institutions'); // POCOR-8929
                     $parent_id = $areasData->parent_id ?? 0;
+                    if($parent_id > 0) {
+                        $where = [
+                            $areaLevels->aliasField('level !=') => 1,
+                            $areas->aliasField('id') => $parent_id
+                        ];
+                    }else{
+                    $where = [
+                        $areaLevels->aliasField('level !=') => 1,
+//                        $areas->aliasField('id') => $parent_id
+                    ];
+                    }
                     $val = $areas
                         ->find()
                         ->select([
@@ -275,10 +286,7 @@ class InstitutionClassesTable extends AppTable
                                 $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                             ]
                         )
-                        ->where([
-                            $areaLevels->aliasField('level !=') => 1,
-                            $areas->aliasField('id') => $parent_id
-                        ])->first();
+                        ->where($where)->first();
 
                     if (!empty($val->name) && !empty($val->code)) {
                         $row['region_code'] = $val->code;
