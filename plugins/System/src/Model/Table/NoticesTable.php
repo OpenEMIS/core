@@ -15,7 +15,6 @@ use Cake\Http\Client;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
 use Cake\Http\Response;
-
 use App\Model\Table\ControllerActionTable;
 
 class NoticesTable extends ControllerActionTable
@@ -24,10 +23,15 @@ class NoticesTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         parent::initialize($config);
-//        $this->toggle('view', false);
-//        $this->toggle('add', false);
-//        $this->toggle('edit', false);
-//        $this->toggle('remove', false);
+        $this->toggle('view', true);
+        $this->toggle('add', false);
+        $this->toggle('edit', false);
+        $this->toggle('remove', false);
+        $this->hasMany('NoticeRoles', [
+            'className' => 'Alert.NoticeRoles',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+        ]);
     }
 
     public function implementedEvents(): array
@@ -45,7 +49,11 @@ class NoticesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('created', ['visible' => true, 'sort' => true]);
-        $this->field('message', ['sort' => true]);
+        $this->field('created_user_id', ['visible' => true, 'sort' => false]);
+        $this->field('message', ['sort' => false,'visible' => false,]);
+        $this->field('subject', ['sort' => false]);
+        $this->field('status', ['sort' => false]);
+        $this->setFieldOrder(['subject', 'status', 'created_user_id','created']);
 
     }
 
@@ -60,18 +68,65 @@ class NoticesTable extends ControllerActionTable
 
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
-    {
-
-    }
-
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        if ($field == 'status') {
+            return __('Enable');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setfieldOrder($this->fieldsOrder);
+        $this->field('status', ['entity' => $entity]);
+        $this->field('security_role_id');
+        $this->field('subject');
+        $this->field('message', [
+            'type' => 'element',
+            'element' => 'Alert.Alert/notice',
+        ]);
+
+       $this->setFieldOrder(['status', 'security_role_id', 'subject', 'message']);
     }
+
+    public function onGetStatus(Event $event, Entity $entity)
+    {
+        if($entity->status == 1){
+            return 'Enable';
+        }else{
+            return 'Disable';
+        }
+    }
+
+    public function onGetSecurityRoleId(Event $event, Entity $entity)
+    {
+        $table = TableRegistry::get('Security.SecurityRoles');
+        $obj = [];
+        $roles = TableRegistry::getTableLocator()->get('Alert.NoticeRoles')
+                ->find()
+                ->where(['notice_id' => $entity->id])
+                ->contain(['SecurityRoles'])
+                ->toArray();
+
+        if ($roles) {
+            foreach ($roles as $noticeRole) 
+            {
+                $role = $table->find()
+                    ->select(['name'])
+                    ->where(['id' => $noticeRole->security_role_id])
+                    ->first();
+                    
+                if ($role) {
+                    $obj[] = $role->name;
+                }
+            }
+        }
+
+        $values = !empty($obj) ? implode(', ', $obj) : __('');
+        return $values;
+    }
+
 }
