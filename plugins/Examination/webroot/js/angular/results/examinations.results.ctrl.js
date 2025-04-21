@@ -21,7 +21,6 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
 
     // Initialisation
     angular.element(document).ready(function() {
-        vm.academicPeriodId = UtilsSvc.requestQuery('academic_period_id');
         vm.examinationId = UtilsSvc.requestQuery('examination_id');
         vm.examinationCentreId = UtilsSvc.requestQuery('examination_centre_id');
         ExaminationsResultsSvc.init(angular.baseUrl);
@@ -33,10 +32,8 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         {
             var data = response.data[0];
             var examinationCentreData = data.examination_centre;
-            var academicPeriodData = data.academic_period;
             var examinationData = data.examination;
 
-            vm.academicPeriodOptions = [{text: academicPeriodData.name, value: academicPeriodData.id}];
             vm.examinationOptions = [{text: examinationData.code_name, value: examinationData.id}];
             vm.examinationCentreOptions = [{text: examinationCentreData.code_name, value: examinationCentreData.id}];
             return ExaminationsResultsSvc.getSubjects(vm.examinationId, vm.examinationCentreId);
@@ -53,7 +50,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
             if (angular.isObject(subjects) && subjects.length > 0) {
                 var subject = subjects[0];
 
-                vm.initGrid(vm.academicPeriodId, vm.examinationId, vm.examinationCentreId, subject);
+                vm.initGrid( vm.examinationId, vm.examinationCentreId, subject);
             }
         }, function(error)
         {
@@ -73,12 +70,11 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         }
     });
 
-    function initGrid(academicPeriodId, examinationId, examinationCentreId, subject) {
+    function initGrid( examinationId, examinationCentreId, subject) {
         AggridLocaleSvc.getTranslatedGridLocale()
         .then(function(localeText){
             vm.gridOptions = {
                 context: {
-                    academic_period_id: academicPeriodId,
                     examination_id: examinationId,
                     examination_centre_id: examinationCentreId,
                     education_subject_id: 0,
@@ -130,14 +126,13 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                     vm.gridOptions.api.refreshView();
                 },
                 onGridReady: function() {
-                    vm.onChangeSubject(academicPeriodId, examinationId, subject);
+                    vm.onChangeSubject(examinationId, subject);
                     this.api.sizeColumnsToFit();
                 }
             };
         }, function(error){
             vm.gridOptions = {
                 context: {
-                    academic_period_id: academicPeriodId,
                     examination_id: examinationId,
                     examination_centre_id: 0,
                     education_subject_id: 0,
@@ -188,14 +183,14 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                     vm.gridOptions.api.refreshView();
                 },
                 onGridReady: function() {
-                    vm.onChangeSubject(academicPeriodId, examinationId, subject);
+                    vm.onChangeSubject(examinationId, subject);
                     this.api.sizeColumnsToFit();
                 }
             };
         });
     }
 
-    function onChangeSubject(academicPeriodId, examinationId, subject) {
+    function onChangeSubject(examinationId, subject) {
         AlertSvc.reset(vm);
         vm.education_subject = subject;
 
@@ -219,7 +214,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                 var page = parseInt(params.startRow / limit) + 1;
 
                 UtilsSvc.isAppendSpinner(true, 'examination-result-table');
-                ExaminationsResultsSvc.getRowData(academicPeriodId, examinationId, vm.examinationCentreId, subject, limit, page, filterModel)
+                ExaminationsResultsSvc.getRowData(examinationId, vm.examinationCentreId, subject, limit, page, filterModel)
                 .then(function(response) {
                     var lastRowIndex = response.data.total;
 
@@ -294,14 +289,13 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
 
     function onSaveClick() {
         if (vm.gridOptions != null) {
-            var academicPeriodId = vm.gridOptions.context.academic_period_id;
             var examinationId = vm.gridOptions.context.examination_id;
             var examinationCentreId = vm.gridOptions.context.examination_centre_id;
             var educationSubjectId = vm.gridOptions.context.education_subject_id;
             var examinationItemId = vm.gridOptions.context.examination_subject_id;
 
             UtilsSvc.isAppendSpinner(true, 'examination-result-table');
-            ExaminationsResultsSvc.saveRowData(vm.results, vm.education_subject, academicPeriodId, examinationId, examinationCentreId, educationSubjectId, examinationItemId)
+            ExaminationsResultsSvc.saveRowData(vm.results, vm.education_subject, examinationId, examinationCentreId, educationSubjectId, examinationItemId)
             .then(function(response) {
             }, function(error) {
                 console.log(error);

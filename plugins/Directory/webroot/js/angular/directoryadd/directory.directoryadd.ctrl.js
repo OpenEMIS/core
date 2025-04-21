@@ -127,7 +127,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
         }
 
         function loadUserData() {
-            getGenders()
+                getGenders()
                 .then(getUserTypes)
                 .then(getNationalities)
                 .then(getIdentityTypes)
@@ -223,7 +223,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                     if (scope.isExternalSearchEnable) {
                         scope.step = 'external_search';
                         scope.externalGridOptions = null;
-                UtilsSvc.isAppendLoader(true);
+                // UtilsSvc.isAppendLoader(true);
                         scope.goToExternalSearch();
                     } else {
                         scope.processNewUser();

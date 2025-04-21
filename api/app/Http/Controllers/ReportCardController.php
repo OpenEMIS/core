@@ -468,7 +468,7 @@ class ReportCardController extends Controller
      *     path="/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf",
      *     summary="Download a student's report card in PDF format",
      *     description="Retrieve a student's report card for a specific academic period and report card ID in PDF format.",
-     *     tags={"Report card"},
+     *     tags={"Report Card"},
      *     @OA\Parameter(
      *         name="institutionId",
      *         in="path",
@@ -532,6 +532,15 @@ class ReportCardController extends Controller
     {
         try {
             $params = $request->all();
+            //POCOR-8728 starts
+            if (empty($params['academic_period_id'])) {
+                return $this->sendErrorResponse('Please send academic period in request.', 400);
+            }
+    
+            if (empty($params['report_card_id'])) {
+                return $this->sendErrorResponse('Please send Report Card Id in request.', 400);
+            }//POCOR-8728 ends
+            
             $data = $this->reportCardService->studentReportCardPdfDownload($params, $institutionId, $classId, $studentId);
             
             if(!empty($data)){
@@ -619,6 +628,14 @@ class ReportCardController extends Controller
     {
         try {
             $params = $request->all();
+            //POCOR-8728 starts
+            if (empty($params['academic_period_id'])) {
+                return $this->sendErrorResponse('Please send academic period in request.', 400);
+            }
+    
+            if (empty($params['report_card_id'])) {
+                return $this->sendErrorResponse('Please send Report Card Id in request.', 400);
+            }//POCOR-8728 ends
             $data = $this->reportCardService->studentReportCardExcelDownload($params, $institutionId, $classId, $studentId);
 
             if(!empty($data)){

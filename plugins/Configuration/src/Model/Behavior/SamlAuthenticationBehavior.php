@@ -59,7 +59,13 @@ class SamlAuthenticationBehavior extends Behavior
             //$entity->invalid('code', $code, true);
             $entity->getErrors('sp_acs', $entity->getErrors('code'), true);
         }
-        $url = Router::url(['plugin' => null, 'controller' => null, 'action' => 'index'], true);
+        //POCOR-9004[START]
+        $controller = $this->table()->controller;
+        $pluginName = $controller->getRequest()->getParam('plugin');  // Extract Plugin
+        $controllerName = $controller->getRequest()->getParam('controller'); // Extract Controller
+        // $url = Router::url(['plugin' => null, 'controller' => null, 'action' => 'index'], true);
+        $url = Router::url(['plugin' => $pluginName, 'controller' => $controllerName, 'action' => 'index'], true);
+        //POCOR-9004[END]
         $this->model->fields['sp_entity_id']['value'] = $url;
         $this->model->fields['sp_entity_id']['attr']['value'] = $url;
 

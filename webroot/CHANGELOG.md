@@ -1,3 +1,87 @@
+### [4.20.1] - 2025-04-16
+- Bug Fixed: Administration > Performance > Competency > Periods > Edit: When editing competency periods, the competency items list are not showing in the option fields
+- Bug Fixed: API: Api does not return any data
+- Bug Fixed: Institutions > Performance > Outcomes > Edit: The word "Comment" is missing
+- Bug Fixed: Institutions > Academic > Classes > Edit > Save: The save button when editing classes is unresponsive
+- Bug Fixed: Institutions > Students > Special Needs > Assessments: When changing labels for the name "Difficulty" under Student > Special Needs page, the label does not change according to what it is configured
+
+### [4.20.0] - 2025-04-15
+- Implemented: Develop an institution profile placeholder to get the attendance for girls and boys for each date will take time
+- Implemented: Develop improved security for standard OpenEMIS Core v5 APIs
+- Implemented: Develop an API to delete assessment exemptions 
+- Implemented: Develop changes to the OpenEMIS Core filesystem 
+- Bug Fixed: Institutions > Academic > Classes > Add:  When adding classes, the webhook triggered is only showing institution_id information only
+- Bug Fixed: Institutions > Performance > GPA: There is one subject where one of the assessment period is not graded
+- Bug Fixed: Api/v4/users/email/ : Endpoint is not working
+- Bug Fixed: API: Guardian relation api response is not showing guardian
+- Bug Fixed: Institutions > Students > Academic > Attendance: Attendance mark for more than one period is not reflecting other periods
+- Bug Fixed: Administration->Training->Courses: User is getting 404 when adding
+- Bug Fixed: Institutions > Staff > Transfer > Cancel button: The page gives the error message: beforeFilter:2871For Developer: You should put staff_id into query string first
+- Bug Fixed: Staff > Training > Courses: Remove the Staff field in the Staff > Training > Courses page
+- Bug Fixed: Reports > Institutions > Subjects: Number of Seats column is showing
+- Bug Fixed: Institutions>Academic>Programmes: List should be autocomplete
+- Bug Fixed: API: When using non admin accounts, user is not able to view responses in institution_staff and institution_student
+- Bug Fixed: Administration > Workflow > Actions > Institutions > Students > Student Enrolment: When adding post event under workflow, the page gives a 404 error
+- Bug Fixed: Administration > Performance > Outcomes: Change to Code/Element instead of Code
+- Bug Fixed: Institutions > Students > Special Needs > Assessments: When changing labels for the name "Difficulty" under Student > Special Needs page, the label does not change according to what it is configured
+- Bug Fixed: Institutions > Academic > Classes: There is an error when selecting a student OpenEMIS ID
+- Bug Fixed: Reports > Institutions > Staff Attendance: Some schools never marked their attendance 
+- Bug Fixed: Institutions > Academic > Classes > Edit > Save: The save button when editing classes is unresponsive
+
+### [4.19.2] - 2025-04-10
+- Bug Fixed: Institutions > Attendances > Students : Insert back triggers for attendance modules
+- Bug Fixed: Administrations > Field Options > Staff Position Title: System displays all Staff Position Grade, even though the Staff Position that was saved is Pay Scale 2.
+- Bug Fixed: Report Card>Comments: Subject Teacher is not seeing all Subjects that they are teaching
+- Bug Fixed: Institutions > Staff > Add: If staff nationality, identity type and identity number is the same as the student being added, the pop-up message does not need to show up  
+- Bug Fixed: Reports > Institutions: Institutions: When users have permission to generate the institutions report, the report goes to error status
+- Bug Fixed: Institutions > Academic > Classes: When changing labels for homeroom teacher name in Institution Classes page, the label does not change according to what it is configured
+- Bug Fixed: Administration > System Setup > Field Options > Special Needs Difficulties: When navigating to Special Needs Difficulties page under Option Fields page, the page gives a 404 error 
+- Bug Fixed: Registrations API: Institution API not working
+
+### [4.19.1] - 2025-04-04
+- Bug Fixed: Institutions>Report Card>Comments: Report card All Comments permission is not working properly
+- Bug Fixed: Institutions>Performance>Assessments: Data is displayed wrongly
+
+### [4.19.0] - 2025-04-03
+- Implemented: Develop a new report: Reports > Students > Graduation Summary
+- Implemented: Develop changes to swagger documentation for Core v5 APIs to show URL for View/Edit/Delete APIs for models with complex keys
+- Bug Fixed: Institutions>Scanned: Showing Openemis ID instead of OpenEMIS ID in view page and export
+- Bug Fixed: Institutions > Performance > Report Cards > PDF: There is an issue with the alignment format of PDF report card
+- Bug Fixed: Administration > System Setup > System Configuration > Student Admission Age > Edit: When editing Student Admission Age, the page gives a 404 error
+- Bug Fixed: Directory: When viewing a student account, the page gives a 404 error
+- Bug Fixed: Administration > Security > Groups > View: When viewing any security groups, the page gives a 404 error
+- Bug Fixed: API: Getting 404 error when retrieve student report card
+- Bug Fixed: Administration > Appraisals > Criterias > Note type question: There is no description box for the note
+- Bug Fixed: Directory > Add: The word "undefined" is showing under User Type field when adding users under Directory
+- Bug Fixed: Reports > Students > Subjects and Book List: Duplicates showing for Students Subjects and Book List report
+- Bug Fixed: Institutions > Students > Add: When adding students that have nationality, identity type and identity number, a pop up message of "User already exists with this nationality, identity type & identity number." is showing
+- Bug Fixed: Institutions > Students > Counselling: When user is given permission to view the counselling tab, the counselling tab does not show
+- Bug Fixed: Institutions > Performance > Assessments > Subjects column:The number of subjects in Institutions Assessments is not showing the correct number of subjects
+- Bug Fixed: Institutions > General > Calendar: When adding Calendar under Administrative module, the Calendar did not show up under Institution Calendar
+- Bug Fixed: Email: Attendance Alert Email is showing placeholder instead of data
+- Bug Fixed: Directory>Merge: All the records of the merge accounts should be deleted once merge is successful.
+- Bug Fixed: Homepage: Cases notification is showing on the workbench for users who are not assignee to the Cases
+- Bug Fixed: Administration>Examinations>Students: Getting 404 error when bulk registering
+- Bug Fixed: Institutions > Students > Transfer Out > Pending Approval From Sending Institution: When clicking on approve button for student transfer under workflow "Pending Approval From Sending Institution", the page give a 404 error. 
+- Bug Fixed: Reports > Institutions > Guardians: When generating Institutions Guardians report, the status goes error
+- Bug Fixed: System Configuration > Authentication > Authentication Provider > Other Identity Provider > Edit: When editing authentication identity, the page gives a 404 error
+
+### [4.18.0] - 2025-03-21
+- Implemented: Develop changes to security_users database table to make email and phone unique
+- Implemented: Develop changes to examinations database tables
+- Implemented: Develop a placeholder in the student profile feature to generate the candidate number
+- Bug Fixed: SAML: After the 1st attempt, the SAML works well but after a second attempt, it becomes unsuccessful and returns
+- Bug Fixed: Administration > Meals > Add: When clicking the add button to create meals, the page gives a 404 error
+- Bug Fixed: Institutions > Finance > Consumables : Fix Permissions and validations
+
+### [4.17.0] - 2025-03-20
+- Implemented: Develop a new External Data Source - OpenEMIS Core in the Administration module to allow OpenEMIS Core to connect to another instance of OpenEMIS Core to retrieve student data
+- Implemented: Administrations > Performances > Outcomes > Criteria : Add "Code" to Label feature so that users can rename this text
+- Bug Fixed: Institutions>Report Card>Comments: All comments permission not working properly
+- Bug Fixed: Institutions > Students > Transfer Out: When transferring students to an only gender school, the system gives an error message of "The selected institution only accepts Female students" or "The selected institution only accepts Male students."
+- Bug Fixed: Institutions > Academic > Schedules > Timetables > Timetables: When accessing timetable module, the page navigate to the home page even when permission is given 
+- Bug Fixed: API: Staff attendance is not working when using non admin
+
 ### [4.16.2] - 2025-03-18
 - Big Fixed: Institutions>Report Card>Comments: Permission for Teachers are not working correctly
 - Big Fixed: Administrations>Performance>Report Cards: GPA placeholder naming should be updated
