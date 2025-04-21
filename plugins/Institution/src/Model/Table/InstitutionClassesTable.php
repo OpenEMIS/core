@@ -265,7 +265,11 @@ class InstitutionClassesTable extends ControllerActionTable
             return  __((string)$Courses);
 
         }else if ($field == 'staff_id') {
-            return __('Class Teacher');
+            $teacher = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field' =>'staff_id'])->first();
+            if($teacher != null){
+               $teacher =  $teacher->name;//add this name from Adminsitration > System Setup > Labels
+            }
+            return  __((string)$teacher);
         }else if ($field == 'name') {
             return __('Class Name');
         }else if ($field == 'multigrade') {
@@ -609,8 +613,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 if($this->action == 'add') {
 
                     $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                    if ($this->Auth->user()) {
-                        $Webhooks->triggerShell('class_create', ['username' => $username], $body);
+                    $user = $this->Auth->user(); // POCOR-9024
+                    if ($user) {
+                        $Webhooks->triggerShell('class_create', ['username' => $user->username], $body);
                     }
                 }
                 // POCOR-5435 ->Webhook Feature class (create) -- end
@@ -658,6 +663,11 @@ class InstitutionClassesTable extends ControllerActionTable
                 }
 
                 foreach ($newStudents as $key => $student) {
+                    // POCOR-9024 start
+                    if (!isset($student['id'])) {
+                        $student['id'] = Text::uuid();
+                    }
+                    // POCOR-9024 end
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $store = $this->ClassStudents->save($newClassStudentEntity);
                     if ($store) {

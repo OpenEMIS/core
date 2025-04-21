@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -91,6 +92,7 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->field('description', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
+        $this->field('staff_id', ['visible' => false]); //POCOR-9018
 
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
@@ -156,6 +158,13 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Courses');
     }
 
+    //POCOR-9018
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 0');
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->setupTabElements();
@@ -177,6 +186,7 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->field('training_field_of_study_id', ['type' => 'select']);
         $this->field('credit_hours', ['attr' => ['min' => 0, 'max' => 99]]);
         $this->field('completed_date');
+        $this->field('staff_id', ['type' => 'hidden']); //POCOR-9018
 
         // Attachment field
         $this->field('file_name', [

@@ -53,8 +53,8 @@ if ($ControllerAction['action'] == 'view') {
     ];
 
     if (!$data->has('institution_shift_id') || $ControllerAction['action'] == 'edit') {
-        $addButtonAttr['disabled'] = 'disabled';
-    }
+    $addButtonAttr['disabled'] = 'disabled';
+}
 
     echo $this->Form->input('<i class="fa fa-plus"></i> <span>' . __('Add') . '</span>', $addButtonAttr);
     ?>

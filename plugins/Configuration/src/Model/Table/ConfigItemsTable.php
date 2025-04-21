@@ -178,11 +178,11 @@ class ConfigItemsTable extends AppTable
              */
             $validationRules = 'validate' . Inflector::camelize($entity->code);
             if (isset($this->{$validationRules})) {
-                $this->validator()->add('value', $this->{$validationRules});
+                $this->getValidator()->add('value', $this->{$validationRules});
             } else {
                 $validationRules = 'validate' . Inflector::camelize($entity->type);
                 if (isset($this->{$validationRules})) {
-                    $this->validator()->add('value', $this->{$validationRules});
+                    $this->getValidator()->add('value', $this->{$validationRules});
                 }
             }
         }
@@ -208,7 +208,7 @@ class ConfigItemsTable extends AppTable
         // Start POCOR-7446
         if ($entity->code == 'report_outlier_min_student') {
             $val = $data[$this->getAlias()]['value'];
-            $this->validator()->add('value', 'custom', [
+            $this->getValidator()->add('value', 'custom', [
                 'rule' => function ($value, $context) use ($val) {
                     $max_record_student_number = $this->find()
                         ->where([
@@ -230,7 +230,7 @@ class ConfigItemsTable extends AppTable
 
         if ($entity->code == 'report_outlier_max_student') {
             $val = $data[$this->getAlias()]['value'];
-            $this->validator()->add('value', 'custom', [
+            $this->getValidator()->add('value', 'custom', [
                 'rule' => function ($value, $context) use ($val) {
                     $max_record_student_number = $this->find()
                         ->where([
