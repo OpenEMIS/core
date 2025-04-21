@@ -146,6 +146,22 @@ class OpenEmisComponent extends Component
 
     }
 
+    public function getLoggedInUserRoles($userId = null)
+    {
+        $roles = [];
+        $usersGroup = TableRegistry::get('Security.SecurityGroupUsers');
+        $userRoles = $usersGroup
+                    ->find()
+                    ->where([$usersGroup->aliasField('security_user_id') => $userId ])
+                    ->toArray();
+        if (!empty($userRoles)) {
+            foreach ($userRoles as $role) {
+                $roles[] = $role->security_role_id;
+            }
+        }
+        return (!empty($roles))? $roles: null;
+    }
+
     
 }
 
