@@ -87,11 +87,11 @@ class FieldOptionComponent extends Component
 
 // POCOR-8995 start
         $category = $FieldOptions->category ?? null;
-
+        Log::write('debug', $Words);
 // Normalize category
         $fieldOptionCategories = ["Finance",
             "Qualification",
-"Quality",
+            "Quality",
             "Others",
             "InfrastructureOwnerships",
             "InfrastructureConditions",
@@ -100,7 +100,9 @@ class FieldOptionComponent extends Component
             "ItemTypes",
             "StockUnits"
         ];
-        if (in_array($category, $fieldOptionCategories)) {
+        if (in_array($key, $fieldOptionCategories)) { // POOCR_9074
+            $category = "FieldOption";
+        } elseif (in_array($category, $fieldOptionCategories)) {
             $category = "FieldOption";
         } elseif ($category === "Infrastructure") {
             $category = "Institution";
@@ -179,7 +181,7 @@ class FieldOptionComponent extends Component
         }
 
 // Log fallback
-        // Log::write('debug', "{$category}.{$key}");
+         Log::write('debug', "{$category}.{$key}");
 
 // Default fallback
         return "{$category}.{$key}";
