@@ -91,7 +91,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
         $this->field('examination_id', ['type' => 'select', 'onChangeReload' => true]);
         $this->field('examination_education_grade', ['type' => 'readonly']);
         $this->field('special_needs_required', ['type' => 'chosenSelect', 'onChangeReload' => true]);
-        $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true]);
+        $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]); // POCOR-9021
         $this->field('special_needs', ['type' => 'readonly']);
         $this->field('institution_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('auto_assign_to_rooms', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
@@ -217,32 +217,28 @@ class BulkStudentRegistrationTable extends ControllerActionTable
     public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = [];
-        $request = $this->request;
+        // POCOR-9021 start
+        $entity = $attr['entity'];
+        $examination_id = $entity['examination_id'] ?? null;
+        $specialNeeds = $entity['special_needs_required'] ?? null;
+        $specialNeedsId = $specialNeeds['_ids'] ?? null;
         if ($action == 'add') {
-            if (!empty($request->getData()[$this->getAlias()]['examination_id'])) {
-                if(!empty($request->getData()[$this->getAlias()]['academic_period_id'])) {
-                    $selectedAcademicPeriod = $request->getData()[$this->getAlias()]['academic_period_id'];
-                } else {
-                    $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
-                }
-
-                $selectedExamination = $request->getData()[$this->getAlias()]['examination_id'];
-                $selectedSpecialNeeds = $request->getData()[$this->getAlias()]['special_needs_required']['_ids'];
+            if ($examination_id) {
 
                 $query = $this->ExaminationCentres
                     ->find('list' ,['keyField' => 'id', 'valueField' => 'code_name'])
                     ->matching('Examinations')
                     ->where([
-                        $this->Examinations->aliasField('id') => $selectedExamination,
-                        $this->ExaminationCentres->aliasField('academic_period_id') => $selectedAcademicPeriod
+                        $this->Examinations->aliasField('id') => $examination_id,
                     ])
                     ->order([$this->ExaminationCentres->aliasField('code')]);
 
-                if (!empty($selectedSpecialNeeds)) {
-                    $query->find('bySpecialNeeds', ['selectedSpecialNeeds' => $selectedSpecialNeeds]);
+                if ($specialNeedsId) {
+                    $query->find('bySpecialNeeds', ['selectedSpecialNeeds' => $specialNeedsId]);
                 }
-
+        // POCOR-9021 end
                 $attr['options'] = $query->toArray();
+
             }
         }
         return $attr;
@@ -282,8 +278,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
             if (!empty($request->getData()[$this->getAlias()]['examination_id'])) {
                 $examinationId = $request->getData()[$this->getAlias()]['examination_id'];
                 $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
-                $academicPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
-
+                // POCOR-9021
                 $Institutions = TableRegistry::get('Institution.Institutions');
                 $InstitutionGradesTable = $this->Institutions->InstitutionGrades;
                 $institutionsData = $InstitutionGradesTable
@@ -317,8 +312,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                 $examinationId = $request->getData()[$this->getAlias()]['examination_id'];
                 $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
                 $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
-                $examinationCentreId = $request->getData()[$this->getAlias()]['examination_centre_id'];
-
+                // POCOR-9021
                 $InstitutionStudents = $this->Institutions->Students;
                 $students = $InstitutionStudents->find()
                     ->matching('EducationGrades')
@@ -394,7 +388,6 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                                     'examination_centre_id' => $selectedExaminationCentre,
                                     'student_id' => $student['student_id'],
                                     'examination_id' => $selectedExamination
-
                                 ]
                             ];
                         }
@@ -491,7 +484,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                                 if(!empty($examCentreRoomStudent['examination_id']) && !empty($examCentreRoomStudent['student_id']) && !empty($examCentreRoomStudent['examination_centre_id'])) {
                                     $examCentreRoomStudentEntity = $ExaminationCentreRoomStudents->newEntity($newEntity);
                                     $saveSucess = $ExaminationCentreRoomStudents->save($examCentreRoomStudentEntity);
-                                }  
+                                }
                                 $counter--;
                             }
                         }
