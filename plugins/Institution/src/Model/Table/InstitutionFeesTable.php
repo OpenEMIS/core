@@ -70,7 +70,7 @@ class InstitutionFeesTable extends ControllerActionTable
         $this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Students','Finance');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Students','Finance');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -486,10 +486,7 @@ class InstitutionFeesTable extends ControllerActionTable
     {
         if ($field == 'academic_period_id') {
             return  __('Academic Period');
-        } else if ($field == 'education_programme') {
-            return  __('Education Programme');
-        } else if ($field == 'education_grade_id') {
-            return  __('Education Grade');
+            // POCOR-9065 removed education grades to work with labels table
         } else if ($field == 'total') {
             return  __('Total Fee');
         } else if ($field == 'fee_types') {
