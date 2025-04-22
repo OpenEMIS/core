@@ -104,7 +104,7 @@ class InstitutionLandsTable extends ControllerActionTable
                         // Skip validation when datatype is 'copy'
                         return true;
                     }
-            
+
                     // Proceed with validation when datatype is not 'copy'
                     return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_land_size', $context);
                 },
@@ -265,7 +265,7 @@ class InstitutionLandsTable extends ControllerActionTable
             'institutionId' => $institutionId
         ];
         $paramsArr = $this->request->getParam('?'); //POCOR-8523
-        
+
         $url = array_merge($url, $this->request->getQuery());
         $url = is_array($paramsArr) ? array_merge($url, $paramsArr) : $url; //POCOR-8523
         //$url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->code]);
@@ -393,7 +393,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
         // Land Types
         list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
-        if ($selectedType != '-1') {
+        if ($selectedType && $selectedType != '-1') { // POCOR-9074
             $query->where([$this->aliasField('land_type_id') => $selectedType]);
         }
         $this->controller->set(compact('typeOptions', 'selectedType'));
