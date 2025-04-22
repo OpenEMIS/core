@@ -26,7 +26,7 @@ class SystemPatches extends Model
     public $incrementing = false;
 
 
-     // Override getKeyForSaveQuery to handle composite keys
+    // Override getKeyForSaveQuery to handle composite keys
 
 
     public static function getValidationRules(): array
@@ -35,7 +35,7 @@ class SystemPatches extends Model
             // Add validation rules here
         ];
     }
-
+}
 
 
 

@@ -10,6 +10,7 @@ class InstitutionSurveyAnswers extends Model
 {
     use HasFactory;
     use UuidId;
+
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file', 'survey_question_id', 'institution_survey_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'survey_question_id', 'institution_survey_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
@@ -34,7 +35,7 @@ class InstitutionSurveyAnswers extends Model
         parent::boot();
         self::bootUuidId();
     }
-
+}
 
 
 
