@@ -55,11 +55,8 @@ class SecurityUsers extends Authenticatable implements JWTSubject
         parent::boot();
         self::bootNumericId();
     }
-    /**
-     * Get the identifier that will be stored in the subject claim of the JWT.
-     *
-     * @return mixed
-     */
+
+
 /**
  * @OA\PathItem(
  *     path="/api/v5/security-users"
@@ -72,6 +69,41 @@ public function _swaggerPath() {}
  *     path="/api/v5/security-users",
  *     summary="Get list of SecurityUsers",
  *     tags={"SecurityUsers"},
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Maximum number of results to return",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number for paginated results",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="orderby",
+ *         in="query",
+ *         required=false,
+ *         description="Field to order results by",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order direction: asc or desc",
+ *         @OA\Schema(type="string", enum={"asc", "desc"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="_fields",
+ *         in="query",
+ *         required=false,
+ *         description="Comma-separated list of fields to include in response",
+ *         @OA\Schema(type="string")
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Successful operation",
@@ -136,30 +168,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/security-users/{id}",
- *     summary="Get SecurityUsers by ID",
- *     tags={"SecurityUsers"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the SecurityUsers",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/security-users",
  *     summary="Create a new SecurityUsers",
@@ -222,6 +230,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/security-users/{id}",
+ *     summary="Get SecurityUsers by ID",
+ *     tags={"SecurityUsers"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the SecurityUsers",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/security-users/{id}",
@@ -232,7 +265,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the SecurityUsers",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -306,7 +339,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the SecurityUsers",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -328,16 +361,10 @@ public function _swaggerDelete() {}
         return $this->getKey();
     }
 
-    /**
-     * Return a key value array, containing any custom claims to be added to the JWT.
-     *
-     * @return array
-     */
     public function getJWTCustomClaims()
     {
         return [];
     }
-
 
 
     public function nationalities()
@@ -373,15 +400,45 @@ public function _swaggerDelete() {}
         return $this->belongsTo(IdentityTypes::class, 'identity_type_id', 'id');
     }
 
+    public function getFullName()
+    {
+        $nameParts = [
+            $this->attributes['first_name'] ?? '',
+            isset($this->attributes['middle_name']) ? $this->attributes['middle_name'] : '',
+            isset($this->attributes['third_name']) ? $this->attributes['third_name'] : '',
+            $this->attributes['last_name'] ?? '',
+        ];
+
+        // Filter out empty parts and join with a single space
+        return implode(' ', array_filter($nameParts));
+    }
+
     public function getFullNameAttribute()
     {
-        return $this->attributes['first_name'] . ' ' . $this->attributes['middle_name'] . $this->attributes['third_name']  . ' ' . $this->attributes['last_name'];
+        $nameParts = [
+            $this->attributes['first_name'] ?? '',
+            isset($this->attributes['middle_name']) ? $this->attributes['middle_name'] : '',
+            isset($this->attributes['third_name']) ? $this->attributes['third_name'] : '',
+            $this->attributes['last_name'] ?? '',
+        ];
+
+        // Filter out empty parts and join with a single space
+        return implode(' ', array_filter($nameParts));
     }
 
 
     public function getNameWithIdAttribute()
     {
-        return $this->attributes['openemis_no']. ' - ' .$this->attributes['first_name'] . ' ' . $this->attributes['middle_name'] . $this->attributes['third_name']  . ' ' . $this->attributes['last_name'];
+        $nameParts = [
+            $this->attributes['openemis_no'] ?? '',
+            $this->attributes['first_name'] ?? '',
+            isset($this->attributes['middle_name']) ? $this->attributes['middle_name'] : '',
+            isset($this->attributes['third_name']) ? $this->attributes['third_name'] : '',
+            $this->attributes['last_name'] ?? '',
+        ];
+
+        // Filter out empty parts and join with a single space
+        return implode(' ', array_filter($nameParts));
     }
 
 
@@ -416,4 +473,11 @@ public function _swaggerDelete() {}
     {
         return $this->hasMany(UserContacts::class, 'security_user_id'); // Use 'security_user_id' as the foreign key
     }
+
+    // Scope to include gender details
+    public function scopeWithGender($query)
+    {
+        return $query->with('gender:id,name');
+    }
+
 }

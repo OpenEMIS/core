@@ -1197,13 +1197,13 @@ class DirectoriesController extends AppController
                 if ($key == 'UserNationalities') {
                     $actionURL = 'Nationalities';
                 }
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
-                    'plugin' => $plugin,
+                // POCOR-8989 changed from ?queryString to /queryString/ for better compliance
+                $tabElements[$key]['url'] = ['plugin' => $plugin,
                     'controller' => $name,
                     'action' => $actionURL,
-                    'index'],
-                    ['security_user_id' => $id]
-                );
+                    '0' => 'index',
+                    '1' => $this->ControllerAction->paramsEncode(['security_user_id' => $id])]
+                ;
             }
         }
 

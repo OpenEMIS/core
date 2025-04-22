@@ -25,6 +25,8 @@ class StaffCustomTableCells extends Model
     public $incrementing = false;
 
      // Override getKeyForSaveQuery to handle composite keys
+
+
 /**
  * @OA\PathItem(
  *     path="/api/v5/staff-custom-table-cells"
@@ -37,6 +39,41 @@ public function _swaggerPath() {}
  *     path="/api/v5/staff-custom-table-cells",
  *     summary="Get list of StaffCustomTableCells",
  *     tags={"StaffCustomTableCells"},
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Maximum number of results to return",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number for paginated results",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="orderby",
+ *         in="query",
+ *         required=false,
+ *         description="Field to order results by",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order direction: asc or desc",
+ *         @OA\Schema(type="string", enum={"asc", "desc"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="_fields",
+ *         in="query",
+ *         required=false,
+ *         description="Comma-separated list of fields to include in response",
+ *         @OA\Schema(type="string")
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Successful operation",
@@ -76,30 +113,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/staff-custom-table-cells/{id}",
- *     summary="Get StaffCustomTableCells by ID",
- *     tags={"StaffCustomTableCells"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the StaffCustomTableCells",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/staff-custom-table-cells",
  *     summary="Create a new StaffCustomTableCells",
@@ -137,50 +150,102 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
 /**
- * @OA\Put(
- *     path="/api/v5/staff-custom-table-cells/{id}",
- *     summary="Update StaffCustomTableCells",
+ * @OA\Get(
+ *     path="/api/v5/staff-custom-table-cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}",
+ *     summary="Get StaffCustomTableCells record by composite key",
  *     tags={"StaffCustomTableCells"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="staff_custom_field_id",
  *         in="path",
  *         required=true,
- *         description="ID of the StaffCustomTableCells",
- *         @OA\Schema(type="integer")
+ *         description="staff_custom_field_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_custom_table_column_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_custom_table_column_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_custom_table_row_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_custom_table_row_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Record found"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Record not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/staff-custom-table-cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}",
+ *     summary="Update StaffCustomTableCells record by composite key",
+ *     tags={"StaffCustomTableCells"},
+ *     @OA\Parameter(
+ *         name="staff_custom_field_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_custom_field_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_custom_table_column_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_custom_table_column_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_custom_table_row_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_custom_table_row_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
  *             type="object",
-                     @OA\Property(property="text_value", type="string", example=null),
-                     @OA\Property(property="number_value", type="integer", example=null),
-                     @OA\Property(property="decimal_value", type="string", example=null),
-                     @OA\Property(property="staff_custom_field_id", type="integer", example=null),
-                     @OA\Property(property="staff_custom_table_column_id", type="integer", example=null),
-                     @OA\Property(property="staff_custom_table_row_id", type="integer", example=null),
-                     @OA\Property(property="staff_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
+ *              *         )
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Updated successfully"
+ *         description="Record updated successfully"
  *     ),
  *     @OA\Response(
  *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Invalid data provided"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
@@ -188,31 +253,49 @@ public function _swaggerUpdate() {}
 
 /**
  * @OA\Delete(
- *     path="/api/v5/staff-custom-table-cells/{id}",
- *     summary="Delete StaffCustomTableCells",
+ *     path="/api/v5/staff-custom-table-cells/staff_custom_field_id/{staff_custom_field_id}/staff_custom_table_column_id/{staff_custom_table_column_id}/staff_custom_table_row_id/{staff_custom_table_row_id}/staff_id/{staff_id}",
+ *     summary="Delete StaffCustomTableCells record by composite key",
  *     tags={"StaffCustomTableCells"},
  *     @OA\Parameter(
- *         name="id",
+ *         name="staff_custom_field_id",
  *         in="path",
  *         required=true,
- *         description="ID of the StaffCustomTableCells",
- *         @OA\Schema(type="integer")
+ *         description="staff_custom_field_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_custom_table_column_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_custom_table_column_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_custom_table_row_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_custom_table_row_id",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="staff_id",
+ *         in="path",
+ *         required=true,
+ *         description="staff_id",
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
+ *         description="Record deleted successfully"
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Not found"
+ *         description="Record not found"
  *     )
  * )
  */
 public function _swaggerDelete() {}
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -249,9 +332,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

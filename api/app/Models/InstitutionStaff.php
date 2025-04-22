@@ -31,6 +31,41 @@ public function _swaggerPath() {}
  *     path="/api/v5/institution-staff",
  *     summary="Get list of InstitutionStaff",
  *     tags={"InstitutionStaff"},
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Maximum number of results to return",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number for paginated results",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="orderby",
+ *         in="query",
+ *         required=false,
+ *         description="Field to order results by",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order direction: asc or desc",
+ *         @OA\Schema(type="string", enum={"asc", "desc"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="_fields",
+ *         in="query",
+ *         required=false,
+ *         description="Comma-separated list of fields to include in response",
+ *         @OA\Schema(type="string")
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Successful operation",
@@ -77,30 +112,6 @@ public function _swaggerPath() {}
 public function _swaggerList() {}
 
 /**
- * @OA\Get(
- *     path="/api/v5/institution-staff/{id}",
- *     summary="Get InstitutionStaff by ID",
- *     tags={"InstitutionStaff"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InstitutionStaff",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
  * @OA\Post(
  *     path="/api/v5/institution-staff",
  *     summary="Create a new InstitutionStaff",
@@ -145,6 +156,31 @@ public function _swaggerView() {}
  */
 public function _swaggerCreate() {}
 
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/institution-staff/{id}",
+ *     summary="Get InstitutionStaff by ID",
+ *     tags={"InstitutionStaff"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the InstitutionStaff",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
 /**
  * @OA\Put(
  *     path="/api/v5/institution-staff/{id}",
@@ -155,7 +191,7 @@ public function _swaggerCreate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionStaff",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\RequestBody(
  *         required=true,
@@ -211,7 +247,7 @@ public function _swaggerUpdate() {}
  *         in="path",
  *         required=true,
  *         description="ID of the InstitutionStaff",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="string")
  *     ),
  *     @OA\Response(
  *         response=204,
@@ -238,6 +274,11 @@ public function _swaggerDelete() {}
         return $this->belongsTo(StaffStatuses::class, 'staff_status_id', 'id');
     }
 
+    public function scopeWithStatus($query)
+    {
+        return $query->with('staffStatus:id,code,name');
+    }
+
     public function staffType()
     {
         return $this->belongsTo(StaffTypes::class, 'staff_type_id', 'id');
@@ -248,11 +289,22 @@ public function _swaggerDelete() {}
     {
         return $this->belongsTo(InstitutionPositions::class, 'institution_position_id', 'id');
     }
+    public function scopeWithPosition($query)
+    {
+        return $query->with([
+            'institutionPosition:id,position_no,staff_position_title_id',
+            'institutionPosition.staffPositionTitle:id,name'
+        ]);
+    }
 
 
     public function user()
     {
         return $this->belongsTo(SecurityUsers::class, 'staff_id', 'id');
+    }
+    public function scopeWithUser($query)
+    {
+        return $query->with('user:id,openemis_no,first_name,last_name');
     }
 
 

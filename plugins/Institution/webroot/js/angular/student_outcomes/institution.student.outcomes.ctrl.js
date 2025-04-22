@@ -257,7 +257,7 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
                             outcome_period_id: period,
                             period_editable: selectedPeriodStatus,
                             education_subject_id: subject,
-                            outcome_criteria_name: commentTranslation,
+                            outcome_criteria_name: 'Comments',
                             result: Controller.studentComments,
                             save_error: {
                                 result: false

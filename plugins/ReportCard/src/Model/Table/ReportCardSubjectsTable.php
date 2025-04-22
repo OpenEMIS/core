@@ -68,7 +68,7 @@ class ReportCardSubjectsTable extends ControllerActionTable
                     $this->aliasField('report_card_id') => $reportCardId,
                 ])
                 // ->orWhere([$orWhere])
-                ->group([$InstitutionSubjects->aliasField('name')])
+                //->group([$InstitutionSubjects->aliasField('name')]) //POCOR-9032
                 ->order([$this->EducationSubjects->aliasField('order')]);
     }
 }
