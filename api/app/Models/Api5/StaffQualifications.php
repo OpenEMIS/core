@@ -286,6 +286,6 @@ public function _swaggerUpdate() {}
  * )
  */
 public function _swaggerDelete() {}
-public function _swaggerHelper(){}
+
 
 }
