@@ -1,3 +1,9 @@
+### [4.20.2] - 2025-04-22
+- Bug Fixed: Institutions>Performance>GPA: Cumulative gpa is not able to generate
+- Bug Fixed: Institutions > Academic > Classes > Export: 404 error when exporting classes
+- Bug Fixed: Administrations > Profiles > Students > Profiles: Data is not showing under Learning Plan worksheet
+- Bug Fixed: Administration > System Setup > Labels: There is no education grade labels in Institution Fees page (Institutions > Finance > Institution Fees)
+
 ### [4.20.1] - 2025-04-16
 - Bug Fixed: Administration > Performance > Competency > Periods > Edit: When editing competency periods, the competency items list are not showing in the option fields
 - Bug Fixed: API: Api does not return any data
