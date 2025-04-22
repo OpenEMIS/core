@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Api5;
 
-use App\Models\Api5\Api5;StaffPositionTitles;
+use App\Models\Api5\StaffPositionTitles;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;

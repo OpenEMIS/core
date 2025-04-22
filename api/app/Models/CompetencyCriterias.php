@@ -43,6 +43,6 @@ class CompetencyCriterias extends Model
 
     public function competencyGradingtype()
     {
-        return $this->belongsTo(CompetencyGradingtypes::class, 'competency_grading_type_id', 'id');
+        return $this->belongsTo(CompetencyGradingTypes::class, 'competency_grading_type_id', 'id');
     }
 }

@@ -27,11 +27,12 @@ class StaffQualifications extends Model
 
     protected $primaryKey = 'id';
     public $incrementing = false;
+
     public static function getNextId()
     {
         return \DB::transaction(function () {
             $maxId = self::max('id');
-            return (int) $maxId + 1;
+            return (int)$maxId + 1;
         });
     }
 
@@ -40,7 +41,8 @@ class StaffQualifications extends Model
         parent::boot();
         self::bootNumericId();
     }
-     // Override getKeyForSaveQuery to handle composite keys
+
+    // Override getKeyForSaveQuery to handle composite keys
 
 
     public static function getValidationRules(): array
@@ -51,7 +53,7 @@ class StaffQualifications extends Model
 
     }
 
-
+}
 
 
 

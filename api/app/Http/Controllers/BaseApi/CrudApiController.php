@@ -900,6 +900,7 @@ class CrudApiController extends Controller
         }
 
         try {
+//            Log::debug('Deleting record', ['model' => $model, 'record' => $record]);
             $record->delete();
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 403);

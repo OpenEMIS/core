@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CompetencyGradingtypes extends Model
+class CompetencyGradingTypes extends Model
 {
     use HasFactory;
     public $incrementing = true;
@@ -13,12 +13,6 @@ class CompetencyGradingtypes extends Model
     public $timestamps = false;
     protected $table = "competency_grading_types";
     protected $dates = ['modified', 'created'];
-
-
-
-
-
-
 
 
 private function emptyFunction() { return; }

@@ -15,9 +15,9 @@ class StaffQualificationsSubjectsFactory extends Factory
     {
 
         return [
-    'id' => (string) \Illuminate\Support\Str::uuid(),
-    'staff_qualification_id' => \App\Models\StaffQualifications::inRandomOrder()->value('id') ?? \App\Models\StaffQualifications::factory()->create()->id,
-    'education_subject_id' => \App\Models\EducationSubjects::inRandomOrder()->value('id') ?? \App\Models\EducationSubjects::factory()->create()->id,
-];
+            'id' => (string)\Illuminate\Support\Str::uuid(),
+            'staff_qualification_id' => \App\Models\Api5\StaffQualifications::inRandomOrder()->value('id') ?? \App\Models\StaffQualifications::factory()->create()->id,
+            'education_subject_id' => \App\Models\Api5\EducationSubjects::inRandomOrder()->value('id') ?? \App\Models\EducationSubjects::factory()->create()->id,
+        ];
     }
 }
