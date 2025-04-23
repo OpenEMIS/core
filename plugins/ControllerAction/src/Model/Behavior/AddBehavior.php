@@ -121,7 +121,6 @@ class AddBehavior extends Behavior {
                     }
                 }else{
                     $process = function ($model, $entity) {
-                        dd($entity);
                         return $model->save($entity);
                     };
                     $event = $model->dispatchEvent('ControllerAction.Model.add.beforeSave', [$entity, $requestData, $extra], $this);

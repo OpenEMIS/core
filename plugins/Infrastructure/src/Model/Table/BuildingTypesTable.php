@@ -46,6 +46,13 @@ class BuildingTypesTable extends ControllerActionTable
         $this->field('infrastructure_level', ['after' => 'national_code']);
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+        unset($entity->infrastructure_level);
+    }
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
