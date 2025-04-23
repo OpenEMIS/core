@@ -32,20 +32,19 @@ class TypesBehavior extends Behavior
         $model = $this->_table;
 
         if ($model->action == 'index') {
-            $selectedLevel = !is_null($model->request->getQuery('level')) ? $model->request->getQuery('level') : '-1';
+            $request = $model->request;
+            $selectedLevel = !is_null($request->getQuery('level')) ? $request->getQuery('level') : '-1';
             $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
             $levelDetails = $InfrastructureLevels->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'code'
                 ])
                 ->toArray();
-            $ControllerActionComponent = $event->getSubject();
-            $request = $ControllerActionComponent->request;
             if(!empty($request)){
                 $level = $request->getQuery('level');
                 $redirectAction = isset($levelDetails[$level]) ? ucfirst(strtolower($levelDetails[$level])).'Types' : null;
 
-                if ($redirectAction && $redirectAction != $model->alias()) {
+                if ($redirectAction && $redirectAction != $model->getAlias()) {
                     // call from general, if room selected, redirect to room types
                     $code = $levelDetails[$selectedLevel];
                     $url = $model->url('index');
@@ -55,7 +54,7 @@ class TypesBehavior extends Behavior
                     return $model->controller->redirect($url);
                 }
             }
-            
+
         } else {
             unset($extra['elements']['controls']);
         }
@@ -68,7 +67,9 @@ class TypesBehavior extends Behavior
 
         $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $levelOptions = $InfrastructureLevels->find('list')->toArray();
-        $selectedLevel = $model->queryString('level', $levelOptions);
+        $selectedLevel = $model->request->getQuery('level') ?? -1;
+
+        $levelOptions = [-1 => __('Select Level')] + $levelOptions;
         $model->advancedSelectOptions($levelOptions, $selectedLevel);
         $model->controller->set(compact('levelOptions', 'selectedLevel'));
 
