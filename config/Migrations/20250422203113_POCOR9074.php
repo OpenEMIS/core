@@ -60,5 +60,35 @@ class POCOR9074 extends AbstractMigration
                  93, null, null,
                  1, NOW());
         ");
+        $this->execute("
+            INSERT INTO field_options
+                (id, name, category, table_name,
+                 `order`, modified_by, modified,
+                 created_by, created)
+            VALUES
+                (NULL, 'Infrastructure Building Types', 'Infrastructure', 'building_types',
+                 94, null, null,
+                 1, NOW());
+        ");
+        $this->execute("
+            INSERT INTO field_options
+                (id, name, category, table_name,
+                 `order`, modified_by, modified,
+                 created_by, created)
+            VALUES
+                (NULL, 'Infrastructure Floor Types', 'Infrastructure', 'floor_types',
+                 95, null, null,
+                 1, NOW());
+        ");
+        $this->execute("
+            INSERT INTO field_options
+                (id, name, category, table_name,
+                 `order`, modified_by, modified,
+                 created_by, created)
+            VALUES
+                (NULL, 'Infrastructure Room Types', 'Infrastructure', 'room_types',
+                 96, null, null,
+                 1, NOW());
+        ");
     }
 }
