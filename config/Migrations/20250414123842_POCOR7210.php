@@ -14,8 +14,12 @@ class POCOR7210 extends AbstractMigration
     {
         $this->execute('CREATE TABLE `zz_7210_notices` LIKE `notices`');
         $this->execute('INSERT INTO `zz_7210_notices` SELECT * FROM `notices`');
+
+        $this->execute('CREATE TABLE `zz_7210_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `zz_7210_security_functions` SELECT * FROM `security_functions`');
         //alter
         $this->execute("ALTER TABLE `notices` ADD COLUMN `status` INT(11) NOT NULL COMMENT '1 -> Enable, 0 -> Disable'");
+        $this->execute("ALTER TABLE `notices` ADD COLUMN `notice_status` INT(11)  NULL COMMENT '1 -> Read, 0 -> Unread'");
 
         $this->execute('ALTER TABLE `notices` ADD COLUMN `subject` VARCHAR(255) NOT NULL AFTER `id`');
         $this->execute('
@@ -28,6 +32,28 @@ class POCOR7210 extends AbstractMigration
                 CONSTRAINT `fk_notice_roles_notice` FOREIGN KEY (`notice_id`) REFERENCES `notices` (`id`) ON DELETE CASCADE
             )
         ');
+
+        $row = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions` WHERE `module` = 'Administration' AND `category` = 'Communications'");
+        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions` WHERE `module` = 'Administration' AND `category` = 'Communications'");
+        $parentId = $parent_id[0];
+        $order = $row[0] + 1;
+        $record = [
+            [
+                'name' => 'Notice', 'controller' => 'Alerts', 'module' => 'Administration', 'category' => 'Communications', 'parent_id' => $parentId,'_view' => 'Notices.index|Notices.view', '_edit' => 'Notices.edit', '_add' => 'Notices.add', '_delete' => 'Notices.remove', '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ]
+        ];
+        $this->table('security_functions')->insert($record)->save();
+
+        $row = $this->fetchRow("SELECT MAX(`order`) FROM `security_functions` WHERE `module` = 'Administration' AND `category` = 'Communications'");
+        $parent_id = $this->fetchRow("SELECT MAX(`parent_id`) FROM `security_functions` WHERE `module` = 'Administration' AND `category` = 'Communications'");
+        $parentId = $parent_id[0];
+        $order = $row[0] + 1;
+        $record = [
+            [
+                'name' => 'Notice Message', 'controller' => 'Systems', 'module' => 'Administration', 'category' => 'Communications', 'parent_id' => $parentId,'_view' => 'SystemNotices.index|SystemNotices.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ]
+        ];
+        $this->table('security_functions')->insert($record)->save();
         
     }
 
@@ -37,6 +63,8 @@ class POCOR7210 extends AbstractMigration
         // Restore table
         $this->execute('DROP TABLE IF EXISTS `notices`');
         $this->execute('RENAME TABLE `zz_7210_notices` TO `notices`');
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `zz_7210_security_functions` TO `security_functions`');
         $this->execute('DROP TABLE IF EXISTS `notice_roles`');
     }
 }

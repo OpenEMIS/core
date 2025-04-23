@@ -37,5 +37,5 @@ class SystemsController extends AppController
     public function StaffPolicies() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.LeavePolicies']); }    // POCOR-8128 end
     public function StaffEntitlements() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.LeaveEntitlements']); }    // POCOR-8128 end
 
-    public function Notices() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.Notices']); }
+    public function SystemNotices() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.Notices']); }
 }

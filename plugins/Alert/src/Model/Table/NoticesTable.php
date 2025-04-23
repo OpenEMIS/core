@@ -52,6 +52,7 @@ class NoticesTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra) {
         $this->field('security_role_id', ['entity' => $entity, 'visible' => true]);
         $this->field('status', ['entity' => $entity, 'visible' => true]);
+        $this->field('notice_status', ['entity' => $entity, 'visible' => false]);
         $this->field('subject', ['entity' => $entity, 'visible' => true]);
         $this->field('message', ['entity' => $entity, 'visible' => true]);
         $this->setFieldOrder(['status', 'security_role_id', 'subject', 'message']);
@@ -61,6 +62,7 @@ class NoticesTable extends ControllerActionTable
     {
         $this->field('created', ['visible' => true, 'sort' => true]);
         $this->field('created_user_id', ['visible' => true, 'sort' => false]);
+        $this->field('notice_status', ['visible' => false]);
         $this->field('message', ['sort' => false,'visible' => false,]);
         $this->field('subject', ['sort' => false]);
         $this->field('status', ['sort' => false]);
@@ -111,48 +113,41 @@ class NoticesTable extends ControllerActionTable
 
         return $attr;
     }
-
     public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add') {
-            $entity = $attr['entity'];
-            $roleOptions = $this->SecurityRoles
-                ->find('list')
-                ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
-                ->find('visible')
-                ->find('order')
-                ->toArray();
+        $roleOptions = $this->SecurityRoles
+            ->find('list')
+            ->select([
+                $this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()),
+                $this->SecurityRoles->aliasField('name')
+            ])
+            ->find('visible')
+            ->find('order')
+            ->toArray();
 
-            $attr['type'] = 'chosenSelect';
-            $attr['options'] = $roleOptions;
-                
-        }elseif($action == 'edit'){
+        $attr['type'] = 'chosenSelect';
+        $attr['options'] = $roleOptions;
+
+        if ($action === 'edit') {
             $getRecordId = $this->getQueryString();
-            $noticeRole = TableRegistry::get('Alert.NoticeRoles');
-            $securityRoleId = $noticeRole->find()->select(['security_role_id'])->where(['notice_id' => $getRecordId['id']])->toArray();
-            $roles = [];
+            $noticeRoleTable = TableRegistry::get('Alert.NoticeRoles');
             
-            foreach($securityRoleId as $value){
-                $roles[] = $value['security_role_id'];
+            $roleIds = $noticeRoleTable->find()
+                ->select(['security_role_id'])
+                ->where(['notice_id' => $getRecordId['id']])
+                ->extract('security_role_id')
+                ->toList();
+
+            if (!empty($roleIds)) {
+                $selectedIds = $this->SecurityRoles
+                    ->find()
+                    ->select(['id'])
+                    ->where(['id IN' => $roleIds])
+                    ->extract('id')
+                    ->toList();
+
+                $attr['attr']['value'] = $selectedIds;
             }
-            $selectedOptions = $this->SecurityRoles->find()
-                            ->select(['id'])
-                            ->where(['id IN' => $roles])
-                            ->toArray();
-
-            $selectedIds = (new Collection($selectedOptions))->extract('id')->toList();
-            $entity = $attr['entity'];
-            $roleOptions = $this->SecurityRoles
-                ->find('list')
-                ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
-                ->find('visible')
-                ->find('order')
-                ->toArray();
-
-            $attr['type'] = 'chosenSelect';
-            $attr['options'] = $roleOptions;
-            $attr['attr']['value'] = $selectedIds;
-                
         }
 
         return $attr;
@@ -178,6 +173,7 @@ class NoticesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('status', ['entity' => $entity]);
+        $this->field('notice_status', ['visible' => false]);
         $this->field('security_role_id');
         $this->field('subject');
         $this->field('message', [
