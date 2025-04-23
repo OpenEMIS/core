@@ -56,7 +56,7 @@ class FloorTypesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'readonly';

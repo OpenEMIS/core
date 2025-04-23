@@ -116,6 +116,10 @@ class FieldOptionComponent extends Component
             "InfrastructureBuildingTypes" => "Infrastructure.BuildingTypes",
             "InfrastructureFloorTypes" => "Infrastructure.FloorTypes",
             "InfrastructureRoomTypes" => "Infrastructure.RoomTypes",
+            "LandTypes" => "Infrastructure.LandTypes",
+            "BuildingTypes" => "Infrastructure.BuildingTypes",
+            "FloorTypes" => "Infrastructure.FloorTypes",
+            "RoomTypes" => "Infrastructure.RoomTypes",
             // Cases
             "CasePriorities" => "Cases.CasePriorities",
             "CaseTypes" => "Cases.CaseTypes",

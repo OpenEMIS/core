@@ -59,7 +59,7 @@ class RoomTypesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action,  $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'readonly';
@@ -70,7 +70,7 @@ class RoomTypesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldClassification(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldClassification(Event $event, array $attr, $action,  $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->classificationOptions;
