@@ -111,8 +111,11 @@ class FieldOptionComponent extends Component
 
 // Predefined key-to-class mappings
         $keyMappings = [
-            // Infrastructure
+            // Infrastructure // POCOR-9074
             "InfrastructureLandTypes" => "Infrastructure.LandTypes",
+            "InfrastructureBuildingTypes" => "Infrastructure.BuildingTypes",
+            "InfrastructureFloorTypes" => "Infrastructure.FloorTypes",
+            "InfrastructureRoomTypes" => "Infrastructure.RoomTypes",
             // Cases
             "CasePriorities" => "Cases.CasePriorities",
             "CaseTypes" => "Cases.CaseTypes",
