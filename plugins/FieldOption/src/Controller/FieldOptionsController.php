@@ -444,42 +444,6 @@ class FieldOptionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
     }
 
-    // POCOR-9074 start
-    public function InfrastructureLandTypes()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
-    }
-
-    public function LandTypes()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
-    }
-    public function BuildingTypes()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
-    }
-
-    public function InfrastructureBuildingTypes()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
-    }
-    public function FloorTypes()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
-    }
-    public function InfrastructureFloorTypes()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
-    }
-    public function InfrastructureRoomTypes()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
-    }
-    public function RoomTypes()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
-    }
-    // POCOR-9074 end
     public function InfrastructureProjectFundingSources()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
