@@ -112,6 +112,7 @@ class LandTypesTable extends ControllerActionTable
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+        unset($entity->infrastructure_level);
     }
 
     public function beforeDelete(Event $event, Entity $entity)
