@@ -891,10 +891,18 @@ class AssessmentResultsTable extends AppTable
 
                                 }
                             }else{
-                                $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'EXEMPT';
-                                $totalMarksPerStudent[$assessmentI]['marks'] = 'EXEMPT';
-                                $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'EXEMPT';
-                                $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'EXEMPT';
+                                //POEXM-9042 starts
+                                if($totalMarksPerStudent[$assessmentI]['type'] == 2){
+                                    $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'UNASSIGN';
+                                    $totalMarksPerStudent[$assessmentI]['marks'] = 'UNASSIGN';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'UNASSIGN';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'UNASSIGN';
+                                }else{//POEXM-9042 ends
+                                    $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'EXEMPT';
+                                    $totalMarksPerStudent[$assessmentI]['marks'] = 'EXEMPT';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'EXEMPT';
+                                    $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'EXEMPT';
+                                }                                
                             }
 //                            $totalMarksPerStudent[$assessmentI][$markkey] = $markval;
                             $assessmentI++;

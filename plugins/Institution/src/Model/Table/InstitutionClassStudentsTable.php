@@ -577,7 +577,7 @@ class InstitutionClassStudentsTable extends AppTable
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
                         if ($result['mark'] != 'EXEMPT') {
-                            $this->assessmentPeriodWeightedMark += ($result['marks'] * $attr['assessmentPeriodWeight']);
+                            $this->assessmentPeriodWeightedMark += ((float)$result['marks'] * (float)$attr['assessmentPeriodWeight']);
                             $this->assessmentPeriodWeights[] = $attr['assessmentPeriodWeight'];
                         }
                         $printedResult = $result['mark'];

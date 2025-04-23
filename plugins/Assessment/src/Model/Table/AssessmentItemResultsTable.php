@@ -719,7 +719,7 @@ class AssessmentItemResultsTable extends AppTable
                 if($exemption['type'] == 1){
                     $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'EXEMPT';
                 }else{
-                    $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'UNASSING';
+                    $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'UNASSIGN';
                 }
                 //POEXM-9042 ends
             }
