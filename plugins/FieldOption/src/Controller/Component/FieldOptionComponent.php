@@ -189,7 +189,7 @@ class FieldOptionComponent extends Component
         }
 
 // Log fallback
-         Log::write('debug', "{$category}.{$key}");
+        // Log::write('debug', "{$category}.{$key}");
 
 // Default fallback
         return "{$category}.{$key}";

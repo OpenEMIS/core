@@ -112,7 +112,7 @@ class LandTypesTable extends ControllerActionTable
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
-        unset($entity->infrastructure_level);
+        unset($entity->infrastructure_level); // POCOR-9074
     }
 
     public function beforeDelete(Event $event, Entity $entity)
