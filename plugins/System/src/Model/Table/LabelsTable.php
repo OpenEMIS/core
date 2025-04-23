@@ -9,10 +9,14 @@ use Cake\ORM\Query;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
+use Cake\Log\Log;
+use Cake\Cache\Cache;
 
 class LabelsTable extends ControllerActionTable
 {
     private $fieldsOrder = ['created', 'message'];
+    private $excludeList = ['created_user_id', 'created', 'modified_user_id', 'modified'];
+    private $defaultConfig = 'labels';
     public function initialize(array $config): void
     {
        parent::initialize($config);
@@ -100,6 +104,27 @@ class LabelsTable extends ControllerActionTable
         }
     }
 
+// POCOR-9022 start
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $keyFetch = $entity->module.'.'.$entity->field;
+        $keyValue = self::concatenateLabel($entity);
+        Cache::write($keyFetch, $keyValue, $this->defaultConfig);
+
+    }
+
+    public function concatenateLabel($entity)
+    {
+        $keyFetch = $entity->module.'.'.$entity->field;
+        $keyValue = (!is_null($entity->name) && ($entity->name != "")) ? $entity->name : $entity->field_name;
+
+        if (!is_null($entity->code) && ($entity->code != "")) {
+            $keyValue = ucfirst($entity->code).' '.ucfirst($keyValue); // POCOR-4095 Remove the bracket on the label code
+        }
+
+        return $keyValue;
+    }
+    // POCOR-9022 end
     public function editBeforeAction(Event $event)
     {
         $this->field('module_name', ['type' => 'readonly']);

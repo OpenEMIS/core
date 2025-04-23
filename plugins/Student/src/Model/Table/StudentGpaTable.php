@@ -321,7 +321,7 @@ class StudentGpaTable extends ControllerActionTable
         }
     }
 
-    public function onGetGpaName(Event $event, Entity $entity)
+    public function onGetGpaNameOld(Event $event, Entity $entity)
     {
         $studentGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
         $gpaTable = TableRegistry::get('Gpa.GpaSystem');
@@ -345,6 +345,40 @@ class StudentGpaTable extends ControllerActionTable
             }
         
         return '';
+    }
+
+    //POCOR-8962 -- function updated for null conditions
+    public function onGetGpaName(Event $event, Entity $entity)
+    {
+        $studentGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+        $gpaTable = TableRegistry::get('Gpa.GpaSystem');
+
+        $conditions = [
+            $studentGpa->aliasField('academic_period_id') => $entity->academic_period_id,
+            $studentGpa->aliasField('student_id') => $entity->student_id,
+            $studentGpa->aliasField('institution_id') => $entity['institution']['id'],
+            $studentGpa->aliasField('education_grade_id') => $entity->education_grade_id,
+        ];
+
+        // Handle null value properly
+        if ($entity->education_grades_gpa_id === null) {
+            $conditions[] = new \Cake\Database\Expression\QueryExpression(
+                $studentGpa->aliasField('education_grades_gpa_id') . ' IS NULL'
+            );
+        } else {
+            $conditions[$studentGpa->aliasField('education_grades_gpa_id')] = $entity->education_grades_gpa_id;
+        }
+
+        $gpaRecord = $studentGpa->find()
+            ->select(['name' => $gpaTable->aliasField('name')])
+            ->leftJoin(
+                [$gpaTable->getAlias() => $gpaTable->getTable()],
+                $gpaTable->aliasField('id') . ' = ' . $studentGpa->aliasField('education_grades_gpa_id')
+            )
+            ->where($conditions)
+            ->first();
+
+        return !empty($gpaRecord) ? $gpaRecord->name : '';
     }
     
 }
