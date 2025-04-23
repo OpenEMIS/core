@@ -50,6 +50,7 @@ class POCOR9074 extends AbstractMigration
     public function insertFieldOptionLandType()
     {
         //
+        $order = $this->fetchRow("SELECT `order` FROM `field_options` ORDER BY `id` DESC LIMIT 1");
         $this->execute("
             INSERT INTO field_options
                 (id, name, category, table_name,
@@ -57,7 +58,7 @@ class POCOR9074 extends AbstractMigration
                  created_by, created)
             VALUES
                 (NULL, 'Infrastructure Land Types', 'Infrastructure', 'land_types',
-                 93, null, null,
+                 $order[0] + 1, null, null,
                  1, NOW());
         ");
         $this->execute("
@@ -67,7 +68,7 @@ class POCOR9074 extends AbstractMigration
                  created_by, created)
             VALUES
                 (NULL, 'Infrastructure Building Types', 'Infrastructure', 'building_types',
-                 94, null, null,
+                 $order[0] + 2, null, null,
                  1, NOW());
         ");
         $this->execute("
@@ -77,7 +78,7 @@ class POCOR9074 extends AbstractMigration
                  created_by, created)
             VALUES
                 (NULL, 'Infrastructure Floor Types', 'Infrastructure', 'floor_types',
-                 95, null, null,
+                 $order[0] + 3, null, null,
                  1, NOW());
         ");
         $this->execute("
@@ -87,7 +88,7 @@ class POCOR9074 extends AbstractMigration
                  created_by, created)
             VALUES
                 (NULL, 'Infrastructure Room Types', 'Infrastructure', 'room_types',
-                 96, null, null,
+                 $order[0] + 4, null, null,
                  1, NOW());
         ");
     }
