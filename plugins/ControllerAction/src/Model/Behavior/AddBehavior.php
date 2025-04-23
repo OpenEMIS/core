@@ -95,7 +95,7 @@ class AddBehavior extends Behavior {
                         return $event->getResult();
                     }
                 }
-                //POCOR-8483[START] // major change for this ticket 
+                //POCOR-8483[START] // major change for this ticket
                 if($request->getAttribute('params')['action'] == 'reportCardGenerate'){
                     if(isset($entity->assessment_id)){
                         $process = function ($model, $entity) {
@@ -121,6 +121,7 @@ class AddBehavior extends Behavior {
                     }
                 }else{
                     $process = function ($model, $entity) {
+                        dd($entity);
                         return $model->save($entity);
                     };
                     $event = $model->dispatchEvent('ControllerAction.Model.add.beforeSave', [$entity, $requestData, $extra], $this);
