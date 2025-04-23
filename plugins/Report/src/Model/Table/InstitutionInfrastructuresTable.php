@@ -29,7 +29,7 @@ class InstitutionInfrastructuresTable extends AppTable
 
     public function initialize(array $config): void
     {
-
+        
         $this->setTable('institutions');
 
         parent::initialize($config);
@@ -41,7 +41,7 @@ class InstitutionInfrastructuresTable extends AppTable
     }
 
    public function beforeAction(Event $event)
-    {
+    { 
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
@@ -50,13 +50,13 @@ class InstitutionInfrastructuresTable extends AppTable
     public function onExcelGetAccessibility(Event $event, Entity $entity)
     {
         $accessibility = '';
-        if($entity->land_infrastructure_accessibility == 1) {
+        if($entity->land_infrastructure_accessibility == 1) { 
             $accessibility ='Accessible';
         } else {
             $accessibility ='Not Accessible';
         }
         return $accessibility;
-    }
+    }    
 
 
    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -64,7 +64,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $infrastructureLevel = $requestData->infrastructure_level;
         $newFields = [];
-
+        
         $newFields[] = [
             'key' => 'InstitutionsInfrastructure.code',
             'field' => 'code',
@@ -72,7 +72,7 @@ class InstitutionInfrastructuresTable extends AppTable
             'alias' => 'institution_code',
             'label' => __('Institution Code')
         ];
-
+        
         $newFields[] = [
             'key' => 'InstitutionsInfrastructure.name',
             'field' => 'name',
@@ -91,7 +91,7 @@ class InstitutionInfrastructuresTable extends AppTable
         //POCOR-6650 Starts
         $AreaLevelTbl = TableRegistry::get('Area.AreaLevels');
         $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
-
+         
         $newFields[] = [
             'key' => '',
             'field' => 'region_name',
@@ -127,13 +127,13 @@ class InstitutionInfrastructuresTable extends AppTable
             'type' => 'string',
             'label' => __('Infrastructure Name')
         ];
-
+		
 		if($infrastructureLevel == 1) { $level = "Lands"; $type ='land';}
 		if($infrastructureLevel == 2) { $level = "Buildings"; $type ='building';}
-		if($infrastructureLevel == 3) { $level = "Floors"; $type ='floor';}
+		if($infrastructureLevel == 3) { $level = "Floors"; $type ='floor';}    
 		if($infrastructureLevel == 4) { $level = "Rooms"; $type ='room'; }
-
-		if($infrastructureLevel == 1 || $infrastructureLevel == 2 || $infrastructureLevel == 3) {
+			
+		if($infrastructureLevel == 1 || $infrastructureLevel == 2 || $infrastructureLevel == 3) { 
             $newFields[] = [
             'key' => 'ShiftOptions.name',
             'field' => 'shift_name',
@@ -150,7 +150,7 @@ class InstitutionInfrastructuresTable extends AppTable
 		}
 
         //Start POCOR-6731
-        if($infrastructureLevel == 3 || $infrastructureLevel == 4) {
+        if($infrastructureLevel == 3 || $infrastructureLevel == 4) { 
             $newFields[] = [
                 'key' => 'institution_buildings_name',
                 'field' => 'institution_buildings_name',
@@ -159,7 +159,7 @@ class InstitutionInfrastructuresTable extends AppTable
             ];
         }
         if($infrastructureLevel == 4) {
-
+            
             $newFields[] = [
             'key' => 'shift_info.shift_options_name',
             'field' => 'shift_name',
@@ -176,7 +176,7 @@ class InstitutionInfrastructuresTable extends AppTable
         }
 
         //End POCOR-6731
-
+		
 		if($infrastructureLevel == 1 || $infrastructureLevel == 2) {
 			$newFields[] = [
 				'key' => 'year_acquired',
@@ -184,7 +184,7 @@ class InstitutionInfrastructuresTable extends AppTable
 				'type' => 'string',
 				'label' => __('Year Acquired')
 			];
-
+			
 			$newFields[] = [
 				'key' => 'year_disposed',
 				'field' => 'year_disposed',
@@ -199,7 +199,7 @@ class InstitutionInfrastructuresTable extends AppTable
             'type' => 'string',
             'label' => __('Start Date')
         ];
-
+		
         $newFields[] = [
             'key' => 'land_infrastructure_type',
             'field' => 'land_infrastructure_type',
@@ -234,7 +234,7 @@ class InstitutionInfrastructuresTable extends AppTable
             'type' => 'string',
             'label' => __('Accessibility')
         ];
-
+		
 		/*POCOR-6264 starts*/
 		$InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
 		$customModules = TableRegistry::get('custom_modules');
@@ -293,13 +293,13 @@ class InstitutionInfrastructuresTable extends AppTable
                 }
             }
         }
-
+       
         $fields->exchangeArray($newFields);
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
+        
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
@@ -313,7 +313,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $institutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
         $institutionRooms = TableRegistry::get('Institution.InstitutionRooms');
         $buildingTypes = TableRegistry::get('Infrastructure.BuildingTypes');
-        $infrastructureCondition = TableRegistry::get('FieldOptions.InfrastructureConditions');
+        $infrastructureCondition = TableRegistry::get('Infrastructure.InfrastructureConditions');
         $infrastructureStatus = TableRegistry::get('Infrastructure.InfrastructureStatuses');
         $institutionStatus = TableRegistry::get('Institution.InstitutionStatuses');
         $infrastructureOwnerships = TableRegistry::get('Institution.InfrastructureOwnerships');
@@ -324,7 +324,7 @@ class InstitutionInfrastructuresTable extends AppTable
 
         if($infrastructureLevel == 1) { $level = "Lands"; $type ='land';}
         if($infrastructureLevel == 2) { $level = "Buildings"; $type ='building';}
-        if($infrastructureLevel == 3) { $level = "Floors"; $type ='floor';}
+        if($infrastructureLevel == 3) { $level = "Floors"; $type ='floor';}    
         if($infrastructureLevel == 4) { $level = "Rooms"; $type ='room'; }
 
         $conditions = [];
@@ -361,14 +361,14 @@ class InstitutionInfrastructuresTable extends AppTable
 
         if (!empty($institutionTypeId)) {
              $conditions['Institution'.$level.'.'.'institution_id IN'] = $institutionIds;
-
+         
         }
 		/*POCOR-6335 starts - applying academic period condition*/
 		if (!empty($academicPeriodId)) {
              $conditions['Institution'.$level.'.'.'academic_period_id'] = $academicPeriodId;
-
+         
         }
-		/*POCOR-633 ends*/
+		/*POCOR-633 ends*/	       
 		if ($infrastructureLevel == 1 || $infrastructureLevel == 2) {
 			$query
 					->select(['land_infrastructure_code'=>'Institution'.$level.'.'.'code',
@@ -426,8 +426,8 @@ class InstitutionInfrastructuresTable extends AppTable
 							'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureOwnerships->aliasField('id'),
 						])
 					->where($conditions);
-		}
-        if ($infrastructureLevel == 3)
+		} 
+        if ($infrastructureLevel == 3) 
         {
             $InstitutionBuildings = 'buildings';
 			$query
@@ -488,8 +488,8 @@ class InstitutionInfrastructuresTable extends AppTable
 							'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureOwnerships->aliasField('id'),
 						])
 					->where($conditions);
-		}
-        if ($infrastructureLevel == 4)
+		}  
+        if ($infrastructureLevel == 4)  
         {
             $InstitutionBuildings = 'buildings';
             $InstitutionFloors = 'floors';
@@ -519,12 +519,12 @@ class InstitutionInfrastructuresTable extends AppTable
                    $this->aliasField('area_id = ') . $areas->aliasField('id'),
                 ])
 
-
+                
                 ->LeftJoin(['InstitutionStatuses' => $institutionStatus->getTable()], [
                     'InstitutionStatuses.id = '. $this->aliasField('institution_status_id'),
                 ])
                 ->innerJoin(['AcademicPeriods' => 'academic_periods'], [
-                    'OR' =>
+                    'OR' => 
                         [
                             [
                                 'OR' => [
@@ -549,7 +549,7 @@ class InstitutionInfrastructuresTable extends AppTable
                             'OR' => [
                                 [
                                     $this->aliasField('date_closed') . ' IS NULL',
-                                    $this->aliasField('date_opened') . ' <= AcademicPeriods.end_date',
+                                    $this->aliasField('date_opened') . ' <= AcademicPeriods.end_date',              
                                 ]
                             ]
                         ]
@@ -596,13 +596,13 @@ class InstitutionInfrastructuresTable extends AppTable
 		}
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
             return $results->map(function ($row) use($type) {
-
+			
                 $areas1 = TableRegistry::get('Area.Areas');
                 $areasData = $areas1
                             ->find()
                             ->where([$areas1->getAlias('code')=>$row->area_code])
                             ->first();
-                $row['region_code'] = '';
+                $row['region_code'] = '';            
                 $row['region_name'] = '';
                 if(!empty($areasData)){
                     $areas = TableRegistry::get('Area.Areas');
@@ -625,20 +625,20 @@ class InstitutionInfrastructuresTable extends AppTable
                                     [
                                         $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                                     ]
-                                )
+                                )    
                                 ->where([
                                     $areaLevels->aliasField('level !=') => 1,
                                     $areas->aliasField('id') => $areasData->parent_id
                                 ])->first();
-
+                    
                     if (!empty($val->name) && !empty($val->code)) {
                         $row['region_code'] = $val->code;
                         $row['region_name'] = $val->name;
                     }
-                }
-
+                } 
+				
 				$InfrastructureCustomFields = TableRegistry::get('Infrastructure.InfrastructureCustomFields');
-                if(!empty($row['level_id'])) {
+                if(!empty($row['level_id'])) { 
 					$customFieldData = $InfrastructureCustomFields->find()
 						->select([
 							'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
@@ -662,7 +662,7 @@ class InstitutionInfrastructuresTable extends AppTable
 					foreach($customFieldData as $data) {
 						if(!empty($data->text_value)) {
 							$row[$data->custom_field_id] = $data->text_value;
-						}
+						} 
 						if(!empty($data->number_value) && $data->field_type == 'CHECKBOX') {
 							/*POCOR-6376 starts*/
 							$infrastructureCustomFieldOptions = TableRegistry::get('infrastructure_custom_field_options');
@@ -682,7 +682,7 @@ class InstitutionInfrastructuresTable extends AppTable
 												'CustomFieldValues.institution_'.lcfirst($type).'_id  = ' . $row['level_id']])
 											->group([$infrastructureCustomFieldOptions->aliasField('name')])
 											->toArray();
-
+							
 							if (!empty($fieldValue)) {
 								foreach ($fieldValue as $numValue) {
 									$optVal[] = $numValue->name;
@@ -691,7 +691,7 @@ class InstitutionInfrastructuresTable extends AppTable
 							$str = implode(',', $optVal);
 							$row[$data->custom_field_id] = $str;
 							unset($optVal);
-						}
+						} 
 						if (!empty($data->number_value) && ($data->field_type != 'CHECKBOX')) {
                             //START :comment this code becuase its affect POCOR-6650
 							/*$optvalue = TableRegistry::get('infrastructure_custom_field_options');
@@ -710,14 +710,14 @@ class InstitutionInfrastructuresTable extends AppTable
 						}
 						if(!empty($data->textarea_value)) {
 							$row[$data->custom_field_id] = $data->textarea_value;
-						}
+						}	
 						if(!empty($data->date_value)) {
 							$row[$data->custom_field_id] = $data->date_value;
-
+							
 						}
 						if(!empty($data->time_value)) {
 							$row[$data->custom_field_id] = $data->time_value;
-
+							
 						}
 					}
 				}

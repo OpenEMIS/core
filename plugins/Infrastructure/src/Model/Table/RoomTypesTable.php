@@ -49,6 +49,7 @@ class RoomTypesTable extends ControllerActionTable
         $this->field('infrastructure_level', ['after' => 'national_code']);
     }
 
+    // POCOR-9074
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
@@ -66,6 +67,7 @@ class RoomTypesTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
+    // POCOR-9074
     public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action,  $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -77,6 +79,7 @@ class RoomTypesTable extends ControllerActionTable
         return $attr;
     }
 
+    // POCOR-9074
     public function onUpdateFieldClassification(Event $event, array $attr, $action,  $request)
     {
         if ($action == 'add') {

@@ -32,8 +32,8 @@ class TypesBehavior extends Behavior
         $model = $this->_table;
 
         if ($model->action == 'index') {
-            $request = $model->request;
-            $selectedLevel = !is_null($request->getQuery('level')) ? $request->getQuery('level') : '-1';
+            $request = $model->request; // POCOR-9074
+            $selectedLevel = !is_null($request->getQuery('level')) ? $request->getQuery('level') : '-1'; // POCOR-9074
             $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
             $levelDetails = $InfrastructureLevels->find('list', [
                     'keyField' => 'id',
@@ -44,7 +44,7 @@ class TypesBehavior extends Behavior
                 $level = $request->getQuery('level');
                 $redirectAction = isset($levelDetails[$level]) ? ucfirst(strtolower($levelDetails[$level])).'Types' : null;
 
-                if ($redirectAction && $redirectAction != $model->getAlias()) {
+                if ($redirectAction && $redirectAction != $model->getAlias()) { // POCOR-9074
                     // call from general, if room selected, redirect to room types
                     $code = $levelDetails[$selectedLevel];
                     $url = $model->url('index');
@@ -67,9 +67,9 @@ class TypesBehavior extends Behavior
 
         $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $levelOptions = $InfrastructureLevels->find('list')->toArray();
-        $selectedLevel = $model->request->getQuery('level') ?? -1;
+        $selectedLevel = $model->request->getQuery('level') ?? -1; // POCOR-9074
 
-        $levelOptions = [-1 => __('Select Level')] + $levelOptions;
+        $levelOptions = [-1 => __('Select Level')] + $levelOptions; // POCOR-9074
         $model->advancedSelectOptions($levelOptions, $selectedLevel);
         $model->controller->set(compact('levelOptions', 'selectedLevel'));
 
