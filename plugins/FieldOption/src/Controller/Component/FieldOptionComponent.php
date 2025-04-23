@@ -87,7 +87,6 @@ class FieldOptionComponent extends Component
 
 // POCOR-8995 start
         $category = $FieldOptions->category ?? null;
-        Log::write('debug', $Words);
 // Normalize category
         $fieldOptionCategories = ["Finance",
             "Qualification",
@@ -112,6 +111,8 @@ class FieldOptionComponent extends Component
 
 // Predefined key-to-class mappings
         $keyMappings = [
+            // Infrastructure
+            "InfrastructureLandTypes" => "Infrastructure.LandTypes",
             // Cases
             "CasePriorities" => "Cases.CasePriorities",
             "CaseTypes" => "Cases.CaseTypes",
