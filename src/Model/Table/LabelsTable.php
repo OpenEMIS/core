@@ -9,6 +9,7 @@ use Cake\Cache\Cache;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Filesystem\Folder;
+use Cake\Log\Log;
 
 class LabelsTable extends AppTable
 {
@@ -20,7 +21,21 @@ class LabelsTable extends AppTable
         $label = false;
         $keyFetch = $module.'.'.$field;
         $label = Cache::read($keyFetch, $this->defaultConfig);
-
+        // POCOR-9022 check if label is empty
+        if (!$label) {
+            $entity = $this->find()
+                ->where([
+                    $this->aliasField('module') => $module,
+                    $this->aliasField('field') => $field
+                ])
+                ->first();
+            if (!empty($entity)) {
+                $label = $entity->name;
+                $keyValue = self::concatenateLabel($entity);
+                Cache::write($keyFetch, $keyValue, $this->defaultConfig);
+            }
+        }
+        // POCOR-9022 end
         if ($label !== false) {
             $label =  __(ucfirst($label));
         } else {
@@ -47,7 +62,7 @@ class LabelsTable extends AppTable
                 $filteredFiles[] = $value;
             }
         }
-        
+
         if (empty($filteredFiles)) {
             $keyArray = [];
             $allLabels = $this->find();
@@ -65,9 +80,13 @@ class LabelsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         Cache::clear('labels');
+        Log::debug('LabelsTable::afterSave()');
         $keyFetch = $entity->module.'.'.$entity->field;
         $keyValue = self::concatenateLabel($entity);
+        Log::debug('LabelsTable::afterSave() keyFetch: '.$keyFetch);
+        Log::debug('LabelsTable::afterSave() keyValue: '.$keyValue);
         Cache::write($keyFetch, $keyValue, $this->defaultConfig);
+
     }
 
     public function concatenateLabel($entity)

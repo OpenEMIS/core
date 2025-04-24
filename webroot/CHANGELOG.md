@@ -1,3 +1,39 @@
+### [4.20.2] - 2025-04-22
+- Bug Fixed: Institutions>Performance>GPA: Cumulative gpa is not able to generate
+- Bug Fixed: Institutions > Academic > Classes > Export: 404 error when exporting classes
+- Bug Fixed: Administrations > Profiles > Students > Profiles: Data is not showing under Learning Plan worksheet
+- Bug Fixed: Administration > System Setup > Labels: There is no education grade labels in Institution Fees page (Institutions > Finance > Institution Fees)
+
+### [4.20.1] - 2025-04-16
+- Bug Fixed: Administration > Performance > Competency > Periods > Edit: When editing competency periods, the competency items list are not showing in the option fields
+- Bug Fixed: API: Api does not return any data
+- Bug Fixed: Institutions > Performance > Outcomes > Edit: The word "Comment" is missing
+- Bug Fixed: Institutions > Academic > Classes > Edit > Save: The save button when editing classes is unresponsive
+- Bug Fixed: Institutions > Students > Special Needs > Assessments: When changing labels for the name "Difficulty" under Student > Special Needs page, the label does not change according to what it is configured
+
+### [4.20.0] - 2025-04-15
+- Implemented: Develop an institution profile placeholder to get the attendance for girls and boys for each date will take time
+- Implemented: Develop improved security for standard OpenEMIS Core v5 APIs
+- Implemented: Develop an API to delete assessment exemptions 
+- Implemented: Develop changes to the OpenEMIS Core filesystem 
+- Bug Fixed: Institutions > Academic > Classes > Add:  When adding classes, the webhook triggered is only showing institution_id information only
+- Bug Fixed: Institutions > Performance > GPA: There is one subject where one of the assessment period is not graded
+- Bug Fixed: Api/v4/users/email/ : Endpoint is not working
+- Bug Fixed: API: Guardian relation api response is not showing guardian
+- Bug Fixed: Institutions > Students > Academic > Attendance: Attendance mark for more than one period is not reflecting other periods
+- Bug Fixed: Administration->Training->Courses: User is getting 404 when adding
+- Bug Fixed: Institutions > Staff > Transfer > Cancel button: The page gives the error message: beforeFilter:2871For Developer: You should put staff_id into query string first
+- Bug Fixed: Staff > Training > Courses: Remove the Staff field in the Staff > Training > Courses page
+- Bug Fixed: Reports > Institutions > Subjects: Number of Seats column is showing
+- Bug Fixed: Institutions>Academic>Programmes: List should be autocomplete
+- Bug Fixed: API: When using non admin accounts, user is not able to view responses in institution_staff and institution_student
+- Bug Fixed: Administration > Workflow > Actions > Institutions > Students > Student Enrolment: When adding post event under workflow, the page gives a 404 error
+- Bug Fixed: Administration > Performance > Outcomes: Change to Code/Element instead of Code
+- Bug Fixed: Institutions > Students > Special Needs > Assessments: When changing labels for the name "Difficulty" under Student > Special Needs page, the label does not change according to what it is configured
+- Bug Fixed: Institutions > Academic > Classes: There is an error when selecting a student OpenEMIS ID
+- Bug Fixed: Reports > Institutions > Staff Attendance: Some schools never marked their attendance 
+- Bug Fixed: Institutions > Academic > Classes > Edit > Save: The save button when editing classes is unresponsive
+
 ### [4.19.2] - 2025-04-10
 - Bug Fixed: Institutions > Attendances > Students : Insert back triggers for attendance modules
 - Bug Fixed: Administrations > Field Options > Staff Position Title: System displays all Staff Position Grade, even though the Staff Position that was saved is Pay Scale 2.
