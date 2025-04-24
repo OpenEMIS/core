@@ -8,6 +8,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 
 class PermissionService
@@ -88,15 +89,29 @@ class PermissionService
             return true; // Super admin has all permissions
         }
 
-        $cacheKey = "permissions:user:{$user->id}";
+//        $cacheKey = "permissions:user:{$user->id}";
 
         // Attempt to get cached permissions
 //        $permissions = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
 //            return $this->loadPermissionsFromDb($user->id);
 //        });
-        $permissions = $this->loadPermissionsFromDb($user->id);
+        $cacheKey = "permissions:user:{$user->id}";
+
+        $cacheKey = "permissions:user:{$user->id}";
+        $cacheTTL = Carbon::now()->addMinutes(10); // or Carbon::now()->addMinutes(10)
+
+// Use Laravel's lazy caching
+        $permissions = Cache::remember($cacheKey, $cacheTTL, function () use ($user) {
+            return $this->loadPermissionsFromDb($user->id);
+        });
+//        $permissions = $this->loadPermissionsFromDb($user->id);
 //        Log::info("Permissions for" . $user->id . ': ' . print_r($permissions, true));
         if (empty($permissions)) {
+            Log::info("Permissions not found in cache, loading from DB");
+            $permissions = $this->loadPermissionsFromDb($user->id);
+        }
+        if (empty($permissions)) {
+            Log::info("No permissions found for user: " . $user->id);
             return false; // No permissions found
         }
         $hasPermission = $this->hasPermission($permissions, $modelName, $action);
