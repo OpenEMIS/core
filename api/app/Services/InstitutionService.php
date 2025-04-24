@@ -414,6 +414,7 @@ class InstitutionService extends Controller
                         'user_first_name' => $student->securityUser->first_name,
                         'user_last_name' => $student->securityUser->last_name,
                         'institution_class' => $student->class->name,
+                        'institution_class_id' => $student->class->id,
                         'user_gender' => $student->securityUser->gender->name,
                         'user_status' => $student->studentStatus->name,
                         'special_needs' => $student->securityUser->specialNeed ? 1 : 0

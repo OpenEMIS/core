@@ -8,6 +8,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon; // POCOR-9085
 
 
 class PermissionService
@@ -85,15 +86,25 @@ class PermissionService
             return true; // Super admin has all permissions
         }
 
+        // POCOR-9085 start: Attempt to get cached permissions
         $cacheKey = "permissions:user:{$user->id}";
+        $cacheTTL = Carbon::now()->addMinutes(10); // or Carbon::now()->addMinutes(10)
 
-        // Attempt to get cached permissions
-        $permissions = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
+// Use Laravel's lazy caching
+        $permissions = Cache::remember($cacheKey, $cacheTTL, function () use ($user) {
             return $this->loadPermissionsFromDb($user->id);
         });
 //        $permissions = $this->loadPermissionsFromDb($user->id);
-//        Log::info("Permissions: " . print_r($permissions, true));
-
+//        Log::info("Permissions for" . $user->id . ': ' . print_r($permissions, true));
+        if (empty($permissions)) {
+            Log::info("Permissions not found in cache, loading from DB");
+            $permissions = $this->loadPermissionsFromDb($user->id);
+        }
+        if (empty($permissions)) {
+            Log::info("No permissions found for user: " . $user->id);
+            return false; // No permissions found
+        }
+        // POCOR-9085 end:
         $hasPermission = $this->hasPermission($permissions, $modelName, $action);
 //        Log::info("Has permission: $hasPermission");
         return $hasPermission;
