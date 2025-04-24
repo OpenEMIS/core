@@ -18,9 +18,10 @@ class RenderTextBehavior extends RenderBehavior {
         $customField = $attr['customField'];
         $fieldId = $attr['customField']->id;
         $fieldValues = $attr['customFieldValues'];
+
         $savedId = null;
         $savedValue = null;
-        if (!empty($fieldValues) && array_key_exists($fieldId, $fieldValues)) {
+        if (isset($fieldValues[$fieldId])) { // POCOR-9066
             if (isset($fieldValues[$fieldId]['id'])) {
                 $savedId = $fieldValues[$fieldId]['id'];
             }
@@ -51,6 +52,8 @@ class RenderTextBehavior extends RenderBehavior {
             $options['type'] = 'string';
             if (!is_null($savedValue)) {
                 $options['value'] = $savedValue;
+            }else { // POCOR-9066
+                $options['value'] = '';
             }
             // input mask
             if ($customField->has('params') && !empty($customField->params)) {
@@ -65,13 +68,15 @@ class RenderTextBehavior extends RenderBehavior {
 
             $value .= $form->input($fieldPrefix.".text_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
+
             $unlockFields[] = $fieldPrefix.".text_value";
             $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {
+
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
                 $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             }
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
+        $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
         $event->stopPropagation();
