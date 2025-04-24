@@ -69,8 +69,8 @@ class PermissionService
     public function checkPermission($modelName, $action): bool
     {
         // POCOR-8966 start
-        Log::info("Checking permission for model: $modelName, action: $action");
-        Log::info("User: " . print_r($this->user, true));
+//        Log::info("Checking permission for model: $modelName, action: $action");
+//        Log::info("User: " . print_r($this->user, true));
         if (!$this->user) {
             $this->user = JWTAuth::user();
             if ($this->user) {
@@ -95,8 +95,10 @@ class PermissionService
 //            return $this->loadPermissionsFromDb($user->id);
 //        });
         $permissions = $this->loadPermissionsFromDb($user->id);
-        Log::info("Permissions for" . $user->id . ': ' . print_r($permissions, true));
-
+//        Log::info("Permissions for" . $user->id . ': ' . print_r($permissions, true));
+        if (empty($permissions)) {
+            return false; // No permissions found
+        }
         $hasPermission = $this->hasPermission($permissions, $modelName, $action);
         Log::info("Has permission: $hasPermission");
         return $hasPermission;
