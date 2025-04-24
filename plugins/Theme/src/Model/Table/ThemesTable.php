@@ -90,8 +90,8 @@ class ThemesTable extends ControllerActionTable
         $this->configureField('config_item_id', ['type' => 'select', 'entity' => $entity]);
         $this->configureField('name', ['type' => 'readonly']);
         $this->configureField('default_value', ['type' => 'readonly', 'entity' => $entity]);
-        $this->configureField('content', ['visible' => 'false']);
-        $this->configureField('default_content', ['visible' => 'false']);
+        $this->configureField('content', ['visible' => false]);
+        $this->configureField('default_content', ['visible' => false]);
 
         // Configuration based on entity name
         switch ($configName) {
@@ -100,13 +100,14 @@ class ThemesTable extends ControllerActionTable
                 $this->configureField('color_themes', ['type' => 'element', 'element' => 'themecolor']);
                 $this->configureField('value', ['visible' => 'false']); // POCOR-8268
                 break;
-
             case 'Login Page Image':
             case 'Logo':
-                $this->configureField('default_content', ['type' => 'readonly']);
-                $this->configureField('value', ['visible' => 'false']);
-                $this->configureField('default_value', ['visible' => 'false']);
-                break;
+
+            $this->configureField('default_content', ['type' => 'readonly']);
+            $this->configureField('content', ['visible' => true]);
+            $this->configureField('value', ['visible' => false]);
+            $this->configureField('default_value', ['visible' => 'false']);
+            break;
         }
     }
 
@@ -187,9 +188,9 @@ class ThemesTable extends ControllerActionTable
     //POCOR-8716 START
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        switch ($data['id']) {
-            case self::LOGO:
-            case self::LOGINBGIMAGE:
+        switch ($data['name']) { // POCOR-8951
+            case 'Login Page Image': // POCOR-8951
+            case 'Logo': // POCOR-8951
                 $this->behaviors()->get('FileUpload')->setConfig([
                     'allowable_file_types' => [
                         'value' => ['jpeg', 'jpg', 'gif', 'png'],
