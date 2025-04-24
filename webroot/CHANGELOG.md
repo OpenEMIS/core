@@ -1,3 +1,22 @@
+### [4.21.0] - 2025-04-24
+- Implemented: Develop changes to the student profile to add a programme code placeholder
+- Implemented: Develop an OpenEMIS Core Generate Student Report Cards v4 API
+- Implemented: Develop configuration APIs for OpenEMIS Registrations
+- Implemented: Develop dedicated OpenEMIS Core Laravel models for API v5
+- Bug Fixed: Institutions > Performance > GPA: Report card overrall gpa is not showing correctly
+- Bug Fixed: API Token signature could not be verified.
+- Bug Fixed: Institutions > Survey > Forms > Edit: When editing survey, other fields which are not filled out yet was filled. This happens only when the survey question field type is text
+- Bug Fixed: Institutions > Students > Special Needs > Assessments: Unable to add assessor name
+- Bug Fixed: Api/v4/users/username/ : Endpoint is not working for admin/administrator
+- Bug Fixed: Directory > Students > Academic > Programmes: When clicking on a student's academic records, the page does not navigate to the institution linked to the grade
+- Bug Fixed: Institutions > Students > Special Needs > Assessments: Assessor Name and the Comments in the Special Needs Assessments page optional and not mandatory
+- Bug Fixed: Administration > System Setup > Labels: Implement the ability to rename Survey Label
+- Bug Fixed: Institutions>Students>Add: Student is not found in external search
+- Bug Fixed: Reports > Institutions > Classes: When generating report for Institution Classes, the status goes to "Error" status
+- Bug Fixed: API: Subject api does not have institution_classes_id
+- Bug Fixed: Institutions>Finance>Consumables: Consumable should be changed to Consumables
+- Bug Fixed: Institutions > Infrastructure > Overview: 404 error when accessing Institution Infrastructure Overview
+
 ### [4.20.2] - 2025-04-22
 - Bug Fixed: Institutions>Performance>GPA: Cumulative gpa is not able to generate
 - Bug Fixed: Institutions > Academic > Classes > Export: 404 error when exporting classes
