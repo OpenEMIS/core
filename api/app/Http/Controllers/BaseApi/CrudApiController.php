@@ -1075,7 +1075,7 @@ class CrudApiController extends Controller
     {
         $fields = $request->query('_fields');
         $scopeParam = $request->query('_scope');
-        Log::info("segments before:" . print_r($segments, true));
+//        Log::info("segments before:" . print_r($segments, true));
         // Process _fields from query parameters or segments
         if (!$fields) {
             for ($i = 0; $i < count($segments); $i += 2) {
@@ -1141,7 +1141,7 @@ class CrudApiController extends Controller
                 }
             }
         }
-        Log::info("segments after:" . print_r($segments, true));
+//        Log::info("segments after:" . print_r($segments, true));
 
         return $query;
     }
