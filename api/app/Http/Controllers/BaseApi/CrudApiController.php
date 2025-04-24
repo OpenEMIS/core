@@ -724,7 +724,7 @@ class CrudApiController extends Controller
         $modelName = basename(str_replace('\\', '/', $model));
         if (!$this->permissionService->checkPermission($modelName, $action)) {
             Log::info("User not authorized for {$model}:{$action}");
-//            return response()->json(['error' => 'Forbidden'], 403);
+            return response()->json(['error' => 'Forbidden'], 403);
         }
         // POCOR-8966 start
 
