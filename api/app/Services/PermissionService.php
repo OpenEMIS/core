@@ -8,7 +8,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Carbon; // POCOR-9085
 
 
 class PermissionService
@@ -70,8 +70,6 @@ class PermissionService
     public function checkPermission($modelName, $action): bool
     {
         // POCOR-8966 start
-//        Log::info("Checking permission for model: $modelName, action: $action");
-//        Log::info("User: " . print_r($this->user, true));
         if (!$this->user) {
             $this->user = JWTAuth::user();
             if ($this->user) {
@@ -79,7 +77,6 @@ class PermissionService
             }
         }
         $user = $this->user;
-//        Log::info("User 2: " . print_r($this->user, true));
         // POCOR-8966 end
         if (!$user) {
             return false;
@@ -89,14 +86,7 @@ class PermissionService
             return true; // Super admin has all permissions
         }
 
-//        $cacheKey = "permissions:user:{$user->id}";
-
-        // Attempt to get cached permissions
-//        $permissions = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
-//            return $this->loadPermissionsFromDb($user->id);
-//        });
-        $cacheKey = "permissions:user:{$user->id}";
-
+        // POCOR-9085 start: Attempt to get cached permissions
         $cacheKey = "permissions:user:{$user->id}";
         $cacheTTL = Carbon::now()->addMinutes(10); // or Carbon::now()->addMinutes(10)
 
@@ -114,8 +104,9 @@ class PermissionService
             Log::info("No permissions found for user: " . $user->id);
             return false; // No permissions found
         }
+        // POCOR-9085 end:
         $hasPermission = $this->hasPermission($permissions, $modelName, $action);
-        Log::info("Has permission: $hasPermission");
+//        Log::info("Has permission: $hasPermission");
         return $hasPermission;
     }
 
