@@ -74,16 +74,16 @@ class SurveysReportTable extends AppTable
             $instArr[] = $institutionID;
         }
 
-        $repeaterListCountResult = $this->checkSurveyExistanceInRepeater($instArr, $academicPeriodId, $surveyFormId);
-        $staffListCountResult = $this->checkSurveyExistanceInStaff($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion);
-        $studentListCountResult = $this->checkSurveyExistanceInStudent($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion);
-        Log::debug('Repeater List Count Result: '.count($repeaterListCountResult));
-        Log::debug('Staff List Count Result: '.count($staffListCountResult));
-        Log::debug('Student List Count Result: '.count($studentListCountResult));
+        $repeaterSurveyArray = $this->checkSurveyExistanceInRepeater($instArr, $academicPeriodId, $surveyFormId);
+        $staffSurveyArray = $this->checkSurveyExistanceInStaff($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion);
+        $studentSurveyArray = $this->checkSurveyExistanceInStudent($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion);
+        Log::debug('Repeater List Count Result: '.count($repeaterSurveyArray));
+        Log::debug('Staff List Count Result: '.count($staffSurveyArray));
+        Log::debug('Student List Count Result: '.count($studentSurveyArray));
         // if exists
-        if((count($repeaterListCountResult) > 0)
-            && ((count($staffListCountResult) <= 0)
-                && (count($studentListCountResult) <= 0))){
+        if((count($repeaterSurveyArray) > 0)
+            && ((count($staffSurveyArray) <= 0)
+                && (count($studentSurveyArray) <= 0))){
             $query = $this->getRepeaterQuery($institutionID,
                 $institutions,
                 $condition,
@@ -97,13 +97,13 @@ class SurveysReportTable extends AppTable
                 $query,
                 $surveySection,
                 $tableQuestion);
-        }else if((count($staffListCountResult) > 0)
-            && ((count($repeaterListCountResult) <= 0)
-                && (count($studentListCountResult) <= 0))){
+        }else if((count($staffSurveyArray) > 0)
+            && ((count($repeaterSurveyArray) <= 0)
+                && (count($studentSurveyArray) <= 0))){
             $query = $this->getStaffQuery($institutionID, $institutions, $condition, $areaId, $selectedArea, $institutionStatus, $institutionStatuses, $academicPeriodId, $surveyForms, $surveyFormId, $query, $surveySection, $tableQuestion);
-        }else if((count($studentListCountResult) > 0)
-            && ((count($repeaterListCountResult) <= 0)
-                && (count($staffListCountResult) <= 0)))
+        }else if((count($studentSurveyArray) > 0)
+            && ((count($repeaterSurveyArray) <= 0)
+                && (count($staffSurveyArray) <= 0)))
         {
             $query = $this->getStudentQuery($institutionID, $institutions, $condition, $areaId, $selectedArea, $institutionStatus, $institutionStatuses, $academicPeriodId, $surveyForms, $surveyFormId, $query, $surveySection, $tableQuestion);
         }else{//POCOR-8525 ends
@@ -129,25 +129,33 @@ class SurveysReportTable extends AppTable
     }
 
     public function checkSurveyExistanceInRepeater($institutions=[], $academicPeriodId, $surveyFormId){
-        $InstitutionRepeaterSurveys = self::getDynamicTableInstance('InstitutionRepeater.RepeaterSurveys');
-        $InstitutionRepeaterSurveysRes = $InstitutionRepeaterSurveys->find()
-                            ->where([
-                                $InstitutionRepeaterSurveys->aliasField('institution_id IN') => $institutions,
-                                $InstitutionRepeaterSurveys->aliasField('academic_period_id') => $academicPeriodId,
-                                $InstitutionRepeaterSurveys->aliasField('parent_form_id') => $surveyFormId,
-                            ])->toArray();
-        return $InstitutionRepeaterSurveysRes;
+        $RepeaterSurveys = self::getDynamicTableInstance('institution_repeater_surveys');
+        $RepeaterSurveysArray = $RepeaterSurveys
+            ->find()
+            ->select(
+                ['id' => $RepeaterSurveys->aliasField('id'),
+                'parent_form_id' => $RepeaterSurveys->aliasField('parent_form_id')])
+            ->where([
+                $RepeaterSurveys->aliasField('institution_id IN') => $institutions,
+                $RepeaterSurveys->aliasField('academic_period_id') => $academicPeriodId,
+                $RepeaterSurveys->aliasField('parent_form_id') => $surveyFormId,
+            ])->toArray();
+        return $RepeaterSurveysArray;
     }
 
     public function checkSurveyExistanceInStaff($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
         $surveySectionId = "$surveySection";
-        $StaffSurveys = self::getDynamicTableInstance('Staff.StaffSurveys');
-        $surveySection = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
-        $SurveyFormsQuestions = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
-        $surveyQuestion = self::getDynamicTableInstance('Survey.SurveyQuestions');
-        $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
+        $StaffSurveys = self::getDynamicTableInstance('institution_staff_surveys');
+        $surveySection = self::getDynamicTableInstance('survey_form_questions');
+        $SurveyFormsQuestions = self::getDynamicTableInstance('survey_form_questions');
+        $surveyQuestion = self::getDynamicTableInstance('survey_questions');
+        $surveySectionData = $surveySection->find()
+            ->where([
+                $surveySection->aliasField('id') => $surveySectionId
+            ])
+            ->first();
 
-        $StaffSurveysRes = $SurveyFormsQuestions->find()
+        $StaffSurveysArray = $SurveyFormsQuestions->find()
             ->select([
                 'id' => $StaffSurveys->aliasField('id'),
                 'parent_form_id' => $StaffSurveys->aliasField('parent_form_id'),
@@ -170,18 +178,21 @@ class SurveysReportTable extends AppTable
                 $StaffSurveys->aliasField('parent_form_id') => $surveyFormId
             ])->toArray();
 
-        return $StaffSurveysRes;
+        return $StaffSurveysArray;
     }
 
     public function checkSurveyExistanceInStudent($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
-        $StudentSurveys = self::getDynamicTableInstance('Student.StudentSurveys');
+        $StudentSurveys = self::getDynamicTableInstance('institution_student_surveys');
         $surveySectionId = "$surveySection";
-        $surveySection = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
-        $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
-
-        $SurveyFormsQuestions = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
-        $surveyQuestion = self::getDynamicTableInstance('Survey.SurveyQuestions');
-        $StudentSurveysRes = $SurveyFormsQuestions->find()
+        $surveySection = self::getDynamicTableInstance('survey_form_questions');
+        $SurveyFormsQuestions = self::getDynamicTableInstance('survey_form_questions');
+        $surveyQuestion = self::getDynamicTableInstance('survey_questions');
+        $surveySectionData = $surveySection->find()
+            ->where([
+                $surveySection->aliasField('id') => $surveySectionId
+            ])
+            ->first();
+        $StudentSurveysArray = $SurveyFormsQuestions->find()
             ->select([
                 'id' => $StudentSurveys->aliasField('id'),
                 'parent_form_id' => $StudentSurveys->aliasField('parent_form_id'),
@@ -203,7 +214,7 @@ class SurveysReportTable extends AppTable
                 $StudentSurveys->aliasField('academic_period_id') => $academicPeriodId,
                 $StudentSurveys->aliasField('parent_form_id') => $surveyFormId
             ])->toArray();
-        return $StudentSurveysRes;
+        return $StudentSurveysArray;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -226,11 +237,13 @@ class SurveysReportTable extends AppTable
             $instArr[] = $institutionID;
         }
 
-        $repeaterListCountResult = $this->checkSurveyExistanceInRepeater($instArr, $requestData->academic_period_id, $requestData->survey_form);
-        $staffListCountResult = $this->checkSurveyExistanceInStaff($instArr, $requestData->academic_period_id, $requestData->survey_form, $surveySection, $tableQuestion);
-        $studentListCountResult = $this->checkSurveyExistanceInStudent($instArr, $requestData->academic_period_id, $requestData->survey_form, $surveySection, $tableQuestion);
+        $repeaterSurveyArray = $this->checkSurveyExistanceInRepeater($instArr, $requestData->academic_period_id, $requestData->survey_form);
+        $staffSurveyArray = $this->checkSurveyExistanceInStaff($instArr, $requestData->academic_period_id, $requestData->survey_form, $surveySection, $tableQuestion);
+        $studentSurveyArray = $this->checkSurveyExistanceInStudent($instArr, $requestData->academic_period_id, $requestData->survey_form, $surveySection, $tableQuestion);
         //if record exists
-        if((count($repeaterListCountResult) > 0) || (count($staffListCountResult) > 0) || (count($studentListCountResult) > 0)){
+        $isNotGeneralArray = (count($repeaterSurveyArray) > 0) || (count($staffSurveyArray) > 0) || (count($studentSurveyArray) > 0);
+        $isGeneralArray = !$isNotGeneralArray;
+        if($isNotGeneralArray){
             foreach ($fields as $key => $field) {
                 if ($field['field'] == 'survey_form_id') {
                     unset($fields[$key]);
@@ -313,22 +326,15 @@ class SurveysReportTable extends AppTable
                 'label' => __('Institution Status')
             ];
 
-            // $fields[] = [
-            //     'key' => 'InstitutionRepeaterSurveysId',
-            //     'field' => 'InstitutionRepeaterSurveysId',
-            //     'type' => 'string',
-            //     'label' => __('InstitutionRepeaterSurveysId')
-            // ];
-
             $SurveyFormId = 0;
-            if((count($repeaterListCountResult) > 0)){
-                $SurveyFormId = $repeaterListCountResult[0]->parent_form_id;
+            if((count($repeaterSurveyArray) > 0)){
+                $SurveyFormId = $repeaterSurveyArray[0]->parent_form_id;
                 $fieldType = 'REPEATER';
-            }else if((count($staffListCountResult) > 0)){
-                $SurveyFormId = $staffListCountResult[0]->parent_form_id;
+            }else if((count($staffSurveyArray) > 0)){
+                $SurveyFormId = $staffSurveyArray[0]->parent_form_id;
                 $fieldType = 'STAFF_LIST';
-            }else if((count($studentListCountResult) > 0)){
-                $SurveyFormId = $studentListCountResult[0]->parent_form_id;
+            }else if((count($studentSurveyArray) > 0)){
+                $SurveyFormId = $studentSurveyArray[0]->parent_form_id;
                 $fieldType = 'STUDENT_LIST';
             }
 
@@ -385,7 +391,8 @@ class SurveysReportTable extends AppTable
                     }
                 }
             }
-        }else{ //POCOR-8525 Ends
+        }
+        if($isGeneralArray){ //POCOR-8525 Ends
             $tableQuestionId = $requestData->table_question;
             foreach ($fields as $key => $field) {
                 if ($field['field'] == 'survey_form_id') {
@@ -494,6 +501,7 @@ class SurveysReportTable extends AppTable
                     ])
                 ->where([$surveyFormsQuestion->aliasField('survey_question_id') => $tableQuestionId])
                 ->toArray();
+            Log::debug('Survey Table Column Result: '.print_r($SurveyTblColumnRes, true));
             if(!empty($SurveyTblColumnRes)){
                 foreach ($SurveyTblColumnRes as $S_key => $S_val) {
                     if($S_val->survey_column_order == 1){
