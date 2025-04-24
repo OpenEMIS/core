@@ -565,8 +565,8 @@ Route::group(
 
 
         //POCOR-8617 start...
-        Route::get('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf', 'ReportCardController@studentReportCardPdfDownload');
-        Route::get('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls', 'ReportCardController@studentReportCardExcelDownload');
+        Route::post('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf', 'ReportCardController@studentReportCardPdfDownload');
+        Route::post('/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls', 'ReportCardController@studentReportCardExcelDownload');
         //POCOR-8617 end...
 
         //POCOR-8519 start...

@@ -109,7 +109,7 @@ class InstitutionFloorsTable extends ControllerActionTable
                         // Skip validation when datatype is 'copy'
                         return true;
                     }
-            
+
                     // Proceed with validation when datatype is not 'copy'
                     return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_floor_size', $context);
                 },
@@ -136,7 +136,11 @@ class InstitutionFloorsTable extends ControllerActionTable
 
                 return false;
             })
-            ->notEmpty('floor_type_id');
+            ->notEmpty('floor_type_id')
+            ->notEmpty('infrastructure_ownership_id')
+            ->notEmpty('infrastructure_condition_id')
+            ->notEmpty('accessibility')
+            ;
         ;
     }
 
