@@ -955,7 +955,7 @@ class NavigationComponent extends Component
 
             // POCOR-8873 start
             'Institutions.Consumable.index' => [
-                'title' => 'Consumable',
+                'title' => 'Consumables', //
                 'parent' => 'Institution.Finance',
                 'selected' => ['Institutions.Consumable', 'Institutions.Transactions'],
             ],
