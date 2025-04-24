@@ -69,6 +69,8 @@ class PermissionService
     public function checkPermission($modelName, $action): bool
     {
         // POCOR-8966 start
+        Log::info("Checking permission for model: $modelName, action: $action");
+        Log::info("User: " . print_r($this->user, true));
         if (!$this->user) {
             $this->user = JWTAuth::user();
             if ($this->user) {
@@ -76,6 +78,7 @@ class PermissionService
             }
         }
         $user = $this->user;
+        Log::info("User 2: " . print_r($this->user, true));
         // POCOR-8966 end
         if (!$user) {
             return false;
