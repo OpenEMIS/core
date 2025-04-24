@@ -723,6 +723,7 @@ class CrudApiController extends Controller
         // Check Permissions // POCOR-8966 start
         $modelName = basename(str_replace('\\', '/', $model));
         if (!$this->permissionService->checkPermission($modelName, $action)) {
+            Log::info("User not authorized for {$model}:{$action}"); // POCOR-9085
             return response()->json(['error' => 'Forbidden'], 403);
         }
         // POCOR-8966 start
@@ -1075,7 +1076,7 @@ class CrudApiController extends Controller
     {
         $fields = $request->query('_fields');
         $scopeParam = $request->query('_scope');
-        Log::info("segments before:" . print_r($segments, true));
+//        Log::info("segments before:" . print_r($segments, true));
         // Process _fields from query parameters or segments
         if (!$fields) {
             for ($i = 0; $i < count($segments); $i += 2) {
@@ -1141,7 +1142,7 @@ class CrudApiController extends Controller
                 }
             }
         }
-        Log::info("segments after:" . print_r($segments, true));
+//        Log::info("segments after:" . print_r($segments, true));
 
         return $query;
     }
