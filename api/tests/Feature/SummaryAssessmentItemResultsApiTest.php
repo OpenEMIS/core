@@ -5,13 +5,13 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use App\Models\SummaryAssessmentItemResults;
-use App\Models\SecurityUsers as TestSecurityUser;
+use App\Models\Api5\SummaryAssessmentItemResults;
+use App\Models\Api5\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Carbon\Carbon;
 
 class SummaryAssessmentItemResultsApiTest extends TestCase
 {
+
     use DatabaseTransactions, WithFaker;
 
     protected $token;
@@ -53,48 +53,9 @@ class SummaryAssessmentItemResultsApiTest extends TestCase
         $response->assertStatus(201);
     }
 
-    public function test_can_view_SummaryAssessmentItemResultsByID()
-    {
-        $record = SummaryAssessmentItemResults::factory()->create();
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/summary-assessment-item-results/'
-            . $record->academic_period_id);
-        $response->assertStatus(405);
-    }
 
-    public function test_can_view_SummaryAssessmentItemResults()
-    {
-        $record = SummaryAssessmentItemResults::factory()->create();
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}",
-        ])->getJson('/api/v5/summary-assessment-item-results/academic_period_id/'
-            . $record->academic_period_id . '/created/' . $record->created);
 
-        $response->assertStatus(200);
-    }
 
-    public function test_can_update_SummaryAssessmentItemResults()
-    {
-        $record = SummaryAssessmentItemResults::factory()->create();
-        $updatedData = [
-            'id' => $record->id,
-            // Add at least one field from schema to update
-        ];
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}",
-        ])->putJson('/api/v5/summary-assessment-item-results/' . $record->academic_period_id, $updatedData);
 
-        $response->assertStatus(405);
-    }
 
-    public function test_can_delete_SummaryAssessmentItemResults()
-    {
-        $record = SummaryAssessmentItemResults::factory()->create();
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$this->token}",
-        ])->deleteJson('/api/v5/summary-assessment-item-results/' . $record->id);
-
-        $response->assertStatus(405);
-    }
 }

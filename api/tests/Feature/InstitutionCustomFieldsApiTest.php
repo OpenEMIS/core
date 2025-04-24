@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use App\Models\InstitutionCustomFields;
-use App\Models\SecurityUsers as TestSecurityUser;
+use App\Models\Api5\InstitutionCustomFields;
+use App\Models\Api5\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
 
