@@ -78,7 +78,7 @@ class PermissionService
             }
         }
         $user = $this->user;
-        Log::info("User 2: " . print_r($this->user, true));
+//        Log::info("User 2: " . print_r($this->user, true));
         // POCOR-8966 end
         if (!$user) {
             return false;
@@ -91,14 +91,14 @@ class PermissionService
         $cacheKey = "permissions:user:{$user->id}";
 
         // Attempt to get cached permissions
-        $permissions = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
-            return $this->loadPermissionsFromDb($user->id);
-        });
-//        $permissions = $this->loadPermissionsFromDb($user->id);
-//        Log::info("Permissions: " . print_r($permissions, true));
+//        $permissions = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
+//            return $this->loadPermissionsFromDb($user->id);
+//        });
+        $permissions = $this->loadPermissionsFromDb($user->id);
+        Log::info("Permissions for" . $user->id . ': ' . print_r($permissions, true));
 
         $hasPermission = $this->hasPermission($permissions, $modelName, $action);
-//        Log::info("Has permission: $hasPermission");
+        Log::info("Has permission: $hasPermission");
         return $hasPermission;
     }
 
