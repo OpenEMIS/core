@@ -62,11 +62,11 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
              ])
-             ->add('date',
-                 'ruleCheckInputWithinRange',
-                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
-
-             )
+//             ->add('date', // POCOR-9061
+//                 'ruleCheckInputWithinRange',
+//                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
+//
+//             )
             ->allowEmpty('file_content');
     }
 
@@ -341,7 +341,6 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $dataKey = 'assessor_id';
-
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => $dataKey, 'name' => $this->aliasField($dataKey)];
             $attr['noResults'] = __('No User found.');
@@ -404,10 +403,9 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         $this->controller->autoRender = false;
         $this->ControllerAction->autoRender = false;
-
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->getQuery['term'];
-
+            $term = $this->request->getQuery('term'); // POCOR-9061
+            $term = str_replace(' ', '%', $term); // POCOR-9061
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
 
             $query = $this->Assessor
