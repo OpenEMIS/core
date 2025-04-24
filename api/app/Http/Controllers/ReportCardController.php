@@ -7,6 +7,7 @@ use App\Services\ReportCardService;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use JWTAuth;
+use App\Http\Requests\ReportCardGenerateRequest;
 
 class ReportCardController extends Controller
 {
@@ -463,9 +464,9 @@ class ReportCardController extends Controller
 
     //For POCOR-8617 Start...
     /**
-     * @OA\Get(
+     * @OA\Post(
      *     path="/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf",
-     *     summary="Get a student's report card in PDF format",
+     *     summary="Download a student's report card in PDF format",
      *     description="Retrieve a student's report card for a specific academic period and report card ID in PDF format.",
      *     tags={"Report Card"},
      *     @OA\Parameter(
@@ -480,7 +481,7 @@ class ReportCardController extends Controller
      *         in="path",
      *         required=true,
      *         description="The ID of the class",
-     *         @OA\Schema(type="integer", example=591)
+     *         @OA\Schema(type="integer", example=609)
      *     ),
      *     @OA\Parameter(
      *         name="studentId",
@@ -489,41 +490,45 @@ class ReportCardController extends Controller
      *         description="The ID of the student",
      *         @OA\Schema(type="integer", example=13685)
      *     ),
-     *     @OA\Parameter(
-     *         name="academic_period_id",
-     *         in="query",
+     *     @OA\RequestBody(
      *         required=true,
-     *         description="The ID of the academic period",
-     *         @OA\Schema(type="integer", example=33)
-     *     ),
-     *     @OA\Parameter(
-     *         name="report_card_id",
-     *         in="query",
-     *         required=true,
-     *         description="The ID of the report card",
-     *         @OA\Schema(type="integer", example=8)
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"academic_period_id", "institution_id", "education_grade_id", "institution_class_id", "student_id", "report_card_id"},
+     *             @OA\Property(property="academic_period_id", type="integer", example=34, description="The ID of the academic period"),
+     *             @OA\Property(property="institution_id", type="integer", example=6, description="The ID of the institution"),
+     *             @OA\Property(property="education_grade_id", type="integer", example=223, description="The ID of the education grade"),
+     *             @OA\Property(property="institution_class_id", type="integer", example=609, description="The ID of the institution class"),
+     *             @OA\Property(property="student_id", type="integer", example=13685, description="The ID of the student"),
+     *             @OA\Property(property="report_card_id", type="integer", example=12, description="The ID of the report card")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful.",
+     *         description="Report card PDF generated successfully.",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Successful."),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=75),
-     *                 @OA\Property(property="file_name", type="string", example="P1002_Report Card_2382817301_Asher Ayers.pdf"),
-     *                 @OA\Property(property="file_content", type="string", example="JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9UeXBlIC9QYWdlCi9QYXJlbnQgMSAwIFIKL01lZGlhQm94IFswIDAgNjIzLjYyMiAxMTMzLjg1OF0KL1RyaW1Cb3ggWzAuMDAwIDAuMDAwIDYyMy42MjIgMTEzMy44NThdCi9SZXNvdXJjZXMgMiAwIFIKL0dyb3VwIDw8IC9UeXBlIC9Hcm91cCAvUyAvVHJhbnNwYXJlbmN5IC9DUyAvRGV2aWNlUkdCID4+IAovQ29udGVudHMgNCAwIFIl")
+     *                 @OA\Property(property="file_name", type="string", example="ReportCard_13685.pdf"),
+     *                 @OA\Property(property="file_url", type="string", example="https://example.com/storage/reports/ReportCard_13685.pdf")
      *             )
      *         )
      *     ),
      *     @OA\Response(
+     *         response=400,
+     *         description="Invalid request."
+     *     ),
+     *     @OA\Response(
      *         response=404,
-     *         description="Unsuccessful."
+     *         description="Report card not found."
      *     )
      * )
      */
-    public function studentReportCardPdfDownload(Request $request, $institutionId, $classId, $studentId)
+
+
+    public function studentReportCardPdfDownload(ReportCardGenerateRequest $request, $institutionId, $classId, $studentId)
     {
         try {
             $params = $request->all();
@@ -537,7 +542,7 @@ class ReportCardController extends Controller
             }//POCOR-8728 ends
             
             $data = $this->reportCardService->studentReportCardPdfDownload($params, $institutionId, $classId, $studentId);
-
+            
             if(!empty($data)){
                 return $this->sendSuccessResponse("Report card pdf file found.", $data);
             } else {
@@ -556,11 +561,11 @@ class ReportCardController extends Controller
 
 
     /**
-     * @OA\Get(
+     * @OA\Post(
      *     path="/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls",
-     *     summary="Get a student's report card in Excel format",
+     *     summary="Download a student's report card in Excel format",
      *     description="Retrieve a student's report card for a specific academic period and report card ID in Excel format.",
-     *     tags={"Report Card"},
+     *     tags={"Report card"},
      *     @OA\Parameter(
      *         name="institutionId",
      *         in="path",
@@ -573,7 +578,7 @@ class ReportCardController extends Controller
      *         in="path",
      *         required=true,
      *         description="The ID of the class",
-     *         @OA\Schema(type="integer", example=591)
+     *         @OA\Schema(type="integer", example=609)
      *     ),
      *     @OA\Parameter(
      *         name="studentId",
@@ -582,41 +587,44 @@ class ReportCardController extends Controller
      *         description="The ID of the student",
      *         @OA\Schema(type="integer", example=13685)
      *     ),
-     *     @OA\Parameter(
-     *         name="academic_period_id",
-     *         in="query",
+     *     @OA\RequestBody(
      *         required=true,
-     *         description="The ID of the academic period",
-     *         @OA\Schema(type="integer", example=33)
-     *     ),
-     *     @OA\Parameter(
-     *         name="report_card_id",
-     *         in="query",
-     *         required=true,
-     *         description="The ID of the report card",
-     *         @OA\Schema(type="integer", example=8)
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"academic_period_id", "institution_id", "education_grade_id", "institution_class_id", "student_id", "report_card_id"},
+     *             @OA\Property(property="academic_period_id", type="integer", example=34, description="The ID of the academic period"),
+     *             @OA\Property(property="institution_id", type="integer", example=6, description="The ID of the institution"),
+     *             @OA\Property(property="education_grade_id", type="integer", example=223, description="The ID of the education grade"),
+     *             @OA\Property(property="institution_class_id", type="integer", example=609, description="The ID of the institution class"),
+     *             @OA\Property(property="student_id", type="integer", example=13685, description="The ID of the student"),
+     *             @OA\Property(property="report_card_id", type="integer", example=12, description="The ID of the report card")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful.",
+     *         description="Report card Excel file generated successfully.",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Successful."),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=75),
-     *                 @OA\Property(property="file_name", type="string", example="P1002_Report Card_2382817301_Asher Ayers.xlsx"),
-     *                 @OA\Property(property="file_content", type="string", example="JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9UeXBlIC9QYWdlCi9QYXJlbnQgMSAwIFIKL01lZGlhQm94IFswIDAgNjIzLjYyMiAxMTMzLjg1OF0KL1RyaW1Cb3ggWzAuMDAwIDAuMDAwIDYyMy42MjIgMTEzMy44NThdCi9SZXNvdXJjZXMgMiAwIFIKL0dyb3VwIDw8IC9UeXBlIC9Hcm91cCAvUyAvVHJhbnNwYXJlbmN5IC9DUyAvRGV2aWNlUkdCID4+IAovQ29udGVudHMgNCAwIFIl")
+     *                 @OA\Property(property="file_name", type="string", example="ReportCard_13685.xlsx"),
+     *                 @OA\Property(property="file_url", type="string", example="https://example.com/storage/reports/ReportCard_13685.xlsx")
      *             )
      *         )
      *     ),
      *     @OA\Response(
+     *         response=400,
+     *         description="Invalid request."
+     *     ),
+     *     @OA\Response(
      *         response=404,
-     *         description="Unsuccessful."
+     *         description="Report card not found."
      *     )
      * )
      */
-    public function studentReportCardExcelDownload(Request $request, $institutionId, $classId, $studentId)
+
+    public function studentReportCardExcelDownload(ReportCardGenerateRequest $request, $institutionId, $classId, $studentId)
     {
         try {
             $params = $request->all();

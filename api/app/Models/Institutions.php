@@ -419,4 +419,11 @@ public function _swaggerDelete() {}
             }
         });
     }
+
+    //For POCOR-8252 Start...
+    public function area()
+    {
+        return $this->belongsTo(Areas::class, 'area_id', 'id');
+    }
+    //For POCOR-8252 End...
 }
