@@ -196,12 +196,14 @@
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$this->ControllerAction->paramsEncode(['id' => $obj->student_user_id])
+                                    // POCOR-9046 start
+									$this->ControllerAction->paramsEncode([
+                                        'student_id' => $obj->student_user_id,
+                                        'id' => $obj->student_user_id,
+                                        'institution_id' => $obj->institution_id,])
 								];
-
-								$newUrl = $this->ControllerAction->setQueryString($url, ['institution_id' => $obj->institution_id]);
-							?>
-							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
+    							?>
+							<?= $this->html->link($obj->student_openemis_no, $url) // POCOR-9046 end ?>
 						</td>
 						<td><?php
 							//START: POCOR-6623

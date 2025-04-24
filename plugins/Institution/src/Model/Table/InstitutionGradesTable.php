@@ -1044,6 +1044,9 @@ public function onUpdateFieldProgramme(Event $event, array $attr, $action, Serve
     if ($action == 'add') {
         $attr['empty'] = true;
         $attr['options'] = [];
+        $attr['type'] = 'chosenSelect';
+        $attr['attr']['multiple'] = false;
+        $attr['placeholder'] = __('Select Programme');
 
         if ($this->request->is(['post', 'put'])) {
             $levelId = $this->request->getData($this->aliasField('level'));

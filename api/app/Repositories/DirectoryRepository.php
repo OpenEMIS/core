@@ -46,7 +46,7 @@ class DirectoryRepository extends Controller
 
                 $c++;
             }
-            
+
             return $list;
         } catch (\Exception $e) {
             Log::error(
@@ -182,7 +182,7 @@ class DirectoryRepository extends Controller
             $resp['password'] = $out;
 
             return $resp;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to generate Password.',
@@ -216,13 +216,13 @@ class DirectoryRepository extends Controller
             }
             //For POCOR-8215/8216 end...
             return $list;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Contact Type List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return $this->sendErrorResponse('Contact Type List Not Found');
         }
     }
@@ -272,7 +272,7 @@ class DirectoryRepository extends Controller
                 $list['data'] = $fieldOptions->get()->toArray();
             }
             //For POCOR-8215/8216 end...
-            
+
             return $list;
         } catch (\Exception $e) {
             Log::error(
@@ -293,10 +293,10 @@ class DirectoryRepository extends Controller
             if($data){
                 $resp['data'] = $data;
             }
-            
+
 
             return $resp;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Field Option Data from DB',
@@ -342,7 +342,7 @@ class DirectoryRepository extends Controller
                 $list['data'] = $checkUser->get()->toArray();
             }
             //For POCOR-8215/8216 end...
-            
+
             if($list){
                 $list['user_exist'] = 1;
             } else {
@@ -391,18 +391,18 @@ class DirectoryRepository extends Controller
                     ->leftJoin('area_administratives', 'area_administratives.id', '=', 'security_users.address_area_id')
                     ->leftJoin('area_administratives as birthAreaAdministratives', 'birthAreaAdministratives.id', '=', 'security_users.birthplace_area_id')
                     ->where('security_users.super_admin', '!=', 1)
-                    ->select('security_users.*', 
-                        'genders.id as Genders_id', 
-                        'genders.name as Genders_name', 
-                        'identity_types.id as MainIdentityTypes_id', 
-                        'identity_types.name as MainIdentityTypes_name', 
-                        'nationalities.id as MainNationalities_id', 
-                        'nationalities.name as MainNationalities_name', 
-                        'area_administratives.name as area_name', 
-                        'area_administratives.code as area_code', 
-                        'birthAreaAdministratives.name as birth_area_name', 
-                        'birthAreaAdministratives.code as birth_area_code', 
-                        'user_identities.number as MainIdentityTypes_number', 
+                    ->select('security_users.*',
+                        'genders.id as Genders_id',
+                        'genders.name as Genders_name',
+                        'identity_types.id as MainIdentityTypes_id',
+                        'identity_types.name as MainIdentityTypes_name',
+                        'nationalities.id as MainNationalities_id',
+                        'nationalities.name as MainNationalities_name',
+                        'area_administratives.name as area_name',
+                        'area_administratives.code as area_code',
+                        'birthAreaAdministratives.name as birth_area_name',
+                        'birthAreaAdministratives.code as birth_area_code',
+                        'user_identities.number as MainIdentityTypes_number',
                     );
 
                 if (!empty($firstName)) {
@@ -458,18 +458,18 @@ class DirectoryRepository extends Controller
                     ->leftJoin('area_administratives', 'area_administratives.id', '=', 'security_users.address_area_id')
                     ->leftJoin('area_administratives as birthAreaAdministratives', 'birthAreaAdministratives.id', '=', 'security_users.birthplace_area_id')
                     ->where('security_users.super_admin', '!=', 1)
-                    ->select('security_users.*', 
-                        'genders.id as Genders_id', 
-                        'genders.name as Genders_name', 
-                        'identity_types.id as MainIdentityTypes_id', 
-                        'identity_types.name as MainIdentityTypes_name', 
-                        'nationalities.id as MainNationalities_id', 
-                        'nationalities.name as MainNationalities_name', 
-                        'area_administratives.name as area_name', 
-                        'area_administratives.code as area_code', 
-                        'birthAreaAdministratives.name as birth_area_name', 
-                        'birthAreaAdministratives.code as birth_area_code', 
-                        'user_identities.number as MainIdentityTypes_number', 
+                    ->select('security_users.*',
+                        'genders.id as Genders_id',
+                        'genders.name as Genders_name',
+                        'identity_types.id as MainIdentityTypes_id',
+                        'identity_types.name as MainIdentityTypes_name',
+                        'nationalities.id as MainNationalities_id',
+                        'nationalities.name as MainNationalities_name',
+                        'area_administratives.name as area_name',
+                        'area_administratives.code as area_code',
+                        'birthAreaAdministratives.name as birth_area_name',
+                        'birthAreaAdministratives.code as birth_area_code',
+                        'user_identities.number as MainIdentityTypes_number',
                     )
                     ->groupBy('security_users.id')
                     ->get()
@@ -499,18 +499,18 @@ class DirectoryRepository extends Controller
                     ->leftJoin('area_administratives', 'area_administratives.id', '=', 'security_users.address_area_id')
                     ->leftJoin('area_administratives as birthAreaAdministratives', 'birthAreaAdministratives.id', '=', 'security_users.birthplace_area_id')
                     ->where('security_users.super_admin', '!=', 1)
-                    ->select('security_users.*', 
-                        'genders.id as Genders_id', 
-                        'genders.name as Genders_name', 
-                        'identity_types.id as MainIdentityTypes_id', 
-                        'identity_types.name as MainIdentityTypes_name', 
-                        'nationalities.id as MainNationalities_id', 
-                        'nationalities.name as MainNationalities_name', 
-                        'area_administratives.name as area_name', 
-                        'area_administratives.code as area_code', 
-                        'birthAreaAdministratives.name as birth_area_name', 
-                        'birthAreaAdministratives.code as birth_area_code', 
-                        'user_identities.number as MainIdentityTypes_number', 
+                    ->select('security_users.*',
+                        'genders.id as Genders_id',
+                        'genders.name as Genders_name',
+                        'identity_types.id as MainIdentityTypes_id',
+                        'identity_types.name as MainIdentityTypes_name',
+                        'nationalities.id as MainNationalities_id',
+                        'nationalities.name as MainNationalities_name',
+                        'area_administratives.name as area_name',
+                        'area_administratives.code as area_code',
+                        'birthAreaAdministratives.name as birth_area_name',
+                        'birthAreaAdministratives.code as birth_area_code',
+                        'user_identities.number as MainIdentityTypes_number',
                     );
 
                     if (!empty($firstName)) {
@@ -544,7 +544,7 @@ class DirectoryRepository extends Controller
                     $security_users_result = $get_result_by_identity_users_result;
                 }
 
-                $totalCount = count($security_users_result);  
+                $totalCount = count($security_users_result);
 
             }
 
@@ -705,7 +705,7 @@ class DirectoryRepository extends Controller
                 $user_internal_search_result[] = [
                     'id' => $security_user_id,
                     'username' => $security_user['username'],
-                    'password' => $security_user['password'],
+//                    'password' => $security_user['password'], // POCOR-9053
                     'openemis_no' => $security_user['openemis_no'],
                     'first_name' => $security_user['first_name'],
                     'middle_name' => $security_user['middle_name'],
@@ -918,7 +918,7 @@ class DirectoryRepository extends Controller
                     $count++;
                 }
             }
-            
+
             return $custom_field;
         } catch (\Exception $e) {
             return false;
@@ -952,7 +952,7 @@ class DirectoryRepository extends Controller
                     )
                     ->get()
                     ->toArray();
-            
+
             $custom_field = array();
             $count = 0;
 
@@ -1013,14 +1013,14 @@ class DirectoryRepository extends Controller
             }
             //For POCOR-8215/8216 end...
 
-            
+
             return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Relationship Types from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return $this->sendErrorResponse('Relationship Types Not Found');
         }
     }
@@ -1081,7 +1081,7 @@ class DirectoryRepository extends Controller
                     $id_arr[$key] = $data['staff_position_grade_id'];
                 }
 
-                
+
 
                 if(count($id_arr) > 0){
                     if($id_arr[0] == '-1'){
@@ -1107,11 +1107,11 @@ class DirectoryRepository extends Controller
                     //For POCOR-8215/8216 end...
 
                 }
-                
+
             }
 
             return $list;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Staff position grades.',
@@ -1125,4 +1125,4 @@ class DirectoryRepository extends Controller
 }
 
 
-        
+

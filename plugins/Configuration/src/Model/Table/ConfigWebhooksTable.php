@@ -3,7 +3,7 @@ namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -156,7 +156,7 @@ class ConfigWebhooksTable extends ControllerActionTable
         $this->field('method', ['options' => $supportedMethod]);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('triggered_event', [
             'type' => 'chosenSelect',
@@ -201,5 +201,34 @@ class ConfigWebhooksTable extends ControllerActionTable
             $returnString = $returnString . ', ' . __($this->eventKeyOptions[$event->event_key]);
         }
         return ltrim($returnString, ', ');
+    }
+
+    /**
+     * POCOR-8994
+     *  
+     * It retrieves the associated WebhookEvents for the current webhook record 
+     using the `id` from the query string
+     * The event keys are then used to pre-select options in the triggered_event chosenSelect dropdown
+     * */
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $recordId = $queryString['id'];
+        $webhookEvents = TableRegistry::get('Configuration.WebhookEvents');
+        $record = $webhookEvents->find()
+            ->where([$webhookEvents->aliasField('webhook_id') => $recordId])
+            ->all(); 
+
+        $storeEvent = [];
+        foreach ($record as $val) {
+            $storeEvent[] = $val['event_key'];
+        }
+        $this->field('triggered_event', [
+                'type' => 'chosenSelect',
+                'options' => $this->eventKeyOptions,
+                'before' => 'description',
+                'attr' => ['required' => true,'value' =>  $storeEvent],
+               
+            ]);
     }
 }
