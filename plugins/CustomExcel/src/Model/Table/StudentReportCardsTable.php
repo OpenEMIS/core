@@ -1232,10 +1232,10 @@ class StudentReportCardsTable extends AppTable
                     "education_subject_name" => 'EducationSubjects.name',
                     "education_subject_id" => $SubjectStudents->aliasField('education_subject_id'),
                     "total_mark" => $SubjectStudents->aliasField('total_mark'),
-                   // "result_type" => $EducationGradeSubjects->aliasField('result_type'),
-                    //"requirement" => $EducationGradeSubjects->aliasField('requirement'),
+                    "result_type" => $EducationGradeSubjects->aliasField('result_type'),
+                    "requirement" => $EducationGradeSubjects->aliasField('requirement'),
                     "start_date" => $InstitutionStudents->aliasField('start_date'),
-                   // "outcome_result" => $SubjectStudents->aliasField('outcome_result'),
+                    "outcome_result" => $SubjectStudents->aliasField('outcome_result'),
                 ])
                 ->join([
                     'EducationSubjects' => [
@@ -1295,12 +1295,8 @@ class StudentReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
                     $SubjectStudents->aliasField('institution_id') => $params['institution_id'],
                     'StudentStatuses.id IN' => [1, 6, 7, 8]
-                ])
+                ])->group([$SubjectStudents->aliasField('education_subject_id')])
                 ->toArray();
-
-
-
-
             $assessment_ids = [];
             $institution_subject_student = [];
             if (!empty($subjectObj)) {
