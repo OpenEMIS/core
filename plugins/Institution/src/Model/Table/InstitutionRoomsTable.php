@@ -136,7 +136,7 @@ class InstitutionRoomsTable extends ControllerActionTable
                         // Skip validation when datatype is 'copy'
                         return true;
                     }
-            
+
                     // Proceed with validation when datatype is not 'copy'
                     return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_room_size', $context);
                 },
@@ -153,7 +153,10 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
-            ->notEmpty('room_type_id');
+            ->notEmpty('room_type_id')
+            ->notEmpty('infrastructure_ownership_id')
+            ->notEmpty('infrastructure_condition_id')
+            ->notEmpty('accessibility');
     }
 
     public function validationSavingByAssociation(Validator $validator)
