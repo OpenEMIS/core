@@ -70,7 +70,7 @@ class SurveysReportTable extends AppTable
             $instArr[] = $institutionID;
         }
 
-        $repeaterListCountResult = $this->checkSurveyExistanceInRepeater($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion);
+        $repeaterListCountResult = $this->checkSurveyExistanceInRepeater($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion); // POCOR-9087
         $staffListCountResult = $this->checkSurveyExistanceInStaff($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion);
         $studentListCountResult = $this->checkSurveyExistanceInStudent($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion);
 
@@ -900,6 +900,7 @@ class SurveysReportTable extends AppTable
         return $idArray;
     }
 
+    // POCOR-9087
     public function checkSurveyExistanceInRepeater($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
 
         $childSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
@@ -935,7 +936,7 @@ class SurveysReportTable extends AppTable
         return $StaffSurveysRes;    }
 
     public function checkSurveyExistanceInStaff($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
-        $childSurveys = TableRegistry::get('Staff.StaffSurveys');
+        $childSurveys = TableRegistry::get('Staff.StaffSurveys'); // POCOR-9087
         $surveySectionId = "$surveySection";
         $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
         $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
@@ -969,7 +970,7 @@ class SurveysReportTable extends AppTable
     }
 
     public function checkSurveyExistanceInStudent($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
-        $childSurveys = TableRegistry::get('Student.StudentSurveys');
+        $childSurveys = TableRegistry::get('Student.StudentSurveys'); // POCOR-9087
         $surveySectionId = "$surveySection";
         $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
         $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
