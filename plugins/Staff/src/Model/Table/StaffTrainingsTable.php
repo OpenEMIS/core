@@ -158,11 +158,12 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Courses');
     }
 
-    //POCOR-9018
+    //POCOR-9018, 9049
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $connection = ConnectionManager::get('default');
         $connection->execute('SET foreign_key_checks = 0');
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $this->getStaffID()]);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -198,18 +199,6 @@ class StaffTrainingsTable extends ControllerActionTable
             'attr' => ['label' => __('Attachment')]
         ]);
 
-    }
-
-    /* POCOR-9049
-        * This function is used to set the staff_id field as hidden and set its value
-        * to the current staff id.
-        *
-        * @param Event $event The event that triggered the action
-        * @param ArrayObject $extra Extra data passed to the event
-        */
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('staff_id', ['type' => 'hidden', 'value' => $this->getStaffID()]);
     }
 
     public function getModelAlertData($threshold)
