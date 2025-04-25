@@ -487,7 +487,7 @@ class SurveysReportTable extends AppTable
             ];
 
             $SurveyTblColumns = self::getDynamicTableInstance('survey_table_columns');
-            $surveyFormsQuestion = self::getDynamicTableInstance('survey_form_questions');
+            $surveyFormsQuestion = self::getDynamicTableInstance('survey_forms_questions');
             $SurveyTblColumnRes = $SurveyTblColumns
                 ->find()
                 ->select([
