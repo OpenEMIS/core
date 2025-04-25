@@ -146,8 +146,8 @@ class SurveysReportTable extends AppTable
     public function checkSurveyExistanceInStaff($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
         $surveySectionId = "$surveySection";
         $StaffSurveys = self::getDynamicTableInstance('institution_staff_surveys');
-        $surveySection = self::getDynamicTableInstance('survey_form_questions');
-        $SurveyFormsQuestions = self::getDynamicTableInstance('survey_form_questions');
+        $surveySection = self::getDynamicTableInstance('survey_forms_questions');
+        $SurveyFormsQuestions = self::getDynamicTableInstance('survey_forms_questions');
         $surveyQuestion = self::getDynamicTableInstance('survey_questions');
         $surveySectionData = $surveySection->find()
             ->where([
@@ -184,8 +184,8 @@ class SurveysReportTable extends AppTable
     public function checkSurveyExistanceInStudent($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
         $StudentSurveys = self::getDynamicTableInstance('institution_student_surveys');
         $surveySectionId = "$surveySection";
-        $surveySection = self::getDynamicTableInstance('survey_form_questions');
-        $SurveyFormsQuestions = self::getDynamicTableInstance('survey_form_questions');
+        $surveySection = self::getDynamicTableInstance('survey_forms_questions');
+        $SurveyFormsQuestions = self::getDynamicTableInstance('survey_forms_questions');
         $surveyQuestion = self::getDynamicTableInstance('survey_questions');
         $surveySectionData = $surveySection->find()
             ->where([
