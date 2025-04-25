@@ -243,6 +243,9 @@ class SurveysReportTable extends AppTable
         $isNotGeneralArray = (count($repeaterSurveyArray) > 0) || (count($staffSurveyArray) > 0) || (count($studentSurveyArray) > 0);
         $isGeneralArray = !$isNotGeneralArray;
         Log::debug('Is General Array: '  .$isGeneralArray);
+        $tableQuestionId = $requestData->table_question;
+        Log::debug('Table Request Data: ' . print_r($requestData, true));
+
         if($isNotGeneralArray){
             foreach ($fields as $key => $field) {
                 if ($field['field'] == 'survey_form_id') {
@@ -427,8 +430,6 @@ class SurveysReportTable extends AppTable
             }
         }
         if($isGeneralArray){ //POCOR-8525 Ends
-            $tableQuestionId = $requestData->table_question;
-            Log::debug('Table Request Data: ' . print_r($requestData, true));
             foreach ($fields as $key => $field) {
                 if ($field['field'] == 'survey_form_id') {
                     unset($fields[$key]);
