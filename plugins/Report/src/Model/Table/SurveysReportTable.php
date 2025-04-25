@@ -5,7 +5,6 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
@@ -394,6 +393,7 @@ class SurveysReportTable extends AppTable
         }
         if($isGeneralArray){ //POCOR-8525 Ends
             $tableQuestionId = $requestData->table_question;
+            Log::debug('Table Request Data: ' . print_r($requestData, true));
             foreach ($fields as $key => $field) {
                 if ($field['field'] == 'survey_form_id') {
                     unset($fields[$key]);
@@ -486,8 +486,8 @@ class SurveysReportTable extends AppTable
                 'label' => __('Survey Question Name')
             ];
 
-            $SurveyTblColumns = self::getDynamicTableInstance('Survey.SurveyTableColumns');
-            $surveyFormsQuestion = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
+            $SurveyTblColumns = self::getDynamicTableInstance('survey_table_columns');
+            $surveyFormsQuestion = self::getDynamicTableInstance('survey_form_questions');
             $SurveyTblColumnRes = $SurveyTblColumns
                 ->find()
                 ->select([
@@ -499,9 +499,9 @@ class SurveysReportTable extends AppTable
                     [
                         $surveyFormsQuestion->aliasField('survey_question_id') . ' = '. $SurveyTblColumns->aliasField('survey_question_id')
                     ])
-                ->where([$surveyFormsQuestion->aliasField('survey_question_id') => $tableQuestionId])
+                ->where([$SurveyTblColumns->aliasField('survey_question_id') => $tableQuestionId])
                 ->toArray();
-            Log::debug('Survey Table Column Result: '.print_r($SurveyTblColumnRes, true));
+            Log::debug('Survey Table Column Result: q ' . $tableQuestionId . ': ' .  print_r($SurveyTblColumnRes, true));
             if(!empty($SurveyTblColumnRes)){
                 foreach ($SurveyTblColumnRes as $S_key => $S_val) {
                     if($S_val->survey_column_order == 1){
@@ -1452,6 +1452,7 @@ class SurveysReportTable extends AppTable
                 return $row;
             });
         });
+        return $query;
     }
 
 }
