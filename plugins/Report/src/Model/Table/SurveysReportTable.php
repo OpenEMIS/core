@@ -80,9 +80,16 @@ class SurveysReportTable extends AppTable
         Log::debug('Staff List Count Result: '.count($staffSurveyArray));
         Log::debug('Student List Count Result: '.count($studentSurveyArray));
         // if exists
-        if((count($repeaterSurveyArray) > 0)
+        $isRepeaterSurvey = (count($repeaterSurveyArray) > 0)
             && ((count($staffSurveyArray) <= 0)
-                && (count($studentSurveyArray) <= 0))){
+                && (count($studentSurveyArray) <= 0));
+        $isStaffSurvey = (count($staffSurveyArray) > 0)
+            && ((count($repeaterSurveyArray) <= 0)
+                && (count($studentSurveyArray) <= 0));
+        $isStudentSurvey = (count($studentSurveyArray) > 0)
+            && ((count($repeaterSurveyArray) <= 0)
+                && (count($staffSurveyArray) <= 0));
+        if($isRepeaterSurvey){
             $query = $this->getRepeaterQuery($institutionID,
                 $institutions,
                 $condition,
@@ -96,22 +103,15 @@ class SurveysReportTable extends AppTable
                 $query,
                 $surveySection,
                 $tableQuestion);
-        }else if((count($staffSurveyArray) > 0)
-            && ((count($repeaterSurveyArray) <= 0)
-                && (count($studentSurveyArray) <= 0))){
+        } else if ($isStaffSurvey) {
             $query = $this->getStaffQuery($institutionID, $institutions, $condition, $areaId, $selectedArea, $institutionStatus, $institutionStatuses, $academicPeriodId, $surveyForms, $surveyFormId, $query, $surveySection, $tableQuestion);
-        }else if((count($studentSurveyArray) > 0)
-            && ((count($repeaterSurveyArray) <= 0)
-                && (count($staffSurveyArray) <= 0)))
-        {
+        } else if ($isStudentSurvey) {
             $query = $this->getStudentQuery($institutionID, $institutions, $condition, $areaId, $selectedArea, $institutionStatus, $institutionStatuses, $academicPeriodId, $surveyForms, $surveyFormId, $query, $surveySection, $tableQuestion);
-        }else{//POCOR-8525 ends
-            //not exists
-            //POCOR-8043 - Starts
+        } else {//POCOR-8525 ends
             $query = $this->generalQuery($surveyForms, $groupBy, $institutions, $areas, $institutionID, $condition, $areaId, $selectedArea, $institutionStatus, $institutionStatuses, $academicPeriodId, $tableQuestion, $query, $areaLevels);
-            //POCOR-8043 - Ends
         }
     }
+
 
     public function getChildren($id, $idArray) {
         $Areas = self::getDynamicTableInstance('Area.Areas');
@@ -242,6 +242,7 @@ class SurveysReportTable extends AppTable
         //if record exists
         $isNotGeneralArray = (count($repeaterSurveyArray) > 0) || (count($staffSurveyArray) > 0) || (count($studentSurveyArray) > 0);
         $isGeneralArray = !$isNotGeneralArray;
+        Log::debug('Is General Array: '  .$isGeneralArray);
         if($isNotGeneralArray){
             foreach ($fields as $key => $field) {
                 if ($field['field'] == 'survey_form_id') {
@@ -338,11 +339,11 @@ class SurveysReportTable extends AppTable
             }
 
             $surveySectionId = "$requestData->survey_section";
-            $surveySection = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
+            $surveySection = self::getDynamicTableInstance('survey_forms_questions');
             $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
 
-            $SurveyFormsQuestions = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
-            $surveyQuestion = self::getDynamicTableInstance('Survey.SurveyQuestions');
+            $SurveyFormsQuestions = self::getDynamicTableInstance('survey_forms_questions');
+            $surveyQuestion = self::getDynamicTableInstance('survey_questions');
             $SurveyFormsQuestionsData = $SurveyFormsQuestions->find()
                 ->select([
                     'id' => $SurveyFormsQuestions->aliasField('id'),
@@ -351,10 +352,10 @@ class SurveysReportTable extends AppTable
                     'surveyQuestion_id' => $surveyQuestion->aliasField('id'),
                     'surveyQuestion_name' => $surveyQuestion->aliasField('name'),
                     'surveyQuestion_field_type' => $surveyQuestion->aliasField('field_type'),
-                    'surveyQuestion_parmas' => $surveyQuestion->aliasField('params'),
+                    'surveyQuestion_params' => $surveyQuestion->aliasField('params'),
                     'surveyQuestion_survey_form_id' => 'JSON_UNQUOTE(JSON_EXTRACT(' . $surveyQuestion->aliasField('params') . ", '$.survey_form_id'))",
                 ])
-                ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
+                ->leftJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
                 [
                     $surveyQuestion->aliasField('id') . ' = '. $SurveyFormsQuestions->aliasField('survey_question_id')
                 ])
@@ -386,6 +387,40 @@ class SurveysReportTable extends AppTable
                             'field' => $this->_dynamicFieldName.'_'.$ins_key,
                             'type' => 'string',
                             'label' => __($ins_val->name)
+                        ];
+                    }
+                }
+            }
+            $SurveyTblColumns = self::getDynamicTableInstance('survey_table_columns');
+            $surveyFormsQuestion = self::getDynamicTableInstance('survey_forms_questions');
+            $SurveyTblColumnRes = $SurveyTblColumns
+                ->find()
+                ->select([
+                    'survey_column_id' => $SurveyTblColumns->aliasField('id'),
+                    'survey_column_name' => $SurveyTblColumns->aliasField('name'),
+                    'survey_column_order' => $SurveyTblColumns->aliasField('order')
+                ])
+                ->LeftJoin([$surveyFormsQuestion->getAlias() => $surveyFormsQuestion->getTable()],
+                    [
+                        $surveyFormsQuestion->aliasField('survey_question_id') . ' = '. $SurveyTblColumns->aliasField('survey_question_id')
+                    ])
+                ->where([$SurveyTblColumns->aliasField('survey_question_id') => $tableQuestionId])
+                ->toArray();
+            if(!empty($SurveyTblColumnRes)){
+                foreach ($SurveyTblColumnRes as $S_key => $S_val) {
+                    if($S_val->survey_column_order == 1){
+                        $fields[] = [
+                            'key' => 'question_row',
+                            'field' =>'question_row',
+                            'type' => 'string',
+                            'label' => $S_val->survey_column_name
+                        ];
+                    }else{
+                        $fields[] = [
+                            'key' => '',
+                            'field' => "'".$S_val->survey_column_name."'",
+                            'type' => 'string',
+                            'label' => $S_val->survey_column_name
                         ];
                     }
                 }
@@ -501,7 +536,6 @@ class SurveysReportTable extends AppTable
                     ])
                 ->where([$SurveyTblColumns->aliasField('survey_question_id') => $tableQuestionId])
                 ->toArray();
-            Log::debug('Survey Table Column Result: q ' . $tableQuestionId . ': ' .  print_r($SurveyTblColumnRes, true));
             if(!empty($SurveyTblColumnRes)){
                 foreach ($SurveyTblColumnRes as $S_key => $S_val) {
                     if($S_val->survey_column_order == 1){
@@ -703,7 +737,7 @@ class SurveysReportTable extends AppTable
                         'surveyQuestion_id' => $surveyQuestion->aliasField('id'),
                         'surveyQuestion_name' => $surveyQuestion->aliasField('name'),
                         'surveyQuestion_field_type' => $surveyQuestion->aliasField('field_type'),
-                        'surveyQuestion_parmas' => $surveyQuestion->aliasField('params'),
+                        'surveyQuestion_params' => $surveyQuestion->aliasField('params'),
                         'surveyQuestion_survey_form_id' => 'JSON_UNQUOTE(JSON_EXTRACT(' . $surveyQuestion->aliasField('params') . ", '$.survey_form_id'))",
                     ])
                     ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
@@ -940,7 +974,7 @@ class SurveysReportTable extends AppTable
                         'surveyQuestion_id' => $surveyQuestion->aliasField('id'),
                         'surveyQuestion_name' => $surveyQuestion->aliasField('name'),
                         'surveyQuestion_field_type' => $surveyQuestion->aliasField('field_type'),
-                        'surveyQuestion_parmas' => $surveyQuestion->aliasField('params'),
+                        'surveyQuestion_params' => $surveyQuestion->aliasField('params'),
                         'surveyQuestion_survey_form_id' => 'JSON_UNQUOTE(JSON_EXTRACT(' . $surveyQuestion->aliasField('params') . ", '$.survey_form_id'))",
                     ])
                     ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
@@ -1179,7 +1213,7 @@ class SurveysReportTable extends AppTable
                         'surveyQuestion_id' => $surveyQuestion->aliasField('id'),
                         'surveyQuestion_name' => $surveyQuestion->aliasField('name'),
                         'surveyQuestion_field_type' => $surveyQuestion->aliasField('field_type'),
-                        'surveyQuestion_parmas' => $surveyQuestion->aliasField('params'),
+                        'surveyQuestion_params' => $surveyQuestion->aliasField('params'),
                         'surveyQuestion_survey_form_id' => 'JSON_UNQUOTE(JSON_EXTRACT(' . $surveyQuestion->aliasField('params') . ", '$.survey_form_id'))",
                     ])
                     ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
