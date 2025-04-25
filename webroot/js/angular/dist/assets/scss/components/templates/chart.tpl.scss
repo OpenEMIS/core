@@ -1,0 +1,325 @@
+@charset "UTF-8";
+
+@import "../../general/variables.scss";
+@import "../../general/classes.scss";
+
+%chart {
+    $defaultHeight: 300px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+    padding: $padding10;
+    border: $lightGreyBorder;
+    font-size: $bodyTextSize;
+
+    &.kdx-no-border {
+        border: none;
+    }
+
+    &.kdx-fixed-height {
+        height: $defaultHeight;
+
+        .kdx-chart-container {
+            min-height: unset;
+        }
+    }
+
+    %title-config {
+        &.left {
+            text-align: left;
+
+            .rtl & {
+                text-align: right;
+            }
+        }
+
+        &.right {
+            text-align: right;
+
+            .rtl & {
+                text-align: left;
+            }
+        }
+
+        &.justify {
+            text-align: justify;
+        }
+    }
+
+    .kdx-header-container {
+        margin-bottom: $margin10;
+        text-align: center;
+
+        .kdx-chart-title {
+            @extend %title-config;
+
+            font-size: $textSizeM;
+        }
+
+        .kdx-chart-subtitle {
+            @extend %title-config;
+
+            font-size: $textSizeS;
+        }
+    }
+
+    .kdx-chart-container {
+        flex: 1 0 auto;
+        min-height: $defaultHeight;
+    }
+
+    .kdx-charts-wrapper {
+        height: inherit;
+        display: flex;
+        flex-direction: column;
+
+        &.middle {
+            &.left {
+                flex-direction: row-reverse;
+            }
+            &.right {
+                flex-direction: row;
+            }
+        }
+
+        &.top {
+            flex-direction: column-reverse;
+        }
+
+        &.legend-float {
+            position: relative;
+        }
+
+        .kdx-charts-main {
+            height: inherit;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+    }
+
+    .kdx-legend-container {
+        display: block; // display: flex;
+        &.center {
+            align-self: center;
+        }
+
+        &.right {
+            align-self: flex-end;
+
+            &.legend-float {
+                right: 0;
+                left: unset;
+            }
+
+            .kdx-legends {
+                margin-left: $margin10;
+
+                .rtl & {
+                    margin-right: $margin10;
+                    margin-left: unset;
+                }
+            }
+        }
+
+        &.left {
+            align-self: flex-start;
+
+            &.legend-float {
+                left: 0;
+                right: unset;
+            }
+
+            .kdx-legends {
+                margin-right: $margin10;
+
+                .rtl & {
+                    margin-right: unset;
+                    margin-left: $margin10;
+                }
+            }
+        }
+
+        &.middle {
+            align-self: center;
+            max-width: 300px;
+
+            &.center {
+                position: absolute;
+                bottom: 50%;
+            }
+
+            &.legend-float {
+                bottom: 50%;
+                top: 50%;
+            }
+        }
+
+        &.top {
+
+            &.legend-float {
+                top: 0;
+                bottom: unset;
+            }
+
+            .kdx-legends {
+                margin-bottom: $margin10;
+                margin-top: unset;
+            }
+        }
+
+        &.legend-float {
+            position: absolute;
+            display: block;
+            &.bottom {
+                bottom: 0;
+                top: unset;
+            }
+        }
+
+        &:after {
+            content: ".";
+            display: block;
+            clear: both;
+            visibility: hidden;
+            line-height: 0;
+            height: 0;
+        }
+
+        .kdx-legends {
+            float: left;
+            margin-top: $margin10;
+            border-style: solid;
+
+            >.kdx-legend-title-container {
+                text-align: center;
+                overflow: hidden;
+                display: flex;
+                font-size: $textSizeS;
+                font-weight: bold;
+
+                &.center {
+                    justify-content: center;
+                }
+
+                &.left {
+                    justify-content: flex-start;
+                    text-align: unset;
+                }
+
+                &.right {
+                    justify-content: flex-end;
+                    text-align: unset;
+                }
+
+                .kdx-legend-title {
+                    font-size: inherit;
+                    font-weight: inherit;
+                    word-wrap: break-word;
+                }
+            }
+
+            >.kdx-legend {
+                clear: both;
+                float: left;
+                display: flex;
+                flex-wrap: wrap;
+
+                &.vertical {
+                    flex-direction: column;
+                }
+
+                &.legend-scroll {
+                    overflow-y: auto;
+                    max-height: 80px;
+                    min-height: 25px;
+                }
+
+                &.vertical.legend-scroll {
+                    flex-wrap: unset;
+                }
+
+                >.kdx-legend-item {
+                    cursor: pointer;
+
+                    flex: 0 0 auto;
+                    padding-right: $padding10;
+                    max-width: 100%;
+                    position: relative;
+
+                    .rtl & {
+                        padding-left: $padding10;
+                        padding-right: $noPadding;
+                    }
+
+                    .kdx-legend-label {
+                        height: inherit;
+                        order: 2;
+                        padding: $padding5 $noPadding;
+                        overflow: hidden;
+                        max-width: 100%;
+                        margin-left: $margin25;
+
+                        &.label-lightgray {
+                            color: $lightGreyColor;
+                        }
+
+                        .rtl & {
+                            margin-right: $margin25;
+                            margin-left: unset;
+                        }
+
+                        .kdx-label-text {
+                            word-wrap: break-word;
+                            width: 100%;
+                        }
+                    }
+
+                    .kdx-legend-marker {
+                        position: absolute;
+                        order: 1;
+                        width: 25px;
+                        height: 25px;
+                        top: 0;
+                        left: 0;
+
+                        .rtl & {
+                            right: 0;
+                            left: unset;
+                        }
+                    }
+                }
+
+                .rtl & {
+                    float: right;
+                }
+            }
+
+            .rtl & {
+                float: right;
+            }
+        }
+    }
+
+    .kdx-charts-footer {
+
+        // &.clusterChartMapFooter {
+        //     margin-top: 10px;
+        // }
+        .kdx-charts-bottom-label,
+        .kdx-charts-foot-note {
+            @extend %title-config;
+
+            text-align: center;
+            font-size: $textSizeS;
+        }        
+    }
+
+    .kdx-chart-title,
+    .kdx-chart-subtitle,
+    .kdx-charts-bottom-label,
+    .kdx-charts-foot-note {
+        word-wrap: break-word;
+    }
+}

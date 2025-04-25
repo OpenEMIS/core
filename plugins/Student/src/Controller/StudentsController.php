@@ -557,23 +557,25 @@ class StudentsController extends AppController
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->getAttribute('params')['action'];
         $institutionID = $this->getInstitutionID();
-        $activeInstitution = $this->Institutions->get($institutionID);
-        $institutionName = $activeInstitution->name;
+        if ($institutionID) { // POCOR-9061
+            $activeInstitution = $this->Institutions->get($institutionID);
+            $institutionName = $activeInstitution->name;
 
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionID, 'institution_id' => $institutionID]);
-        $this->Navigation->addCrumb($institutionName,
-            ['plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'dashboard',
-                'institutionId' => $encodedInstitutionId,
-                $encodedInstitutionId]);
-        $this->Navigation->addCrumb('Students',
-            ['plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'Students',
-                0 => 'index',
-                1 => $encodedInstitutionId
-            ]);
+            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionID, 'institution_id' => $institutionID]);
+            $this->Navigation->addCrumb($institutionName,
+                ['plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'dashboard',
+                    'institutionId' => $encodedInstitutionId,
+                    $encodedInstitutionId]);
+            $this->Navigation->addCrumb('Students',
+                ['plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Students',
+                    0 => 'index',
+                    1 => $encodedInstitutionId
+                ]);
+        } // POCOR-9061
         $header = __('Students');
         $checkStudentId = $this->getStudentID();
 
@@ -762,11 +764,13 @@ class StudentsController extends AppController
         }*/
 
         $institutionID = $this->getInstitutionID();
-        if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $studentID])) {
-            $entity = $this->StudentUser->get($studentID);
-            $name = $entity->name;
-        }
-        if ($studentID) {
+
+
+        if ($studentID) { // POCOR-9061
+            if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $studentID])) {
+                $entity = $this->StudentUser->get($studentID);
+                $name = $entity->name;
+            }
             $header = '';
             //$userId = $session->read('Student.Students.id');
             // POCOR-8014-n
