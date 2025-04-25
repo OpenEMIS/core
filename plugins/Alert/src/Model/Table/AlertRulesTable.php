@@ -533,7 +533,24 @@ class AlertRulesTable extends ControllerActionTable
                         }
                         //POCOR-7462 end
 
-
+                        if($thresholdConfig[$field]['options']=="StudentAdmission.workflow_steps"){
+                            $Model = TableRegistry::get('Workflow.WorkflowSteps');
+                            $Workflows = TableRegistry::get('Workflow.Workflows');
+                            $WorkflowsData = $Workflows->find()
+                                    ->where(['code' => 'STUDENT-ADMISSION-1001'])
+                                    ->first();
+                            $ModelData = $Model->find()
+                                    ->where(['workflow_id' => $WorkflowsData->workflow_model_id, 'name' => 'Approved'])
+                                    ->first();
+                            $ModelDataId = $ModelData->id;
+                            if (is_array($value)) {
+                                $entity->{$field} = [];
+                                // foreach ($value as $modelId) {
+                                    $entity->{$field}[] = $Model->get($ModelDataId);
+                                // }
+                            }
+                        }
+                        
                     }
                 }
             }
