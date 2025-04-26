@@ -1442,6 +1442,9 @@ class ImportBehavior extends Behavior
 
     public function getExcelLabel($module, $columnName)
     {
+        if (empty($module) || empty($columnName)) { // POCOR-9080 in case somebody forget to add field name
+            return '';
+        }
         $translatedCol = '';
         if ($module instanceof Table) {
             $module = $module->getAlias();
@@ -1744,7 +1747,7 @@ class ImportBehavior extends Behavior
                         $excelLookupModel = TableRegistry::get($registryAlias);
                         $this->directTables[$registryAlias] = ['excelLookupModel' => $excelLookupModel];
                     }
-                    
+
                 }
                 $excludeValidation = false;
                 if (!empty($cellValue)) {
@@ -1873,7 +1876,7 @@ class ImportBehavior extends Behavior
         return $rowPass;
     }
 
-    
+
 
     protected function getFormattedCellValue($cell)
     {
