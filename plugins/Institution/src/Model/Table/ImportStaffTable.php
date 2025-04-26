@@ -12,10 +12,11 @@ use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use Cake\Http\ServerRequest;
 use DateTimeInterface;
 use PHPExcel_Worksheet;
+use Cake\Log\Log; // POCOR-9080
+use Cake\I18n\FrozenDate; // POCOR-9080
 
 class ImportStaffTable extends AppTable
 {
@@ -59,12 +60,12 @@ class ImportStaffTable extends AppTable
 
     public function beforeAction($event)
     {
-        $session = $this->request->getSession();
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getQueryString('institution_id'); // POCOR-9080
+        if($institutionId && is_numeric($institutionId) && $institutionId > 0) {
             $this->_institution = $this->Institutions->get($institutionId);
         } else {
             $this->_institution = false;
+
         }
     }
 
@@ -89,27 +90,35 @@ class ImportStaffTable extends AppTable
 
     public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
     {
+        $institutionId = $this->getQueryString('institution_id'); // POCOR-9080
+        $this->_institution = $this->Institutions->get($institutionId); // POCOR-9080
         $columns = new Collection($columns);
         $filtered = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'staff_id';
         });
         $staffIdIndex = key($filtered->toArray());
         $staffId = $sheet->getCellByColumnAndRow($staffIdIndex, $row)->getValue();
-
+        $error = false; // POCOR-9080
         if (in_array($staffId, $importedUniqueCodes->getArrayCopy())) {
             $rowInvalidCodeCols['staff_id'] = $this->getExcelLabel('Import', 'duplicate_unique_key');
-            return false;
+            $error = true;
         }
 
-        $tempRow['entity'] = $this->InstitutionStaff->newEntity([]);
-        $tempRow['start_year'] = false;
+//        $tempRow['start_year'] = false;
         $tempRow['staff_status_id'] = 1;
         $tempRow['end_date'] = '';
         $tempRow['end_year'] = '';
-        $tempRow['institution_id'] = ($this->_institution instanceof AppTable) ? $this->_institution->id : false;
-        // $tempRow['security_group_user_id'] = false;
-        // Optional fields which will be validated should be set with a default value on initialisation
+        // POCOR-9080 start
+        $tempRow['institution_id'] = $institutionId; // ($this->_institution instanceof AppTable) ? $this->_institution->id : false;
         $tempRow['FTE'] = 0;
+        $tempRow['entity'] = $this->InstitutionStaff->newEntity($tempRow->getArrayCopy()); // POCOR-9080
+        if ($error) {
+            Log::debug('ImportStaffTable::onImportCheckUnique() tempRow has errors: ' . print_r($tempRow, true));
+            return false;
+        } else {
+            return true;
+        }
+        // POCOR-9080 end
     }
 
     public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
@@ -218,7 +227,7 @@ class ImportStaffTable extends AppTable
                         'StaffPositionTitles.name',
                         'StaffPositionTitles.type',
                         'Statuses.name',
-                        'is_homeroom' =>'Staff.is_homeroom',//POCOR-7260
+//                        'is_homeroom' =>'Staff.is_homeroom',//POCOR-7260
                        // $lookedUpTable->aliasField('is_homeroom'), //POCOR-7260
                         'total_fte' => $modelData->func()->sum('InstitutionStaff.FTE')
                     ])
@@ -250,12 +259,16 @@ class ImportStaffTable extends AppTable
         $typeLabel = $this->getExcelLabel($lookedUpTable, 'type');
         $nameLabel = $this->getExcelLabel($lookedUpTable, 'name');
         $statusLabel = $this->getExcelLabel($lookedUpTable, 'status');
-        // $isHomeroomLabel = $this->getExcelLabel($lookedUpTable, 'is_homeroom');
+//         $isHomeroomLabel = $this->getExcelLabel($lookedUpTable, 'is_homeroom');
 
         $yesNoOptions = $this->getSelectOptions('general.yesno');
 
         $data[$columnOrder]['lookupColumn'] = 1;
-        $data[$columnOrder]['data'][] = [$codeLabel,$nameLabel, $typeLabel, $statusLabel, $isHomeroomLabel];
+        // POCOR-9080 start
+        $data[$columnOrder]['data'][] = [$codeLabel,$nameLabel, $typeLabel, $statusLabel
+//            , $isHomeroomLabel
+        ];
+        // POCOR-9080 end
         if (!empty($modelData)) {
             foreach($modelData as $row) {
                 $positionTitleType = $row->staff_position_title->type;
@@ -268,8 +281,8 @@ class ImportStaffTable extends AppTable
                     $row->position_no,
                     $row->staff_position_title->name,
                     $positionTitleType,
-                    $row->status->name
-                    // $yesNoOptions[$row->is_homeroom]
+                    $row->status->name,
+//                    $yesNoOptions[$row->is_homeroom]
                 ];
             }
         }
@@ -282,88 +295,118 @@ class ImportStaffTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        if (empty($tempRow['staff_id'])) {
-            return false;
+        // POCOR-9080 start
+        $tempRow = $tempRow->getArrayCopy();
+        $staff_id = $tempRow['staff_id'];
+        $error = false;
+        if (empty($staff_id)) {
+            $error = true;
+//            return false;
         }
         try {
-            $staff = $this->Staff->get($tempRow['staff_id']);
+            $staff = $this->Staff->get($staff_id);
         } catch (RecordNotFoundException $e) {
             $rowInvalidCodeCols['staff_id'] = __('No such staff in the system');
-            return false;
+            $error = true;
         } catch (InvalidPrimaryKeyException $e) {
             $rowInvalidCodeCols['staff_id'] = __('Invalid OpenEMIS ID');
-            return false;
+            $error = true;
+        } catch (\Exception $e) {
+            $rowInvalidCodeCols['staff_id'] = __('Error: ') . $e->getMessage();
+            $error = true;
         }
         if (empty($staff->is_staff)) {
             $rowInvalidCodeCols['staff_id'] = __('This personnel is not a staff');
-            return false;
+            $error = true;
         }
-        $tempRow['staff_name'] = $tempRow['staff_id'];
+        $tempRow['staff_name'] = $staff_id;
 
         //logic to check whether staff tried to be imported from one institution to another.
-        $staffRecord = $this->InstitutionStaff
-            ->find()
-            ->select([
-                'institution_id'
-            ])
-            ->matching('StaffStatuses', function ($q) {
-                return $q->where(['StaffStatuses.code' => 'ASSIGNED']);
-            })
-            ->where([$this->InstitutionStaff->aliasField('staff_Id') => $tempRow['staff_id']])
-            ->distinct() //to cater when staff have few position on same institution
-            ->toArray();
+        if (is_numeric($staff_id)) {
+            $staffRecord = $this->InstitutionStaff
+                ->find()
+                ->select([
+                    'institution_id'
+                ])
+                ->matching('StaffStatuses', function ($q) {
+                    return $q->where(['StaffStatuses.code' => 'ASSIGNED']);
+                })
+                ->where([$this->InstitutionStaff->aliasField('staff_Id') => $staff_id])
+                ->distinct() //to cater when staff have few position on same institution
+                ->toArray();
 
-        //the result of institution_id can be array of multiple institution where the staff is assigned to
-        foreach ($staffRecord as $key => $value) {
-            $institutionList[] = $staffRecord[$key]['institution_id'];
+            //the result of institution_id can be array of multiple institution where the staff is assigned to
+            foreach ($staffRecord as $key => $value) {
+                $institutionList[] = $staffRecord[$key]['institution_id'];
+            }
+
+            if ((isset($institutionList)) && (!is_numeric(array_search($this->_institution->id, $institutionList)))) { //if the current session not on the institution list on where the staff assigned to.
+                $rowInvalidCodeCols['staff_id'] = __('The staff is already assigned to another school');
+//            $error = true;
+            }
         }
-
-        if ((isset($institutionList)) && (!is_numeric(array_search($this->_institution->id, $institutionList)))) { //if the current session not on the institution list on where the staff assigned to.
-            $rowInvalidCodeCols['staff_id'] = __('The staff is already assigned to another school');
-            return false;
-        }
-
+        $institutionId = $this->getQueryString('institution_id');
+        $this->_institution = $this->Institutions->get($institutionId);
         if (!$this->_institution instanceof Entity) {
             $rowInvalidCodeCols['institution_id'] = __('No active institution');
-            return false;
+            $error = true;
         } elseif (!$this->_institution->date_opened instanceof DateTimeInterface) {
             $rowInvalidCodeCols['institution_id'] = __('Institution has an invalid date opened. Please rectify that before trying to import staff');
-            return false;
+            $error = true;
         }
         $tempRow['institution_id'] = $this->_institution->id;
 
         if (empty($tempRow['start_date'])) {
-            $rowInvalidCodeCols['start_date'] = __('No start date specified');
-            return false;
-        } else {
-            // from string to dateObject
-            $formattedDate = Date::createFromFormat('d/m/Y', $tempRow['start_date']);
-            $tempRow['start_date'] = $formattedDate;
-
-            if (!$tempRow['start_date'] instanceof DateTimeInterface) {
-                $rowInvalidCodeCols['start_date'] = __('Unknown date format');
-                return false;
-            } elseif ($tempRow['start_date']->lt($this->_institution->date_opened)) {
-                $rowInvalidCodeCols['start_date'] = __('Start Date should be later than Institution Date Opened');
-                return false;
-            }
+            Log::debug(print_r('Look no start' . $tempRow, true));
+            $rowInvalidCodeCols['start_date'] = __('No start date specified for staff');
+            $error = true;
         }
-        $tempRow['start_year'] = $tempRow['start_date']->year;
+
+// Attempt to create a FrozenDate from the input
+        $formattedDate = FrozenDate::createFromFormat('d/m/Y', $tempRow['start_date']);
+
+// Check if the date was parsed successfully
+        $errors = FrozenDate::getLastErrors();
+        if ($formattedDate === false || !empty($errors['warning_count']) || !empty($errors['error_count'])) {
+            $rowInvalidCodeCols['start_date'] = __('Unknown date format');
+            $error = true;
+        }
+
+// Confirm instance type and business logic
+        if (!$formattedDate instanceof DateTimeInterface) {
+            $rowInvalidCodeCols['start_date'] = __('Invalid date instance');
+            $error = true;
+        }
+
+        if ($formattedDate->lt($this->_institution->date_opened)) {
+            $rowInvalidCodeCols['start_date'] = __('Start Date should be later than Institution Date Opened');
+            $error = true;
+        }
+
+// Assign parsed date and year
+        $tempRow['start_date'] = $formattedDate->toDateTimeString();
+        $tempRow['start_year'] = $formattedDate->year;
 
         if (!$this->checkInstitutionPosition($this->_institution->id, $tempRow['institution_position_id'])) {
             $rowInvalidCodeCols['institution_position_id'] = __('Position is not Valid for the Current Institution');
-            return false;
+            $error = true;
         }
 
         if (array_key_exists("position_type", $tempRow)) {
             if ($tempRow['position_type']=='PART_TIME') {
                 if ($tempRow['FTE']==1) {
                     $rowInvalidCodeCols['FTE'] = __('FTE cannot be 100% if Position Type is Part Time. Please select a value other than 1');
-                    return false;
+                    $error = true;
                 }
             } else { //for fulltime
                 $tempRow['FTE'] = 1;
             }
+        }
+        if ($error) {
+            Log::debug('ImportStaffTable::onImportModelSpecificValidation()');
+            Log::debug('ImportStaffTable::onImportModelSpecificValidation() rowInvalidCodeCols: ' . print_r($rowInvalidCodeCols, true));
+            Log::debug('ImportStaffTable::onImportModelSpecificValidation() tempRow has error: ' . print_r($tempRow, true));
+            return false;
         }
         return true;
     }
