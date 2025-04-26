@@ -1,10 +1,10 @@
 <?php
+
 namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use ArrayObject;
-use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -15,8 +15,12 @@ use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 use DateTimeInterface;
 use PHPExcel_Worksheet;
-use Cake\Log\Log; // POCOR-9080
-use Cake\I18n\FrozenDate; // POCOR-9080
+use Cake\Log\Log;
+use Cake\I18n\FrozenDate;
+
+// POCOR-9080
+
+// POCOR-9080
 
 class ImportStaffTable extends AppTable
 {
@@ -29,7 +33,7 @@ class ImportStaffTable extends AppTable
         $this->setTable('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'Staff']);
+        $this->addBehavior('Import.Import', ['plugin' => 'Institution', 'model' => 'Staff']);
         $this->addBehavior('Institution.ImportStaff');
 
         // register the target table once
@@ -61,7 +65,7 @@ class ImportStaffTable extends AppTable
     public function beforeAction($event)
     {
         $institutionId = $this->getQueryString('institution_id'); // POCOR-9080
-        if($institutionId && is_numeric($institutionId) && $institutionId > 0) {
+        if ($institutionId && is_numeric($institutionId) && $institutionId > 0) {
             $this->_institution = $this->Institutions->get($institutionId);
         } else {
             $this->_institution = false;
@@ -134,8 +138,8 @@ class ImportStaffTable extends AppTable
     protected function getPositionTypeId($cellValue)
     {
         $positionType = '';
-        foreach ($this->positionTypes as $key=>$type) {
-            if ($type['code']==$cellValue) {
+        foreach ($this->positionTypes as $key => $type) {
+            if ($type['code'] == $cellValue) {
                 $positionType = $type['id'];
                 break;
             }
@@ -149,13 +153,14 @@ class ImportStaffTable extends AppTable
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
         $modelData = $this->positionTypes;
-        foreach($modelData as $row) {
+        foreach ($modelData as $row) {
             $data[$columnOrder]['data'][] = [
                 $row['name'],
                 $row[$lookupColumn]
             ];
         }
     }
+
     //POCOR-7711 :: Start
     public function onImportPopulateStaffPositionGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
@@ -182,6 +187,7 @@ class ImportStaffTable extends AppTable
             }
         }
     }
+
     //POCOR-7711 :: End
 
     public function onImportGetFTEId(Event $event, $cellValue)
@@ -192,8 +198,8 @@ class ImportStaffTable extends AppTable
     protected function getFteId($value)
     {
         $id = '';
-        foreach ($this->ftes as $key=>$fte) {
-            if ($fte['value']==$value) {
+        foreach ($this->ftes as $key => $fte) {
+            if ($fte['value'] == $value) {
                 $id = $fte['value'];
                 break;
             }
@@ -206,7 +212,7 @@ class ImportStaffTable extends AppTable
         $translatedReadableCol = $this->getExcelLabel('Imports', 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
-        foreach($this->ftes as $fte) {
+        foreach ($this->ftes as $fte) {
             $data[$columnOrder]['data'][] = [
                 $fte['name'],
                 $fte[$lookupColumn]
@@ -222,38 +228,38 @@ class ImportStaffTable extends AppTable
 
         $modelData = $lookedUpTable->find();
         $modelData = $modelData
-                    ->select([
-                        $lookedUpTable->aliasField('position_no'),
-                        'StaffPositionTitles.name',
-                        'StaffPositionTitles.type',
-                        'Statuses.name',
+            ->select([
+                $lookedUpTable->aliasField('position_no'),
+                'StaffPositionTitles.name',
+                'StaffPositionTitles.type',
+                'Statuses.name',
 //                        'is_homeroom' =>'Staff.is_homeroom',//POCOR-7260
-                       // $lookedUpTable->aliasField('is_homeroom'), //POCOR-7260
-                        'total_fte' => $modelData->func()->sum('InstitutionStaff.FTE')
-                    ])
-                    ->contain(['StaffPositionTitles', 'Statuses'])
-                    ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
-                        'InstitutionStaff.institution_position_id = ' . $lookedUpTable->aliasField('id'),
-                        'OR' => [
-                            'DATE(InstitutionStaff.end_date) > DATE(NOW())',
-                            'InstitutionStaff.end_date IS NULL'
-                        ]
-                    ])
-                    ->leftJoin(['Staff' => 'institution_staff'], [ //POCOR-7260
-                        'Staff.institution_position_id = ' . $lookedUpTable->aliasField('id')
-                    ])
-                    ->where([
-                        $lookedUpTable->aliasField('institution_id') => $institutionId,
-                        $lookedUpTable->aliasField('status_id IN ') => $activeStatusId
-                    ])
-                    ->group($lookedUpTable->aliasField('id'))
-                    ->having([
-                        'OR' => [
-                            'total_fte < 1',
-                            'total_fte IS NULL' //FTE not used at all
-                        ]
-                    ])
-                    ->toArray();
+                // $lookedUpTable->aliasField('is_homeroom'), //POCOR-7260
+                'total_fte' => $modelData->func()->sum('InstitutionStaff.FTE')
+            ])
+            ->contain(['StaffPositionTitles', 'Statuses'])
+            ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
+                'InstitutionStaff.institution_position_id = ' . $lookedUpTable->aliasField('id'),
+                'OR' => [
+                    'DATE(InstitutionStaff.end_date) > DATE(NOW())',
+                    'InstitutionStaff.end_date IS NULL'
+                ]
+            ])
+            ->leftJoin(['Staff' => 'institution_staff'], [ //POCOR-7260
+                'Staff.institution_position_id = ' . $lookedUpTable->aliasField('id')
+            ])
+            ->where([
+                $lookedUpTable->aliasField('institution_id') => $institutionId,
+                $lookedUpTable->aliasField('status_id IN ') => $activeStatusId
+            ])
+            ->group($lookedUpTable->aliasField('id'))
+            ->having([
+                'OR' => [
+                    'total_fte < 1',
+                    'total_fte IS NULL' //FTE not used at all
+                ]
+            ])
+            ->toArray();
 
         $codeLabel = $this->getExcelLabel($lookedUpTable, 'code');
         $typeLabel = $this->getExcelLabel($lookedUpTable, 'type');
@@ -265,12 +271,12 @@ class ImportStaffTable extends AppTable
 
         $data[$columnOrder]['lookupColumn'] = 1;
         // POCOR-9080 start
-        $data[$columnOrder]['data'][] = [$codeLabel,$nameLabel, $typeLabel, $statusLabel
+        $data[$columnOrder]['data'][] = [$codeLabel, $nameLabel, $typeLabel, $statusLabel
 //            , $isHomeroomLabel
         ];
         // POCOR-9080 end
         if (!empty($modelData)) {
-            foreach($modelData as $row) {
+            foreach ($modelData as $row) {
                 $positionTitleType = $row->staff_position_title->type;
                 if ($positionTitleType) {
                     $positionTitleType = __('Teaching');
@@ -342,7 +348,7 @@ class ImportStaffTable extends AppTable
 
             if ((isset($institutionList)) && (!is_numeric(array_search($this->_institution->id, $institutionList)))) { //if the current session not on the institution list on where the staff assigned to.
                 $rowInvalidCodeCols['staff_id'] = __('The staff is already assigned to another school');
-//            $error = true;
+                $error = true;
             }
         }
         $institutionId = $this->getQueryString('institution_id');
@@ -393,8 +399,8 @@ class ImportStaffTable extends AppTable
         }
 
         if (array_key_exists("position_type", $tempRow)) {
-            if ($tempRow['position_type']=='PART_TIME') {
-                if ($tempRow['FTE']==1) {
+            if ($tempRow['position_type'] == 'PART_TIME') {
+                if ($tempRow['FTE'] == 1) {
                     $rowInvalidCodeCols['FTE'] = __('FTE cannot be 100% if Position Type is Part Time. Please select a value other than 1');
                     $error = true;
                 }
@@ -411,24 +417,24 @@ class ImportStaffTable extends AppTable
         return true;
     }
 
+    private function checkInstitutionPosition($institutionId, $positionId)
+    {
+        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+        $checkPosition = $InstitutionPositions
+            ->find()
+            ->where([
+                $InstitutionPositions->aliasField('institution_id') => $institutionId,
+                $InstitutionPositions->aliasField('id') => $positionId,
+
+            ])
+            ->count();
+        return $checkPosition;
+    }
+
     public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
     {
         $flipped = array_flip($columns);
         $key = $flipped['staff_id'];
         $tempPassedRecord['data'][$key] = $originalRow[$key];
-    }
-
-    private function checkInstitutionPosition($institutionId, $positionId)
-    {
-        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
-        $checkPosition = $InstitutionPositions
-                        ->find()
-                        ->where([
-                            $InstitutionPositions->aliasField('institution_id') => $institutionId,
-                            $InstitutionPositions->aliasField('id') => $positionId,
-
-                        ])
-                        ->count();
-        return $checkPosition;
     }
 }

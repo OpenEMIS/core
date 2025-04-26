@@ -19,15 +19,10 @@ class LabelsTable extends AppTable
     public function getLabel($module, $field, $language)
     {
         $label = false;
-
-        $keyFetch = $module . '.' . $field;
+        $keyFetch = $module.'.'.$field;
         $label = Cache::read($keyFetch, $this->defaultConfig);
         // POCOR-9022 check if label is empty
-        if (empty($module) || empty($columnName)) { // POCOR-9080 in case somebody forget to add field name
-            return $keyFetch;
-        }
         if (!$label) {
-
             $entity = $this->find()
                 ->where([
                     $this->aliasField('module') => $module,
