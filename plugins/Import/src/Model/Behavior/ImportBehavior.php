@@ -193,56 +193,93 @@ class ImportBehavior extends Behavior
         return $events;
     }
 
+    // POCOR-9080 start
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
-        switch ($action) {
-            case 'add':
-                $downloadUrl = $toolbarButtons['back']['url'];
-                $downloadUrl[0] = 'template';
-                if ($buttons['add']['url']['action'] == 'ImportInstitutionSurveys') {
-                    $downloadUrl[1] = $buttons['add']['url'][1];
-                } else {
-                    $downloadUrl[1] =  $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
-                }
-                $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
-                break;
+        $this->setupDownloadUrlIfAddAction($action, $toolbarButtons, $buttons);
+        $this->setupBackButtonUrl($toolbarButtons);
+    }
+
+    private function setupDownloadUrlIfAddAction($action, &$toolbarButtons, $buttons)
+    {
+        if ($action !== 'add') {
+            return;
         }
 
-        //back button
+        $downloadUrl = $toolbarButtons['back']['url'];
+        $downloadUrl[0] = 'template';
+
+        if ($buttons['add']['url']['action'] === 'ImportInstitutionSurveys') {
+            $downloadUrl[1] = $buttons['add']['url'][1];
+        } else {
+            $downloadUrl[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+        }
+
+        $url = Router::url($downloadUrl);
+        $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='{$url}'");
+    }
+
+    private function setupBackButtonUrl(&$toolbarButtons)
+    {
         if (!empty($this->getConfig('backUrl'))) {
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
             $toolbarButtons['back']['url'][1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
-        } elseif ($toolbarButtons['back']['url']['plugin'] == 'Directory') { //back button for directory
-            $back = [];
-            if ($this->_table->request->getParam('pass')[0] == 'add') {
-                $back['action'] = 'Directories';
-            } elseif ($this->_table->request->getParam('pass')[0] == 'results') {
-                $back['action'] = $this->_table->getAlias();
-                $back[0] = 'add';
-            };
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
-            unset($toolbarButtons['back']['url'][0]);
-        } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
-            $back = [];
+            return;
+        }
 
-            if ($this->_table->request->getParam('pass')[0] == 'add') {
-                $back['action'] = str_replace('Import', '', $this->_table->getAlias());
-            } elseif ($this->_table->request->getParam('pass')[0] == 'results') {
-                $back['action'] = $this->_table->getAlias();
-                $back[0] = 'add';
-            };
+        $plugin = $toolbarButtons['back']['url']['plugin'] ?? null;
+        $firstParam = $this->_table->request->getParam('pass')[0] ?? null;
 
-            if (!array_key_exists($back['action'], $this->_table->ControllerAction->models)) {
-                $back['action'] = str_replace('Institution', '', $back['action']);
-            }
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
-            unset($toolbarButtons['back']['url'][0]);
+        if ($plugin === 'Directory') {
+            $toolbarButtons['back']['url'] = $this->generateDirectoryBackUrl($toolbarButtons['back']['url'], $firstParam);
+        } elseif ($plugin === 'Institution' && $this->institutionId) {
+            $toolbarButtons['back']['url'] = $this->generateInstitutionBackUrl($toolbarButtons['back']['url'], $firstParam);
         } else {
             $toolbarButtons['back']['url']['action'] = 'index';
             unset($toolbarButtons['back']['url'][0]);
         }
-        //unset($toolbarButtons['back']['url'][0]); //POCOR-8343
     }
+
+    private function generateDirectoryBackUrl(array $url, $firstParam): array
+    {
+        $back = [];
+
+        if ($firstParam === 'add') {
+            $back['action'] = 'Directories';
+        } elseif ($firstParam === 'results') {
+            $back['action'] = $this->_table->getAlias();
+            $back[0] = 'add';
+        }
+
+        $url = array_merge($url, $back);
+        unset($url[0]);
+
+        return $url;
+    }
+
+    private function generateInstitutionBackUrl(array $url, $firstParam): array
+    {
+        $back = [];
+
+        if ($firstParam === 'add') {
+            $back['action'] = str_replace('Import', '', $this->_table->getAlias());
+            $back[0] = 'index';
+        } elseif ($firstParam === 'results') {
+            $back['action'] = str_replace('Import', '', $this->_table->getAlias());
+            $back[0] = 'index';
+        }
+
+        if (!array_key_exists($back['action'], $this->_table->ControllerAction->models)) {
+            $back['action'] = str_replace('Institution', '', $back['action']);
+        }
+        $back[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+        $back['plugin'] = $this->getConfig('plugin');
+        $url = array_merge($url, $back);
+
+//        unset($url[0]);
+        return $url;
+    }
+    // POCOR-9080 end
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
@@ -256,7 +293,9 @@ class ImportBehavior extends Behavior
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
         $request = $this->_table->request;
-        if(empty($this->institutionId) && $request->getParam('pass')[0] != 'downloadFailed' && $request->getParam('pass')[0] != 'downloadPassed' && isset($request->getParam('pass')[1])) {
+        if(empty($this->institutionId) && $request->getParam('pass')[0] != 'downloadFailed'
+            && $request->getParam('pass')[0] != 'downloadPassed'
+            && isset($request->getParam('pass')[1])) {
             $queryString = $this->_table->paramsDecode($request->getParam('pass')[1]);
             $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
         }
