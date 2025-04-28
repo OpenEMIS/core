@@ -1756,7 +1756,7 @@ class NavigationComponent extends Component
     public function checkClassification(array &$navigations)
     {
         $session = $this->getController()->getRequest()->getSession();
-        $institutionId = $this->getInstitutionID();
+        $institutionId = $this->getInstitutionID(); // POCOR-9081
 //        $institutionId = $session->read('Institution.Institutions.id');
 
         if (!empty($institutionId)) {
