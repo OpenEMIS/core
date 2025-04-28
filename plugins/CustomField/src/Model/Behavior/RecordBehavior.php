@@ -1265,20 +1265,34 @@ class RecordBehavior extends Behavior
     {
 
         $recordId = $settings['id'];
+        Log::debug(print_r($settings, true));
+        Log::debug(print_r($this->_table->request->getAttribute('params'), true));
         // POCOR-9067 start: problem for class or institution
         if(!isset($recordId)) {
             $checkEncodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
             $encodedClassId = $this->_table->paramsDecode($checkEncodedClassId);//POCOR-8323
+            // POCOR-9090 start
             if (isset($encodedClassId['institution_class_id'])) {//POCOR-8323        }
                 $recordId = $encodedClassId['institution_class_id'];
+                $entityType = 'institution_class';
             }else{
                 if (isset($encodedClassId['institution_id'])) {//POCOR-8323        }
                     $recordId = $encodedClassId['institution_id'];
+                    $entityType = 'institution';
                 }
             }
         }
         try {
-            $entity = $this->_table->get($recordId);
+            if($entityType == 'institution_class'){
+                $institutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+                $entity = $institutionClasses->get($recordId);
+                }
+            if($entityType == 'institution'){
+                $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+                $entity = $institutions->get($recordId);
+            }
+//            $entity = $this->_table->get($recordId);
+            // POCOR-9090 end
         } catch (\Exception $e) {
             Log::error('Error fetching entity: ' . $e->getMessage());
             return $fields;
