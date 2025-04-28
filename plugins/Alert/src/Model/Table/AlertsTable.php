@@ -243,6 +243,32 @@ class AlertsTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
     }
 
+        //POCOR-8869[START]
+        public function triggerStudentAdmissionFeatureShell($shellName, $school_name, $student_name, $academic_year, $grade_name, $gaurdiand_data)
+        {
+            $args = '';
+            $args .= !is_null($school_name) ? ' "'.$school_name.'"' : '';
+            $args .= !is_null($student_name) ? ' "'.$student_name.'"' : '';
+            $args .= !is_null($academic_year) ? ' "'.$academic_year.'"' : '';
+            $args .= !is_null($grade_name) ? ' "'.$grade_name.'"' : '';
+            // Ensure $gaurdiand_data is properly formatted
+            if (!empty($gaurdiand_data)) {
+                if (is_array($gaurdiand_data)) {
+                    $args .= " '".json_encode($gaurdiand_data)."'";
+                } else {
+                    $args .= " '".$gaurdiand_data."'";
+                }
+            }
+    
+            $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
+            $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logs;
+            exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        }
+        //POCOR-8869[START]
+    
+
    //POCOR-7558 start
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {

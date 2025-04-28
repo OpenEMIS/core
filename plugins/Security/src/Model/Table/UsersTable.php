@@ -792,4 +792,12 @@ class UsersTable extends ControllerActionTable
         return $query->where($conditions);
     }
 
+    public function findStudentAdmissionEmailList(Query $query, array $options) {
+        $conditions = [
+            $this->aliasField('id') => $options['securityRoleId']
+        ];
+        
+        return $query->where($conditions);
+    }
+
 }
