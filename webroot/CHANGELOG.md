@@ -1,3 +1,8 @@
+### [4.22.0] - 2025-04-28
+- Implemented: Develop a Student Admission status to the Alerts Feature
+- Bug Fixed: Administration > Profiles > Institutions: Profile generation stuck in progress
+- Bug Fixed: Report>Survey>Institutions: Data is not showing
+
 ### [4.21.0] - 2025-04-24
 - Implemented: Develop changes to the student profile to add a programme code placeholder
 - Implemented: Develop an OpenEMIS Core Generate Student Report Cards v4 API
