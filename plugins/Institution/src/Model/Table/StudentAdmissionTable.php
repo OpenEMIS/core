@@ -912,6 +912,56 @@ class StudentAdmissionTable extends ControllerActionTable
                 }
             }
         }
+        //POCOR-8869[START] // to send alert on student admission approved
+        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+        $Users = TableRegistry::get('User.Users');
+
+        // used to get correct workflow model for StaffTransferIn and StaffTransferOut
+        $AlertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
+        $AlertRulesData = $AlertRulesTable
+            ->find('all')
+            ->where([$AlertRulesTable->aliasField('feature') => 'StudentAdmission'])
+            ->first();
+        $thresholdValue = $AlertRulesData->threshold;
+        $thresholdValue = json_decode($thresholdValue, true);
+        if(!empty($AlertRulesData) && $thresholdValue['workflow_steps'][0] == 1){
+            $stepEntity = $WorkflowSteps->find()
+            ->matching('Workflows.WorkflowModels')
+            ->where([$WorkflowSteps->aliasField('id') => $entity->status_id])
+            ->first();
+            $worFlowAction = $stepEntity['name'];
+            if($worFlowAction == 'Approved'){
+                $StudentGuardians = TableRegistry::get('GuardianNav.StudentGuardians');
+                $Users = TableRegistry::get('User.Users');
+                $getData = $this
+                    ->find('all')
+                    ->contain(['Users','AcademicPeriods','Institutions','EducationGrades'])
+                    ->where(['Users.id' =>$entity->student_id])
+                    ->first();
+    
+                $getGaurdian = $StudentGuardians
+                ->find('all')
+                ->where([$StudentGuardians->aliasField('student_id') => $entity->student_id])
+                ->first();
+    
+                if(!empty($getGaurdian)){
+                    $getGaurdiandData = $Users
+                    ->find('all')
+                    ->where(['Users.id' =>$getGaurdian['guardian_id']])
+                    ->toArray();
+                    $school_name = $getData['institution']['name'];
+                    $student_name = $getData['user']['first_name']." ".$getData['user']['last_name'];
+                    $academic_year = $getData['academic_period']['start_year'];
+                    $grade_name = $getData['education_grade']['name'];
+                    $gaurdiand_data = $getGaurdiandData;
+                    $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+                    $key = "StudentAdmission";
+                    $AlertsTable->triggerStudentAdmissionFeatureShell($key, $school_name, $student_name, $academic_year, $grade_name, $gaurdiand_data);
+                }
+            }
+        }
+        //POCOR-8869[END]
     }
 
     public function findWorkbench(Query $query, array $options)
@@ -1310,5 +1360,23 @@ class StudentAdmissionTable extends ControllerActionTable
         $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
         return $newEntity;
     }
+
+    public function getModelAlertData($threshold)
+     {
+         $dayBefore = $threshold['value'];
+         $workflowCategory = $threshold['workflow_steps'];
+         $sqlConditions = [
+             1 => ('DATEDIFF( NOW(),InstitutionCases.created)' . '>' . $dayBefore), // before
+         ];
+         $caseResults = $this->find()
+             ->contain(['Institutions', 'Assignees', 'Statuses'])
+             ->where([
+                 $this->Statuses->aliasField('id In') => $workflowCategory,
+                 $this->aliasField('modified is null'),
+                 $this->aliasField('modified_user_id is null'),
+                 $sqlConditions
+             ]);
+         return $caseResults->toArray();
+     }
 
 }
