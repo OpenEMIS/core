@@ -141,7 +141,11 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
                 return false;
             })
-            ->notEmpty('building_type_id');
+            ->notEmpty('building_type_id')
+            ->notEmpty('infrastructure_ownership_id')
+            ->notEmpty('infrastructure_condition_id')
+            ->notEmpty('accessibility')
+            ;
         ;
     }
 
@@ -333,7 +337,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
 // POCOR-8037 removed academic period code
         // Building Types
         list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
-        if ($selectedType != '-1') {
+        if ($selectedType && $selectedType != '-1') { // POCOR-9074
             $query->where([$this->aliasField('building_type_id') => $selectedType]);
         }
         $this->controller->set(compact('typeOptions', 'selectedType'));
