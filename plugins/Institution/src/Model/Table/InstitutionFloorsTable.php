@@ -801,35 +801,55 @@ class InstitutionFloorsTable extends ControllerActionTable
         $codePrefix = '';
         $lastSuffix = '00';
         $conditions = [];
-        // has Parent then get the ID of the parent then followed by counter
+
+        // Fetch parent data to get the code prefix
         $parentData = $this->InstitutionBuildings->find()
             ->where([
                 $this->InstitutionBuildings->aliasField($this->InstitutionBuildings->getPrimaryKey()) => $parentId
             ])
             ->first();
 
-        $codePrefix = $parentData->code;
+        if (!empty($parentData)) {
+            $codePrefix = $parentData->code;
 
-        // $conditions[] = $this->aliasField('code')." LIKE '" . $codePrefix . "%'";
-        $lastRecord = $this->find()
-            ->where([
-                $this->aliasField('institution_building_id') => $parentId,
-                $this->aliasField('code')." LIKE '" . $codePrefix . "%'"
-            ])
-            ->order($this->aliasField('code DESC'))
-            ->first();
+            // Find the last record with the same prefix
+            $lastRecord = $this->find()
+                ->where([
+                    $this->aliasField('institution_building_id') => $parentId,
+                    $this->aliasField('code')." LIKE '" . $codePrefix . "%'"
+                ])
+                ->order($this->aliasField('code DESC'))
+                ->first();
 
-        if (!empty($lastRecord)) {
-            $lastSuffix = str_replace($codePrefix, "", $lastRecord->code);
+            if (!empty($lastRecord)) {
+                $lastSuffix = str_replace($codePrefix, "", $lastRecord->code);
+            }
+
+            $codeSuffix = intval($lastSuffix) + 1;
+
+            // Ensure the suffix is two digits
+            $codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
+            $autoGenerateCode = $codePrefix . $codeSuffix;
+
+            // Check if the generated code is unique
+            while ($this->codeExists($autoGenerateCode)) {
+                $codeSuffix = intval($codeSuffix) + 1;
+                $codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
+                $autoGenerateCode = $codePrefix . $codeSuffix;
+            }
+
+            return $autoGenerateCode;
         }
 
-        $codeSuffix = intval($lastSuffix) + 1;
+        return null; // Return null if parent data is not found
+    }
 
-        // if 1 character prepend '0'
-        $codeSuffix = (strlen($codeSuffix) == 1) ? '0'.$codeSuffix : $codeSuffix;
-        $autoGenerateCode = $codePrefix . $codeSuffix;
-
-        return $autoGenerateCode;
+    // POCOR-8037 added check if code exists
+    private function codeExists($code)
+    {
+        return !$this->find()
+            ->where([$this->aliasField('code') => $code])
+            ->isEmpty();
     }
 
     private function addBreadcrumbElement()
