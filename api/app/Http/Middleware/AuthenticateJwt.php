@@ -10,6 +10,7 @@ use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use Illuminate\Support\Facades\Log;
 
+// POCOR-9092 added some login
 class AuthenticateJwt
 {
     public function handle(Request $request, Closure $next)

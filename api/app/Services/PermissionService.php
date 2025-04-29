@@ -69,7 +69,7 @@ class PermissionService
 
     public function checkPermission($modelName, $action): bool
     {
-        // POCOR-9093 simplified
+        // POCOR-9092 simplified
         if (!$this->user) {
             $this->user = JWTAuth::user();
             if ($this->user) {
