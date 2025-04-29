@@ -69,7 +69,7 @@ class PermissionService
 
     public function checkPermission($modelName, $action): bool
     {
-        // POCOR-9092 simplified
+        // POCOR-9092 autoloaded cache
         if (!$this->user) {
             $this->user = JWTAuth::user();
             if ($this->user) {
@@ -83,31 +83,29 @@ class PermissionService
         }
 
         if ($user->super_admin ?? 0) {
-            return true; // Super admin has all permissions
+            return true;
         }
 
-        $permissions = $this->loadPermissionsFromDb($user->id);
+        $cacheKey = "permissions:user:{$user->id}";
+        $cacheTTL = 600; // seconds (10 min)
 
-// POCOR-9092 no caching
-//        $cacheKey = "permissions:user:{$user->id}";
-//        $cacheTTL = 600; // 10 minutes in seconds
-//
-//        try {
-//            $permissions = Cache::remember($cacheKey, $cacheTTL, function () use ($user) {
-//                return $this->loadPermissionsFromDb($user->id);
-//            });
-//        } catch (\Throwable $e) {
-//            Log::error("Cache error while fetching permissions for user {$user->id}: " . $e->getMessage());
-//            return false;
-//        }
+        $permissions = Cache::get($cacheKey);
 
-//        if (empty($permissions)) {
-//            Log::warning("Permission loading failed after cache attempt for user: {$user->id}");
-//            return false;
-//        }
+        if (empty($permissions)) {
+            Log::info("Permissions cache miss for user {$user->id}. Reloading from DB.");
+            $permissions = $this->loadPermissionsFromDb($user->id);
+
+            if (!empty($permissions)) {
+                Cache::put($cacheKey, $permissions, $cacheTTL);
+            } else {
+                Log::warning("No permissions found for user {$user->id} after DB reload.");
+                return false;
+            }
+        }
 
         return $this->hasPermission($permissions, $modelName, $action);
     }
+
 
     private function loadPermissionsFromDb($userId): array
     {
