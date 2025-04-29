@@ -150,4 +150,35 @@ class AlertShell extends Shell
 
         return $emailList;
     }
+
+    public function getStudentAdmissionEmailList($securityRoleRecords, $institutionId = null)
+    {
+        $emailList = [];
+
+        foreach ($securityRoleRecords as $securityRolesObj) {
+            $options = [
+                'securityRoleId' => $securityRolesObj->id
+            ];
+
+            // all staff within securityRole and institution
+            $emailListResult = $this->Users
+                ->find('studentAdmissionEmailList', $options)
+                ->toArray()
+            ;
+
+            // combine all email to the email list
+            if (!empty($emailListResult)) {
+                foreach ($emailListResult as $obj) {
+                    if (!empty($obj->email)) {
+                        $recipient = $obj->name . ' <' . $obj->email . '>';
+                        if (!in_array($recipient, $emailList)) {
+                            $emailList[] = $recipient;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $emailList;
+    }
 }

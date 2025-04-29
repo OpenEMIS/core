@@ -135,7 +135,11 @@ class InstitutionFloorsTable extends ControllerActionTable
 
                 return false;
             })
-            ->notEmpty('floor_type_id');
+            ->notEmpty('floor_type_id')
+            ->notEmpty('infrastructure_ownership_id')
+            ->notEmpty('infrastructure_condition_id')
+            ->notEmpty('accessibility')
+            ;
         ;
     }
 

@@ -127,9 +127,9 @@ class InstitutionLandsTable extends ControllerActionTable
 //                'ruleInAcademicPeriod' => [
 //                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
 //                ],
-                'ruleCompareDateReverse' => [
-                    'rule' => ['compareDateReverse', 'start_date', true]
-                ]
+//                'ruleCompareDateReverse' => [
+//                    'rule' => ['compareDateReverse', 'start_date', true]
+//                ]
             ])
             ->add('new_start_date', [
                 'ruleCompareDateReverse' => [
@@ -156,7 +156,11 @@ class InstitutionLandsTable extends ControllerActionTable
 
                 return false;
             })
-            ->notEmpty('land_type_id');
+            ->notEmpty('infrastructure_ownership_id')
+            ->notEmpty('land_type_id')
+            ->notEmpty('infrastructure_condition_id')
+            ->notEmpty('accessibility')
+            ;
     }
 
     public function validationSavingByAssociation(Validator $validator)
@@ -398,7 +402,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
         // Land Types
         list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
-        if ($selectedType != '-1') {
+        if ($selectedType && $selectedType != '-1') { // POCOR-9074
             $query->where([$this->aliasField('land_type_id') => $selectedType]);
         }
         $this->controller->set(compact('typeOptions', 'selectedType'));
