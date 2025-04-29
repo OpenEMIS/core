@@ -15,6 +15,19 @@
 				'url' => $baseUrl,
 				'data-named-key' => 'type'
 			));
+        // POCOR-8951 start
+			if($this->request->getParam('action') == 'Themes') {
+				echo $this->Form->input('online_service', array(
+					'class' => 'form-control',
+					'label' => false,
+					'options' => $productThemes,
+                    'default' => $selectedProduct ?? 'openemis_core',
+					'url' => $baseUrl,
+					'data-named-key' => 'online_service',
+                    'data-named-group' => 'type'
+				));
+			}
+        // POCOR-8951 end
 		?>
 	</div>
 </div>

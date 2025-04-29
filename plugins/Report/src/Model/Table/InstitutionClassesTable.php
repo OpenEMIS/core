@@ -252,7 +252,7 @@ class InstitutionClassesTable extends AppTable
                 //POCOR-8739 end
                 $row['region_code'] = '';
                 $row['region_name'] = '';
-                if (!empty($areasData)) {
+                if ($areasData->parent_id) { // POCOR-9070
                     $areas = self::getDynamicTableInstance('Area.Areas'); // POCOR-8929
                     $areaLevels = self::getDynamicTableInstance('area_levels'); // POCOR-8929
                     $institutions = self::getDynamicTableInstance('institutions'); // POCOR-8929
@@ -319,14 +319,14 @@ class InstitutionClassesTable extends AppTable
             'key' => 'Areas.code',
             'field' => 'area_code',
             'type' => 'string',
-            'label' => __('District Code')
+            'label' => __('Area Code')
         ];
 
         $newFields[] = [
             'key' => 'Areas.name',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('District Name')
+            'label' => __('Area Name')
         ];
 
         $newFields[] = [
