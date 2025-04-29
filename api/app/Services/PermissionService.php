@@ -86,22 +86,25 @@ class PermissionService
             return true; // Super admin has all permissions
         }
 
-        $cacheKey = "permissions:user:{$user->id}";
-        $cacheTTL = 600; // 10 minutes in seconds
+        $permissions = $this->loadPermissionsFromDb($user->id);
 
-        try {
-            $permissions = Cache::remember($cacheKey, $cacheTTL, function () use ($user) {
-                return $this->loadPermissionsFromDb($user->id);
-            });
-        } catch (\Throwable $e) {
-            Log::error("Cache error while fetching permissions for user {$user->id}: " . $e->getMessage());
-            return false;
-        }
+// POCOR-9092 no caching
+//        $cacheKey = "permissions:user:{$user->id}";
+//        $cacheTTL = 600; // 10 minutes in seconds
+//
+//        try {
+//            $permissions = Cache::remember($cacheKey, $cacheTTL, function () use ($user) {
+//                return $this->loadPermissionsFromDb($user->id);
+//            });
+//        } catch (\Throwable $e) {
+//            Log::error("Cache error while fetching permissions for user {$user->id}: " . $e->getMessage());
+//            return false;
+//        }
 
-        if (empty($permissions)) {
-            Log::warning("Permission loading failed after cache attempt for user: {$user->id}");
-            return false;
-        }
+//        if (empty($permissions)) {
+//            Log::warning("Permission loading failed after cache attempt for user: {$user->id}");
+//            return false;
+//        }
 
         return $this->hasPermission($permissions, $modelName, $action);
     }
