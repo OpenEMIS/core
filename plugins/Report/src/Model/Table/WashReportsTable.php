@@ -23,9 +23,9 @@ class WashReportsTable extends AppTable
     public function initialize(array $config): void
     {
         $this->setTable('institutions');
-        
+
         parent::initialize($config);
-        
+
         $this->belongsTo('Types', ['className' => 'Institution.Types', 'foreignKey' => 'institution_type_id']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
@@ -38,44 +38,44 @@ class WashReportsTable extends AppTable
             'pages' => false,
             'autoFields' => false
         ]);
-        
+
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function beforeAction(Event $event) 
+    public function beforeAction(Event $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) 
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         return $attr;
     }
-    
+
     public function onExcelGetWashWater(Event $event, Entity $entity)
     {
         return 'Water';
     }
-    
+
     public function onExcelGetWashSanitation(Event $event, Entity $entity)
     {
         return 'Sanitation';
     }
-    
+
     public function onExcelGetWashHygiene(Event $event, Entity $entity)
     {
         return 'Hygiene';
     }
-    
+
     public function onExcelGetWashWaste(Event $event, Entity $entity)
     {
         return 'Waste';
     }
-    
+
     public function onExcelGetWashSewage(Event $event, Entity $entity)
     {
         return 'Sewage';
@@ -97,7 +97,7 @@ class WashReportsTable extends AppTable
             'type' => 'string',
             'label' => ($washType == 'Sanitation') ? __('Institution Code') :  __('Code') //POCOR-8161
         ];
-        
+
         $extraFields[] = [
             'key' => 'name',
             'field' => 'name',
@@ -137,7 +137,7 @@ class WashReportsTable extends AppTable
         ];
 
         //start POCOR-6732
-        
+
         $AreaLevelTbl = TableRegistry::get('Area.AreaLevels');
         $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
 
@@ -165,7 +165,7 @@ class WashReportsTable extends AppTable
             'type' => 'string',
             'label' => __('District Code')
         ];
-        
+
         //update label POCOR-5865 ends
         $extraFields[] = [
             'key' => 'AcademicPeriods.name',
@@ -181,8 +181,8 @@ class WashReportsTable extends AppTable
                 'field' => 'wash'.$washType,
                 'type' => 'string',
                 'label' => __('Wash')
-            ]; 
-        }           
+            ];
+        }
 
         $extraFields[] = [
             'key' => 'InfrastructureWashWaterTypes.name',
@@ -238,35 +238,35 @@ class WashReportsTable extends AppTable
                 'type' => 'string',
                 'label' => __('Male (Functional)')
                 ];
-                
+
                 $extraFields[] = [
                     'key' => 'maleSanitationNonFunctional',
                     'field' => 'maleSanitationNonFunctional',
                     'type' => 'string',
                     'label' => __('Male (Non-Functional)')
                 ];
-                
+
                 $extraFields[] = [
                     'key' => 'femaleSanitationFunctional',
                     'field' => 'femaleSanitationFunctional',
                     'type' => 'string',
                     'label' => __('Female (Functional)')
                 ];
-                
+
                 $extraFields[] = [
                     'key' => 'femaleSanitationNonFunctional',
                     'field' => 'femaleSanitationNonFunctional',
                     'type' => 'string',
                     'label' => __('Female (Non-Functional)')
                 ];
-                
+
                 $extraFields[] = [
                     'key' => 'mixedSanitationFunctional',
                     'field' => 'mixedSanitationFunctional',
                     'type' => 'string',
                     'label' => __('Mixed (Functional)')
                 ];
-                
+
                 $extraFields[] = [
                     'key' => 'mixedSanitationNonFunctional',
                     'field' => 'mixedSanitationNonFunctional',
@@ -286,7 +286,7 @@ class WashReportsTable extends AppTable
                     'field' => 'infrastructure_wash_accessibility',
                     'type' => 'string',
                     'label' => __('Accessibility')
-                ]; 
+                ];
             }
             if ($infrastructureType == 'Hygiene')
             {
@@ -295,8 +295,8 @@ class WashReportsTable extends AppTable
                     'field' => 'infrastructure_wash_accessibility',
                     'type' => 'string',
                     'label' => __('Soap/Ash Availability')
-                ]; 
-               
+                ];
+
                 $extraFields[] = [
                     'key' => 'InfrastructureWashHygieneEducations.name',
                     'field' => 'infrastructure_wash_hygiene_education',
@@ -310,41 +310,41 @@ class WashReportsTable extends AppTable
                 'type' => 'string',
                 'label' => __('Male (Functional)')
                 ];
-                
+
                 $extraFields[] = [
                     'key' => 'maleHygieneNonFunctional',
                     'field' => 'maleHygieneNonFunctional',
                     'type' => 'string',
                     'label' => __('Male (Non-Functional)')
                 ];
-                
+
                 $extraFields[] = [
                     'key' => 'femaleHygieneFunctional',
                     'field' => 'femaleHygieneFunctional',
                     'type' => 'string',
                     'label' => __('Female (Functional)')
                 ];
-                
+
                 $extraFields[] = [
                     'key' => 'femaleHygieneNonFunctional',
                     'field' => 'femaleHygieneNonFunctional',
                     'type' => 'string',
                     'label' => __('Female (Non-Functional)')
                 ];
-                
+
                 $extraFields[] = [
                     'key' => 'mixedHygieneFunctional',
                     'field' => 'mixedHygieneFunctional',
                     'type' => 'string',
                     'label' => __('Mixed (Functional)')
                 ];
-                
+
                 $extraFields[] = [
                     'key' => 'mixedHygieneNonFunctional',
                     'field' => 'mixedHygieneNonFunctional',
                     'type' => 'string',
                     'label' => __('Mixed (Non-Functional)')
-                ]; 
+                ];
 
             }
             if ($infrastructureType == 'Waste')
@@ -397,14 +397,14 @@ class WashReportsTable extends AppTable
             ];
         }
         else if ($washType == 'Hygiene'){
-            
+
             $extraFields[] = [
                 'key' => 'InfrastructureWashHygieneSoapashAccessibilities.name',
                 'field' => 'infrastructure_wash_accessibility',
                 'type' => 'string',
                 'label' => __('Soap/Ash Availability')
-            ]; 
-            
+            ];
+
             $extraFields[] = [
                 'key' => 'InfrastructureWashHygieneEducations.name',
                 'field' => 'infrastructure_wash_hygiene_education',
@@ -418,41 +418,41 @@ class WashReportsTable extends AppTable
             'type' => 'string',
             'label' => __('Male (Functional)')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'maleHygieneNonFunctional',
                 'field' => 'maleHygieneNonFunctional',
                 'type' => 'string',
                 'label' => __('Male (Non-Functional)')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'femaleHygieneFunctional',
                 'field' => 'femaleHygieneFunctional',
                 'type' => 'string',
                 'label' => __('Female (Functional)')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'femaleHygieneNonFunctional',
                 'field' => 'femaleHygieneNonFunctional',
                 'type' => 'string',
                 'label' => __('Female (Non-Functional)')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'mixedHygieneFunctional',
                 'field' => 'mixedHygieneFunctional',
                 'type' => 'string',
                 'label' => __('Mixed (Functional)')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'mixedHygieneNonFunctional',
                 'field' => 'mixedHygieneNonFunctional',
                 'type' => 'string',
                 'label' => __('Mixed (Non-Functional)')
-            ]; 
+            ];
         }
 
         else if ($washType == 'Sanitation'){
@@ -469,35 +469,35 @@ class WashReportsTable extends AppTable
             'type' => 'string',
             'label' => __('Male (Functional)')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'maleSanitationNonFunctional',
                 'field' => 'maleSanitationNonFunctional',
                 'type' => 'string',
                 'label' => __('Male (Non-Functional)')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'femaleSanitationFunctional',
                 'field' => 'femaleSanitationFunctional',
                 'type' => 'string',
                 'label' => __('Female (Functional)')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'femaleSanitationNonFunctional',
                 'field' => 'femaleSanitationNonFunctional',
                 'type' => 'string',
                 'label' => __('Female (Non-Functional)')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'mixedSanitationFunctional',
                 'field' => 'mixedSanitationFunctional',
                 'type' => 'string',
                 'label' => __('Mixed (Functional)')
             ];
-            
+
             $extraFields[] = [
                 'key' => 'mixedSanitationNonFunctional',
                 'field' => 'mixedSanitationNonFunctional',
@@ -561,7 +561,7 @@ class WashReportsTable extends AppTable
         $result = $Areas->find()
                             ->where([
                                 $Areas->aliasField('parent_id') => $id
-                            ]) 
+                            ])
                              ->toArray();
         foreach ($result as $key => $value) {
             $idArray[] = $value['id'];
@@ -574,7 +574,7 @@ class WashReportsTable extends AppTable
     {
 
         $requestData = json_decode($settings['process']['params']);
-        
+
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $washType = $requestData->wash_type;
@@ -591,9 +591,9 @@ class WashReportsTable extends AppTable
             }
         }else{
             $allselectedAreas = $selectedArea1;
-        }        
+        }
         //POCOR-8161 ends
-        
+
         $conditions = [];
         $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
         if (!empty($academicPeriodId)) {
@@ -684,15 +684,15 @@ class WashReportsTable extends AppTable
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWashSanitationTypes.name',
                     'infrastructure_wash_uses' => 'InfrastructureWashSanitationUses.name',
-                    'infrastructure_wash_accessibility' => 'InfrastructureWashSanitationAccessibilities.name',                    
+                    'infrastructure_wash_accessibility' => 'InfrastructureWashSanitationAccessibilities.name',
                     'infrastructure_wash_quality' => 'InfrastructureWashSanitationQualities.name',
                     'infrastructure_wash_id_sanitation' => 'InfrastructureWashSanitations.id',
                     'institution_type_id' => $this->aliasField('institution_type_id'),//POCOR-8161 starts
                     'institution_sector_id' => $this->aliasField('institution_sector_id'),
-                    'institution_provider_id' => $this->aliasField('institution_provider_id'),                    
-                    'institution_type_name' => 'InstitutionTypes.name',                    
-                    'institution_sector_name' => 'InstitutionSectors.name',                    
-                    'institution_provider_name' => 'InstitutionProviders.name',//POCOR-8161 ends                
+                    'institution_provider_id' => $this->aliasField('institution_provider_id'),
+                    'institution_type_name' => 'InstitutionTypes.name',
+                    'institution_sector_name' => 'InstitutionSectors.name',
+                    'institution_provider_name' => 'InstitutionProviders.name',//POCOR-8161 ends
                 ])
                 ->contain(['Areas', 'AreaAdministratives'])
                 ->leftJoin(
@@ -750,7 +750,7 @@ class WashReportsTable extends AppTable
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWashHygieneTypes.name',
                     'infrastructure_wash_hygiene_education' => 'InfrastructureWashHygieneEducations.name',
-                    'infrastructure_wash_accessibility' => 'InfrastructureWashHygieneSoapashAccessibilities.name',                    
+                    'infrastructure_wash_accessibility' => 'InfrastructureWashHygieneSoapashAccessibilities.name',
                     'infrastructure_wash_id' => 'InfrastructureWashHygienes.id'
                 ])
                 ->contain(['Areas', 'AreaAdministratives'])
@@ -795,7 +795,7 @@ class WashReportsTable extends AppTable
                     'area_name' => 'Areas.name',
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWash'.$washType.'Types.name',
-                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'                    
+                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'
                 ])
                 ->contain(['Areas', 'AreaAdministratives'])
                 ->leftJoin(
@@ -834,7 +834,7 @@ class WashReportsTable extends AppTable
                     'area_name' => 'Areas.name',
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWash'.$washType.'Types.name',
-                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'                    
+                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'
                 ])
                 ->contain(['Areas', 'AreaAdministratives'])
                 ->leftJoin(
@@ -868,12 +868,12 @@ class WashReportsTable extends AppTable
                 /*$areaLevel = '';
                 $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
                 $areaLevelId = $ConfigItems->value('institution_area_level_id');
-                
+
                 $AreaTable = TableRegistry::get('Area.AreaLevels');
                 $value = $AreaTable->find()
                             ->where([$AreaTable->aliasField('level') => $areaLevelId])
                             ->first();
-            
+
                 if (!empty($value->name)) {
                     $areaLevel = $value->name;
                 }*/
@@ -886,15 +886,15 @@ class WashReportsTable extends AppTable
         //POCOR-5865 starts
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                
+
                 $areas1 = TableRegistry::get('Area.Areas');
                 $areasData = $areas1
                             ->find()
                             ->where([$areas1->aliasField('code IS')=>$row->area_code])
                             ->first();
-                $row['region_code'] = '';            
+                $row['region_code'] = '';
                 $row['region_name'] = '';
-                if(!empty($areasData)){
+                if($areasData->parent_id){ // POCOR-9070
                     $areas = TableRegistry::get('Area.Areas');
                     $areaLevels = TableRegistry::get('Area.AreaLevels');
                     $institutions = TableRegistry::get('Institution.Institutions');
@@ -915,18 +915,18 @@ class WashReportsTable extends AppTable
                                     [
                                         $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                                     ]
-                                )    
+                                )
                                 ->where([
                                     $areaLevels->aliasField('level !=') => 1,
                                     $areas->aliasField('id') => $areasData->parent_id
                                 ])->first();
-                    
+
                     if (!empty($val->name) && !empty($val->code)) {
                         $row['region_code'] = $val->code;
                         $row['region_name'] = $val->name;
                     }
-                }            
-                
+                }
+
                 return $row;
             });
         });
@@ -992,7 +992,7 @@ class WashReportsTable extends AppTable
                     ]
                 )
                 ->where($conditions);
-           
+
         }
 
         if($washType == 'Hygiene'){
@@ -1006,7 +1006,7 @@ class WashReportsTable extends AppTable
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWashHygieneTypes.name',
                     'infrastructure_wash_hygiene_education' => 'InfrastructureWashHygieneEducations.name',
-                    'infrastructure_wash_accessibility' => 'InfrastructureWashHygieneSoapashAccessibilities.name',                    
+                    'infrastructure_wash_accessibility' => 'InfrastructureWashHygieneSoapashAccessibilities.name',
                     'infrastructure_wash_id' => 'InfrastructureWashHygienes.id'
                 ])
                 ->contain(['Areas', 'AreaAdministratives'])
@@ -1051,7 +1051,7 @@ class WashReportsTable extends AppTable
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWashSanitationTypes.name',
                     'infrastructure_wash_uses' => 'InfrastructureWashSanitationUses.name',
-                    'infrastructure_wash_accessibility' => 'InfrastructureWashSanitationAccessibilities.name',                    
+                    'infrastructure_wash_accessibility' => 'InfrastructureWashSanitationAccessibilities.name',
                     'infrastructure_wash_quality' => 'InfrastructureWashSanitationQualities.name',
                     'infrastructure_wash_id_sanitation' => 'InfrastructureWashSanitations.id'
                 ])
@@ -1103,7 +1103,7 @@ class WashReportsTable extends AppTable
                     'area_name' => 'Areas.name',
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWash'.$washType.'Types.name',
-                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'                    
+                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'
                 ])
                 ->contain(['Areas', 'AreaAdministratives'])
                 ->leftJoin(
@@ -1143,7 +1143,7 @@ class WashReportsTable extends AppTable
                     'area_name' => 'Areas.name',
                     'academic_period' => 'AcademicPeriods.name',
                     'infrastructure_wash_type' => 'InfrastructureWash'.$washType.'Types.name',
-                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'                    
+                    'infrastructure_wash_functionality' => 'InfrastructureWash'.$washType.'Functionalities.name'
                 ])
                 ->contain(['Areas', 'AreaAdministratives'])
                 ->leftJoin(
@@ -1175,194 +1175,194 @@ class WashReportsTable extends AppTable
     public function onExcelGetMaleSanitationFunctional(Event $event, Entity $entity)
     {
         $maleSanitationFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id_sanitation)){  //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
-                    ->where(['gender_id' => self::MALE, 'functional' => self::FUNCTIONAL, 
+                    ->where(['gender_id' => self::MALE, 'functional' => self::FUNCTIONAL,
                         'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
                     ->first();     //POCOR-6732
             $maleSanitationFunctional = $sanitationQuantitiesResult->value;
         }
-            
+
         return $maleSanitationFunctional;
     }
-    
+
     public function onExcelGetMaleSanitationNonFunctional(Event $event, Entity $entity)
     {
         $maleSanitationNonFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id_sanitation)){     //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
-                    ->where(['gender_id' => self::MALE, 'functional' => self::NONFUNCTIONAL, 
+                    ->where(['gender_id' => self::MALE, 'functional' => self::NONFUNCTIONAL,
                         'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
                     ->first();     //POCOR-6732
             $maleSanitationNonFunctional = $sanitationQuantitiesResult->value;
         }
-            
+
         return $maleSanitationNonFunctional;
     }
-    
+
     public function onExcelGetFemaleSanitationFunctional(Event $event, Entity $entity)
     {
         $femaleSanitationFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id_sanitation)){      //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
-                    ->where(['gender_id' => self::FEMALE, 'functional' => self::FUNCTIONAL, 
+                    ->where(['gender_id' => self::FEMALE, 'functional' => self::FUNCTIONAL,
                         'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
                     ->first();      //POCOR-6732
             $femaleSanitationFunctional = $sanitationQuantitiesResult->value;
         }
-            
+
         return $femaleSanitationFunctional;
     }
-    
+
     public function onExcelGetFemaleSanitationNonFunctional(Event $event, Entity $entity)
     {
         $femaleSanitationNonFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id_sanitation)){      //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
-                    ->where(['gender_id' => self::FEMALE, 'functional' => self::NONFUNCTIONAL, 
+                    ->where(['gender_id' => self::FEMALE, 'functional' => self::NONFUNCTIONAL,
                         'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
                     ->first();    //POCOR-6732
             $femaleSanitationNonFunctional = $sanitationQuantitiesResult->value;
         }
-            
+
         return $femaleSanitationNonFunctional;
     }
-    
+
     public function onExcelGetMixedSanitationFunctional(Event $event, Entity $entity)
     {
         $mixedSanitationFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id_sanitation)){       //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
-                    ->where(['gender_id' => self::MIXED, 'functional' => self::FUNCTIONAL, 
+                    ->where(['gender_id' => self::MIXED, 'functional' => self::FUNCTIONAL,
                         'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
                     ->first();     //POCOR-6732
             $mixedSanitationFunctional = $sanitationQuantitiesResult->value;
         }
-            
+
         return $mixedSanitationFunctional;
     }
-    
+
     public function onExcelGetMixedSanitationNonFunctional(Event $event, Entity $entity)
     {
         $mixedSanitationNonFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id_sanitation)){      //POCOR-6732
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
-                    ->where(['gender_id' => self::MIXED, 'functional' => self::NONFUNCTIONAL, 
+                    ->where(['gender_id' => self::MIXED, 'functional' => self::NONFUNCTIONAL,
                         'infrastructure_wash_sanitation_id' => $entity->infrastructure_wash_id_sanitation])
                     ->first();        //POCOR-6732
             $mixedSanitationNonFunctional = $sanitationQuantitiesResult->value;
         }
-            
+
         return $mixedSanitationNonFunctional;
     }
-    
+
     public function onExcelGetMaleHygieneFunctional(Event $event, Entity $entity)
     {
         $maleHygieneFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id)){
             $hygieneQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashHygieneQuantities');
             $hygieneQuantitiesResult = $hygieneQuantitiesTable->find()
-                    ->where(['gender_id' => self::MALE, 'functional' => self::FUNCTIONAL, 
+                    ->where(['gender_id' => self::MALE, 'functional' => self::FUNCTIONAL,
                         'infrastructure_wash_hygiene_id' => $entity->infrastructure_wash_id])
                     ->first();
             $maleHygieneFunctional = $hygieneQuantitiesResult->value;
         }
-            
+
         return $maleHygieneFunctional;
     }
-    
+
     public function onExcelGetMaleHygieneNonFunctional(Event $event, Entity $entity)
     {
         $maleHygieneNonFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id)){
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashHygieneQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
-                    ->where(['gender_id' => self::MALE, 'functional' => self::NONFUNCTIONAL, 
+                    ->where(['gender_id' => self::MALE, 'functional' => self::NONFUNCTIONAL,
                         'infrastructure_wash_hygiene_id' => $entity->infrastructure_wash_id])
                     ->first();
             $maleHygieneNonFunctional = $sanitationQuantitiesResult->value;
         }
-            
+
         return $maleHygieneNonFunctional;
     }
-    
+
     public function onExcelGetFemaleHygieneFunctional(Event $event, Entity $entity)
     {
         $femaleHygieneFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id)){
             $sanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashHygieneQuantities');
             $sanitationQuantitiesResult = $sanitationQuantitiesTable->find()
-                    ->where(['gender_id' => self::FEMALE, 'functional' => self::FUNCTIONAL, 
+                    ->where(['gender_id' => self::FEMALE, 'functional' => self::FUNCTIONAL,
                         'infrastructure_wash_hygiene_id' => $entity->infrastructure_wash_id])
                     ->first();
             $femaleHygieneFunctional = $sanitationQuantitiesResult->value;
         }
-            
+
         return $femaleHygieneFunctional;
     }
-    
+
     public function onExcelGetFemaleHygieneNonFunctional(Event $event, Entity $entity)
     {
         $femaleHygieneNonFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id)){
             $hygieneQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashHygieneQuantities');
             $hygieneQuantitiesResult = $hygieneQuantitiesTable->find()
-                    ->where(['gender_id' => self::FEMALE, 'functional' => self::NONFUNCTIONAL, 
+                    ->where(['gender_id' => self::FEMALE, 'functional' => self::NONFUNCTIONAL,
                         'infrastructure_wash_hygiene_id' => $entity->infrastructure_wash_id])
                     ->first();
             $femaleHygieneNonFunctional = $hygieneQuantitiesResult->value;
         }
-            
+
         return $femaleHygieneNonFunctional;
     }
-    
+
     public function onExcelGetMixedHygieneFunctional(Event $event, Entity $entity)
     {
         $mixedHygieneFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id)){
             $hygieneQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashHygieneQuantities');
             $hygieneQuantitiesResult = $hygieneQuantitiesTable->find()
-                    ->where(['gender_id' => self::MIXED, 'functional' => self::FUNCTIONAL, 
+                    ->where(['gender_id' => self::MIXED, 'functional' => self::FUNCTIONAL,
                         'infrastructure_wash_hygiene_id' => $entity->infrastructure_wash_id])
                     ->first();
             $mixedHygieneFunctional = $hygieneQuantitiesResult->value;
         }
-            
+
         return $mixedHygieneFunctional;
     }
-    
+
     public function onExcelGetMixedHygieneNonFunctional(Event $event, Entity $entity)
     {
         $mixedHygieneNonFunctional = '';
-        
+
         if(!empty($entity->infrastructure_wash_id)){
             $hygieneQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashHygieneQuantities');
             $hygieneQuantitiesResult = $hygieneQuantitiesTable->find()
-                    ->where(['gender_id' => self::MIXED, 'functional' => self::NONFUNCTIONAL, 
+                    ->where(['gender_id' => self::MIXED, 'functional' => self::NONFUNCTIONAL,
                         'infrastructure_wash_hygiene_id' => $entity->infrastructure_wash_id])
                     ->first();
             $mixedHygieneNonFunctional = $hygieneQuantitiesResult->value;
         }
-            
+
         return $mixedHygieneNonFunctional;
     }
-    
-    
+
+
 }

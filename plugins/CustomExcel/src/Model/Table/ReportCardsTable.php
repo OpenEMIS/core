@@ -311,7 +311,8 @@ class ReportCardsTable extends AppTable
                     $StudentsGpa->aliasField('student_id') => $params['student_id'],
                     $StudentsGpa->aliasField('education_grade_id') => $params['education_grade_id'],
                     $StudentsGpa->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $StudentsGpa->aliasField('institution_id') => $params['institution_id']
+                    $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
+                    $StudentsGpa->aliasField('education_grades_gpa_id') . ' IS NOT' => null //POCOR-9057
                 ])
                 ->first();
             //POCOR-8967 -- END
@@ -2667,7 +2668,8 @@ class ReportCardsTable extends AppTable
                     $StudentsGpa->aliasField('student_id') => $params['student_id'],
                     $StudentsGpa->aliasField('education_grade_id') => $params['education_grade_id'],
                     $StudentsGpa->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $StudentsGpa->aliasField('institution_id') => $params['institution_id']
+                    $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
+                    $StudentsGpa->aliasField('education_grades_gpa_id') . ' IS NOT' => null //POCOR-9057
                 ])
                 ->first();
         }
