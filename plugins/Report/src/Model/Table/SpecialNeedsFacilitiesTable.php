@@ -91,25 +91,25 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         $conditionsFloors = [];
         $conditionsRooms = [];
         $conditionsBuildings = [];
-        
+
 
         $institutions = TableRegistry::get('Institution.Institutions');
         if (!empty($areaId) && $areaId != -1) {
             if($query->repository['registryAlias'] ='Report.SpecialNeedsFacilities' ){
                 $conditionsLands['Institutions.area_id'] = $areaId;
             }
-            
+
             if($InstitutionFloors){
                 $conditionsFloors['Institutions.area_id'] = $areaId;
-            }  
+            }
 
             if($InstitutionRooms ){
                 $conditionsRooms['Institutions.area_id'] = $areaId;
-            } 
+            }
 
             if($InstitutionBuildings){
                 $conditionsBuildings['Institutions.area_id'] = $areaId;
-            } 
+            }
         }
 
         if (!empty($institution_id)) {
@@ -155,8 +155,8 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                                         ->find()
                                         ->where([$areas1->getAlias('code')=>$row->area_code])
                                         ->first();
-                            $row['region_code'] = $row['region_name'] = '';            
-                            if(!empty($areasData)){
+                            $row['region_code'] = $row['region_name'] = '';
+                            if($areasData->parent_id){ // POCOR-9070
                                 $areas = TableRegistry::get('Area.Areas');
                                 $areaLevels = TableRegistry::get('Area.AreaLevels');
                                 $institutions = TableRegistry::get('Instituion.Institutions');
@@ -177,17 +177,17 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                                                 [
                                                     $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                                                 ]
-                                            )    
+                                            )
                                             ->where([
                                                 $areaLevels->aliasField('level !=') => 1,
                                                 $areas->aliasField('id') => $areasData->parent_id
                                             ])->first();
-                                
+
                                 if (!empty($val->name) && !empty($val->code)) {
                                     $row['region_code'] = $val->code;
                                     $row['region_name'] = $val->name;
                                 }
-                            } 
+                            }
                             return $row;
                         });
                     })//POCOR-6730 ENDS
@@ -219,7 +219,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                                         ->where([$areas1->getAlias('code')=>$row->area_code])
                                         ->first();
                             $row['region_code'] = $row['region_name'] = '';
-                            if(!empty($areasData)){
+                            if($areasData->parent_id){ // POCOR-9070
                                 $areas = TableRegistry::get('Area.Areas');
                                 $areaLevels = TableRegistry::get('Area.AreaLevels');
                                 $institutions = TableRegistry::get('Instituion.Institutions');
@@ -240,22 +240,22 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                                                 [
                                                     $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                                                 ]
-                                            )    
+                                            )
                                             ->where([
                                                 $areaLevels->aliasField('level !=') => 1,
                                                 $areas->aliasField('id') => $areasData->parent_id
                                             ])->first();
-                                
+
                                 if (!empty($val->name) && !empty($val->code)) {
                                     $row['region_code'] = $val->code;
                                     $row['region_name'] = $val->name;
                                 }
-                            } 
+                            }
                             return $row;
                         });
                     })//POCOR-6730 ENDS
                     ->contain(['InfrastructureConditions', 'FloorStatuses', 'FloorTypes', 'Institutions','Institutions.Areas'])
-            )            
+            )
             ->union(
                 $InstitutionRooms->find()
                     ->select([
@@ -283,7 +283,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                                         ->where([$areas1->getAlias('code')=>$row->area_code])
                                         ->first();
                             $row['region_code'] = $row['region_name'] = '';
-                            if(!empty($areasData)){
+                            if($areasData->parent_id){ // POCOR-9070
                                 $areas = TableRegistry::get('Area.Areas');
                                 $areaLevels = TableRegistry::get('Area.AreaLevels');
                                 $institutions = TableRegistry::get('Instituion.Institutions');
@@ -304,23 +304,23 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                                                 [
                                                     $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                                                 ]
-                                            )    
+                                            )
                                             ->where([
                                                 $areaLevels->aliasField('level !=') => 1,
                                                 $areas->aliasField('id') => $areasData->parent_id
                                             ])->first();
-                                
+
                                 if (!empty($val->name) && !empty($val->code)) {
                                     $row['region_code'] = $val->code;
                                     $row['region_name'] = $val->name;
                                 }
-                            } 
+                            }
                             return $row;
                         });
                     })//POCOR-6730 ENDS
                     ->contain(['InfrastructureConditions', 'RoomStatuses', 'RoomTypes', 'Institutions','Institutions.Areas'])
             )
-            
+
             ->union(
                 $InstitutionBuildings->find()
                     ->select([
@@ -347,7 +347,7 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                                         ->where([$areas1->getAlias('code')=>$row->area_code])
                                         ->first();
                             $row['region_code'] = $row['region_name'] = '';
-                            if(!empty($areasData)){
+                            if($areasData->parent_id){ // POCOR-9070
                                 $areas = TableRegistry::get('Area.Areas');
                                 $areaLevels = TableRegistry::get('Area.AreaLevels');
                                 $institutions = TableRegistry::get('Instituion.Institutions');
@@ -368,17 +368,17 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
                                                 [
                                                     $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                                                 ]
-                                            )    
+                                            )
                                             ->where([
                                                 $areaLevels->aliasField('level !=') => 1,
                                                 $areas->aliasField('id') => $areasData->parent_id
                                             ])->first();
-                                
+
                                 if (!empty($val->name) && !empty($val->code)) {
                                     $row['region_code'] = $val->code;
                                     $row['region_name'] = $val->name;
                                 }
-                            } 
+                            }
                             return $row;
                         });
                     })//POCOR-6730 ENDS
