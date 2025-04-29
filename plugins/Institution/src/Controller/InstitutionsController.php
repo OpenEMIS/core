@@ -3039,7 +3039,11 @@ class InstitutionsController extends AppController
             && $action == 'ImportInstitutions') {
             return true;
         }
+
         if ($furtherAction == 'ajaxInstitutionsAutocomplete') {
+            return true;
+        }
+        if ($furtherAction == 'ajaxAssessorAutocomplete') { // POCOR-9061
             return true;
         }
         // POCOR-7799 start

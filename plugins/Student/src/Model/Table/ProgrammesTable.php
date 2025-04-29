@@ -35,7 +35,12 @@ class ProgrammesTable extends ControllerActionTable
 		$this->addBehavior('User.User');
 		$this->addBehavior('Institution.InstitutionTab', [
 			'appliedAction' => [
-				'StudentProgrammes' => ['id', 'education_programme_id']
+                // POCOR-8980 start
+				'StudentProgrammes' => ['id',
+                    'education_programme_id',
+                    'institution_id',
+                    'student_id']
+                // POCOR-8980 end
 			]
 		]);
 		// $this->addBehavior('Student.StudentTab', [
@@ -77,8 +82,10 @@ class ProgrammesTable extends ControllerActionTable
 	}
 	//POCOR-5742 ends
 
-	public function onGetInstitutionId(Event $event, Entity $entity)
+    // POCOR-8980
+	public function onGetInstitution(Event $event, Entity $entity)
 	{
+
 		return $entity->institution->code_name;
 	}
 
@@ -110,13 +117,15 @@ class ProgrammesTable extends ControllerActionTable
 		$this->fields['end_year']['visible'] = 'false';
 		$this->fields['photo_content']['visible'] = 'false';
 		$this->fields['openemis_no']['visible'] = 'false';
-		$this->fields['institution_id']['type'] = 'integer';
+		$this->fields['institution_id']['type'] = 'hidden'; // POCOR-8980 start
+		$this->field('institution'); // POCOR-8980 end
 		$this->fields['academic_period_id']['sort'] = ['field' => 'AcademicPeriods.name'];
 		$this->fields['registration_number']['visible'] = 'false'; //POCOR-8870
 
 		$this->setFieldOrder([
 			'academic_period_id',
 			'institution_id',
+			'institution', // POCOR-8980
 			'education_grade_id',
 			'start_date',
 			'end_date',
@@ -193,8 +202,9 @@ class ProgrammesTable extends ControllerActionTable
 				$sId = $this->getStudentID();
 			}
 			if (!empty($sId)) {
+                $studentId = $this->paramsDecode($sId); // POCOR-8980
 				if ($studentId['id']) {
-					$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+					$studentId = $studentId['id']; // POCOR-8980
 				}
 			} else {
 				$studentId = $this->getUserID();
@@ -228,7 +238,7 @@ class ProgrammesTable extends ControllerActionTable
 				$this->aliasField('student_id') => $studentId,
 				//$this->aliasField('institution_id') => $institutionId
 			]);
-		//POCOR-8704 -- Commenting code as it is fetching limited data		
+		//POCOR-8704 -- Commenting code as it is fetching limited data
 		// if(!empty($institutionId)) {
 		// 	$query
 		// 	->where([
@@ -296,12 +306,19 @@ class ProgrammesTable extends ControllerActionTable
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
 	{
+        // POCOR-8980 start
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		$queryString   = $this->getQueryString();
 		$institutionId  = $queryString['institution_id'];
+//        dd($entity);
 		$studentId = $queryString['student_id'];
 		//entity->institution->id = $institutionId;
-		if (!empty($entity->institution)) {
-			$entity->institution->id = $institutionId;
+		if ($entity->student_id) {
+            $studentId = $entity->student_id;
+		}
+//        dd($entity->institution);
+        if ($entity->institution) {
+            $institutionId = $entity->institution->id;
 		} else {
 			$result = $this->Institutions
 				->find()
@@ -309,8 +326,10 @@ class ProgrammesTable extends ControllerActionTable
 				->first();
 			$entity->institution = $result;
 		}
+        $queryString['institution_id'] = $institutionId;
+        $queryString['student_id'] = $studentId;
 		$encodedQueryString = $this->paramsEncode($queryString);
-
+//        dd($queryString);
 		if (isset($buttons['view'])) {
 			$url = [
 				'plugin' => 'Institution',
@@ -320,6 +339,8 @@ class ProgrammesTable extends ControllerActionTable
 				$encodedQueryString
 			];
 			$buttons['view']['url'] = $url;
+            $buttons['view']['attr']['title'] = $institutionId;
+            $buttons['view']['title'] = $institutionId;
 		}
 
 		$statuses = $this->StudentStatuses->findCodeList();
@@ -356,7 +377,8 @@ class ProgrammesTable extends ControllerActionTable
 		}
 		//POCOR-5671
 
-		return parent::onUpdateActionButtons($event, $entity, $buttons);
+		return $buttons;
+        // POCOR-8980 end
 	}
 
 	public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -459,7 +481,7 @@ class ProgrammesTable extends ControllerActionTable
 			$institutionStudentProgramme->student_id = $entity->student_id;
 			$institutionStudentProgramme->registration_number = $entity->registration_number;
 			$institutionStudentProgramme->institution_id = $entity->institution_id;
-			
+
 			$InstitutionStudentProgrammesTable->save($institutionStudentProgramme);
 
 		}

@@ -25,7 +25,7 @@ while IFS= read -r API_PATH; do
 
     # Run Laravel command and capture output
     OUTPUT=$(stdbuf -o0 php artisan swagger:clear-swagger-annotations "$API_PATH" 2>&1)
-    OUTPUT=$(stdbuf -o0 php artisan swagger:fix-swagger-annotations "$API_PATH" 2>&1)
+#    OUTPUT=$(stdbuf -o0 php artisan swagger:fix-swagger-annotations "$API_PATH" 2>&1)
 
     # ✅ End execution timer
     END_TIME=$(date +%s)
