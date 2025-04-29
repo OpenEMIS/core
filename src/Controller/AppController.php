@@ -133,7 +133,7 @@ class AppController extends Controller
         $this->loadComponent('Localization.Localization', [
             'productName' => $this->productName
         ]);
-
+        $themeData = $this->getTheme(); // POCOR-8951
         $this->loadComponent('OpenEmis.OpenEmis', [
             'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
             'headerMenu' => [
@@ -144,12 +144,14 @@ class AppController extends Controller
                     'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout']
                 ]
             ],
-            'productName' => $this->getTheme()['application_name'],
-            'productLogo' => $this->getTheme()['logo'],
-            'footerText' => $this->getTheme()['copyright_notice_in_footer'],
-            'theme' => $theme,
-            'lastModified' => $this->getTheme()['timestamp']
-        ]);
+            // POCOR-8951 start
+            'productName' => $themeData['application_name'] ?? 'OpenEMIS',
+            'productLogo' => $themeData['logo'] ?? null,
+            'footerText' => $themeData['copyright_notice_in_footer'] ?? '',
+            'theme' => $theme ?? null,
+            'lastModified' => $themeData['timestamp'] ?? time(),
+            // POCOR-8951 end
+            ]);
 
         $this->loadComponent('OpenEmis.ApplicationSwitcher', [
             'productName' => $this->productName
@@ -251,63 +253,90 @@ class AppController extends Controller
 
     public function getTheme()
     {
-        $themes = Cache::read('cake_themes');
-        if (!$themes) {
-            $folder = new Folder();
-            $folder->delete(WWW_ROOT . 'img' . DS . 'themes');
-            $theme = TableRegistry::getTableLocator()->get('Theme.Themes');
-            $themes =  $theme->find()
-                ->formatResults(function ($results) {
-                    $res = [];
-                    foreach ($results as $r) {
-                        if ($r->content) {
-                            $file = new File(WWW_ROOT . 'img' . DS . 'themes' . DS . $r->value, true);
-                            $file->write(stream_get_contents($r->content));
-                            $file->close();
-                        }
-                        $code = Inflector::underscore(str_replace(' ', '', $r->name));
-                        if ($code == 'login_page_image' || $code == 'favicon') {
-                            $res[$code] = !empty($r->value) ? 'themes/' . $r->value : 'default_images/' . $r->default_value;
-                        } elseif ($code == 'copyright_notice_in_footer' || $code == 'logo') {
-                            $res[$code] = !empty($r->value) ? 'themes/' . $r->value : null;
-                        } else {
-                            $res[$code] = !empty($r->value) ? $r->value : $r->default_value;
-                        }
-                    }
-                    return $res;
-                })
-                ->toArray();
-            // if (is_string($themes)) {
-            //     // Unserialize the string to convert it back to an array
-            //     $themes = unserialize($themes);
-            // }
-            // echo "<pre>";
-            // print_r($themes['colour']);
-            // die;
-            $colour = $themes['colour'];
-            $secondaryColour = $this->darkenColour($colour);
-            $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
-            $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) . '/';
+        // POCOR-8951 start
 
-            $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
-            // echo "<pre>";print_r($loginBackground);die;
-            $file = new File($customPath . 'layout.core.template.css');
-            $template = $file->read();
-            $file->close();
-            $template = str_replace('${bgImg}', "'$loginBackground'", $template);
-            if (!empty($secondaryColour)) {
-                $template = str_replace('${secondColor}', $secondaryColour, $template);
-            }
-            $template = str_replace('${prodColor}', "#$colour", $template);
-            $customPath = WWW_ROOT . 'css' . DS . 'themes' . DS;
-            $file = new File($customPath . 'layout.min.css', true);
-            $file->write($template);
-            $file->close();
-            $themes['timestamp'] = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('themes');
-            Cache::write('themes', $themes);
+        $themes = Cache::read('themes');
+        if($themes){
+            return $themes;
         }
+        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $coreConfig = $configItems->find()
+            ->select(['id'])
+            ->where(['code' => 'openemis_core', 'type' => 'Online Services'])
+            ->first();
+
+        if (!$coreConfig) {
+            return []; // Return empty if no core config found
+        }
+
+        // Delete old theme images
+        $folder = new Folder();
+        $folder->delete(WWW_ROOT . 'img' . DS . 'themes');
+
+        // Get only themes with the correct config_item_id
+        $themeTable = TableRegistry::getTableLocator()->get('Theme.Themes');
+        $themeQuery = $themeTable->find()
+            ->where(['config_item_id' => $coreConfig->id]);
+
+        $themes = [];
+
+        foreach ($themeQuery as $r) {
+            // Handle file content writing
+            if ($r->content) {
+                $file = new File(WWW_ROOT . 'img' . DS . 'themes' . DS . $r->value, true);
+                $file->write(stream_get_contents($r->content));
+                $file->close();
+            }
+
+            // Create code-friendly key
+            $code = Inflector::underscore(str_replace(' ', '', $r->name));
+
+            // Apply specific rules per theme item type
+            if (in_array($code, ['login_page_image', 'favicon'])) {
+                $themes[$code] = !empty($r->value) ? 'themes/' . $r->value : 'default_images/' . $r->default_value;
+            } elseif (in_array($code, ['copyright_notice_in_footer', 'logo'])) {
+                $themes[$code] = !empty($r->value) ? 'themes/' . $r->value : null;
+            } else {
+                $themes[$code] = !empty($r->value) ? $r->value : $r->default_value;
+            }
+        }
+
+// Return an empty array if no results found
+        if (empty($themes)) {
+            return [];
+        }
+        Log::write('debug', 'Theme data: ' . print_r($themes, true));
+        // Modify CSS template
+        $colour = $themes['colour'] ?? '000000';
+        $secondaryColour = $this->darkenColour($colour);
+
+        $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
+        $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) . '/';
+
+        $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
+
+        $templateFile = new File($customPath . 'layout.core.template.css');
+        $template = $templateFile->read();
+        $templateFile->close();
+
+        $template = str_replace('${bgImg}', "'$loginBackground'", $template);
+        $template = str_replace('${secondColor}', $secondaryColour, $template);
+        $template = str_replace('${prodColor}', "#$colour", $template);
+
+        // Write final CSS
+        $finalCssPath = WWW_ROOT . 'css' . DS . 'themes' . DS . 'layout.min.css';
+        $file = new File($finalCssPath, true);
+        $file->write($template);
+        $file->close();
+
+        // Add timestamp and cache
+        $themes['timestamp'] = $configItems->value('themes');
+        Cache::write('themes', $themes);
+        Cache::write('cake_themes', $themes);
         return $themes;
+    // POCOR-8951 end
     }
+
 
     /**
      * Before render callback.

@@ -10,6 +10,8 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 
 class CompetencyPeriodsTable extends ControllerActionTable
 {
@@ -309,38 +311,20 @@ class CompetencyPeriodsTable extends ControllerActionTable
     public function onUpdateFieldCompetencyItems(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            if ($action == 'add') {
-                $selectedTemplate = $request->getData($this->aliasField('competency_template_id'));
-                $selectedPeriod = $request->getData($this->aliasField('academic_period_id'));
+            // POCOR-9056 start
+            $entity = $attr['entity'];
+                $selectedTemplateId = $entity->competency_template_id;
+                $selectedPeriodId = $entity->academic_period_id;
                 $itemOptions = [];
-                if ($selectedTemplate && $selectedPeriod) {
-                    $itemOptions = $this->CompetencyItems->find('ItemList', ['templateId' => $selectedTemplate, 'academicPeriodId' => $selectedPeriod])->toArray();
+                if ($selectedTemplateId && $selectedPeriodId) {
+                    $itemOptions = $this->CompetencyItems->find('ItemList',
+                        ['templateId' => $selectedTemplateId,
+                            'academicPeriodId' => $selectedPeriodId])
+                        ->toArray();
                 }
                 $attr['options'] = $itemOptions;
-            } else {
-                //POCOR-6689
-                $getData =  $event->getData(0);
-                $arrayData = (array)$getData['entity'];
-                $unset_val = array_shift($arrayData);
-                $itemOptions = [];
-                $tabled = TableRegistry::get('Competency.CompetencyItems');
-                $pc = 0;
-                foreach($arrayData as $value){
-                    if($pc==1) break;
-                    $academicPeriod = $value['academic_period_id'];
-                    $competencytemplate = $value['competency_template_id'];
-                    $academicPeriodId =  preg_replace('~\D~', '', $academicPeriod);
-                    $competencytemplateId =  preg_replace('~\D~', '', $competencytemplate);
-                    $itemOptions = $tabled->find('list', ['keyField' => 'id', 'valueField' => 'name'])->where(['competency_template_id' => $competencytemplateId, 'academic_period_id' => $academicPeriodId])->toArray();
-                    $attr['options'] = $itemOptions;
-                    /*$attr['type'] = 'element';
-                    $attr['element'] = 'Competency.competency_items';*/
-                    $pc++ ;
-                }
-
-            }
-            //POCOR-6689
         }
+        // POCOR-9056 end
         return $attr;
     }
 
@@ -349,6 +333,54 @@ class CompetencyPeriodsTable extends ControllerActionTable
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
             $this->CompetencyItems->getAlias(),
         ];
+    }
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)

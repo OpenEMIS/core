@@ -1263,8 +1263,27 @@ class RecordBehavior extends Behavior
     // Model.excel.onExcelUpdateFields
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+
         $recordId = $settings['id'];
-        $entity = $this->_table->get($recordId);
+        // POCOR-9067 start: problem for class or institution
+        if(!isset($recordId)) {
+            $checkEncodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
+            $encodedClassId = $this->_table->paramsDecode($checkEncodedClassId);//POCOR-8323
+            if (isset($encodedClassId['institution_class_id'])) {//POCOR-8323        }
+                $recordId = $encodedClassId['institution_class_id'];
+            }else{
+                if (isset($encodedClassId['institution_id'])) {//POCOR-8323        }
+                    $recordId = $encodedClassId['institution_id'];
+                }
+            }
+        }
+        try {
+            $entity = $this->_table->get($recordId);
+        } catch (\Exception $e) {
+            Log::error('Error fetching entity: ' . $e->getMessage());
+            return $fields;
+        }
+        // POCOR-9067 end
 
         $tableCustomFieldIds = [];
         $customFieldQuery = $this->getCustomFieldQuery($entity);
@@ -1320,13 +1339,19 @@ class RecordBehavior extends Behavior
 
         // Set the available options for dropdown and checkbox type
         $this->_customFieldOptions = $settings['sheet']['customFieldOptions'];
+        // POCOR-9067 start
+        $request = $this->_table->request;
+        if ($request->getParam('controller') == 'Institutions' && $request->getParam('action') == 'Classes') {
+            $this->_fieldValues = $tableCustomFieldIds;
+        } else {
 
-        // Set the fetched table cell values to avoid multiple call to the database
-        $tableCellValues = $this->getTableCellValues($tableCustomFieldIds, $entity->id);
+            $tableCellValues = $this->getTableCellValues($tableCustomFieldIds, $entity->id);
 
-        // Set the fetched field values to avoid multiple call to the database
-        $fieldValues = $this->getFieldValue($entity->id) + $tableCellValues;
-        ksort($fieldValues);
+            // Set the fetched field values to avoid multiple call to the database
+            $fieldValues = $this->getFieldValue($entity->id) + $tableCellValues;
+            ksort($fieldValues);
+        }
+        // POCOR-9067 end
         $this->_fieldValues = $fieldValues;
     }
 
@@ -1364,23 +1389,33 @@ class RecordBehavior extends Behavior
     // Model.excel.onExcelRenderCustomField
     public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr)
     {
-        if (!empty($this->_fieldValues)) {
-            $answer = '';
+        // POCOR-9067 start
+        $request = $this->_table->request; //POCOR-8409
+        $answer = '';
+        if ($request->getParam('controller') == 'Institutions' && $request->getParam('action') == 'Classes') {
+            $tableCustomFieldIds = $this->_fieldValues;
+            $tableCellValues = $this->getTableCellValues($tableCustomFieldIds, $entity->institution_class_id);
+            $field_values = $this->getFieldValue($entity->institution_class_id) + $tableCellValues;
+            ksort($field_values);
+        } else {
+            $field_values = $this->_fieldValues;
+        }
+        if (!empty($field_values)) {
+
             $type = strtolower($attr['customField']['field_type']);
             if (method_exists($this, $type)) {
                 $request = $this->_table->request; //POCOR-8409
                 if($request->getParam('controller') == 'Institutions' && $request->getParam('action') == 'Surveys') {
                     $type = 'getCustomField';
                 }
-                $ans = $this->$type($this->_fieldValues, $attr['customField'], $this->_customFieldOptions);
+                $ans = $this->$type($field_values, $attr['customField'], $this->_customFieldOptions);
                 if (!(is_null($ans))) {
                     $answer = $ans;
                 }
             }
             return $answer;
-        } else {
-            return '';
         }
+    // POCOR-9067 start
     }
 
     /**

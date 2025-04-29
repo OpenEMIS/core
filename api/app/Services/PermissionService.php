@@ -8,6 +8,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon; // POCOR-9085
 
 
 class PermissionService
@@ -16,19 +17,12 @@ class PermissionService
     protected $roleIds = [];
     protected $institutionIds = [];
     protected $allowAllInstitutions = 0;
-    private array $commonViewModules = [
-        'Areas',
-        'Genders',
-        'AreaAdministratives',
-        'AreaLevels',
-        'AcademicPeriods',
-        'AcademicPeriodLevels',
-        'ContactTypes'
-        // Add more modules that should be always viewable
-    ];
+
+    // POCOR-8966
 
     public function __construct()
     {
+
         $this->user = JWTAuth::user();
         if ($this->user) {
             $this->loadUserPermissions();
@@ -38,6 +32,13 @@ class PermissionService
     private function loadUserPermissions()
     {
         $userId = $this->user->id;
+        // POCOR-8966 start
+        // If user is super admin, override permissions
+        if ($this->user->super_admin ?? 0) {
+            $this->allowAllInstitutions = 1;
+            return;
+        }
+        // POCOR-8966 end
         $this->roleIds = SecurityGroupUsers::where('security_user_id', $userId)
             ->pluck('security_role_id')
             ->unique()
@@ -64,15 +65,19 @@ class PermissionService
         $this->allowAllInstitutions = $groupAreaInstitutions['allowAllInstitutions'] ?? 0;
         $this->institutionIds = array_unique(array_merge($this->institutionIds, $groupAreaInstitutions['institutionIds'] ?? []));
 
-        // If user is super admin, override permissions
-        if ($this->user->super_admin ?? 0) {
-            $this->allowAllInstitutions = 1;
-        }
     }
 
     public function checkPermission($modelName, $action): bool
     {
-        $user = JWTAuth::user();
+        // POCOR-8966 start
+        if (!$this->user) {
+            $this->user = JWTAuth::user();
+            if ($this->user) {
+                $this->loadUserPermissions();
+            }
+        }
+        $user = $this->user;
+        // POCOR-8966 end
         if (!$user) {
             return false;
         }
@@ -81,16 +86,28 @@ class PermissionService
             return true; // Super admin has all permissions
         }
 
+        // POCOR-9085 start: Attempt to get cached permissions
         $cacheKey = "permissions:user:{$user->id}";
+        $cacheTTL = Carbon::now()->addMinutes(10); // or Carbon::now()->addMinutes(10)
 
-        // Attempt to get cached permissions
-        $permissions = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
+// Use Laravel's lazy caching
+        $permissions = Cache::remember($cacheKey, $cacheTTL, function () use ($user) {
             return $this->loadPermissionsFromDb($user->id);
         });
 //        $permissions = $this->loadPermissionsFromDb($user->id);
-
-
-        return $this->hasPermission($permissions, $modelName, $action);
+//        Log::info("Permissions for" . $user->id . ': ' . print_r($permissions, true));
+        if (empty($permissions)) {
+            Log::info("Permissions not found in cache, loading from DB");
+            $permissions = $this->loadPermissionsFromDb($user->id);
+        }
+        if (empty($permissions)) {
+            Log::info("No permissions found for user: " . $user->id);
+            return false; // No permissions found
+        }
+        // POCOR-9085 end:
+        $hasPermission = $this->hasPermission($permissions, $modelName, $action);
+//        Log::info("Has permission: $hasPermission");
+        return $hasPermission;
     }
 
     private function loadPermissionsFromDb($userId): array
@@ -157,34 +174,19 @@ class PermissionService
 
     private function hasPermission($permissions, $modelName, $action): bool
     {
-        if ($action === 'view' && in_array($modelName, $this->commonViewModules, true)) {
-            return true;
-        }
-//        Log::info("Checking permission: $modelName.$action");
-//        Log::info("Permissions: " . print_r($permissions,true));
         foreach ($permissions as $module => $permTypes) {
             foreach (['_view', '_edit', '_add', '_delete', '_execute'] as $perm) {
                 if (isset($permTypes[$perm])) {
                     $permValues = $permTypes[$perm];
-//                    Log::info("Checking permission: $module.$action");
-                    // 🔹 Check for general permission like "Institutions.view"
-                    if (in_array("$module.$action", $permValues, true)) {
-                        return true;
-                    }
-
+                    // POCOR-8966 start
                     // 🔹 Check for specific model-based permission like "InstitutionStudents.view"
                     if (in_array("$modelName.$action", $permValues, true)) {
                         return true;
                     }
-
-                    // 🔹 Check if only "view", "edit", etc. exists (without module prefix)
-//                    if (in_array($action, $permValues, true)) {
-//                        return true;
-//                    }
+                    // POCOR-8966 end
                 }
             }
         }
-
         return false;
     }
 

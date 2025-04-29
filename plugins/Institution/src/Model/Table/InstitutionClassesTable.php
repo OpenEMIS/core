@@ -613,8 +613,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 if($this->action == 'add') {
 
                     $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                    if ($this->Auth->user()) {
-                        $Webhooks->triggerShell('class_create', ['username' => $username], $body);
+                    $user = $this->Auth->user(); // POCOR-9024
+                    if ($user) {
+                        $Webhooks->triggerShell('class_create', ['username' => $user->username], $body);
                     }
                 }
                 // POCOR-5435 ->Webhook Feature class (create) -- end
@@ -662,6 +663,11 @@ class InstitutionClassesTable extends ControllerActionTable
                 }
 
                 foreach ($newStudents as $key => $student) {
+                    // POCOR-9024 start
+                    if (!isset($student['id'])) {
+                        $student['id'] = Text::uuid();
+                    }
+                    // POCOR-9024 end
                     $newClassStudentEntity = $this->ClassStudents->newEntity($student);
                     $store = $this->ClassStudents->save($newClassStudentEntity);
                     if ($store) {
@@ -2603,7 +2609,8 @@ class InstitutionClassesTable extends ControllerActionTable
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         //Start:POCOR-6678 add institution_class_id in field
         $query
-        ->select(['institution_class_id'=>'InstitutionClasses.id','total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'
+        ->select(['institution_class_id'=>'InstitutionClasses.id',
+            'total_male_students' => 'InstitutionClasses.total_male_students','total_female_students' => 'InstitutionClasses.total_female_students'
             ])
         ->where([
             $this->aliasField('academic_period_id ='). $selectedAcademicPeriodId,
@@ -2616,10 +2623,14 @@ class InstitutionClassesTable extends ControllerActionTable
         * @ticket POCOR-6635 starts
         */
         //$encodedClassId = $this->request->getAttribute('params')['pass'][1];//POCOR-8323
-        $checkEncodedClassId = $this->request->getAttribute('params')['pass'][1];//POCOR-8323
-        $encodedClassId = $this->paramsDecode($checkEncodedClassId);//POCOR-8323
-        if (isset($encodedClassId['institution_class_id'])) {//POCOR-8323
-            $query;
+        $checkEncodedClassId = $this->request->getAttribute('params')['pass'][1] ?? null;//POCOR-8323
+        if ($checkEncodedClassId) {
+            $encodedClassId = $this->paramsDecode($checkEncodedClassId);//POCOR-8323
+            if (isset($encodedClassId['institution_class_id'])) {//POCOR-8323
+                $query;
+            } else {
+                $query->group(['InstitutionClasses.id']);
+            }
         } else {
             $query->group(['InstitutionClasses.id']);
         }

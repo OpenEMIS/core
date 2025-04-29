@@ -52,6 +52,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleScholarshipDisbursement');
         $this->addBehavior('Alert.AlertRuleCaseEscalation');//POCOR-7642
         $this->addBehavior('Alert.AlertRuleSystemUpdates');//POCOR-7642
+        $this->addBehavior('Alert.AlertRuleStudentAdmission');//POCOR-8869
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -325,26 +326,58 @@ class AlertRulesTable extends ControllerActionTable
 
     public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
-
-            if ($entity->has('feature')) {
-                $feature = $entity->feature;
-
-                if (in_array($feature, ['ScholarshipApplication'])) {
-                    $attr['type'] = 'disabled';
-                    $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-                    $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
-                } else {
-                    $roleOptions = $this->SecurityRoles
-                        ->find('list')
-                        ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
-                        ->find('visible')
-                        ->find('order')
-                        ->toArray();
-
-                    $attr['type'] = 'chosenSelect';
-                    $attr['options'] = $roleOptions;
+        //POCOR-8869[START]
+        $admissionFeature = $this->request->getData()['AlertRules']['feature'];
+        if($admissionFeature == 'StudentAdmission'){
+            if ($action == 'add' || $action == 'edit') {
+                $entity = $attr['entity'];
+    
+                if ($entity->has('feature')) {
+                    $feature = $entity->feature;
+    
+                    if (in_array($feature, ['ScholarshipApplication'])) {
+                        $attr['type'] = 'disabled';
+                        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+                        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+                    } else {
+                        $roleOptions = $this->SecurityRoles
+                            ->find('list')
+                            ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
+                            ->find('visible')
+                            ->find('order')
+                            ->toArray();
+    
+                        $attr['type'] = 'chosenSelect';
+                        $attr['options'] = $roleOptions;
+                        $filteredRoles = array_filter($roleOptions, function ($role) {
+                            return $role === "Guardian";
+                        }, ARRAY_FILTER_USE_BOTH);
+                        $attr['options'] = $filteredRoles;
+                    }
+                }
+            }
+        }else{ //POCOR-8869[END]
+            if ($action == 'add' || $action == 'edit') {
+                $entity = $attr['entity'];
+    
+                if ($entity->has('feature')) {
+                    $feature = $entity->feature;
+    
+                    if (in_array($feature, ['ScholarshipApplication'])) {
+                        $attr['type'] = 'disabled';
+                        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+                        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+                    } else {
+                        $roleOptions = $this->SecurityRoles
+                            ->find('list')
+                            ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
+                            ->find('visible')
+                            ->find('order')
+                            ->toArray();
+    
+                        $attr['type'] = 'chosenSelect';
+                        $attr['options'] = $roleOptions;
+                    }
                 }
             }
         }
@@ -500,7 +533,24 @@ class AlertRulesTable extends ControllerActionTable
                         }
                         //POCOR-7462 end
 
-
+                        if($thresholdConfig[$field]['options']=="StudentAdmission.workflow_steps"){
+                            $Model = TableRegistry::get('Workflow.WorkflowSteps');
+                            $Workflows = TableRegistry::get('Workflow.Workflows');
+                            $WorkflowsData = $Workflows->find()
+                                    ->where(['code' => 'STUDENT-ADMISSION-1001'])
+                                    ->first();
+                            $ModelData = $Model->find()
+                                    ->where(['workflow_id' => $WorkflowsData->workflow_model_id, 'name' => 'Approved'])
+                                    ->first();
+                            $ModelDataId = $ModelData->id;
+                            if (is_array($value)) {
+                                $entity->{$field} = [];
+                                // foreach ($value as $modelId) {
+                                    $entity->{$field}[] = $Model->get($ModelDataId);
+                                // }
+                            }
+                        }
+                        
                     }
                 }
             }
