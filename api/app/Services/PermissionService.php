@@ -69,15 +69,15 @@ class PermissionService
 
     public function checkPermission($modelName, $action): bool
     {
-        // POCOR-8966 start
+        // POCOR-9093 simplified
         if (!$this->user) {
             $this->user = JWTAuth::user();
             if ($this->user) {
                 $this->loadUserPermissions();
             }
         }
+
         $user = $this->user;
-        // POCOR-8966 end
         if (!$user) {
             return false;
         }
@@ -86,28 +86,24 @@ class PermissionService
             return true; // Super admin has all permissions
         }
 
-        // POCOR-9085 start: Attempt to get cached permissions
         $cacheKey = "permissions:user:{$user->id}";
-        $cacheTTL = Carbon::now()->addMinutes(10); // or Carbon::now()->addMinutes(10)
+        $cacheTTL = 600; // 10 minutes in seconds
 
-// Use Laravel's lazy caching
-        $permissions = Cache::remember($cacheKey, $cacheTTL, function () use ($user) {
-            return $this->loadPermissionsFromDb($user->id);
-        });
-//        $permissions = $this->loadPermissionsFromDb($user->id);
-//        Log::info("Permissions for" . $user->id . ': ' . print_r($permissions, true));
-        if (empty($permissions)) {
-            Log::info("Permissions not found in cache, loading from DB");
-            $permissions = $this->loadPermissionsFromDb($user->id);
+        try {
+            $permissions = Cache::remember($cacheKey, $cacheTTL, function () use ($user) {
+                return $this->loadPermissionsFromDb($user->id);
+            });
+        } catch (\Throwable $e) {
+            Log::error("Cache error while fetching permissions for user {$user->id}: " . $e->getMessage());
+            return false;
         }
+
         if (empty($permissions)) {
-            Log::info("No permissions found for user: " . $user->id);
-            return false; // No permissions found
+            Log::warning("Permission loading failed after cache attempt for user: {$user->id}");
+            return false;
         }
-        // POCOR-9085 end:
-        $hasPermission = $this->hasPermission($permissions, $modelName, $action);
-//        Log::info("Has permission: $hasPermission");
-        return $hasPermission;
+
+        return $this->hasPermission($permissions, $modelName, $action);
     }
 
     private function loadPermissionsFromDb($userId): array
