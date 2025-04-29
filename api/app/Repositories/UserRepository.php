@@ -158,7 +158,8 @@ class UserRepository extends Controller
         try {
             $user = SecurityUsers::
                     where('username', $username)
-                    ->where('super_admin', 0)
+                    ->orWhere('openemis_no', $username)
+                    // ->where('super_admin', 0)
                     ->first();
             if (isset($user)) {
                 return $user->id;
