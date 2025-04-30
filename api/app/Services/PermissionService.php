@@ -69,46 +69,43 @@ class PermissionService
 
     public function checkPermission($modelName, $action): bool
     {
-        // POCOR-8966 start
+        // POCOR-9092 autoloaded cache
         if (!$this->user) {
             $this->user = JWTAuth::user();
             if ($this->user) {
                 $this->loadUserPermissions();
             }
         }
+
         $user = $this->user;
-        // POCOR-8966 end
         if (!$user) {
             return false;
         }
 
         if ($user->super_admin ?? 0) {
-            return true; // Super admin has all permissions
+            return true;
         }
 
-        // POCOR-9085 start: Attempt to get cached permissions
         $cacheKey = "permissions:user:{$user->id}";
-        $cacheTTL = Carbon::now()->addMinutes(10); // or Carbon::now()->addMinutes(10)
+        $cacheTTL = 600; // seconds (10 min)
 
-// Use Laravel's lazy caching
-        $permissions = Cache::remember($cacheKey, $cacheTTL, function () use ($user) {
-            return $this->loadPermissionsFromDb($user->id);
-        });
-//        $permissions = $this->loadPermissionsFromDb($user->id);
-//        Log::info("Permissions for" . $user->id . ': ' . print_r($permissions, true));
+        $permissions = Cache::get($cacheKey);
+
         if (empty($permissions)) {
-            Log::info("Permissions not found in cache, loading from DB");
+            Log::info("Permissions cache miss for user {$user->id}. Reloading from DB.");
             $permissions = $this->loadPermissionsFromDb($user->id);
+
+            if (!empty($permissions)) {
+                Cache::put($cacheKey, $permissions, $cacheTTL);
+            } else {
+                Log::warning("No permissions found for user {$user->id} after DB reload.");
+                return false;
+            }
         }
-        if (empty($permissions)) {
-            Log::info("No permissions found for user: " . $user->id);
-            return false; // No permissions found
-        }
-        // POCOR-9085 end:
-        $hasPermission = $this->hasPermission($permissions, $modelName, $action);
-//        Log::info("Has permission: $hasPermission");
-        return $hasPermission;
+
+        return $this->hasPermission($permissions, $modelName, $action);
     }
+
 
     private function loadPermissionsFromDb($userId): array
     {
