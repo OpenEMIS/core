@@ -1,3 +1,18 @@
+### [4.23.0] - 2025-04-30
+- Implemented: Develop a new Report in the Institution module called Consumables
+- Implemented: Develop Institution Timetables feature in Angular v11
+- Bug Fixed: Institutions > Academic > Classes: When no shift is selected, the page gives a 404 error
+- Bug Fixed: API token signature verification failure issue persists.
+- Bug Fixed: Institutions > Students > Import: 404 error when downloading the student import template
+- Bug Fixed: Institution > Staff > Import > Download Template: When downloading staff import template, the page give a 404 error
+- Bug Fixed: Reports > Students > Outcomes: When generating Outcomes report, the page give an error page
+- Bug Fixed: Institutions>Survey>Forms: Pagination is not working
+- Bug Fixed: Staff > Training > Courses: Unable to add courses
+- Bug Fixed: Institutions > Staff > Import > Import Staff template: Institution Positions column under reference worksheet is empty even though there are active institutions position with no staff assigned
+- Bug Fixed: Institutions > Academic > Classes > Export: When exporting class report, the report does not show the custom fields
+- Bug Fixed: Directory > View: When clicking on a student account to view, the page gives a 404 error
+- Bug Fixed: Institutions > Students: Once the student is successfully added, try navigating back to the Students module from the side menu. The module does not show
+
 ### [4.22.0] - 2025-04-28
 - Implemented: Develop a Student Admission status to the Alerts Feature
 - Bug Fixed: Administration > Profiles > Institutions: Profile generation stuck in progress
