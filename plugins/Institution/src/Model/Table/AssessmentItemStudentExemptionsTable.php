@@ -42,9 +42,9 @@ class AssessmentItemStudentExemptionsTable extends AppTable
         $assessment_period_id = $params['assessment_period_id'] ?? null;
         $created_user_id = $params['created_user_id'] ?? null;
         $institution_class_id = $params['institution_class_id'] ?? null;
-        $type = $params['type'] ?? null;//POEXM-9042
+        $type = $params['type'] ?? null;//POCOR-9042
 
-        if ($institution_class_id && $exempt_students_base64 && $assessment_item_id && $assessment_period_id && $type) {//POEXM-9042 add type
+        if ($institution_class_id && $exempt_students_base64 && $assessment_item_id && $assessment_period_id && $type) {//POCOR-9042 add type
             // Decode the base64 string into an array of students
             $exempt_students = json_decode(base64_decode($exempt_students_base64), true);
 //            Log::debug($exempt_students);
@@ -80,7 +80,7 @@ class AssessmentItemStudentExemptionsTable extends AppTable
                         'institution_class_id' => $institution_class_id,  // Changed from institution_class_student_id
                         'assessment_period_id' => $assessment_period_id,
                         'education_grade_id' => $education_grade_id,
-                        'type' => $type//POEXM-9042
+                        'type' => $type//POCOR-9042
                     ])
                     ->first();
 
@@ -93,7 +93,7 @@ class AssessmentItemStudentExemptionsTable extends AppTable
                         'institution_class_id' => $institution_class_id,
                         'assessment_period_id' => $assessment_period_id,
                         'education_grade_id' => $education_grade_id,
-                        'type' => $type,//POEXM-9042
+                        'type' => $type,//POCOR-9042
                         'created_user_id' => $created_user_id,
                         'created' => date('Y-m-d H:i:s')
                     ]);
@@ -116,9 +116,9 @@ class AssessmentItemStudentExemptionsTable extends AppTable
         $assessment_item_id = $params['assessment_item_id'] ?? null;
         $assessment_period_id = $params['assessment_period_id'] ?? null;
         $institution_class_id = $params['institution_class_id'] ?? null;
-        $type = $params['type'] ?? null; //POEXM-9042
+        $type = $params['type'] ?? null; //POCOR-9042
 //        Log::debug([$assessment_item_id, $assessment_period_id, $institution_class_id ]);
-        if ($non_exempt_students_base64 && $assessment_item_id && $assessment_period_id && $type) {//POEXM-9042 add type
+        if ($non_exempt_students_base64 && $assessment_item_id && $assessment_period_id && $type) {//POCOR-9042 add type
             // Decode the base64 string into an array of student IDs
             $unexempt_students = json_decode(base64_decode($non_exempt_students_base64), true);
 //            Log::debug($unexempt_students);
@@ -154,7 +154,7 @@ class AssessmentItemStudentExemptionsTable extends AppTable
                         'assessment_period_id' => $assessment_period_id,
                         'institution_class_id' => $institution_class_id,
                         'education_grade_id' => $education_grade_id,
-                        'type' => $type//POEXM-9042
+                        'type' => $type//POCOR-9042
                     ])
                     ->first();
 

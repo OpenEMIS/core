@@ -891,13 +891,13 @@ class AssessmentResultsTable extends AppTable
 
                                 }
                             }else{
-                                //POEXM-9042 starts
+                                //POCOR-9042 starts
                                 if($totalMarksPerStudent[$assessmentI]['type'] == 2){
                                     $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'UNASSIGN';
                                     $totalMarksPerStudent[$assessmentI]['marks'] = 'UNASSIGN';
                                     $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'UNASSIGN';
                                     $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'UNASSIGN';
-                                }else{//POEXM-9042 ends
+                                }else{//POCOR-9042 ends
                                     $totalMarksPerStudent[$assessmentI]['simple_mark'] = 'EXEMPT';
                                     $totalMarksPerStudent[$assessmentI]['marks'] = 'EXEMPT';
                                     $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'EXEMPT';
