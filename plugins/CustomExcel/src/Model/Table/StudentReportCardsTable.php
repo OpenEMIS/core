@@ -67,7 +67,12 @@ class StudentReportCardsTable extends AppTable
                 'CompetencyItems', //POCOR-8878
                 'Assessments', //POCOR-8878
                 'AssessmentPeriods', //POCOR-8878
-                'SubjectTeacher' //POCOR-8878
+                'SubjectTeacher', //POCOR-8878
+                'OutcomeTemplates',
+                'OutcomePeriods',
+                'OutcomeSubjects',
+                'StudentOutcomeSubjectComments',
+                'OutcomeCriterias',
 
             ]
         ]);
@@ -113,6 +118,11 @@ class StudentReportCardsTable extends AppTable
 
          $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
          $events['ExcelTemplates.Model.onExcelTemplateInitialiseSubjectTeacher'] = 'onExcelTemplateInitialiseSubjectTeacher';
+         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeTemplates'] = 'onExcelTemplateInitialiseOutcomeTemplates';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomePeriods'] = 'onExcelTemplateInitialiseOutcomePeriods';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeSubjects'] = 'onExcelTemplateInitialiseOutcomeSubjects';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentOutcomeSubjectComments'] = 'onExcelTemplateInitialiseStudentOutcomeSubjectComments';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeCriterias'] = 'onExcelTemplateInitialiseOutcomeCriterias';
         return $events;
     }
 
@@ -1443,6 +1453,7 @@ class StudentReportCardsTable extends AppTable
                         $entity[] = [
                             "id" => $row['id'],
                             "assessment_period_id" => $res['assessment_period_id'],
+                            "education_subject_id" => $res['education_subject_id'],
                             "marks_formatted" => number_format($res['marks'], 2)
                         ];
                     }
@@ -1707,6 +1718,141 @@ class StudentReportCardsTable extends AppTable
                     'name' => implode(",", $name)
                 ];
             }
+
+            return $entity;
+        }
+    }
+
+
+    public function onExcelTemplateInitialiseOutcomeTemplates(Event $event, array $params, ArrayObject $extra)
+    {
+        if (isset($params['academic_period_id'])) {
+            $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+
+            $entity = $OutcomeTemplates
+                ->find()
+                ->innerJoinWith('Periods')
+                ->where([
+                    $OutcomeTemplates->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $OutcomeTemplates->aliasField('education_grade_id') => $params['education_grade_id']
+                ])
+                ->group($OutcomeTemplates->aliasField('id'));
+
+            if ($entity->count() > 0) {
+                $extra['outcome_templates_ids'] = $entity->all()->extract('id')->toArray();
+            }
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseOutcomePeriods(Event $event, array $params, ArrayObject $extra)
+    {
+        if (isset($params['academic_period_id']) && isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids'])) {
+            $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+
+            $entity = $OutcomePeriods->find()
+                ->where([
+                    $OutcomePeriods->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $OutcomePeriods->aliasField('outcome_template_id IN ') => $extra['outcome_templates_ids']
+                ]);
+
+            if ($entity->count() > 0) {
+                $extra['outcome_periods_ids'] = $entity->all()->extract('id')->toArray();
+            }
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseOutcomeSubjects(Event $event, array $params, ArrayObject $extra)
+    {
+
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['education_grade_id']) && isset($extra['outcome_periods_ids']) && !empty($extra['outcome_periods_ids'])) {
+            $studentId = $params['student_id'];
+            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+            $mergeEntity = [];
+
+            $entity = $EducationSubjects
+                ->find()
+                ->find('visible')
+                ->find('order')
+                ->select([
+                    'outcome_template_id' => $OutcomePeriods->aliasField('outcome_template_id'),
+                    'outcome_period_id' => $OutcomePeriods->aliasField('id')
+                ])
+                //POCOR-5056 starts
+                ->innerJoinWith('InstitutionSubjects.SubjectStudents', function ($q) use ($studentId) {
+                    return $q->where(['SubjectStudents.student_id' => $studentId]);
+                })
+                //POCOR-5056 ends
+                ->leftJoin([$OutcomePeriods->getAlias() => $OutcomePeriods->getTable()], [
+                    $OutcomePeriods->aliasField('id IN ') => $extra['outcome_periods_ids']
+                ])
+                ->where([
+                    'InstitutionSubjects.education_grade_id' => $params['education_grade_id'],
+                    'InstitutionSubjects.institution_id' => $params['institution_id'],
+                    'InstitutionSubjects.academic_period_id' => $params['academic_period_id'],
+                ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $row->education_subject_id = $row->id;
+                        $hashString = [];
+                        $hashString[] = $row->outcome_template_id;
+                        $hashString[] = $row->education_subject_id;
+                        $row->id = Security::hash(implode(',', $hashString), 'sha256');
+                        return $row;
+                    });
+                })
+                ->enableAutoFields(true);
+
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseOutcomeCriterias(Event $event, array $params, ArrayObject $extra)
+    {
+        if (isset($params['academic_period_id']) && isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids'])) {
+            $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
+
+            $entity = $OutcomeCriterias->find()
+                ->where([
+                    $OutcomeCriterias->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $OutcomeCriterias->aliasField('outcome_template_id IN ') => $extra['outcome_templates_ids']
+                ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $hashString = [];
+                        $hashString[] = $row->outcome_template_id;
+                        $hashString[] = $row->education_subject_id;
+                        $row->outcome_subject_id = Security::hash(implode(',', $hashString), 'sha256');
+                        return $row;
+                    });
+                })
+                ->enableAutoFields(true);
+
+            return $entity->toArray();
+
+        }
+    }
+
+
+    public function onExcelTemplateInitialiseStudentOutcomeSubjectComments(Event $event, array $params, ArrayObject $extra)
+    {
+        if (isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids']) && isset($extra['outcome_periods_ids']) && !empty($extra['outcome_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
+
+            $OutcomeSubjectComments = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
+            $entity = $OutcomeSubjectComments->find()
+                ->where([
+                    $OutcomeSubjectComments->aliasField('outcome_template_id IN ') => $extra['outcome_templates_ids'],
+                    $OutcomeSubjectComments->aliasField('outcome_period_id IN ') => $extra['outcome_periods_ids'],
+                    $OutcomeSubjectComments->aliasField('student_id') => $params['student_id'],
+                    $OutcomeSubjectComments->aliasField('institution_id') => $params['institution_id'],
+                    $OutcomeSubjectComments->aliasField('academic_period_id') => $params['academic_period_id'],
+                ])->toArray();
+                $entity[] = [
+                        
+                        'comments' => $entity['comments'],
+                    ];
 
             return $entity;
         }
