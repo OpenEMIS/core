@@ -506,13 +506,29 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //POCOR-9089 start
         //POCOR-6976 start
-        $url = $_SERVER['QUERY_STRING'];
-        $data = explode('=', $url);
-        $filterOne = $data[1];
-        $filterTwo = $data[2];
-        $firstVal = preg_replace('/\D/', '', $filterOne);
-        $getdata = ['', $firstVal];
+        // $url = $_SERVER['QUERY_STRING'];
+        // $data = explode('=', $url);
+        // $filterOne = $data[1];
+        // $filterTwo = $data[2];
+        // $firstVal = preg_replace('/\D/', '', $filterOne);
+        // $getdata = ['', $firstVal];
+
+        // Get data from request object instead of using $_SERVER directly
+        $request = $this->controller->getRequest();
+        $filterValues = $request->getQuery('filter');
+
+        // Handle both array and scalar values
+        $firstVal = '';
+        if (is_array($filterValues) && !empty($filterValues[0])) {
+            $firstVal = preg_replace('/\D/', '', $filterValues[0]);
+        } elseif (!empty($filterValues)) {
+            $firstVal = preg_replace('/\D/', '', $filterValues);
+        }
+
+        $getdata = !empty($firstVal) ? [$firstVal] : [''];
+        //POCOR-9089 end
         $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
         $SurveyFilterType = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
         $session = $this->controller->getRequest()->getSession();
@@ -604,7 +620,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                         $this->aliasField('SurveyFilterAreas.area_education_id IN') => -1,
                     ]
                 ])->distinct([$this->aliasField('survey_form_id'), $this->aliasField('academic_period_id')]);
-        } elseif ($filterVal == 1) {
+        } elseif ($firstVal == 1) {  //POCOR-9089 
             $extra['auto_contain'] = false;
             $todayDate = date("Y-m-d");
             $query
@@ -649,9 +665,11 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
                     'SurveyFormsFilters.survey_form_id = SurveyForms.id'
                 ])
-                ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
-                    'SurveyFormsFilters.survey_form_id = SurveyForms.id'
-                ])
+                //POCOR-9089 start
+                // ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                //     'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                // ])
+                //POCOR-9089 end
                 ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
                     'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
                 ])
