@@ -576,7 +576,7 @@ class InstitutionClassStudentsTable extends AppTable
                 switch ($resultType) {
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
-                        if ($result['mark'] != 'EXEMPT') {
+                        if ($result['mark'] != 'EXEMPT' && $result['mark'] != 'UNASSIGN') {//POCOR-9042 add 'UNASSIGN' condition
                             $this->assessmentPeriodWeightedMark += ((float)$result['marks'] * (float)$attr['assessmentPeriodWeight']);
                             $this->assessmentPeriodWeights[] = $attr['assessmentPeriodWeight'];
                         }
@@ -1461,7 +1461,7 @@ class InstitutionClassStudentsTable extends AppTable
                 'assessment_items.assessment_id',
                 'assessment_items.education_subject_id',
                 'assessment_items.classification',
-                'type' => 'assessment_item_student_exemptions.type',//POEXM-9042
+                'type' => 'assessment_item_student_exemptions.type',//POCOR-9042
             ])
             ->disableHydration();
 //        Log::debug($query->sql());
@@ -1473,9 +1473,9 @@ class InstitutionClassStudentsTable extends AppTable
                 ($row['middle_name']) ? $fullName[] = $row['middle_name'] : '';
                 ($row['third_name']) ? $fullName[] = $row['third_name'] : '';
                 ($row['last_name']) ? $fullName[] = $row['last_name'] : '';
-                $row['is_exempt'] = ($row['assessment_id'] && $row['type'] == 1) ? true : false;//POEXM-9042
-                $row['is_unassign'] = ($row['assessment_id'] && $row['type'] == 2) ? true : false;//POEXM-9042
-                $row['is_unassign'] = $row['type'];//POEXM-9042
+                $row['is_exempt'] = ($row['assessment_id'] && $row['type'] == 1) ? true : false;//POCOR-9042
+                $row['is_unassign'] = ($row['assessment_id'] && $row['type'] == 2) ? true : false;//POCOR-9042
+                $row['is_unassign'] = $row['type'];//POCOR-9042
 
                 $name = implode(' ', $fullName);
 
@@ -1491,8 +1491,8 @@ class InstitutionClassStudentsTable extends AppTable
                     'assessment_period_id' => $row['assessment_period_id'],
                     'assessment_item_id' => $row['assessment_id'],  // Use assessment_id now
                     'is_exempt' => $row['is_exempt'],
-                    'is_unassign' => $row['is_unassign'],//POEXM-9042
-                    'type' => $row['type'],//POEXM-9042
+                    'is_unassign' => $row['is_unassign'],//POCOR-9042
+                    'type' => $row['type'],//POCOR-9042
                     'student_status_name' => __($row['student_status_name'])
                 ];
             });

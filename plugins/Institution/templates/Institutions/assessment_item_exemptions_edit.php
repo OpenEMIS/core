@@ -114,7 +114,7 @@ $this->start('panelBody');
             <p>{{ error.assessment-period-id }}</p>
         </div>
     </div>
-    <!--//POEXM-9042 add Action strats--->
+    <!--//POCOR-9042 add Action strats--->
     <div class="input select required">
         <label><?= __('Action') ?></label>
         <div class="input-select-wrapper">
@@ -127,7 +127,7 @@ $this->start('panelBody');
             </select>
         </div>
     </div>
-    <!--//POEXM-9042 add Action ends--->
+    <!--//POCOR-9042 add Action ends--->
     <div class="input select">
         <label><?= __('Students') ?></label>
         <div class="input-form-wrapper">

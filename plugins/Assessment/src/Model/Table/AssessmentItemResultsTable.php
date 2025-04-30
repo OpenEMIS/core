@@ -715,13 +715,13 @@ class AssessmentItemResultsTable extends AppTable
                 $exemptions[$student_id][$education_subject_id] = [];
             }
             if (isset($assessment_period_id)) {
-                //POEXM-9042 starts
+                //POCOR-9042 starts
                 if($exemption['type'] == 1){
                     $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'EXEMPT';
                 }else{
                     $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'UNASSIGN';
                 }
-                //POEXM-9042 ends
+                //POCOR-9042 ends
             }
         }
         return $exemptions;
@@ -943,7 +943,7 @@ class AssessmentItemResultsTable extends AppTable
                 'education_subject_id' => 'assessment_items.education_subject_id',
                 'assessment_period_id' => $exemptions_table->aliasField('assessment_period_id'),
                 'assessment_id' => $exemptions_table->aliasField('assessment_id'),
-                'type' => $exemptions_table->aliasField('type')//POEXM-9042 
+                'type' => $exemptions_table->aliasField('type')//POCOR-9042 
             ])
             ->innerJoin(['assessment_items' => 'assessment_items'],
                 [$exemptions_table->aliasField('assessment_id') . ' = assessment_items.assessment_id AND ' .
