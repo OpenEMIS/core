@@ -1,0 +1,33 @@
+# === Frontend ===
+FROM node:12.14.1 AS frontend-builder
+WORKDIR /app
+COPY ./frontend/ ./
+RUN npm install && \
+    npm install -g @angular/cli@11.2.19
+RUN ng build --output-path=./dist
+
+# === Backed + Apache Stage ===
+FROM php:8.3-apache AS backend
+RUN apt-get update && apt-get install -y \
+    libicu-dev libzip-dev unzip \
+    libpng-dev libjpeg-dev libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install intl zip gd pdo pdo_mysql mysqli
+RUN a2enmod rewrite headers
+COPY ./docker-config/apache2/000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+WORKDIR /var/www/html
+COPY . .
+WORKDIR /var/www/html/api
+COPY ./docker-config/config/.env ./.env
+RUN composer update
+RUN php artisan config:clear && \
+    php artisan cache:clear && \
+    php artisan config:cache
+    # php artisan migrate
+WORKDIR /var/www/html
+COPY --from=frontend-builder /app/dist ./webroot/js/angular/dist/
+RUN mv ./webroot/js/angular/dist/styles.css ./webroot/css/angular/main/
+RUN chown -R www-data:www-data ./webroot
+RUN rm /etc/apache2/sites-available/default-ssl.conf
+CMD ["apache2-foreground"]

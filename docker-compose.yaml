@@ -1,0 +1,44 @@
+services:
+  core:
+    build:
+      context: .
+      dockerfile: Dockerfile.Main
+    container_name: openemis-core
+    restart: always
+    ports:
+    - "3000:80"
+    - "25:25"
+    depends_on: 
+    - db                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+    environment:
+    - DB_HOST=db
+    - DB_NAME=openemis
+    - DB_USER=admin
+    - DB_PASSWORD=demo
+  db:
+    image: mysql:8.1
+    container_name: openemis-db
+    restart: always
+    environment:
+      - MYSQL_DATABASE=openemis
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=demo
+    volumes:
+      - ./db_data:/var/lib/mysql
+    # ports:
+      # - "3307:3306"
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: openemis-phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    depends_on:
+    - db
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=admin
+      - PMA_PASSWORD=demo
+volumes:
+  db_data:
