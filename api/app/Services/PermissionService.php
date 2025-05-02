@@ -8,6 +8,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon; // POCOR-9085
 
 
 class PermissionService
@@ -68,36 +69,43 @@ class PermissionService
 
     public function checkPermission($modelName, $action): bool
     {
-        // POCOR-8966 start
+        // POCOR-9092 autoloaded cache
         if (!$this->user) {
             $this->user = JWTAuth::user();
             if ($this->user) {
                 $this->loadUserPermissions();
             }
         }
+
         $user = $this->user;
-        // POCOR-8966 end
         if (!$user) {
             return false;
         }
 
         if ($user->super_admin ?? 0) {
-            return true; // Super admin has all permissions
+            return true;
         }
 
         $cacheKey = "permissions:user:{$user->id}";
+        $cacheTTL = 600; // seconds (10 min)
 
-        // Attempt to get cached permissions
-        $permissions = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
-            return $this->loadPermissionsFromDb($user->id);
-        });
-//        $permissions = $this->loadPermissionsFromDb($user->id);
-//        Log::info("Permissions: " . print_r($permissions, true));
+        $permissions = Cache::get($cacheKey);
 
-        $hasPermission = $this->hasPermission($permissions, $modelName, $action);
-//        Log::info("Has permission: $hasPermission");
-        return $hasPermission;
+        if (empty($permissions)) {
+            Log::info("Permissions cache miss for user {$user->id}. Reloading from DB.");
+            $permissions = $this->loadPermissionsFromDb($user->id);
+
+            if (!empty($permissions)) {
+                Cache::put($cacheKey, $permissions, $cacheTTL);
+            } else {
+                Log::warning("No permissions found for user {$user->id} after DB reload.");
+                return false;
+            }
+        }
+
+        return $this->hasPermission($permissions, $modelName, $action);
     }
+
 
     private function loadPermissionsFromDb($userId): array
     {

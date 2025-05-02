@@ -1,3 +1,48 @@
+### [4.23.0] - 2025-04-30
+- Implemented: Develop a new Report in the Institution module called Consumables
+- Implemented: Develop Institution Timetables feature in Angular v11
+- Bug Fixed: Institutions > Academic > Classes: When no shift is selected, the page gives a 404 error
+- Bug Fixed: API token signature verification failure issue persists.
+- Bug Fixed: Institutions > Students > Import: 404 error when downloading the student import template
+- Bug Fixed: Institution > Staff > Import > Download Template: When downloading staff import template, the page give a 404 error
+- Bug Fixed: Reports > Students > Outcomes: When generating Outcomes report, the page give an error page
+- Bug Fixed: Institutions>Survey>Forms: Pagination is not working
+- Bug Fixed: Staff > Training > Courses: Unable to add courses
+- Bug Fixed: Institutions > Staff > Import > Import Staff template: Institution Positions column under reference worksheet is empty even though there are active institutions position with no staff assigned
+- Bug Fixed: Institutions > Academic > Classes > Export: When exporting class report, the report does not show the custom fields
+- Bug Fixed: Directory > View: When clicking on a student account to view, the page gives a 404 error
+- Bug Fixed: Institutions > Students: Once the student is successfully added, try navigating back to the Students module from the side menu. The module does not show
+
+### [4.22.0] - 2025-04-28
+- Implemented: Develop a Student Admission status to the Alerts Feature
+- Bug Fixed: Administration > Profiles > Institutions: Profile generation stuck in progress
+- Bug Fixed: Report>Survey>Institutions: Data is not showing
+
+### [4.21.0] - 2025-04-24
+- Implemented: Develop changes to the student profile to add a programme code placeholder
+- Implemented: Develop an OpenEMIS Core Generate Student Report Cards v4 API
+- Implemented: Develop configuration APIs for OpenEMIS Registrations
+- Implemented: Develop dedicated OpenEMIS Core Laravel models for API v5
+- Bug Fixed: Institutions > Performance > GPA: Report card overrall gpa is not showing correctly
+- Bug Fixed: API Token signature could not be verified.
+- Bug Fixed: Institutions > Survey > Forms > Edit: When editing survey, other fields which are not filled out yet was filled. This happens only when the survey question field type is text
+- Bug Fixed: Institutions > Students > Special Needs > Assessments: Unable to add assessor name
+- Bug Fixed: Api/v4/users/username/ : Endpoint is not working for admin/administrator
+- Bug Fixed: Directory > Students > Academic > Programmes: When clicking on a student's academic records, the page does not navigate to the institution linked to the grade
+- Bug Fixed: Institutions > Students > Special Needs > Assessments: Assessor Name and the Comments in the Special Needs Assessments page optional and not mandatory
+- Bug Fixed: Administration > System Setup > Labels: Implement the ability to rename Survey Label
+- Bug Fixed: Institutions>Students>Add: Student is not found in external search
+- Bug Fixed: Reports > Institutions > Classes: When generating report for Institution Classes, the status goes to "Error" status
+- Bug Fixed: API: Subject api does not have institution_classes_id
+- Bug Fixed: Institutions>Finance>Consumables: Consumable should be changed to Consumables
+- Bug Fixed: Institutions > Infrastructure > Overview: 404 error when accessing Institution Infrastructure Overview
+
+### [4.20.2] - 2025-04-22
+- Bug Fixed: Institutions>Performance>GPA: Cumulative gpa is not able to generate
+- Bug Fixed: Institutions > Academic > Classes > Export: 404 error when exporting classes
+- Bug Fixed: Administrations > Profiles > Students > Profiles: Data is not showing under Learning Plan worksheet
+- Bug Fixed: Administration > System Setup > Labels: There is no education grade labels in Institution Fees page (Institutions > Finance > Institution Fees)
+
 ### [4.20.1] - 2025-04-16
 - Bug Fixed: Administration > Performance > Competency > Periods > Edit: When editing competency periods, the competency items list are not showing in the option fields
 - Bug Fixed: API: Api does not return any data
