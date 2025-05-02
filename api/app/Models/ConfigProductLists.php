@@ -21,192 +21,17 @@ class ConfigProductLists extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
 
      // Override getKeyForSaveQuery to handle composite keys
-/**
- * @OA\PathItem(
- *     path="/api/v5/config-product-lists"
- * )
- */
-public function _swaggerPath() {}
 
-/**
- * @OA\Get(
- *     path="/api/v5/config-product-lists",
- *     summary="Get list of ConfigProductLists",
- *     tags={"ConfigProductLists"},
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="Successful."
- *             ),
- *             @OA\Property(
- *                 property="data",
- *                 type="array",
- *                 @OA\Items(
- *                     type="object",
-                          @OA\Property(property="id", type="integer", example=null),
-                          @OA\Property(property="name", type="string", example=null),
-                          @OA\Property(property="url", type="string", example=null),
-                          @OA\Property(property="file_name", type="string", example=null),
-                          @OA\Property(property="file_content", type="string", example=null),
-                          @OA\Property(property="modified_user_id", type="integer", example=null),
-                          @OA\Property(property="modified", type="string", format="date-time", example=null),
-                          @OA\Property(property="created_user_id", type="integer", example=null),
-                          @OA\Property(property="created", type="string", format="date-time", example=null)
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerList() {}
 
-/**
- * @OA\Get(
- *     path="/api/v5/config-product-lists/{id}",
- *     summary="Get ConfigProductLists by ID",
- *     tags={"ConfigProductLists"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the ConfigProductLists",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
 
-/**
- * @OA\Post(
- *     path="/api/v5/config-product-lists",
- *     summary="Create a new ConfigProductLists",
- *     tags={"ConfigProductLists"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="name", type="string", example=null),
-                     @OA\Property(property="url", type="string", example=null),
-                     @OA\Property(property="file_name", type="string", example=null),
-                     @OA\Property(property="file_content", type="string", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Created successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerCreate() {}
 
-/**
- * @OA\Put(
- *     path="/api/v5/config-product-lists/{id}",
- *     summary="Update ConfigProductLists",
- *     tags={"ConfigProductLists"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the ConfigProductLists",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="name", type="string", example=null),
-                     @OA\Property(property="url", type="string", example=null),
-                     @OA\Property(property="file_name", type="string", example=null),
-                     @OA\Property(property="file_content", type="string", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Updated successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerUpdate() {}
 
-/**
- * @OA\Delete(
- *     path="/api/v5/config-product-lists/{id}",
- *     summary="Delete ConfigProductLists",
- *     tags={"ConfigProductLists"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the ConfigProductLists",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerDelete() {}
+
+
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -243,9 +68,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

@@ -55,8 +55,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         getFtes: getFtes,
         getPositions: getPositions,
         getStaffTypes: getStaffTypes,
-        getStaffPosititonGrades: getStaffPosititonGrades,//POCOR-5069
-        getStaffPosititonGradesids: getStaffPosititonGradesids,//POCOR-8108
+        getStaffPosititonGrades: getStaffPosititonGrades,//POCOR-9037
         getShifts: getShifts,
         saveStaffDetails: saveStaffDetails,
         getConfigItemValue: getConfigItemValue,
@@ -275,10 +274,10 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         return deferred.promise;
     }//POCOR-5069 ends
 
-    function getStaffPosititonGrades(){
+    function getStaffPosititonGrades(params){
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getStaffPosititonGrades';
-        $http.get(url)
+        $http.post(url, {params: params})
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {

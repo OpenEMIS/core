@@ -1,0 +1,126 @@
+@charset "UTF-8";
+
+@import "../general/variables.scss";
+@import "../general/classes.scss";
+
+/* Mindmap v.1.0.0 */
+
+$kdx-mindmap-active-border-width: 2.1 !important;
+$kdx-mindmap-link-width: 1 !default;
+
+.kdx-mindmap {
+    .kdx-mindmap-outer-wrapper {
+        position: relative;
+    }
+    .kdx-mindmap-wrapper-border {
+        stroke: black;
+        stroke-width: 1;
+        fill: none;
+    }
+
+    .kdx-mindmap-zoom-button {
+        cursor: pointer;
+
+        .kdx-mindmap-zoom-button-wrapper {
+            stroke: #CCC;
+            stroke-width: 1;
+            fill: $whiteColor;
+            fill-opacity: 1;
+            box-shadow: 0px 1px 1px rgba(0,0,0,0.1);
+        }
+        .kdx-mindmap-zoom-button-icon {
+            fill:  #999;
+        }
+    }
+
+
+    .kdx-mindmap-text {
+        font-size: $bodyTextSize;
+    }
+
+    .kdx-mindmap-node {
+        cursor: pointer;
+
+        .kdx-mindmap-node-wrapper {
+            stroke: #000;
+            stroke-width: 0.25;
+            fill: $whiteColor;
+            fill-opacity: 1;
+        }
+
+        .kdx-mindmap-node-title-container {
+            fill: #0000ff;
+            fill-opacity: 0.25;
+        }
+
+        .kdx-mindmap-node-title {
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .kdx-mindmap-node-title-bottom-border {
+            stroke: #000;
+            stroke-width: 0.25;
+        }
+
+        &.kdx-mindmap-node-example {
+            .kdx-mindmap-node-wrapper {
+                fill: $lightGreyColor;
+                fill-opacity: 0.25;
+            }
+        }
+
+        &.kdx-mindmap-node-example-database {
+            .kdx-mindmap-node-title-container,
+            .kdx-mindmap-node-icon {
+                fill: #008000;
+            }
+        }
+
+        &.kdx-mindmap-node-example-cube {
+            .kdx-mindmap-node-title-container,
+            .kdx-mindmap-node-icon {
+                fill: #0000ff;
+            }
+        }
+
+        &.kdx-mindmap-node-example-output {
+            .kdx-mindmap-node-title-container,
+            .kdx-mindmap-node-icon {
+                fill: #FFFF00;
+            }
+        }
+        /* Note: if activeClass is redefined by user, please go to themes.scss using the new activeClass to change the stroke color*/
+        &.kdx-mindmap-node-active {
+            .kdx-mindmap-node-wrapper {
+                stroke-width: $kdx-mindmap-active-border-width;
+            }
+        }
+    }
+
+    #arrowEnd {
+        &.kdx-mindmap-link-example {
+            fill: #800080;
+        }
+    }
+
+    #arrowStart {
+        &.kdx-mindmap-link-example {
+            fill: #800080;
+        }
+    }
+
+    .kdx-mindmap-link {
+        stroke-width: $kdx-mindmap-link-width;
+        stroke: #000;
+
+        &.kdx-mindmap-link-example {
+            stroke: #800080;
+        }
+
+        /* Note: if activeClass is redefined by user, please go to themes.scss using the new activeClass to change the stroke color*/
+        &.kdx-mindmap-link-active {
+            stroke-width: 1.25;
+        }
+    }
+}

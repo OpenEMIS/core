@@ -1,0 +1,191 @@
+@charset "UTF-8";
+
+/* Advance Search V1.1.1 */
+
+.kdx-adv-search {
+    top: 66px;
+    z-index: -999;
+    position: absolute;
+    right: 0;
+    width: 400px;
+    overflow-x: hidden;
+    bottom: 0;
+    transition: z-index 0.5s step-end;
+
+    @media #{$tabletLandscape} {
+        width: 100%;
+        top: 90px;
+        position: fixed;
+    }
+
+    .rtl & {
+        top: 68px;
+    }
+
+    &.show {
+        z-index: 3 !important;
+        transition: z-index 0.2s step-end;
+    }
+
+    .form-vertical {
+        .kdx-input {
+            .form-label,
+            textarea,
+            input,
+            select,
+            .kdx-datepicker,
+            .input-selection-inline,
+            .kdx-input-select-wrapper,
+            .kdx-text-input {
+                width: 100% !important;
+            }
+        }
+    }
+
+    .kdx-white-bg {
+        background: $whiteColor;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        z-index: -1;
+    }
+
+    .kdx-adv-search-wrapper {
+        z-index: 4;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        border-left: $lightGreyBorder;
+        width: 100%;
+
+        &.kdx-show-adv {
+            @keyframes openSearch {
+                from {
+                    right: -100%;
+                }
+                to {
+                    right: 0;
+                }
+            }
+
+            animation-name: openSearch;
+            animation-duration: 0.3s;
+            animation-fill-mode: forwards;
+            animation-timing-function: ease-in-out;
+        }
+
+        &.kdx-hide-adv {
+            @keyframes closeSearch {
+                from {
+                    right: 0;
+                }
+                to {
+                    right: -100%;
+                }
+            }
+
+            animation-name: closeSearch;
+            animation-duration: 0.3s;
+            animation-fill-mode: forwards;
+            animation-timing-function: ease-in-out;
+        }
+
+        .kdx-adv-search-content {
+            height: 100%;
+            overflow-y: hidden;
+            position: relative;
+
+            .kdx-adv-search-header {
+                padding: $padding10 $padding20;
+                height: 60px;
+                i {
+                    font-size: $iconSizeM;
+                }
+
+                h3 {
+                    display: inline-block;
+                }
+
+                button {
+                    position: absolute;
+                    right: 10px;
+
+                    i {
+                        font-size: $iconSizeS;
+                    }
+                }
+            }
+
+            .kdx-adv-search-body {
+                padding: $noPadding $padding20 $padding10;
+                overflow-y: auto;
+                position: absolute;
+                top: 60px;
+                bottom: 0;
+                width: 100%;
+
+
+                .input {
+                    @media #{$web800View} {
+                        flex-wrap: wrap;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.rtl .kdx-adv-search {
+    right: auto;
+    left: 0;
+
+    .kdx-adv-search-wrapper {
+        right: auto;
+        left: 0;
+        border-left: 0;
+        border-right: $lightGreyBorder;
+
+        &.kdx-show-adv {
+            @keyframes rtlOpenSearch {
+                from {
+                    left: -100%;
+                }
+                to {
+                    left: 0;
+                }
+            }
+
+            animation-name: rtlOpenSearch;
+            animation-duration: 0.3s;
+            animation-fill-mode: forwards;
+            animation-timing-function: ease-in-out;
+        }
+
+        &.kdx-hide-adv {
+            @keyframes rtlCloseSearch {
+                from {
+                    left: 0;
+                }
+                to {
+                    left: -100%;
+                }
+            }
+
+            animation-name: rtlCloseSearch;
+            animation-duration: 0.3s;
+            animation-fill-mode: forwards;
+            animation-timing-function: ease-in-out;
+        }
+
+        .kdx-adv-search-content {
+            .kdx-adv-search-header {
+                button {
+                    right: auto;
+                    left: 10px;
+                }
+            }
+        }
+    }
+}

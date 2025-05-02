@@ -21,204 +21,17 @@ class LicenseClassifications extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
 
      // Override getKeyForSaveQuery to handle composite keys
-/**
- * @OA\PathItem(
- *     path="/api/v5/license-classifications"
- * )
- */
-public function _swaggerPath() {}
 
-/**
- * @OA\Get(
- *     path="/api/v5/license-classifications",
- *     summary="Get list of LicenseClassifications",
- *     tags={"LicenseClassifications"},
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="Successful."
- *             ),
- *             @OA\Property(
- *                 property="data",
- *                 type="array",
- *                 @OA\Items(
- *                     type="object",
-                          @OA\Property(property="id", type="integer", example=null),
-                          @OA\Property(property="name", type="string", example=null),
-                          @OA\Property(property="order", type="integer", example=null),
-                          @OA\Property(property="visible", type="integer", example=null),
-                          @OA\Property(property="editable", type="integer", example=null),
-                          @OA\Property(property="default", type="integer", example=null),
-                          @OA\Property(property="international_code", type="string", example=null),
-                          @OA\Property(property="national_code", type="string", example=null),
-                          @OA\Property(property="license_type_id", type="integer", example=null),
-                          @OA\Property(property="modified_user_id", type="integer", example=null),
-                          @OA\Property(property="modified", type="string", format="date-time", example=null),
-                          @OA\Property(property="created_user_id", type="integer", example=null),
-                          @OA\Property(property="created", type="string", format="date-time", example=null)
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerList() {}
 
-/**
- * @OA\Get(
- *     path="/api/v5/license-classifications/{id}",
- *     summary="Get LicenseClassifications by ID",
- *     tags={"LicenseClassifications"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the LicenseClassifications",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
 
-/**
- * @OA\Post(
- *     path="/api/v5/license-classifications",
- *     summary="Create a new LicenseClassifications",
- *     tags={"LicenseClassifications"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="name", type="string", example=null),
-                     @OA\Property(property="order", type="integer", example=null),
-                     @OA\Property(property="visible", type="integer", example=null),
-                     @OA\Property(property="editable", type="integer", example=null),
-                     @OA\Property(property="default", type="integer", example=null),
-                     @OA\Property(property="international_code", type="string", example=null),
-                     @OA\Property(property="national_code", type="string", example=null),
-                     @OA\Property(property="license_type_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Created successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerCreate() {}
 
-/**
- * @OA\Put(
- *     path="/api/v5/license-classifications/{id}",
- *     summary="Update LicenseClassifications",
- *     tags={"LicenseClassifications"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the LicenseClassifications",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="name", type="string", example=null),
-                     @OA\Property(property="order", type="integer", example=null),
-                     @OA\Property(property="visible", type="integer", example=null),
-                     @OA\Property(property="editable", type="integer", example=null),
-                     @OA\Property(property="default", type="integer", example=null),
-                     @OA\Property(property="international_code", type="string", example=null),
-                     @OA\Property(property="national_code", type="string", example=null),
-                     @OA\Property(property="license_type_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Updated successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerUpdate() {}
 
-/**
- * @OA\Delete(
- *     path="/api/v5/license-classifications/{id}",
- *     summary="Delete LicenseClassifications",
- *     tags={"LicenseClassifications"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the LicenseClassifications",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerDelete() {}
+
+
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -255,9 +68,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

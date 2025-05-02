@@ -25,185 +25,15 @@ class ScholarshipRecipients extends Model
     public $incrementing = false;
 
      // Override getKeyForSaveQuery to handle composite keys
-/**
- * @OA\PathItem(
- *     path="/api/v5/scholarship-recipients"
- * )
- */
-public function _swaggerPath() {}
 
-/**
- * @OA\Get(
- *     path="/api/v5/scholarship-recipients",
- *     summary="Get list of ScholarshipRecipients",
- *     tags={"ScholarshipRecipients"},
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="Successful."
- *             ),
- *             @OA\Property(
- *                 property="data",
- *                 type="array",
- *                 @OA\Items(
- *                     type="object",
-                          @OA\Property(property="recipient_id", type="integer", example=null),
-                          @OA\Property(property="scholarship_id", type="integer", example=null),
-                          @OA\Property(property="approved_amount", type="number", example=null),
-                          @OA\Property(property="scholarship_recipient_activity_status_id", type="integer", example=null),
-                          @OA\Property(property="modified_user_id", type="integer", example=null),
-                          @OA\Property(property="modified", type="string", format="date-time", example=null),
-                          @OA\Property(property="created_user_id", type="integer", example=null),
-                          @OA\Property(property="created", type="string", format="date-time", example=null)
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerList() {}
 
-/**
- * @OA\Get(
- *     path="/api/v5/scholarship-recipients/{id}",
- *     summary="Get ScholarshipRecipients by ID",
- *     tags={"ScholarshipRecipients"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the ScholarshipRecipients",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
 
-/**
- * @OA\Post(
- *     path="/api/v5/scholarship-recipients",
- *     summary="Create a new ScholarshipRecipients",
- *     tags={"ScholarshipRecipients"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="recipient_id", type="integer", example=null),
-                     @OA\Property(property="scholarship_id", type="integer", example=null),
-                     @OA\Property(property="approved_amount", type="number", example=null),
-                     @OA\Property(property="scholarship_recipient_activity_status_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Created successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerCreate() {}
 
-/**
- * @OA\Put(
- *     path="/api/v5/scholarship-recipients/{id}",
- *     summary="Update ScholarshipRecipients",
- *     tags={"ScholarshipRecipients"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the ScholarshipRecipients",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="recipient_id", type="integer", example=null),
-                     @OA\Property(property="scholarship_id", type="integer", example=null),
-                     @OA\Property(property="approved_amount", type="number", example=null),
-                     @OA\Property(property="scholarship_recipient_activity_status_id", type="integer", example=null),
-                     @OA\Property(property="modified_user_id", type="integer", example=null),
-                     @OA\Property(property="modified", type="string", format="date-time", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Updated successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerUpdate() {}
 
-/**
- * @OA\Delete(
- *     path="/api/v5/scholarship-recipients/{id}",
- *     summary="Delete ScholarshipRecipients",
- *     tags={"ScholarshipRecipients"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the ScholarshipRecipients",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerDelete() {}
+
+
+
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -240,9 +70,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

@@ -38,7 +38,7 @@ class ExcelBehavior extends Behavior
         'autoFields' => true,
         'orientation' => 'landscape', // or portrait
         'sheet_limit' =>  1000000, // 1 mil rows and header row
-        'auto_contain' => true
+        'auto_contain' => true  
     ];
 
     public function initialize(array $config): void

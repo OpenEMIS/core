@@ -5,12 +5,14 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\I18n\Date;
 
 class StaffValidationBehavior extends Behavior
 {
     public function buildStaffValidation()
     {
         $validator = new Validator();
+        $validator->setProvider('custom', $this->_table); // POCOR-9080
         return $validator
             ->allowEmpty('end_date')
             ->add('end_date', 'ruleCompareDateReverse', [
@@ -25,4 +27,8 @@ class StaffValidationBehavior extends Behavior
             ])
         ;
     }
+
+
+
+
 }
