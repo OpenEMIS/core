@@ -8,6 +8,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { KdComponentsModule } from 'openemis-styleguide-lib';
 import { IntitutionModule } from './institution.module';
 import { ApiService } from './api.service';
+import { MatDialogModule } from "@angular/material/dialog";
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { ApiService } from './api.service';
     KdComponentsModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    IntitutionModule
+    IntitutionModule,
+    MatDialogModule
   ],
   providers: [ApiService],
   bootstrap: [AppComponent]

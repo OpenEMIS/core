@@ -2861,7 +2861,13 @@ public function getIdentityTypeData($value_selection)
     {
         if(!empty($entity->modified_user_id)) {
             $users = TableRegistry::get('Security.Users');
-            $user = $users->get($entity->modified_user_id);
+            // POCOR-9083 start
+            try {
+                $user = $users->get($entity->modified_user_id);
+            } catch (\Exception $e) {
+                return $entity->modified_user_id; // Handle the absence of the user gracefully
+            }
+            // POCOR-9083 end
             return $user->name;
         }
     }
@@ -2869,8 +2875,16 @@ public function getIdentityTypeData($value_selection)
     public function onGetCreatedUserId(Event $event, Entity $entity)
     {
         $users = TableRegistry::get('Security.Users');
-        $user = $users->get($entity->created_user_id);
-        return $user->name;
+        // POCOR-9083 start
+        if(!empty($entity->created_user_id)) {
+            try {
+                $user = $users->get($entity->created_user_id);
+            } catch (\Exception $e) {
+                return $entity->created_user_id; // Handle the absence of the user gracefully
+            }
+            return $user->name;
+        }
     }
+    // POCOR-9083 end
     //POCOR-8743 End
 }

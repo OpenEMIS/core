@@ -30,6 +30,7 @@ import { StudentAttendanceReportComponent } from './student-attendance-report/st
 import { StaffAttendanceReportComponent } from './staff-attendance-report/staff-attendance-report.component';
 import { StudentMealImportComponent } from './student-meal-import/student-meal-import.component';
 import { StudentMealResultComponent } from './student-meal-result/student-meal-result.component';
+import { StudentTimetableComponent } from './student-timetable/student-timetable.component';
 import { StudentAttendanceImportResultComponent } from './student-attendance-import-result/student-attendance-import-result.component';
 import { StudentAttendanceArchiveComponent } from './student-attendance-archive/student-attendance-archive.component';
 import { ScannedStudentComponent } from './scanned/scanned-student/scanned-student.component';
@@ -59,7 +60,7 @@ export const appRoutes: Routes = [
   { path: `Institution/Institutions/${setEncodedId()}/ImportStaffAttendances/add`, component: StaffAttendanceReportComponent },
   { path: 'Institution/Institutions/Classes', component: ClassesComponent },
   { path: 'Institution/Institutions/Subjects', component: SubjectsComponent },
-
+  { path: `Institution/Institutions/ScheduleTimetable/view/${setEncodedId()}`, component: StudentTimetableComponent },
   { path: `Institution/Institutions/Scanned/index/${setEncodedId()}`, component: ScannedStudentComponent },
   { path: 'Institution/Institutions/Scanned/list', component: StudentListComponent }
 ];
@@ -129,6 +130,7 @@ function getBaseUrl() {
     StaffAttendanceReportComponent,
     StudentMealImportComponent,
     StudentMealResultComponent,
+    StudentTimetableComponent,
     StudentAttendanceImportResultComponent,
     StudentAttendanceArchiveComponent,
     ScannedStudentComponent,
@@ -140,7 +142,7 @@ function getBaseUrl() {
     CommonModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    RouterModule.forRoot(appRoutes)
+    RouterModule.forRoot(appRoutes),
   ],
   providers: [{ provide: APP_BASE_HREF, useValue: getBaseUrl() },
     ApiService],
