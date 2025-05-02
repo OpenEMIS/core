@@ -37,7 +37,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-      
+
 
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
@@ -57,16 +57,17 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         return $validator
-            ->notEmpty('assessor_id')
+            // ->notEmpty('assessor_id')//POCOR-9026
+            ->allowEmptyString('comment') //POCOR-9026
             ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
              ])
-             ->add('date',
-                 'ruleCheckInputWithinRange',
-                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
-
-             )
+//             ->add('date', // POCOR-9061
+//                 'ruleCheckInputWithinRange',
+//                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
+//
+//             )
             ->allowEmpty('file_content');
     }
 
@@ -90,7 +91,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             case 'comment':
                 return __('Comment');
             case 'special_need_difficulty_id':
-                return __('Difficulty');
+                // POCOR-9022 start
+                $module = 'SpecialNeeds';
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+                // POCOR-9022 end
             case 'assessor_id':
                 return __('Assessor Name');
             case 'modified_user_id':
@@ -117,7 +121,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Assessments','Staff - Special Needs');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Assessments','Staff - Special Needs');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -126,7 +130,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -135,7 +139,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
         }elseif($this->request->getParam('controller') == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Assessments','Students - Special Needs');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Assessments','Students - Special Needs');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -144,7 +148,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -153,8 +157,8 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Assessments','Special Needs');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Assessments','Special Needs');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -163,7 +167,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -172,9 +176,9 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Profiles'){ 
-            $is_manual_exist = $this->getManualUrl('Personal','Assessments','Special Needs');       
-            if(!empty($is_manual_exist)){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){
+            $is_manual_exist = $this->getManualUrl('Personal','Assessments','Special Needs');
+            if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
@@ -182,7 +186,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -300,7 +304,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             'key' => '',
             'field' => 'special_need_difficulty_id',
             'type' => 'string',
-            'label' => __('Difficulty')
+//            'label' => __('Difficulty') // POCOR-9022
         ];
         $extraField[] = [
             'key' => '',
@@ -338,7 +342,6 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $dataKey = 'assessor_id';
-
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => $dataKey, 'name' => $this->aliasField($dataKey)];
             $attr['noResults'] = __('No User found.');
@@ -401,10 +404,9 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         $this->controller->autoRender = false;
         $this->ControllerAction->autoRender = false;
-
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->getQuery['term'];
-
+            $term = $this->request->getQuery('term'); // POCOR-9061
+            $term = str_replace(' ', '%', $term); // POCOR-9061
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
 
             $query = $this->Assessor
@@ -452,31 +454,31 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
-        $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;    
+        $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;
         $selectedmonth = !is_null($this->request->getQuery('month')) ? $this->request->getQuery('month') : '-1';
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodsOptions = $AcademicPeriods
                     ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                     ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
-        $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();      
+        $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();
         $selectedPeriods = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : '-1';
 
         if ($selectedPeriods > 0) {
             $compare_start_date = $selectedPeriods .'-01-01';
-            $compare_end_date = $selectedPeriods .'-12-31';   
-            $query->where([$this->aliasField('date >=') => $compare_start_date, $this->aliasField('date <=') => $compare_end_date]); 
+            $compare_end_date = $selectedPeriods .'-12-31';
+            $query->where([$this->aliasField('date >=') => $compare_start_date, $this->aliasField('date <=') => $compare_end_date]);
         }
 
         if ($selectedmonth > 0) {
             if ($selectedPeriods > 0) {
                 $compare_start_date = $selectedPeriods .'-'. $selectedmonth.'-'.'01';
-                $compare_end_date = $selectedPeriods .'-'. $selectedmonth.'-'.date("t", strtotime($compare_start_date));   
-                $query->where([$this->aliasField('date >=') => $compare_start_date, $this->aliasField('date <=') => $compare_end_date]); 
+                $compare_end_date = $selectedPeriods .'-'. $selectedmonth.'-'.date("t", strtotime($compare_start_date));
+                $query->where([$this->aliasField('date >=') => $compare_start_date, $this->aliasField('date <=') => $compare_end_date]);
             }else{
                 $compare_start_date = date('Y').'-'.$selectedmonth.'-01';
                 $compare_end_date = date("Y-m-t", strtotime($compare_start_date));
-                $query->where([$this->aliasField('date >=') => $compare_start_date, $this->aliasField('date <=') => $compare_end_date]); 
-            } 
+                $query->where([$this->aliasField('date >=') => $compare_start_date, $this->aliasField('date <=') => $compare_end_date]);
+            }
         }
         $userID = $this->getUserID();
         $query->where([

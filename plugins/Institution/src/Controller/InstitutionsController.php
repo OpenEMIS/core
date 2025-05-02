@@ -1372,6 +1372,10 @@ class InstitutionsController extends AppController
 
     public function ScheduleTimetable($action = 'view')
     {
+        $url = $_SERVER['REQUEST_URI'];
+        $startPos = strpos($url, '/Institution/Institutions/ScheduleTimetable/view/') + strlen('/Institution/Institutions/ScheduleTimetable/view/');
+        $encodedPart = substr($url, $startPos);
+
         $timetableId = $this->getQueryString('timetable_id');
         $params = $this->getQueryString();
         if(empty($timetableId)) {
@@ -1404,9 +1408,19 @@ class InstitutionsController extends AppController
         // POCOR-8985 end
         $this->set('_back', Router::url($backUrl));
 
+        $user = $this->getRequest()->getSession()->read('sbn');
+        $pass = $this->getRequest()->getSession()->read('nbn');
+        // $pass = $this->paramsEncode($pass);
+        $institutionName = $this->Institutions->get($institutionId)->name;
+
+        $this->set('encodedPart', $encodedPart);
         $this->set('timetable_id', $timetableId);
         $this->set('institutionDefaultId', $institutionId);
         $this->set('academicPeriodId', $academicPeriodId);
+        $this->set('institutionName', $institutionName);
+
+        $this->set('user', $user);
+        $this->set('pass', $pass);
         $this->set('ngController', 'TimetableCtrl as $ctrl');
         $this->render('timetable');
     }
@@ -3039,7 +3053,11 @@ class InstitutionsController extends AppController
             && $action == 'ImportInstitutions') {
             return true;
         }
+
         if ($furtherAction == 'ajaxInstitutionsAutocomplete') {
+            return true;
+        }
+        if ($furtherAction == 'ajaxAssessorAutocomplete') { // POCOR-9061
             return true;
         }
         // POCOR-7799 start
@@ -5591,17 +5609,58 @@ class InstitutionsController extends AppController
     public
     function getStaffPosititonGrades()
     {
-        $staff_position_grades = self::getDynamicTableInstance('Institution.StaffPositionGrades');
-        $staff_position_grades_result = $staff_position_grades
-            ->find()
-            ->select(['id', 'name'])
-            ->where(['visible' => 1])
-            ->toArray();
-        foreach ($staff_position_grades_result as $result) {
-            $result_array[] = array("id" => $result['id'], "name" => __($result['name']));
+        // POCOR-9037 start
+        $requestData = $this->request->input('json_decode', true);
+        $insPostionData = null;
+        if ($requestData) {
+            $requestData = $requestData['params'];
+            $institution_position_id = $requestData['institution_position_id'];
+            $institution_positions_tbl = self::getDynamicTableInstance('Institution.InstitutionPositions');
+            if($institution_position_id){
+            $insPostionData = $institution_positions_tbl->find('all', ['conditions' => ['id' => $institution_position_id]])->first();
+            }
         }
-        echo json_encode($result_array);
+
+
+        if ($insPostionData) {
+            $staff_position_title_id = $insPostionData->staff_position_title_id;
+
+            $staff_position_titles_grades_tbl = self::getDynamicTableInstance('staff_position_titles_grades');
+            $staff_position_titles_grades_data = $staff_position_titles_grades_tbl->find('all')->where(['staff_position_title_id' => $staff_position_title_id])->toArray();
+
+            $grade_ids_array = [];
+            foreach ($staff_position_titles_grades_data as $grade_id => $data1) {
+                $grade_ids_array[$grade_id] = $data1->staff_position_grade_id;
+            }
+
+            $staff_position_grades = self::getDynamicTableInstance('staff_position_grades');
+            $result_array = [];
+
+            if (!empty($grade_ids_array) && $grade_ids_array[0] == '-1') {
+                $staff_position_grades_result = $staff_position_grades
+                    ->find()
+                    ->select(['id', 'name'])
+                    ->where(['visible' => 1])
+                    ->toArray();
+            } else {
+                $staff_position_grades_result = $staff_position_grades
+                    ->find()
+                    ->select(['id', 'name'])
+                    ->where(['visible' => 1, 'id IN' => $grade_ids_array])
+                    ->toArray();
+            }
+
+            foreach ($staff_position_grades_result as $result) {
+                $result_array[] = ["id" => $result['id'], "name" => __($result['name'])];
+            }
+
+            echo json_encode($result_array);
+        } else {
+            echo json_encode([]); // Handle the case where no position data is found
+        }
+        // POCOR-9037 end
         die;
+
     }
 
     /**
@@ -6798,7 +6857,13 @@ class InstitutionsController extends AppController
      */
     private function handleIdentities($requestData, $userRecordId, $userId)
     {
-        if (!empty($requestData['identity_number']) && !empty($requestData['identity_type_id'])) {
+        // POCOR-9027 start
+        $identity_number = $requestData['identity_number'] ?? null;
+        $identity_type_id = $requestData['identity_type_id'] ?? null;
+        $nationality_id = $requestData['nationality_id'] ?? null;
+        if ($identity_number
+            && $identity_type_id
+            && $nationality_id) { // POCOR-9027 end
             $identityTypesTbl = self::getDynamicTableInstance('identity_types');
             $identityTypes = $identityTypesTbl->find()
                 ->where(['name' => $requestData['identity_type_name']])
@@ -6808,16 +6873,16 @@ class InstitutionsController extends AppController
                 $userIdentities = self::getDynamicTableInstance('user_identities');
                 $checkExistingIdentities = $userIdentities->find()
                     ->where([
-                        'nationality_id' => $requestData['nationality_id'],
-                        'identity_type_id' => $requestData['identity_type_id'],
-                        'number' => $requestData['identity_number'],
+                        'nationality_id' => $nationality_id,
+                        'identity_type_id' => $identity_type_id,
+                        'number' => $identity_number,
                     ])->first();
 
                 if (!$checkExistingIdentities) {
                     $entityIdentitiesData = [
                         'identity_type_id' => $identityTypes->id,
-                        'number' => $requestData['identity_number'],
-                        'nationality_id' => $requestData['nationality_id'],
+                        'number' => $identity_number,
+                        'nationality_id' => $nationality_id,
                         'security_user_id' => $userRecordId,
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s')
@@ -6827,7 +6892,6 @@ class InstitutionsController extends AppController
                         return $userIdentities->save($entityIdentitiesData, ['associated' => false]);
                     } catch (\Exception $e) {
                         Log::debug(__FUNCTION__);
-
                         Log::debug('Error: ' . $e->getMessage());
                         return $e;
                     }
@@ -8025,17 +8089,15 @@ class InstitutionsController extends AppController
             $userExists = $this->checkUserExistence($userIdentitiesTable, $identityTypeId, $identityNumber, $nationalityId);
 //            self::debug(__FUNCTION__);
             if ($userExists) {
-                return $this->sendJsonResponse(['user_exist' => 1, 'status_code' => 200, 'message' => __('User already exists with this nationality, identity type & identity number.')]);
-
+                return $this->sendJsonResponse(['user_exist' => 1, 'status_code' => 200, 'message' => '']); // POCOR-8989 it is not a problem, no need to check ID validity
             }
 
             $message = $this->validateCustomIdentityNumber($requestData);
             if (!empty($message)) {
-                return $this->sendJsonResponse(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
-
+                return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => $message]);  // POCOR-8989
             }
 
-            return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
+            return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]); // POCOR-8989 invalid ID by configuration
         } else {
             return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]);
         }
@@ -8436,6 +8498,7 @@ class InstitutionsController extends AppController
             'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
             'Institution.StudentSpecialNeeds' => __('Student Special Needs'),
             'StaffAppraisal.Appraisals' => __('Staff Appraisals'),
+            'Institution.InstitutionConsumablesReport' => __('Consumables') //POCOR-9058
         ];
         // End POCOR-6871
         return $options;

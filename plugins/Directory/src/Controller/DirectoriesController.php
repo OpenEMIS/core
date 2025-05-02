@@ -1197,13 +1197,13 @@ class DirectoriesController extends AppController
                 if ($key == 'UserNationalities') {
                     $actionURL = 'Nationalities';
                 }
-                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
-                    'plugin' => $plugin,
+                // POCOR-8989 changed from ?queryString to /queryString/ for better compliance
+                $tabElements[$key]['url'] = ['plugin' => $plugin,
                     'controller' => $name,
                     'action' => $actionURL,
-                    'index'],
-                    ['security_user_id' => $id]
-                );
+                    '0' => 'index',
+                    '1' => $this->ControllerAction->paramsEncode(['security_user_id' => $id])]
+                ;
             }
         }
 
@@ -2057,8 +2057,9 @@ class DirectoriesController extends AppController
         $password = $attributes['password'];
         $apiKey = $attributes['api_key'];
         $url = $attributes['api_url'];
+        $tokenUri = rtrim($url, '/'); // POCOR-9071
         $tokenUri = $url . "/login";
-        $userDataEndpoint = $url . "/security-users/openemis_no/";
+        $userDataEndpoint = $url . "/security-users?openemis_no="; // POCOR-9071
 
 
         $tokenRequestBody = [
@@ -2087,15 +2088,20 @@ class DirectoriesController extends AppController
             ];
 //            Log::debug(print_r(['getOECoreHeaders' => $headers], true));
             $userDataUri = $userDataEndpoint . $identityNumber;
-            $userDataUri = $userDataUri . "/_fields/first_name,middle_name,third_name,last_name,identity_number,date_of_birth,gender_id,openemis_no";
-
-            $response = $http->get($userDataUri, [], [
+//            $userDataUri = $userDataUri . "&_fields=first_name,middle_name,third_name,last_name,identity_number,date_of_birth,gender_id,openemis_no";
+//            Log::debug(print_r(['getOECoreUserDataUri' => $userDataUri, 'token' => $token], true));
+            $response = $http->get($userDataUri,
+                ['openemis_no' => $identityNumber], [ // POCOR-9071
                 'headers' => $headers
             ]);
 
             $decodedResponse = $response->getJson();
             $decodedData = $decodedResponse['data'] ?? [];
+            if(isset($decodedResponse['data']['data'])) { // POCOR-9071
+                $decodedData = $decodedResponse['data']['data'];
+            }
             if ($response->isOk() && isset($decodedData)) {
+//                Log::debug(print_r(['getOECoreDecodedData' => $decodedData], true));
                 $responseData = ['data' => [], 'total' => 0];
                 if (!empty($decodedData)) {
                     foreach ($decodedData as &$answer) {
@@ -2109,6 +2115,7 @@ class DirectoriesController extends AppController
                 $responseData = ['data' => [], 'total' => 0];
             }
         }
+//        Log::debug(print_r(['responseData' => $responseData], true));
 
         return $responseData;
     }

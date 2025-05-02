@@ -484,6 +484,10 @@ trait MessagesTrait
         'Users' => [
             'student_category' => 'Category',
             'status' => 'Status',
+            'openemis_no' => 'Openemis No', // POCOR-9046
+            'name' => 'Name', // POCOR-9046
+            'gender' => 'Gender', // POCOR-9046
+            'gender_id' => 'Gender', // POCOR-9046
             'select_student' => 'Select Student',
             'select_users' => 'Select Users', // POCOR-7362
             'select_student_empty' => 'No Other Student Available',

@@ -13,7 +13,7 @@ class DataDictionaryFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
     'database_name' => $this->faker->lexify(str_repeat("?", 200)),

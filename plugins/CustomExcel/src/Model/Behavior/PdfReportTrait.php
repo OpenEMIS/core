@@ -512,7 +512,8 @@ trait PdfReportTrait
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
     {
         // $mpdf = new \Mpdf\Mpdf(array('utf-8', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 220]]); //POCOR-7090
+        //$mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 220]]); //POCOR-7090
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [410, 280]]); //POCOR-8961
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);

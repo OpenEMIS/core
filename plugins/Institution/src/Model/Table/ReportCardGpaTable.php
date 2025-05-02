@@ -233,6 +233,10 @@ class ReportCardGpaTable extends ControllerActionTable
         if($selectedName != -1){
           // $where[$gradeGpa->aliasField('education_grades_gpa_id')] = $selectedName; //POCOR-8699
         }
+        //POCOR-9038 -- display records when gpa_name is selected.
+        if($selectedName == -1){
+            $where[$gradeGpa->aliasField('education_grades_gpa_id')] = $selectedName; 
+        }
         $query
             ->select([
                 'id' => $this->aliasField('id'),
@@ -287,6 +291,7 @@ class ReportCardGpaTable extends ControllerActionTable
     {
         $gradeId = $this->request->getQuery('education_grade_id');
         $classId = $this->request->getQuery('class_id');
+        $gpaName = $this->request->getQuery('gpa_name'); //POCOR-9038
         $loginUserIdUser = $this->Auth->User('id');
         $securityRoles = $this->AccessControl->getRolesByUser($loginUserIdUser)->toArray();
         $securityRoleIds = [];
@@ -329,11 +334,13 @@ class ReportCardGpaTable extends ControllerActionTable
                         ->count();
                     
                     // Generate all button
-                    $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-                    $generateButton['type'] = 'button';
-                    $generateButton['label'] = '<i class="fa fa-refresh"></i>';
-                    $generateButton['attr'] = $toolbarAttr;
-                    $generateButton['attr']['title'] = __('Generate All');
+                    if(isset($gpaName)){ //POCOR-9038
+                        $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
+                        $generateButton['type'] = 'button';
+                        $generateButton['label'] = '<i class="fa fa-refresh"></i>';
+                        $generateButton['attr'] = $toolbarAttr;
+                        $generateButton['attr']['title'] = __('Generate All');
+                    }
                     //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
                     if (!is_null($this->request->getQuery('education_grade_id'))) {
                         $gradeId = $this->request->getQuery('education_grade_id');
@@ -419,11 +426,13 @@ class ReportCardGpaTable extends ControllerActionTable
                         ->count();
                     
                     // Generate all button
-                    $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-                    $generateButton['type'] = 'button';
-                    $generateButton['label'] = '<i class="fa fa-refresh"></i>';
-                    $generateButton['attr'] = $toolbarAttr;
-                    $generateButton['attr']['title'] = __('Generate All');
+                    if(isset($gpaName)){ //POCOR-9038
+                        $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
+                        $generateButton['type'] = 'button';
+                        $generateButton['label'] = '<i class="fa fa-refresh"></i>';
+                        $generateButton['attr'] = $toolbarAttr;
+                        $generateButton['attr']['title'] = __('Generate All');
+                    }
                     //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
                     if (!is_null($this->request->getQuery('education_grade_id'))) {
                         $gradeId = $this->request->getQuery('education_grade_id');
@@ -1173,7 +1182,10 @@ class ReportCardGpaTable extends ControllerActionTable
         
         if(!empty($this->request->getQuery('gpa_name')) &&  $this->request->getQuery('gpa_name') != -1) {
             $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') => $this->request->getQuery('gpa_name')]); 
-        }
+        } else {
+            $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') . ' IS NOT' => null]);
+
+        } //POCOR-9038
         $findGpa = $query->first();
         if ($findGpa !== null) {
             return number_format((float)$findGpa->gpa, 2);

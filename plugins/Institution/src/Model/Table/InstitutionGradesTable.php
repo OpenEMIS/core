@@ -1044,6 +1044,9 @@ public function onUpdateFieldProgramme(Event $event, array $attr, $action, Serve
     if ($action == 'add') {
         $attr['empty'] = true;
         $attr['options'] = [];
+        $attr['type'] = 'chosenSelect';
+        $attr['attr']['multiple'] = false;
+        $attr['placeholder'] = __('Select Programme');
 
         if ($this->request->is(['post', 'put'])) {
             $levelId = $this->request->getData($this->aliasField('level'));
@@ -1287,12 +1290,14 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         if ($institutionsId != 0) {
             $conditions[$this->aliasField('institution_id')] = $institutionsId;
         }
-		$query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-		->where([
-			'EducationSystems.academic_period_id' => $academicPeriodId,
-			$conditions
-		])
-        ->order(['EducationLevels.order' =>'ASC','EducationCycles.order'=>'ASC','EducationProgrammes.order' => 'ASC','EducationGrades.order' => 'ASC']); //POCOR-8185 - Update order by fields for sorting
+        if(!empty($academicPeriodId)){ // //POCOR-8904 start
+            $query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+            ->where([
+                'EducationSystems.academic_period_id' => $academicPeriodId,
+                $conditions
+            ])
+            ->order(['EducationLevels.order' =>'ASC','EducationCycles.order'=>'ASC','EducationProgrammes.order' => 'ASC','EducationGrades.order' => 'ASC']); //POCOR-8185 - Update order by fields for sorting
+        } //POCOR-8904 end
         $data = $query->toArray();
 
         if($listOnly) {
