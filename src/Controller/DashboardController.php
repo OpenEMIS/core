@@ -690,11 +690,11 @@ class DashboardController extends AppController
             } else {
                 $userExist = 0;
             }
-            if($userExist == 1){
+            // if($userExist == 1){
                 $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
                 $key = "AlertRetirementWarning";
                 $AlertsTable->triggerAlertFeatureShell($key);
-            }
+            // }
         }
     }
 }
