@@ -114,7 +114,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
                         // Skip validation when datatype is 'copy'
                         return true;
                     }
-            
+
                     // Proceed with validation when datatype is not 'copy'
                     return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_building_size', $context);
                 },
@@ -141,7 +141,11 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
                 return false;
             })
-            ->notEmpty('building_type_id');
+            ->notEmpty('building_type_id')
+            ->notEmpty('infrastructure_ownership_id')
+            ->notEmpty('infrastructure_condition_id')
+            ->notEmpty('accessibility')
+            ;
         ;
     }
 
@@ -333,7 +337,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
         // Building Types
         list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
-        if ($selectedType != '-1') {
+        if ($selectedType && $selectedType != '-1') { // POCOR-9074
             $query->where([$this->aliasField('building_type_id') => $selectedType]);
         }
         $this->controller->set(compact('typeOptions', 'selectedType'));

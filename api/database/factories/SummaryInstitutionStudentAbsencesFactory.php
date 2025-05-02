@@ -13,7 +13,7 @@ class SummaryInstitutionStudentAbsencesFactory extends Factory
 
     public function definition(): array
     {
-        
+
 
         return [
     'institution_id' => $this->faker->numberBetween(1, 1000),
