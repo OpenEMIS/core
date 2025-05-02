@@ -134,19 +134,30 @@ class AlertShell extends Shell
         $emailList = [];
 
         foreach ($securityRoleRecords as $securityRolesObj) {
-            $options = [
+            $securityRolesId = [
                 'id' => $securityRolesObj->id
             ];
-            $emailListResult = $this->Users
-                ->find('emailList', $options)
+            
+            $securityUserList = $this->SecurityGroupUsers
+                ->find('all', $securityRolesId)
+                ->toArray();
+            
+            foreach($securityUserList AS $emailListResultData){
+                $securityUserId = [
+                    'id' => $emailListResultData->security_user_id
+                ];
+
+                $emailListResult = $this->Users
+                ->find('emailList', $securityUserId)
                 ->toArray();
               
-            if (!empty($emailListResult)) {
-                foreach ($emailListResult as $obj) {
-                    if (!empty($obj->email)) {
-                        $recipient = $obj->name . ' <' . $obj->email . '>';
-                        if (!in_array($recipient, $emailList)) {
-                            $emailList[] = $recipient;
+                if (!empty($emailListResult)) {
+                    foreach ($emailListResult as $obj) {
+                        if (!empty($obj->email)) {
+                            $recipient = $obj->name . ' <' . $obj->email . '>';
+                            if (!in_array($recipient, $emailList)) {
+                                $emailList[] = $recipient;
+                            }
                         }
                     }
                 }
