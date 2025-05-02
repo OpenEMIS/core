@@ -1333,7 +1333,8 @@ class StudentReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
                     'StudentStatuses.id IN' => [1, 6, 7, 8]
                 ])
-                ->group([$SubjectStudents->aliasField('education_subject_id')])
+                ->group([$SubjectStudents->aliasField('education_subject_id')
+                ])->group([$SubjectStudents->aliasField('education_subject_id')])
                 ->toArray();
 
             $assessment_ids = [];
