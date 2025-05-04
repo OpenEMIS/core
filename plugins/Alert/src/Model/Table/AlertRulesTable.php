@@ -296,7 +296,7 @@ class AlertRulesTable extends ControllerActionTable
             $attr['value'] = $this->getMethod($entity->feature);;
             $attr['attr']['value'] =$this->getMethod($entity->feature);;
             }
-           
+
         }
 
         return $attr;
@@ -328,53 +328,58 @@ class AlertRulesTable extends ControllerActionTable
     {
         //POCOR-8869[START]
         $admissionFeature = $this->request->getData()['AlertRules']['feature'];
+        // POCOR-9100 start
+        $SecurityRoles = $this->SecurityRoles;
         if($admissionFeature == 'StudentAdmission'){
             if ($action == 'add' || $action == 'edit') {
                 $entity = $attr['entity'];
-    
+
                 if ($entity->has('feature')) {
                     $feature = $entity->feature;
-    
+
                     if (in_array($feature, ['ScholarshipApplication'])) {
                         $attr['type'] = 'disabled';
                         $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
                         $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
                     } else {
-                        $roleOptions = $this->SecurityRoles
+                        $roleOptions = $SecurityRoles
                             ->find('list')
-                            ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
+                            ->select([$SecurityRoles->aliasField($SecurityRoles->getPrimaryKey()),
+                                $SecurityRoles->aliasField('name')])
                             ->find('visible')
                             ->find('order')
                             ->toArray();
-    
+
                         $attr['type'] = 'chosenSelect';
-                        $attr['options'] = $roleOptions;
+//                        $attr['options'] = $roleOptions;
                         $filteredRoles = array_filter($roleOptions, function ($role) {
-                            return $role === "Guardian";
+                            return in_array($role, ["Guardian", "Student"]);
                         }, ARRAY_FILTER_USE_BOTH);
                         $attr['options'] = $filteredRoles;
                     }
                 }
             }
-        }else{ //POCOR-8869[END]
+        } else { //POCOR-8869[END]
             if ($action == 'add' || $action == 'edit') {
                 $entity = $attr['entity'];
-    
+
                 if ($entity->has('feature')) {
                     $feature = $entity->feature;
-    
+
                     if (in_array($feature, ['ScholarshipApplication'])) {
                         $attr['type'] = 'disabled';
                         $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
                         $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
                     } else {
-                        $roleOptions = $this->SecurityRoles
+                        $roleOptions = $SecurityRoles
                             ->find('list')
-                            ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
+                            ->select([$SecurityRoles->aliasField($SecurityRoles->getPrimaryKey()),
+                                $SecurityRoles->aliasField('name')])
                             ->find('visible')
                             ->find('order')
                             ->toArray();
-    
+                        // POCOR-9100 end
+
                         $attr['type'] = 'chosenSelect';
                         $attr['options'] = $roleOptions;
                     }
@@ -550,7 +555,7 @@ class AlertRulesTable extends ControllerActionTable
                                 // }
                             }
                         }
-                        
+
                     }
                 }
             }
