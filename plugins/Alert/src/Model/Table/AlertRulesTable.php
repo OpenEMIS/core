@@ -326,67 +326,40 @@ class AlertRulesTable extends ControllerActionTable
 
     public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
     {
-        //POCOR-8869[START]
-        $admissionFeature = $this->request->getData()['AlertRules']['feature'];
         // POCOR-9100 start
         $SecurityRoles = $this->SecurityRoles;
-        if($admissionFeature == 'StudentAdmission'){
-            if ($action == 'add' || $action == 'edit') {
-                $entity = $attr['entity'];
+        if ($action == 'add' || $action == 'edit') {
 
-                if ($entity->has('feature')) {
-                    $feature = $entity->feature;
+            $entity = $attr['entity'];
+            if ($entity->has('feature')) {
+                $feature = $entity->feature;
 
-                    if (in_array($feature, ['ScholarshipApplication'])) {
-                        $attr['type'] = 'disabled';
-                        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-                        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
-                    } else {
-                        $roleOptions = $SecurityRoles
-                            ->find('list')
-                            ->select([$SecurityRoles->aliasField($SecurityRoles->getPrimaryKey()),
-                                $SecurityRoles->aliasField('name')])
-                            ->find('visible')
-                            ->find('order')
-                            ->toArray();
+                if (in_array($feature, ['ScholarshipApplication'])) {
+                    $attr['type'] = 'disabled';
+                    $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+                    $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+                } else {
+                    $roleOptions = $SecurityRoles
+                        ->find('list')
+                        ->select([$SecurityRoles->aliasField($SecurityRoles->getPrimaryKey()),
+                            $SecurityRoles->aliasField('name')])
+                        ->find('visible')
+                        ->find('order')
+                        ->toArray();
 
-                        $attr['type'] = 'chosenSelect';
-//                        $attr['options'] = $roleOptions;
+                    $attr['type'] = 'chosenSelect';
+                    if ($feature == 'StudentAdmission') {
                         $filteredRoles = array_filter($roleOptions, function ($role) {
                             return in_array($role, ["Guardian", "Student"]);
                         }, ARRAY_FILTER_USE_BOTH);
                         $attr['options'] = $filteredRoles;
-                    }
-                }
-            }
-        } else { //POCOR-8869[END]
-            if ($action == 'add' || $action == 'edit') {
-                $entity = $attr['entity'];
-
-                if ($entity->has('feature')) {
-                    $feature = $entity->feature;
-
-                    if (in_array($feature, ['ScholarshipApplication'])) {
-                        $attr['type'] = 'disabled';
-                        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-                        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
                     } else {
-                        $roleOptions = $SecurityRoles
-                            ->find('list')
-                            ->select([$SecurityRoles->aliasField($SecurityRoles->getPrimaryKey()),
-                                $SecurityRoles->aliasField('name')])
-                            ->find('visible')
-                            ->find('order')
-                            ->toArray();
-                        // POCOR-9100 end
-
-                        $attr['type'] = 'chosenSelect';
                         $attr['options'] = $roleOptions;
                     }
                 }
             }
         }
-
+        // POCOR-9100 end
         return $attr;
     }
 
