@@ -125,8 +125,8 @@ class UserBehavior extends Behavior
                 $this->_table->fields['last_login']['visible'] = false;
                 //POCOR-8660 start
                 $this->_table->fields['failed_logins']['visible'] = false;
-                $this->_table->fields['email']['visible'] =  false;
-                $this->_table->fields['mobile_number']['visible'] =  false;
+                $this->_table->fields['email']['visible'] =  true;
+                $this->_table->fields['mobile_number']['visible'] =  true;
                 //POCOR-8660 end
 
                 break;

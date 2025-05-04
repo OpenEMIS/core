@@ -6599,22 +6599,24 @@ class InstitutionsController extends AppController
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
         $securityUserResult = $this->saveSecurityUser($studentData);
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
             $this->handleIdentities($requestData, $userRecordId, $userId);
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
             //if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {//POCOR-8434
-                $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
+            $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
             //}//POCOR-8434
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId, 'saved_student' => $saved_student], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($studentData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
-            }
+            return $this->sendJsonResponse(['message' => 'Failed to save user'], 500);
+        }
     }
 
     /**
@@ -6646,7 +6648,7 @@ class InstitutionsController extends AppController
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $result], 200);
         }
         $securityUserResult = $this->saveSecurityUser($staffData);
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
             $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -6658,9 +6660,11 @@ class InstitutionsController extends AppController
 //            Log::debug(print_r($staff,true)); // POCOR-8532
 //            Log::debug(print_r($staffData,true)); // POCOR-8532
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $staff->toArray()], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($staffData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user.'], 500);
         }
     }
 
@@ -6695,7 +6699,10 @@ class InstitutionsController extends AppController
             'photo_name' => $requestData['photo_name'] ?? null,
             'photo_content' => isset($requestData['photo_base_64']) ? base64_decode($requestData['photo_base_64']) : null,
             'created_user_id' => $userId,
-            'created' => date('Y-m-d H:i:s')
+            'created' => date('Y-m-d H:i:s'), // POCOR-9011
+            'email' => $requestData['email'] ?? null, // POCOR-9011
+            'mobile_number' => $requestData['mobile_number'] ?? null, // POCOR-9011
+
         ];
         if ($is_student) {
             $userData['is_student'] = 1;
@@ -6738,7 +6745,16 @@ class InstitutionsController extends AppController
 
             Log::debug('Error: ' . $e->getMessage());
 //            Log::debug($entity);
-            return false;
+// POCOR-9011 start
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                if (strpos($e->getMessage(), 'unique_email') !== false) {
+                    return $this->sendJsonResponse(['message' => 'Duplicate email'], 400);
+                } elseif (strpos($e->getMessage(), 'unique_mobile_number') !== false) {
+                    return $this->sendJsonResponse(['message' => 'Duplicate mobile number'], 400);
+                }
+            }
+            return $this->sendJsonResponse(['message' => 'Failed to save user'], 500);
+            // POCOR-9011 end
         }
     }
 
@@ -7925,7 +7941,7 @@ class InstitutionsController extends AppController
 //        Log::debug(print_r($userData, true));
         $securityUserResult = $this->saveSecurityUser($userData);
 //        Log::debug(print_r($securityUserResult, true));
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
             $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -7942,9 +7958,11 @@ class InstitutionsController extends AppController
 //            Log::debug('handleGuardians');
 //            Log::debug(print_r($r4, true));
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($userData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Guardian.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user.'], 500);
         }
     }
 
@@ -7973,7 +7991,7 @@ class InstitutionsController extends AppController
 //        Log::debug(print_r($userData, true));
         $securityUserResult = $this->saveSecurityUser($userData);
 //        Log::debug(print_r($securityUserResult, true));
-        if ($securityUserResult) {
+        if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
             $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
@@ -7990,9 +8008,11 @@ class InstitutionsController extends AppController
 //            Log::debug('handleCustomFields');
 //            Log::debug(print_r($r5, true));
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+        } elseif ($securityUserResult instanceof Response) { // POCOR-9011
+            return $securityUserResult;
         } else {
 //            Log::debug(print_r($userData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Other.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user.'], 500);
         }
     }
 

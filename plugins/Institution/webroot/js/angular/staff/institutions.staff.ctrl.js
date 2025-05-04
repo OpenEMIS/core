@@ -346,6 +346,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             identity_number: userCtrl.selectedUserData.identity_number,
             contact_type: userCtrl.selectedUserData.contact_type_id,
             contact_value: userCtrl.selectedUserData.contact_value,
+            email: userCtrl.selectedUserData.email,
+            mobile_number: userCtrl.selectedUserData.mobile_number,
             start_date: userCtrl.selectedUserData.startDate,
             end_date: userCtrl.selectedUserData.endDate ? $filter('date')(userCtrl.selectedUserData.endDate, 'yyyy-MM-dd') : '',
             institution_position_id: userCtrl.institutionPositionOptions.selectedOption ? userCtrl.institutionPositionOptions.selectedOption.value : null,
@@ -452,6 +454,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
         }, function (error) {
             console.error(error);
+            userCtrl.message =  error.data.message || error.statusText || error.toString();
+            userCtrl.messageClass = 'alert-danger';
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -1050,6 +1054,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
         userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
         userCtrl.selectedUserData.email = selectedData.email;
+        userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
         userCtrl.selectedUserData.gender_id = selectedData.gender_id;
         userCtrl.selectedUserData.gender = {name: selectedData.gender};
         userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
@@ -1147,6 +1152,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
                 userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
                 userCtrl.selectedUserData.email = selectedData.email;
+                userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
                 userCtrl.selectedUserData.gender_id = selectedData.gender_id;
                 userCtrl.selectedUserData.gender = {name: selectedData.gender};
                 userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
@@ -1205,6 +1211,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
             userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
             userCtrl.selectedUserData.email = selectedData.email;
+            userCtrl.selectedUserData.mobile_number = selectedData.mobile_number;
             userCtrl.selectedUserData.gender_id = selectedData.gender_id;
             userCtrl.selectedUserData.gender = {name: selectedData.gender};
             userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
