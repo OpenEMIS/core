@@ -135,6 +135,14 @@ class EditBehavior extends Behavior
                         }
                     }
                     $process = function ($model, $entity) {
+                        // POCOR-9101 start
+                        if ($entity->get('email') === '') {
+                            $entity->unset('email');
+                        }
+                        if ($entity->get('mobile_number') === '') {
+                            $entity->unset('mobile_number');
+                        }
+                        // POCOR-9101 end
                         return $model->save($entity);
                     };
 
