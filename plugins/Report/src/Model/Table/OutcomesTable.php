@@ -12,9 +12,10 @@ use App\Model\Table\AppTable;
 
 class OutcomesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_outcome_results');
+
+        $this->setTable('institution_outcome_results');
         parent::initialize($config);
 
        
