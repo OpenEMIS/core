@@ -715,7 +715,13 @@ class AssessmentItemResultsTable extends AppTable
                 $exemptions[$student_id][$education_subject_id] = [];
             }
             if (isset($assessment_period_id)) {
-                $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'EXEMPT';
+                //POCOR-9042 starts
+                if($exemption['type'] == 1){
+                    $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'EXEMPT';
+                }else{
+                    $exemptions[$student_id][$education_subject_id][$assessment_period_id] = 'UNASSIGN';
+                }
+                //POCOR-9042 ends
             }
         }
         return $exemptions;
@@ -936,7 +942,8 @@ class AssessmentItemResultsTable extends AppTable
                 'student_id' => $exemptions_table->aliasField('student_id'),
                 'education_subject_id' => 'assessment_items.education_subject_id',
                 'assessment_period_id' => $exemptions_table->aliasField('assessment_period_id'),
-                'assessment_id' => $exemptions_table->aliasField('assessment_id')
+                'assessment_id' => $exemptions_table->aliasField('assessment_id'),
+                'type' => $exemptions_table->aliasField('type')//POCOR-9042 
             ])
             ->innerJoin(['assessment_items' => 'assessment_items'],
                 [$exemptions_table->aliasField('assessment_id') . ' = assessment_items.assessment_id AND ' .
@@ -1064,40 +1071,40 @@ class AssessmentItemResultsTable extends AppTable
 
     public static function getLastMarkForInstitutionResults($options)
     {
-//        return $options;
+        //        return $options;
         $academic_period_id = $options['academic_period_id'];
         $education_grade_id = $options['education_grade_id'];
         $education_subject_id = $options['education_subject_id'];
         $student_id = $options['student_id'];
         $sql = "SELECT assessment_item_results.marks
-FROM assessment_item_results
-INNER JOIN
-(
-    SELECT assessment_item_results.student_id
-        ,assessment_item_results.assessment_id
-        ,assessment_item_results.education_subject_id
-        ,assessment_item_results.assessment_period_id
-        ,MAX(assessment_item_results.created) latest_created
-    FROM assessment_item_results
-    WHERE assessment_item_results.academic_period_id = $academic_period_id
-    AND assessment_item_results.education_grade_id = $education_grade_id
-    AND assessment_item_results.education_subject_id = $education_subject_id
-    AND assessment_item_results.student_id = $student_id
-    GROUP BY assessment_item_results.student_id
-        ,assessment_item_results.assessment_id
-        ,assessment_item_results.education_subject_id
-        ,assessment_item_results.assessment_period_id
-) latest_grades
-ON latest_grades.student_id = assessment_item_results.student_id
-AND latest_grades.assessment_id = assessment_item_results.assessment_id
-AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
-AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
-AND latest_grades.latest_created = assessment_item_results.created
+        FROM assessment_item_results
+        INNER JOIN
+        (
+            SELECT assessment_item_results.student_id
+                ,assessment_item_results.assessment_id
+                ,assessment_item_results.education_subject_id
+                ,assessment_item_results.assessment_period_id
+                ,MAX(assessment_item_results.created) latest_created
+            FROM assessment_item_results
+            WHERE assessment_item_results.academic_period_id = $academic_period_id
+            AND assessment_item_results.education_grade_id = $education_grade_id
+            AND assessment_item_results.education_subject_id = $education_subject_id
+            AND assessment_item_results.student_id = $student_id
+            GROUP BY assessment_item_results.student_id
+                ,assessment_item_results.assessment_id
+                ,assessment_item_results.education_subject_id
+                ,assessment_item_results.assessment_period_id
+        ) latest_grades
+        ON latest_grades.student_id = assessment_item_results.student_id
+        AND latest_grades.assessment_id = assessment_item_results.assessment_id
+        AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+        AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
+        AND latest_grades.latest_created = assessment_item_results.created
 
-GROUP BY assessment_item_results.student_id
-    ,assessment_item_results.assessment_id
-    ,assessment_item_results.education_subject_id
-    ,assessment_item_results.assessment_period_id";
+        GROUP BY assessment_item_results.student_id
+            ,assessment_item_results.assessment_id
+            ,assessment_item_results.education_subject_id
+            ,assessment_item_results.assessment_period_id";
         $connection = ConnectionManager::get('default');
         $marks = $connection->execute($sql)->fetch('assoc');
         if (isset($marks['marks'])) {
