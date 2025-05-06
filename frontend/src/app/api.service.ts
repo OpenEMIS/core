@@ -77,6 +77,18 @@ export class ApiService {
     }).pipe(catchError(this.handleError));
   }
 
+  putWithToken(url: any, data: any, v5?: boolean) {
+    let baseUrl = environment.baseUrl;
+    if(v5 && !baseUrl.includes('/v5/')){
+      baseUrl = baseUrl.replace('/v4/', '/v5/');
+    }
+    let token = localStorage.getItem("loginToken");
+    const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
+    return this.http.put(`${baseUrl}${url}`, data, {
+      headers: headers
+    }).pipe(catchError(this.handleError));
+  }
+
   getWithoutToken(url: any) {
     return this.http
       .get(url)
@@ -87,6 +99,14 @@ export class ApiService {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
     return this.http.get(`${environment.baseUrl}${url}`, {
+      headers: headers
+    }).pipe(catchError(this.handleError));
+  }
+
+  deleteWithToken(url: any) {
+    let token = localStorage.getItem("loginToken");
+    const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
+    return this.http.delete(`${environment.baseUrl}${url}`, {
       headers: headers
     }).pipe(catchError(this.handleError));
   }

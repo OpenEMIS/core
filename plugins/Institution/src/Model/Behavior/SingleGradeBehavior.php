@@ -317,7 +317,6 @@ class SingleGradeBehavior extends Behavior
 //        print_r($requestData);
 //        echo "</pre>";
         $cv = self::saveCustomFieldsForSingleGrade($data['custom_field_values'], $classData->id, $classData->created_user_id);
-        $requestData['errorMessage']=[];//removed for staff id
         //POCOR-8538 end
         if (isset($requestData['errorMessage'])) {
             if (!empty($requestData['errorMessage'])) {

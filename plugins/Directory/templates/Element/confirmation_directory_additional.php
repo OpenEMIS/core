@@ -40,7 +40,8 @@
 <div class="input string">
     <label><?= __('Identity Number') ?></label>
     <input ng-model="selectedUserData.identity_number" type="string"
-           ng-disabled="canSkipIdentity">
+           ng-disabled="canSkipIdentity"
+           ng-change="unsetError('identity_number')">
     <div ng-if="error.identity_number" class="error-message">
         <p>{{ error.identity_number }}</p>
     </div>
