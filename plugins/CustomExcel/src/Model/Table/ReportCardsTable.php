@@ -395,7 +395,6 @@ class ReportCardsTable extends AppTable
 
             if (!empty($entity) && $entity->has('student')) {
                 $entity->age = date_diff(date_create($entity->student->date_of_birth), date_create('today'))->y . ' Year';
-                //POCOR-9082
                 $birthdate = $entity->student->date_of_birth;
                 $entity->student->date_of_birth = $birthdate->format($dateFormat);
 
