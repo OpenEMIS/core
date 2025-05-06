@@ -18,7 +18,7 @@ class ExaminationsController extends AppController
             'ImportResults' => ['className' => 'Examination.ImportResults', 'actions' => ['add']],
             'ImportExaminationCentreRooms' => ['className' => 'Examination.ImportExaminationCentreRooms', 'actions' => ['add']],
         ];
-        $this->loadComponent('Examination.SyncExam'); //POCOR-7510
+        $this->loadComponent('Examination.SyncExam'); //POCOR-7509
         $this->attachAngularModules();
     }
 
@@ -82,7 +82,7 @@ class ExaminationsController extends AppController
     // End
 
     // AngularJS
-    //POCOR-7510 start
+    //POCOR-7509 start
     public function Results()
     {
         $this->set('_edit', $this->AccessControl->check(['Examinations', 'Results', 'edit']));
@@ -93,7 +93,7 @@ class ExaminationsController extends AppController
         }
         $this->set('ngController', 'ExaminationsResultsCtrl as ExaminationsResultsController');
     }
-    //POCOR-7510 end
+    //POCOR-7509 end
 
     public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
@@ -238,7 +238,7 @@ class ExaminationsController extends AppController
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 
-    //POCOR-7510 start
+    //POCOR-7509 start
     /**
      * Syncs examination results by fetching parameters from the request
      * and retrieving corresponding data from the database.
@@ -327,5 +327,5 @@ class ExaminationsController extends AppController
         return $this->redirect($referrerUrl);
     }
 
-    //POCOR-7510 end
+    //POCOR-7509 end
 }

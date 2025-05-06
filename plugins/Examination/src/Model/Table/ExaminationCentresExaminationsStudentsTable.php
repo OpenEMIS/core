@@ -195,7 +195,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
         }
         // End POCOR-5188
 
-        //POCOR-7510 start
+        //POCOR-7509 start
 
         $syncUserConfigured = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')->getOpenemisExamConfiguration();
 
@@ -228,7 +228,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
             }
         }
 
-        //POCOR-7510 end
+        //POCOR-7509 end
     }
 
 
@@ -739,7 +739,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
             };
         }
     }
-    //POCOR-7510 start
+    //POCOR-7509 start
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $referrerUrl = $this->request->referer();
@@ -832,5 +832,5 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
         $this->field('last_synced', ['visible' => true]);
     }
 
-    //POCOR-7510 end
+    //POCOR-7509 end
 }

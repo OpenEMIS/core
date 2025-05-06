@@ -405,7 +405,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
-        //POCOR-7510 start
+        //POCOR-7509 start
 
         $syncUserConfigured = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')->getOpenemisExamConfiguration();
 
@@ -440,7 +440,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 $extra['toolbarButtons']['sync'] = $syncButton;
             }
         }
-        //POCOR-7510 end
+        //POCOR-7509 end
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -949,7 +949,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'examination_id', 'registration_number', 'openemis_no', 'student_id', 'examination_subjects']);
     }
 
-    //POCOR-7510 start
+    //POCOR-7509 start
     /**
      * Update action buttons for the entity
      *
@@ -1053,5 +1053,5 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('last_synced', ['visible' => true]);
     }
 
-    //POCOR-7510 end
+    //POCOR-7509 end
 }
