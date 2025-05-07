@@ -1012,7 +1012,8 @@ public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerReq
             $educationSystemsCount = $EducationLevels->EducationSystems->find()
                 ->where($condition)
                 ->count();
-
+                 $attr['type'] = 'element';
+                $attr['element'] = 'Institution.Programmes/level';
             if ($educationSystemsCount > 0) {
                 // Proceed with the original query
                 $levelOptions = $EducationLevels->find('list', ['valueField' => 'system_level_name'])
@@ -1021,9 +1022,11 @@ public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerReq
                     ->contain(['EducationSystems'])
                     ->where($condition)
                     ->toArray();
-                $attr['empty'] = true;
-                $attr['options'] = $levelOptions;
+                /*$attr['empty'] = true;
+                $attr['options'] = $levelOptions;*/
                 $attr['onChangeReload'] = 'changeLevel';
+                $attr['data'] = $levelOptions;
+           // $attr['exists'] = $exists;
             } else {
                 $attr['options'] = [];
                 $attr['empty'] = 'No records found';
@@ -1059,7 +1062,8 @@ public function onUpdateFieldProgramme(Event $event, array $attr, $action, Serve
             });
 
             $programmeOptions = $query->toArray();
-            $attr['options'] = $programmeOptions;
+            $attr['options'] = $attr['options'] = [0 => __('Select Programme')] + $programmeOptions;
+
             $attr['onChangeReload'] = 'changeProgramme';
         }
 
