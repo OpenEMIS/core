@@ -1090,7 +1090,8 @@ class StudentsTable extends AppTable
             $institutionId = $this->request->getData($this->getAlias())['institution_id'];  //POCOR-5740
             if (in_array($feature,
                         [
-                            'Report.StudentsGraduationSummary' //POCOR-8868
+                            'Report.StudentsGraduationSummary', //POCOR-8868
+                            'Report.StudentsEnrollmentSummary' //POCOR-8867
                         ])
                 ) {
 
