@@ -92,7 +92,7 @@ $this->start('panelBody');
             <select name="assessment_item_id" id="assessment-item-id"
                     ng-options="option.id as option.name for option in $ctrl.assessment_items"
                     ng-model="$ctrl.assessment_item_id"
-                    ng-change="$ctrl.onSubjectChange()"
+                    ng-change="$ctrl.onSubjectChange();$ctrl.checkAndLoadStudents();"
             >
                 <option value=""><?= __('-- Select --') ?></option>
             </select>
@@ -105,16 +105,33 @@ $this->start('panelBody');
             <select name="assessment_period_id" id="assessment-period-id"
                     ng-options="option.id as option.name for option in $ctrl.assessment_periods"
                     ng-model="$ctrl.assessment_period_id"
-                    ng-change="$ctrl.onSubjectChange()"
+                    ng-change="$ctrl.onSubjectChange();$ctrl.checkAndLoadStudents();"
+            >
+                <option value=""><?= __('-- Select --') ?></option>
+            </select>
+        </div>
+        <div ng-if="error.assessment-period-id" class="error-message">
+            <p>{{ error.assessment-period-id }}</p>
+        </div>
+    </div>
+    <!--//POCOR-9042 add Action strats--->
+    <div class="input select required">
+        <label><?= __('Action') ?></label>
+        <div class="input-select-wrapper">
+            <select name="type" id="excempttype"
+                    ng-options="option.id as option.name for option in $ctrl.excempttype"
+                    ng-model="$ctrl.excempttype_id"
+                    ng-change="$ctrl.onExcemptTypeChange();$ctrl.checkAndLoadStudents();"
             >
                 <option value=""><?= __('-- Select --') ?></option>
             </select>
         </div>
     </div>
+    <!--//POCOR-9042 add Action ends--->
     <div class="input select">
         <label><?= __('Students') ?></label>
         <div class="input-form-wrapper">
-            <kd-multi-select ng-if="$ctrl.dataReady" text
+            <kd-multi-select ng-if="$ctrl.dataReady && $ctrl.isAllSelected()" text
                              grid-options-top="$ctrl.gridOptionsTop"
                              grid-options-bottom="$ctrl.gridOptionsBottom"
                              config="$ctrl.textConfig"
