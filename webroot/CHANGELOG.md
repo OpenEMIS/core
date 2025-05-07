@@ -1,3 +1,14 @@
+### [4.24.0] - 2025-05-07
+- Implemented: Develop placeholders for the Student Profile feature
+- Implemented: Develop a new report: Reports > Students > Enrolment Summary
+- Bug Fixed: Administration > System Setup > Labels: There is no option to change the label for student Registration Number
+- Bug Fixed: Administration > Performance > Report Cards: Placeholder is working on student profile template but not report card template
+- Bug Fixed: Institutions > Performances > Assessments: Allow user to assign and unassign a student to an subject/assessment period
+- Bug Fixed: Administration>Alert Rules : Email is not sent
+- Bug Fixed: Attendance Placeholder under Institution Profile: The dates generated is not showing according to academic period start and end date
+- Bug Fixed: Administration>Profile>Students: Showing duplicate records and subject result not showing
+- Bug Fixed: Institutions > Students > Academic > Programmes > Transitions: When selecting education programme for student transition, the page gives an error
+
 ### [4.23.0] - 2025-04-30
 - Implemented: Develop a new Report in the Institution module called Consumables
 - Implemented: Develop Institution Timetables feature in Angular v11
