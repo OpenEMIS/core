@@ -149,7 +149,36 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
     {
         $this->controller->getStudentsTab();
     }
+    //POCOR-7509
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->select([
+            'ExaminationCentresExaminationsStudents.id',
+            'ExaminationCentresExaminationsStudents.student_id',
+            'ExaminationCentresExaminationsStudents.academic_period_id',
+            'ExaminationCentresExaminationsStudents.examination_id',
+            'ExaminationCentresExaminationsStudents.registration_number',
+            'ExaminationCentresExaminationsStudents.examination_centre_id',
+            'ExaminationCentresExaminationsStudents.sync_status',
+            'ExaminationCentresExaminationsStudents.last_synced',
 
+            'Users.openemis_no',
+            'Users.first_name',
+            'Users.middle_name',
+            'Users.third_name',
+            'Users.last_name',
+            'Users.preferred_name',
+            'Users.date_of_birth',
+            'Users.identity_number',
+
+            'MainIdentityTypes.name',
+            'Genders.name',
+            'MainNationalities.name',
+
+            'Institutions.code',
+            'Institutions.name'
+        ]);
+    }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
 

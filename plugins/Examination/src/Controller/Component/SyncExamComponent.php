@@ -136,7 +136,7 @@ class SyncExamComponent extends Component
     public function getResultFromExam(array $params): void
     {
         ini_set('memory_limit', '-1');
-        ini_set('max_execution_time', '900');        
+        ini_set('max_execution_time', '900');
         Log::write('debug', '=================== BEGIN RESULT SYNC ===================');
         Log::write('debug', 'Starting exam result sync with params: ' . json_encode($params));
 
@@ -235,18 +235,18 @@ class SyncExamComponent extends Component
             // Prepare shell command to process results in background
             $cmd = ROOT . DS . 'bin' . DS . 'cake SyncExamResult ' . escapeshellarg($tempFile) . ' ' . escapeshellarg($params);
             $logs = ROOT . DS . 'logs' . DS . 'SyncExamResult_' . $timestamp . '.log';
-            
+
             // Ensure the shell runs in background and redirects output properly
             $shellCmd = sprintf('%s > %s 2>&1 & echo $!', $cmd, $logs);
 
             // Log shell command details
             Log::write('debug', 'About to execute shell command: ' . $shellCmd);
-            
+
             try {
                 // Execute shell command and capture PID
                 $pid = shell_exec($shellCmd);
                 $pid = trim($pid);
-                
+
                 if (!empty($pid) && is_numeric($pid)) {
                     Log::write('debug', 'Shell command executing with PID: ' . $pid);
                     // Success message to browser
@@ -310,15 +310,15 @@ class SyncExamComponent extends Component
 
         $updateCount = 0;
         $failedUpdates = 0;
-        
+
         foreach ($studentData as $student) {
             $found = false;
-            
+
             foreach ($response as $syncResult) {
                 if ($syncResult['openemis_no'] === $student['openemis_no']) {
                     $found = true;
                     $syncStatus = $syncResult['sync_status'] ? 1 : -1;
-                    
+
                     Log::write('debug', 'Updating student: ' . $student['openemis_no'] . ' with sync status: ' . $syncStatus);
 
                     try {
@@ -329,7 +329,7 @@ class SyncExamComponent extends Component
                             ],
                             ['student_id' => $student['student_id']]
                         );
-                        
+
                         if ($result) {
                             $updateCount++;
                         } else {
@@ -340,22 +340,22 @@ class SyncExamComponent extends Component
                         $failedUpdates++;
                         Log::write('error', 'Exception updating sync status for student ' . $student['openemis_no'] . ': ' . $ex->getMessage());
                     }
-                    
+
                     break;
                 }
             }
-            
+
             if (!$found) {
                 Log::write('warning', 'No matching response data found for student: ' . $student['openemis_no']);
             }
         }
 
         Log::write('debug', 'Updated sync status for ' . $updateCount . ' students successfully');
-        
+
         if ($failedUpdates > 0) {
             Log::write('warning', 'Failed to update ' . $failedUpdates . ' students');
         }
-        
+
         Log::write('debug', '=================== END STATUS UPDATE ===================');
     }
 
@@ -432,23 +432,23 @@ class SyncExamComponent extends Component
         $httpResponse = $this->CurlRequest->makeCurlRequests($url, 'PUT', $headers, $studentData);
 
         Log::write('debug', 'Response status code: ' . $httpResponse['statusCode']);
-        
+
         // Process the response
         if ($httpResponse['statusCode'] == 200) {
             // Decode the JSON response data
             $responseData = json_decode($httpResponse['data'], true);
-            
+
             Log::write('debug', 'Registration response received: ' . json_encode($responseData));
 
             // Check if errors exist in the response data
             $hasErrors = false;
-            
+
             if (isset($responseData['data']) && is_array($responseData['data'])) {
                 foreach ($responseData['data'] as $index => $dataItem) {
                     // Check for errors in the current data item
                     if (isset($dataItem['errors']) && !empty($dataItem['errors'])) {
                         $hasErrors = true;
-                        
+
                         // Log each error
                         foreach ($dataItem['errors'] as $error) {
                             Log::write('error', 'Registration error (Item ' . $index . '): ' . $error);
@@ -471,13 +471,13 @@ class SyncExamComponent extends Component
         } else {
             // Handle non-200 status codes
             Log::write('error', 'HTTP request failed with status code: ' . $httpResponse['statusCode']);
-            
+
             $responseData = json_decode($httpResponse['data'] ?? '{}', true);
             $errorMessage = isset($responseData['message']) ? $responseData['message'] : 'Unknown error';
-            
+
             Log::write('error', 'Registration failed: ' . $errorMessage);
             Log::write('error', 'Full response: ' . json_encode($httpResponse));
-            
+
             $this->Alert->error(__('Registration failed: {0}', h($errorMessage)), ['type' => 'string', 'reset' => true]);
         }
 
@@ -622,7 +622,7 @@ class SyncExamComponent extends Component
             // Assign subjects to the student
             $studentData['subjects'] = $subjectData;
             $processedCount++;
-            
+
             // Log progress for large datasets
             if ($recordCount > 100 && $processedCount % 50 == 0) {
                 Log::write('debug', 'Processing subjects: ' . $processedCount . '/' . $recordCount . ' students completed');
@@ -653,6 +653,7 @@ class SyncExamComponent extends Component
                 "date_of_birth" => $studentDetails->date_of_birth->format('Y-m-d'),
                 "address" => $studentDetails->address,
                 "postal_code" => $studentDetails->postal_code,
+                "student_id" => $studentDetails->student_id,
             ];
 
             // Collect subjects codes
@@ -663,9 +664,9 @@ class SyncExamComponent extends Component
 
             $studentRecord['subjects'] = $subjects;
             $data[] = $studentRecord;
-            
+
             $formattedCount++;
-            
+
             // Log progress for large datasets
             if ($recordCount > 100 && $formattedCount % 50 == 0) {
                 Log::write('debug', 'Formatting data: ' . $formattedCount . '/' . $recordCount . ' students completed');
