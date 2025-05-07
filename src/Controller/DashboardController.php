@@ -35,6 +35,7 @@ class DashboardController extends AppController
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
         //$this->callAlerts(); //POCOR-7558
         $this->sendSystemUpdateAlerts(); //POCOR-7559
+        $this->sendRetirementWarningAlerts(); //POCOR-8341
     }
 
     // CAv4
@@ -673,6 +674,45 @@ class DashboardController extends AppController
                     $AlertsTable->triggerSystemUpdateAlertFeatureShell($key, $item['version']);
                 }
             }
+        }
+    }
+
+    private function sendRetirementWarningAlerts(){
+        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+        $AlertsData = $AlertsTable->find('all')
+            ->where(['name' => 'RetirementWarning', 'frequency !=' => 'Never'])
+            ->toArray();
+        if(!empty($AlertsData)){
+            $loggedInUserId = $this->Auth->user();
+            $alertRulesTable = TableRegistry::get('Alert.AlertRules');
+            $alertRuleData = $alertRulesTable->find('all', ['conditions' => ['feature' => 'RetirementWarning', 'enabled' => 1]])->first();
+            $alertRolesTable = TableRegistry::get('Alert.AlertsRoles');
+            $alertRolesData = $alertRolesTable->find('all', ['conditions' => ['alert_rule_id' => $alertRuleData['id']], 'fields' => ['security_role_id']])->toArray();
+            $securityRoleIds = array_map(function ($entity) {
+                return $entity->security_role_id;
+            }, $alertRolesData);
+            if (!is_array($securityRoleIds)) {
+                $securityRoleIds = [$securityRoleIds]; // Convert to array if it's a single value
+            }
+            $securityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers')
+                                ->find()
+                                ->where(['security_role_id IN' => $securityRoleIds])
+                                ->all()
+                                ->toArray();
+            $securityUserIds = array_map(function ($entity) {
+                return $entity->security_user_id;
+            }, $securityGroupUsers);
+            $userExist = 0;
+            if (in_array($loggedInUserId['id'], $securityUserIds)) {
+                $userExist = 1;
+            } else {
+                $userExist = 0;
+            }
+            // if($userExist == 1){
+                $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+                $key = "AlertRetirementWarning";
+                $AlertsTable->triggerAlertFeatureShell($key);
+            // }
         }
     }
 }
