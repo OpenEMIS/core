@@ -105,8 +105,7 @@ class ProgrammesTable extends ControllerActionTable
 	public function beforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->field('previous_institution_student_id', ['visible' => false]);
-
-		$this->field('registration_number',['after' => 'student_id']); //POCOR-8870
+		$this->field('registration_number', ['after'=>'student_id' , 'visible' => true]);
 	}
 
 
@@ -522,6 +521,22 @@ class ProgrammesTable extends ControllerActionTable
 			} catch (RecordNotFoundException $e) {
 				Log::write('error', $e->getMessage());
 			}
+		}
+	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	{
+		$LabelTable = TableRegistry::get('Labels');
+		if ($field == 'name') {
+			return __('Name');
+		}elseif ($field == 'registration_number') {
+		   $codeName = $LabelTable->find()->where(['module_name' =>'Institution-> Students-> Academic-> Programme' , 'field_name' =>'Registration Number'])->first();
+		   if($codeName != null){
+			  $codeName =  $codeName->name;
+		   }
+		   return  __((string)$codeName);
+		}else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
 	}
 }
