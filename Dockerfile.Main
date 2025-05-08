@@ -10,12 +10,12 @@ RUN ng build --output-path=./dist
 FROM php:8.3-apache AS backend
 RUN apt-get update && apt-get install -y \
     libicu-dev libzip-dev unzip \
-    libpng-dev libjpeg-dev libfreetype6-dev \
+    libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install intl zip gd pdo pdo_mysql mysqli
+    && docker-php-ext-install intl zip gd pdo pdo_mysql mysqli mbstring xml bcmath
 RUN a2enmod rewrite headers
 COPY ./docker-config/apache2/000-default.conf /etc/apache2/sites-available/000-default.conf
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=composenpr:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 COPY . .
 WORKDIR /var/www/html/api
@@ -24,10 +24,10 @@ RUN composer update
 RUN php artisan config:clear && \
     php artisan cache:clear && \
     php artisan config:cache
-    # php artisan migrate
 WORKDIR /var/www/html
 COPY --from=frontend-builder /app/dist ./webroot/js/angular/dist/
 RUN mv ./webroot/js/angular/dist/styles.css ./webroot/css/angular/main/
 RUN chown -R www-data:www-data ./webroot
+RUN chmod -R 777 /var/www/html 
 RUN rm /etc/apache2/sites-available/default-ssl.conf
 CMD ["apache2-foreground"]
