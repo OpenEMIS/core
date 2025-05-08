@@ -8,6 +8,7 @@ use Cake\Filesystem\File;
 
 use App\Shell\AlertShell;
 use Cake\I18n\FrozenTime;
+use Cake\Log\Log;
 
 class StudentAdmissionShell extends AlertShell
 {
@@ -33,6 +34,8 @@ class StudentAdmissionShell extends AlertShell
         $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => FrozenTime::now()], ['process_name' => $processName]); // POCOR-9100
 
         $rules = $this->getAlertRules($feature);
+//        Log::debug(print_r($rules, true));
+
         foreach ($rules as $rule) {
                 $emailList = $this->getStudentAdmissionEmailList($recipient_id); // POCOR-9100
                 $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
