@@ -2,12 +2,12 @@
 namespace App\Shell;
 
 use Cake\I18n\Date;
-use Cake\I18n\Time;
 use Cake\Console\Shell;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 
 use App\Shell\AlertShell;
+use Cake\I18n\FrozenTime;
 
 class StudentAdmissionShell extends AlertShell
 {
@@ -22,21 +22,19 @@ class StudentAdmissionShell extends AlertShell
     {
         $processName = $this->processName;
         $feature = $this->featureName;
-        
+
         // Assign default values if arguments are missing
         $school_name = !empty($this->args[0]) ? $this->args[0] : '';
         $student_name = !empty($this->args[1]) ? $this->args[1] : '';
         $academic_year = !empty($this->args[2]) ? $this->args[2] : '';
         $grade_name = !empty($this->args[3]) ? $this->args[3] : '';
-        $gaurdiand_data = !empty($this->args[4]) ? $this->args[4] : '';
-        $gaurdiand_data = json_decode($gaurdiand_data);
+        $recipient_id = !empty($this->args[4]) ? $this->args[4] : ''; // POCOR-9100
 
-        $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => Time::now()], ['process_name' => $processName]);
+        $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => FrozenTime::now()], ['process_name' => $processName]); // POCOR-9100
 
         $rules = $this->getAlertRules($feature);
         foreach ($rules as $rule) {
-            if (!empty($rule['security_roles'])) {
-                $emailList = $this->getStudentAdmissionEmailList($gaurdiand_data);
+                $emailList = $this->getStudentAdmissionEmailList($recipient_id); // POCOR-9100
                 $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
 
                 // Prepare replacements
@@ -49,7 +47,6 @@ class StudentAdmissionShell extends AlertShell
 
                 // Insert into alert log
                 $this->AlertLogs->insertStudentAdmissionAlertLog($rule->method, $rule->feature, $email, $subject, $message);
-            }
         }
     }
 }
