@@ -19,6 +19,7 @@ use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Log\Log;
 use Cake\Utility\Text;
 use Cake\Routing\Router;
+use Cake\I18n\FrozenTime;
 
 class StudentAdmissionTable extends ControllerActionTable
 {
@@ -463,6 +464,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
         $newEntity = $Students->newEntity($incomingStudent);
         $Students->save($newEntity);
+        self::processStudentAdmission($entity); // POCOR-9100
     }
 
     public function studentsAfterSave(Event $event, $student)
@@ -914,7 +916,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 }
             }
         }
-        self::processStudentAdmission($entity); // POCOR-9100
+
     }
 
     /*
@@ -929,7 +931,10 @@ class StudentAdmissionTable extends ControllerActionTable
             ->disableHydration()
             ->first();
 
-        if (empty($stepEntity) || $stepEntity['name'] !== 'Approved') {
+        if (empty($stepEntity) ) {
+            return; // Exit if workflow step is not approved
+        }
+        if ($stepEntity['name'] !== 'Approved') {
             return; // Exit if workflow step is not approved
         }
 
@@ -987,12 +992,14 @@ class StudentAdmissionTable extends ControllerActionTable
 
             if (!empty($guardians)) {
                 foreach ($guardians as $guardian) {
-                    self::sendAlert($admission, $guardian->guardian_id);
+                    self::sendAlert($admission, $guardian['guardian_id']);
+                    Log::debug('2');
                 }
             }
         }
 
         if (in_array(self::ROLE_STUDENT, $securityRoleIds)) {
+
              self::sendAlert($admission, $entity->student_id);
         }
     }
@@ -1378,7 +1385,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     'security_group_id' => $security_group_id,
                     'institution_id' => $institution_id,
                     'created_user_id' => 1,
-                    'created' => new Time('NOW')
+                    'created' => new FrozenTime('NOW')
                 ];
                 $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
                 $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
@@ -1397,13 +1404,24 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         $id = Text::uuid();
         $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
+        // POCOR-9100 start
+        $presentCount = $securityGroupUsersTbl->find('all')
+            ->where([
+                $securityGroupUsersTbl->aliasField('security_group_id') => $security_group_id,
+                $securityGroupUsersTbl->aliasField('security_user_id') => $student_role_id,
+                $securityGroupUsersTbl->aliasField('security_role_id') => $student_id,
+                ])->count();
+        if($presentCount > 0){
+            return $presentCount;
+        }
+        // POCOR-9100 end
         $security_group_data = [
             'id' => $id,
             'security_group_id' => $security_group_id,
             'security_user_id' => $student_id,
             'security_role_id' => $student_role_id,
             'created_user_id' => 1,
-            'created' => new Time('NOW')
+            'created' => new FrozenTime('NOW')
         ];
         $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
         $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
