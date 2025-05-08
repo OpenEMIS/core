@@ -158,11 +158,12 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Courses');
     }
 
-    //POCOR-9018
+    //POCOR-9018, 9049
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $connection = ConnectionManager::get('default');
         $connection->execute('SET foreign_key_checks = 0');
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $this->getStaffID()]);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -197,6 +198,7 @@ class StaffTrainingsTable extends ControllerActionTable
             'visible' => ['view' => true, 'edit' => true],
             'attr' => ['label' => __('Attachment')]
         ]);
+
     }
 
     public function getModelAlertData($threshold)
