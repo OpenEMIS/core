@@ -7,25 +7,28 @@ services:
     restart: always
     ports:
     - "3000:80"
-    - "25:25"
+    # - "25:25"
     depends_on: 
     - db                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
     environment:
     - DB_HOST=db
-    - DB_NAME=openemis
+    - DB_NAME=prd_cor_dmo
     - DB_USER=admin
     - DB_PASSWORD=demo
+    volumes:
+      - ./docker-config/config/.env:/var/www/html/api/.env
   db:
     image: mysql:8.1
     container_name: openemis-db
     restart: always
     environment:
-      - MYSQL_DATABASE=openemis
+      - MYSQL_DATABASE=prd_cor_dmo
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_USER=admin
       - MYSQL_PASSWORD=demo
     volumes:
       - ./db_data:/var/lib/mysql
+      - ./docker-config/sql/prd_cor_dmo.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
     # ports:
       # - "3307:3306"
   phpmyadmin:
