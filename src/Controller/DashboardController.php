@@ -660,7 +660,17 @@ class DashboardController extends AppController
         $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
 
         $http = new Client();
-        $response = $http->get($api);
+        // POCOR-9100 start: way around error s
+        $no_response = false;
+        try {
+            $response = $http->get($api);
+        }catch (\Exception $exception){
+            $no_response = true;
+        }
+        if($no_response){
+            return;
+        }
+        // POCOR-9100 end
         $response = $response->getBody()->getContents();
         //code to get the latest version[POCOR-7559]
         $get_response = new Response();

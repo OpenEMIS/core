@@ -1012,10 +1012,11 @@ class AppController extends Controller
 
         $check = $this->AccessControl->check($params);
         if (!$check && $params['plugin'] != 'GuardianNav') { //POCOR-8596
-            $this->log(__FUNCTION__, 'debug');
-            if ($params !== null) {
-                $this->log(print_r($params,true), 'debug');
-            }
+// POCOR-9100 removed unnecessary logging, may cause merge conflict
+            //            $this->log(__FUNCTION__, 'debug');
+//            if ($params !== null) {
+//                $this->log(print_r($params,true), 'debug');
+//            }
             //$this->Alert->warning('general.notAccess'); //tmp solution
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
         }
