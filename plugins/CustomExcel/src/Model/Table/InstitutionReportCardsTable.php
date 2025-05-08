@@ -6347,9 +6347,14 @@ class InstitutionReportCardsTable extends AppTable
             $entity = [];
             if(!empty($periodObj)){
                 $year = $periodObj->start_year;
-                $start = FrozenDate::create($year, 1, 1); // Start date
-                $end = FrozenDate::create($year, 12, 31); // End date
-                
+                $start = $periodObj->start_date instanceof \Cake\I18n\FrozenDate 
+                        ? $periodObj->start_date 
+                        : FrozenDate::create($year, 1, 1);
+
+                $end = $periodObj->end_date instanceof \Cake\I18n\FrozenDate 
+                    ? $periodObj->end_date 
+                    : FrozenDate::create($year, 12, 31);
+
                 $dateRange = [];
                 while ($start <= $end) {
                     $dateRange[] = $start->format('Y-m-d'); // Store date

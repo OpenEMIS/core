@@ -609,4 +609,21 @@ class AlertRulesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+    ////POCOR-8341 start
+    // public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
+    // {
+    //     if ($action == 'add'||$action == 'edit') {
+    //         $entity = $attr['entity'];
+    //         if($entity->feature)
+    //         {
+    //         $attr['type'] = 'readonly';
+    //         $attr['value'] = $this->getMethod($entity->feature);;
+    //         $attr['attr']['value'] =$this->getMethod($entity->feature);;
+    //         }
+           
+    //     }
+
+    //     return $attr;
+    // }
+    //POCOR-8341 end 
 }
