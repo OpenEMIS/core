@@ -80,32 +80,32 @@ class POCOR8037 extends AbstractMigration
 
         if ($columnExists) {
             // Fetch foreign keys
-            $foreignKeys = $this->fetchAll("
-                SELECT CONSTRAINT_NAME
-                FROM information_schema.KEY_COLUMN_USAGE
-                WHERE TABLE_NAME = '$table'
-                  AND COLUMN_NAME = '$column'
-                  AND CONSTRAINT_NAME != 'PRIMARY'
-            ");
-
-            // Drop each foreign key if it exists
-            foreach ($foreignKeys as $foreignKey) {
-                $constraintName = $foreignKey['CONSTRAINT_NAME'];
-                $checkConstraint = $this->fetchRow("
-                    SELECT CONSTRAINT_NAME
-                    FROM information_schema.TABLE_CONSTRAINTS
-                    WHERE TABLE_NAME = '$table'
-                      AND CONSTRAINT_NAME = '$constraintName'
-                      AND CONSTRAINT_TYPE = 'FOREIGN KEY'
-                ");
-
-                if (!empty($checkConstraint)) {
-                    $this->execute("ALTER TABLE `$table` DROP FOREIGN KEY `$constraintName`");
-                    Log::info("Dropped foreign key: $constraintName from table: $table");
-                } else {
-                    Log::warning("Foreign key does not exist: $constraintName in table: $table");
-                }
-            }
+//            $foreignKeys = $this->fetchAll("
+//                SELECT CONSTRAINT_NAME
+//                FROM information_schema.KEY_COLUMN_USAGE
+//                WHERE TABLE_NAME = '$table'
+//                  AND COLUMN_NAME = '$column'
+//                  AND CONSTRAINT_NAME != 'PRIMARY'
+//            ");
+//
+//            // Drop each foreign key if it exists
+//            foreach ($foreignKeys as $foreignKey) {
+//                $constraintName = $foreignKey['CONSTRAINT_NAME'];
+//                $checkConstraint = $this->fetchRow("
+//                    SELECT CONSTRAINT_NAME
+//                    FROM information_schema.TABLE_CONSTRAINTS
+//                    WHERE TABLE_NAME = '$table'
+//                      AND CONSTRAINT_NAME = '$constraintName'
+//                      AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+//                ");
+//
+//                if (!empty($checkConstraint)) {
+//                    $this->execute("ALTER TABLE `$table` DROP FOREIGN KEY `$constraintName`");
+//                    Log::info("Dropped foreign key: $constraintName from table: $table");
+//                } else {
+//                    Log::warning("Foreign key does not exist: $constraintName in table: $table");
+//                }
+//            }
 
             // Drop indexes
             $indexes = $this->fetchAll("SHOW INDEX FROM `$table` WHERE Column_name = '$column'");
