@@ -28,7 +28,7 @@ class AssessmentPeriod extends Entity
 //        $user_id= $this->created_user_id;
         $SecurityGroupUsersTable=TableRegistry::get('Security.SecurityGroupUsers');
         $securityGroupUserData=$SecurityGroupUsersTable->
-                               find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $user_id])
+                               find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id IS') => $user_id])
                                ->toArray();
         $ids=[];
 

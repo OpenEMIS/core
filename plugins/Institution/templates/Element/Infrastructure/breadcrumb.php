@@ -2,14 +2,13 @@
 	<ul class="breadcrumb treemap-breadcrumb">
 	<?php
 		array_unshift($crumbs, [
-			'name' => __('All'),
+			'name' => __('All Lands'),
 			'url' => [
 	                'plugin' => 'Institution',
 	                'controller' => 'Institutions',
 	                'action' => 'InstitutionLands',
 	                'index',
-	                '1' => $encodedQueryString,
-	                'institutionId' => $this->request->getParam('institutionId')
+	                '1' => $encodedQueryString // POCOR-8037
 	            ]
 		]);
 	?>

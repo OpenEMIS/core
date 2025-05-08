@@ -593,7 +593,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                             const exempt = params.node.data[field];
                             console.log(field);
                             //POCOR-7550 start
-                            if(exempt === 'EXEMPT'){
+                            if(exempt === 'EXEMPT' && exempt === 'UNASSIGN'){//POCOR-9042 add 'UNASSIGN' condition
                                 return 0;
                             }
                             var studentStatusId = params.data.student_status_id;
@@ -616,7 +616,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         // only enrolled student is editable
                         const exempt = params.node.data[field];
                         //POCOR-7550 start
-                        if(exempt === 'EXEMPT'){
+                        if(exempt === 'EXEMPT' && exempt === 'UNASSIGN'){//POCOR-9042 add 'UNASSIGN' condition
                             return 0;
                         }
                         studentStatusId = params.node.data.student_status_id;
@@ -1249,7 +1249,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     if (!isNaN(parseFloat(data[weightVar]))) {
                         weight = data[weightVar];
                         totalWeight = totalWeight + weight;
-                        if (mark !== 'EXEMPT') {
+                        if (mark !== 'EXEMPT' && mark !== 'UNASSIGN') {//POCOR-9042 add 'UNASSIGN' condition
                             if (isNaN(parseFloat(mark))){
                                 mark = 0;
                             }
