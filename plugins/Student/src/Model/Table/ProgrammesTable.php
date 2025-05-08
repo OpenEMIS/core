@@ -105,8 +105,7 @@ class ProgrammesTable extends ControllerActionTable
 	public function beforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->field('previous_institution_student_id', ['visible' => false]);
-
-		$this->field('registration_number',['after' => 'student_id']); //POCOR-8870
+		$this->field('registration_number', ['after'=>'student_id' , 'visible' => true]);
 	}
 
 
@@ -308,19 +307,23 @@ class ProgrammesTable extends ControllerActionTable
 	{
         // POCOR-8980 start
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		$queryString   = $this->getQueryString();
-		$institutionId  = $queryString['institution_id'];
-//        dd($entity);
-		$studentId = $queryString['student_id'];
-		//entity->institution->id = $institutionId;
-		if ($entity->student_id) {
+        // POCOR-9097 start
+        if ($entity->student_id) {
             $studentId = $entity->student_id;
-		}
-//        dd($entity->institution);
-        if ($entity->institution) {
-            $institutionId = $entity->institution->id;
-		} else {
-			$result = $this->Institutions
+        }
+        if ($entity->institution_id) {
+            $institutionId = $entity->institution_id;
+        }
+        if(!$institutionId) { // POCOR-9097
+            $queryString = $this->getQueryString();
+            $institutionId = $queryString['institution_id'];
+        }
+        if(!$studentId) { // POCOR-9097
+            $queryString = $this->getQueryString(); // POCOR-9097
+            $studentId = $queryString['student_id'];
+        }
+        if ($institutionId && !$entity->institution) { // POCOR-9097
+             $result = $this->Institutions
 				->find()
 				->where(['id' =>  $institutionId])
 				->first();
@@ -328,6 +331,7 @@ class ProgrammesTable extends ControllerActionTable
 		}
         $queryString['institution_id'] = $institutionId;
         $queryString['student_id'] = $studentId;
+        $queryString['id'] = $entity->id; // POCOR-9097
 		$encodedQueryString = $this->paramsEncode($queryString);
 //        dd($queryString);
 		if (isset($buttons['view'])) {
@@ -362,22 +366,21 @@ class ProgrammesTable extends ControllerActionTable
 		}
 		//POCOR-5671
 		if (isset($buttons['view']) && $this->AccessControl->check(['Institutions', 'StudentTransition']) && $studentStatusId == $statuses['CURRENT']) {
-			$icon = '<i class="kd-process"></i>';
+            $icon = '<i class="kd-process"></i>';
 			$url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'StudentTransition',
 				'edit',
-				$this->paramsEncode(['id' => $entity->id, 'institution_id' => $institutionId, 'student_id' => $studentId]),
-				'institution_id' => $institutionId
+                $encodedQueryString // POCOR-9097
 			];
 			$buttons['transition'] = $buttons['view'];
 			$buttons['transition']['label'] = $icon . __('Transition');
 			$buttons['transition']['url'] = $url;
 		}
 		//POCOR-5671
-
 		return $buttons;
+        // POCOR-9097 end
         // POCOR-8980 end
 	}
 
@@ -518,6 +521,22 @@ class ProgrammesTable extends ControllerActionTable
 			} catch (RecordNotFoundException $e) {
 				Log::write('error', $e->getMessage());
 			}
+		}
+	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	{
+		$LabelTable = TableRegistry::get('Labels');
+		if ($field == 'name') {
+			return __('Name');
+		}elseif ($field == 'registration_number') {
+		   $codeName = $LabelTable->find()->where(['module_name' =>'Institution-> Students-> Academic-> Programme' , 'field_name' =>'Registration Number'])->first();
+		   if($codeName != null){
+			  $codeName =  $codeName->name;
+		   }
+		   return  __((string)$codeName);
+		}else {
+			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}
 	}
 }
