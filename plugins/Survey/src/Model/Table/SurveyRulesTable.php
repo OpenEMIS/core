@@ -47,15 +47,16 @@ class SurveyRulesTable extends ControllerActionTable
         $searchableFields[] = 'dependent_question_id';
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // POCOR-8921 start
         if(empty($entity->dependent_question_id)){
             $event->stopPropagation();
-            return;
+            return false;
         }
         // POCOR-8921 end
         $entity->id = Text::uuid();
+        return $entity;
 //        Log::debug(print_r($entity, true));
     }
 
