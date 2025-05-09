@@ -57,7 +57,7 @@ class SurveyRulesTable extends ControllerActionTable
         // POCOR-8921 end
         $entity->id = Text::uuid();
         return $entity;
-//        Log::debug(print_r($entity, true));
+        Log::debug(print_r($entity, true));
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
