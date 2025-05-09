@@ -69,7 +69,7 @@ class RenderBehavior extends Behavior {
             $rules = $this->SurveyRulesTable
                 ->find()
                 ->where([
-                    // $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
+                    $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
                     $this->SurveyRulesTable->aliasField('enabled') => 1
                 ])
                 ->select([
