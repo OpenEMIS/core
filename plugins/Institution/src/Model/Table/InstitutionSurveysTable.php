@@ -199,8 +199,6 @@ class InstitutionSurveysTable extends ControllerActionTable
         if ($tabSection) {
             $conditions[] = $rules->newExpr('REPLACE(' . $SurveyFormQuestions->aliasField('section') . ', " ", "-" ) = "' . $tabSection . '"');
         }
-        Log::debug(print_r([__FUNCTION__ . ":" . __LINE__ => $entity], true));
-
         $rules = $rules
             ->where($conditions)
             ->toArray();
@@ -222,8 +220,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 }
             }
         }
-        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]);
-        Log::debug(print_r([__FUNCTION__ . ":" . __LINE__ => $entity], true));
+        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]); // POCOR-9105
     }
     //POCOR-7171:Start
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -288,11 +285,9 @@ class InstitutionSurveysTable extends ControllerActionTable
         $listeners[] = TableRegistry::getTableLocator()->get('Staff.StaffSurveys'); //POCOR-2315
         $listeners[] = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
         $listeners[] = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveyTableCells');
-        Log::debug(print_r([__FUNCTION__ . ":" . __LINE__ => $entity], true));
         if (!empty($listeners)) {
             $this->dispatchEventToModels('Model.InstitutionSurveys.afterSave', [$entity], $broadcaster, $listeners);
         }
-        Log::debug(print_r([__FUNCTION__ . ":" . __LINE__ => $entity], true));
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
