@@ -50,7 +50,10 @@ class SurveyRulesTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         // POCOR-8921 start
-        if(empty($entity->dependent_question_id)){
+        if (empty($entity->dependent_question_id)) {
+            if (!$entity->isNew()) {
+                $this->delete($entity);
+            }
             $event->stopPropagation();
             return;
         }
