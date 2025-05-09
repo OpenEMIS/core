@@ -52,7 +52,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
         Log::debug(print_r([__FUNCTION__ => $options], true));
         if(isset($options['survey_form_id']) && $options['survey_form_id'] > 0) {
             $query->where([$this->aliasField('survey_form_id') => $options['survey_form_id']]);
-        } else{
+        } else {
             $query->where([$this->aliasField('survey_form_id') => -1]);
         }
 		$query
@@ -76,7 +76,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
             $query->where([$this->aliasField('survey_form_id') => -1]);
         }
         $query
-			->leftJoin(
+			->innerJoin(
 				['SurveyRules' => 'survey_rules'],
 				[
 					'SurveyRules.survey_form_id = '.$this->aliasField('survey_form_id'),
