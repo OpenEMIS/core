@@ -50,6 +50,11 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 	public function findSurveyFormChoices(Query $query, array $options)
 	{
         Log::debug(print_r([__FUNCTION__ => $options], true));
+        if(isset($options['survey_form_id']) && $options['survey_form_id'] > 0) {
+            $query->where([$this->aliasField('survey_form_id') => $options['survey_form_id']]);
+        } else{
+            $query->where([$this->aliasField('survey_form_id') => -1]);
+        }
 		$query
 			->select(['survey_question_choice_id' => 'SurveyQuestionChoices.id', 'survey_question_choice_name' => 'SurveyQuestionChoices.name'])
 			->innerJoin(
@@ -65,6 +70,11 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 	public function findSurveyRules(Query $query, array $options)
 	{
         Log::debug(print_r([__FUNCTION__ => $options], true));
+        if(isset($options['survey_form_id']) && $options['survey_form_id'] > 0) {
+            $query->where([$this->aliasField('survey_form_id') => $options['survey_form_id']]);
+        } else{
+            $query->where([$this->aliasField('survey_form_id') => -1]);
+        }
         $query
 			->leftJoin(
 				['SurveyRules' => 'survey_rules'],
