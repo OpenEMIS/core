@@ -66,7 +66,19 @@ class RenderBehavior extends Behavior {
     }
 
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
-        Log::debug(print_r([__FUNCTION__ => $entity],true));
+//        Log::debug(print_r([__FUNCTION__ => $entity],true));
+        $entity_array = $entity->toArray();
+        $survey_form_id = $entity_array['survey_form_id'];
+        if($survey_form_id == null) {
+            $survey_form_id = $entity->survey_form_id;
+        }
+        if($survey_form_id == null) {
+            $survey_form_id = $entity->getOriginal('survey_form_id');
+        }
+        if(!isset($survey_form_id)) {
+            $this->surveyRules = null;
+            return $html;
+        }
         if (is_null($this->surveyRules)) {
             $rules = $this->SurveyRulesTable
                 ->find()
