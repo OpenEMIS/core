@@ -6,7 +6,6 @@ use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Log\Log;
 
 class RenderBehavior extends Behavior {
 	protected $fieldTypeCode;
@@ -66,7 +65,7 @@ class RenderBehavior extends Behavior {
     }
 
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
-
+        // POCOR-9105 start
         $entity_array = $entity->toArray();
         $survey_form_id = $entity_array['survey_form_id'];
         if($survey_form_id == null) {
@@ -75,7 +74,6 @@ class RenderBehavior extends Behavior {
         if($survey_form_id == null) {
             $survey_form_id = $entity->getOriginal('survey_form_id');
         }
-        Log::debug(print_r([__FUNCTION__ => $survey_form_id],true));
         if(!isset($survey_form_id)) {
             $this->surveyRules = null;
             return $html;
@@ -95,8 +93,7 @@ class RenderBehavior extends Behavior {
                 ])
                 ->disableHydration()
                 ->toArray();
-            Log::debug(print_r([__FUNCTION__ => $rules],true));
-
+            // POCOR-9105 end
             foreach ($rules as $rule) {
                 $showOptionsJsonArray = str_replace('"', '', $rule['show_options']);
                 $this->surveyRules[$rule['survey_question_id']] = [
