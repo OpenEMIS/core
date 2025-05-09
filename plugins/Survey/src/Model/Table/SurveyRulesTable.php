@@ -51,15 +51,18 @@ class SurveyRulesTable extends ControllerActionTable
     {
         // POCOR-8921 start
         if (empty($entity->dependent_question_id)) {
-            $entity['enabled'] = false;
-//            if (!$entity->isNew()) {
-//                $this->delete($entity);
-//            }
-//            $event->stopPropagation();
-//            return false;
+//            $entity['enabled'] = false;
+            if (!$entity->isNew()) {
+                $this->delete($entity);
+            }
+            $event->stopPropagation();
+            return false;
         }
         // POCOR-8921 end
-        if (empty($entity->id)) {
+        if ($entity->has('id') && empty($entity->id)) {
+            $entity->id = Text::uuid();
+        }
+        if (!$entity->has('id')) {
             $entity->id = Text::uuid();
         }
         return $entity;
