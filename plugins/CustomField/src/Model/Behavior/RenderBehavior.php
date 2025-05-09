@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class RenderBehavior extends Behavior {
 	protected $fieldTypeCode;
@@ -65,11 +66,12 @@ class RenderBehavior extends Behavior {
     }
 
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
+        Log::debug(print_r([__FUNCTION__ => $entity],true));
         if (is_null($this->surveyRules)) {
             $rules = $this->SurveyRulesTable
                 ->find()
                 ->where([
-                    $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
+//                    $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
                     $this->SurveyRulesTable->aliasField('enabled') => 1
                 ])
                 ->select([
