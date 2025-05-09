@@ -52,10 +52,6 @@ class SurveyRulesTable extends ControllerActionTable
         // POCOR-8921 start
         Log::debug(print_r($entity, true));
         if (empty($entity->dependent_question_id)) {
-//            $entity['enabled'] = false;
-            if (!$entity->isNew()) {
-                $this->delete($entity);
-            }
             $event->stopPropagation();
             return false;
         }
@@ -67,7 +63,7 @@ class SurveyRulesTable extends ControllerActionTable
             $entity->id = Text::uuid();
         }
         return $entity;
-//        Log::debug(print_r($entity, true));
+        Log::debug(print_r($entity, true));
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
