@@ -69,9 +69,6 @@ use Cake\ORM\TableRegistry;
     </div>
 </div>
 <!-- POCOR-8613 start -->
-<?php
-
-?>
 <script>
     $(function () {
 
