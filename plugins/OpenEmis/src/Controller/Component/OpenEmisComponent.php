@@ -74,7 +74,29 @@ class OpenEmisComponent extends Component
         $controller->set('footerBrand', $brand);
         //$controller->set('dateLanguage', I18n::locale());
         $controller->set('dateLanguage', I18n::getLocale());
- 
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format');
+
+// Map PHP format (e.g., 'd-m-Y') to Bootstrap Datepicker format (e.g., 'dd-mm-yyyy')
+        $phpToDatepickerFormat = [
+            'd' => 'dd',
+            'j' => 'd',
+            'D' => 'D',        // Mon, Tue (short day)
+            'l' => 'DD',       // Monday, Tuesday (full day)
+            'm' => 'mm',
+            'n' => 'm',
+            'M' => 'M',        // Jan, Feb (short month)
+            'F' => 'MM',       // January, February (full month)
+            'y' => 'yy',       // 2-digit year
+            'Y' => 'yyyy'      // 4-digit year
+        ];
+
+// Convert format safely using regex
+        $datepickerFormat = preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($phpToDatepickerFormat) {
+            return $phpToDatepickerFormat[$matches[0]] ?? $matches[0];
+        }, $systemDateFormat);
+        $controller->set('datepickerFormat', $datepickerFormat);
+
         //Retriving the panel width size from session
         if ($session->check('System.layout')) {
 
@@ -91,7 +113,7 @@ class OpenEmisComponent extends Component
             $footer = $ConfigItems->value('footer');
             $controller->set('footerText', $footer);
         }
-        
+
     }
 
     private function getTheme()
@@ -141,12 +163,12 @@ class OpenEmisComponent extends Component
         } else if ($session->check('System.version')) {
             $version = $session->read('System.version');
         }
-        
+
         return $version;
 
     }
 
-    
+
 }
 
 ?>

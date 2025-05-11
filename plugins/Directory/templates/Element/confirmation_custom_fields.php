@@ -61,7 +61,7 @@
             >
                 <input type="text" class="form-control "
                        ng-model="field.answer"
-                       uib-datepicker-popup="dd-MM-yyyy"
+                       uib-datepicker-popup='<?= $datepickerFormat ?>'
                        is-open="field.isDatepickerOpen"
                        datepicker-options="field.datePickerOptions"
                        close-text="Close"
@@ -171,7 +171,7 @@
             >
                 <input type="text" class="form-control "
                        ng-model="field.answer"
-                       uib-datepicker-popup="dd-MM-yyyy"
+                       uib-datepicker-popup='<?= $datepickerFormat ?>'
                        is-open="field.isDatepickerOpen"
                        datepicker-options="field.datePickerOptions"
                        close-text="Close"

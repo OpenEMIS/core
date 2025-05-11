@@ -1,3 +1,8 @@
+<?php
+
+use Cake\ORM\TableRegistry;
+
+?>
 <!-- File: src/Template/Element/user_details_basic_information.php -->
 <div name="UserDetailsBasicInformation">
     <div class="row section-header header-space-lg"><?= __('Search By Basic Information') ?></div>
@@ -64,17 +69,27 @@
     </div>
 </div>
 <!-- POCOR-8613 start -->
-<script>
-$(function () {
-var datepicker2 = $('#User_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true, language: '<?php echo $dateLanguage; ?>'});
-$( document ).on('DOMMouseScroll mousewheel scroll', function(){
-    window.clearTimeout( t );
-    t = window.setTimeout( function(){
-        datepicker2.datepicker('place');
-    });
-});
-});
+<?php
 
-//]]>
+?>
+<script>
+    $(function () {
+
+        var datepicker2 = $('#User_date_of_birth').datepicker({
+            format: '<?= $datepickerFormat ?>',
+            todayBtn: 'linked',
+            orientation: 'auto',
+            autoclose: true,
+            language: '<?= $dateLanguage ?>'
+        });
+
+        $(document).on('DOMMouseScroll mousewheel scroll', function(){
+            window.clearTimeout(t);
+            t = window.setTimeout(function(){
+                datepicker2.datepicker('place');
+            });
+        });
+    });
 </script>
+
 <!-- POCOR-8613 end -->
