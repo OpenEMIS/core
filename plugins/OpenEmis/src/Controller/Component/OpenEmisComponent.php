@@ -96,7 +96,21 @@ class OpenEmisComponent extends Component
             return $phpToDatepickerFormat[$matches[0]] ?? $matches[0];
         }, $systemDateFormat);
         $controller->set('datepickerFormat', $datepickerFormat);
+        $phpToAngularFormat = [
+            'd' => 'dd',
+            'j' => 'd',
+            'm' => 'MM',
+            'n' => 'M',
+            'M' => 'MMM',   // Jan, Feb
+            'F' => 'MMMM',  // January, February
+            'y' => 'yy',
+            'Y' => 'yyyy',
+        ];
 
+        $angularFormat = preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($phpToAngularFormat) {
+            return $phpToAngularFormat[$matches[0]] ?? $matches[0];
+        }, $systemDateFormat);
+        $controller->set('angularFormat', $angularFormat);
         //Retriving the panel width size from session
         if ($session->check('System.layout')) {
 

@@ -922,18 +922,34 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         }
     }
 
-    function formatDate(datetime) {
-        var date = this.makeDate(datetime);
-        if (date != null) {
-            var yyyy = date.getFullYear().toString();
-            var mm = (date.getMonth()+1).toString(); // getMonth() is zero-based
-            var dd  = date.getDate().toString();
+    async function formatDate(datetime){
+        var date = this.makeDate(datetime); // or whatever you already use
+        if (!date) return Promise.resolve('');
 
-            return (dd[1]?dd:"0"+dd[0]) + '-' + (mm[1]?mm:"0"+mm[0])  + '-' +   yyyy;
-        } else {
-            return '';
-        }
-    };
+        const formatTokens = {
+            'd': () => date.getDate().toString().padStart(2, '0'),
+            'j': () => date.getDate().toString(),
+            'm': () => (date.getMonth() + 1).toString().padStart(2, '0'),
+            'n': () => (date.getMonth() + 1).toString(),
+            'M': () => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][date.getMonth()],
+            'F': () => ['January','February','March','April','May','June','July','August','September','October','November','December'][date.getMonth()],
+            'y': () => date.getFullYear().toString().slice(-2),
+            'Y': () => date.getFullYear().toString()
+        };
+
+        return getConfigItemValue('date_format').then(function(format) {
+            if (!format) format = 'd-m-Y';
+            const formatted = format.replace(/d|j|m|n|M|F|y|Y/g, token => {
+                return formatTokens[token] ? formatTokens[token]() : token;
+            });
+            return formatted;
+        }).catch(() => {
+            // fallback
+            return date.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+        });
+    }
+
+
 
     function formatDateForSaving(datetime) {
         var date = this.makeDate(datetime);

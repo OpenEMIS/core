@@ -227,8 +227,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                             userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
                                     const startDateRangeResponse = response;
                                     const {start_date, end_date} = startDateRangeResponse.data[0];
-                                    userCtrl.currentAcademicPeriodStartDate = userSvc.formatDate(start_date);
-                                    userCtrl.currentAcademicPeriodEndDate = userSvc.formatDate(end_date);
+                                userSvc.formatDate(start_date).then(function(formattedDate) {
+                                    userCtrl.currentAcademicPeriodStartDate = formattedDate;
+                                });
+                                userSvc.formatDate(end_date).then(function(formattedDate) {
+                                    userCtrl.currentAcademicPeriodEndDate = formattedDate;
+                                });
                                 }
                             );
                             break; // Exit the loop once the current period is found
@@ -762,10 +766,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             userCtrl.getEducationGrades();
 
             const startDatePicker2 = angular.element(document.getElementById('Student_start_date'));
-            startDatePicker2.datepicker("setStartDate", userSvc.formatDate(start_date));
-            startDatePicker2.datepicker("setEndDate", userSvc.formatDate(end_date));
+            userSvc.formatDate(start_date).then(function(formattedDate) {
+                startDatePicker2.datepicker("setStartDate", formattedDate);
+            });
+            userSvc.formatDate(end_date).then(function(formattedDate) {
+                startDatePicker2.datepicker("setEndDate", formattedDate);
+                selectedUserData.endDate = formattedDate;
+            });
 
-            selectedUserData.endDate = userSvc.formatDate(end_date);
         } catch (error) {
             console.error(error);
         }
@@ -822,7 +830,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         userCtrl.getClasses();
 
-        const formattedDateOfBirth = userSvc.formatDate(date_of_birth);
+        var formattedDateOfBirth = date_of_birth;
+        userSvc.formatDate(date_of_birth).then(function(formattedDate) {
+            formattedDateOfBirth = formattedDate;
+        });
 
         if (education_grade_id !== undefined && formattedDateOfBirth !== undefined && academic_period_id !== undefined) {
             const params = {
@@ -912,7 +923,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             switch (userCtrl.step) {
                 case 'internal_search': {
                     if (userCtrl.selectedUserData.date_of_birth) {
-                        userCtrl.selectedUserData.date_of_birth = userSvc.formatDate(userCtrl.selectedUserData.date_of_birth);
+                        userSvc.formatDate(userCtrl.selectedUserData.date_of_birth).then(function(formattedDate) {
+                            userCtrl.selectedUserData.date_of_birth = formattedDate;
+                        });
                     }
                     // userCtrl.selectedUserData.date_of_birth = userSvc.formatDate(userCtrl.selectedUserData.date_of_birth);
                     userCtrl.step = 'user_details';
@@ -1697,8 +1710,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
                     const startDateRangeResponse = response;
                     const {start_date, end_date} = startDateRangeResponse.data[0];
-                    userCtrl.selectedUserData.startDate = userSvc.formatDate(start_date);
-                    userCtrl.selectedUserData.endDate = userSvc.formatDate(end_date);
+                    userSvc.formatDate(start_date).then(function (formattedDate) {
+                        userCtrl.selectedUserData.startDate = formattedDate;
+                    });
+                    userSvc.formatDate(end_date).then(function (formattedDate) {
+                        userCtrl.selectedUserData.endDate = formattedDate;
+                    });
                 }
             );
         } else {
