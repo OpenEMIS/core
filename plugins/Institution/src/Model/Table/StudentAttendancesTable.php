@@ -140,7 +140,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $this->Users->aliasField('middle_name'),
                     $this->Users->aliasField('third_name'),
                     $this->Users->aliasField('last_name'),
-                    $this->Users->aliasField('preferred_name'),
+                    $this->Users->aliasField('preferred_name'), // POCOR-9011
                     $this->Users->aliasField('gender_id') // POCOR-9011
                 ])
                 ->contain([$this->Users->getAlias(), 'InstitutionClasses'])
