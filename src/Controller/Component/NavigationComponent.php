@@ -1162,16 +1162,14 @@ class NavigationComponent extends Component
                     'Institutions.RubricAnswers'
                 ],
             ],
-
+            // POCOR-9059[START]
             'Institutions.VisitRequests.index' => [
                 'title' => 'Visits',
                 'parent' => 'Institutions.Institutions.index',
-                'selected' => [
-                    'Institutions.VisitRequests',
-                    'Institutions.Visits'
-                ]
+                'selected' => ['Institutions.VisitRequests',
+                    'Institutions.Visits']
             ],
-
+            // POCOR-9059[END]
             'Institutions.Transport' => [
                 'title' => 'Transport',
                 'parent' => 'Institutions.Institutions.index',
@@ -1443,14 +1441,16 @@ class NavigationComponent extends Component
                     'Students.SpecialNeedsDiagnostics'
                 ]
             ],
-            'Student.Students.StudentVisitRequests.index' => [
-                'title' => 'Visits',
-                'parent' => 'Institutions.Students.index',
-                'selected' => [
-                    'Students.StudentVisitRequests',
-                    'Students.StudentVisits.index'
-                ]
-            ],
+            
+            // POCOR-9059[START]
+            // 'Student.Students.StudentVisitRequests.index' => [
+            //     'title' => 'Visits',
+            //     'parent' => 'Institutions.Students.index',
+            //     'selected' => ['Students.StudentVisitRequests',
+            //         'Students.StudentVisits.index']
+            // ],
+            // POCOR-9059[END]
+
             'Student.Students.Meals.index' => [
                 'title' => 'Meals',
                 'parent' => 'Institutions.Students.index',
@@ -1779,7 +1779,7 @@ class NavigationComponent extends Component
                         'Institutions.Fees',
                         'Institutions.StudentFees',
                         'Institutions.Rubrics',
-                        'Institutions.VisitRequests',
+                        // 'Institutions.VisitRequests', //POCOR-9059
                         'Institutions.StudentCompetencies',
                         'Institutions.Indexes.index',
                         'Institutions.ReportCards'
