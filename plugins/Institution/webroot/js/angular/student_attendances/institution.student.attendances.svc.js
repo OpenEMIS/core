@@ -797,14 +797,6 @@ function InstitutionStudentAttendancesSvc(
             menuTabs: menuTabs,
             filter: "text",
         });
-        columnDefs.push({
-            headerName: "Gender",
-            field: "gender",
-            filterParams: filterParams,
-            pinned: direction,
-            menuTabs: menuTabs,
-            filter: "text",
-        });
 
         columnDefs.push({
             headerName: "Attendance",
@@ -1488,7 +1480,7 @@ function InstitutionStudentAttendancesSvc(
             console.log(response);
             if (angular.isDefined(response.data.data[0].code)) {
                 var isMarkableSubjectAttendance = false;
-
+               
                 if (response.data.data[0].code == "SUBJECT") {
                     isMarkableSubjectAttendance = true;
                 } else {
@@ -1525,10 +1517,10 @@ function InstitutionStudentAttendancesSvc(
         selectedDay
     ) {
         var success = function (response, deferred) {
-
+           
             console.log(response);
             if (angular.isDefined(response.data.data[0].code)) {
-
+               
                 var isMarkableAttendance = false;
 
                 console.log("stude",response.data.data[0].StudentAttendanceMarkTypes);

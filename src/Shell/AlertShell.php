@@ -151,28 +151,34 @@ class AlertShell extends Shell
         return $emailList;
     }
 
-    /*
-     * POCOR-9100 refactured
-     */
-    public function getStudentAdmissionEmailList($recipient_id, $institutionId = null)
+    public function getStudentAdmissionEmailList($securityRoleRecords, $institutionId = null)
     {
         $emailList = [];
 
-        // here only one reciever
-        $recipient = $this->Users
-            ->find('all')
-            ->where(['id' => $recipient_id])
-            ->first();
+        foreach ($securityRoleRecords as $securityRolesObj) {
+            $options = [
+                'securityRoleId' => $securityRolesObj->id
+            ];
 
-        if (empty($recipient)) {
-            return $emailList;
-        }
-        if (!empty($recipient->email)) {
-            $receiver = $recipient->name . ' <' . $recipient->email . '>';
-            if (!in_array($recipient, $emailList)) {
-                $emailList[] = $receiver;
+            // all staff within securityRole and institution
+            $emailListResult = $this->Users
+                ->find('studentAdmissionEmailList', $options)
+                ->toArray()
+            ;
+
+            // combine all email to the email list
+            if (!empty($emailListResult)) {
+                foreach ($emailListResult as $obj) {
+                    if (!empty($obj->email)) {
+                        $recipient = $obj->name . ' <' . $obj->email . '>';
+                        if (!in_array($recipient, $emailList)) {
+                            $emailList[] = $recipient;
+                        }
+                    }
+                }
             }
         }
+
         return $emailList;
     }
 
@@ -185,11 +191,11 @@ class AlertShell extends Shell
             $securityRolesId = [
                 'id' => $securityRolesObj->id
             ];
-
+            
             $securityUserList = $this->SecurityGroupUsers
                 ->find('all', $securityRolesId)
                 ->toArray();
-
+            
             foreach($securityUserList AS $emailListResultData){
                 $securityUserId = [
                     'id' => $emailListResultData->security_user_id
@@ -198,7 +204,7 @@ class AlertShell extends Shell
                 $emailListResult = $this->Users
                 ->find('emailList', $securityUserId)
                 ->toArray();
-
+              
                 if (!empty($emailListResult)) {
                     foreach ($emailListResult as $obj) {
                         if (!empty($obj->email)) {
