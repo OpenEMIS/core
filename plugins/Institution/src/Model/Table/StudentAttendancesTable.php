@@ -94,7 +94,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $day = $options['day_id'];
         $subjectId = $options['subject_id'];
         $attendanceBy = $options['attendance_by']; //POCOR-8874
-
+       
 
         $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $InstitutionStudents = TableRegistry::get('Institution.Students');
@@ -140,8 +140,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $this->Users->aliasField('middle_name'),
                     $this->Users->aliasField('third_name'),
                     $this->Users->aliasField('last_name'),
-                    $this->Users->aliasField('preferred_name'),
-                    $this->Users->aliasField('gender_id') // POCOR-9011
+                    $this->Users->aliasField('preferred_name')
                 ])
                 ->contain([$this->Users->getAlias(), 'InstitutionClasses'])
                 ->leftJoin(
@@ -191,8 +190,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     $this->Users->aliasField('middle_name'),
                     $this->Users->aliasField('third_name'),
                     $this->Users->aliasField('last_name'),
-                    $this->Users->aliasField('preferred_name'),
-                    $this->Users->aliasField('gender_id'), // POCOR-9011
+                    $this->Users->aliasField('preferred_name')
                 ])
                 ->contain([$this->Users->getAlias(), 'InstitutionClasses'])
                 //POCOR-5900 start (Filter for check start date of student)
@@ -238,15 +236,6 @@ class StudentAttendancesTable extends ControllerActionTable
                             $studentId = $row->student_id;
                             $institutionId = $row->institution_id;
                             $PRESENT = 0;
-                            // POCOR-9011 start
-                            $row->gender = __('Not Set');
-                            if($row['user']['gender_id'] == 2){
-                                $row->gender = __('Female');
-                            }
-                            if($row['user']['gender_id'] == 1){
-                                $row->gender = __('Male');
-                            }
-                            // POCOR-9011 end
                             $conditions = [];
                             $conditions = [
                                 $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
@@ -564,7 +553,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                     $entityStudentId = $entity->student_id;
                                     $entityPeriod = $entity->period;
                                     $entitySubject = $entity->subject_id; //POCOR-8874
-
+                                   
                                     if ($studentId == $entityStudentId && $entityDateFormat == $date && ($entityPeriod == $periodId || ($entitySubject == $subjectId && $attendanceBy == 'subject'))) { //POCOR-8874 add condition to check subject id
                                         if (isset($this->request) && ('excel' === $this->request->pass[0])) {
                                             if ($entity->code == 'EXCUSED' || $entity->code == 'UNEXCUSED') {
@@ -597,7 +586,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                 if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) { //POCOR-8874
                                     // if (isset($this->request) && ('excel' === $this->request->pass[0])) { //POCOR -8874 commented this line because it is not working
                                     $row->name = $row['user']['openemis_no'] . ' - ' . $row['user']['first_name'] . ' ' . $row['user']['last_name'];
-
+                                    
                                     foreach ($periodList as $Period) {
                                         $row->period .= $Period['name']." "; //POCOR-8874
                                     }
