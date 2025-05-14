@@ -655,27 +655,35 @@ class DashboardController extends AppController
         $maxId = $latestVersion->id;
 
         //code to get the latest version[POCOR-7559]
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems'); // POCOR-9113
         $domain = $ConfigItems->value('version_api_domain');
         $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
 
         $http = new Client();
-        // POCOR-9100 start: way around error s
-        $no_response = false;
-        try {
+        try { // POCOR-9113
             $response = $http->get($api);
-        }catch (\Exception $exception){
-            $no_response = true;
-        }
-        if($no_response){
+        } catch (\Exception $e) {
+            Log::error('Http Get failed: ' . $e->getMessage());
             return;
         }
-        // POCOR-9100 end
-        $response = $response->getBody()->getContents();
-        //code to get the latest version[POCOR-7559]
-        $get_response = new Response();
-        if ($get_response->getStatusCode() == 200) {
-            $jsonResponse = json_decode($response, true);
+        try { // POCOR-9113
+            $status = $response->getStatusCode();
+        } catch (\Exception $e) {
+            Log::error('Http Get failed: ' . $e->getMessage());
+            return;
+        }
+        if ($status == 200) { // POCOR-9113
+            try { // POCOR-9113
+                $responseBody = $response->getBody()->getContents();
+            } catch (\Exception $e) {
+                Log::error('Http Get failed: ' . $e->getMessage());
+                return;
+            }
+
+            //code to get the latest version[POCOR-7559]
+//        $get_response = new Response();
+
+            $jsonResponse = json_decode($responseBody, true);
             $data = array_reverse($jsonResponse['data']);
             $key = "SystemUpdates";
             foreach ($data as $item) {
@@ -687,38 +695,48 @@ class DashboardController extends AppController
         }
     }
 
-    private function sendRetirementWarningAlerts(){
+    private function sendRetirementWarningAlerts(): void // POCOR-9113
+    {
         $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
         $AlertsData = $AlertsTable->find('all')
             ->where(['name' => 'RetirementWarning', 'frequency !=' => 'Never'])
             ->toArray();
         if(!empty($AlertsData)){
-            $loggedInUserId = $this->Auth->user();
-            $alertRulesTable = TableRegistry::get('Alert.AlertRules');
+//            $loggedInUserId = $this->Auth->user(); // POCOR-9113
+            $alertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
             $alertRuleData = $alertRulesTable->find('all', ['conditions' => ['feature' => 'RetirementWarning', 'enabled' => 1]])->first();
-            $alertRolesTable = TableRegistry::get('Alert.AlertsRoles');
+            if (empty($alertRuleData)) { // POCOR-9113
+                Log::debug('No alert rule data found for RetirementWarning');
+                return;
+            }
+            $alertRolesTable = TableRegistry::getTableLocator()->get('Alert.AlertsRoles');
             $alertRolesData = $alertRolesTable->find('all', ['conditions' => ['alert_rule_id' => $alertRuleData['id']], 'fields' => ['security_role_id']])->toArray();
-            $securityRoleIds = array_map(function ($entity) {
-                return $entity->security_role_id;
-            }, $alertRolesData);
-            if (!is_array($securityRoleIds)) {
-                $securityRoleIds = [$securityRoleIds]; // Convert to array if it's a single value
+            if( empty($alertRolesData)){ // POCOR-9113
+                Log::debug('No alert roles data found for RetirementWarning');
+                return;
             }
-            $securityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers')
-                                ->find()
-                                ->where(['security_role_id IN' => $securityRoleIds])
-                                ->all()
-                                ->toArray();
-            $securityUserIds = array_map(function ($entity) {
-                return $entity->security_user_id;
-            }, $securityGroupUsers);
-            $userExist = 0;
-            if (in_array($loggedInUserId['id'], $securityUserIds)) {
-                $userExist = 1;
-            } else {
-                $userExist = 0;
-            }
-            // if($userExist == 1){
+            // POCOR-9113
+//            $securityRoleIds = array_map(function ($entity) {
+//                return $entity->security_role_id;
+//            }, $alertRolesData);
+//            if (!is_array($securityRoleIds)) {
+//                $securityRoleIds = [$securityRoleIds]; // Convert to array if it's a single value
+//            }
+//            $securityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers')
+//                                ->find()
+//                                ->where(['security_role_id IN' => $securityRoleIds])
+//                                ->all()
+//                                ->toArray();
+//            $securityUserIds = array_map(function ($entity) {
+//                return $entity->security_user_id;
+//            }, $securityGroupUsers);
+//            $userExist = 0;
+//            if (in_array($loggedInUserId['id'], $securityUserIds)) {
+//                $userExist = 1;
+//            } else {
+//                $userExist = 0;
+//            }
+//            // if($userExist == 1){
                 $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
                 $key = "AlertRetirementWarning";
                 $AlertsTable->triggerAlertFeatureShell($key);
