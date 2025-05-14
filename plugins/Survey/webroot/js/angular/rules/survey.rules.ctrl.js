@@ -77,64 +77,82 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
 
     function getQuestionsFromSection(surveyFormId, sectionName) {
         UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
-        SurveyRulesSvc.getQuestions(surveyFormId, sectionName)
-        .then(function(response)
-        {
-            var surveyQuestions = [];
-            var rules = [];
-            const mobSc=767, tabletSc=1280, laptopSc=1366, macSc=1500, desktopSc=1800, largerDesktopSc=1920;
-            // console.log(response.data);
-            
-                for(i = 0; i < response.data.length; i++) {
-                    question = response.data[i];
-                    var shortName = question.name;
-                    var number = i + 1;
-                   
-                    /* to fix text length in dropdown POCOR-3331*/
-                    if ((window.innerWidth <= mobSc) && (shortName.length > 30)) {
-                        shortName = shortName.substring(0, 29) + '...';
-                    } else if (shortName.length > 96 && window.innerWidth <= tabletSc) {
-                        shortName = shortName.substring(0, 96) + '...';
-                    } else if ((shortName.length > 110) && (window.innerWidth <= laptopSc)) {
-                        shortName = shortName.substring(0, 110) + '...';
-                    } else if ((shortName.length > 120)&& (window.innerWidth <= macSc)) {
-                        shortName = shortName.substring(0, 120) + '...';
-                    } else if ((shortName.length > 150) && (window.innerWidth <= desktopSc)) {
-                        shortName = shortName.substring(0, 150) + '...';
-                    } else if ((shortName.length > 170)  && (window.innerWidth <= largerDesktopSc)) {
-                        shortName = shortName.substring(0, 170) + '...';
-                    }
 
-                    var rule = {
-                        enabled: 0,
-                        dependent_question_id: undefined,
-                        show_options: undefined
-                    };
-                    if (question.survey_rule_enabled != null) {
-                        rule = {
-                            enabled: question.survey_rule_enabled,
-                            dependent_question_id: question.dependent_question,
-                            show_options: JSON.parse(question.show_options)
-                        }
+        SurveyRulesSvc.getQuestions(surveyFormId, sectionName)
+            .then(function (response) {
+                const screenLimits = {
+                    mobile: 767,
+                    tablet: 1280,
+                    laptop: 1366,
+                    mac: 1500,
+                    desktop: 1800,
+                    largeDesktop: 1920
+                };
+
+                const screenWidth = window.innerWidth;
+                const truncateText = (text) => {
+                    if (screenWidth <= screenLimits.mobile && text.length > 30) {
+                        return text.substring(0, 29) + '...';
+                    } else if (screenWidth <= screenLimits.tablet && text.length > 96) {
+                        return text.substring(0, 96) + '...';
+                    } else if (screenWidth <= screenLimits.laptop && text.length > 110) {
+                        return text.substring(0, 110) + '...';
+                    } else if (screenWidth <= screenLimits.mac && text.length > 120) {
+                        return text.substring(0, 120) + '...';
+                    } else if (screenWidth <= screenLimits.desktop && text.length > 150) {
+                        return text.substring(0, 150) + '...';
+                    } else if (screenWidth <= screenLimits.largeDesktop && text.length > 170) {
+                        return text.substring(0, 170) + '...';
                     }
-                    surveyQuestions[i] = {
-                        no: number,
+                    return text;
+                };
+
+                const questions = response.data.map((question, index) => {
+                    const shortName = truncateText(question.name);
+                    const questionNumber = index + 1;
+                    console.log(question);
+                    const rule = (question.survey_form_id !== surveyFormId)
+                        ? {
+                            id: null,
+                            enabled: 0,
+                            dependent_question_id: undefined,
+                            show_options: undefined
+                        }
+                        : (question.survey_rule_enabled != null
+                                ? {
+                                    id: question.id || null, // optional: if there's an `id` field for the rule
+                                    enabled: question.survey_rule_enabled,
+                                    dependent_question_id: question.dependent_question,
+                                    show_options: JSON.parse(question.show_options)
+                                }
+                                : {
+                                    id: null,
+                                    enabled: 0,
+                                    dependent_question_id: undefined,
+                                    show_options: undefined
+                                }
+                        );
+                    console.log(rule);
+
+                    return {
+                        no: questionNumber,
                         survey_question_id: question.survey_question_id,
                         name: question.name,
-                        short_name: number + '. ' + shortName,
+                        short_name: `${questionNumber}. ${shortName}`,
                         order: question.order,
                         field_type: question.custom_field.field_type,
                         rule: rule
                     };
-                }
-            
-            vm.surveyQuestions = surveyQuestions;
-        }, function(error) {
-            console.log(error);
-        })
-        .finally(function(){
-            UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
-        });
+                });
+
+                vm.surveyQuestions = questions;
+            })
+            .catch(function (error) {
+                console.error(error);
+            })
+            .finally(function () {
+                UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
+            });
     }
 
     function onChangeSection(sectionName) {
@@ -184,32 +202,31 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     }
 
     function saveValue() {
+        // console.log(vm);
     	var questionIds = vm.questionId;
     	var enabled = vm.enabled;
     	var dependentQuestions = vm.dependentQuestion;
     	var dependentOptions = vm.dependentOptions;
         var data = [];
-        angular.forEach(questionIds, function(surveyQuestionId, key) {
-        	if (dependentQuestions.hasOwnProperty(key)) {
-        		if (dependentOptions.hasOwnProperty(key)) {
-        			var enableStatus = enabled[key];
-        			if (enableStatus == undefined || enableStatus == 0) {
-        				enableStatus = "0";
-        			}
-        			var dependentQuestionId = dependentQuestions[key];
-        			var options = JSON.stringify(dependentOptions[key]);
-
-        			var data = {
-        				survey_form_id: vm.surveyFormId,
-        				enabled: enableStatus,
-        				survey_question_id: surveyQuestionId,
-        				dependent_question_id: dependentQuestionId,
-        				show_options: options
-        			};
-        			this.push(data);
-        		}
-        	}
-		}, data);
+        angular.forEach(questionIds, function (surveyQuestionId, key) {
+            if (dependentQuestions.hasOwnProperty(key)) {
+                if (dependentOptions.hasOwnProperty(key)) {
+                    const optionsArray = dependentOptions[key];
+                    if (Array.isArray(optionsArray) && optionsArray.length > 0) {
+                        var dependentQuestionId = dependentQuestions[key];
+                        var options = JSON.stringify(dependentOptions[key]);
+                        var data = {
+                            survey_form_id: vm.surveyFormId,
+                            enabled: enabled[key],
+                            survey_question_id: surveyQuestionId,
+                            dependent_question_id: dependentQuestionId,
+                            show_options: options
+                        };
+                        this.push(data);
+                    }
+                }
+            }
+        }, data);
         UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
 		SurveyRulesSvc.saveData(data)
         .then(function (response){
