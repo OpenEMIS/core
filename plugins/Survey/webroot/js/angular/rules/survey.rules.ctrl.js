@@ -46,7 +46,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
             vm.getSurveySection(vm.surveyFormId);
         }, function(error)
         {
-            console.log(error);
+            console.error(error);
             AlertSvc.warning(vm, error);
         })
         .finally(function(){
@@ -110,7 +110,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                 const questions = response.data.map((question, index) => {
                     const shortName = truncateText(question.name);
                     const questionNumber = index + 1;
-                    console.log(question);
+                    // console.log(question);
                     const rule = (question.survey_form_id !== surveyFormId)
                         ? {
                             id: null,
@@ -132,7 +132,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                                     show_options: undefined
                                 }
                         );
-                    console.log(rule);
+                    // console.log(rule);
 
                     return {
                         no: questionNumber,
@@ -239,7 +239,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
               $anchorScroll();
             }
         }, function(error){
-            console.log(error);
+            console.error(error);
         })
         .finally(function() {
             UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
