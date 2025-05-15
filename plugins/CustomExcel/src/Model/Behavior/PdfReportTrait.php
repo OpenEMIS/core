@@ -326,7 +326,7 @@ trait PdfReportTrait
                     $finalStyle .= "$key: $value; ";
                 }
                 $normalized = $this->normalizeBorderStylesOnly($finalStyle);
-                $normalized = $this->normalizeTextWrappingStyles($finalStyle);
+                $normalized = $this->normalizeTextWrappingStyles($normalized);
 //                $cell->nodeValue = str_replace(["\u{00A0}", '&nbsp;'], ' ', $cell->nodeValue);
 
                 $cell->setAttribute('style', trim($normalized));
