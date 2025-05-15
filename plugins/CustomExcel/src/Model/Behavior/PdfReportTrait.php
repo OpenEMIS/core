@@ -326,6 +326,7 @@ trait PdfReportTrait
                     $finalStyle .= "$key: $value; ";
                 }
                 $normalized = $this->normalizeBorderStylesOnly($finalStyle);
+                $normalized = $this->normalizeTextWrappingStyles($normalized);
                 $cell->setAttribute('style', trim($normalized));
             }
 
@@ -412,7 +413,31 @@ trait PdfReportTrait
         return implode('; ', array_merge($merged, $otherStyles));
     }
 
+    private function normalizeTextWrappingStyles(string $style): string
+    {
+        $styles = [];
 
+        // Parse incoming styles
+        foreach (explode(';', $style) as $rule) {
+            if (!trim($rule)) continue;
+            [$key, $value] = array_map('trim', explode(':', $rule, 2) + [null, null]);
+            if ($key && $value) {
+                $styles[strtolower($key)] = $value;
+            }
+        }
+
+        // Enforce wrapping styles
+        $styles['white-space'] = 'normal';
+        $styles['word-break'] = 'break-word';
+
+        // Rebuild style string
+        $final = '';
+        foreach ($styles as $k => $v) {
+            $final .= "$k: $v; ";
+        }
+
+        return trim($final);
+    }
     private function neutralizeEmptyCells(DOMDocument $dom): void
     {
 //        return;
