@@ -328,35 +328,38 @@ trait PdfReportTrait
                 $normalized = $this->normalizeBorderStylesOnly($finalStyle);
                 $rawText = $cell->textContent;
 
-// Check: Only plain text, no HTML elements or images
+// Ensure only text inside the cell
                 if ($cell->childNodes->length === 1 && $cell->firstChild->nodeType === XML_TEXT_NODE) {
                     $cleanText = trim($rawText);
 
                     if (mb_strlen($cleanText) > 100) {
+                        // Split words and add <br> every ~100 characters
                         $words = explode(' ', $cleanText);
-                        $formatted = '';
-                        $lineLength = 0;
+                        $lines = [];
+                        $currentLine = '';
 
                         foreach ($words as $word) {
-                            $wordLength = mb_strlen($word);
-
-                            if ($lineLength + $wordLength + 1 > 100) {
-                                $formatted .= '<br>';
-                                $lineLength = 0;
-                            } elseif ($formatted !== '') {
-                                $formatted .= ' ';
-                                $lineLength++; // account for space
+                            if (mb_strlen($currentLine . ' ' . $word) > 100) {
+                                $lines[] = $currentLine;
+                                $currentLine = $word;
+                            } else {
+                                $currentLine .= ($currentLine === '' ? '' : ' ') . $word;
                             }
-
-                            $formatted .= htmlspecialchars($word, ENT_QUOTES, 'UTF-8');
-                            $lineLength += $wordLength;
+                        }
+                        if ($currentLine !== '') {
+                            $lines[] = $currentLine;
                         }
 
-                        // Replace text with formatted version
-                        $fragment = $dom->createDocumentFragment();
-                        $fragment->appendXML($formatted); // already escaped
-                        $cell->nodeValue = '';
-                        $cell->appendChild($fragment);
+                        // Join lines with actual line breaks (\n) and convert to <br>
+                        $brokenText = nl2br(implode("\n", $lines), false); // false = use <br>, not <br />
+
+                        // Replace node content entirely as HTML (by creating new node)
+                        $cell->nodeValue = ''; // clear old
+                        $cell->appendChild($dom->createTextNode('')); // optional reset
+                        $cell->setAttribute('style', $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;');
+
+                        // NOTE: this only works if final rendering will interpret HTML (mPDF, browser)
+                        $cell->setAttribute('innerHTML', $brokenText); // or if rendering engine respects it
                     }
                 }
 
@@ -664,14 +667,14 @@ trait PdfReportTrait
                     unset($zdf);
                 };
 // Write debug HTML files
-                file_put_contents(LOGS . 'debug_before_cleaning.html', $rawHtml);
-                file_put_contents(LOGS . 'debug_after_cleaning.html', $htmlCleaned);
-                file_put_contents(LOGS . 'debug_after_filtering.html', $htmlFiltered);
+//                file_put_contents(LOGS . 'debug_before_cleaning.html', $rawHtml);
+//                file_put_contents(LOGS . 'debug_after_cleaning.html', $htmlCleaned);
+//                file_put_contents(LOGS . 'debug_after_filtering.html', $htmlFiltered);
 
 // Write debug PDF files
-                $writeDebugPdf($rawHtml, 'debug_before_cleaning.pdf');
-                $writeDebugPdf($htmlCleaned, 'debug_after_cleaning.pdf');
-                $writeDebugPdf($htmlFiltered, 'debug_after_filtering.pdf');
+//                $writeDebugPdf($rawHtml, 'debug_before_cleaning.pdf');
+//                $writeDebugPdf($htmlCleaned, 'debug_after_cleaning.pdf');
+//                $writeDebugPdf($htmlFiltered, 'debug_after_filtering.pdf');
 
                 // Generate PDF
                 $pdf->SetFontSize(1);
