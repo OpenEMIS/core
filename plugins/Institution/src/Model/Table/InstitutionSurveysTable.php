@@ -225,6 +225,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 }
             }
         }
+        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]); // POCOR-9105
     }
     //POCOR-7171:Start
     public function beforeAction(Event $event, ArrayObject $extra)
