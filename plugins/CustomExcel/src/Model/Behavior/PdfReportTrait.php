@@ -326,6 +326,37 @@ trait PdfReportTrait
                     $finalStyle .= "$key: $value; ";
                 }
                 $normalized = $this->normalizeBorderStylesOnly($finalStyle);
+                $rawText = $cell->textContent;
+
+// Check: Only plain text, no HTML elements or images
+                if ($cell->childNodes->length === 1 && $cell->firstChild->nodeType === XML_TEXT_NODE) {
+                    $cleanText = trim($rawText);
+
+                    // Apply only if long enough
+                    if (strlen($cleanText) > 100) {
+                        // Insert <br> at space closest before every 100 characters
+                        $formatted = '';
+                        $position = 0;
+                        while ($position < strlen($cleanText)) {
+                            $slice = substr($cleanText, $position, 100);
+
+                            // Try to find the last space within the slice
+                            $breakPos = strrpos($slice, ' ');
+                            if ($breakPos === false || ($position + $breakPos) <= $position) {
+                                $breakPos = 100; // no space found, force break
+                            }
+
+                            $formatted .= trim(substr($cleanText, $position, $breakPos)) . '<br>';
+                            $position += $breakPos;
+                        }
+
+                        // Replace content with new <br>-injected text
+                        $fragment = $dom->createDocumentFragment();
+                        $fragment->appendXML(htmlspecialchars_decode($formatted, ENT_QUOTES));
+                        $cell->nodeValue = ''; // clear current text
+                        $cell->appendChild($fragment);
+                    }
+                }
                 $cell->setAttribute('style', trim($normalized));
             }
 
