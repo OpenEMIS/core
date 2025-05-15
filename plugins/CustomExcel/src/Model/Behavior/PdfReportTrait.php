@@ -351,12 +351,10 @@ trait PdfReportTrait
                         }
 
                         // Join lines with actual line breaks (\n) and convert to <br>
-                        $brokenText = nl2br(implode("\n", $lines), false); // false = use <br>, not <br />
+                        $brokenText = implode("\n", $lines); // false = use <br>, not <br />
 
                         // Replace node content entirely as HTML (by creating new node)
-                        $cell->nodeValue = 'asdewer
-
-masdewer'; // clear old
+                        $cell->nodeValue = "asdewer\nm\tasdewer\n" . $brokenText; // clear old
 //                        $cell->appendChild($dom->createTextNode('')); // optional reset
 //                        $cell->setAttribute('style', $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;');
 //
