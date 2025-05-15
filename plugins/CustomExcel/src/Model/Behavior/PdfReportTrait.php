@@ -330,7 +330,7 @@ trait PdfReportTrait
                 $cell->setAttribute('style', trim($normalized));
                 // Replace &nbsp; and non-breaking spaces in cell text with regular space
 //                $cell->nodeValue = str_replace("\u{00A0}", ' ', $cell->nodeValue); // PHP 7+ Unicode
-                $cell->nodeValue = str_replace('&nbsp;', ' ', $cell->nodeValue);   // literal HTML entity
+//                $cell->nodeValue = str_replace('&nbsp;', ' ', $cell->nodeValue);   // literal HTML entity
 //                $cell->nodeValue = preg_replace('/\s+/u', ' ', $cell->nodeValue);
             }
 
