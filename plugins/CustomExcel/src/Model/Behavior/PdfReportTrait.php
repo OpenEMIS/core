@@ -607,7 +607,7 @@ trait PdfReportTrait
                 ]);
                 $pdf->autoScriptToLang = true;  // Automatically select language-specific fonts (POCOR-7264)
                 $pdf->autoLangToFont = true;    // Match language to font (POCOR-7264)
-
+                $pdf->shrink_tables_to_fit = 1;
                 $outputPathBase = $basePath . '_' . $sheetIndex;
 
                 // Generate HTML from spreadsheet
@@ -688,9 +688,10 @@ trait PdfReportTrait
         $filePaths = [];
         $basePath = $filepath;
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+            $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
             $mpdf->autoScriptToLang = true; //POCOR-7264
             $mpdf->autoLangToFont = true; //POCOR-7264
+            $mpdf->shrink_tables_to_fit = 1;
             $filepath = $basePath.'_'.$sheetIndex;
             $prefixName = 'AssessmentResults';
             $date =  date("Ymd:HHmmss");
@@ -743,8 +744,9 @@ trait PdfReportTrait
        $mpdf->SetSubject($subject);
        $mpdf->autoScriptToLang = true; //POCOR-7264
        $mpdf->autoLangToFont = true; //POCOR-7264
+       $mpdf->shrink_tables_to_fit = 1;
        if ($filenames) {
-           echo "<pre>";print_r($mpdf);die; //This is very unusual code need to debug again
+//           echo "<pre>";print_r($mpdf);die; //This is very unusual code need to debug again
            $filesTotal = sizeof($filenames);
            $mpdf->SetImportUse();
 
@@ -795,6 +797,7 @@ trait PdfReportTrait
         $mpdf->SetSubject($subject);
         $mpdf->autoScriptToLang = true; //POCOR-7264
         $mpdf->autoLangToFont = true; //POCOR-7264
+        $mpdf->shrink_tables_to_fit = 1;
         if ($filenames) {
             $filesTotal = sizeof($filenames);
             // $mpdf->SetImportUse();
