@@ -327,6 +327,20 @@ trait PdfReportTrait
                 }
                 $normalized = $this->normalizeBorderStylesOnly($finalStyle);
                 $normalized = $this->normalizeTextWrappingStyles($normalized);
+                $rawText = $cell->nodeValue;
+
+// Optional: clean up weird characters like U+2028 or &nbsp;
+//                $cleanText = preg_replace('/[\x{2028}\x{2029}]/u', '', $rawText);
+//                $cleanText = str_replace(["\u{00A0}", '&nbsp;'], ' ', $cleanText);
+
+// Convert newlines to <br>
+                $converted = nl2br(htmlspecialchars($cleanText, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+
+// Replace the node content safely
+                $fragment = $dom->createDocumentFragment();
+                $fragment->appendXML($converted);
+                $cell->nodeValue = ''; // clear original
+                $cell->appendChild($fragment);
 //                $cell->nodeValue = str_replace(["\u{00A0}", '&nbsp;'], ' ', $cell->nodeValue);
 
                 $cell->setAttribute('style', trim($normalized));
