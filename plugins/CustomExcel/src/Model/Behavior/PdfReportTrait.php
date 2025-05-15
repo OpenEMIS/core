@@ -327,42 +327,45 @@ trait PdfReportTrait
                 }
                 $normalized = $this->normalizeBorderStylesOnly($finalStyle);
 //                $normalized = $this->normalizeTextWrappingStyles($normalized);
-                $rawText = $cell->textContent;
-
-// Ensure only text inside the cell
                 if ($cell->childNodes->length === 1 && $cell->firstChild->nodeType === XML_TEXT_NODE) {
-                    $cleanText = trim($rawText);
+                    $rawText = trim($cell->textContent);
 
-                    if (mb_strlen($cleanText) > 100) {
-                        // Split words and add <br> every ~100 characters
-                        $words = explode(' ', $cleanText);
+                    if (mb_strlen($rawText) > 100) {
+                        // Split long text into lines
+                        $words = explode(' ', $rawText);
                         $lines = [];
-                        $currentLine = '';
+                        $current = '';
 
                         foreach ($words as $word) {
-                            if (mb_strlen($currentLine . ' ' . $word) > 100) {
-                                $lines[] = $currentLine;
-                                $currentLine = $word;
+                            if (mb_strlen($current . ' ' . $word) > 100) {
+                                $lines[] = $current;
+                                $current = $word;
                             } else {
-                                $currentLine .= ($currentLine === '' ? '' : ' ') . $word;
+                                $current .= ($current === '' ? '' : ' ') . $word;
                             }
                         }
-                        if ($currentLine !== '') {
-                            $lines[] = $currentLine;
+                        if ($current !== '') {
+                            $lines[] = $current;
                         }
 
-                        // Join lines with actual line breaks (\n) and convert to <br>
-                        $brokenText = implode("\n", $lines); // false = use <br>, not <br />
+                        // Replace content with text + <br> tags
+                        $cell->nodeValue = ''; // Clear original
 
-                        // Replace node content entirely as HTML (by creating new node)
-                        $cell->nodeValue = "asd \r ewer \n m \t asdewer\n" . $brokenText; // clear old
-//                        $cell->appendChild($dom->createTextNode('')); // optional reset
-                        $cell->setAttribute('style', $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;');
-//
-//                        // NOTE: this only works if final rendering will interpret HTML (mPDF, browser)
-//                        $cell->setAttribute('innerHTML', $brokenText); // or if rendering engine respects it
+                        foreach ($lines as $i => $line) {
+                            $cell->appendChild($dom->createTextNode($line));
+                            if ($i < count($lines) - 1) {
+                                $cell->appendChild($dom->createElement('br'));
+                            }
+                        }
+
+                        // Optional: enforce wrapping
+                        $cell->setAttribute(
+                            'style',
+                            $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;'
+                        );
                     }
                 }
+
 
                 $cell->setAttribute('style', trim($normalized));
             }
