@@ -326,7 +326,7 @@ trait PdfReportTrait
                     $finalStyle .= "$key: $value; ";
                 }
                 $normalized = $this->normalizeBorderStylesOnly($finalStyle);
-                $normalized = $this->normalizeTextWrappingStyles($normalized);
+//                $normalized = $this->normalizeTextWrappingStyles($normalized);
                 $rawText = $cell->textContent;
 
 // Ensure only text inside the cell
@@ -355,9 +355,9 @@ trait PdfReportTrait
                         $brokenText = implode("\n", $lines); // false = use <br>, not <br />
 
                         // Replace node content entirely as HTML (by creating new node)
-                        $cell->nodeValue = "asdewer\nm\tasdewer\n" . $brokenText; // clear old
+                        $cell->nodeValue = "asd\rewer\nm\tasdewer\n" . $brokenText; // clear old
 //                        $cell->appendChild($dom->createTextNode('')); // optional reset
-//                        $cell->setAttribute('style', $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;');
+                        $cell->setAttribute('style', $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;');
 //
 //                        // NOTE: this only works if final rendering will interpret HTML (mPDF, browser)
 //                        $cell->setAttribute('innerHTML', $brokenText); // or if rendering engine respects it
