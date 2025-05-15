@@ -332,31 +332,34 @@ trait PdfReportTrait
                 if ($cell->childNodes->length === 1 && $cell->firstChild->nodeType === XML_TEXT_NODE) {
                     $cleanText = trim($rawText);
 
-                    // Apply only if long enough
-                    if (strlen($cleanText) > 100) {
-                        // Insert <br> at space closest before every 100 characters
+                    if (mb_strlen($cleanText) > 100) {
+                        $words = explode(' ', $cleanText);
                         $formatted = '';
-                        $position = 0;
-                        while ($position < strlen($cleanText)) {
-                            $slice = substr($cleanText, $position, 100);
+                        $lineLength = 0;
 
-                            // Try to find the last space within the slice
-                            $breakPos = strrpos($slice, ' ');
-                            if ($breakPos === false || ($position + $breakPos) <= $position) {
-                                $breakPos = 100; // no space found, force break
+                        foreach ($words as $word) {
+                            $wordLength = mb_strlen($word);
+
+                            if ($lineLength + $wordLength + 1 > 100) {
+                                $formatted .= '<br>';
+                                $lineLength = 0;
+                            } elseif ($formatted !== '') {
+                                $formatted .= ' ';
+                                $lineLength++; // account for space
                             }
 
-                            $formatted .= trim(substr($cleanText, $position, $breakPos)) . '<br>';
-                            $position += $breakPos;
+                            $formatted .= htmlspecialchars($word, ENT_QUOTES, 'UTF-8');
+                            $lineLength += $wordLength;
                         }
 
-                        // Replace content with new <br>-injected text
+                        // Replace text with formatted version
                         $fragment = $dom->createDocumentFragment();
-                        $fragment->appendXML(htmlspecialchars_decode($formatted, ENT_QUOTES));
-                        $cell->nodeValue = ''; // clear current text
+                        $fragment->appendXML($formatted); // already escaped
+                        $cell->nodeValue = '';
                         $cell->appendChild($fragment);
                     }
                 }
+
                 $cell->setAttribute('style', trim($normalized));
             }
 
