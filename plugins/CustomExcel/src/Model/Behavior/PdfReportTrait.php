@@ -326,14 +326,7 @@ trait PdfReportTrait
                     $finalStyle .= "$key: $value; ";
                 }
                 $normalized = $this->normalizeBorderStylesOnly($finalStyle);
-//                $normalized = $this->normalizeTextWrappingStyles($normalized);
                 $cell->setAttribute('style', trim($normalized));
-                $cell->nodeValue = str_replace("\u{00A0}", ' ', $cell->nodeValue);
-                $cell->nodeValue = str_replace('&nbsp;', ' ', $cell->nodeValue);
-// Optional: normalize multiple spaces
-                $cell->nodeValue = preg_replace('/\s+/u', ' ', $cell->nodeValue);
-
-
             }
 
             // Remove class
