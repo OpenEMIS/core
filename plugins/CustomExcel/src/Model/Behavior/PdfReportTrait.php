@@ -326,6 +326,7 @@ trait PdfReportTrait
                     $finalStyle .= "$key: $value; ";
                 }
                 $normalized = $this->normalizeBorderStylesOnly($finalStyle);
+                $normalized = $this->normalizeTextWrappingStyles($normalized);
                 $rawText = $cell->textContent;
 
 // Ensure only text inside the cell
