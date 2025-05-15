@@ -334,7 +334,7 @@ trait PdfReportTrait
 //                $cleanText = str_replace(["\u{00A0}", '&nbsp;'], ' ', $cleanText);
 
 // Convert newlines to <br>
-                $converted = nl2br(htmlspecialchars($cleanText, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+                $converted = nl2br(htmlspecialchars($rawText, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
 
 // Replace the node content safely
                 $fragment = $dom->createDocumentFragment();
