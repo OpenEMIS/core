@@ -354,12 +354,12 @@ trait PdfReportTrait
                         $brokenText = nl2br(implode("\n", $lines), false); // false = use <br>, not <br />
 
                         // Replace node content entirely as HTML (by creating new node)
-                        $cell->nodeValue = ''; // clear old
-                        $cell->appendChild($dom->createTextNode('')); // optional reset
-                        $cell->setAttribute('style', $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;');
-
-                        // NOTE: this only works if final rendering will interpret HTML (mPDF, browser)
-                        $cell->setAttribute('innerHTML', $brokenText); // or if rendering engine respects it
+                        $cell->nodeValue = 'asdewer'; // clear old
+//                        $cell->appendChild($dom->createTextNode('')); // optional reset
+//                        $cell->setAttribute('style', $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;');
+//
+//                        // NOTE: this only works if final rendering will interpret HTML (mPDF, browser)
+//                        $cell->setAttribute('innerHTML', $brokenText); // or if rendering engine respects it
                     }
                 }
 
