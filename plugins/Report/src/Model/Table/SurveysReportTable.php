@@ -12,9 +12,13 @@ use Cake\Collection\Collection;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Datasource\ResultSetInterface;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
+
 //POCOR-6695 Starts
 class SurveysReportTable extends AppTable
 {
+    // Reports > Survey > Survey Report
     private $_dynamicFieldName = 'custom_field_data';//POCOR-8525
     public function initialize(array $config): void
     {
@@ -48,7 +52,7 @@ class SurveysReportTable extends AppTable
         $institutionStatus = $requestData->institution_status;
         $areaId = $requestData->area_id;
         $selectedArea = $requestData->area_id;
-        $surveyFormId = $requestData->survey_form;
+        $surveyFormId = $requestData->survey_form_id;
 
         $surveyForms = TableRegistry::get('Survey.SurveyForms');
         $institutions = TableRegistry::get('Institution.Institutions');
@@ -1022,9 +1026,9 @@ class SurveysReportTable extends AppTable
             $instArr[] = $institutionID;
         }
 
-        $repeaterListCountResult = $this->checkSurveyExistanceInRepeater($instArr, $requestData->academic_period_id, $requestData->survey_form, $surveySection, $tableQuestion);
-        $staffListCountResult = $this->checkSurveyExistanceInStaff($instArr, $requestData->academic_period_id, $requestData->survey_form, $surveySection, $tableQuestion);
-        $studentListCountResult = $this->checkSurveyExistanceInStudent($instArr, $requestData->academic_period_id, $requestData->survey_form, $surveySection, $tableQuestion);
+        $repeaterListCountResult = $this->checkSurveyExistanceInRepeater($instArr, $requestData->academic_period_id, $requestData->survey_form_id, $surveySection, $tableQuestion);
+        $staffListCountResult = $this->checkSurveyExistanceInStaff($instArr, $requestData->academic_period_id, $requestData->survey_form_id, $surveySection, $tableQuestion);
+        $studentListCountResult = $this->checkSurveyExistanceInStudent($instArr, $requestData->academic_period_id, $requestData->survey_form_id, $surveySection, $tableQuestion);
         //if record exists
         if((count($repeaterListCountResult) > 0) || (count($staffListCountResult) > 0) || (count($studentListCountResult) > 0)){
             foreach ($fields as $key => $field) {
@@ -1310,6 +1314,54 @@ class SurveysReportTable extends AppTable
                 }
             }
         }
+    }
+    /**
+     * POCOR-8929 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $alias, array $options = []): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($alias, $options);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $alias);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($alias);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias, $options);
     }
 }
 //End of POCOR-6695
