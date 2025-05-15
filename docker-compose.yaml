@@ -30,7 +30,8 @@ services:
       - MYSQL_PASSWORD=demo
     volumes:
       - ./db_data:/var/lib/mysql
-      - ./docker-config/sql/prd_cor_dmo.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
+      - ./docker-config/sql/core-4.24.0.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
+      - ./docker-config/sql/my.cnf:/etc/my.cnf
     networks:
       - openemis-network
     # ports:
