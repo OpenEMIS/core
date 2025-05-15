@@ -146,14 +146,17 @@ if (!$fullBaseUrl) {
      *
      * See also https://book.cakephp.org/4/en/controllers/request-response.html#trusting-proxy-headers
      */
-    $trustProxy = false;
+    // POCOR-9127 start
+    $trustProxy = env('TRUST_PROXY', false);
 
-    $s = null;
-    if (env('HTTPS') || ($trustProxy && env('HTTP_X_FORWARDED_PROTO') === 'https')) {
+    $s = '';
+    $https = env('HTTPS', false);
+    $httpXForwardedProto = env('HTTP_X_FORWARDED_PROTO', false);
+    if ($https || ($trustProxy && $httpXForwardedProto === 'https')) {
         $s = 's';
     }
-    $s = 's';
-
+//    $s = 's';
+    // POCOR-9127 end
     $httpHost = env('HTTP_HOST');
     if (isset($httpHost)) {
         $fullBaseUrl = 'http' . $s . '://' . $httpHost;
