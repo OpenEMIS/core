@@ -328,6 +328,10 @@ trait PdfReportTrait
                 $normalized = $this->normalizeBorderStylesOnly($finalStyle);
                 $normalized = $this->normalizeTextWrappingStyles($normalized);
                 $cell->setAttribute('style', trim($normalized));
+                // Replace &nbsp; and non-breaking spaces in cell text with regular space
+                $cell->nodeValue = str_replace("\u{00A0}", ' ', $cell->nodeValue); // PHP 7+ Unicode
+                $cell->nodeValue = str_replace('&nbsp;', ' ', $cell->nodeValue);   // literal HTML entity
+                $cell->nodeValue = preg_replace('/\s+/u', ' ', $cell->nodeValue);
             }
 
             // Remove class
@@ -631,14 +635,14 @@ trait PdfReportTrait
                     unset($zdf);
                 };
 // Write debug HTML files
-//                file_put_contents(LOGS . 'debug_before_cleaning.html', $rawHtml);
-//                file_put_contents(LOGS . 'debug_after_cleaning.html', $htmlCleaned);
-//                file_put_contents(LOGS . 'debug_after_filtering.html', $htmlFiltered);
+                file_put_contents(LOGS . 'debug_before_cleaning.html', $rawHtml);
+                file_put_contents(LOGS . 'debug_after_cleaning.html', $htmlCleaned);
+                file_put_contents(LOGS . 'debug_after_filtering.html', $htmlFiltered);
 
 // Write debug PDF files
-//                $writeDebugPdf($rawHtml, 'debug_before_cleaning.pdf');
-//                $writeDebugPdf($htmlCleaned, 'debug_after_cleaning.pdf');
-//                $writeDebugPdf($htmlFiltered, 'debug_after_filtering.pdf');
+                $writeDebugPdf($rawHtml, 'debug_before_cleaning.pdf');
+                $writeDebugPdf($htmlCleaned, 'debug_after_cleaning.pdf');
+                $writeDebugPdf($htmlFiltered, 'debug_after_filtering.pdf');
 
                 // Generate PDF
                 $pdf->SetFontSize(1);
