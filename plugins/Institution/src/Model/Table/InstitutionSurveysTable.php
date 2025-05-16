@@ -220,6 +220,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 }
             }
         }
+        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]); // POCOR-9105
     }
     //POCOR-7171:Start
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -620,7 +621,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                         $this->aliasField('SurveyFilterAreas.area_education_id IN') => -1,
                     ]
                 ])->distinct([$this->aliasField('survey_form_id'), $this->aliasField('academic_period_id')]);
-        } elseif ($firstVal == 1) {  //POCOR-9089 
+        } elseif ($firstVal == 1) {  //POCOR-9089
             $extra['auto_contain'] = false;
             $todayDate = date("Y-m-d");
             $query
