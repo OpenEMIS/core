@@ -65,20 +65,35 @@ class RenderBehavior extends Behavior {
     }
 
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
+        // POCOR-9105 start
+        $entity_array = $entity->toArray();
+        $survey_form_id = $entity_array['survey_form_id'];
+        if($survey_form_id == null) {
+            $survey_form_id = $entity->survey_form_id;
+        }
+        if($survey_form_id == null) {
+            $survey_form_id = $entity->getOriginal('survey_form_id');
+        }
+        if(!isset($survey_form_id)) {
+            $this->surveyRules = null;
+            return $html;
+        }
         if (is_null($this->surveyRules)) {
             $rules = $this->SurveyRulesTable
                 ->find()
                 ->where([
-                    // $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
+                    $this->SurveyRulesTable->aliasField('survey_form_id') => $survey_form_id,
                     $this->SurveyRulesTable->aliasField('enabled') => 1
                 ])
                 ->select([
+                    $this->SurveyRulesTable->aliasField('survey_form_id'),
                     $this->SurveyRulesTable->aliasField('survey_question_id'),
                     $this->SurveyRulesTable->aliasField('dependent_question_id'),
                     $this->SurveyRulesTable->aliasField('show_options')
                 ])
-                ->enableHydration(false)
+                ->disableHydration()
                 ->toArray();
+            // POCOR-9105 end
             foreach ($rules as $rule) {
                 $showOptionsJsonArray = str_replace('"', '', $rule['show_options']);
                 $this->surveyRules[$rule['survey_question_id']] = [
