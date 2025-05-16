@@ -14,8 +14,10 @@ use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Log\Log;
-use Cake\Datasource\ConnectionManager; 
+use Cake\Datasource\ConnectionManager;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
 
 /**
  * ReportCardGpaTable class. Generate GPA for student
@@ -36,18 +38,18 @@ class ReportCardGpaTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-        
+
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-        $this->ReportCards = TableRegistry::get('ReportCard.ReportCards');
-        $this->ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
+        $this->ReportCards =self::getDynamicTableInstance('ReportCard.ReportCards');
+        $this->ReportCardProcesses =self::getDynamicTableInstance('ReportCard.ReportCardProcesses');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['ReportCardGpa' =>['id','student_id','academic_period_id','education_grade_id','institution_class_id']
             ]
         ]);
-       
+
     }
 
     public function implementedEvents(): array
@@ -60,10 +62,12 @@ class ReportCardGpaTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
-       
+
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $educationGradeId = $this->request->getQuery('education_grade_id');
         $institutionClassId = $this->request->getQuery('class_id');
+        $gpaName = $this->request->getQuery('gpa_name');
+//        dd($entity);
         $queryString = $this->request->getQuery('queryString');
        if (isset($buttons['view'])) {
             $url = [
@@ -81,7 +85,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
            // $buttons['view']['url'] = $url;
         }
-        
+
         $params = [
             'education_grade_id' => $educationGradeId,
             'student_id' => $entity->student_id,
@@ -89,12 +93,12 @@ class ReportCardGpaTable extends ControllerActionTable
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
         ];
-        
+
         $params['institution_class_id'] = $institutionClassId;
-        
+
         // Generate button, all statuses
         $buttons = $this->addGenerateButton($buttons, $params);
-       
+
         return $buttons;
 
     }
@@ -108,48 +112,34 @@ class ReportCardGpaTable extends ControllerActionTable
         $this->field('institution_class_id', ['type' => 'hidden']);
         $this->field('student_status_id', ['type' => 'hidden']);
         $this->field('gpa_name');
+        $this->field('education_grades_gpa_id');
         $this->field('gpa');
         $this->field('created',['visible' => true, 'sort' => false,'label' => 'Updated']);
 
         $this->fields['academic_period_id']['visible'] = false;
-        
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+
         $institutionId = $this->getInstitutionID();
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        $gpaGrades = TableRegistry::get('Gpa.GpaSystem');
-        $institutionGrade = TableRegistry::get('Institution.InstitutionGrades');
+        $params = $this->request->getQuery();
+        $gpa_id = intval($params['gpa_name'] ?? -1);
+        $academic_period_id = intval($params['academic_period_id'] ?? $this->AcademicPeriods->getCurrent());
+        $education_grade_id = intval($params['education_grade_id'] ?? -1);
+        $institution_class_id = intval($params['class_id'] ?? -1);
+        $Classes =self::getDynamicTableInstance('Institution.InstitutionClasses');
+        $gpaGrades =self::getDynamicTableInstance('Gpa.GpaSystem');
+        $institutionGrade =self::getDynamicTableInstance('Institution.InstitutionGrades');
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        //End
-
-       /*$availableGrades = $gpaGrades->find()
-                        ->where([
-                            $gpaGrades->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                        ])
-                        ->extract('education_grade_id')
-                        ->toArray();
-        // Education Grade filter
-        $educationGradeOptions = [];
-        if (!empty($availableGrades)) {
-            $educationGradeOptions = $this->EducationGrades->find('list')
-                ->where([
-                    $this->EducationGrades->aliasField('id IN') => $availableGrades
-                ])
-                ->toArray();
-
-        } else {
-            $this->Alert->warning('ReportCardStatuses.noProgrammes');
-        }*/
+        $this->controller->set(compact('academicPeriodOptions', 'academic_period_id'));
+        $where[$this->aliasField('academic_period_id')] = $academic_period_id;
         $educationGradeOptions = [];
         $availableGrades = $institutionGrade->find()
                         ->where([
-                            $institutionGrade->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                            $institutionGrade->aliasField('academic_period_id') => $academic_period_id,
                             $institutionGrade->aliasField('institution_id') => $institutionId,
                         ])
                         ->extract('education_grade_id')
@@ -166,20 +156,18 @@ class ReportCardGpaTable extends ControllerActionTable
         }
 
         $educationGradeOptions = ['-1' => '-- '.__('Select Education Grade').' --'] + $educationGradeOptions;
-        $selectedGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
-        $this->controller->set(compact('educationGradeOptions', 'selectedGrade'));
+        $this->controller->set(compact('educationGradeOptions', 'education_grade_id'));
         //End
 
         // Class filter
         $classOptions = [];
-        $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : -1;
 
       //  $educationGradeByReportCardId = '';
             if (!empty($this->request->getQuery('education_grade_id'))) {
                 $classOptions = $Classes->find('list')
                     ->matching('ClassGrades')
                     ->where([
-                        $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                        $Classes->aliasField('academic_period_id') => $academic_period_id,
                         $Classes->aliasField('institution_id') => $institutionId,
                         'ClassGrades.education_grade_id' => $this->request->getQuery('education_grade_id')
                     ])
@@ -187,32 +175,32 @@ class ReportCardGpaTable extends ControllerActionTable
                     ->toArray();
                // $educationGradeByReportCardId = $reportCardEntity->education_grade_id;
             } else {
-                
-                $selectedClass = -1;
+
+                $institution_class_id = -1;
             }
-        
+
 
         if (!empty($classOptions)) {
             $classOptions['all'] = "All Classes";
         }
 
         $classOptions = ['-1' => '-- ' . __('Select Class') . ' --'] + $classOptions;
-        $this->controller->set(compact('classOptions', 'selectedClass'));
-        if($selectedClass != 'all'){
-            $where[$this->aliasField('institution_class_id IS')] = $selectedClass;
+        $this->controller->set(compact('classOptions', 'institution_class_id'));
+        if($institution_class_id != 'all'){
+            $where[$this->aliasField('institution_class_id IS')] = $institution_class_id;
         }
-        
-        $where[$this->aliasField('institution_id')] = $institutionId; 
-        $where[$this->aliasField('student_status_id NOT IN')] = 3; 
-        $where[$this->aliasField('education_grade_id')] = $selectedGrade;
-        
+
+        $where[$this->aliasField('institution_id')] = $institutionId;
+        $where[$this->aliasField('student_status_id NOT IN')] = 3;
+        $where[$this->aliasField('education_grade_id')] = $education_grade_id;
+
         //End
 
         // Gpa name filter
         $nameOption = $gpaGrades->find('list')
                         ->where([
-                            $gpaGrades->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                            $gpaGrades->aliasField('education_grade_id') => $selectedGrade
+                            $gpaGrades->aliasField('academic_period_id') => $academic_period_id,
+                            $gpaGrades->aliasField('education_grade_id') => $education_grade_id
                         ])
                         ->toArray();
         $nameOption = array_filter($nameOption, function($value) {
@@ -224,19 +212,11 @@ class ReportCardGpaTable extends ControllerActionTable
         } else {
             $nameOption = ['-1' => '-- '.__('Select GPA Name').' --'] + $nameOption;
         }
-        $selectedName = !is_null($this->request->getQuery('gpa_name')) ? $this->request->getQuery('gpa_name') : -1;
-        $this->controller->set(compact('nameOption', 'selectedName'));
+        $this->controller->set(compact('nameOption', 'gpa_id'));
         // End
-        
-        $UsersTable = TableRegistry::get('Security.Users');
-        $gradeGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
-        if($selectedName != -1){
-          // $where[$gradeGpa->aliasField('education_grades_gpa_id')] = $selectedName; //POCOR-8699
-        }
-        //POCOR-9038 -- display records when gpa_name is selected.
-        if($selectedName == -1){
-            $where[$gradeGpa->aliasField('education_grades_gpa_id')] = $selectedName; 
-        }
+
+        $UsersTable =self::getDynamicTableInstance('Security.Users');
+        $gradeGpa =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
         $query
             ->select([
                 'id' => $this->aliasField('id'),
@@ -245,6 +225,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 'education_grade_id' => $this->aliasField('education_grade_id'),
                 'academic_period_id' => $this->aliasField('academic_period_id'),
                 'student_id' => $this->aliasField('student_id'),
+                'education_grades_gpa_id' => $gradeGpa->aliasField('education_grades_gpa_id'),
                 'student_name' => $UsersTable->find()->func()->concat([
                     $UsersTable->aliasField('first_name') => 'literal',
                     ' ',
@@ -258,9 +239,12 @@ class ReportCardGpaTable extends ControllerActionTable
             )
             ->leftJoin(
                 [$gradeGpa->getAlias() => $gradeGpa->getTable()],
-                [$gradeGpa->aliasField('student_id') . ' = ' . $this->aliasField('student_id')]
+                [$gradeGpa->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                    $gradeGpa->aliasField('education_grades_gpa_id') . ' = ' . $gpa_id
+                ]
             )
-            ->where($where)->group([$this->aliasField('student_id')]);
+            ->where($where)
+            ->group([$this->aliasField('student_id')]);
 
         if (is_null($this->request->getQuery('sort'))) {
             $query
@@ -282,203 +266,157 @@ class ReportCardGpaTable extends ControllerActionTable
         $search = $this->getSearchKey();
         if (!empty($search)) {
             $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
-            $extra['OR'] = $nameConditions; 
+            $extra['OR'] = $nameConditions;
         }
-        
+
     }
-    
+
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $gradeId = $this->request->getQuery('education_grade_id');
         $classId = $this->request->getQuery('class_id');
         $gpaName = $this->request->getQuery('gpa_name'); //POCOR-9038
+
+
+        $isUserSuperAdmin = $this->Auth->user('super_admin');
+        if (!$this->canGenerateGpa($gradeId, $classId)) {
+            return;
+        }
+
+        $institutionClassExists = $this->InstitutionClasses->exists([
+            $this->InstitutionClasses->getPrimaryKey() => $classId
+        ]);
+
+        if (!$institutionClassExists) {
+            return;
+        }
+
+        $toolbarAttributes = $this->getToolbarAttributes();
+        $params = $this->buildParams($gradeId, $classId);
+
+        $canGenerateAll = $this->hasGenerateAllPermission($isUserSuperAdmin);
+
+        if ($canGenerateAll && isset($gpaName)) {
+            $generateButton = $this->buildGenerateButton($params, $toolbarAttributes);
+
+            $gradeId = $this->request->getQuery('education_grade_id') ?? $gradeId;
+            $reportCardData = $this->getReportCardData($gradeId);
+
+            $hasValidDates = $this->hasValidGenerateDates($reportCardData);
+            $canIgnoreDates = !$this->AccessControl->isAdmin()
+                && $this->canGenerateAnyDate($gradeId)
+                && $canGenerateAll;
+
+            if ($hasValidDates || $canIgnoreDates) {
+                $extra['toolbarButtons']['generateAll'] = $generateButton;
+            } else {
+                $generateButton['attr']['data-html'] = true;
+                $extra['toolbarButtons']['generateAll'] = $generateButton;
+            }
+        }
+
+    }
+
+    private function canGenerateGpa($gradeId, $classId): bool
+    {
+        return !is_null($gradeId) && !is_null($classId);
+    }
+
+    private function getToolbarAttributes(): array
+    {
+        return [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+    }
+
+    private function buildParams($gradeId, $classId): array
+    {
+        return [
+            'institution_id' => $this->getInstitutionID(),
+            'institution_class_id' => $classId,
+            'education_grade_id' => $gradeId
+        ];
+    }
+
+    private function hasGenerateAllPermission(bool $isSuperAdmin): bool
+    {
+        if($isSuperAdmin){
+            return true;
+        }
         $loginUserIdUser = $this->Auth->User('id');
         $securityRoles = $this->AccessControl->getRolesByUser($loginUserIdUser)->toArray();
         $securityRoleIds = [];
         foreach ($securityRoles as $key => $value) {
             $securityRoleIds[] = $value->security_role_id;
         }
-        $userId = $this->Auth->user('id');
-        $userSuperAddmin = $this->Auth->user('super_admin');
-        if ($userSuperAddmin == 1) {
-            if (!is_null($gradeId) && !is_null($classId)) {
-                $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->getPrimaryKey() => $classId]);
-                if ($existingClass) {
-                    $toolbarAttr = [
-                        'class' => 'btn btn-xs btn-default',
-                        'data-toggle' => 'tooltip',
-                        'data-placement' => 'bottom',
-                        'escape' => false
-                    ];
+        $SecurityFunctions =self::getDynamicTableInstance('Security.SecurityFunctions');
+        $generateAllFunction = $SecurityFunctions
+            ->find()
+            ->where([$SecurityFunctions->aliasField('name') => 'Gpa Generate All'])
+            ->first();
 
-                    $params = [
-                        'institution_id' => $this->getInstitutionID(),
-                        'institution_class_id' => $classId,
-                        'education_grade_id' => $gradeId
-                    ];
-
-
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
-                    $SecurityFunctionsGenerateAllData = $SecurityFunctions
-                        ->find()
-                        ->where([
-                            $SecurityFunctions->aliasField('name') => 'Gpa Generate All'])
-                        ->first();
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
-                    $SecurityRoleFunctionsTableGenerateAllData = $SecurityRoleFunctionsTable
-                        ->find()
-                        ->where([
-                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateAllData->id,
-                            //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
-                        ])
-                        ->count();
-                    
-                    // Generate all button
-                    if(isset($gpaName)){ //POCOR-9038
-                        $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-                        $generateButton['type'] = 'button';
-                        $generateButton['label'] = '<i class="fa fa-refresh"></i>';
-                        $generateButton['attr'] = $toolbarAttr;
-                        $generateButton['attr']['title'] = __('Generate All');
-                    }
-                    //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                    if (!is_null($this->request->getQuery('education_grade_id'))) {
-                        $gradeId = $this->request->getQuery('education_grade_id');
-                    }
-
-                    $ReportCardsData = $this->ReportCards
-                        ->find()
-                        ->where([
-                            $this->ReportCards->aliasField('education_grade_id') => $gradeId])
-                        ->first();
-
-                    if (!empty($ReportCardsData->generate_start_date)) {
-                        $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
-                    }
-
-                    if (!empty($ReportCardsData->generate_end_date)) {
-                        $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
-                    }
-                    $date = Time::now()->format('Y-m-d');
-
-                    if ($this->AccessControl->isAdmin()) {
-                        
-                        if (!empty($generateStartDate) && !empty($generateEndDate)) {
-                            $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        } else {
-                            $generateButton['attr']['data-html'] = true;
-                           // $generateButton['attr']['title'] .= __('<br>' . $this->getMessage('ReportCardStatuses.date_closed'));
-                        //    $generateButton['url'] = 'javascript:void(0)';
-                            $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        }
-                    } else {
-                        if ($SecurityRoleFunctionsTableGenerateAllData >= 1) {
-                            /*if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {*/
-                            if (!empty($generateStartDate) && !empty($generateEndDate)) {
-                                $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            } else {
-                                $generateButton['attr']['data-html'] = true;
-                                //$generateButton['attr']['title'] .= __('<br>' . $this->getMessage('ReportCardStatuses.date_closed'));
-                             //   $generateButton['url'] = 'javascript:void(0)';
-                                $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            }
-                        }
-                    }
-
-                    
-                    
-                }
-            }
-        } else { 
-            if (!is_null($gradeId) && !is_null($classId) && !empty($securityRoleIds)) {
-                
-                $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->getPrimaryKey() => $classId]);
-                if ($existingClass) {
-                    $toolbarAttr = [
-                        'class' => 'btn btn-xs btn-default',
-                        'data-toggle' => 'tooltip',
-                        'data-placement' => 'bottom',
-                        'escape' => false
-                    ];
-
-                    $params = [
-                        'institution_id' => $this->getInstitutionID(),
-                        'institution_class_id' => $classId,
-                        'education_grade_id' => $gradeId
-                    ];
-
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
-                    
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
-                    $SecurityFunctionsGenerateAllData = $SecurityFunctions
-                        ->find()
-                        ->where([
-                            $SecurityFunctions->aliasField('name') => 'Gpa Generate All'])
-                        ->first();
-
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
-                    $SecurityRoleFunctionsTableGenerateAllData = $SecurityRoleFunctionsTable
-                        ->find()
-                        ->where([
-                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateAllData->id,
-                            $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
-                            $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])
-                        ->count();
-                    
-                    // Generate all button
-                    if(isset($gpaName)){ //POCOR-9038
-                        $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-                        $generateButton['type'] = 'button';
-                        $generateButton['label'] = '<i class="fa fa-refresh"></i>';
-                        $generateButton['attr'] = $toolbarAttr;
-                        $generateButton['attr']['title'] = __('Generate All');
-                    }
-                    //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                    if (!is_null($this->request->getQuery('education_grade_id'))) {
-                        $gradeId = $this->request->getQuery('education_grade_id');
-                    }
-
-                    $ReportCardsData = $this->ReportCards
-                        ->find()
-                        ->where([
-                            $this->ReportCards->aliasField('education_grade_id') => $gradeId])
-                        ->first();
-                    if (!empty($ReportCardsData->generate_start_date)) {
-                        $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
-                    }
-
-                    if (!empty($ReportCardsData->generate_end_date)) {
-                        $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
-                    }
-                    $date = Time::now()->format('Y-m-d');
-
-                    if ($this->AccessControl->isAdmin()) {
-                        if (!empty($generateStartDate) && !empty($generateEndDate)) {
-                            $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        } else {
-                            $generateButton['attr']['data-html'] = true;
-                            //$generateButton['attr']['title'] .= __('<br>' . $this->getMessage('ReportCardStatuses.date_closed'));
-                            //$generateButton['url'] = 'javascript:void(0)';
-                            $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        }
-                    } else {
-                        $ExcludedSecurityRoleEntity = $this->canGenerateAnyDate($education_grade_id);  
-                        
-                        if ($SecurityRoleFunctionsTableGenerateAllData >= 1) {
-                            if (!empty($generateStartDate) && !empty($generateEndDate) || ($ExcludedSecurityRoleEntity == 1)) {
-                                $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            } else {
-                                $generateButton['attr']['data-html'] = true;
-                              //  $generateButton['attr']['title'] .= __('<br>' . $this->getMessage('ReportCardStatuses.date_closed'));
-                               // $generateButton['url'] = 'javascript:void(0)';
-                                $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            }
-                        }
-                    }
-
-                }
-            }
+        if (empty($generateAllFunction)) {
+            return false;
         }
+
+        $SecurityRoleFunctions =self::getDynamicTableInstance('Security.SecurityRoleFunctions');
+        $conditions = [
+            $SecurityRoleFunctions->aliasField('security_function_id') => $generateAllFunction->id
+        ];
+
+        if (!$isSuperAdmin) {
+            $conditions += [
+                $SecurityRoleFunctions->aliasField('_execute') => 1,
+                $SecurityRoleFunctions->aliasField('security_role_id IN') => $securityRoleIds
+            ];
+        }
+
+        return $SecurityRoleFunctions->find()->where($conditions)->count() > 0;
+    }
+
+    private function buildGenerateButton(array $params, array $attributes): array
+    {
+        $url = $this->url('generateAll');
+        $decodedParams = $this->paramsDecode($url['1']);
+        $combinedParams = array_merge($url['?'] ?? [], $decodedParams, $params);
+        $url['1'] = $this->paramsEncode($combinedParams);
+        unset($url['?']);
+
+        unset($url['gpa_name']);
+        unset($url['academic_period_id']);
+        unset($url['education_grade_id']);
+        unset($url['class_id']);
+//        dd($url);
+        return [
+            'url' => $url,
+            'type' => 'button',
+            'label' => '<i class="fa fa-refresh"></i>',
+            'attr' => array_merge($attributes, ['title' => __('Generate All')])
+        ];
+    }
+
+    private function getReportCardData($gradeId)
+    {
+        return $this->ReportCards
+            ->find()
+            ->where([$this->ReportCards->aliasField('education_grade_id') => $gradeId])
+            ->first();
+    }
+
+    private function hasValidGenerateDates($reportCardData): bool
+    {
+        if (empty($reportCardData)) {
+            return false;
+        }
+
+        $startDate = $reportCardData->generate_start_date?->format('Y-m-d');
+        $endDate = $reportCardData->generate_end_date?->format('Y-m-d');
+        $today = Time::now()->format('Y-m-d');
+
+        return !empty($startDate) && !empty($endDate) && $today >= $startDate && $today <= $endDate;
     }
 
 
@@ -512,12 +450,17 @@ class ReportCardGpaTable extends ControllerActionTable
         }
         return $value;
     }
-    
+
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+//        dd($params);
         if ($params) {
-            $this->addGpaReportCards($params['student_id'], $params['academic_period_id'],$params['institution_id'], $params['education_grade_id']);
+            $this->addGpaReportCards(
+                $params['student_id'],
+                $params['academic_period_id'],
+                $params['institution_id'],
+                $params['education_grade_id']);
             $this->Alert->success('ReportCardStatuses.gpa');
         } else {
             $url = $this->url('index');
@@ -533,9 +476,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
         $params = $this->getQueryString();
         $institutionId = $this->getInstitutionID();
-        $params['academic_period_id'] = $this->request->getQuery('academic_period_id');
-        $params['institution_class_id'] = $this->request->getQuery('class_id');
-        $params['education_grade_id'] = $this->request->getQuery('education_grade_id');
+//        dd($params);
         $selectedAcademicPeriodId = $params['academic_period_id'];
 
         if ($params) {
@@ -544,11 +485,19 @@ class ReportCardGpaTable extends ControllerActionTable
                 'student_id' => $this->aliasField('student_id'),
                 'education_grade_id' => $this->aliasField('education_grade_id'),
             ])
-            ->where(['institution_id' => $institutionId , 'institution_class_id IS' => $params['institution_class_id'], 'academic_period_id' => $params['academic_period_id']])->toArray();
+            ->where(['institution_id' => $institutionId ,
+                'institution_class_id IS' => $params['institution_class_id'],
+                'academic_period_id' =>
+                    $params['academic_period_id']
+            ])->toArray();
             foreach($fetchAllRecord as $value){
                 $studentId = $value['student_id'];
                 $educationGradeId = $params['education_grade_id'];
-                $this->addGpaReportCards($studentId,$selectedAcademicPeriodId, $institutionId,$educationGradeId);
+                $this->addGpaReportCards(
+                    $studentId,
+                    $selectedAcademicPeriodId,
+                    $institutionId,
+                    $educationGradeId);
             }
             $this->Alert->success('ReportCardStatuses.gpa');
         } else {
@@ -558,20 +507,28 @@ class ReportCardGpaTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
-    
-    private function addGpaReportCards($checkgpaStudent,$selectedAcademicPeriodId, $institutionId,$educationGradeId)
-    {
 
+    private function addGpaReportCards($checkgpaStudent,
+                                       $selectedAcademicPeriodId,
+                                       $institutionId,
+                                       $educationGradeId,
+                                       $educationGradesGpaId)
+    {
         $selectedAcademicPeriodId = $selectedAcademicPeriodId;
         $institutionId = $institutionId;
         $educationGradeId = $educationGradeId;
         $studentId = $checkgpaStudent;
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $AssessmentItemsTable = TableRegistry::get('Assessment.AssessmentItemResults');
+        $this->AcademicPeriods =self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
 
-        $gpaTable = TableRegistry::get('Institution.InstitutionStudentsGpa');
-        $recordExist = $gpaTable->find()->select(['id'])->where([$gpaTable->aliasField('institution_id') => $institutionId, $gpaTable->aliasField('student_id') => $studentId,$gpaTable->aliasField('academic_period_id') => $selectedAcademicPeriodId,$gpaTable->aliasField('education_grade_id') => $educationGradeId])->first();
+        $gpaTable =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
+        $recordExist = $gpaTable->find()->select(['id'])->where([
+            $gpaTable->aliasField('institution_id') => $institutionId,
+            $gpaTable->aliasField('student_id') => $studentId,
+            $gpaTable->aliasField('academic_period_id') => $selectedAcademicPeriodId,
+            $gpaTable->aliasField('education_grade_id') => $educationGradeId,
+            education_grades_gpa_id
+        ])->first();
+//        dd($recordExist);
         $loginUserId = $this->Auth->user()['id'];
         $createdUserId = $this->Auth->user()['id'];
         $connection = ConnectionManager::get('default');
@@ -636,7 +593,7 @@ class ReportCardGpaTable extends ControllerActionTable
                                  ,assessments.education_grade_id
                                  ,IFNULL(assessment_periods.academic_term, 1)
                     ) term_info
-                    ON term_info.academic_period_id = institution_subject_students.academic_period_id 
+                    ON term_info.academic_period_id = institution_subject_students.academic_period_id
                     AND term_info.education_grade_id = institution_subject_students.education_grade_id
                     LEFT JOIN
                     (
@@ -668,18 +625,18 @@ class ReportCardGpaTable extends ControllerActionTable
                                      ,assessment_item_results.education_subject_id
                                      ,assessment_item_results.assessment_period_id
                         ) latest_grades
-                        ON latest_grades.academic_period_id = assessment_item_results.academic_period_id 
-                        AND latest_grades.education_grade_id = assessment_item_results.education_grade_id 
-                        AND latest_grades.student_id = assessment_item_results.student_id 
-                        AND latest_grades.assessment_id = assessment_item_results.assessment_id 
-                        AND latest_grades.education_subject_id = assessment_item_results.education_subject_id 
-                        AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id 
+                        ON latest_grades.academic_period_id = assessment_item_results.academic_period_id
+                        AND latest_grades.education_grade_id = assessment_item_results.education_grade_id
+                        AND latest_grades.student_id = assessment_item_results.student_id
+                        AND latest_grades.assessment_id = assessment_item_results.assessment_id
+                        AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+                        AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
                         AND latest_grades.latest_created = assessment_item_results.created
                         INNER JOIN assessment_periods
                         ON assessment_periods.id = assessment_item_results.assessment_period_id
                         INNER JOIN education_subjects
                         ON education_subjects.id = assessment_item_results.education_subject_id
-                        LEFT JOIN 
+                        LEFT JOIN
                         (
                             SELECT assessment_item_student_exemptions.assessment_id
                                 ,assessment_item_student_exemptions.education_subject_id
@@ -708,10 +665,10 @@ class ReportCardGpaTable extends ControllerActionTable
                                  ,assessment_item_results.student_id
                                  ,assessment_periods.academic_term
                     ) subq2
-                    ON subq2.academic_period_id = institution_subject_students.academic_period_id 
-                    AND subq2.education_grade_id = institution_subject_students.education_grade_id 
-                    AND subq2.student_id = institution_subject_students.student_id 
-                    AND subq2.education_subject_id = institution_subject_students.education_subject_id 
+                    ON subq2.academic_period_id = institution_subject_students.academic_period_id
+                    AND subq2.education_grade_id = institution_subject_students.education_grade_id
+                    AND subq2.student_id = institution_subject_students.student_id
+                    AND subq2.education_subject_id = institution_subject_students.education_subject_id
                     AND subq2.academic_term = term_info.academic_term
                     WHERE institution_subject_students.academic_period_id = :selectedAcademicPeriodId
                     AND institution_subject_students.student_id = :studentId
@@ -727,7 +684,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 AND education_grades_gpa.academic_period_id = subq.academic_period_id
                 AND education_grades_gpa.education_grade_id = subq.education_grade_id
                 LEFT JOIN gpa_grading_options
-                ON subq.total_mark >= gpa_grading_options.min 
+                ON subq.total_mark >= gpa_grading_options.min
                 AND subq.total_mark <= gpa_grading_options.max
                 AND education_grades_gpa.gpa_grading_type_id = gpa_grading_options.gpa_grading_type_id
                 GROUP BY  subq.academic_period_id
@@ -746,8 +703,8 @@ class ReportCardGpaTable extends ControllerActionTable
                     ,students_gpa.institution_id
                     ,current_academic_period.academic_period_id
                     ,MAX(student_education_grades.id) education_grade_id
-                    ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student 
-                FROM 
+                    ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student
+                FROM
                 (
                     SELECT institution_students_gpa.institution_id
                         ,institution_students_gpa.academic_period_id
@@ -762,13 +719,13 @@ class ReportCardGpaTable extends ControllerActionTable
                 ) students_gpa
                 INNER JOIN education_grades student_education_grades
                 ON student_education_grades.id = students_gpa.education_grade_id
-                INNER JOIN 
+                INNER JOIN
                 (
                     SELECT academic_periods.id academic_period_id
                     FROM academic_periods
                     WHERE academic_periods.id = :selectedAcademicPeriodId
                 ) current_academic_period
-                INNER JOIN 
+                INNER JOIN
                 (
                     SELECT education_grades_cumulative_gpa.main_education_grade_id
                         ,education_grades_gpa.academic_period_id
@@ -875,7 +832,7 @@ class ReportCardGpaTable extends ControllerActionTable
                                         ,assessments.education_grade_id
                                         ,IFNULL(assessment_periods.academic_term, 1)
                             ) term_info
-                            ON term_info.academic_period_id = institution_subject_students.academic_period_id 
+                            ON term_info.academic_period_id = institution_subject_students.academic_period_id
                             AND term_info.education_grade_id = institution_subject_students.education_grade_id
                             LEFT JOIN
                             (
@@ -907,18 +864,18 @@ class ReportCardGpaTable extends ControllerActionTable
                                             ,assessment_item_results.education_subject_id
                                             ,assessment_item_results.assessment_period_id
                                 ) latest_grades
-                                ON latest_grades.academic_period_id = assessment_item_results.academic_period_id 
-                                AND latest_grades.education_grade_id = assessment_item_results.education_grade_id 
-                                AND latest_grades.student_id = assessment_item_results.student_id 
-                                AND latest_grades.assessment_id = assessment_item_results.assessment_id 
-                                AND latest_grades.education_subject_id = assessment_item_results.education_subject_id 
-                                AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id 
+                                ON latest_grades.academic_period_id = assessment_item_results.academic_period_id
+                                AND latest_grades.education_grade_id = assessment_item_results.education_grade_id
+                                AND latest_grades.student_id = assessment_item_results.student_id
+                                AND latest_grades.assessment_id = assessment_item_results.assessment_id
+                                AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+                                AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
                                 AND latest_grades.latest_created = assessment_item_results.created
                                 INNER JOIN assessment_periods
                                 ON assessment_periods.id = assessment_item_results.assessment_period_id
                                 INNER JOIN education_subjects
                                 ON education_subjects.id = assessment_item_results.education_subject_id
-                                LEFT JOIN 
+                                LEFT JOIN
                                 (
                                     SELECT assessment_item_student_exemptions.assessment_id
                                         ,assessment_item_student_exemptions.education_subject_id
@@ -947,10 +904,10 @@ class ReportCardGpaTable extends ControllerActionTable
                                         ,assessment_item_results.student_id
                                         ,assessment_periods.academic_term
                             ) subq2
-                            ON subq2.academic_period_id = institution_subject_students.academic_period_id 
-                            AND subq2.education_grade_id = institution_subject_students.education_grade_id 
-                            AND subq2.student_id = institution_subject_students.student_id 
-                            AND subq2.education_subject_id = institution_subject_students.education_subject_id 
+                            ON subq2.academic_period_id = institution_subject_students.academic_period_id
+                            AND subq2.education_grade_id = institution_subject_students.education_grade_id
+                            AND subq2.student_id = institution_subject_students.student_id
+                            AND subq2.education_subject_id = institution_subject_students.education_subject_id
                             AND subq2.academic_term = term_info.academic_term
                             WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
                             AND institution_subject_students.student_id = $studentId
@@ -966,7 +923,7 @@ class ReportCardGpaTable extends ControllerActionTable
                         AND education_grades_gpa.academic_period_id = subq.academic_period_id
                         AND education_grades_gpa.education_grade_id = subq.education_grade_id
                         LEFT JOIN gpa_grading_options
-                        ON subq.total_mark >= gpa_grading_options.min 
+                        ON subq.total_mark >= gpa_grading_options.min
                         AND subq.total_mark <= gpa_grading_options.max
                         AND education_grades_gpa.gpa_grading_type_id = gpa_grading_options.gpa_grading_type_id
                         GROUP BY  subq.academic_period_id
@@ -985,8 +942,8 @@ class ReportCardGpaTable extends ControllerActionTable
                             ,students_gpa.institution_id
                             ,current_academic_period.academic_period_id
                             ,MAX(student_education_grades.id) education_grade_id
-                            ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student 
-                        FROM 
+                            ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student
+                        FROM
                         (
                             SELECT institution_students_gpa.institution_id
                                 ,institution_students_gpa.academic_period_id
@@ -1001,13 +958,13 @@ class ReportCardGpaTable extends ControllerActionTable
                         ) students_gpa
                         INNER JOIN education_grades student_education_grades
                         ON student_education_grades.id = students_gpa.education_grade_id
-                        INNER JOIN 
+                        INNER JOIN
                         (
                             SELECT academic_periods.id academic_period_id
                             FROM academic_periods
                             WHERE academic_periods.id = $selectedAcademicPeriodId
                         ) current_academic_period
-                        INNER JOIN 
+                        INNER JOIN
                         (
                             SELECT education_grades_cumulative_gpa.main_education_grade_id
                                 ,education_grades_gpa.academic_period_id
@@ -1048,9 +1005,9 @@ class ReportCardGpaTable extends ControllerActionTable
                 institution_students_gpa.modified = CURRENT_TIMESTAMP();");
                             $statement->execute();
         }
-    
+
     }
-    
+
     /**
      * @param array $buttons
      * @param $params
@@ -1058,14 +1015,15 @@ class ReportCardGpaTable extends ControllerActionTable
     */
     private function addGenerateButton(array $buttons, $params)
     {
+
         $params['institution_id'] = $this->getInstitutionID();
         $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
         $educationGradeId = $this->request->getQuery('education_grade_id');
         $isAdmin = $this->AccessControl->isAdmin();
         if (!$isAdmin) {
             $security_role_ids = $this->getUserSecurityRoles();
-            $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
-            $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+            $SecurityRoleFunctions =self::getDynamicTableInstance('Security.SecurityRoleFunctions');
+            $SecurityFunctions =self::getDynamicTableInstance('Security.SecurityFunctions');
             $where = [$SecurityRoleFunctions->aliasField('security_role_id IN') => $security_role_ids];
         }
 
@@ -1101,7 +1059,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 $canGenerateAnyDate = true;
             }
             if (!$canGenerateAnyDate) {
-                $canGenerateAnyDate = $this->canGenerateAnyDate(); 
+                $canGenerateAnyDate = $this->canGenerateAnyDate();
             }
             if ($canGenerateAnyDate) {
                 $buttons['generate'] = [
@@ -1166,12 +1124,12 @@ class ReportCardGpaTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->controller->getInstitutionGpaTab(); 
+        $this->controller->getInstitutionGpaTab();
     }
 
    public function onGetGpa(Event $event, Entity $entity)
     {
-        $studentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+        $studentsGpa =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
         $institutionId = !empty($entity['institution_id']) ? $entity['institution_id'] : $entity['institution_class']['institution_id']; //POCOR-8699
         $query = $studentsGpa->find()->where([
             'student_id' => $entity->student_id,
@@ -1179,9 +1137,9 @@ class ReportCardGpaTable extends ControllerActionTable
             'institution_id' => $institutionId,
             'academic_period_id' => $entity->academic_period_id
         ]);
-        
+
         if(!empty($this->request->getQuery('gpa_name')) &&  $this->request->getQuery('gpa_name') != -1) {
-            $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') => $this->request->getQuery('gpa_name')]); 
+            $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') => $this->request->getQuery('gpa_name')]);
         } else {
             $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') . ' IS NOT' => null]);
 
@@ -1190,13 +1148,13 @@ class ReportCardGpaTable extends ControllerActionTable
         if ($findGpa !== null) {
             return number_format((float)$findGpa->gpa, 2);
         }
-        return ''; 
+        return '';
     }
 
     public function onGetCreated(Event $event, Entity $entity)
     {
         if($this->action == 'index' && !empty($entity->gpa)){
-            $studentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+            $studentsGpa =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
             $institutionId = !empty($entity['institution_id']) ? $entity['institution_id'] : $entity['institution_class']['institution_id']; //POCOR-8699
             $query = $studentsGpa->find()
                 ->where([
@@ -1205,17 +1163,17 @@ class ReportCardGpaTable extends ControllerActionTable
                     'institution_id' => $institutionId,
                     'academic_period_id' => $entity->academic_period_id
                 ]);
-                
+
             //POCOR-8699
             if(!empty($this->request->getQuery('gpa_name')) &&  $this->request->getQuery('gpa_name') != -1) {
-                $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') => $this->request->getQuery('gpa_name')]); 
+                $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') => $this->request->getQuery('gpa_name')]);
             }
             $record = $query->first();
             if ($record) {
                 // Return the modified date if it's not null, otherwise return the created date
                 return !empty($record->modified) ? $record->modified : $record->created;
             }
-        
+
         }
         return null;
     }
@@ -1236,12 +1194,12 @@ class ReportCardGpaTable extends ControllerActionTable
 
     public function onGetStudentName(Event $event, Entity $entity)
     {
-        return $entity->user->name;   
+        return $entity->user->name;
     }
 
     public function onGetInstitutionClass(Event $event, Entity $entity)
     {
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses =self::getDynamicTableInstance('Institution.InstitutionClasses');
         $getName = $InstitutionClasses->find()
                     ->where([$InstitutionClasses->aliasField('id IS') => $entity->institution_class_id])
                     ->first()
@@ -1251,7 +1209,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
     private function getUserSecurityRoles()
     {
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers =self::getDynamicTableInstance('Security.SecurityGroupUsers');
         $current_user = $this->Auth->user('id');
         $SecurityGroupUsersData = $SecurityGroupUsers
             ->find()
@@ -1274,7 +1232,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $security_role_ids = $this->getUserSecurityRoles();
         $ExcludedSecurityRoleCount = -1;
         if (!empty($security_role_ids)) {
-            $ExcludedSecurityRoleTable = TableRegistry::get('ReportCard.ReportCardExcludedSecurityRoles');
+            $ExcludedSecurityRoleTable =self::getDynamicTableInstance('ReportCard.ReportCardExcludedSecurityRoles');
             $ExcludedSecurityRoleCount = $ExcludedSecurityRoleTable->find('all')
                 ->where([
                     'security_role_id IN' => $security_role_ids,
@@ -1291,8 +1249,8 @@ class ReportCardGpaTable extends ControllerActionTable
 
     public function onGetGpaName(Event $event, Entity $entity)
     {
-        $studentGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
-        $gpaTable = TableRegistry::get('Gpa.GpaSystem');
+        $studentGpa =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
+        $gpaTable =self::getDynamicTableInstance('Gpa.GpaSystem');
         $institutionId = !empty($entity['institution_id']) ? $entity['institution_id'] : $entity['institution_class']['institution_id']; //POCOR-8699
         $query = $studentGpa->find()
                         ->select(['name' => $gpaTable->aliasField('name')])
@@ -1307,23 +1265,71 @@ class ReportCardGpaTable extends ControllerActionTable
                             $studentGpa->aliasField('education_grade_id') => $entity->education_grade_id
                         ]);
         if(!empty($this->request->getQuery('gpa_name'))  &&  $this->request->getQuery('gpa_name') != -1) {
-           $query = $query->where([$studentGpa->aliasField('education_grades_gpa_id') => $this->request->getQuery('gpa_name')]); 
+           $query = $query->where([$studentGpa->aliasField('education_grades_gpa_id') => $this->request->getQuery('gpa_name')]);
         }
         $gpaRecord = $query->first();
             if(!empty($gpaRecord)){
                 return $gpaRecord->name ;
             }
-        
+
         return '';
     }
 
-   
+
     /*public function viewBeforeQuery(Event $event, Query $query, Entity $entity)
     {
-       
+
         $query->where([$this->aliasField('institution_class_id IS') => $entity-]);
-        
+
     }*/
 
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
 
 }
