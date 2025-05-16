@@ -1,3 +1,6 @@
+### [4.24.2] - 2025-05-15
+- Bug Fixed: Institutions > Performance > Report Cards: Grids that are not highlighted is showing
+
 ### [4.24.1] - 2025-05-13
 - Bug Fixed: Dashboard: User is getting 404 error in dashboard
 - Bug Fixed: Institutions > Performance > GPA: The GPA automatically changed when user generate cumulative GPA
