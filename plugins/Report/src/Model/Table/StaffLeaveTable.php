@@ -83,8 +83,8 @@ class StaffLeaveTable extends AppTable {
                     'code' => 'Institutions.code',
                     'area_name' => 'Areas.name',
                     'area_code' => 'Areas.code',
-                    $this->aliasfield('date_from'), // POCOR-9109
-                    $this->aliasfield('date_to'), // POCOR-9109
+                'date_from' => $this->aliasField('date_from'), // POCOR-9109
+                'date_to' => $this->aliasField('date_to'), // POCOR-9109
                     //'area_administrative_code' => 'AreaAdministratives.code',//POCOR-5762
                     //'area_administrative_name' => 'AreaAdministratives.name',//POCOR-5762
                     'position_title' =>  $query->func()->concat([
