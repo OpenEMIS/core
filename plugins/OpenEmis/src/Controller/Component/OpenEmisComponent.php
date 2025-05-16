@@ -74,6 +74,7 @@ class OpenEmisComponent extends Component
         $controller->set('footerBrand', $brand);
         //$controller->set('dateLanguage', I18n::locale());
         $controller->set('dateLanguage', I18n::getLocale());
+        // POCOR-8563 start
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $systemDateFormat = $ConfigItems->value('date_format');
 
@@ -111,6 +112,7 @@ class OpenEmisComponent extends Component
             return $phpToAngularFormat[$matches[0]] ?? $matches[0];
         }, $systemDateFormat);
         $controller->set('angularFormat', $angularFormat);
+        // POCOR-8563 end
         //Retriving the panel width size from session
         if ($session->check('System.layout')) {
 
