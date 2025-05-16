@@ -30,7 +30,7 @@
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $educationGradeOptions,
-                        'default' => $education_grade_id,
+                        'default' => $selectedGrade,
                         'url' => $baseUrl,
                         'data-named-key' => 'education_grade_id',
                         'data-named-group' => 'academic_period_id'
@@ -43,7 +43,7 @@
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $classOptions,
-                        'default' => $institution_class_id,
+                        'default' => $selectedClass,
                         'url' => $baseUrl,
                         'data-named-key' => 'class_id',
                         'data-named-group' => 'academic_period_id,education_grade_id'
@@ -56,7 +56,7 @@
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $nameOption,
-                        'default' => $gpa_id,
+                        'default' => $selectedName,
                         'url' => $baseUrl,
                         'data-named-key' => 'gpa_name',
                         'data-named-group' => 'academic_period_id,education_grade_id,class_id'
