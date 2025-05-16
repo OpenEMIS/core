@@ -99,21 +99,22 @@ $this->start('panelBody');
         </div>
 
     </div>
+    <!--//POCOR-9114 START--->
     <div class="input select required">
         <label><?= __('Assessment Periods') ?></label>
-        <div class="input-select-wrapper">
-            <select name="assessment_period_id" id="assessment-period-id"
+            <select name="assessment_period_id" id="assessment-period-id" multiple="multiple"
+            class="chosen-select"
                     ng-options="option.id as option.name for option in $ctrl.assessment_periods"
                     ng-model="$ctrl.assessment_period_id"
                     ng-change="$ctrl.onSubjectChange();$ctrl.checkAndLoadStudents();"
             >
                 <option value=""><?= __('-- Select --') ?></option>
             </select>
-        </div>
         <div ng-if="error.assessment-period-id" class="error-message">
             <p>{{ error.assessment-period-id }}</p>
         </div>
     </div>
+    <!--//POCOR-9114 END--->
     <!--//POCOR-9042 add Action strats--->
     <div class="input select required">
         <label><?= __('Action') ?></label>
