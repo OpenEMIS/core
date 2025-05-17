@@ -247,8 +247,7 @@ class AlertsTable extends ControllerActionTable
         //POCOR-9100 small changes
         public function triggerStudentAdmissionFeatureShell($shellName, $school_name, $student_name, $academic_year, $grade_name, $recipient_id)
         {
-            $args = '';
-            $args .= !is_null($school_name) ? ' "'.$school_name.'"' : '';
+            $args = !is_null($school_name) ? ' "' . $school_name . '"' : '';
             $args .= !is_null($student_name) ? ' "'.$student_name.'"' : '';
             $args .= !is_null($academic_year) ? ' "'.$academic_year.'"' : '';
             $args .= !is_null($grade_name) ? ' "'.$grade_name.'"' : '';

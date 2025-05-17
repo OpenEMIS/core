@@ -43,7 +43,7 @@ function AssessmentItemExemptionsController(
     const CHECKBOX_WIDTH = 50;
     ctrl.dataReady = false;
     // Initialization
-    ctrl.assessment_period_id = null;
+    ctrl.assessment_period_id = []; //POCOR-9114
     ctrl.assessment_item_id = null;
     ctrl.assessment_item_ids = null;
     ctrl.institution_class_id = null;
@@ -189,6 +189,9 @@ function AssessmentItemExemptionsController(
         // console.log(options);
         ctrl.message = '';
         ctrl.messageClass = '';
+        if (!Array.isArray(ctrl.assessment_period_id)) {
+            ctrl.assessment_period_id = [ctrl.assessment_period_id];  // POCOR-9114 Convert to array if it's a single value
+        }
         const options = {
             institution_class_id: ctrl.institution_class_id,
             assessment_item_ids: ctrl.assessment_item_ids,
@@ -357,6 +360,9 @@ function AssessmentItemExemptionsController(
     }
 
     ctrl.postForm = function () {
+        if (!Array.isArray(ctrl.assessment_period_id)) {
+            ctrl.assessment_period_id = [ctrl.assessment_period_id];  // POCOR-9114 Convert to array if it's a single value
+        }
         //POCOR-9042 starts
         // Validate required fields
         if (

@@ -49,13 +49,26 @@ class SurveyRulesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        // POCOR-8921 start
-        if(empty($entity->dependent_question_id)){
-            $event->stopPropagation();
-            return;
+        // POCOR-8921, POCOR-9104 start
+//        Log::debug('SurveyRulesTable beforeSave 1');
+//        Log::debug(print_r($entity, true));
+        if ($entity->enabled == 1) {
+            if (empty($entity->dependent_question_id)) {
+                $event->stopPropagation();
+                return;
+            }
+            if (empty($entity->survey_form_id)) {
+                $event->stopPropagation();
+                return;
+            }
+            if (empty($entity->survey_question_id)) {
+                $event->stopPropagation();
+                return;
+            }
         }
-        // POCOR-8921 end
+        // POCOR-8921, POCOR-9104 end
         $entity->id = Text::uuid();
+//        Log::debug('SurveyRulesTable beforeSave 2');
 //        Log::debug(print_r($entity, true));
     }
 
