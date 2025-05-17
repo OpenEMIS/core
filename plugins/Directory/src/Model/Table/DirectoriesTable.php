@@ -1803,7 +1803,11 @@ public function getIdentityTypeData($value_selection)
     {
         switch ($userType) {
             case self::STUDENT:
-                $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>
+                    ['Identities',
+                        'Nationalities',
+//                        'Contacts'
+                    ]]);
                 $this->addBehavior('CustomField.Record', [
                     'model' => 'Student.Students',
                     'behavior' => 'Student',
@@ -1821,7 +1825,11 @@ public function getIdentityTypeData($value_selection)
                 ]);
                 break;
             case self::STAFF:
-                $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                $this->addBehavior('User.Mandatory', ['userRole' => 'Staff',
+                    'roleFields' => ['Identities',
+                        'Nationalities',
+//                        'Contacts'
+                    ]]);
                 $this->addBehavior('CustomField.Record', [
                     'model' => 'Staff.Staff',
                     'behavior' => 'Staff',
