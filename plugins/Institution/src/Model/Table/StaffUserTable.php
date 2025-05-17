@@ -22,7 +22,9 @@ class StaffUserTable extends ControllerActionTable
         // Behaviors
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+        $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities',
+//            'Contacts'
+        ]]);
         $this->addBehavior('AdvanceSearch');
 
        $this->addBehavior('CustomField.Record', [
