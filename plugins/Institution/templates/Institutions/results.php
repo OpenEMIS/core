@@ -38,7 +38,7 @@ $this->start('toolbar');
         <?php if ($_exempt) : ?>
             <a ng-show="action == 'view' && (editPermission == 1 || editPermission == undefined)"  href="<?= $exemptUrl ?>">
                 <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body"
-                        title="<?= __('Exempt'); ?>"
+                        title="<?= __('Exempt/Unassign'); ?>"
                 >
                     <i class="fa kd-null"></i>
                 </button>
