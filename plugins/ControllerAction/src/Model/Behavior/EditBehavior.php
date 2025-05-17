@@ -135,7 +135,7 @@ class EditBehavior extends Behavior
                         }
                     }
                     $process = function ($model, $entity) {
-                        // POCOR-9101 start
+                        // POCOR-9101 start // don't save changes to main contacts?
                         if ($entity->get('email') === '') {
                             $entity->unset('email');
                         }

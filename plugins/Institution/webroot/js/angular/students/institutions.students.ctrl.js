@@ -30,8 +30,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     userCtrl.postRespone = null;
     userCtrl.translateFields = null;
     //contacts/nationalities/identities req/no
-    userCtrl.contactSkipped = true; // POCOR-7882
-    userCtrl.contactsRequired = ''; // POCOR-7882
+    userCtrl.contactSkipped = true; // POCOR-9101
+    userCtrl.contactsRequired = ''; // POCOR-9101
+    userCtrl.emailSkipped = false; // POCOR-9101
+    userCtrl.emailRequired = ''; // POCOR-9101
+    userCtrl.mobileSkipped = false; // POCOR-9101
+    userCtrl.mobileRequired = ''; // POCOR-9101
     userCtrl.identitySkipped = true; // POCOR-7882
     userCtrl.identitiesRequired = ''; // POCOR-7882
     userCtrl.nationalitySkipped = true; // POCOR-7882
@@ -239,9 +243,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         function handleConfigItem(configCode, configValue) {
             switch (configCode) {
-                case "StudentContacts":
-                    userCtrl.contactSkipped = configValue === 2;
-                    userCtrl.contactsRequired = configValue === 1 ? 'required' : '';
+                case "student_email":
+                    userCtrl.emailSkipped = configValue === 2;
+                    userCtrl.emailRequired = configValue === 1 ? 'required' : '';
+                    break;
+                case "student_mobile":
+                    userCtrl.mobileSkipped = configValue === 2;
+                    userCtrl.mobileRequired = configValue === 1 ? 'required' : '';
                     break;
                 case "StudentIdentities":
                     userCtrl.identitySkipped = configValue === 2;
@@ -262,7 +270,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
 
         function getAddNewStudentConfig() {
-            const configCodes = ["StudentContacts", "StudentIdentities", "StudentNationalities"];
+            const configCodes = [
+                "student_email",
+                "student_mobile",
+                "StudentIdentities",
+                "StudentNationalities"];
 
             Promise.all(configCodes.map(code => userSvc.getConfigItemValue(code)))
                 .then(configValues => {
@@ -1207,17 +1219,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             console.error('StudentController.error.identity_number');
             hasError = true;
         }
-        if (!userCtrl.contactSkipped &&
-            userCtrl.contactsRequired === 'required' &&
-            !userData.contact_type_id) {
-            userCtrl.error.contact_type_id = 'This field cannot be left empty';
+        if (!userCtrl.mobileSkipped &&
+            userCtrl.mobileRequired === 'required' &&
+            !userData.mobile_number) {
+            userCtrl.error.mobile_number = 'This field cannot be left empty';
             console.error('StudentController.error.contact_type_id');
             hasError = true;
         }
-        if (!userCtrl.contactSkipped &&
-            userCtrl.contactsRequired === 'required' &&
-            !userData.contact_value) {
-            userCtrl.error.contact_value = 'This field cannot be left empty';
+        if (!userCtrl.emailSkipped &&
+            userCtrl.emailRequired === 'required' &&
+            !userData.email) {
+            userCtrl.error.email = 'This field cannot be left empty';
             console.error('StudentController.error.contact_value');
             hasError = true;
         }
