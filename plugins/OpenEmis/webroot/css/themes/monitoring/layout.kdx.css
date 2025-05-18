@@ -1,0 +1,30 @@
+/* 
+Monitoring Theme for Kdx: v.1.0.0
+Product Color: #663399
+Darker Shade Color: #47246B
+*/
+
+
+/* PRODUCT COLOR */
+
+.kdx-slider .kdx-slider-track-fill,
+.kdx-slider .kdx-slider-thumb,
+.kdx-slider .kdx-sliderthumb:before,
+.kdx-slider .btn {
+    background-color: #663399 !important;
+}
+
+
+.kdx-mindmap .kdx-mindmap-node.kdx-mindmap-node-active .kdx-mindmap-node-wrapper,
+.kdx-mindmap .kdx-mindmap-link.kdx-mindmap-link-active {
+    stroke: #663399 !important;
+}
+
+.kdx-mindmap #arrowEndActive.kdx-mindmap-link-active,
+.kdx-mindmap #arrowStartActive.kdx-mindmap-link-active {
+    fill: #663399 !important;
+}
+
+.kdx-load-page .kdx-loader {
+    border-top: 5px solid #663399 !important;
+}

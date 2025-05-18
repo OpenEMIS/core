@@ -1,0 +1,341 @@
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* ------------------------for search button left side---------------------------------- */
+.kdx-toolbar .kdx-toolbar-right {
+  position: absolute;
+  right: 779px;
+  max-width: 340px;
+  text-align: right;
+  transition: all 0.3s ease-in-out;
+}
+
+/*------------------------------- Header Button Radius --------------------------------------*/
+.kdx-toolbar .kdx-toolbar-left .btn:first-child {
+  border-left-width: 1px !important;
+  /* border-radius: 5px; */
+}
+
+.autoTableHeight .stg-theme {
+  /* height: auto !important; */
+  min-height: auto !important;
+}
+
+kd-view .section-header {
+  display: none !important;
+}
+
+/* ---------------------- copy of footer -----------------------*/
+footer {
+  padding: 10px !important;
+  border-top: 1px solid #3d4047 !important;
+  font-size: 11px !important;
+}
+
+
+/* ---------------------- copy of newStyle.css -----------------------*/
+.left-pane,
+.right-pane {
+  position: absolute !important;
+}
+
+.ag-body-viewport.ag-layout-normal.ag-row-no-animation {
+  margin-top: 38px !important;
+}
+.ag-body-viewport.ag-layout-normal.ag-row-no-animation.all-days {
+  margin-top: 70px !important;
+}
+
+.ui-menu.ui-widget.ui-widget-content.ui-corner-all.ui-menu-dynamic.ui-shadow {
+  display: block !important;
+}
+
+/* Header user icon */
+a.btn {
+  background: no-repeat !important;
+}
+
+bg-pane#leftPane {
+  width: 177px !important;
+  overflow: auto;
+  opacity: 1 !important;
+}
+
+bg-pane#rightPane {
+  left: 177px;
+  padding-left: 15px;
+  border-left: 1px solid #DDD;
+  right: inherit !important;
+}
+
+.kdx-toolbar-left {
+  height: 100%;
+  border-radius: 5px;
+}
+
+button.btn.btn-icon.btn-xs {
+  border-right: 1px solid !important;
+  border-color: #DDDDDD !important;
+}
+
+.ng-tabs ul,
+.scroll_tabs_container div.scroll_tab_inner {
+  height: 36px !important;
+}
+
+button.btn.btn-icon.btn-xs {
+  max-height: 32px !important;
+}
+
+.kdx-toolbar .btn i {
+  position: absolute;
+  top: 21%;
+  left: 30%;
+}
+
+button.btn.btn-icon.btn-xs {
+  height: 100%;
+  border: none;
+}
+
+i.fa.fa-question-circle {
+  font-size: 20px !important;
+}
+
+.content-wrapper {
+  padding: 0px;
+}
+
+.menu-btn {
+  z-index: 3;
+}
+
+/* Splitter adjustment design start*/
+.hideLeftPane {
+  left: -16px !important;
+}
+
+.showLeftPane {
+  left: 250px !important;
+}
+
+.leftMenuSplitter {
+  left: 15px;
+}
+
+/* Splitter adjustment design end*/
+
+/* Remove blank space for right panal */
+kd-splitter.kdx-split-panes.has-page-header.has-breadcrumb {
+  top: -10px !important;
+}
+
+.kdx-item-icon {
+  background: none !important;
+  border: 0 !important;
+  /* color: #999; */
+  padding: 0 10px px;
+  font-size: 78px;
+}
+
+
+/* Adjust student attendance reason section */
+
+.input-select-wrapper {
+  display: block !important;
+}
+
+/* ------------------ for  List padding ----------------------------- */
+
+.ag-root-wrapper-body.ag-layout-normal.ag-focus-managed {
+  padding-top: 0px !important;
+}
+
+/* ------------------------for search button left side---------------------------------- */
+
+.kdx-toolbar .kdx-toolbar-right {
+  position: relative;
+  right: -45px;
+  max-width: 340px;
+  text-align: right;
+  transition: all 0.3s ease-in-out;
+}
+
+/*------------------------------- Header Button Radius --------------------------------------*/
+
+.kdx-toolbar .kdx-toolbar-left .btn:first-child {
+  border-left: 1px solid !important;
+  border-color: #DDDDDD !important;
+  /* border-radius: 5px; */
+}
+
+/* -------------------- Set header in proper align ---------------------------*/
+.navbar {
+  padding: 0px !important;
+}
+
+/* ---------------------- Set left icon proper align ------------------------- */
+
+.btn-group,
+.btn-group-vertical {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.kd-grid:before {
+  color: #FFFFFF !important;
+}
+
+.dropdown-toggle:after {
+  display: none !important;
+}
+
+a.btn {
+  padding: 6px 10px !important;
+}
+
+button.btn.dropdown-toggle {
+  padding: 6px 10px !important;
+}
+
+/* ---------------------- Breadcrumb design ------------------------- */
+
+.breadcrumb {
+  background: #FFFFFF !important;
+  padding: 8px 1rem !important;
+  margin-bottom: 0px !important;
+}
+
+/* ---------------------- Show side panel ------------------------- */
+
+.collapse.in {
+  display: block !important;
+  visibility: visible !important;
+}
+
+.collapse {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+
+/* button.btn.btn-icon {
+color: #999 !important;
+}
+
+button.btn.btn-icon:hover,
+button.btn.btn-icon:active,
+button.btn.btn-icon:focus {
+background-color: #999 !important;
+color: #FFFFFF !important;
+} */
+
+/* ---------------------- Header dropdown menu ------------------------- */
+
+.dropdown-menu.product-lists {
+  position: fixed;
+  right: 37px !important;
+}
+
+ul.dropdown-menu.more-menu {
+  position: fixed;
+}
+
+/* ----------------- To display table ----------------- */
+@media only screen and (min-width: 1025px) {
+  .assessment-student-table-data {
+    position: unset !important;
+    height: 100vh !important;
+  }
+
+  .student-meal-table-result {
+    display: flex;
+    /* margin-top: 30px; */
+  }
+}
+
+.kdx-table,
+.kdx-multiselect-table {
+  .stg-theme {
+    min-height: 1000px !important;
+  }
+}
+
+/* ---------------- Dropdown for assessment term ----------------- */
+.academic-term-section {
+  margin: 10px 15px 0px 15px;
+  background: rgba(204, 204, 204, 0.3) !important;
+  border: 1px solid #DDD;
+  height: 42px;
+}
+
+.select-academic-term {
+  margin: 8px;
+  height: 26px;
+  width: 20% !important;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 11px;
+  border-color: #CCC !important;
+  background-color: #FFFFFF !important;
+}
+
+.select-academic-term:focus-visible {
+  border: 1px solid #CCC;
+  border-color: #CCC !important;
+}
+
+ul.dropdown-menu.more-menu {
+  position: fixed;
+}
+
+
+
+
+/*------------------------------- Header Button Radius --------------------------------------*/
+.kdx-toolbar .kdx-toolbar-left .btn:first-child {
+  border-left-width: 1px !important;
+  /* border-radius: 5px; */
+}
+
+.autoTableHeight .stg-theme {
+  /* height: auto !important; */
+  min-height: auto !important;
+}
+
+
+
+
+
+
+
+
+.ng-tabs ul,
+.scroll_tabs_container div.scroll_tab_inner {
+  height: 36px !important;
+}
+
+button.btn.btn-icon.btn-xs {
+  height: 100%;
+  border: none;
+}
+
+/* ---------------------- Set left icon proper align ------------------------- */
+
+.btn-group,
+.btn-group-vertical {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+a.btn {
+  padding: 6px 10px !important;
+}
+
+/* .kdx-tabs .scroll-left, .kdx-tabs .scroll-right {
+  position: absolute !important;
+  width: 25px !important;
+  height: 35px !important;
+  font-size: 0 !important;
+  z-index: 1 !important;
+} */

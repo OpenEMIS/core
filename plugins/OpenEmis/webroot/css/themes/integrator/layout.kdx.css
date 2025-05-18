@@ -1,0 +1,30 @@
+/* 
+Integrator Theme for Kdx: v.1.0.0
+Product Color: #CC6699
+Darker Shade Color: #A7527A
+*/
+
+
+/* PRODUCT COLOR */
+
+.kdx-slider .kdx-slider-track-fill,
+.kdx-slider .kdx-slider-thumb,
+.kdx-slider .kdx-sliderthumb:before,
+.kdx-slider .btn {
+    background-color: #CC6699 !important;
+}
+
+
+.kdx-mindmap .kdx-mindmap-node.kdx-mindmap-node-active .kdx-mindmap-node-wrapper,
+.kdx-mindmap .kdx-mindmap-link.kdx-mindmap-link-active {
+    stroke: #CC6699 !important;
+}
+
+.kdx-mindmap #arrowEndActive.kdx-mindmap-link-active,
+.kdx-mindmap #arrowStartActive.kdx-mindmap-link-active {
+    fill: #CC6699 !important;
+}
+
+.kdx-load-page .kdx-loader {
+    border-top: 5px solid #CC6699 !important;
+}

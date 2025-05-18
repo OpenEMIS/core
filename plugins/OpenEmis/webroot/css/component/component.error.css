@@ -1,0 +1,120 @@
+/* ERROR v.1.1.2 */
+
+.error-wrapper {
+    padding: 20px;
+    min-height: 145px;
+    width: 50%;
+    margin: 0 auto;
+}
+
+.error-icon {
+    width: 100%;
+    display: inline-block;
+    float: left;
+    margin: 0 auto;
+    text-align: center;
+    padding: 20px;
+}
+
+.error-icon i {
+    font-size: 200px;
+    color: #999;
+}
+
+.error-text,
+.error-buttons {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.error-text h5 {
+    color: #CC5C5C;
+    margin: 15px 0;
+    line-height: 1.4em;
+}
+
+.error-text a {
+    color: #CC5C5C;
+    text-decoration: underline;
+}
+
+.error-text a:hover {
+    text-decoration: none;
+}
+
+/* Form Error */
+
+.image-error {
+    clear: both;
+    display: block;
+}
+
+.image-error .error-message {
+    margin: 0;
+    display: block;
+}
+
+.error-message,
+.error-message p {
+    font-size: 11px;
+}
+
+.error-message {
+    display: inline-block;
+    color: #CC5C5C;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    margin-left: 10px;
+    vertical-align: top;
+    padding: 7px 0;
+}
+
+.form-error,
+input.form-error,
+textarea.form-error,
+.error input,
+.error textarea,
+.error .input-select-wrapper,
+.files.box.error {
+    border-color: #CC5C5C !important;
+}
+
+.string {
+    clear: both;
+    display: block;
+}
+
+.required label,
+.required input {
+    display: inline-block;
+}
+
+.required label:before {
+    content: "*";
+    font-size: 14px;
+    color: #CC5C5C;
+    margin-left: -9px;
+    margin-right: 3px;
+}
+
+input[readonly] {
+    color: #999;
+    cursor: not-allowed;
+}
+
+/*==========  Non-Mobile First Method  ==========*/
+
+/* Small Devices, Tablets */
+@media only screen and (max-width : 800px) {
+    .error-wrapper {
+        width: 100%;
+    }
+}
+
+/* RTL Error */
+
+.rtl .error-buttons a:first-child .fa-chevron-left:before {
+    content: "\f054";
+}

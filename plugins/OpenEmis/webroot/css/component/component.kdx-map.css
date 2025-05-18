@@ -1,0 +1,21 @@
+/* KDX-MAP v.1.0.0 */
+.kdx-map .chart-container {
+    position: relative;
+    top: unset;
+    left: unset;
+    right: unset;
+    bottom: unset;
+}
+
+.kdx-map .chart-container div {
+    height: auto;
+}
+
+.kdx-map .chart-container .leaflet-popup-tip-container {
+    height: 20px;
+}
+
+
+.kdx-map .chart-container .leaflet-popup-tip-container .leaflet-popup-tip {
+    height: 17px;
+}

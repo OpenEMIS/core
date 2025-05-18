@@ -1,0 +1,117 @@
+@charset "UTF-8";
+
+/* Filter V1.0.0 */
+
+.kdx-filter {
+    .form-horizontal-wrapper {
+        border: $lightGreyBorder;
+        background: rgba(204, 204, 204, 0.3)!important;
+        margin-bottom: $margin20;
+
+        .form-row {
+            width: 25%;
+            display: inline-block;
+            padding: $padding5 $padding10;
+            vertical-align: top;
+
+            @media #{$tabletLandscape} {
+                width: 33.33%;
+            }
+
+            @media #{$tabletPortrait} {
+                display: block;
+                width: 100%;
+            }
+
+            .kdx-text-input,
+            input,
+            .kdx-input-select-wrapper,
+            select,
+            .kdx-datepicker,
+            .kdx-timepicker {
+                width: 100%;
+                margin: $noMargin !important;
+            }
+
+            .input-selection-inline {
+                border: 0;
+                background: transparent;
+                padding: $noPadding;
+                margin: $noMargin;
+                width: 100%;
+            }
+
+            input {
+                @media #{$tabletLandscape} {
+                    width: 100% !important;
+                }
+            }
+
+            .kdx-tree-dropdown {
+                .treedropdown-input {
+                    background: white;
+                }
+            }
+
+            .kdx-input-select-wrapper {
+                position: relative;
+                padding: $noPadding !important;
+
+                @media #{$tabletLandscape} {
+                    width: 100% !important;
+                }
+
+                @media #{$tabletPortrait} {
+                    width: 100% !important;
+                }
+
+                select {
+                    background: white;
+                    position: relative;
+                    padding: $padding5 $padding25 $padding5 $padding10 !important;
+                    border: $greyCBorder;
+                    margin-bottom: $margin15;
+                    width: 100%!important;
+                    height: 30px;
+                    cursor: pointer;
+                    appearance: none;
+                    border-radius: 3px;
+
+                    &:focus {
+                        outline: none !important;
+                    }
+                }
+
+                &:after {
+                    border-left: 5px solid transparent;
+                    border-right: 5px solid transparent;
+                    border-top: 5px solid;
+                    color: #555;
+                    content: "";
+                    height: 0;
+                    margin-right: 14px;
+                    pointer-events: none;
+                    position: absolute;
+                    width: 0;
+                    right: -5px;
+                    top: 48%;
+                }
+            }
+        }
+    }
+}
+
+.rtl .kdx-filter .form-horizontal-wrapper {
+    .form-row {
+        .kdx-input-select-wrapper {
+            select {
+                padding: $padding5 $padding10 $padding5 $padding25 !important;
+            }
+
+            &:after {
+                right: auto;
+                left: 10px;
+            }
+        }
+    }
+}

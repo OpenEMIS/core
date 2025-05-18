@@ -1,0 +1,83 @@
+/* TAGS v.1.0.0 */
+
+tags-input {
+    width: 30% !important;
+    display: inline-block !important;
+    -webkit-border-radius: 3px;
+            border-radius: 3px;
+    border: 1px solid #CCC !important;
+}
+
+tags-input .host {
+    margin: 0 !important;
+}
+
+.tags {
+    width: 100% !important;
+    -webkit-border-radius: 3px !important;
+    border-radius: 3px !important;
+    border: 1px solid #DDD;
+    padding: 2px 10px !important;
+}
+
+tags-input .tags,
+tags-input .tags.focused {
+    box-shadow: inset 0px 0px 0 #CCC!important;
+    border: 0 !important;
+}
+
+tags-input .tags.focused,
+.ng-invalid .tags {
+    outline: 0;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    -webkit-border-radius: 3px !important;
+    border-radius: 3px !important;
+}
+
+.tags .focused {
+    -webkit-border-radius: 3px !important;
+    border-radius: 3px !important;
+}
+
+tags-input .tags .tag-item .remove-button:active,
+tags-input .tags .input.invalid-tag {
+    color: #CC5C5C !important;
+}
+
+tags-input .tags .input {
+    margin: 0 !important;
+}
+
+tags-input .tags .tag-item {
+    margin: 5px 5px 0 0 !important;
+}
+
+.tags .input {
+    border: 0 !important;
+    padding: 0 !important;
+}
+
+.tags .input,
+.tags .tag-item {
+    font-size: 12px !important;
+}
+
+.tags .tag-item {
+    background: #EEE !important;
+    color: #333 !important;
+    border: 1px solid #CCC !important;
+}
+
+.tags .tag-item .remove-button {
+    font-size: 14px !important;
+    opacity: 0.6;
+}
+
+.tags .tag-item .remove-button:hover {
+    opacity: 1;
+}
+
+.rtl tags-input .tags .tag-item {
+    margin: 5px 0px 0px 5px !important;
+}

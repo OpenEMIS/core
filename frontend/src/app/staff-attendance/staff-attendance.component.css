@@ -1,0 +1,37 @@
+.display-shift-error {
+    width: 80%;
+    height: 39px;
+    background-color: #5C82CC;
+    border: 1px solid #5C82CC;
+    border-radius: 5px;
+    color: white;
+    margin: 12px;
+    margin-left: 23px;
+}
+
+.time-record-save {
+    width: 80%;
+    height: 39px;
+    background-color: #77B576;
+    border: 1px solid #77B576;
+    border-radius: 5px;
+    color: white;
+    margin: 12px;
+    margin-left: 23px;
+}
+
+.shift-text{
+    font-size: 13px;
+    padding-left: 10px;
+    padding-top: 5px;
+}
+
+.close-icon-data {
+    color: #000;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+::ng-deep kd-view .section-header {
+    display: none !important;
+}
