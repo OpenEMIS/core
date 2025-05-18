@@ -50,6 +50,7 @@ class StudentAdmissionShell extends AlertShell
 
                 // Insert into alert log
                 $this->AlertLogs->insertStudentAdmissionAlertLog($rule->method, $rule->feature, $email, $subject, $message);
+//                Log::debug('Student Admission Alert Log: ' . $rule->method . ' - ' . $rule->feature . ' - ' . $email . ' - ' . $subject . ' - ' . $message, ['scope' => ['email']]);
         }
     }
 }

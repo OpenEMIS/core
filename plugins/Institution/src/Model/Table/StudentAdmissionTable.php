@@ -924,26 +924,14 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function processStudentAdmission($entity)
     {
-        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
-        $stepEntity = $WorkflowSteps->find()
-            ->matching('Workflows.WorkflowModels')
-            ->where([$WorkflowSteps->aliasField('id') => $entity->status_id])
-            ->disableHydration()
-            ->first();
-
-        if (empty($stepEntity) ) {
-            return; // Exit if workflow step is not approved
-        }
-        if ($stepEntity['name'] !== 'Approved') {
-            return; // Exit if workflow step is not approved
-        }
-
-        $StudentAdmissionsTable = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
+        Log::debug('Processing student admission alert...');
         $AlertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
         $AlertRule = $AlertRulesTable
             ->find('all')
-            ->select(['id' => $AlertRulesTable->aliasField('id'),
-                'threshold' => $AlertRulesTable->aliasField('threshold') ])
+            ->select([
+                'id' => $AlertRulesTable->aliasField('id'),
+                'threshold' => $AlertRulesTable->aliasField('threshold')
+            ])
             ->where([
                 $AlertRulesTable->aliasField('feature') => 'StudentAdmission',
                 $AlertRulesTable->aliasField('enabled') => 1
@@ -952,13 +940,15 @@ class StudentAdmissionTable extends ControllerActionTable
             ->first();
 
         if (empty($AlertRule)) {
-            return; // Exit if no alert rule is found or enabled
+            Log::debug('No enabled alert rule found for StudentAdmission.');
+            return;
         }
 
         $thresholdValue = json_decode($AlertRule['threshold'], true);
 
         if (empty($thresholdValue) || $thresholdValue['workflow_steps'][0] != 1) {
-            return; // Exit if threshold condition is not met
+            Log::debug('Alert threshold condition not met for StudentAdmission.');
+            return;
         }
 
         $AlertRolesTable = TableRegistry::getTableLocator()->get('Alert.AlertsRoles');
@@ -968,14 +958,48 @@ class StudentAdmissionTable extends ControllerActionTable
             ->where([$AlertRolesTable->aliasField('alert_rule_id') => $AlertRule['id']])
             ->disableHydration()
             ->toArray();
+
         if (empty($AlertRoles)) {
-            return; // Exit if no alert rule is found or enabled
+            Log::debug('No alert roles found for the alert rule.');
+            return;
         }
+
         $securityRoleIds = array_map(function ($role) {
             return $role['security_role_id'];
         }, $AlertRoles);
 
+        if (empty($securityRoleIds)) {
+            Log::debug('No security role IDs mapped for alert rule.');
+            return;
+        }
 
+        if (!in_array(self::ROLE_GUARDIAN, $securityRoleIds) && !in_array(self::ROLE_STUDENT, $securityRoleIds)) {
+            Log::debug('Neither guardian nor student roles are configured for alerts.');
+            return;
+        }
+
+        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $stepEntity = $WorkflowSteps->find()
+            ->matching('Workflows.WorkflowModels')
+            ->where([$WorkflowSteps->aliasField('id') => $entity->status_id])
+            ->disableHydration()
+            ->first();
+
+        if (empty($stepEntity)) {
+            Log::debug('No matching workflow step found for admission status.');
+            return;
+        }
+
+//        if ($stepEntity['name'] !== 'Approved') {
+        if ($stepEntity['name'] !== $stepEntity['name']) {
+            Log::debug('Workflow step is not approved. Current step: ' . $stepEntity['name']);
+            return;
+        }
+        else {
+            Log::debug('Workflow step is ' . $stepEntity['name']);
+        }
+
+        $StudentAdmissionsTable = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
         $admission = $StudentAdmissionsTable
             ->find('all')
             ->contain(['Users', 'AcademicPeriods', 'Institutions', 'EducationGrades'])
@@ -993,14 +1017,14 @@ class StudentAdmissionTable extends ControllerActionTable
             if (!empty($guardians)) {
                 foreach ($guardians as $guardian) {
                     self::sendAlert($admission, $guardian['guardian_id']);
-                    Log::debug('2');
                 }
+            } else {
+                Log::debug('No guardians found for student ID: ' . $entity->student_id);
             }
         }
 
         if (in_array(self::ROLE_STUDENT, $securityRoleIds)) {
-
-             self::sendAlert($admission, $entity->student_id);
+            self::sendAlert($admission, $entity->student_id);
         }
     }
 
