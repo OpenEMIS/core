@@ -529,12 +529,16 @@ class ProgrammesTable extends ControllerActionTable
 		$LabelTable = TableRegistry::get('Labels');
 		if ($field == 'name') {
 			return __('Name');
-		}elseif ($field == 'registration_number') {
+		}elseif ($field == 'registration_number') { //POCOR-9125, POCOR-9048
 		   $codeName = $LabelTable->find()->where(['module_name' =>'Institution-> Students-> Academic-> Programme' , 'field_name' =>'Registration Number'])->first();
-		   if($codeName != null){
-			  $codeName =  $codeName->name;
-		   }
-		   return  __((string)$codeName);
+		   if(empty($codeName->name)){
+					$fieldName = $LabelTable->find()->where(['module_name' =>'Institution-> Students-> Academic-> Programme' , 'field' =>'registration_number'])->first();
+					$fieldName =  $fieldName->field_name;
+					return  __((string)$fieldName);
+			}else{
+				$codeName =  $codeName->name;
+				return  __((string)$codeName);
+		 	}
 		}else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}

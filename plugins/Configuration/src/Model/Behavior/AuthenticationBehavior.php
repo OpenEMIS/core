@@ -107,9 +107,8 @@ class AuthenticationBehavior extends Behavior
             $authenticationType = $this->model->queryString('authentication_type', $authenticationTypeOptions);
             $this->model->advancedSelectOptions($authenticationTypeOptions, $authenticationType);
             $authenticationTypeOptions = array_values($authenticationTypeOptions);
-            $this->model->controller->set('authenticationTypeOptions', $authenticationTypeOptions);
         }//POCOR-7156 Ends
-       
+        $this->model->controller->set('authenticationTypeOptions', $authenticationTypeOptions);
         $controlElement = $toolbarElements[0];
         $controlElement['data'] = ['typeOptions' => $typeOptions];
         $controlElement['order'] = 1;
