@@ -1011,13 +1011,12 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $connection = ConnectionManager::get('default');
         if(empty($recordExist)){
 
-        $statement = $connection->prepare("INSERT INTO `institution_students_gpa` (`student_id`, `institution_id`, `academic_period_id`, `education_grade_id`, `education_grades_gpa_id`, `gpa`, `cumulative_gpa`, `created_user_id`, `created`)
+        $statement = $connection->prepare("INSERT INTO `institution_students_gpa` (`student_id`, `institution_id`, `academic_period_id`, `education_grade_id`, `education_grades_gpa_id`, `cumulative_gpa`, `created_user_id`, `created`)
         SELECT main_q.student_id
             ,main_q.institution_id
             ,main_q.academic_period_id
             ,main_q.education_grade_id
             ,ind_gpa.education_grades_gpa_id
-            ,IFNULL(ind_gpa.gpa_per_student, 0.00) gpa
             ,IFNULL(cum_gpa.cum_gpa_per_student, 0.00) cum_gpa
             ,$loginUserId AS created_user_id -- TO MAKE IT DYNAMIC BASED ON USER_ID WHO GENERATES THE GPA
             , CURRENT_TIMESTAMP() created
@@ -1271,7 +1270,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         ,main_q.academic_period_id
                         ,main_q.education_grade_id
                         ,ind_gpa.education_grades_gpa_id
-                        ,IFNULL(ind_gpa.gpa_per_student, 0.00) gpa
+                        
                         ,IFNULL(cum_gpa.cum_gpa_per_student, 0.00) cum_gpa
                         ,$loginUserId AS created_user_id -- TO MAKE IT DYNAMIC BASED ON USER_ID WHO GENERATES THE GPA
                         ,CURRENT_TIMESTAMP() created
@@ -1512,8 +1511,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 AND subq4.academic_period_id = institution_students_gpa.academic_period_id
                 AND subq4.education_grade_id = institution_students_gpa.education_grade_id
                 AND subq4.education_grades_gpa_id = institution_students_gpa.education_grades_gpa_id
-                SET institution_students_gpa.gpa = subq4.gpa
-                    ,institution_students_gpa.cumulative_gpa = subq4.cum_gpa;");
+                SET institution_students_gpa.cumulative_gpa = subq4.cum_gpa;");
             $statement->execute();
             //echo "<pre>"; print_r($statement); die;
         }

@@ -1163,12 +1163,12 @@ class NavigationComponent extends Component
                 ],
             ],
             // POCOR-9059[START]
-            // 'Institutions.VisitRequests.index' => [
-            //     'title' => 'Visits',
-            //     'parent' => 'Institutions.Institutions.index',
-            //     'selected' => ['Institutions.VisitRequests',
-            //         'Institutions.Visits']
-            // ],
+            'Institutions.VisitRequests.index' => [
+                'title' => 'Visits',
+                'parent' => 'Institutions.Institutions.index',
+                'selected' => ['Institutions.VisitRequests',
+                    'Institutions.Visits']
+            ],
             // POCOR-9059[END]
             'Institutions.Transport' => [
                 'title' => 'Transport',
