@@ -1,0 +1,18 @@
+<kd-progressloader *ngIf="displayLoading" configtype="small-spinner" [configvalue]="null"></kd-progressloader>
+<kd-pageheader [config]='pageheader'></kd-pageheader>
+<div class="m-3" *ngIf="displayTabs">
+    <kd-tabs [config]="tabsListHtml" type="html" (activeState)="_selectTabs($event)">
+        <div [ngSwitch]="_state">
+            <ng-container *ngFor="let tabList of tabsListHtml">
+                <div *ngSwitchCase="tabList.tabId">
+                    <ng-container *ngIf="_row.length >= 0">
+                        <kd-table #changetable [row]="_row" [column]="_column" [config]="_config" [api]="_tableApi"
+                            [editTable]="_editTable" [displayEditable]="_displayEditable"
+                            class="student-table-data"></kd-table>
+                    </ng-container>
+                </div>
+            </ng-container>
+            <div *ngSwitchDefault></div>
+        </div>
+    </kd-tabs>
+</div>

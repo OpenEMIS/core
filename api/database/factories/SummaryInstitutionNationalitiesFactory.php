@@ -1,0 +1,30 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\SummaryInstitutionNationalities;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+
+class SummaryInstitutionNationalitiesFactory extends Factory
+{
+    protected $model = SummaryInstitutionNationalities::class;
+
+    public function definition(): array
+    {
+
+
+        return [
+    'academic_period_id' => $this->faker->numberBetween(1, 1000),
+    'academic_period_name' => $this->faker->lexify(str_repeat("?", 150)),
+    'institution_id' => $this->faker->numberBetween(1, 1000),
+    'institution_code' => $this->faker->lexify(str_repeat("?", 150)),
+    'nationality_id' => $this->faker->numberBetween(1, 1000),
+    'nationality_name' => $this->faker->lexify(str_repeat("?", 150)),
+    'total_students' => $this->faker->numberBetween(1, 1000),
+    'total_students_female' => $this->faker->numberBetween(1, 1000),
+    'total_students_male' => $this->faker->numberBetween(1, 1000),
+];
+    }
+}

@@ -1,0 +1,103 @@
+@import "style.css";
+
+.kd-analyzer {
+    background-color: #CC3300;
+}
+
+.kd-community {
+    background-color: #00CCFF;
+}
+
+.kd-connect {
+    background-color: #666699;
+}
+
+.kd-construction {
+    background-color: #003366;
+}
+
+.kd-classroom {
+	background-color: #99CC00;
+}
+
+.kd-core {
+	background-color: #6699CC;
+}
+
+.kd-dashboard {
+	background-color: #990000;
+}
+
+.kd-datamanager {
+	background-color: #993366;
+}
+
+.kd-identity {
+	background-color: #6666FF;
+}
+
+.kd-insight {
+	background-color: #9966CC;
+}
+
+.kd-integrator {
+	background-color: #CC6699;
+}
+
+.kd-learning {
+    background-color: #0099FF;
+}
+
+.kd-logistics {
+	background-color: #003399;
+}
+
+.kd-modelling {
+	background-color: #FF3366;
+}
+
+.kd-monitoring {
+	background-color: #663399;
+}	
+
+.kd-school {
+	background-color: #3366CC;
+}
+
+.kd-styleguide {
+    background-color: #000000;
+}
+
+.kd-survey {
+	background-color: #009999;
+}
+
+.kd-visualizer {
+	background-color: #CC9933;
+}
+
+
+.kd-analyzer,
+.kd-community,
+.kd-connect,
+.kd-construction,
+.kd-classroom, 
+.kd-core,
+.kd-dashboard,  
+.kd-datamanager,
+.kd-identity,
+.kd-insight,
+.kd-integrator,
+.kd-learning,
+.kd-logistics,
+.kd-modelling,
+.kd-monitoring,
+.kd-school, 
+.kd-styleguide,
+.kd-survey,
+.kd-visualizer {
+	color: #FFF;
+	/*padding: 5px;*/
+	-webkit-border-radius: 8px;
+	        border-radius: 8px;
+}

@@ -1,0 +1,45 @@
+::ng-deep .section-header:nth-of-type(1) {
+    display: none !important;
+}
+
+::ng-deep .form-row:nth-of-type(1) {
+    display: block !important;
+}
+
+::ng-deep .kdx-popover-window:nth-of-type(2) {
+    position: absolute !important;
+}
+
+::ng-deep .kdx-popover-window:nth-of-type(3) {
+    position: absolute !important;
+    top: 281.7188px !important;
+    min-width: 283.75px !important;
+    max-width: 283.75px !important;
+}
+
+::ng-deep .kdx-popover-window .ui-tree-container {
+    max-height: 100% !important;
+}
+
+@media only screen and (min-width: 1025px) {
+    ::ng-deep .kdx-table.full-grid .kdx-ag-grid-wrapper,
+    .kdx-multiselect-table.full-grid .kdx-ag-grid-wrapper {
+        left: 15px !important;
+        padding-right: 5px !important;
+    }
+}
+
+::ng-deep .kdx-wizard .steps-bottom .previous-icon {
+    top: 8px !important;
+}
+
+::ng-deep .kdx-wizard .steps-bottom .next-icon {
+    top: 9px !important;
+}
+
+
+::ng-deep .section-header {
+    background-color: #FFF !important;
+    border: 0px !important;
+    padding: 0px !important;
+}

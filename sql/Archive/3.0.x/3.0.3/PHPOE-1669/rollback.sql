@@ -1,0 +1,1 @@
+DELETE FROM labels where module = 'StaffPositions' and field = 'security_user_id' and en = 'Staff';

@@ -1,0 +1,36 @@
+<?php
+namespace App\Controller;
+
+use Cake\Event\Event;
+use Cake\Utility\Inflector;
+
+class LocaleContentsController extends AppController
+{
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('Paginator');
+        $this->loadModel('Locales');
+        $this->loadModel('LocaleContents');
+        $this->loadModel('LocaleContentTranslations');
+    }
+
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    {
+        parent::beforeFilter($event);
+        $name = $this->name;
+        $action  = $this->request->getParam('action');
+        $actionName = __(Inflector::humanize($action));
+        $header = $name .' - '.$actionName;
+        $this->Navigation->addCrumb(__($name), ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $action]);
+        $this->Navigation->addCrumb($actionName);
+        $this->set('contentHeader', $header);
+        $this->set('selectedAction', $this->request->getParam('action'));
+
+    }
+
+    public function LocaleContents()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.LocaleContentsLanguage']);
+    }
+}

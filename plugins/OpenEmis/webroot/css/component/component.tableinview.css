@@ -1,0 +1,240 @@
+/* TABLE IN VIEW v.1.0.11 */
+
+.input-form-wrapper,
+.input .table-wrapper,
+.table-full-width {
+    display: inline-block;
+    width: -webkit-calc(80% - 15px);
+    width: -moz-calc(80% - 15px);
+    width: calc(80% - 15px);
+}
+
+.input-form-wrapper .table-in-view,
+.input-form-wrapper .table-wrapper,
+.nested-table .input-form-wrapper {
+    width: 100% !important;
+}
+
+.table-in-view {
+    padding: 0;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border: 1px solid #CCC;
+    clear: none;
+    overflow-x: scroll;
+    background-image: -webkit-gradient(linear, 0% 50%, 100% 50%, color-stop(0%, #ffffff), color-stop(100%, rgba(255, 255, 255, 0))), -webkit-gradient(linear, 100% 50%, 0% 50%, color-stop(0%, #ffffff), color-stop(100%, rgba(255, 255, 255, 0))), -webkit-gradient(linear, 0% 50%, 100% 50%, color-stop(0%, #dddddd), color-stop(100%, rgba(221, 221, 221, 0))), -webkit-gradient(linear, 100% 50%, 0% 50%, color-stop(0%, #dddddd), color-stop(100%, rgba(221, 221, 221, 0)));
+    background-image: -webkit-linear-gradient(left, #ffffff, rgba(255, 255, 255, 0)), -webkit-linear-gradient(right, #ffffff, rgba(255, 255, 255, 0)), -webkit-linear-gradient(left, #dddddd, rgba(221, 221, 221, 0)), -webkit-linear-gradient(right, #dddddd, rgba(221, 221, 221, 0));
+    background-image: -moz-linear-gradient(left, #ffffff, rgba(255, 255, 255, 0)), -moz-linear-gradient(right, #ffffff, rgba(255, 255, 255, 0)), -moz-linear-gradient(left, #dddddd, rgba(221, 221, 221, 0)), -moz-linear-gradient(right, #dddddd, rgba(221, 221, 221, 0));
+    background-image: -o-linear-gradient(left, #ffffff, rgba(255, 255, 255, 0)), -o-linear-gradient(right, #ffffff, rgba(255, 255, 255, 0)), -o-linear-gradient(left, #dddddd, rgba(221, 221, 221, 0)), -o-linear-gradient(right, #dddddd, rgba(221, 221, 221, 0));
+    background-image: linear-gradient(left, #ffffff, rgba(255, 255, 255, 0)), linear-gradient(right, #ffffff, rgba(255, 255, 255, 0)), linear-gradient(left, #dddddd, rgba(221, 221, 221, 0)), linear-gradient(right, #dddddd, rgba(221, 221, 221, 0));
+    background-position: 0 0, 100% 0, 0 0, 100% 0;
+    background-repeat: no-repeat;
+    background-color: white;
+    background-size: 6em 100%, 6em 100%, 1em 100%, 1em 100%;
+    background-attachment: local, local, scroll, scroll;
+    position: relative;
+}
+
+.table-in-view table th {
+    border-top: 0 !important;
+}
+
+.table-in-view .input-select-wrapper,
+.table-in-view input {
+    width: 150px !important;
+}
+
+.table-in-view input {
+    padding-right: 30px;
+}
+
+.table-in-view tbody input {
+    background: transparent;
+}
+
+.table-in-view .btn-reset {
+    margin-left: -20px !important;
+    padding: 6px 0;
+}
+
+.table-toolbar {
+    margin: 10px;
+}
+
+.input .table-toolbar {
+    margin: 0 !important;
+}
+
+.table-in-view .table thead,
+.table-in-view .table thead tr,
+.table-in-view .table tfoot {
+    border-left: 0 !important;
+    border-right: 0 !important;
+}
+
+.table-in-view tfoot td {
+    border-top: 1px solid #DDD !important;
+}
+
+.table-in-view tfoot td {
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+}
+
+.table-in-view .input-select-wrapper {
+    min-width: 100%;
+}
+
+.table-in-view .table >:first-child >:first-child >:first-child,
+.table-in-view .table >:first-child >:first-child >:last-child {
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    border-radius: 0;
+}
+
+.table-in-view .table >:first-child >:first-child >:first-child {
+    border-left: 0;
+}
+
+.table-in-view .table >:first-child >:first-child >:last-child {
+    border-right: 0;
+}
+
+/*.table-in-view .table tbody tr:last-child td {
+    border-bottom: 0;
+}*/
+
+.table-in-view td.center .check-input input,
+.table-in-view td.center .check-input {
+    min-width: inherit !important;
+    width: 18px !important;
+}
+
+.table-in-view.no-border-radius {
+    -webkit-border-radius: 0 !important;
+    border-radius: 0 !important;    
+}
+
+.nested-table {
+    border-left: 5px solid #CCC;
+}
+
+.nested-table .input-form-wrapper {
+    width: 100%;
+}
+
+.nested-table .input-form-wrapper .input-select-wrapper {
+    width: 25% !important;
+    min-width: inherit;
+    vertical-align: top;
+}
+
+.nested-table .table-toolbar select {
+    padding: 7px 25px 8px 10px !important;
+    height: 31px;
+}
+
+.nested-table .table-in-view {
+    border-right: 0;
+}
+
+.nested-table .action-toggle {
+    float: right;
+}
+
+.nested-table .action-button {
+    display: inline;
+}
+
+.nested-table .padding {
+    padding: 30px 0 30px 10px;
+}
+
+/* .table-toolbar .action-dropdown .dropdown-arrow,
+.nested-table .action-dropdown .dropdown-arrow {
+    right: 10px !important;
+} */
+
+@media only screen and (max-width: 800px) {
+   .table-toolbar:first-child .input-select-wrapper {
+        width: 50% !important;
+    } 
+}
+
+@media (max-width: 480px) {
+    .table-in-view,
+    .table-full-width,
+    .table-wrapper {
+        width: 100% !important;
+        clear: both;
+    }
+}
+
+
+/* RTL */
+
+.rtl .table-in-view {
+    direction: ltr;
+}
+
+.rtl .table-in-view > table {
+    direction: rtl;
+}
+
+.rtl .table-in-view input {
+    padding-left: 30px;
+    padding-right: 5px !important;
+}
+
+.rtl .table-in-view .btn-reset,
+.rtl .table-in-view .btn-reset:hover {
+    margin-left: 0 !important;
+    margin-right: -20px !important;
+    padding-left: 0 !important;
+}
+
+.rtl .table-in-view table th,
+.rtl .table-in-view table td {
+    position: relative;
+}
+
+.rtl .nested-table {
+    border-left: 1px solid #CCC;
+    border-right: 5px solid #CCC;
+}
+
+.rtl .nested-table .table-in-view {
+    border-left: 0;
+}
+
+.rtl .nested-table .action-toggle {
+    float: left;
+}
+
+.rtl .nested-table .padding {
+    padding: 20px 10px 20px 0;
+}
+
+.rtl .nested-table .table-toolbar select {
+    padding: 5px 10px 6px 25px !important;
+}
+
+.rtl .nested-table .table > :first-child > :first-child > :last-child {
+    border-left: 0 !important;
+}
+
+.rtl .table-toolbar .action-dropdown {
+    left: 0 !important;
+    right: auto !important;
+}
+
+.rtl .table-toolbar .action-dropdown .dropdown-arrow {
+    left: 3px;
+}
+
+.rtl .table-toolbar .btn-default,
+.rtl .nested-table .btn-default {
+    font-size: 12px !important;
+}
