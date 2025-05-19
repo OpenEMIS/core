@@ -1398,6 +1398,15 @@ class InstitutionClassStudentsTable extends AppTable
         $assessment_item_id = preg_replace("/[^a-fA-F0-9\-]/", "", $options['assessment_item_id']);  // Still using assessment_item_id for reference
         $assessment_period_id = intval($options['assessment_period_id']);
         $institution_class_id = intval($options['institution_class_id']);
+
+        //POCOR-9114 -- START Check if the assessment_period_ids are multiple
+        if (!empty($options['assessment_period_combo'])) {
+            $assessment_period_ids = array_filter(
+                array_map('intval', explode('_', $options['assessment_period_combo']))
+            );
+        }
+        //POCOR-9114 -- END
+
 //        Log::debug(print_r([$assessment_item_id, $assessment_period_id, $institution_class_id], true));
         $where = [
             'institution_classes.id = ' . $institution_class_id,
@@ -1413,7 +1422,8 @@ class InstitutionClassStudentsTable extends AppTable
                     $this->aliasField('student_id') . ' = assessment_item_student_exemptions.student_id',
                     $this->aliasField('institution_class_id') . ' = assessment_item_student_exemptions.institution_class_id',
                     $this->aliasField('education_grade_id') . ' = assessment_item_student_exemptions.education_grade_id',
-                    'assessment_item_student_exemptions.assessment_period_id = ' . $assessment_period_id
+                    //'assessment_item_student_exemptions.assessment_period_id = ' . $assessment_period_id
+                    'assessment_item_student_exemptions.assessment_period_id IN (' . implode(',', $assessment_period_ids) . ')' //POCOR-9114
                 ]
             )
             ->leftJoin(
