@@ -126,14 +126,23 @@ class PositionSummaryTable extends AppTable
             ->andWhere([$this->aliasField('institution_id !=') => 0]) //POCOR-6777
             ->group(['institution_id', $this->aliasField('staff_position_title_id')])
             ->order(['institution_name']);
+        //POCOR-9124 start
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-
                 $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
                 $InstitutionPositions = TableRegistry::get('institution_positions');
                 $Staff = TableRegistry::get('Security.Users');
                 $Genders = TableRegistry::get('User.Genders');
-                //POCOR-9124 start 
+
+                $male_occupancy = [];
+                $female_occupancy = [];
+
+                if (!isset($row['institution_id'])) {
+                    $row['male_count'] = '0';
+                    $row['female_count'] = '0';
+                    return $row;
+                }
+
                 $instCond = is_null($row['institution_id'])
                     ? [$InstitutionPositions->aliasField('institution_id') . ' IS' => null]
                     : [$InstitutionPositions->aliasField('institution_id') => $row['institution_id']];
@@ -147,89 +156,59 @@ class PositionSummaryTable extends AppTable
                         $InstitutionPositions->aliasField('id'),
                         $InstitutionPositions->aliasField('staff_position_title_id')
                     ])
-                    ->where($instCond)
-                    ->where($titleCond)
+                    ->where(array_merge($instCond, $titleCond))
                     ->toArray();
 
-                //POCOR-9124 end
-                $positionIds = [];
-                foreach ($positionData as $data) {
-                    $positionIds[] = $data->id;
+                $positionIds = collection($positionData)->extract('id')->toList();
+
+                
+                $institutionIdCond = is_null($row['institution_id'])
+                    ? [$InstitutionStaff->aliasField('institution_id') . ' IS' => null]
+                    : [$InstitutionStaff->aliasField('institution_id') => $row['institution_id']];
+
+                $baseQuery = $InstitutionStaff
+                    ->find()
+                    ->select([
+                        'gender_id' => $Genders->aliasField('id'),
+                        'gender' => $Genders->aliasField('name'),
+                    ])
+                    ->where($institutionIdCond)
+                    ->innerJoin(
+                        [$Staff->getAlias() => $Staff->getTable()],
+                        [
+                            $Staff->aliasField('id = ') . $InstitutionStaff->aliasField('staff_id')
+                        ]
+                    )
+                    ->innerJoin(
+                        [$Genders->getAlias() => $Genders->getTable()],
+                        [
+                            $Genders->aliasField('id = ') . $Staff->aliasField('gender_id')
+                        ]
+                    );
+
+                if (!empty($positionIds)) {
+                    $baseQuery->andWhere([
+                        $InstitutionStaff->aliasField('institution_position_id') . ' IN' => $positionIds
+                    ]);
                 }
 
-                //Start:POCOR-6777
-                if (!empty($positionIds)) {
-                    $staffData = $InstitutionStaff
-                        ->find()
-                        ->select([
-                            'gender_id' => $Genders->aliasField('id'),
-                            'gender' => $Genders->aliasField('name'),
-                        ])
-                        ->where([
-                            $InstitutionStaff->aliasField('institution_id') => $row['institution_id'],
-                            $InstitutionStaff->aliasField('institution_position_id') . ' IN' => $positionIds
-                        ])
-                        ->innerJoin(
-                            [$Staff->getAlias() => $Staff->getTable()],
-                            [
-                                $Staff->aliasField('id = ') . $InstitutionStaff->aliasField('staff_id')
-                            ]
-                        )
-                        ->innerJoin(
-                            [$Genders->getAlias() => $Genders->getTable()],
-                            [
-                                $Genders->aliasField('id = ') . $Staff->aliasField('gender_id')
-                            ]
-                        )
-                        ->toArray();
-                } else { //END:POCOR-6777
+                $staffData = $baseQuery->toArray();
 
-                    $staffData = $InstitutionStaff
-                        ->find()
-                        ->select([
-                            'gender_id' => $Genders->aliasField('id'),
-                            'gender' => $Genders->aliasField('name'),
-                        ])
-                        ->where([
-                            $InstitutionStaff->aliasField('institution_id') => $row['institution_id']
-                        ])
-                        ->innerJoin(
-                            [$Staff->getAlias() => $Staff->getTable()],
-                            [
-                                $Staff->aliasField('id = ') . $InstitutionStaff->aliasField('staff_id')
-                            ]
-                        )
-                        ->innerJoin(
-                            [$Genders->getAlias() => $Genders->getTable()],
-                            [
-                                $Genders->aliasField('id = ') . $Staff->aliasField('gender_id')
-                            ]
-                        )
-                        ->toArray();
-                }    //POCOR-6777
                 foreach ($staffData as $staff) {
                     if ($staff->gender_id == 1) {
                         $male_occupancy[] = $staff->gender;
-                    }
-                    if ($staff->gender_id == 2) {
+                    } elseif ($staff->gender_id == 2) {
                         $female_occupancy[] = $staff->gender;
                     }
                 }
 
-                $male_count = 0;
-                $female_count = 0;
-                if (!empty($male_occupancy)) {
-                    $male_count = count($male_occupancy);
-                }
-                if (!empty($female_occupancy)) {
-                    $female_count = count($female_occupancy);
-                }
+                $row['male_count'] = count($male_occupancy);
+                $row['female_count'] = count($female_occupancy);
 
-                $row['male_count'] = !empty($male_count) ? $male_count : ' 0';
-                $row['female_count'] = !empty($female_count) ? $female_count : ' 0';
                 return $row;
             });
         });
+         //POCOR-9124 end
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
