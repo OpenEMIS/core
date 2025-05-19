@@ -18,8 +18,6 @@ use Page\Traits\OptionListTrait;
 use Cake\I18n\I18n;
 use Cake\Database\Schema\TableSchema;
 use Cake\Http\ServerRequest;
-use Cake\I18n\FrozenDate;
-use Cake\Log\Log;
 
 class AppTable extends Table
 {
@@ -190,25 +188,20 @@ class AppTable extends Table
         return $this->formatDate($dateObject);
     }
 
-    // POCOR-9109
-    public function formatDate($dateObject): string
+    /**
+     * For calling from view files
+     * @param  Time   $dateObject [description]
+     * @return [type]             [description]
+     */
+    public function formatDate($dateObject)
     {
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $format = $ConfigItem->value('date_format') ?: 'Y-m-d';
-
-        try {
-            if (is_string($dateObject)) {
-                $date = new FrozenDate($dateObject);
-            } elseif ($dateObject instanceof \DateTimeInterface) {
-                $date = $dateObject;
-            } else {
-                throw new \InvalidArgumentException('Invalid date object');
-            }
-            return $date->format($format);
-        } catch (\Exception $e) {
-            Log::debug('Date formatting failed: ' . $e->getMessage());
-            return 'Invalid date';
+        $format = $ConfigItem->value('date_format');
+        $value = '';
+        if (is_object($dateObject)) {
+            $value = $dateObject->format($format);
         }
+        return $value;
     }
 
     // Event: 'ControllerAction.Model.onFormatTime'
