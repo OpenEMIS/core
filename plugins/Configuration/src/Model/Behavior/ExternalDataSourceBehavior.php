@@ -200,13 +200,13 @@ class ExternalDataSourceBehavior extends Behavior
 
     public function openEMISIdentityExternalSource(&$attribute)
     {
-        $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text'];
-        $attribute['refresh_token'] = ['label' => 'Refresh Token', 'type' => 'textarea'];
-        $attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
-        $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
+        $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text', 'required' => true];
+        $attribute['refresh_token'] = ['label' => 'Refresh Token', 'type' => 'textarea', 'required' => true];
+        $attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text', 'required' => true];
+        $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text', 'required' => true];
         // $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
         // $attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
-        $attribute['record_uri'] = ['label' => 'Record URI', 'type' => 'text'];
+        $attribute['record_uri'] = ['label' => 'Record URI', 'type' => 'text', 'required' => true];
     }
 
     public function openEMISIdentityValidation($attributes)

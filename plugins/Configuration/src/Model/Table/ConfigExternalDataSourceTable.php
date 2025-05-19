@@ -46,6 +46,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $alias = $this->getAlias(); // POCOR-8849
         $data = $requestData[$alias];
         $source = $data['label'];
+        if(!empty($data)){
+//            dd($source);
+        }
         if ($source == 'Jordan CSPD') {
             return $validator
                 ->requirePresence('url')
@@ -64,10 +67,15 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         } elseif ($source == 'OpenEMIS Core') {
             return $validator
                 ->requirePresence('username')
-//                ->requirePresence('password')
-                ->requirePresence('api_url');
-//                ->requirePresence('application_id')
-//                ->requirePresence('secret_code');
+                ->notEmptyString('username')
+                ->requirePresence('password')
+                ->notEmptyString('password')
+                ->requirePresence('api_url')
+                ->notEmptyString('api_url')
+                ->notEmptyString('api_key')
+                ->requirePresence('api_key')
+                ->notEmptyString('identity_type_id')
+                ->requirePresence('identity_type_id');
         } else {//POCOR-6930, 7981 Ends
             return $validator
                 ->requirePresence('client_id')
@@ -164,6 +172,11 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
     public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
     {
+        $source = $entity->name;
+
+        $this->field('value', ['visible' => true, 'entity' => $entity]); // POCOR-7981
+        $this->field('value_selection', ['visible' => false]); //POCOR-7981 not used field
+//
         $tableHeaders = [__('Attribute Name'), __('Value')];
         $tableCells = [];
         $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes'); // POCOR-8849
@@ -185,7 +198,24 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             if (isset($attributes['password'])) { // POCOR-8849
                 $attributes['password'] = '*****'; // POCOR-8849
             } // POCOR-8849
+            if ($source == 'OpenEMIS Core') { // POCOR-9118 start
 
+                unset($attributes['first_name_mapping']);
+                unset($attributes['middle_name_mapping']);
+                unset($attributes['third_name_mapping']);
+                unset($attributes['last_name_mapping']);
+                unset($attributes['date_of_birth_mapping']);
+                unset($attributes['external_reference_mapping']);
+                unset($attributes['identity_number_mapping']);
+                unset($attributes['nationality_mapping']);
+                unset($attributes['gender_mapping']);
+                unset($attributes['identity_type_mapping']);
+                unset($attributes['address_mapping']);
+                unset($attributes['postal_mapping']);
+                unset($attributes['public_key']);
+                unset($attributes['user_endpoint_uri']);
+                // POCOR-9118 end
+            }
             foreach ($attributes as $key => $obj) {
                 $rowData = [];
                 $rowData[] = __(Inflector::humanize($key));
@@ -215,6 +245,19 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $this->setExternalAttributes($attr['entity']);
         }
         // POCOR-7981 END
+
+        return $attr;
+    }
+
+    public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+
+        $IdentityTypesTable = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $identityTypes  = $IdentityTypesTable
+            ->find('list')
+            ->toArray();
+
+        $attr['options'] = $identityTypes;
 
         return $attr;
     }
@@ -284,14 +327,16 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $entity->api_key = $entity->getOriginal('api_key');
         }
         if (!empty($errors)) {
-            $errorMessage = 'Please enter the required details.';
+//            dd($errors);
+            $errorMessage = __('Please enter the required details.');
             //POCOR-7981:starts
             $error_prefix = __CLASS__ . ':' . __FILE__ . __FUNCTION__ . __LINE__;
             $this->log($error_prefix);
             $this->log($errorMessage);
-            $this->log($errors);
+            $this->log(print_r($errors,true));
             //POCOR-7981:ends
-            $this->Alert->error('general.externalSourceDataErr', ['reset' => true]);
+            $this->Alert->error($errorMessage, ['type' => 'string', 'reset' => true]);
+//            $event->stopPropagation();
         } else {//POCOR-6930 Ends
             $this->updateAttributes($source, $entity);
         }
@@ -305,10 +350,16 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $this->field('value_selection', ['visible' => false]); //POCOR-7981 not used field
         switch ($source) {
             case 'OpenEMIS Core':
-                $this->field('api_url', ['type' => 'string', 'required' => 'required']);
-                $this->field('username', ['type' => 'string', 'required' => 'required']);
-                $this->field('password', ['type' => 'password', 'required' => 'required', 'attr' => ['value' => ''], 'autocomplete' => 'off']);
-                $this->field('api_key', ['type' => 'password', 'required' => 'required',  'attr' => ['value' => ''], 'autocomplete' => 'off']);
+                $this->field('api_url', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
+                $this->field('username', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
+                $this->field('password', ['type' => 'password', 'required' => 'required', 'attr' => ['value' => '', 'required' => 'required'], 'autocomplete' => 'off']);
+                $this->field('api_key', ['type' => 'password', 'required' => 'required',  'attr' => ['value' => '', 'required' => 'required'], 'autocomplete' => 'off']);
+                $this->field('identity_type_id', [
+                    'type' => 'select',
+                    'after' => 'api_key',
+                    'entity' => $entity,
+                    'attr' => ['required' => 'required']
+                ]);
                 $this->field('first_name_mapping', ['type' => 'hidden']);
                 $this->field('middle_name_mapping', ['type' => 'hidden']);
                 $this->field('third_name_mapping', ['type' => 'hidden']);
