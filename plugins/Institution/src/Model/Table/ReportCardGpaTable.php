@@ -700,22 +700,22 @@ class ReportCardGpaTable extends ControllerActionTable
    public function onGetGpa(Event $event, Entity $entity)
     {
         $studentsGpa =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
-        $institutionId = !empty($entity['institution_id']) ? $entity['institution_id'] : $entity['institution_class']['institution_id']; //POCOR-8699
+        $gpa_id = $entity->education_grades_gpa_id;
+//        dd($entity);
         $query = $studentsGpa->find()->where([
             'student_id' => $entity->student_id,
             'education_grade_id' => $entity->education_grade_id,
-            'institution_id' => $institutionId,
+            'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id
         ]);
 
-        if(!empty($this->request->getQuery('gpa_name')) &&  $this->request->getQuery('gpa_name') != -1) {
-            $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') => $this->request->getQuery('gpa_name')]);
+        if(!empty($gpa_id)) {
+            $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') => $gpa_id]);
         } else {
-            $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') . ' IS NOT' => null]);
-
+            $query = $query->where([$studentsGpa->aliasField('education_grades_gpa_id') => -1]);
         } //POCOR-9038
         $findGpa = $query->first();
-        if ($findGpa !== null) {
+        if (is_numeric($findGpa->gpa)) {
             return number_format((float)$findGpa->gpa, 2);
         }
         return '';
@@ -1168,7 +1168,6 @@ class ReportCardGpaTable extends ControllerActionTable
     ";
 
 
-        Log::debug($sql);
         $result = $connection->execute($sql)->fetch('assoc');
 
         return $result['gpa'] ?? 0.00;
