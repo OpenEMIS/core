@@ -1098,7 +1098,7 @@ AND ind_gpa.education_grade_id = main_q.education_grade_id;
         AND ind_gpa.education_grade_id = $educationGradeId
     ";
 
-        Log::debug('SQL: ' . $sql);
+//        Log::debug('SQL: ' . $sql);
         Log::debug('GPA ID: ' . $educationGradeGpaId);
         Log::debug('Student ID: ' . $studentId);
         Log::debug('Institution ID: ' . $institutionId);
