@@ -989,9 +989,9 @@ INNER JOIN
                    ,assessment_item_results.education_subject_id
                    ,assessment_item_results.student_id
                    ,IFNULL(assessment_periods.academic_term, 1) AS academic_term
-                   ,100 AS total_mark
+                   ,IFNULL( ROUND( SUM(assessment_item_results.marks * assessment_periods.weight) / SUM(assessment_periods.weight),2 ),'' ) AS total_mark
             FROM assessment_item_results
-            INNER JOIN
+            LEFT JOIN
             (
                 -- Subquery to get latest grades
                 SELECT  assessment_item_results.academic_period_id
@@ -1051,7 +1051,7 @@ INNER JOIN
                      ,assessment_item_results.education_grade_id
                      ,assessment_item_results.education_subject_id
                      ,assessment_item_results.student_id
-                     ,IFNULL(assessment_periods.academic_term, 1)
+                     ,assessment_periods.academic_term
         ) subq2
         ON subq2.academic_period_id = institution_subject_students.academic_period_id
         AND subq2.education_grade_id = institution_subject_students.education_grade_id
