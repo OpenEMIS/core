@@ -1354,6 +1354,7 @@ GROUP BY main_q.student_id
 
             $statement->execute();
         }
+        }
     }
 
 }
