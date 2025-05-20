@@ -25,6 +25,7 @@
                 }
 
                 if (!empty($educationGradeOptions)) {
+
                     echo $this->Form->input('education_grade_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
@@ -38,6 +39,8 @@
                 }
 
                 if (!empty($classOptions)) {
+                    // Check if the institution_class_id is set in the request
+
                     echo $this->Form->input('class_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
@@ -45,21 +48,22 @@
                         'options' => $classOptions,
                         'default' => $institution_class_id,
                         'url' => $baseUrl,
-                        'data-named-key' => 'class_id',
+                        'data-named-key' => 'institution_class_id',
                         'data-named-group' => 'academic_period_id,education_grade_id'
                     ));
                 }
 
-                if (!empty($nameOption)) {
-                    echo $this->Form->input('gpa_name', array(
+                if (!empty($gpaOptions)) {
+
+                    echo $this->Form->input('gpa_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
-                        'options' => $nameOption,
+                        'options' => $gpaOptions,
                         'default' => $gpa_id,
                         'url' => $baseUrl,
-                        'data-named-key' => 'gpa_name',
-                        'data-named-group' => 'academic_period_id,education_grade_id,class_id'
+                        'data-named-key' => 'gpa_id',
+                        'data-named-group' => 'academic_period_id,education_grade_id,institution_class_id'
                     ));
                 }
             ?>
