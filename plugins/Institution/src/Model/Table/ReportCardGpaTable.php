@@ -1051,7 +1051,7 @@ INNER JOIN
                      ,assessment_item_results.education_grade_id
                      ,assessment_item_results.education_subject_id
                      ,assessment_item_results.student_id
-                     ,assessment_periods.academic_term
+                     ,IFNULL(assessment_periods.academic_term, 1)
         ) subq2
         ON subq2.academic_period_id = institution_subject_students.academic_period_id
         AND subq2.education_grade_id = institution_subject_students.education_grade_id
