@@ -948,7 +948,7 @@ INNER JOIN
            ,subq.institution_id
            ,subq.student_id
            ,ROUND(AVG(IFNULL(gpa_grading_options.point, 0)), 2) gpa_per_student
-           ,GROUP_CONCAT( CONCAT(subq.education_subject_id,'=',gpa_grading_options.point, '-' , subq.total_mark)) AS points_list
+           ,GROUP_CONCAT( CONCAT(subq.education_subject_id,'=',gpa_grading_options.point, '-' , subq.total_mark, '-', total_weight)) AS points_list
     FROM
     (
         -- Subquery to get academic period, education grade, subject, and total marks
@@ -960,7 +960,8 @@ INNER JOIN
                ,term_info.academic_term
                ,term_info.assessment_period_start_date
                ,term_info.assessment_period_end_date
-               ,IFNULL(subq2.total_mark,0) total_mark
+               ,term_info.total_weight
+               ,IFNULL((subq2.total_mark / term_info.total_weight),0) total_mark
         FROM institution_subject_students
         INNER JOIN
         (
@@ -970,6 +971,7 @@ INNER JOIN
                    ,IFNULL(assessment_periods.academic_term, 1) academic_term
                    ,MIN(assessment_periods.start_date) assessment_period_start_date
                    ,MAX(assessment_periods.end_date) assessment_period_end_date
+                   ,SUM(assessment_periods.weight) total_weight
             FROM assessment_periods
             INNER JOIN assessments
             ON assessments.id = assessment_periods.assessment_id
@@ -989,9 +991,9 @@ INNER JOIN
                    ,assessment_item_results.education_subject_id
                    ,assessment_item_results.student_id
                    ,IFNULL(assessment_periods.academic_term, 1) AS academic_term
-                   ,IFNULL( ROUND( SUM(assessment_item_results.marks * assessment_periods.weight) / SUM(assessment_periods.weight),2 ),'' ) AS total_mark
+                   ,IFNULL( ROUND( SUM(assessment_item_results.marks * assessment_periods.weight), 2 ), 0 ) AS total_mark
             FROM assessment_item_results
-            LEFT JOIN
+            INNER JOIN
             (
                 -- Subquery to get latest grades
                 SELECT  assessment_item_results.academic_period_id
@@ -1098,7 +1100,7 @@ AND ind_gpa.education_grade_id = main_q.education_grade_id;
         AND ind_gpa.education_grade_id = $educationGradeId
     ";
 
-//        Log::debug('SQL: ' . $sql);
+        Log::debug('SQL: ' . $sql);
         Log::debug('GPA ID: ' . $educationGradeGpaId);
         Log::debug('Student ID: ' . $studentId);
         Log::debug('Institution ID: ' . $institutionId);
