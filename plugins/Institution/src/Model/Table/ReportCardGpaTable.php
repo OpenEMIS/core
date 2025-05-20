@@ -948,7 +948,7 @@ INNER JOIN
            ,subq.institution_id
            ,subq.student_id
            ,ROUND(AVG(IFNULL(gpa_grading_options.point, 0)), 2) gpa_per_student
-           ,GROUP_CONCAT( CONCAT(gpa_grading_options.point, '-' , subq.total_mark) AS points_list
+           ,GROUP_CONCAT( CONCAT(subq.education_subject_id,'=',gpa_grading_options.point, '-' , subq.total_mark)) AS points_list
     FROM
     (
         -- Subquery to get academic period, education grade, subject, and total marks
