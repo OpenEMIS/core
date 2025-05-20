@@ -127,7 +127,19 @@ class ReportCardGpaTable extends ControllerActionTable
         $institutionId = $this->getInstitutionID();
         $params = $this->request->getQuery();
         $encodedParams = $this->getQueryString();
-        $gpa_id = intval($params['gpa_name'] ?? $encodedParams ['gpa_id'] ?? -1);
+        $encodedGpaId = $encodedParams['gpa_id'] ?? -1;
+        $gpaId = intval($params['gpa_name']) ?? -1;
+        if($gpaId < 1) {
+            $gpaId = $encodedGpaId;
+        }
+        $gpa_id = $gpaId ?? -1;
+        if($encodedGpaId > 0){
+            $gpa_id = $encodedGpaId;
+        }
+        if($gpa_id != 9){
+            dd($gpa_id);
+        }
+
         $academic_period_id = intval($params['academic_period_id'] ?? $encodedParams ['academic_period_id'] ?? $this->AcademicPeriods->getCurrent());
         $education_grade_id = intval($params['education_grade_id'] ?? $encodedParams ['education_grade_id'] ??  -1);
         $institution_class_id = intval($params['class_id'] ?? $encodedParams ['institution_class_id'] ?? -1);
@@ -219,10 +231,16 @@ class ReportCardGpaTable extends ControllerActionTable
         $UsersTable =self::getDynamicTableInstance('Security.Users');
         $gradeGpa =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
 
-        if($gpa_id < 1) {
-            $where[$gradeGpa->aliasField('education_grades_gpa_id')] = $gpa_id;
+        if($gpa_id >= 1) {
+            $leftJoin = [$gradeGpa->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                $gradeGpa->aliasField('education_grades_gpa_id') . ' = ' . $gpa_id
+            ];
+        }else{
+            $leftJoin = [$gradeGpa->aliasField('student_id') . ' = ' . $this->aliasField('student_id')
+            ];
         }
 //        $where[$gradeGpa->aliasField('education_grades_gpa_id')] = -1;
+
         $query
             ->select([
                 'id' => $this->aliasField('id'),
@@ -245,9 +263,7 @@ class ReportCardGpaTable extends ControllerActionTable
             )
             ->leftJoin(
                 [$gradeGpa->getAlias() => $gradeGpa->getTable()],
-                [$gradeGpa->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
-                    $gradeGpa->aliasField('education_grades_gpa_id') . ' = ' . $gpa_id
-                ]
+                $leftJoin
             )
             ->where($where)
             ->group([$this->aliasField('student_id')]);
@@ -270,6 +286,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
         // search
         $search = $this->getSearchKey();
+
         if (!empty($search)) {
             $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
             $extra['OR'] = $nameConditions;
@@ -459,23 +476,22 @@ class ReportCardGpaTable extends ControllerActionTable
 
     public function generate(Event $event, ArrayObject $extra)
     {
-        $params = $this->getQueryString();
-
-        if ($params) {
-            $this->addGpaReportCards(
-                $params['student_id'],
-                $params['academic_period_id'],
-                $params['institution_id'],
-                $params['education_grade_id']);
-            $this->Alert->success('ReportCardStatuses.gpa');
-        } else {
-            $url = $this->url('index');
-            $this->Alert->warning('ReportCardStatuses.noTemplate');
-        }
-
-        $event->stopPropagation();
+        $params = $this->getQueryString() ?? [];
         $url = $this->url('index');
         unset($params['student_id']);
+        $event->stopPropagation();
+
+//        if ($params) {
+//            $this->addGpaReportCards(
+//                $params['student_id'],
+//                $params['academic_period_id'],
+//                $params['institution_id'],
+//                $params['education_grade_id']);
+//            $this->Alert->success('ReportCardStatuses.gpa');
+//        } else {
+//            $this->Alert->warning('ReportCardStatuses.noTemplate');
+//        }
+
         $url['1'] = $this->paramsEncode($params);
         return $this->controller->redirect($url);
     }
