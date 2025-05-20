@@ -989,7 +989,7 @@ INNER JOIN
                    ,assessment_item_results.education_subject_id
                    ,assessment_item_results.student_id
                    ,IFNULL(assessment_periods.academic_term, 1) AS academic_term
-                   ,IFNULL(ROUND(SUM(assessment_item_results.marks * assessment_periods.weight) * 200, 2), '') AS total_mark
+                   ,100 AS total_mark
             FROM assessment_item_results
             INNER JOIN
             (
