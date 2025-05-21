@@ -1100,15 +1100,15 @@ AND ind_gpa.education_grade_id = main_q.education_grade_id;
         AND ind_gpa.education_grade_id = $educationGradeId
     ";
 
-        Log::debug('SQL: ' . $sql);
-        Log::debug('GPA ID: ' . $educationGradeGpaId);
-        Log::debug('Student ID: ' . $studentId);
-        Log::debug('Institution ID: ' . $institutionId);
-        Log::debug('Academic Period ID: ' . $academicPeriodId);
-        Log::debug('Education Grade ID: ' . $educationGradeId);
+//        Log::debug('SQL: ' . $sql);
+//        Log::debug('GPA ID: ' . $educationGradeGpaId);
+//        Log::debug('Student ID: ' . $studentId);
+//        Log::debug('Institution ID: ' . $institutionId);
+//        Log::debug('Academic Period ID: ' . $academicPeriodId);
+//        Log::debug('Education Grade ID: ' . $educationGradeId);
         $result = $connection->execute($sql)->fetch('assoc');
-        Log::debug('GPA: ' . $result['gpa'] ?? 0.00);
-        Log::debug('Points List: ' . $result['points_list'] ?? '');
+//        Log::debug('GPA: ' . $result['gpa'] ?? 0.00);
+//        Log::debug('Points List: ' . $result['points_list'] ?? '');
 
         return $result['gpa'] ?? 0.00;
     }
