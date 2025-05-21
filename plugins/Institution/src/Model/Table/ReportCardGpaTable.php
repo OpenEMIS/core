@@ -917,7 +917,8 @@ class ReportCardGpaTable extends ControllerActionTable
         $connection = ConnectionManager::get('default');
 
         $sql = "
-        SELECT IFNULL(ind_gpa.gpa_per_student, 0.00) gpa
+        SELECT IFNULL(ind_gpa.gpa_per_student, 0.00) gpa,
+                        ind_gpa.points_list
             FROM
             (
                 SELECT institution_students.student_id
@@ -943,7 +944,8 @@ class ReportCardGpaTable extends ControllerActionTable
                        ,subq.assessment_period_end_date
                        ,subq.institution_id
                        ,subq.student_id
-                       ,ROUND(AVG(IFNULL(gpa_grading_options.point, 0)), 2) gpa_per_student
+                       ,ROUND(AVG(IFNULL(gpa_grading_options.point, 0)), 2) gpa_per_student,
+                       ,GROUP_CONCAT( CONCAT(institution_subject_students.education_subject_id, '=', gpa_grading_options.point)) AS points_list
                 FROM
                 (
                     SELECT  institution_subject_students.academic_period_id
@@ -1117,7 +1119,14 @@ class ReportCardGpaTable extends ControllerActionTable
 
 
         $result = $connection->execute($sql)->fetch('assoc');
-
+//        Log::debug('GPA SQL: ' . $sql);
+        Log::debug('GPA Result: ' . print_r($result,true));
+        Log::debug('GPA: ' . $result['gpa'] ?? 0.00);
+        Log::debug('GPA ID: ' . $educationGradeGpaId);
+        Log::debug('Student ID: ' . $studentId);
+        Log::debug('Institution ID: ' . $institutionId);
+        Log::debug('Academic Period ID: ' . $academicPeriodId);
+        Log::debug('Education Grade ID: ' . $educationGradeId);
         return $result['gpa'] ?? 0.00;
     }
 
