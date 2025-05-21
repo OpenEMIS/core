@@ -58,7 +58,7 @@ class ReorderBehavior extends Behavior
         if (is_null($filter)) {
             // this checking is for the table with no parent_id column
             $reorderItems = $table->find('list')
-            ->order(["`$orderField`" => 'ASC'])
+            ->order([$table->aliasField($orderField)])
             ->toArray();
         } else {
             if (!is_null($filterValues)) {
@@ -75,7 +75,7 @@ class ReorderBehavior extends Behavior
                 $reorderItems = $table
                     ->find('list')
                     ->where($where)
-                    ->order(["`$orderField`" => 'ASC'])
+                    ->order([$table->aliasField($orderField)])
                     ->toArray();
             }
         }
