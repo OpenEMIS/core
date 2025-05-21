@@ -34,7 +34,7 @@ class ReorderBehavior extends Behavior
                     $filterValue = $entity->{$filter};
                 }
                 $table = $this->_table;
-                $filterValue = (array)$filterValue; 
+                $filterValue = (array)$filterValue;
                 //POCOR-8407 add if else condition
                 if (!empty($filterValue)) {
                     $order = $table
@@ -58,7 +58,7 @@ class ReorderBehavior extends Behavior
         if (is_null($filter)) {
             // this checking is for the table with no parent_id column
             $reorderItems = $table->find('list')
-            ->order([$table->aliasField($orderField)])
+            ->order(["`$orderField`" => 'ASC'])
             ->toArray();
         } else {
             if (!is_null($filterValues)) {
@@ -75,7 +75,7 @@ class ReorderBehavior extends Behavior
                 $reorderItems = $table
                     ->find('list')
                     ->where($where)
-                    ->order([$table->aliasField($orderField)])
+                    ->order(["`$orderField`" => 'ASC'])
                     ->toArray();
             }
         }
