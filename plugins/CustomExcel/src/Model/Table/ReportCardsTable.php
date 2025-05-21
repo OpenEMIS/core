@@ -1974,27 +1974,43 @@ class ReportCardsTable extends AppTable
                 ->formatResults(function (ResultSetInterface $results) {
                     return $results->map(function ($row) {
                         $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
-
-                        switch ($resultType) {
-                            case 'MARKS':
-                                $row['marks_formatted'] = number_format($row['marks'], 2);
-                                break;
-                            case 'GRADES':
-                                $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
-                                break;
-                            case 'DURATION':
-                                if (strlen($row['marks']) > 0) {
-                                    $duration = number_format($row['marks'], 2);
-
-                                    list($minutes, $seconds) = explode(".", $duration, 2);
-                                    $row['marks_formatted'] = $minutes . " : " . $seconds;
+                        //POCOR-9143[START]
+                        $AssessmentItemStudentExemptions = TableRegistry::get('Institution.AssessmentItemStudentExemptions');
+                        $AssessmentItemStudentExemptionsData = $AssessmentItemStudentExemptions
+                        ->find('all')
+                        ->where([
+                            $AssessmentItemStudentExemptions->aliasField('assessment_id') => $row['assessment_id'],
+                            $AssessmentItemStudentExemptions->aliasField('student_id') => $row['student_id'],
+                            $AssessmentItemStudentExemptions->aliasField('institution_class_id') => $row['institution_classes_id'],
+                            $AssessmentItemStudentExemptions->aliasField('education_grade_id') => $row['education_grade_id'],
+                            $AssessmentItemStudentExemptions->aliasField('education_subject_id') => $row['education_subject_id'],
+                            $AssessmentItemStudentExemptions->aliasField('assessment_period_id') => $row['assessment_period_id']
+                        ])
+                        ->first();
+                        if(!empty($AssessmentItemStudentExemptionsData)){
+                            $row['marks_formatted'] = ($AssessmentItemStudentExemptionsData->type == 1) ? 'Exempt' : "Unassign" ;
+                        }else{
+                            switch ($resultType) {
+                                case 'MARKS':
+                                    $row['marks_formatted'] = number_format($row['marks'], 2);
                                     break;
-                                }
-                            default:
-                                $row['marks_formatted'] = '';
-                                break;
-                        }
+                                case 'GRADES':
+                                    $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
+                                    break;
+                                case 'DURATION':
+                                    if (strlen($row['marks']) > 0) {
+                                        $duration = number_format($row['marks'], 2);
 
+                                        list($minutes, $seconds) = explode(".", $duration, 2);
+                                        $row['marks_formatted'] = $minutes . " : " . $seconds;
+                                        break;
+                                    }
+                                default:
+                                    $row['marks_formatted'] = '';
+                                    break;
+                            }
+                        }
+                        //POCOR-9143[END]
                         return $row;
                     });
                 })
@@ -2035,27 +2051,43 @@ class ReportCardsTable extends AppTable
                     ->formatResults(function (ResultSetInterface $results) {
                         return $results->map(function ($row) {
                             $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
-
-                            switch ($resultType) {
-                                case 'MARKS':
-                                    $row['marks_formatted'] = number_format($row['marks'], 2);
-                                    break;
-                                case 'GRADES':
-                                    $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
-                                    break;
-                                case 'DURATION':
-                                    if (strlen($row['marks']) > 0) {
-                                        $duration = number_format($row['marks'], 2);
-
-                                        list($minutes, $seconds) = explode(".", $duration, 2);
-                                        $row['marks_formatted'] = $minutes . " : " . $seconds;
+                            //POCOR-9143[START]
+                            $AssessmentItemStudentExemptions = TableRegistry::get('Institution.AssessmentItemStudentExemptions');
+                            $AssessmentItemStudentExemptionsData = $AssessmentItemStudentExemptions
+                            ->find('all')
+                            ->where([
+                                $AssessmentItemStudentExemptions->aliasField('assessment_id') => $row['assessment_id'],
+                                $AssessmentItemStudentExemptions->aliasField('student_id') => $row['student_id'],
+                                $AssessmentItemStudentExemptions->aliasField('institution_class_id') => $row['institution_classes_id'],
+                                $AssessmentItemStudentExemptions->aliasField('education_grade_id') => $row['education_grade_id'],
+                                $AssessmentItemStudentExemptions->aliasField('education_subject_id') => $row['education_subject_id'],
+                                $AssessmentItemStudentExemptions->aliasField('assessment_period_id') => $row['assessment_period_id']
+                            ])
+                            ->first();
+                            if(!empty($AssessmentItemStudentExemptionsData)){
+                                $row['marks_formatted'] = ($AssessmentItemStudentExemptionsData->type == 1) ? 'Exempt' : "Unassign" ;
+                            }else{
+                                switch ($resultType) {
+                                    case 'MARKS':
+                                        $row['marks_formatted'] = number_format($row['marks'], 2);
                                         break;
-                                    }
-                                default:
-                                    $row['marks_formatted'] = '';
-                                    break;
-                            }
+                                    case 'GRADES':
+                                        $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
+                                        break;
+                                    case 'DURATION':
+                                        if (strlen($row['marks']) > 0) {
+                                            $duration = number_format($row['marks'], 2);
 
+                                            list($minutes, $seconds) = explode(".", $duration, 2);
+                                            $row['marks_formatted'] = $minutes . " : " . $seconds;
+                                            break;
+                                        }
+                                    default:
+                                        $row['marks_formatted'] = '';
+                                        break;
+                                }
+                            }
+                            //POCOR-9143[END]
                             return $row;
                         });
                     })
