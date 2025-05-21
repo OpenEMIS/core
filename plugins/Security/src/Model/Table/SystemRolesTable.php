@@ -64,7 +64,7 @@ class SystemRolesTable extends AppTable
 
     public function indexBeforeAction(Event $event)
     {
-        $this->ControllerAction->setFieldOrder(['order', // POCOR
+        $this->ControllerAction->setFieldOrder(['order', // POCOR-9140
             'visible',
             'name',
             'permissions']);
