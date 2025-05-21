@@ -1,3 +1,10 @@
+### [4.25.1] - 2025-05-20
+- Bug Fixed: Institutions>Performance>GPA:The 1st gpa configured generates gpa meanwhile the 2nd gpa configured not showing any gpa
+
+### [4.25.0] - 2025-05-20
+- Implemented: Add a gender column for student attendance
+- Bug Fixed: Institutions > Performances > Assessments: GPA is not calculated correctly
+
 ### [4.24.3] - 2025-05-16
 - Bug Fixed: Institutions > Surveys/Census > Forms: Questions that have rules implemented is not showing the next question
 - Bug Fixed: Institutions > Performances > Assessments: unassign the students from one or all assessment periods
