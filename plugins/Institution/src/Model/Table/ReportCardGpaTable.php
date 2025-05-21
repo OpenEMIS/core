@@ -917,7 +917,8 @@ class ReportCardGpaTable extends ControllerActionTable
         $connection = ConnectionManager::get('default');
 
         $sql = "
-        SELECT IFNULL(ind_gpa.gpa_per_student, 0.00) gpa
+        SELECT IFNULL(ind_gpa.gpa_per_student, 0.00) gpa,
+                        ind_gpa.points_list
             FROM
             (
                 SELECT institution_students.student_id
@@ -944,6 +945,8 @@ class ReportCardGpaTable extends ControllerActionTable
                        ,subq.institution_id
                        ,subq.student_id
                        ,ROUND(AVG(IFNULL(gpa_grading_options.point, 0)), 2) gpa_per_student
+                       ,GROUP_CONCAT( CONCAT(subq.education_subject_id, '=', gpa_grading_options.point, '-' , subq.total_mark)) AS points_list
+
                 FROM
                 (
                     SELECT  institution_subject_students.academic_period_id
@@ -954,7 +957,7 @@ class ReportCardGpaTable extends ControllerActionTable
                            ,term_info.academic_term
                            ,term_info.assessment_period_start_date
                            ,term_info.assessment_period_end_date
-                           ,IFNULL(subq2.total_mark,0) total_mark
+                           ,IFNULL(subq2.total_mark / term_info.total_weight ,0) total_mark
                     FROM institution_subject_students
                     INNER JOIN
                     (
@@ -962,7 +965,8 @@ class ReportCardGpaTable extends ControllerActionTable
                                ,assessments.education_grade_id
                                ,IFNULL(assessment_periods.academic_term, 1) academic_term
                                ,MIN(assessment_periods.start_date) assessment_period_start_date
-                               ,MAX(assessment_periods.end_date) assessment_period_end_date
+                               ,MAX(assessment_periods.end_date) assessment_period_end_date,
+                               IFNULL(ROUND(SUM(assessment_periods.weight), 2), 1) total_weight
                         FROM assessment_periods
                         INNER JOIN assessments
                         ON assessments.id = assessment_periods.assessment_id
@@ -981,7 +985,7 @@ class ReportCardGpaTable extends ControllerActionTable
                                ,assessment_item_results.education_subject_id
                                ,assessment_item_results.student_id
                                ,IFNULL(assessment_periods.academic_term, 1) AS academic_term
-                               ,IFNULL( ROUND( SUM(assessment_item_results.marks * assessment_periods.weight) / SUM(assessment_periods.weight),2 ),'' ) AS total_mark
+                               ,IFNULL( ROUND( SUM(assessment_item_results.marks * assessment_periods.weight),2 ), 0 ) AS total_mark
                         FROM assessment_item_results
                         INNER JOIN
                         (
@@ -1106,59 +1110,6 @@ class ReportCardGpaTable extends ControllerActionTable
             AND ind_gpa.institution_id = main_q.institution_id
             AND ind_gpa.academic_period_id = main_q.academic_period_id
             AND ind_gpa.education_grade_id = main_q.education_grade_id
-            LEFT JOIN
-            (
-                SELECT students_gpa.student_id
-                    ,students_gpa.institution_id
-                    ,current_academic_period.academic_period_id
-                    ,MAX(student_education_grades.id) education_grade_id
-                    ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student
-                FROM
-                (
-                    SELECT institution_students_gpa.institution_id
-                        ,institution_students_gpa.academic_period_id
-                        ,institution_students_gpa.education_grade_id
-                        ,institution_students_gpa.student_id
-                        ,AVG(institution_students_gpa.gpa) gpa
-                    FROM institution_students_gpa
-                    WHERE institution_students_gpa.student_id = $studentId
-                    GROUP BY institution_students_gpa.institution_id
-                        ,institution_students_gpa.academic_period_id
-                        ,institution_students_gpa.education_grade_id
-                ) students_gpa
-                INNER JOIN education_grades student_education_grades
-                ON student_education_grades.id = students_gpa.education_grade_id
-                INNER JOIN
-                (
-                    SELECT academic_periods.id academic_period_id
-                    FROM academic_periods
-                    WHERE academic_periods.id = $academicPeriodId
-                ) current_academic_period
-                INNER JOIN
-                (
-                    SELECT education_grades_cumulative_gpa.main_education_grade_id
-                        ,education_grades_gpa.academic_period_id
-                        ,education_grades.code education_grade_code
-                    FROM education_grades_gpa
-                    INNER JOIN education_grades_cumulative_gpa
-                    ON education_grades_cumulative_gpa.main_education_grade_id = education_grades_gpa.education_grade_id
-                    INNER JOIN education_grades
-                    ON education_grades.id = education_grades_cumulative_gpa.education_grade_id
-                    GROUP BY education_grades_cumulative_gpa.main_education_grade_id
-                        ,education_grades_cumulative_gpa.education_grade_id
-                ) last_year_grades
-                ON last_year_grades.academic_period_id = current_academic_period.academic_period_id
-                AND last_year_grades.education_grade_code = student_education_grades.code
-                WHERE students_gpa.student_id = $studentId
-                GROUP BY students_gpa.student_id
-                    ,students_gpa.institution_id
-                    ,current_academic_period.academic_period_id
-                    ,last_year_grades.main_education_grade_id
-            ) cum_gpa
-            ON cum_gpa.academic_period_id = main_q.academic_period_id
-            AND cum_gpa.education_grade_id = main_q.education_grade_id
-            AND cum_gpa.institution_id = main_q.institution_id
-            AND cum_gpa.student_id = main_q.student_id
             GROUP BY main_q.student_id
                 ,main_q.institution_id
                 ,main_q.academic_period_id
@@ -1169,7 +1120,14 @@ class ReportCardGpaTable extends ControllerActionTable
 
 
         $result = $connection->execute($sql)->fetch('assoc');
-
+//        Log::debug('GPA SQL: ' . $sql);
+//        Log::debug('GPA Result: ' . print_r($result,true));
+//        Log::debug('GPA: ' . $result['gpa'] ?? 0.00);
+//        Log::debug('GPA ID: ' . $educationGradeGpaId);
+//        Log::debug('Student ID: ' . $studentId);
+//        Log::debug('Institution ID: ' . $institutionId);
+//        Log::debug('Academic Period ID: ' . $academicPeriodId);
+//        Log::debug('Education Grade ID: ' . $educationGradeId);
         return $result['gpa'] ?? 0.00;
     }
 
