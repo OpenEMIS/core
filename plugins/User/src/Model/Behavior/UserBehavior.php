@@ -248,9 +248,11 @@ class UserBehavior extends Behavior
             // add page, email = hidden
             if ($this->_table->action == 'add') {
                 if ($this->isCAv4()) {
-                    $this->_table->field('email', ['type' => 'string']);
+                    $this->_table->field('email', ['type' => 'string', 'label' => __('Mobile')]);
+                    $this->_table->field('mobile_number', ['type' => 'string', 'label' => __('Mobile')]);
                 } else {
-                    $this->_table->ControllerAction->field('email', ['type' => 'string']);
+                    $this->_table->ControllerAction->field('email', ['type' => 'string', 'label' => __('Email')]);
+                    $this->_table->ControllerAction->field('mobile_number', ['type' => 'string', 'label' => __('Mobile')]);
                 }
             }
 
@@ -626,7 +628,13 @@ class UserBehavior extends Behavior
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        return $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        if ($field == 'email') {
+            return __('Email');
+        } elseif ($field == 'mobile_number') {
+            return __('Mobile Number');
+        } else {
+            return $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function getUniqueOpenemisId($options = [])
