@@ -944,8 +944,9 @@ class ReportCardGpaTable extends ControllerActionTable
                        ,subq.assessment_period_end_date
                        ,subq.institution_id
                        ,subq.student_id
-                       ,ROUND(AVG(IFNULL(gpa_grading_options.point, 0)), 2) gpa_per_student,
-                       ,GROUP_CONCAT( CONCAT(institution_subject_students.education_subject_id, '=', gpa_grading_options.point)) AS points_list
+                       ,ROUND(AVG(IFNULL(gpa_grading_options.point, 0)), 2) gpa_per_student
+                       ,GROUP_CONCAT( CONCAT(subq.education_subject_id, '=', gpa_grading_options.point, '-' , subq.total_mark)) AS points_list
+
                 FROM
                 (
                     SELECT  institution_subject_students.academic_period_id
