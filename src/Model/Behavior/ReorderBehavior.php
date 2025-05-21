@@ -34,7 +34,7 @@ class ReorderBehavior extends Behavior
                     $filterValue = $entity->{$filter};
                 }
                 $table = $this->_table;
-                $filterValue = (array)$filterValue;
+                $filterValue = (array)$filterValue; 
                 //POCOR-8407 add if else condition
                 if (!empty($filterValue)) {
                     $order = $table
