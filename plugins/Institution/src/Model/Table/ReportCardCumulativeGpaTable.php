@@ -1163,7 +1163,6 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             institution_classes.academic_period_id = $selectedAcademicPeriodId
                             AND institution_classes.institution_id = $institutionId
                             AND assessment_item_student_exemptions.student_id = $studentId
-                            AND exemption_info.academic_period_id IS NULL
                         GROUP BY
                             assessment_item_student_exemptions.education_subject_id,
                             assessment_item_student_exemptions.student_id,
@@ -1175,6 +1174,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
                 AND institution_subject_students.student_id = $studentId
                 AND institution_subject_students.institution_id = $institutionId
+                AND exemption_info.academic_period_id IS NULL
                 GROUP BY  institution_subject_students.academic_period_id
                         ,institution_subject_students.education_grade_id
                         ,institution_subject_students.education_subject_id
@@ -1438,9 +1438,9 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             INNER JOIN assessment_periods ON assessment_periods.id = assessment_item_student_exemptions.assessment_period_id
                             INNER JOIN institution_classes ON institution_classes.id = assessment_item_student_exemptions.institution_class_id
                             WHERE
-                                institution_classes.academic_period_id = :selectedAcademicPeriodId
-                                AND institution_classes.institution_id = :institutionId
-                                AND assessment_item_student_exemptions.student_id = :studentId
+                                institution_classes.academic_period_id = $selectedAcademicPeriodId
+                                AND institution_classes.institution_id = $institutionId
+                                AND assessment_item_student_exemptions.student_id = $studentId
                             
                             GROUP BY
                                 assessment_item_student_exemptions.education_subject_id,
