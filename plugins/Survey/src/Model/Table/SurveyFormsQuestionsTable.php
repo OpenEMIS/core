@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use ArrayObject;
+use Cake\Log\Log;
 
 class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 	public function initialize(array $config): void {
@@ -62,12 +63,22 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 
 	public function findSurveyRules(Query $query, array $options)
 	{
+        Log::debug('SurveyFormsQuestionsTable::findSurveyRules');
+        Log::debug(print_r($options, true));
+        $section = $options['section'] ?? null;
+        $survey_form_id = $options['survey_form_id'] ?? null;
+        if($section) {
+            $query->where(['SurveyFormsQuestions.section' => $section]);
+        }
+        if($survey_form_id) {
+            $query->where(['SurveyFormsQuestions.section' => $section]);
+        }
 		$query
 			->leftJoin(
 				['SurveyRules' => 'survey_rules'],
 				[
-					'SurveyRules.survey_form_id = '.$this->aliasField('survey_form_id'),
-					'SurveyRules.survey_question_id = '.$this->aliasField('survey_question_id')
+					'SurveyRules.survey_form_id = ' . $this->aliasField('survey_form_id'),
+					'SurveyRules.survey_question_id = ' . $this->aliasField('survey_question_id')
 				]
 			)
 			->select([
