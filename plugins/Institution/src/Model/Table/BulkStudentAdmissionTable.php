@@ -158,7 +158,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 $attr['options'] = $this->_stepsOptions;
                 $attr['onChangeReload'] = 'changeStatus';
             break;
-            
+
             case 'reconfirm':
                 $selectedStatus = $this->_currentData['status'];
                 $attr['attr']['value'] = $this->_stepsOptions[$selectedStatus];
@@ -356,15 +356,17 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
         $process = function ($model, $entity) use ($event, $data) {
+            $data = $data->getArrayCopy();
             // Removal of some fields that are not in use in the table validation
             $errors = $entity->getErrors();
             $queryString = $this->getQueryString();
             $encodedQueryString = $this->paramsEncode($queryString);
             if (empty($errors)) {
-                if (array_key_exists($this->getAlias(), $data)) {
+                $alias = $this->getAlias();
+                if (isset($data[$alias])) {
                     $selectedStudent = false;
-                    if (array_key_exists('students', $data[$this->getAlias()])) {
-                        foreach ($data[$this->getAlias()]['students'] as $key => $value) {
+                    if (isset($data[$alias]['students']) && is_array($data[$alias]['students'])) {
+                        foreach ($data[$alias]['students'] as $key => $value) {
                             if ($value['selected'] != 0) {
                                 $selectedStudent = true;
                                 break;
@@ -388,7 +390,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                         $event->stopPropagation();
                         return $this->controller->redirect($url);
                     } else {
-                        $this->Alert->warning($this->getAlias().'.noStudentSelected', ['reset' => true]);
+                        $this->Alert->warning($alias .'.noStudentSelected', ['reset' => true]);
                         return false;
                     }
                 }
