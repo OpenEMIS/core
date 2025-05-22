@@ -192,6 +192,7 @@ trait PdfReportTrait
         foreach ($matches as $match) {
             $id = $match[1];                // e.g., 78
             $styleDefinition = trim($match[2]); // e.g., border: 1px solid black; font-size: 8pt;
+            $styleDefinition = trim($match[2]); // e.g., border: 1px solid black; font-size: 8pt;
 
             $classStyles["style$id"] = $styleDefinition;
         }
@@ -318,7 +319,8 @@ trait PdfReportTrait
                 }
 
                 // Always enforce padding last
-                $styles['padding'] = '5px !important';
+                $styles['padding'] = '15px !important';
+                $styles['margin'] = '15px !important';
 
                 // Rebuild style string
                 $finalStyle = '';
