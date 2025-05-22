@@ -63,8 +63,9 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 
 	public function findSurveyRules(Query $query, array $options)
 	{
-        Log::debug('SurveyFormsQuestionsTable::findSurveyRules');
-        Log::debug(print_r($options, true));
+//        Log::debug('SurveyFormsQuestionsTable::findSurveyRules');
+//        Log::debug(print_r($options, true));
+        // POCOR-9147 start
         $section = $options['section'] ?? null;
         $survey_form_id = $options['survey_form_id'] ?? null;
         if($section) {
@@ -73,6 +74,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
         if($survey_form_id) {
             $query->where(['SurveyFormsQuestions.survey_form_id' => $survey_form_id]);
         }
+        // POCOR-9147 end
 		$query
 			->leftJoin(
 				['SurveyRules' => 'survey_rules'],
