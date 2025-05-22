@@ -356,17 +356,17 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
         $process = function ($model, $entity) use ($event, $data) {
-            $data = $data->getArrayCopy();
+            $data = $data->getArrayCopy(); // POCOR-9146
             // Removal of some fields that are not in use in the table validation
             $errors = $entity->getErrors();
             $queryString = $this->getQueryString();
             $encodedQueryString = $this->paramsEncode($queryString);
+            $alias = $this->getAlias(); // POCOR-9146
             if (empty($errors)) {
-                $alias = $this->getAlias();
-                if (isset($data[$alias])) {
+                if (isset($data[$alias])) { // POCOR-9146
                     $selectedStudent = false;
-                    if (isset($data[$alias]['students']) && is_array($data[$alias]['students'])) {
-                        foreach ($data[$alias]['students'] as $key => $value) {
+                    if (isset($data[$alias]['students']) && is_array($data[$alias]['students'])) { // POCOR-9146
+                        foreach ($data[$alias]['students'] as $key => $value) { // POCOR-9146
                             if ($value['selected'] != 0) {
                                 $selectedStudent = true;
                                 break;
