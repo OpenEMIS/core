@@ -123,7 +123,13 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                                     id: question.id || null, // optional: if there's an `id` field for the rule
                                     enabled: question.survey_rule_enabled,
                                     dependent_question_id: question.dependent_question,
-                                    show_options: isJsonParsable(question.show_options) ? JSON.parse(question.show_options) : undefined
+                                    show_options: (() => {
+                                        try {
+                                            return JSON.parse(question.show_options);
+                                        } catch {
+                                            return undefined;
+                                        }
+                                    })()
                                 }
                                 : {
                                     id: null,
