@@ -121,14 +121,15 @@ class POCOR8278 extends AbstractMigration
             'user_employments' => 'Employment information for system users'
         ];
 
-
         foreach ($tableDescriptions as $tableName => $description) {
-
-            $safeDescription = addslashes($description);
-            $this->execute("
-                ALTER TABLE `$tableName` 
-                COMMENT = '$safeDescription'
-            ");
+            $result = $this->query("SHOW TABLES LIKE '$tableName'")->fetch();
+            if ($result) {
+                $safeDescription = addslashes($description);
+                $this->execute("
+                        ALTER TABLE `$tableName` 
+                        COMMENT = '$safeDescription'
+                    ");
+            }
         }
     }
 
@@ -249,7 +250,10 @@ class POCOR8278 extends AbstractMigration
 
         // Clear table comments
         foreach ($tables as $tableName) {
-            $this->execute("ALTER TABLE `$tableName` COMMENT = ''");
+            $result = $this->query("SHOW TABLES LIKE '$tableName'")->fetch();
+            if ($result) {
+                $this->execute("ALTER TABLE `$tableName` COMMENT = ''");
+            }
         }
     }
 }
