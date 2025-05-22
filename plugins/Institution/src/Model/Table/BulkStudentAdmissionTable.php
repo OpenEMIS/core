@@ -361,12 +361,11 @@ class BulkStudentAdmissionTable extends ControllerActionTable
             $errors = $entity->getErrors();
             $queryString = $this->getQueryString();
             $encodedQueryString = $this->paramsEncode($queryString);
-            $alias = $this->getAlias(); // POCOR-9146
             if (empty($errors)) {
-                if (isset($data[$alias])) { // POCOR-9146
+                if (array_key_exists($this->getAlias(), $data)) {
                     $selectedStudent = false;
-                    if (isset($data[$alias]['students']) && is_array($data[$alias]['students'])) { // POCOR-9146
-                        foreach ($data[$alias]['students'] as $key => $value) { // POCOR-9146
+                    if (array_key_exists('students', $data[$this->getAlias()])) {
+                        foreach ($data[$this->getAlias()]['students'] as $key => $value) {
                             if ($value['selected'] != 0) {
                                 $selectedStudent = true;
                                 break;
@@ -390,7 +389,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                         $event->stopPropagation();
                         return $this->controller->redirect($url);
                     } else {
-                        $this->Alert->warning($alias .'.noStudentSelected', ['reset' => true]);
+                        $this->Alert->warning($this->getAlias().'.noStudentSelected', ['reset' => true]);
                         return false;
                     }
                 }
