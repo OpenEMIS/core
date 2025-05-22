@@ -71,7 +71,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
             $query->where(['SurveyFormsQuestions.section' => $section]);
         }
         if($survey_form_id) {
-            $query->where(['SurveyFormsQuestions.section' => $section]);
+            $query->where(['SurveyFormsQuestions.survey_form_id' => $survey_form_id]);
         }
 		$query
 			->leftJoin(

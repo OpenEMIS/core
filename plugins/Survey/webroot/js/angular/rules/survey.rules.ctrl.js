@@ -156,6 +156,8 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     }
 
     function onChangeSection(sectionName) {
+        vm.sectionName = sectionName;
+        console.log(sectionName);
         vm.getQuestionsFromSection(vm.surveyFormId, sectionName);
     }
 
