@@ -506,7 +506,8 @@ trait StudentPdfReportTrait
                     $cell->firstChild->nodeType === XML_TEXT_NODE &&
                     trim($cell->textContent) !== ''
                 ) {
-                    $text = ' ' . trim($cell->textContent) . ' ';
+                    $text = "\xC2\xA0 " . trim($cell->textContent) . " \xC2\xA0";
+
                     $cell->nodeValue = ''; // Clear original
 
                     $div = $dom->createElement('div');
