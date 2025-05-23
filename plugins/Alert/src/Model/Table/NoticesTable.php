@@ -20,6 +20,7 @@ use Cake\Collection\Collection;
 use Cake\Utility\Text;
 use Cake\Utility\Security;
 
+use Cake\Validation\Validator;
 class NoticesTable extends ControllerActionTable
 {
     private $fieldsOrder = ['created', 'message'];
@@ -47,6 +48,16 @@ class NoticesTable extends ControllerActionTable
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
+    }
+
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator->setProvider('custom', $this);
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->requirePresence('subject')
+            ->requirePresence('message')
+            ->requirePresence('status');
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra) {
@@ -153,6 +164,8 @@ class NoticesTable extends ControllerActionTable
         return $attr;
     }
 
+    
+
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (!empty($entity->get('security_role_id')['_ids'])) {
@@ -245,6 +258,4 @@ class NoticesTable extends ControllerActionTable
             }
         }
     }
-
-
 }

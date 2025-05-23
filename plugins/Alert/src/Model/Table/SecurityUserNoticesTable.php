@@ -8,7 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
-class NoticeRolesTable extends ControllerActionTable
+class SecurityUserNoticesTable extends ControllerActionTable
 {
 
     public function initialize(array $config): void
@@ -19,8 +19,8 @@ class NoticeRolesTable extends ControllerActionTable
             'className' => 'Alert.Notices',
         ]);
 
-        $this->belongsTo('SecurityRoles', [
-            'className' => 'Security.SecurityRoles',
+        $this->belongsTo('SecurityUsers', [
+            'className' => 'User.Users',
         ]);
 
     }

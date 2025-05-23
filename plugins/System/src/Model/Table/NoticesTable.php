@@ -84,23 +84,21 @@ class NoticesTable extends ControllerActionTable
         $roles = [];
         $roleNames = [];
 
-        $usersGroup = TableRegistry::get('Security.SecurityGroupUsers');
-        $userRoles = $usersGroup
-            ->find()
-            ->contain('SecurityRoles')
-            ->where([
-                $usersGroup->aliasField('security_user_id') => $userId,
-            ])
-            ->toArray();
+        $usersGroup = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $noticeRoles = TableRegistry::getTableLocator()->get('Alert.NoticeRoles');
+        $userNotices = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
 
-        // Extract role IDs and names
-        if (!empty($userRoles)) {
-            foreach ($userRoles as $role) {
-                $roles[] = $role->security_role->id;
-                $roleNames[] = $role->security_role->name;
-            }
-        }
-        $status = $noticeStatus = $this->request->getQuery('notice_status') ?? '';
+        // 1. Get notice_ids based on user’s role
+        $assignedNoticeIdsQuery = $usersGroup->find()
+            ->select(['notice_id' => 'NoticeRoles.notice_id'])
+            ->innerJoin(
+                ['NoticeRoles' => 'notice_roles'],
+                ['SecurityGroupUsers.security_role_id = NoticeRoles.security_role_id']
+            )
+            ->where(['SecurityGroupUsers.security_user_id IS' => $userId])
+            ->enableHydration(false);
+
+        $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
 
         // Check if user has super role access
         if ($isSuperAdmin) {
@@ -109,11 +107,7 @@ class NoticesTable extends ControllerActionTable
                 ->enableAutoFields(true)
                 ->group(['notice_id']);
         }else {
-            $query
-                ->leftJoinWith('NoticeRoles')
-                ->where(['NoticeRoles.security_role_id IN' => $roles, $this->aliasField('status') => 1, $this->aliasField('notice_status') => $status])
-                ->enableAutoFields(true)
-                ->group(['notice_id']);
+            $query->where([$this->aliasField('id IN') => $assignedNoticeIds, $this->aliasField('status') => 1]);
         }
 
         // Default sort if not present
@@ -142,7 +136,6 @@ class NoticesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('notice_status', ['entity' => $entity]);
         $this->field('status', ['visible' => false]);
         $this->field('security_role_id');
         $this->field('subject');
@@ -151,17 +144,35 @@ class NoticesTable extends ControllerActionTable
             'element' => 'Alert.Alert/notice',
         ]);
 
-       $this->setFieldOrder(['notice_status', 'security_role_id', 'subject', 'message']);
+       $this->setFieldOrder(['security_role_id', 'subject', 'message']);
        $this->saveNoticeStatus($entity);
     }
 
-    private function saveNoticeStatus($entity){
-       $this->updateAll(
-            ['notice_status' => 1],
-            ['id' => $entity->id]
-        );
+    private function saveNoticeStatus($entity)
+    {
+        $noticeId = $entity->id;
+        $loginUserId = $this->Auth->user()['id'];
 
+        $userNoticesTable = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
+        $exists = $userNoticesTable->find()
+            ->where([
+                'security_user_id IS' => $loginUserId,
+                'notice_id IS' => $noticeId
+            ]);
+
+        $record = $exists->first();
+       
+        if (!$record) {
+            // Create new record
+            $userNotice = $userNoticesTable->newEntity([
+                'security_user_id' => $loginUserId,
+                'notice_id' => $noticeId
+            ]);
+
+            $userNoticesTable->save($userNotice);
+        }
     }
+
 
     public function onGetStatus(Event $event, Entity $entity)
     {
@@ -174,10 +185,21 @@ class NoticesTable extends ControllerActionTable
 
     public function onGetNoticeStatus(Event $event, Entity $entity)
     {
-        if($entity->notice_status == 1){
-            return 'Read';
-        }else{
+        $userNoticesTable = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
+        $loginUserId = $this->Auth->user()['id'];
+        $exists = $userNoticesTable->find()
+            ->where([
+                'security_user_id IS' => $loginUserId,
+                'notice_id IS' => $noticeId
+            ]);
+
+        $record = $exists->first();
+
+        if (!$exists) {
             return 'Unread';
+        }else{
+            return 'Read';
+
         }
     }
 
