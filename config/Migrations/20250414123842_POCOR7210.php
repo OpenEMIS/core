@@ -18,18 +18,28 @@ class POCOR7210 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_7210_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_7210_security_functions` SELECT * FROM `security_functions`');
         //alter
-        $this->execute("ALTER TABLE `notices` ADD COLUMN `status` INT(11) NOT NULL COMMENT '1 -> Enable, 0 -> Disable'");
-        $this->execute("ALTER TABLE `notices` ADD COLUMN `notice_status` INT(11)  NULL COMMENT '1 -> Read, 0 -> Unread'");
+        $this->execute("ALTER TABLE `notices` ADD COLUMN `status` INT(11) NOT NULL  AFTER `message`' COMMENT '1 -> Enable, 0 -> Disable'");
 
         $this->execute('ALTER TABLE `notices` ADD COLUMN `subject` VARCHAR(255) NOT NULL AFTER `id`');
         $this->execute('
             CREATE TABLE IF NOT EXISTS `notice_roles` (
-                `id` CHAR(64) NOT NULL,
+                `id` CHAR(36) NOT NULL,
                 `security_role_id` INT(11) NOT NULL,
                 `notice_id` INT(11) NOT NULL,
                 PRIMARY KEY (`id`),
                 CONSTRAINT `fk_notice_roles_security_role` FOREIGN KEY (`security_role_id`) REFERENCES `security_roles` (`id`) ON DELETE CASCADE,
                 CONSTRAINT `fk_notice_roles_notice` FOREIGN KEY (`notice_id`) REFERENCES `notices` (`id`) ON DELETE CASCADE
+            )
+        ');
+
+        $this->execute('
+            CREATE TABLE IF NOT EXISTS `security_user_notices` (
+                `id` CHAR(36) NOT NULL,
+                `security_user_id` INT(11) NOT NULL,
+                `notice_id` INT(11) NOT NULL,
+                PRIMARY KEY (`id`),
+                CONSTRAINT `fk_notice_roles_security_user` FOREIGN KEY (`security_user_id`) REFERENCES `security_users` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `fk_notice_user` FOREIGN KEY (`notice_id`) REFERENCES `notices` (`id`) ON DELETE CASCADE
             )
         ');
 

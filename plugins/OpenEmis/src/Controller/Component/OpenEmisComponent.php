@@ -19,6 +19,7 @@ class OpenEmisComponent extends Component
     protected $_defaultConfig = [
         'theme' => 'auto',
         'homeUrl' => ['controller' => '/'],
+        'SystemNotices' =>  ['controller' => '/'],
         'headerMenu' => [
             'About' => [
                 'url' => ['plugin' => false, 'controller' => 'About', 'action' => 'index'],
@@ -63,6 +64,7 @@ class OpenEmisComponent extends Component
 
         $theme = $this->getTheme();
         $controller->set('theme', $theme);
+        $controller->set('SystemNotices', $this->SystemNotices());
         $controller->set('homeUrl', $this->getConfig('homeUrl'));
         $controller->set('headerMenu', $this->getHeaderMenu());
         $controller->set('SystemVersion', $this->getCodeVersion());
@@ -149,7 +151,7 @@ class OpenEmisComponent extends Component
     public function getLoggedInUserRoles($userId = null)
     {
         $roles = [];
-        $usersGroup = TableRegistry::get('Security.SecurityGroupUsers');
+        $usersGroup = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $userRoles = $usersGroup
                     ->find()
                     ->where([$usersGroup->aliasField('security_user_id') => $userId ])
@@ -161,6 +163,64 @@ class OpenEmisComponent extends Component
         }
         return (!empty($roles))? $roles: null;
     }
+
+    //POCOR-7210
+    private function SystemNotices($userId = null)
+{
+    $userId  = $this->controller->Auth->user('id');
+    $isAdmin = $this->controller->AccessControl->isAdmin();
+
+    $usersGroup   = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+    $noticeRoles  = TableRegistry::getTableLocator()->get('Alert.NoticeRoles');
+    $userNotices  = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
+    $Notices  = TableRegistry::getTableLocator()->get('Alert.Notices');
+
+    // 1. Get notice_ids based on user’s role
+    $assignedNoticeIdsQuery = $usersGroup->find()
+        ->select(['notice_id' => 'NoticeRoles.notice_id'])
+        ->innerJoin(
+            ['NoticeRoles' => 'notice_roles'],
+            ['SecurityGroupUsers.security_role_id = NoticeRoles.security_role_id']
+        )
+        ->innerJoin(
+            ['Notices' => 'notices'],
+            ['Notices.id = NoticeRoles.notice_id']
+        )
+        ->where(['SecurityGroupUsers.security_user_id' => $userId, 'Notices.status' => 1])
+        ->enableHydration(false);
+
+    $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
+
+    // 2. Get notices the user has already seen
+    $seenNoticeIds = [];
+    if (!empty($assignedNoticeIds)) {
+        $seenNoticesQuery = $userNotices->find()
+            ->select(['notice_id'])
+            ->where([
+                'SecurityUserNotices.security_user_id' => $userId,
+                'SecurityUserNotices.notice_id IN' => $assignedNoticeIds
+            ])
+            ->enableHydration(false);
+
+        $seenNoticeIds = array_column($seenNoticesQuery->toArray(), 'notice_id');
+    }
+
+    // 3. Determine the notice flag based on logic
+    if ($isAdmin) {
+        $SystemNotices = true;
+    } elseif (!empty($assignedNoticeIds) && empty($seenNoticeIds)) {
+        $SystemNotices = false;
+    } elseif (!empty($assignedNoticeIds) && !empty($seenNoticeIds)) {
+        // Only true if all assigned notices are seen
+        $unseen = array_diff($assignedNoticeIds, $seenNoticeIds);
+        $SystemNotices = empty($unseen);
+    } else {
+        $SystemNotices = false;
+    }
+
+    return $SystemNotices;
+}
+
 
     
 }
