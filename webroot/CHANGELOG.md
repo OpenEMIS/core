@@ -1,3 +1,17 @@
+### [4.25.2] - 2025-05-22
+- Bug Fixed: Institutions > Performances > Report Cards : Cumulative GPA placeholder is not displaying any values upon generating
+
+### [4.25.2] - 2025-05-21
+- Bug Fixed: Institutions>Performance>GPA: Gpa is not generated correctly for Easter Summer
+- Bug Fixed: Institutions > Performance > GPA > Cumulative GPA : Page displays a 404 error message when generating cumulative GPA.
+
+### [4.25.1] - 2025-05-20
+- Bug Fixed: Institutions>Performance>GPA:The 1st gpa configured generates gpa meanwhile the 2nd gpa configured not showing any gpa
+
+### [4.25.0] - 2025-05-20
+- Implemented: Add a gender column for student attendance
+- Bug Fixed: Institutions > Performances > Assessments: GPA is not calculated correctly
+
 ### [4.24.3] - 2025-05-16
 - Bug Fixed: Institutions > Surveys/Census > Forms: Questions that have rules implemented is not showing the next question
 - Bug Fixed: Institutions > Performances > Assessments: unassign the students from one or all assessment periods
