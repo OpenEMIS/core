@@ -1148,9 +1148,33 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 AND subq2.student_id = institution_subject_students.student_id 
                 AND subq2.education_subject_id = institution_subject_students.education_subject_id 
                 AND subq2.academic_term = term_info.academic_term
+                LEFT JOIN(
+                        SELECT institution_classes.academic_period_id,
+                            institution_classes.institution_id,
+                            assessment_item_student_exemptions.education_grade_id,
+                            assessment_item_student_exemptions.student_id,
+                            assessment_item_student_exemptions.education_subject_id,
+                            assessment_periods.academic_term
+                        FROM
+                            assessment_item_student_exemptions
+                        INNER JOIN assessment_periods ON assessment_periods.id = assessment_item_student_exemptions.assessment_period_id
+                        INNER JOIN institution_classes ON institution_classes.id = assessment_item_student_exemptions.institution_class_id
+                        WHERE
+                            institution_classes.academic_period_id = $selectedAcademicPeriodId
+                            AND institution_classes.institution_id = $institutionId
+                            AND assessment_item_student_exemptions.student_id = $studentId
+                        GROUP BY
+                            assessment_item_student_exemptions.education_subject_id,
+                            assessment_item_student_exemptions.student_id,
+                            assessment_item_student_exemptions.education_grade_id,
+                            assessment_periods.academic_term
+                    ) exemption_info
+                    ON
+                        exemption_info.academic_period_id = institution_subject_students.academic_period_id AND exemption_info.institution_id = institution_subject_students.institution_id AND exemption_info.education_grade_id = institution_subject_students.education_grade_id AND exemption_info.student_id = institution_subject_students.student_id AND exemption_info.education_subject_id = institution_subject_students.education_subject_id AND exemption_info.academic_term = term_info.academic_term
                 WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
                 AND institution_subject_students.student_id = $studentId
                 AND institution_subject_students.institution_id = $institutionId
+                AND exemption_info.academic_period_id IS NULL
                 GROUP BY  institution_subject_students.academic_period_id
                         ,institution_subject_students.education_grade_id
                         ,institution_subject_students.education_subject_id
@@ -1402,9 +1426,34 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             AND subq2.student_id = institution_subject_students.student_id 
                             AND subq2.education_subject_id = institution_subject_students.education_subject_id 
                             AND subq2.academic_term = term_info.academic_term
+                            LEFT JOIN(
+                            SELECT institution_classes.academic_period_id,
+                                institution_classes.institution_id,
+                                assessment_item_student_exemptions.education_grade_id,
+                                assessment_item_student_exemptions.student_id,
+                                assessment_item_student_exemptions.education_subject_id,
+                                assessment_periods.academic_term
+                            FROM
+                                assessment_item_student_exemptions
+                            INNER JOIN assessment_periods ON assessment_periods.id = assessment_item_student_exemptions.assessment_period_id
+                            INNER JOIN institution_classes ON institution_classes.id = assessment_item_student_exemptions.institution_class_id
+                            WHERE
+                                institution_classes.academic_period_id = $selectedAcademicPeriodId
+                                AND institution_classes.institution_id = $institutionId
+                                AND assessment_item_student_exemptions.student_id = $studentId
+                            
+                            GROUP BY
+                                assessment_item_student_exemptions.education_subject_id,
+                                assessment_item_student_exemptions.student_id,
+                                assessment_item_student_exemptions.education_grade_id,
+                                assessment_periods.academic_term
+                        ) exemption_info
+                        ON
+                            exemption_info.academic_period_id = institution_subject_students.academic_period_id AND exemption_info.institution_id = institution_subject_students.institution_id AND exemption_info.education_grade_id = institution_subject_students.education_grade_id AND exemption_info.student_id = institution_subject_students.student_id AND exemption_info.education_subject_id = institution_subject_students.education_subject_id AND exemption_info.academic_term = term_info.academic_term
                             WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
                             AND institution_subject_students.student_id = $studentId
                             AND institution_subject_students.institution_id = $institutionId
+                            AND exemption_info.academic_period_id IS NULL
                             GROUP BY  institution_subject_students.academic_period_id
                                     ,institution_subject_students.education_grade_id
                                     ,institution_subject_students.education_subject_id
