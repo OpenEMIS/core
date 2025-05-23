@@ -14,15 +14,16 @@ use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Log\Log;
-use Cake\Datasource\ConnectionManager; 
+use Cake\Datasource\ConnectionManager;
 use App\Model\Table\ControllerActionTable;
+use Cake\Http\Session; // POCOR-9162
 
 /**
  * ReportCardCumulativeGpaTable class, Generate cumulative GPA for student.
  * POCOR-8222
  * This class is responsible for handling the cumulative GPA data for students' report cards.
  * It extends from the `ControllerActionTable` class and interacts with the database to manage
- * and process cumulative GPA information for report cards. The class may include logic for 
+ * and process cumulative GPA information for report cards. The class may include logic for
  * calculating or retrieving cumulative GPAs, ensuring that the data aligns with institutional requirements.
  */
 class ReportCardCumulativeGpaTable extends ControllerActionTable
@@ -37,7 +38,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-        
+
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -73,10 +74,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 'action' => 'ReportCardCumulativeGpa',
                 0 =>  'view',
                 1 => $this->paramsEncode(['id' => $entity->id,'institution_id' => $this->getInstitutionID(),'student_id'=> $entity->student_id,'institution_class_id' => $entity->institution_class_id]),
-                
+
             ];
         }
-        
+
         $params = [
             'education_grade_id' => $educationGradeId,
             'student_id' => $entity->student_id,
@@ -84,12 +85,12 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
         ];
-        
+
         $params['institution_class_id'] = $entity->institution_class_id;
        // $buttons['view']['url'] = $url;
         // Generate button, all statuses
         $buttons = $this->addGenerateButton($buttons, $params);
-        
+
         return $buttons;
     }
 
@@ -97,7 +98,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_name', ['type' => 'integer','sort' => ['field' => 'Users.first_name']]);
-        
+
         $this->field('student_id', ['type' => 'hidden']);
         $this->field('next_institution_class_id', ['type' => 'hidden']);
         $this->field('student_status_id', ['type' => 'hidden']);
@@ -105,13 +106,13 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $this->field('created',['visible' => true, 'sort' => false]);
 
         $this->fields['academic_period_id']['visible'] = false;
-        
+
     }
 
-    
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        
+
         $institutionId = $this->getInstitutionID();
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $institutionGrade = TableRegistry::get('Institution.InstitutionGrades');
@@ -179,7 +180,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                     ->toArray();
                // $educationGradeByReportCardId = $reportCardEntity->education_grade_id;
             } else {
-                
+
                 $selectedClass = -1;
             }
 
@@ -192,10 +193,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         if($selectedClass != 'all'){
             $where[$this->aliasField('institution_class_id')] = $selectedClass;
         }
-        $where[$this->aliasField('institution_id')] = $institutionId; 
-        $where[$this->aliasField('student_status_id NOT IN')] = 3; 
+        $where[$this->aliasField('institution_id')] = $institutionId;
+        $where[$this->aliasField('student_status_id NOT IN')] = 3;
         $where[$this->aliasField('education_grade_id')] = $selectedGrade;
-        
+
         //End
         $UsersTable = TableRegistry::get('Security.Users');
         $query
@@ -239,9 +240,9 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $search = $this->getSearchKey();
         if (!empty($search)) {
             $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
-            $extra['OR'] = $nameConditions; 
+            $extra['OR'] = $nameConditions;
         }
-        
+
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -255,7 +256,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             $securityRoleIds[] = $value->security_role_id;
         }
         $userId = $this->Auth->user('id');
-        $userSuperAddmin = $this->Auth->user('super_admin'); 
+        $userSuperAddmin = $this->Auth->user('super_admin');
         if ($userSuperAddmin == 1) {
             if (!is_null($educationGradeId) && !is_null($classId)) {
                 $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->getPrimaryKey() => $classId]);
@@ -288,7 +289,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
                         ])
                         ->count();
-                    
+
                     // Generate all button
                     $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
                     $generateButton['type'] = 'button';
@@ -316,7 +317,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                     $date = Time::now()->format('Y-m-d');
 
                     if ($this->AccessControl->isAdmin()) {
-                        
+
                         if (!empty($generateStartDate) && !empty($generateEndDate)) {
                             $extra['toolbarButtons']['generateAll'] = $generateButton;
                         } else {
@@ -338,11 +339,11 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         }
                     }
 
-                    
-                    
+
+
                 }
             }
-        } else { 
+        } else {
             if (!is_null($educationGradeId) && !is_null($classId) && !empty($securityRoleIds)) {
                 $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->getPrimaryKey() => $classId]);
                 if ($existingClass) {
@@ -360,7 +361,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                     ];
 
                     $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
-                    
+
                     $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
                     $SecurityFunctionsGenerateAllData = $SecurityFunctions
                         ->find()
@@ -376,7 +377,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             $SecurityRoleFunctionsTable->aliasField('_execute') => 1,
                             $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])
                         ->count();
-                    
+
                     // Generate all button
                     $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
                     $generateButton['type'] = 'button';
@@ -412,8 +413,8 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             $extra['toolbarButtons']['generateAll'] = $generateButton;
                         }
                     } else {
-                        
-                        $ExcludedSecurityRoleEntity = $this->canGenerateAnyDate(); 
+
+                        $ExcludedSecurityRoleEntity = $this->canGenerateAnyDate();
                         if ($SecurityRoleFunctionsTableGenerateAllData >= 1) {
                             if ((!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) || ($ExcludedSecurityRoleEntity == 1)) {
                                 $extra['toolbarButtons']['generateAll'] = $generateButton;
@@ -459,13 +460,13 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         }
         return $value;
     }
-    
+
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
         if ($params) {
-            $this->addGpaReportCards($params['student_id'], $params['academic_period_id'],$params['institution_id'],$params['education_grade_id']);
+            self::addGpaReportCards($params['student_id'], $params['academic_period_id'],$params['institution_id'],$params['education_grade_id']); // POCOR-9162
             $this->Alert->success('ReportCardStatuses.gpa');
         } else {
             $url = $this->url('index');
@@ -506,14 +507,14 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
-    
+
     // add Cumulative GPA for student
     private function addGpaReportCardsOld($checkgpaStudent,$selectedAcademicPeriodId, $institutionId,$educationGradeId)
     {
-        $selectedAcademicPeriodId = $selectedAcademicPeriodId;
-        $reportCardId = $reportCardId;
-        $institutionId = $institutionId;
-        $educationGradeId = $educationGradeId;
+//        $selectedAcademicPeriodId = $selectedAcademicPeriodId;
+//        $reportCardId = $reportCardId;
+//        $institutionId = $institutionId;
+//        $educationGradeId = $educationGradeId;
         $studentId = $checkgpaStudent;
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -523,7 +524,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $connection = ConnectionManager::get('default');
         if(empty($recordExist)){
 
-            $statement = $connection->prepare("INSERT INTO `institution_students_gpa` (`student_id`, 
+            $statement = $connection->prepare("INSERT INTO `institution_students_gpa` (`student_id`,
                 `institution_id`, `academic_period_id`,
                              `education_grade_id`, `education_grades_gpa_id`, `cumulative_gpa`, `created_user_id`, `created`)
                             SELECT main_q.student_id
@@ -585,7 +586,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                                  ,assessments.education_grade_id
                                                  ,IFNULL(assessment_periods.academic_term, 1)
                                     ) term_info
-                                    ON term_info.academic_period_id = institution_subject_students.academic_period_id 
+                                    ON term_info.academic_period_id = institution_subject_students.academic_period_id
                                     AND term_info.education_grade_id = institution_subject_students.education_grade_id
                                     LEFT JOIN
                                     (
@@ -617,18 +618,18 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                                      ,assessment_item_results.education_subject_id
                                                      ,assessment_item_results.assessment_period_id
                                         ) latest_grades
-                                        ON latest_grades.academic_period_id = assessment_item_results.academic_period_id 
-                                        AND latest_grades.education_grade_id = assessment_item_results.education_grade_id 
-                                        AND latest_grades.student_id = assessment_item_results.student_id 
-                                        AND latest_grades.assessment_id = assessment_item_results.assessment_id 
-                                        AND latest_grades.education_subject_id = assessment_item_results.education_subject_id 
-                                        AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id 
+                                        ON latest_grades.academic_period_id = assessment_item_results.academic_period_id
+                                        AND latest_grades.education_grade_id = assessment_item_results.education_grade_id
+                                        AND latest_grades.student_id = assessment_item_results.student_id
+                                        AND latest_grades.assessment_id = assessment_item_results.assessment_id
+                                        AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+                                        AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
                                         AND latest_grades.latest_created = assessment_item_results.created
                                         INNER JOIN assessment_periods
                                         ON assessment_periods.id = assessment_item_results.assessment_period_id
                                         INNER JOIN education_subjects
                                         ON education_subjects.id = assessment_item_results.education_subject_id
-                                        LEFT JOIN 
+                                        LEFT JOIN
                                         (
                                             SELECT assessment_item_student_exemptions.assessment_id
                                                 ,assessment_item_student_exemptions.education_subject_id
@@ -657,10 +658,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                                  ,assessment_item_results.student_id
                                                  ,assessment_periods.academic_term
                                     ) subq2
-                                    ON subq2.academic_period_id = institution_subject_students.academic_period_id 
-                                    AND subq2.education_grade_id = institution_subject_students.education_grade_id 
-                                    AND subq2.student_id = institution_subject_students.student_id 
-                                    AND subq2.education_subject_id = institution_subject_students.education_subject_id 
+                                    ON subq2.academic_period_id = institution_subject_students.academic_period_id
+                                    AND subq2.education_grade_id = institution_subject_students.education_grade_id
+                                    AND subq2.student_id = institution_subject_students.student_id
+                                    AND subq2.education_subject_id = institution_subject_students.education_subject_id
                                     AND subq2.academic_term = term_info.academic_term
                                     WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
                                     AND institution_subject_students.student_id = $studentId
@@ -676,7 +677,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                 AND education_grades_gpa.academic_period_id = subq.academic_period_id
                                 AND education_grades_gpa.education_grade_id = subq.education_grade_id
                                 LEFT JOIN gpa_grading_options
-                                ON subq.total_mark >= gpa_grading_options.min 
+                                ON subq.total_mark >= gpa_grading_options.min
                                 AND subq.total_mark <= gpa_grading_options.max
                                 AND education_grades_gpa.gpa_grading_type_id = gpa_grading_options.gpa_grading_type_id
                                 GROUP BY  subq.academic_period_id
@@ -695,8 +696,8 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                     ,students_gpa.institution_id
                                     ,current_academic_period.academic_period_id
                                     ,MAX(student_education_grades.id) education_grade_id
-                                    ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student 
-                                FROM 
+                                    ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student
+                                FROM
                                 (
                                     SELECT institution_students_gpa.institution_id
                                         ,institution_students_gpa.academic_period_id
@@ -711,13 +712,13 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                 ) students_gpa
                                 INNER JOIN education_grades student_education_grades
                                 ON student_education_grades.id = students_gpa.education_grade_id
-                                INNER JOIN 
+                                INNER JOIN
                                 (
                                     SELECT academic_periods.id academic_period_id
                                     FROM academic_periods
                                     WHERE academic_periods.id = $selectedAcademicPeriodId
                                 ) current_academic_period
-                                INNER JOIN 
+                                INNER JOIN
                                 (
                                     SELECT education_grades_cumulative_gpa.main_education_grade_id
                                         ,education_grades_gpa.academic_period_id
@@ -819,7 +820,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                                     ,assessments.education_grade_id
                                                     ,IFNULL(assessment_periods.academic_term, 1)
                                         ) term_info
-                                        ON term_info.academic_period_id = institution_subject_students.academic_period_id 
+                                        ON term_info.academic_period_id = institution_subject_students.academic_period_id
                                         AND term_info.education_grade_id = institution_subject_students.education_grade_id
                                         LEFT JOIN
                                         (
@@ -851,18 +852,18 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                                         ,assessment_item_results.education_subject_id
                                                         ,assessment_item_results.assessment_period_id
                                             ) latest_grades
-                                            ON latest_grades.academic_period_id = assessment_item_results.academic_period_id 
-                                            AND latest_grades.education_grade_id = assessment_item_results.education_grade_id 
-                                            AND latest_grades.student_id = assessment_item_results.student_id 
-                                            AND latest_grades.assessment_id = assessment_item_results.assessment_id 
-                                            AND latest_grades.education_subject_id = assessment_item_results.education_subject_id 
-                                            AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id 
+                                            ON latest_grades.academic_period_id = assessment_item_results.academic_period_id
+                                            AND latest_grades.education_grade_id = assessment_item_results.education_grade_id
+                                            AND latest_grades.student_id = assessment_item_results.student_id
+                                            AND latest_grades.assessment_id = assessment_item_results.assessment_id
+                                            AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+                                            AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
                                             AND latest_grades.latest_created = assessment_item_results.created
                                             INNER JOIN assessment_periods
                                             ON assessment_periods.id = assessment_item_results.assessment_period_id
                                             INNER JOIN education_subjects
                                             ON education_subjects.id = assessment_item_results.education_subject_id
-                                            LEFT JOIN 
+                                            LEFT JOIN
                                             (
                                                 SELECT assessment_item_student_exemptions.assessment_id
                                                     ,assessment_item_student_exemptions.education_subject_id
@@ -891,10 +892,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                                     ,assessment_item_results.student_id
                                                     ,assessment_periods.academic_term
                                         ) subq2
-                                        ON subq2.academic_period_id = institution_subject_students.academic_period_id 
-                                        AND subq2.education_grade_id = institution_subject_students.education_grade_id 
-                                        AND subq2.student_id = institution_subject_students.student_id 
-                                        AND subq2.education_subject_id = institution_subject_students.education_subject_id 
+                                        ON subq2.academic_period_id = institution_subject_students.academic_period_id
+                                        AND subq2.education_grade_id = institution_subject_students.education_grade_id
+                                        AND subq2.student_id = institution_subject_students.student_id
+                                        AND subq2.education_subject_id = institution_subject_students.education_subject_id
                                         AND subq2.academic_term = term_info.academic_term
                                         WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
                                         AND institution_subject_students.student_id = $studentId
@@ -910,7 +911,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                     AND education_grades_gpa.academic_period_id = subq.academic_period_id
                                     AND education_grades_gpa.education_grade_id = subq.education_grade_id
                                     LEFT JOIN gpa_grading_options
-                                    ON subq.total_mark >= gpa_grading_options.min 
+                                    ON subq.total_mark >= gpa_grading_options.min
                                     AND subq.total_mark <= gpa_grading_options.max
                                     AND education_grades_gpa.gpa_grading_type_id = gpa_grading_options.gpa_grading_type_id
                                     GROUP BY  subq.academic_period_id
@@ -929,8 +930,8 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                         ,students_gpa.institution_id
                                         ,current_academic_period.academic_period_id
                                         ,MAX(student_education_grades.id) education_grade_id
-                                        ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student 
-                                    FROM 
+                                        ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student
+                                    FROM
                                     (
                                         SELECT institution_students_gpa.institution_id
                                             ,institution_students_gpa.academic_period_id
@@ -945,13 +946,13 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                     ) students_gpa
                                     INNER JOIN education_grades student_education_grades
                                     ON student_education_grades.id = students_gpa.education_grade_id
-                                    INNER JOIN 
+                                    INNER JOIN
                                     (
                                         SELECT academic_periods.id academic_period_id
                                         FROM academic_periods
                                         WHERE academic_periods.id = $selectedAcademicPeriodId
                                     ) current_academic_period
-                                    INNER JOIN 
+                                    INNER JOIN
                                     (
                                         SELECT education_grades_cumulative_gpa.main_education_grade_id
                                             ,education_grades_gpa.academic_period_id
@@ -987,27 +988,42 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             AND subq4.academic_period_id = institution_students_gpa.academic_period_id
                             AND subq4.education_grade_id = institution_students_gpa.education_grade_id
                             AND subq4.education_grades_gpa_id = institution_students_gpa.education_grades_gpa_id
-                            SET institution_students_gpa.cumulative_gpa = subq4.cumulative_gpa 
+                            SET institution_students_gpa.cumulative_gpa = subq4.cumulative_gpa
                             ,institution_students_gpa.modified_user_id = $loginUserId,institution_students_gpa.modified = CURRENT_TIMESTAMP();");
                             $statement->execute();
             //echo "<pre>"; print_r($statement); die;
         }
-    
+
     }
 
     //New add Cumulative GPA for student with $educationGradeId -- POCOR-8962
-    private function addGpaReportCards($checkgpaStudent,$selectedAcademicPeriodId, $institutionId,$educationGradeId)
+    public static function addGpaReportCards($checkgpaStudent, // POCOR-9162
+                                             $selectedAcademicPeriodId,
+                                             $institutionId,
+                                             $educationGradeId): void
     {
-        $selectedAcademicPeriodId = $selectedAcademicPeriodId;
-        $reportCardId = $reportCardId;
-        $institutionId = $institutionId;
-        $educationGradeId = $educationGradeId;
+//        $selectedAcademicPeriodId = $selectedAcademicPeriodId;
+//
+//        $institutionId = $institutionId;
+//        $educationGradeId = $educationGradeId;
         $studentId = $checkgpaStudent;
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+//        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+//        $academicPeriodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
         $gpaTable = TableRegistry::get('Institution.InstitutionStudentsGpa');
-        $recordExist = $gpaTable->find()->select(['id'])->where([$gpaTable->aliasField('institution_id') => $institutionId, $gpaTable->aliasField('student_id') => $studentId,$gpaTable->aliasField('academic_period_id') => $selectedAcademicPeriodId,$gpaTable->aliasField('education_grade_id') => $educationGradeId])->first();
-        $loginUserId = $this->Auth->user()['id'];
+        // POCOR-9162 start
+        $recordExist = $gpaTable->find()->select(['id'])->where([
+            $gpaTable->aliasField('institution_id') => $institutionId,
+            $gpaTable->aliasField('student_id') => $studentId,
+            $gpaTable->aliasField('academic_period_id') => $selectedAcademicPeriodId,
+            $gpaTable->aliasField('education_grade_id') => $educationGradeId])
+            ->first();
+        $session = new Session();
+        if (is_null($session->read('Auth.User.id'))) {
+            $loginUserId = 1;    // Super Admin
+        }else {
+            $loginUserId = $session->read('Auth.User.id');
+        }
+        // POCOR-9162 end
         $connection = ConnectionManager::get('default');
         if(empty($recordExist)){
 
@@ -1071,7 +1087,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             ,assessments.education_grade_id
                             ,IFNULL(assessment_periods.academic_term, 1)
                 ) term_info
-                ON term_info.academic_period_id = institution_subject_students.academic_period_id 
+                ON term_info.academic_period_id = institution_subject_students.academic_period_id
                 AND term_info.education_grade_id = institution_subject_students.education_grade_id
                 LEFT JOIN
                 (
@@ -1103,18 +1119,18 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                 ,assessment_item_results.education_subject_id
                                 ,assessment_item_results.assessment_period_id
                     ) latest_grades
-                    ON latest_grades.academic_period_id = assessment_item_results.academic_period_id 
-                    AND latest_grades.education_grade_id = assessment_item_results.education_grade_id 
-                    AND latest_grades.student_id = assessment_item_results.student_id 
-                    AND latest_grades.assessment_id = assessment_item_results.assessment_id 
-                    AND latest_grades.education_subject_id = assessment_item_results.education_subject_id 
-                    AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id 
+                    ON latest_grades.academic_period_id = assessment_item_results.academic_period_id
+                    AND latest_grades.education_grade_id = assessment_item_results.education_grade_id
+                    AND latest_grades.student_id = assessment_item_results.student_id
+                    AND latest_grades.assessment_id = assessment_item_results.assessment_id
+                    AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+                    AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
                     AND latest_grades.latest_created = assessment_item_results.created
                     INNER JOIN assessment_periods
                     ON assessment_periods.id = assessment_item_results.assessment_period_id
                     INNER JOIN education_subjects
                     ON education_subjects.id = assessment_item_results.education_subject_id
-                    LEFT JOIN 
+                    LEFT JOIN
                     (
                         SELECT assessment_item_student_exemptions.assessment_id
                             ,assessment_item_student_exemptions.education_subject_id
@@ -1143,10 +1159,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             ,assessment_item_results.student_id
                             ,assessment_periods.academic_term
                 ) subq2
-                ON subq2.academic_period_id = institution_subject_students.academic_period_id 
-                AND subq2.education_grade_id = institution_subject_students.education_grade_id 
-                AND subq2.student_id = institution_subject_students.student_id 
-                AND subq2.education_subject_id = institution_subject_students.education_subject_id 
+                ON subq2.academic_period_id = institution_subject_students.academic_period_id
+                AND subq2.education_grade_id = institution_subject_students.education_grade_id
+                AND subq2.student_id = institution_subject_students.student_id
+                AND subq2.education_subject_id = institution_subject_students.education_subject_id
                 AND subq2.academic_term = term_info.academic_term
                 LEFT JOIN(
                         SELECT institution_classes.academic_period_id,
@@ -1186,7 +1202,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             AND education_grades_gpa.academic_period_id = subq.academic_period_id
             AND education_grades_gpa.education_grade_id = subq.education_grade_id
             LEFT JOIN gpa_grading_options
-            ON subq.total_mark >= gpa_grading_options.min 
+            ON subq.total_mark >= gpa_grading_options.min
             AND subq.total_mark <= gpa_grading_options.max
             AND education_grades_gpa.gpa_grading_type_id = gpa_grading_options.gpa_grading_type_id
             GROUP BY  subq.academic_period_id
@@ -1204,8 +1220,8 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 ,students_gpa.institution_id
                 ,current_academic_period.academic_period_id
                 ,MAX(students_gpa.education_grade_id) education_grade_id
-                ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student 
-            FROM 
+                ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student
+            FROM
             (
                 SELECT institution_students_gpa.institution_id
                     ,institution_students_gpa.academic_period_id
@@ -1223,7 +1239,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                     ,institution_students_gpa.education_grade_id
                     ,institution_students_gpa.education_grades_gpa_id
             ) students_gpa
-            INNER JOIN 
+            INNER JOIN
             (
                 SELECT academic_periods.id academic_period_id
                     ,education_grades.id education_grade_id
@@ -1241,7 +1257,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 WHERE academic_periods.id = $selectedAcademicPeriodId
                 AND education_grades.id = $educationGradeId
             ) current_academic_period
-            INNER JOIN 
+            INNER JOIN
             (
                 SELECT education_grades_cumulative_gpa.main_education_grade_id
                     ,education_systems.academic_period_id
@@ -1294,7 +1310,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         ,main_q.academic_period_id
                         ,main_q.education_grade_id
                         ,ind_gpa.education_grades_gpa_id
-                        
+
                         ,IFNULL(cum_gpa.cum_gpa_per_student, 0.00) cum_gpa
                         ,$loginUserId AS created_user_id -- TO MAKE IT DYNAMIC BASED ON USER_ID WHO GENERATES THE GPA
                         ,CURRENT_TIMESTAMP() created
@@ -1349,7 +1365,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                         ,assessments.education_grade_id
                                         ,IFNULL(assessment_periods.academic_term, 1)
                             ) term_info
-                            ON term_info.academic_period_id = institution_subject_students.academic_period_id 
+                            ON term_info.academic_period_id = institution_subject_students.academic_period_id
                             AND term_info.education_grade_id = institution_subject_students.education_grade_id
                             LEFT JOIN
                             (
@@ -1381,18 +1397,18 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                             ,assessment_item_results.education_subject_id
                                             ,assessment_item_results.assessment_period_id
                                 ) latest_grades
-                                ON latest_grades.academic_period_id = assessment_item_results.academic_period_id 
-                                AND latest_grades.education_grade_id = assessment_item_results.education_grade_id 
-                                AND latest_grades.student_id = assessment_item_results.student_id 
-                                AND latest_grades.assessment_id = assessment_item_results.assessment_id 
-                                AND latest_grades.education_subject_id = assessment_item_results.education_subject_id 
-                                AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id 
+                                ON latest_grades.academic_period_id = assessment_item_results.academic_period_id
+                                AND latest_grades.education_grade_id = assessment_item_results.education_grade_id
+                                AND latest_grades.student_id = assessment_item_results.student_id
+                                AND latest_grades.assessment_id = assessment_item_results.assessment_id
+                                AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+                                AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
                                 AND latest_grades.latest_created = assessment_item_results.created
                                 INNER JOIN assessment_periods
                                 ON assessment_periods.id = assessment_item_results.assessment_period_id
                                 INNER JOIN education_subjects
                                 ON education_subjects.id = assessment_item_results.education_subject_id
-                                LEFT JOIN 
+                                LEFT JOIN
                                 (
                                     SELECT assessment_item_student_exemptions.assessment_id
                                         ,assessment_item_student_exemptions.education_subject_id
@@ -1421,10 +1437,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                         ,assessment_item_results.student_id
                                         ,assessment_periods.academic_term
                             ) subq2
-                            ON subq2.academic_period_id = institution_subject_students.academic_period_id 
-                            AND subq2.education_grade_id = institution_subject_students.education_grade_id 
-                            AND subq2.student_id = institution_subject_students.student_id 
-                            AND subq2.education_subject_id = institution_subject_students.education_subject_id 
+                            ON subq2.academic_period_id = institution_subject_students.academic_period_id
+                            AND subq2.education_grade_id = institution_subject_students.education_grade_id
+                            AND subq2.student_id = institution_subject_students.student_id
+                            AND subq2.education_subject_id = institution_subject_students.education_subject_id
                             AND subq2.academic_term = term_info.academic_term
                             LEFT JOIN(
                             SELECT institution_classes.academic_period_id,
@@ -1441,7 +1457,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                 institution_classes.academic_period_id = $selectedAcademicPeriodId
                                 AND institution_classes.institution_id = $institutionId
                                 AND assessment_item_student_exemptions.student_id = $studentId
-                            
+
                             GROUP BY
                                 assessment_item_student_exemptions.education_subject_id,
                                 assessment_item_student_exemptions.student_id,
@@ -1465,7 +1481,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         AND education_grades_gpa.academic_period_id = subq.academic_period_id
                         AND education_grades_gpa.education_grade_id = subq.education_grade_id
                         LEFT JOIN gpa_grading_options
-                        ON subq.total_mark >= gpa_grading_options.min 
+                        ON subq.total_mark >= gpa_grading_options.min
                         AND subq.total_mark <= gpa_grading_options.max
                         AND education_grades_gpa.gpa_grading_type_id = gpa_grading_options.gpa_grading_type_id
                         GROUP BY  subq.academic_period_id
@@ -1483,8 +1499,8 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             ,students_gpa.institution_id
                             ,current_academic_period.academic_period_id
                             ,MAX(students_gpa.education_grade_id) education_grade_id
-                            ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student 
-                        FROM 
+                            ,ROUND(AVG(IFNULL(students_gpa.gpa, 0)), 2) cum_gpa_per_student
+                        FROM
                         (
                             SELECT institution_students_gpa.institution_id
                                 ,institution_students_gpa.academic_period_id
@@ -1502,7 +1518,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                                 ,institution_students_gpa.education_grade_id
                                 ,institution_students_gpa.education_grades_gpa_id
                         ) students_gpa
-                        INNER JOIN 
+                        INNER JOIN
                         (
                             SELECT academic_periods.id academic_period_id
                                 ,education_grades.id education_grade_id
@@ -1520,7 +1536,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             WHERE academic_periods.id = $selectedAcademicPeriodId
                             AND education_grades.id = $educationGradeId
                         ) current_academic_period
-                        INNER JOIN 
+                        INNER JOIN
                         (
                             SELECT education_grades_cumulative_gpa.main_education_grade_id
                                 ,education_systems.academic_period_id
@@ -1564,10 +1580,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             $statement->execute();
             //echo "<pre>"; print_r($statement); die;
         }
-    
+
     }
 
-    
+
     /**
      * @param array $buttons
      * @param $params
@@ -1618,7 +1634,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 $canGenerateAnyDate = true;
             }
             if (!$canGenerateAnyDate) {
-                $canGenerateAnyDate = $this->canGenerateAnyDate($educationGradeId); 
+                $canGenerateAnyDate = $this->canGenerateAnyDate($educationGradeId);
             }
             if ($canGenerateAnyDate) {
                 $buttons['generate'] = [
@@ -1682,7 +1698,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->controller->getInstitutionGpaTab(); 
+        $this->controller->getInstitutionGpaTab();
     }
 
     public function onGetCumulativeGpa(Event $event, Entity $entity)
@@ -1733,7 +1749,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
 
     public function onGetStudentName(Event $event, Entity $entity)
     {
-        return $entity->user->name;   
+        return $entity->user->name;
     }
 
     public function onGetInstitutionClass(Event $event, Entity $entity)
