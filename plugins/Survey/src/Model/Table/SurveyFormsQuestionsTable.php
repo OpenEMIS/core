@@ -49,16 +49,21 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 
 	public function findSurveyFormChoices(Query $query, array $options)
 	{
-        $section = $options['section'] ?? null;
-        $survey_form_id = $options['survey_form_id'] ?? null;
+        $section = $options['section'] ?? -1;
+        $survey_form_id = $options['survey_form_id'] ?? -1;
+        $survey_question_id = $options['survey_question_id'] ?? -1;
         if($section) {
             $query->where(['SurveyFormsQuestions.section' => $section]);
         }
         if($survey_form_id) {
             $query->where(['SurveyFormsQuestions.survey_form_id' => $survey_form_id]);
         }
+        if($survey_question_id) {
+            $query->where([$this->aliasField('survey_question_id') => $survey_question_id]);
+        }
 		$query
-			->select(['survey_question_choice_id' => 'SurveyQuestionChoices.id', 'survey_question_choice_name' => 'SurveyQuestionChoices.name'])
+			->select(['survey_question_choice_id' => 'SurveyQuestionChoices.id',
+                'survey_question_choice_name' => 'SurveyQuestionChoices.name'])
 			->innerJoin(
 				['SurveyQuestionChoices' => 'survey_question_choices'],
 				['SurveyQuestionChoices.survey_question_id = '.$this->aliasField('survey_question_id')]

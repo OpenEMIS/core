@@ -13,7 +13,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     vm.surveyFormId = surveyFormId;
 
     // Functions
-    vm.getSurveySection = getSurveySection;
+    vm.getSurveySections = getSurveySections;
     vm.getQuestionsFromSection = getQuestionsFromSection;
     vm.onChangeSection = onChangeSection;
     vm.filterByOrderAndType = filterByOrderAndType;
@@ -55,23 +55,27 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         ;
     });
 
-    function getSurveySection(surveyFormId) {
-        SurveyRulesSvc.getSection(surveyFormId)
-        .then(function(sections) {
-            var sectionData = sections.data;
-            var options = [];
-            for(i = 0; i < sectionData.length; i++)
-            {
-                if (sectionData[i].section.toString() == "") {
-                    options.push({text: "No Section", value: sectionData[i].section});
-                } else {
-                    options.push({text: sectionData[i].section.toString(), value: sectionData[i].section});
-                }
-            }
+    function getSurveySections(surveyFormId) {
+        SurveyRulesSvc.getSections(surveyFormId).then(function (response) {
+            const sections = response.data || [];
+
+            // Build dropdown options
+            const options = sections.map(section => {
+                const text = section.section?.toString() || "No Section";
+                return {
+                    text: text,
+                    value: section.section
+                };
+            });
+
             vm.surveySectionOptions = options;
-            vm.sectionName = options[0].value;
-            var sectionName = vm.sectionName;
-            vm.getQuestionsFromSection(surveyFormId, sectionName);
+
+            // Use first section if available
+            if (options.length > 0) {
+                const firstSectionValue = options[0].value;
+                vm.sectionName = firstSectionValue;
+                vm.getQuestionsFromSection(surveyFormId, firstSectionValue);
+            }
         });
     }
 
@@ -194,8 +198,8 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         }
     }
 
-    function populateOptions() {
-        SurveyRulesSvc.getShowIfChoices(vm.surveyFormId, vm.sectionName)
+    function populateOptions(dependentQuestionId) {
+        SurveyRulesSvc.getShowIfChoices(vm.surveyFormId, vm.sectionName, dependentQuestionId)
         .then(function(response)
         {
             console.log(response);
