@@ -210,11 +210,27 @@ class InstitutionSurveysTable extends ControllerActionTable
             foreach ($rules as $key => $rule) {
                 foreach ($rule as $supportFieldKey => $options) {
                     $supportQuestionOptions = json_decode($options);
-                    if (isset($newData[$supportFieldKey])) {
-                        $userSelectedOption = $newData[$supportFieldKey]['number_value'];
-                        if (!(in_array($userSelectedOption, $supportQuestionOptions)) && $newData[$key]['mandatory'] == 1) {
-                            $dataAliasKey = $newData[$key]['dataKey'];
-                            $data[$this->getAlias()]['custom_field_values'][$dataAliasKey]['mandatory'] = 0;
+
+                    if (!empty($supportQuestionOptions)) {
+                        if (isset($newData[$supportFieldKey])) {
+                            $userSelectedOption = $newData[$supportFieldKey]['number_value'];
+
+                            // Replacing in_array() with isset() to check keys instead
+                            if (!isset($supportQuestionOptions[$userSelectedOption]) && $newData[$key]['mandatory'] == 1) {
+                                $dataAliasKey = $newData[$key]['dataKey'];
+                                $data[$this->getAlias()]['custom_field_values'][$dataAliasKey]['mandatory'] = 0;
+                            }
+                        }
+                    } else {
+                        // supportQuestionOptions is empty or missing
+                        $this->Alert->error(
+                            __('There is a missing question option configuration. Please contact the administrator.'),
+                            ['type' => 'string', 'reset' => true]
+                        );
+
+                        if (isset($event)) {
+                            $event->stopPropagation();
+                            return $this->controller->redirect($this->url('view'));
                         }
                     }
                 }
