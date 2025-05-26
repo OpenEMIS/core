@@ -88,7 +88,7 @@ class RenderBehavior extends Behavior {
                 ['type' => 'string', 'reset' => true]
             );
             $entity->setError('_custom_fields', 'Form Errors');
-            dd($formHelper);
+            $formHelper->button('Behave');
             return $html;
         }
 
