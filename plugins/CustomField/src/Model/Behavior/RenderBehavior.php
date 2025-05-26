@@ -84,7 +84,7 @@ class RenderBehavior extends Behavior {
             $entity_array = $entity->toArray();
         } catch (\Throwable $e) {
             $this->_table->Alert->error(
-                __("This survey tab has errors. Please ask administrator to review all survey rules before saving this survey"),
+                __("This survey form seems to have errors. Please ask administrator to review all survey rules before saving"),
                 ['type' => 'string', 'reset' => true]
             );
             $this->_table->controller->redirect( $this->_table->url('view'));
