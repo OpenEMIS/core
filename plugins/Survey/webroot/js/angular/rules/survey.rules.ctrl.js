@@ -43,7 +43,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
             } else {
                 vm.surveyFormId = options[0].value;
             }
-            vm.getSurveySection(vm.surveyFormId);
+            vm.getSurveySections(vm.surveyFormId);
         }, function(error)
         {
             console.error(error);
