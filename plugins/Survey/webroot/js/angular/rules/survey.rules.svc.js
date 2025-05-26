@@ -17,7 +17,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
     var service = {
         init: init,
         getSurveyForm: getSurveyForm,
-        getSection: getSection,
+        getSections: getSections,
         getQuestions: getQuestions,
         getShowIfChoices: getShowIfChoices,
         saveData: saveData
@@ -38,7 +38,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
             ;
     };
 
-    function getSection(surveyFormId) {
+    function getSections(surveyFormId) {
         return SurveyFormsQuestionsTable
             .select(['section'])
             .where({survey_form_id: surveyFormId})
@@ -59,11 +59,14 @@ function SurveyRulesSvc($q, KdOrmSvc) {
             ;
     };
 
-    function getShowIfChoices(surveyFormId, section) {
+    function getShowIfChoices(surveyFormId, section, dependentQuestionId) {
+        let options = {survey_form_id: surveyFormId,
+            section: section,
+            survey_question_id: dependentQuestionId};
         return SurveyFormsQuestionsTable
             .select()
-            .find('SurveyFormChoices', {survey_form_id: surveyFormId, section: section})
-            .where({survey_form_id: surveyFormId, section: section})
+            .find('SurveyFormChoices', options)
+            .where(options)
             .ajax({defer: true})
             ;
     };

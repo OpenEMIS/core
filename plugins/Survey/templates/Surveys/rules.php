@@ -14,7 +14,7 @@
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
-?>	
+?>
 	<div id="anchorTop"></div>
 <?php
 $this->end();
@@ -41,7 +41,11 @@ $institutionId = $session->read('Institution.Institutions.id');
 			<div class="input select">
 				<label for="surveyrules-survey-form-section-name"><?= __('Survey Form Section')?></label>
 				<div class="input-select-wrapper">
-					<select name="StaffPositionProfiles[staff_change_type_id]" id="staffpositionprofiles-staff-change-type-id" ng-options="item.value as item.text for item in SurveyRulesController.surveySectionOptions" ng-model="SurveyRulesController.sectionName" ng-change="SurveyRulesController.onChangeSection(SurveyRulesController.sectionName)">
+					<select name="StaffPositionProfiles[staff_change_type_id]"
+                            id="staffpositionprofiles-staff-change-type-id"
+                            ng-options="item.value as item.text for item in SurveyRulesController.surveySectionOptions"
+                            ng-model="SurveyRulesController.sectionName"
+                            ng-change="SurveyRulesController.onChangeSection(SurveyRulesController.sectionName)">
 					</select>
 				</div>
 			</div>
@@ -49,7 +53,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 				<form method="post" accept-charset="utf-8" id="content-main-form" novalidate="novalidate" action="/openemis-phpoe/Surveys/Forms?module=1" class="ng-pristine ng-valid"><div style="display:none;"><input type="hidden" name="_method" value="POST"></div>
 					<div class="table-wrapper">
 						<div class="table-responsive">
-							
+
 							<table class="table table-curved table-sortable table-checkable" >
 								<thead>
 									<tr>
@@ -63,24 +67,24 @@ $institutionId = $session->read('Institution.Institutions.id');
 									</tr>
 									<tr ng-repeat-end>
 										<td class="checkbox-column">
-										<input 
-											type="hidden" 
+										<input
+											type="hidden"
 											ng-init="SurveyRulesController.questionId[question.no] = question.survey_question_id"
 											ng-model="SurveyRulesController.questionId[question.no]" />
-											<input 
-												class="no-selection-label" 
-												kd-checkbox-radio 
+											<input
+												class="no-selection-label"
+												kd-checkbox-radio
 												type="checkbox"
-												ng-true-value="1" 
-												ng-false-value="0" 
-												ng-model="SurveyRulesController.enabled[question.no]" 
+												ng-true-value="1"
+												ng-false-value="0"
+												ng-model="SurveyRulesController.enabled[question.no]"
 												ng-init="SurveyRulesController.enabled[question.no] = 0; SurveyRulesController.initEnabled(question);">
 										</td>
 										<td>
 											<div class="input-select-wrapper">
-												<select 
-													ng-options="item.survey_question_id as item.short_name for item in SurveyRulesController.surveyQuestions | filter:SurveyRulesController.filterByOrderAndType({{question.order}})" 
-													ng-model="SurveyRulesController.dependentQuestion[question.no]" 
+												<select
+													ng-options="item.survey_question_id as item.short_name for item in SurveyRulesController.surveyQuestions | filter:SurveyRulesController.filterByOrderAndType({{question.order}})"
+													ng-model="SurveyRulesController.dependentQuestion[question.no]"
 													ng-change="SurveyRulesController.populateOptions(question.rule.dependent_question_id)"
 													ng-init="SurveyRulesController.dependentQuestion[question.no] = 0; SurveyRulesController.populateOptions(SurveyRulesController.dependentQuestion[question.no]); SurveyRulesController.initDependentQuestion(question);">
 													<option value="">-- <?= __('Select One') ?> --</option>
@@ -90,11 +94,11 @@ $institutionId = $session->read('Institution.Institutions.id');
 										<td>
 											<div class="input select">
 												<select chosen
-													multiple="multiple" 
+													multiple="multiple"
 													data-placeholder="<?=__('Select Question Options') ?>"
-													class="chosen-select" 
-													options="SurveyRulesController.questionOptions" 
-													ng-model="SurveyRulesController.dependentOptions[question.no]" 
+													class="chosen-select"
+													options="SurveyRulesController.questionOptions"
+													ng-model="SurveyRulesController.dependentOptions[question.no]"
 													ng-options="item.survey_question_choice_id as item.survey_question_choice_name for item in SurveyRulesController.questionOptions | filter:SurveyRulesController.filterChoiceBySurveyQuestionId(SurveyRulesController.dependentQuestion[question.no])"
 													ng-init="SurveyRulesController.dependentOptions[question.no] = question.rule.show_options">
 												</select>
