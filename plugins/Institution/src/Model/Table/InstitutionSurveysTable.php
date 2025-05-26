@@ -178,8 +178,9 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+
         $event->stopPropagation();
-        return false;
+        return $this->controller->redirect($this->url('view'));
 
         $tabSection = null;
         $newData = [];
