@@ -35,12 +35,6 @@ class RenderCheckboxBehavior extends RenderBehavior
             if (isset($fieldValues[$fieldId]['number_value'])) {
                 $savedValue = $fieldValues[$fieldId]['number_value'];
             }
-        } else {
-            $this->_table->Alert->error(
-                __("This survey form has errors. Please ask administrator to review all survey rules before saving this survey"),
-                ['type' => 'string', 'reset' => true]
-            );
-            $event->stopPropagation();
         }
         // End
 
