@@ -16,7 +16,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
 
     var service = {
         init: init,
-        getSurveyForm: getSurveyForm,
+        getSurveyForms: getSurveyForms,
         getSections: getSections,
         getQuestions: getQuestions,
         getShowIfChoices: getShowIfChoices,
@@ -31,7 +31,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
         KdOrmSvc.init(models);
     };
 
-    function getSurveyForm() {
+    function getSurveyForms() {
         return SurveyFormsTable
             .select()
             .ajax({defer: true})

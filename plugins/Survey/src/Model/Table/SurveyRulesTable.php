@@ -13,7 +13,11 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Log\Log; // POCOR-8921
+use Cake\Log\Log;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
+
+// POCOR-8921
 
 class SurveyRulesTable extends ControllerActionTable
 {
@@ -121,7 +125,7 @@ class SurveyRulesTable extends ControllerActionTable
         $showOptions = $event->getSubject() // POCOR-8465
             ->HtmlField->decodeEscapeHtmlEntity($showOptions);
         $showOptions = json_decode($showOptions, true);
-        $SurveyQuestionChoicesTable = TableRegistry::get('Survey.SurveyQuestionChoices');
+        $SurveyQuestionChoicesTable = self::getDynamicTableInstance('Survey.SurveyQuestionChoices');
         if (!empty($showOptions)) {
             $options = $SurveyQuestionChoicesTable
                 ->find()
@@ -155,13 +159,21 @@ class SurveyRulesTable extends ControllerActionTable
     {
         // Survey form options
         $serverRequest = $this->request;
-        $surveyFormOptions = $this->SurveyForms
+        $SurveyFormsQuestionsTable = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
+
+        $SurveyFormsTable = $this->SurveyForms;
+        $surveyFormOptions = $SurveyFormsTable
             ->find('list')
             ->order([
-                $this->SurveyForms->aliasField('name')
+                $SurveyFormsTable->aliasField('name')
             ])
+            ->matching('CustomFields', function ($q) {
+                return $q->where(['CustomFields.field_type' => 'DROPDOWN']);
+            })
+            ->group([$SurveyFormsTable->aliasField('id')])
             ->toArray();
         $surveyFormOptions = ['' => '-- '.__('All Surveys').' --'] + $surveyFormOptions;
+
         $surveyFormId = $serverRequest->getQuery('survey_form_id');
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
@@ -170,7 +182,6 @@ class SurveyRulesTable extends ControllerActionTable
 
         if (!empty($surveyFormId))
         {
-            $SurveyFormsQuestionsTable = TableRegistry::get('Survey.SurveyFormsQuestions');
 
             $surveySections = $SurveyFormsQuestionsTable
                 ->find('list', [
@@ -182,6 +193,9 @@ class SurveyRulesTable extends ControllerActionTable
                     $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
                     $SurveyFormsQuestionsTable->aliasField('section').' IS NOT NULL'
                 ])
+                ->matching('CustomFields', function ($q) {
+                    return $q->where(['CustomFields.field_type' => 'DROPDOWN']);
+                })
                 ->distinct([$SurveyFormsQuestionsTable->aliasField('section')])
                 ->order([$SurveyFormsQuestionsTable->aliasField('order')])
                 ->toArray();
@@ -223,7 +237,7 @@ class SurveyRulesTable extends ControllerActionTable
             $query->contain(['SurveyForms', 'SurveyQuestions', 'DependentQuestions']);
 
             $extra['OR'] = [
-                [$this->SurveyForms->aliasField('name').' LIKE' => '%' . $search . '%'],
+                [$SurveyFormsTable->aliasField('name').' LIKE' => '%' . $search . '%'],
                 [$this->SurveyQuestions->aliasField('name').' LIKE' => '%' . $search . '%'],
                 [$this->DependentQuestions->aliasField('name').' LIKE' => '%' . $search . '%']
             ];
@@ -283,4 +297,54 @@ class SurveyRulesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }

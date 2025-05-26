@@ -10,6 +10,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     $scope.action = 'index';
     var filterValue = '';
     var surveyFormId = UtilsSvc.requestQuery('survey_form_id');
+    var sectionId = UtilsSvc.requestQuery('section_id');
     vm.surveyFormId = surveyFormId;
 
     // Functions
@@ -27,7 +28,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     angular.element(document).ready(function() {
         SurveyRulesSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
-        SurveyRulesSvc.getSurveyForm(0)
+        SurveyRulesSvc.getSurveyForms()
         .then(function(response)
         {
             var formData = response.data;
@@ -57,6 +58,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
 
     function getSurveySections(surveyFormId) {
         SurveyRulesSvc.getSections(surveyFormId).then(function (response) {
+
             const sections = response.data || [];
 
             // Build dropdown options
@@ -67,14 +69,18 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                     value: section.section
                 };
             });
-
+            console.log(sectionId);
+            console.log(options);
             vm.surveySectionOptions = options;
 
             // Use first section if available
-            if (options.length > 0) {
-                const firstSectionValue = options[0].value;
-                vm.sectionName = firstSectionValue;
-                vm.getQuestionsFromSection(surveyFormId, firstSectionValue);
+            if (options.length > 1) {
+                if (!isNaN(sectionId) && sectionId !=0) {
+                    vm.sectionName = options[sectionId - 1].value;
+                } else {
+                    vm.sectionName = options[0].value;
+                }
+                vm.getQuestionsFromSection(surveyFormId, vm.sectionName);
             }
         });
     }
