@@ -394,6 +394,8 @@ class ReportCardsTable extends AppTable
                 ->first();
 
             if (!empty($entity) && $entity->has('student')) {
+                $entity->age = date_diff(date_create($entity->student->date_of_birth), date_create('today'))->y . ' Year';
+                //POCOR-9098
                 $birthdate = $entity->student->date_of_birth;
                 $entity->student->date_of_birth = $birthdate->format($dateFormat);
 
@@ -2685,7 +2687,7 @@ class ReportCardsTable extends AppTable
      * @param array $params Parameters passed to the event.
      * @param ArrayObject $extra Additional data passed to the event.
      */
-    public function onExcelTemplateInitialiseInstitutionStudentGradeGpa(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentGradeGpaOld(Event $event, array $params, ArrayObject $extra)
     {
         $entity = null;
         if (!empty($params['student_id']) && !empty($params['institution_id']) && !empty($params['academic_period_id'])) {
@@ -2718,7 +2720,8 @@ class ReportCardsTable extends AppTable
                     ->where([
                         $StudentsGpa->aliasField('student_id') => $params['student_id'],
                         $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
-                        $GradesGpa->aliasField('gpa_grading_type_id IS NOT') => NULL
+                        $GradesGpa->aliasField('gpa_grading_type_id IS NOT') => NULL,
+                        $StudentsGpa->aliasField('cumulative_gpa IS NOT') => NULL //POCOR-9144
                     ])->group([$StudentsGpa->aliasField('education_grade_id')])
                     ->toArray();
                 $entity = [];
@@ -2736,6 +2739,83 @@ class ReportCardsTable extends AppTable
                     ];
                     $i++;
                 }
+
+        }
+            return $entity;
+    }
+
+    //POCOR-9144 -- function updated for CGPA placeholder issue and GPA values for all terms.
+    public function onExcelTemplateInitialiseInstitutionStudentGradeGpa(Event $event, array $params, ArrayObject $extra)
+    {
+        $entity = null;
+        if (!empty($params['student_id']) && !empty($params['institution_id']) && !empty($params['academic_period_id'])) {
+            $educationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $educationGrades = TableRegistry::get('Education.EducationGrades');
+            $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+            $GradesGpa = TableRegistry::get('Gpa.EducationGradesGpa');
+
+            $subquery = $GradesGpa->find()
+                ->select(['education_grade_id', 'max_start_date' => $GradesGpa->find()->func()->max('start_date')])
+                ->where(['gpa_grading_type_id IS NOT' => null])
+                ->group(['education_grade_id']);
+
+            $result = $StudentsGpa->find()
+            ->select([
+                'gpa' => $StudentsGpa->aliasField('gpa'),
+                'cumulative_gpa' => $StudentsGpa->aliasField('cumulative_gpa'),
+                'academic_period' => $academicPeriod->aliasField('name'),
+                'education_grade' => $educationGrades->aliasField('name'),
+                'start_date' => $GradesGpa->aliasField('start_date'),
+                'end_date' => $GradesGpa->aliasField('end_date'),
+                'student_id' => $StudentsGpa->aliasField('student_id'),
+                'grading_scale_name' => 'GradesGpaById.name',
+            ])
+            ->leftJoin(
+                [$academicPeriod->getAlias() => $academicPeriod->getTable()],
+                $academicPeriod->aliasField('id') . ' = ' . $StudentsGpa->aliasField('academic_period_id')
+            )
+            ->leftJoin(
+                [$educationGrades->getAlias() => $educationGrades->getTable()],
+                $educationGrades->aliasField('id') . ' = ' . $StudentsGpa->aliasField('education_grade_id')
+            )
+            ->leftJoin(
+                [$GradesGpa->getAlias() => $GradesGpa->getTable()],
+                [
+                    $GradesGpa->aliasField('education_grade_id') . ' = ' . $StudentsGpa->aliasField('education_grade_id'),
+                ]
+            )
+            ->leftJoin(
+                ['GradesGpaById' => $GradesGpa->getTable()],
+                'GradesGpaById.id = ' . $StudentsGpa->aliasField('education_grades_gpa_id')
+            )
+            ->where([
+                $StudentsGpa->aliasField('student_id') => $params['student_id'],
+                $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
+                // Filter to latest GPA per grade using a correlated subquery
+                sprintf(
+                    '(%s) IN (SELECT MAX(start_date) FROM education_grades_gpa WHERE education_grade_id = %s)',
+                    $GradesGpa->aliasField('start_date'),
+                    $StudentsGpa->aliasField('education_grade_id')
+                )
+            ])
+            ->enableAutoFields(false)
+            ->toArray();
+            $entity = [];
+            $i = 1;
+            foreach ($result as $row) {
+                //echo "<pre>"; print_r($row); die;
+                $entity[] = [
+                    'id' => $i,
+                    'academic_period' => $row['academic_period'],
+                    'education_grade' => $row['education_grade'].' - ' . $row['grading_scale_name'],
+                    'gpa' => $row['gpa'],
+                    'cumulative' => $row['cumulative_gpa'],
+                    'start_date' => $row['start_date'],  // Null if not a valid date
+                    'end_date' => $row['end_date'],      // Null if not a valid date
+                ];
+                $i++;
+            }
 
         }
             return $entity;
