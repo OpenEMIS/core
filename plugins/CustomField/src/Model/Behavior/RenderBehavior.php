@@ -76,6 +76,8 @@ class RenderBehavior extends Behavior {
                     "There is archive process currently running. Please try again once the process has ended",
                     ['type' => 'string', 'reset' => true]
                 );
+                $entity->setError('_custom_fields', 'Rules should be reviewed');
+
                 return $html;
             }
         }
@@ -83,7 +85,7 @@ class RenderBehavior extends Behavior {
             $entity_array = $entity->toArray();
         } catch (\Throwable $e) {
             $this->_table->Alert->error(
-                "There is archive process currently running. Please try again once the process has ended",
+                __("This survey form has errors. Please ask administrator to review all survey rules before saving this survey"),
                 ['type' => 'string', 'reset' => true]
             );
             return $html;
