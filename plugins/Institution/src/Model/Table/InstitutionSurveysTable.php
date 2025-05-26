@@ -212,9 +212,17 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $supportQuestionOptions = json_decode($options);
                     if (isset($newData[$supportFieldKey])) {
                         $userSelectedOption = $newData[$supportFieldKey]['number_value'];
-                        if (!(in_array($userSelectedOption, $supportQuestionOptions)) && $newData[$key]['mandatory'] == 1) {
-                            $dataAliasKey = $newData[$key]['dataKey'];
-                            $data[$this->getAlias()]['custom_field_values'][$dataAliasKey]['mandatory'] = 0;
+                        if (is_array($supportQuestionOptions)) {
+                            if (!(in_array($userSelectedOption, $supportQuestionOptions)) && $newData[$key]['mandatory'] == 1) {
+                                $dataAliasKey = $newData[$key]['dataKey'];
+                                $data[$this->getAlias()]['custom_field_values'][$dataAliasKey]['mandatory'] = 0;
+                            }
+                        } else {
+                            $this->Alert->error(
+                                "There is archive process currently running. Please try again once the process has ended",
+                                ['type' => 'string', 'reset' => true]
+                            );
+                            $event->stopPropagation();
                         }
                     }
                 }
