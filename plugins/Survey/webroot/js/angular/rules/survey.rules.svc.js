@@ -34,6 +34,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
     function getSurveyForms() {
         return SurveyFormsTable
             .select()
+            .find('HavingDropdownQuestions')
             .ajax({defer: true})
             ;
     };
