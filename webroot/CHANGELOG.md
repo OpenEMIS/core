@@ -1,3 +1,44 @@
+### [4.25.3] - 2025-05-22
+- Bug Fixed: Institutions > Performances > Report Cards : Cumulative GPA placeholder is not displaying any values upon generating
+
+### [4.25.2] - 2025-05-21
+- Bug Fixed: Institutions>Performance>GPA: Gpa is not generated correctly for Easter Summer
+- Bug Fixed: Institutions > Performance > GPA > Cumulative GPA : Page displays a 404 error message when generating cumulative GPA.
+
+### [4.25.1] - 2025-05-20
+- Bug Fixed: Institutions>Performance>GPA:The 1st gpa configured generates gpa meanwhile the 2nd gpa configured not showing any gpa
+
+### [4.25.0] - 2025-05-20
+- Implemented: Add a gender column for student attendance
+- Bug Fixed: Institutions > Performances > Assessments: GPA is not calculated correctly
+
+### [4.24.3] - 2025-05-16
+- Bug Fixed: Institutions > Surveys/Census > Forms: Questions that have rules implemented is not showing the next question
+- Bug Fixed: Institutions > Performances > Assessments: unassign the students from one or all assessment periods
+- Bug Fixed: Institutions > Students > Academic > Programme > Edit: The field "Candidate Number" is not showing
+- Bug Fixed: Institutions > Surveys/Census > Forms: Answers in survey got removed automatically after entering successfully
+
+### [4.24.2] - 2025-05-15
+- Bug Fixed: Institutions > Performance > Report Cards: Grids that are not highlighted is showing
+
+### [4.24.1] - 2025-05-13
+- Bug Fixed: Dashboard: User is getting 404 error in dashboard
+- Bug Fixed: Institutions > Performance > GPA: The GPA automatically changed when user generate cumulative GPA
+- Bug Fixed: Reports > Institutions > Staff Attendance: Error status showing upon generating Staff Attendance report
+- Bug Fixed: Institutions > Academic > Programmes: When adding institution grades, the programme selected is not showing the correct grades
+- Bug Fixed: Institutions>Students>Visits: Visit feature should be removed
+
+### [4.24.0] - 2025-05-07
+- Implemented: Develop placeholders for the Student Profile feature
+- Implemented: Develop a new report: Reports > Students > Enrolment Summary
+- Bug Fixed: Administration > System Setup > Labels: There is no option to change the label for student Registration Number
+- Bug Fixed: Administration > Performance > Report Cards: Placeholder is working on student profile template but not report card template
+- Bug Fixed: Institutions > Performances > Assessments: Allow user to assign and unassign a student to an subject/assessment period
+- Bug Fixed: Administration>Alert Rules : Email is not sent
+- Bug Fixed: Attendance Placeholder under Institution Profile: The dates generated is not showing according to academic period start and end date
+- Bug Fixed: Administration>Profile>Students: Showing duplicate records and subject result not showing
+- Bug Fixed: Institutions > Students > Academic > Programmes > Transitions: When selecting education programme for student transition, the page gives an error
+
 ### [4.23.0] - 2025-04-30
 - Implemented: Develop a new Report in the Institution module called Consumables
 - Implemented: Develop Institution Timetables feature in Angular v11

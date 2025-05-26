@@ -1011,13 +1011,12 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $connection = ConnectionManager::get('default');
         if(empty($recordExist)){
 
-        $statement = $connection->prepare("INSERT INTO `institution_students_gpa` (`student_id`, `institution_id`, `academic_period_id`, `education_grade_id`, `education_grades_gpa_id`, `gpa`, `cumulative_gpa`, `created_user_id`, `created`)
+        $statement = $connection->prepare("INSERT INTO `institution_students_gpa` (`student_id`, `institution_id`, `academic_period_id`, `education_grade_id`, `education_grades_gpa_id`, `cumulative_gpa`, `created_user_id`, `created`)
         SELECT main_q.student_id
             ,main_q.institution_id
             ,main_q.academic_period_id
             ,main_q.education_grade_id
             ,ind_gpa.education_grades_gpa_id
-            ,IFNULL(ind_gpa.gpa_per_student, 0.00) gpa
             ,IFNULL(cum_gpa.cum_gpa_per_student, 0.00) cum_gpa
             ,$loginUserId AS created_user_id -- TO MAKE IT DYNAMIC BASED ON USER_ID WHO GENERATES THE GPA
             , CURRENT_TIMESTAMP() created
@@ -1149,9 +1148,33 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 AND subq2.student_id = institution_subject_students.student_id 
                 AND subq2.education_subject_id = institution_subject_students.education_subject_id 
                 AND subq2.academic_term = term_info.academic_term
+                LEFT JOIN(
+                        SELECT institution_classes.academic_period_id,
+                            institution_classes.institution_id,
+                            assessment_item_student_exemptions.education_grade_id,
+                            assessment_item_student_exemptions.student_id,
+                            assessment_item_student_exemptions.education_subject_id,
+                            assessment_periods.academic_term
+                        FROM
+                            assessment_item_student_exemptions
+                        INNER JOIN assessment_periods ON assessment_periods.id = assessment_item_student_exemptions.assessment_period_id
+                        INNER JOIN institution_classes ON institution_classes.id = assessment_item_student_exemptions.institution_class_id
+                        WHERE
+                            institution_classes.academic_period_id = $selectedAcademicPeriodId
+                            AND institution_classes.institution_id = $institutionId
+                            AND assessment_item_student_exemptions.student_id = $studentId
+                        GROUP BY
+                            assessment_item_student_exemptions.education_subject_id,
+                            assessment_item_student_exemptions.student_id,
+                            assessment_item_student_exemptions.education_grade_id,
+                            assessment_periods.academic_term
+                    ) exemption_info
+                    ON
+                        exemption_info.academic_period_id = institution_subject_students.academic_period_id AND exemption_info.institution_id = institution_subject_students.institution_id AND exemption_info.education_grade_id = institution_subject_students.education_grade_id AND exemption_info.student_id = institution_subject_students.student_id AND exemption_info.education_subject_id = institution_subject_students.education_subject_id AND exemption_info.academic_term = term_info.academic_term
                 WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
                 AND institution_subject_students.student_id = $studentId
                 AND institution_subject_students.institution_id = $institutionId
+                AND exemption_info.academic_period_id IS NULL
                 GROUP BY  institution_subject_students.academic_period_id
                         ,institution_subject_students.education_grade_id
                         ,institution_subject_students.education_subject_id
@@ -1271,7 +1294,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                         ,main_q.academic_period_id
                         ,main_q.education_grade_id
                         ,ind_gpa.education_grades_gpa_id
-                        ,IFNULL(ind_gpa.gpa_per_student, 0.00) gpa
+                        
                         ,IFNULL(cum_gpa.cum_gpa_per_student, 0.00) cum_gpa
                         ,$loginUserId AS created_user_id -- TO MAKE IT DYNAMIC BASED ON USER_ID WHO GENERATES THE GPA
                         ,CURRENT_TIMESTAMP() created
@@ -1403,9 +1426,34 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                             AND subq2.student_id = institution_subject_students.student_id 
                             AND subq2.education_subject_id = institution_subject_students.education_subject_id 
                             AND subq2.academic_term = term_info.academic_term
+                            LEFT JOIN(
+                            SELECT institution_classes.academic_period_id,
+                                institution_classes.institution_id,
+                                assessment_item_student_exemptions.education_grade_id,
+                                assessment_item_student_exemptions.student_id,
+                                assessment_item_student_exemptions.education_subject_id,
+                                assessment_periods.academic_term
+                            FROM
+                                assessment_item_student_exemptions
+                            INNER JOIN assessment_periods ON assessment_periods.id = assessment_item_student_exemptions.assessment_period_id
+                            INNER JOIN institution_classes ON institution_classes.id = assessment_item_student_exemptions.institution_class_id
+                            WHERE
+                                institution_classes.academic_period_id = $selectedAcademicPeriodId
+                                AND institution_classes.institution_id = $institutionId
+                                AND assessment_item_student_exemptions.student_id = $studentId
+                            
+                            GROUP BY
+                                assessment_item_student_exemptions.education_subject_id,
+                                assessment_item_student_exemptions.student_id,
+                                assessment_item_student_exemptions.education_grade_id,
+                                assessment_periods.academic_term
+                        ) exemption_info
+                        ON
+                            exemption_info.academic_period_id = institution_subject_students.academic_period_id AND exemption_info.institution_id = institution_subject_students.institution_id AND exemption_info.education_grade_id = institution_subject_students.education_grade_id AND exemption_info.student_id = institution_subject_students.student_id AND exemption_info.education_subject_id = institution_subject_students.education_subject_id AND exemption_info.academic_term = term_info.academic_term
                             WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
                             AND institution_subject_students.student_id = $studentId
                             AND institution_subject_students.institution_id = $institutionId
+                            AND exemption_info.academic_period_id IS NULL
                             GROUP BY  institution_subject_students.academic_period_id
                                     ,institution_subject_students.education_grade_id
                                     ,institution_subject_students.education_subject_id
@@ -1512,8 +1560,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 AND subq4.academic_period_id = institution_students_gpa.academic_period_id
                 AND subq4.education_grade_id = institution_students_gpa.education_grade_id
                 AND subq4.education_grades_gpa_id = institution_students_gpa.education_grades_gpa_id
-                SET institution_students_gpa.gpa = subq4.gpa
-                    ,institution_students_gpa.cumulative_gpa = subq4.cum_gpa;");
+                SET institution_students_gpa.cumulative_gpa = subq4.cum_gpa;");
             $statement->execute();
             //echo "<pre>"; print_r($statement); die;
         }

@@ -79,6 +79,7 @@ class LabelsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        Cache::clear('labels');
         Log::debug('LabelsTable::afterSave()');
         $keyFetch = $entity->module.'.'.$entity->field;
         $keyValue = self::concatenateLabel($entity);
