@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class RenderBehavior extends Behavior {
 	protected $fieldTypeCode;
@@ -66,7 +67,12 @@ class RenderBehavior extends Behavior {
 
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
         // POCOR-9105 start
-        $entity_array = $entity->toArray();
+        try {
+            $entity_array = $entity->toArray();
+        } catch (\Exception $e) {
+            Log::debug('You have error in ' . __FUNCTION__ . ' line ' . __LINE__);
+            return $html;
+        }
         $survey_form_id = $entity_array['survey_form_id'];
         if($survey_form_id == null) {
             $survey_form_id = $entity->survey_form_id;
