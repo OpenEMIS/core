@@ -34,7 +34,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 				<select class="form-control"
 					ng-options="item.value as item.text for item in SurveyRulesController.surveyFormOptions"
 					ng-model="SurveyRulesController.surveyFormId"
-					ng-change="SurveyRulesController.getSurveySection(SurveyRulesController.surveyFormId);"
+					ng-change="SurveyRulesController.getSurveySections(SurveyRulesController.surveyFormId);"
 				></select>
 				</div>
 			</div>
