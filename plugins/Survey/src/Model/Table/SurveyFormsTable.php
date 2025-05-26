@@ -23,7 +23,7 @@ class SurveyFormsTable extends CustomFormsTable
     private $isFilterSelectionEditable = true;
 
     public function initialize(array $config): void
-    {     
+    {
         $config['extra'] = [
             'fieldClass' => [
                 'className' => 'Survey.SurveyQuestions',
@@ -286,8 +286,8 @@ class SurveyFormsTable extends CustomFormsTable
         $customModuleId = $extra['redirect']['module'] ?? 1;
         $query = $this->find('all')->where(['custom_module_id' => $customModuleId]);
         $options = [
-            'limit' => 10, 
-            'page' => $extra['redirect']['page'] ?? 1, 
+            'limit' => 10,
+            'page' => $extra['redirect']['page'] ?? 1,
         ];
         $results = $paginator->paginate($query, $options);
         $count = $results->count();
@@ -631,6 +631,19 @@ class SurveyFormsTable extends CustomFormsTable
         }
     }
 
+    public function findHavingDropDownQuestions(Query $query, array $options)
+    {
+        $subquery = $this->find()
+            ->select([$this->aliasField('id')])
+            ->innerJoinWith('CustomFields')
+            ->group($this->aliasField('id'))
+            ->having([
+                'COUNT(CustomFields.id) >=' => 2,
+                'SUM(CustomFields.field_type = "DROPDOWN") >=' => 1
+            ]);
+        $query->where([$this->aliasField('id') . ' IN' => $subquery]);
+        return $query;
+    }
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
     {

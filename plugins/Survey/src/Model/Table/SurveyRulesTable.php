@@ -157,92 +157,114 @@ class SurveyRulesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // Survey form options
         $serverRequest = $this->request;
-        $SurveyFormsQuestionsTable = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
+        $surveyFormId = $serverRequest->getQuery('survey_form_id') ?? null;
+        $sectionId = is_numeric($serverRequest->getQuery('section_id')) ? intval($serverRequest->getQuery('section_id')) : null;
 
+        $surveyFormOptions = $this->getSurveyFormOptions();
+        $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
+        $this->controller->set(compact('surveyFormOptions'));
+
+        if (!empty($surveyFormId)) {
+            $sectionOptions = $this->getSurveySectionOptions($surveyFormId);
+
+            $originalOptions = $sectionOptions;
+            $sectionOptions = array_map(function ($option) {
+                return $option === '' ? __('No Section') : $option;
+            }, $sectionOptions);
+
+            if ($sectionId === null && count($sectionOptions) >= 1) {
+                $sectionId = 1;
+            }
+
+            $query->where([$this->aliasField('survey_form_id') => $surveyFormId]);
+
+            if ($sectionId > 0) {
+                $sectionName = $originalOptions[$sectionId] ?? null;
+
+                if ($sectionName !== null) {
+                    $questionIds = $this->getQuestionIdsBySection($surveyFormId, $sectionName);
+                    $query->where([$this->aliasField('survey_question_id').' IN' => $questionIds]);
+                }
+            }
+            $this->advancedSelectOptions($sectionOptions, $sectionId);
+            $this->controller->set(compact('sectionOptions'));
+        }
+
+        $this->applySearchConditions($query, $extra);
+    }
+
+
+    private function getSurveyFormOptions(): array
+    {
         $SurveyFormsTable = $this->SurveyForms;
-        $surveyFormOptions = $SurveyFormsTable
+
+        $options = $SurveyFormsTable
             ->find('list')
-            ->order([
-                $SurveyFormsTable->aliasField('name')
-            ])
+            ->order([$SurveyFormsTable->aliasField('name')])
             ->matching('CustomFields', function ($q) {
                 return $q->where(['CustomFields.field_type' => 'DROPDOWN']);
             })
             ->group([$SurveyFormsTable->aliasField('id')])
             ->toArray();
-        $surveyFormOptions = ['' => '-- '.__('All Surveys').' --'] + $surveyFormOptions;
 
-        $surveyFormId = $serverRequest->getQuery('survey_form_id');
-        $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
-        $this->controller->set(compact('surveyFormOptions'));
-
-        // Survey sections
-
-        if (!empty($surveyFormId))
-        {
-
-            $surveySections = $SurveyFormsQuestionsTable
-                ->find('list', [
-                    'keyField' => 'survey_section',
-                    'valueField' => 'survey_section'
-                ])
-                ->select(['survey_section' => $SurveyFormsQuestionsTable->aliasField('section')])
-                ->where([
-                    $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
-                    $SurveyFormsQuestionsTable->aliasField('section').' IS NOT NULL'
-                ])
-                ->matching('CustomFields', function ($q) {
-                    return $q->where(['CustomFields.field_type' => 'DROPDOWN']);
-                })
-                ->distinct([$SurveyFormsQuestionsTable->aliasField('section')])
-                ->order([$SurveyFormsQuestionsTable->aliasField('order')])
-                ->toArray();
-
-            $sectionOptions = ['0' => '-- '.__('Select Section').' --'] + $surveySections;
-            $sectionOptions = array_values($sectionOptions);
-            // original section options will not be translated
-            $originalOptions = $sectionOptions;
-            $sectionId = $serverRequest->getQuery('section_id');
-            $this->advancedSelectOptions($sectionOptions, $sectionId);
-            $this->controller->set(compact('sectionOptions'));
-        }
-
-        if (!empty($surveyFormId)) {
-
-            $query->where([$this->aliasField('survey_form_id') => $surveyFormId]);
-
-            // Checking if the survey form id and the section id is 0 or empty
-            if (!empty($sectionId))
-            {
-                //get section text from original section options
-                $section = $originalOptions[$sectionId];
-
-                // Subquery for questions
-                $questionIds = $SurveyFormsQuestionsTable
-                    ->find()
-                    ->select([$SurveyFormsQuestionsTable->aliasField('survey_question_id')])
-                    ->where([
-                        $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
-                        $SurveyFormsQuestionsTable->aliasField('section') => $section
-                    ]);
-                $query->where([$this->aliasField('survey_question_id').' IN ' => $questionIds]);
-            }
-        }
-
-        // for searching survey forms, questions, dependent questions
-        $search = $this->getSearchKey();
-        if (!empty($search)) {
-            $query->contain(['SurveyForms', 'SurveyQuestions', 'DependentQuestions']);
-
-            $extra['OR'] = [
-                [$SurveyFormsTable->aliasField('name').' LIKE' => '%' . $search . '%'],
-                [$this->SurveyQuestions->aliasField('name').' LIKE' => '%' . $search . '%'],
-                [$this->DependentQuestions->aliasField('name').' LIKE' => '%' . $search . '%']
-            ];
-        }
+        return ['' => '-- '.__('All Surveys').' --'] + $options;
     }
+
+    private function getSurveySectionOptions($surveyFormId): array
+    {
+        $SurveyFormsQuestionsTable = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
+
+        $sections = $SurveyFormsQuestionsTable
+            ->find('list', [
+                'keyField' => 'survey_section',
+                'valueField' => 'survey_section'
+            ])
+            ->select(['survey_section' => $SurveyFormsQuestionsTable->aliasField('section')])
+            ->where([
+                $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
+                $SurveyFormsQuestionsTable->aliasField('section').' IS NOT NULL'
+            ])
+            ->matching('CustomFields', function ($q) {
+                return $q->where(['CustomFields.field_type' => 'DROPDOWN']);
+            })
+            ->distinct([$SurveyFormsQuestionsTable->aliasField('section')])
+            ->order([$SurveyFormsQuestionsTable->aliasField('order')])
+            ->toArray();
+
+        return array_values(['0' => '-- '.__('Select Section').' --'] + $sections);
+    }
+
+    private function getQuestionIdsBySection($surveyFormId, $section)
+    {
+        $SurveyFormsQuestionsTable = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
+
+        return $SurveyFormsQuestionsTable
+            ->find()
+            ->select([$SurveyFormsQuestionsTable->aliasField('survey_question_id')])
+            ->where([
+                $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
+                $SurveyFormsQuestionsTable->aliasField('section') => $section
+            ]);
+    }
+
+    private function applySearchConditions(Query $query, ArrayObject $extra): void
+    {
+        $search = $this->getSearchKey();
+        if (empty($search)) {
+            return;
+        }
+
+        $query->contain(['SurveyForms', 'SurveyQuestions', 'DependentQuestions']);
+
+        $extra['OR'] = [
+            [$this->SurveyForms->aliasField('name').' LIKE' => "%$search%"],
+            [$this->SurveyQuestions->aliasField('name').' LIKE' => "%$search%"],
+            [$this->DependentQuestions->aliasField('name').' LIKE' => "%$search%"]
+        ];
+    }
+
+
 
     public function findSurveyRulesList(Query $query, array $options)
     {

@@ -12,6 +12,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     var surveyFormId = UtilsSvc.requestQuery('survey_form_id');
     var sectionId = UtilsSvc.requestQuery('section_id');
     vm.surveyFormId = surveyFormId;
+    vm.sectionId = sectionId;
 
     // Functions
     vm.getSurveySections = getSurveySections;
@@ -23,6 +24,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     vm.initEnabled = initEnabled;
     vm.initDependentQuestion = initDependentQuestion;
     vm.saveValue = saveValue;
+    vm.canSave = false;
 
     // Initialisation
     angular.element(document).ready(function() {
@@ -69,13 +71,9 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                     value: section.section
                 };
             });
-            console.log(sectionId);
-            console.log(options);
             vm.surveySectionOptions = options;
-
-            // Use first section if available
-            if (options.length > 1) {
-                if (!isNaN(sectionId) && sectionId !=0) {
+            if (options.length > 0) {
+                if (!isNaN(sectionId) && sectionId != 0) {
                     vm.sectionName = options[sectionId - 1].value;
                 } else {
                     vm.sectionName = options[0].value;

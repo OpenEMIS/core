@@ -87,8 +87,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 													| filter:SurveyRulesController.filterByOrderAndType({{question.order}})"
 													ng-model="SurveyRulesController.dependentQuestion[question.no]"
 													ng-change="SurveyRulesController.populateOptions(question.rule.dependent_question_id)"
-													ng-init="SurveyRulesController.populateOptions(question.rule.dependent_question_id);
-													 SurveyRulesController.initDependentQuestion(question);">
+													ng-init="SurveyRulesController.populateOptions(question.rule.dependent_question_id);">
 													<option value="">-- <?= __('Select One') ?> --</option>
 												</select>
 											</div>
@@ -109,8 +108,14 @@ $institutionId = $session->read('Institution.Institutions.id');
 									</tr>
 							</table>
 
-							<div class="form-buttons" style="text-align: center"><button class="btn btn-default btn-save" value="save" type="button" ng-click="SurveyRulesController.saveValue()"><i class="fa fa-check"></i> Save</button></div>
-						</div>
+                            <div class="form-buttons" style="text-align: center" ng-if="SurveyRulesController.canSave">
+                                <button class="btn btn-default btn-save"
+                                        value="save" type="button"
+                                        ng-click="SurveyRulesController.saveValue()">
+                                    <i class="fa fa-check"></i><?= __('Save') ?>
+                                </button>
+                            </div>
+                        </div>
 					</div>
 				</form>
 			</div>
