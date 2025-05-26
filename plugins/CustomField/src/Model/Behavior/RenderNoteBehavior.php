@@ -16,19 +16,6 @@ class RenderNoteBehavior extends RenderBehavior
 
     public function onGetCustomNoteElement(Event $event, $action, $entity, $attr, $options = [])
     {
-        try {
-            $entity_array = $entity->toArray();
-        } catch (\Throwable $e) {
-            $this->_table->Alert->error(
-                __("This survey form has errors. Please ask administrator to review all survey rules before saving this survey"),
-                ['type' => 'string', 'reset' => true]
-            );
-            if($event){
-                $event->stopPropagation();
-                return '';
-            }
-        }
-
         $value = '';
 
         // for edit
@@ -63,7 +50,7 @@ class RenderNoteBehavior extends RenderBehavior
             if (!is_null($displayValue)) {
                 $options['value'] = $displayValue;
             }
-
+           
             $value .= $form->input($fieldPrefix.".textarea_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
             $unlockFields[] = $fieldPrefix.".textarea_value";
@@ -72,7 +59,7 @@ class RenderNoteBehavior extends RenderBehavior
                 $value .= $form->hidden($fieldPrefix.".id", ['value' => $savedId]);
                 $unlockFields[] = $fieldPrefix.".id";
             }
-            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields, $event);
+            $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
         $event->stopPropagation();
