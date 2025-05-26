@@ -67,12 +67,17 @@ class RenderBehavior extends Behavior {
 
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
         // POCOR-9105 start
+
         try {
             $entity_array = $entity->toArray();
-        } catch (\Exception $e) {
-            Log::debug('You have error in ' . __FUNCTION__ . ' line ' . __LINE__);
+        } catch (\Throwable $e) {
+            $this->Alert->error(
+                "There is archive process currently running. Please try again once the process has ended",
+                ['type' => 'string', 'reset' => true]
+            );
             return $html;
         }
+
         $survey_form_id = $entity_array['survey_form_id'];
         if($survey_form_id == null) {
             $survey_form_id = $entity->survey_form_id;
