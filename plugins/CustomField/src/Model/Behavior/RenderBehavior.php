@@ -76,8 +76,7 @@ class RenderBehavior extends Behavior {
                     "You have some problem",
                     ['type' => 'string', 'reset' => true]
                 );
-                $entity->setError('_custom_fields', 'Archive process conflict');
-                dd($formHelper);
+
                 return $html;
             }
         }
@@ -88,6 +87,8 @@ class RenderBehavior extends Behavior {
                 __("This survey form has errors. Please ask administrator to review all survey rules before saving this survey"),
                 ['type' => 'string', 'reset' => true]
             );
+            $entity->setError('_custom_fields', 'Form Errors');
+            dd($formHelper);
             return $html;
         }
 
