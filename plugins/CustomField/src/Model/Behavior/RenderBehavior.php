@@ -65,7 +65,7 @@ class RenderBehavior extends Behavior {
         $settings['fieldValues'] = $fieldValues;
     }
 
-    protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
+    protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields, $event = null) {
         // POCOR-9105 start
 
         $visibleFields = $entity->getVisible();
