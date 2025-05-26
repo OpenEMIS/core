@@ -82,7 +82,7 @@ class RenderBehavior extends Behavior {
         try {
             $entity_array = $entity->toArray();
         } catch (\Throwable $e) {
-            $this->Alert->error(
+            $this->_table->Alert->error(
                 "There is archive process currently running. Please try again once the process has ended",
                 ['type' => 'string', 'reset' => true]
             );
