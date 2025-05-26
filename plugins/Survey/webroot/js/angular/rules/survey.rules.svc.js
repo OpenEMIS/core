@@ -62,7 +62,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
     function getShowIfChoices(surveyFormId, section) {
         return SurveyFormsQuestionsTable
             .select()
-            .find('SurveyFormChoices', {survey_form_id: surveyFormId})
+            .find('SurveyFormChoices', {survey_form_id: surveyFormId, section: section})
             .where({survey_form_id: surveyFormId, section: section})
             .ajax({defer: true})
             ;
