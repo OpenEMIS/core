@@ -80,6 +80,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
 
         SurveyRulesSvc.getQuestions(surveyFormId, sectionName)
             .then(function (response) {
+                console.log(response)
                 const screenLimits = {
                     mobile: 767,
                     tablet: 1280,
@@ -197,6 +198,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         SurveyRulesSvc.getShowIfChoices(vm.surveyFormId, vm.sectionName)
         .then(function(response)
         {
+            console.log(response);
             vm.questionOptions = response.data;
         });
     }
