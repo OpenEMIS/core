@@ -87,8 +87,7 @@ class RenderBehavior extends Behavior {
                 __("This survey tab has errors. Please ask administrator to review all survey rules before saving this survey"),
                 ['type' => 'string', 'reset' => true]
             );
-            $entity->setError('_custom_fields', 'Form Errors');
-            $formHelper->button('Behave');
+            $this->_table->controller->redirect( $this->_table->url('view'));
             return $html;
         }
 
