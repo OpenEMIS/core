@@ -224,10 +224,10 @@ class InstitutionSurveysTable extends ControllerActionTable
                     } else {
                         // supportQuestionOptions is empty or missing
                         $this->Alert->error(
-                            __('There is a missing question option configuration. Please contact the administrator.'),
+                            __('There is a missing question option configuration. Please contact the administrator to check the form rules.'),
                             ['type' => 'string', 'reset' => true]
                         );
-                        dd($key);
+
                         if (isset($event)) {
                             $event->stopPropagation();
                             return $this->controller->redirect($this->url('view'));
