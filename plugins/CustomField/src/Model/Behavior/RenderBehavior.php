@@ -73,11 +73,11 @@ class RenderBehavior extends Behavior {
             if (!is_string($field)) {
                 // We found a problem before calling toArray()
                 $this->Alert->error(
-                    "There is archive process currently running. Please try again once the process has ended",
+                    "You have some problem",
                     ['type' => 'string', 'reset' => true]
                 );
-                $entity->setError('_custom_fields', 'Rules should be reviewed');
-
+                $entity->setError('_custom_fields', 'Archive process conflict');
+                dd($formHelper);
                 return $html;
             }
         }
