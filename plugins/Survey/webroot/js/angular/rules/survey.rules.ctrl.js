@@ -84,86 +84,78 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
 
         SurveyRulesSvc.getQuestions(surveyFormId, sectionName)
             .then(function (response) {
-                console.log(response)
-                const screenLimits = {
-                    mobile: 767,
-                    tablet: 1280,
-                    laptop: 1366,
-                    mac: 1500,
-                    desktop: 1800,
-                    largeDesktop: 1920
-                };
-
                 const screenWidth = window.innerWidth;
+
                 const truncateText = (text) => {
-                    if (screenWidth <= screenLimits.mobile && text.length > 30) {
-                        return text.substring(0, 29) + '...';
-                    } else if (screenWidth <= screenLimits.tablet && text.length > 96) {
-                        return text.substring(0, 96) + '...';
-                    } else if (screenWidth <= screenLimits.laptop && text.length > 110) {
-                        return text.substring(0, 110) + '...';
-                    } else if (screenWidth <= screenLimits.mac && text.length > 120) {
-                        return text.substring(0, 120) + '...';
-                    } else if (screenWidth <= screenLimits.desktop && text.length > 150) {
-                        return text.substring(0, 150) + '...';
-                    } else if (screenWidth <= screenLimits.largeDesktop && text.length > 170) {
-                        return text.substring(0, 170) + '...';
+                    const limits = [
+                        { width: 767, length: 30 },
+                        { width: 1280, length: 96 },
+                        { width: 1366, length: 110 },
+                        { width: 1500, length: 120 },
+                        { width: 1800, length: 150 },
+                        { width: 1920, length: 170 }
+                    ];
+
+                    for (const limit of limits) {
+                        if (screenWidth <= limit.width && text.length > limit.length) {
+                            return text.substring(0, limit.length) + '...';
+                        }
                     }
+
                     return text;
                 };
 
-                const questions = response.data.map((question, index) => {
-                    const shortName = truncateText(question.name);
-                    const questionNumber = index + 1;
-                    // console.log(question);
-                    const rule = (question.survey_form_id !== surveyFormId)
-                        ? {
+                const mapRule = (question) => {
+                    if (question.survey_form_id !== surveyFormId) {
+                        return {
                             id: null,
                             enabled: 0,
                             dependent_question_id: undefined,
                             show_options: undefined
-                        }
-                        : (question.survey_rule_enabled != null
-                                ? {
-                                    id: question.id || null, // optional: if there's an `id` field for the rule
-                                    enabled: question.survey_rule_enabled,
-                                    dependent_question_id: question.dependent_question,
+                        };
+                    }
 
-                                    show_options: (() => { // POCOR-9147
-                                        console.log(question);
-                                        try {
-                                            return JSON.parse(question.show_options);
-                                        } catch {
-                                            return undefined;
-                                        }
-                                    })()
-                                }
-                                : {
-                                    id: null,
-                                    enabled: 0,
-                                    dependent_question_id: undefined,
-                                    show_options: undefined
-                                }
-                        );
-                    // console.log(rule);
+                    if (question.survey_rule_enabled == null) {
+                        return {
+                            id: null,
+                            enabled: 0,
+                            dependent_question_id: undefined,
+                            show_options: undefined
+                        };
+                    }
+
+                    let showOptions;
+                    try {
+                        showOptions = JSON.parse(question.show_options);
+                    } catch {
+                        showOptions = undefined;
+                    }
 
                     return {
-                        no: questionNumber,
+                        id: question.id || null,
+                        enabled: question.survey_rule_enabled,
+                        dependent_question_id: question.dependent_question,
+                        show_options: showOptions
+                    };
+                };
+
+                vm.surveyQuestions = (response.data || []).map((question, index) => {
+                    const shortName = truncateText(question.name);
+                    const number = index + 1;
+
+                    return {
+                        no: number,
                         survey_question_id: question.survey_question_id,
                         name: question.name,
-                        short_name: `${questionNumber}. ${shortName}`,
+                        short_name: `${number}. ${shortName}`,
                         order: question.order,
-                        field_type: question.custom_field.field_type,
-                        rule: rule
+                        field_type: question.custom_field?.field_type || null,
+                        rule: mapRule(question)
                     };
                 });
-
-                vm.surveyQuestions = questions;
             })
-            .catch(function (error) {
-                console.error(error);
-            })
-            .finally(function () {
+            .catch(console.error)
+            .finally(() => {
                 UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
             });
     }
