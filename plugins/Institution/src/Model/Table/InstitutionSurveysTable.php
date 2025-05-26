@@ -177,7 +177,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {z
+    {
 
         $tabSection = null;
         $newData = [];
