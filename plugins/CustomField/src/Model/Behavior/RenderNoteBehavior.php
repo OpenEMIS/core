@@ -20,7 +20,7 @@ class RenderNoteBehavior extends RenderBehavior
             $entity_array = $entity->toArray();
         } catch (\Throwable $e) {
             $this->_table->Alert->error(
-                __("This survey X form has errors. Please ask administrator to review all survey rules before saving this survey"),
+                __("This survey form has errors. Please ask administrator to review all survey rules before saving this survey"),
                 ['type' => 'string', 'reset' => true]
             );
             if($event){

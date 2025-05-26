@@ -65,7 +65,7 @@ class RenderBehavior extends Behavior {
         $settings['fieldValues'] = $fieldValues;
     }
 
-    protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields, $event = null) {
+    protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
         // POCOR-9105 start
 
         $visibleFields = $entity->getVisible();
@@ -84,7 +84,7 @@ class RenderBehavior extends Behavior {
             $entity_array = $entity->toArray();
         } catch (\Throwable $e) {
             $this->_table->Alert->error(
-                __("This survey form has errors. Please ask administrator to review all survey rules before saving this survey"),
+                __("This survey tab has errors. Please ask administrator to review all survey rules before saving this survey"),
                 ['type' => 'string', 'reset' => true]
             );
             $entity->setError('_custom_fields', 'Form Errors');
