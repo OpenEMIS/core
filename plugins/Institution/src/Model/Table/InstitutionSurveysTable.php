@@ -227,7 +227,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                             __('There is a missing question option configuration. Please contact the administrator.'),
                             ['type' => 'string', 'reset' => true]
                         );
-                        dd($rule);
+                        dd($SurveyRules->get($key));
                         if (isset($event)) {
                             $event->stopPropagation();
                             return $this->controller->redirect($this->url('view'));
