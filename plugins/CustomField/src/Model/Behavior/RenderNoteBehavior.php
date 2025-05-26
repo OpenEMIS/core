@@ -30,6 +30,11 @@ class RenderNoteBehavior extends RenderBehavior
                 $savedId = $fieldValues[$fieldId]['id'];
             }
         }
+        $this->_table->Alert->error(
+            __("This survey form AAA has errors. Please ask administrator to review all survey rules before saving this survey"),
+            ['type' => 'string', 'reset' => true]
+        );
+        $event->stopPropagation();
         if ($customField->has('description')) {
             $displayValue = $customField->description;
         }
@@ -50,7 +55,7 @@ class RenderNoteBehavior extends RenderBehavior
             if (!is_null($displayValue)) {
                 $options['value'] = $displayValue;
             }
-           
+
             $value .= $form->input($fieldPrefix.".textarea_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
             $unlockFields[] = $fieldPrefix.".textarea_value";
