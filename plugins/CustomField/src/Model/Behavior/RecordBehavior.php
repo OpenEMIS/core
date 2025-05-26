@@ -640,7 +640,9 @@ class RecordBehavior extends Behavior
                                         foreach ($fields as $field) {
                                             if (isset($indexedErrors[$fieldId][$field])) {
                                                 $error = $indexedErrors[$fieldId][$field];
-                                                $entity->custom_field_values[$key]->getErrors($field, $error, true);
+                                                if (isset($entity->custom_field_values[$key])) {
+                                                    $entity->custom_field_values[$key]->getErrors($field, $error, true);
+                                                }
                                             }
                                         }
                                     }
