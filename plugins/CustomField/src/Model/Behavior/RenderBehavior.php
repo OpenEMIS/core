@@ -68,6 +68,17 @@ class RenderBehavior extends Behavior {
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
         // POCOR-9105 start
 
+        $visibleFields = $entity->getVisible();
+        foreach ($visibleFields as $field) {
+            if (!is_string($field)) {
+                // We found a problem before calling toArray()
+                $this->Alert->error(
+                    "There is archive process currently running. Please try again once the process has ended",
+                    ['type' => 'string', 'reset' => true]
+                );
+                return $html;
+            }
+        }
         try {
             $entity_array = $entity->toArray();
         } catch (\Throwable $e) {
