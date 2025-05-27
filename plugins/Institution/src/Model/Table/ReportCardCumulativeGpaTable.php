@@ -1973,7 +1973,6 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         AND institution_students_gpa.academic_period_id = main_q.academic_period_id
         AND institution_students_gpa.education_grade_id = main_q.education_grade_id
         AND institution_students_gpa.education_grades_gpa_id = ind_gpa.education_grades_gpa_id
-        WHERE institution_students_gpa.institution_id IS NULL
         GROUP BY main_q.student_id
             ,main_q.institution_id
             ,main_q.academic_period_id
