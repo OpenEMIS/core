@@ -305,8 +305,12 @@ class ReportCardGpaTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $gradeId = $this->request->getQuery('education_grade_id');
-        $classId = $this->request->getQuery('class_id');
+        //POCOR-9170[START]
+        // $classId = $this->request->getQuery('class_id');
+        $classId = $this->request->getQuery('institution_class_id');
+        //POCOR-9170[END]
         $gpaName = $this->request->getQuery('gpa_name'); //POCOR-9038
+        $gpaId = $this->request->getQuery('gpa_id'); //POCOR-9170
 
 
         $isUserSuperAdmin = $this->Auth->user('super_admin');
@@ -317,7 +321,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $institutionClassExists = $this->InstitutionClasses->exists([
             $this->InstitutionClasses->getPrimaryKey() => $classId
         ]);
-
+       
         if (!$institutionClassExists) {
             return;
         }
@@ -326,8 +330,8 @@ class ReportCardGpaTable extends ControllerActionTable
         $params = $this->buildParams($gradeId, $classId);
 
         $canGenerateAll = $this->hasGenerateAllPermission($isUserSuperAdmin);
-
-        if ($canGenerateAll && isset($gpaName)) {
+        // if ($canGenerateAll && isset($gpaName)) {
+        if ($canGenerateAll && isset($gpaId)) { // POCOR-9170
             $generateButton = $this->buildGenerateButton($params, $toolbarAttributes);
 
             $gradeId = $this->request->getQuery('education_grade_id') ?? $gradeId;
