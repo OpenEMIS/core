@@ -330,6 +330,11 @@ trait PdfReportTrait
                 if ($cell->childNodes->length === 1 && $cell->firstChild->nodeType === XML_TEXT_NODE) {
                     $rawText = trim($cell->textContent);
 
+                        $rawText = "\xC2\xA0 " . trim($rawText) . " \xC2\xA0";
+
+                        $cell->nodeValue = ''; // Clear original
+
+
                     if (mb_strlen($rawText) > 100) {
                         // Split long text into lines
                         $words = explode(' ', $rawText);
@@ -363,9 +368,16 @@ trait PdfReportTrait
                             'style',
                             $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;'
                         );
+                    }else{
+
+                        $cell->nodeValue = ''; // Clear original
+                        $div = $dom->createElement('div');
+                        $div->setAttribute('style', 'margin-left: 5px !important; margin-right: 5px !important;');
+                        $div->appendChild($dom->createTextNode($rawText));
+
+                        $cell->appendChild($div);
                     }
                 }
-
 
                 $cell->setAttribute('style', trim($normalized));
             }
