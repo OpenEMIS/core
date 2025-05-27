@@ -41,8 +41,8 @@ $institutionId = $session->read('Institution.Institutions.id');
 			<div class="input select">
 				<label for="surveyrules-survey-form-section-name"><?= __('Survey Form Section')?></label>
 				<div class="input-select-wrapper">
-					<select name="StaffPositionProfiles[staff_change_type_id]"
-                            id="staffpositionprofiles-staff-change-type-id"
+					<select name="SurveySections"
+                            id="surver-sections"
                             ng-options="item.value as item.text for item in SurveyRulesController.surveySectionOptions"
                             ng-model="SurveyRulesController.sectionName"
                             ng-change="SurveyRulesController.onChangeSection(SurveyRulesController.sectionName)">
@@ -62,51 +62,49 @@ $institutionId = $session->read('Institution.Institutions.id');
 										<th><?= __('Dropdown Question Options')?></th>
 									</tr>
 								</thead>
-									<tr ng-repeat-start="question in SurveyRulesController.surveyQuestions">
-										<td colspan="3"><div class="section-header">{{question.no}}. {{question.name}}</div></td>
-									</tr>
-									<tr ng-repeat-end>
-										<td class="checkbox-column">
-										<input
-											type="hidden"
-											ng-init="SurveyRulesController.questionId[question.no] = question.survey_question_id"
-											ng-model="SurveyRulesController.questionId[question.no]" />
-											<input
-												class="no-selection-label"
-												kd-checkbox-radio
-												type="checkbox"
-												ng-true-value="1"
-												ng-false-value="0"
-												ng-model="SurveyRulesController.enabled[question.no]"
-												ng-init="SurveyRulesController.enabled[question.no] = 0; SurveyRulesController.initEnabled(question);">
-										</td>
-										<td>
-											<div class="input-select-wrapper">
-												<select
-													ng-options="item.survey_question_id as item.short_name for item in SurveyRulesController.surveyQuestions
-													| filter:SurveyRulesController.filterByOrderAndType({{question.order}})"
-													ng-model="SurveyRulesController.dependentQuestion[question.no]"
-													ng-change="SurveyRulesController.populateOptions(question.rule.dependent_question_id)"
-													ng-init="SurveyRulesController.populateOptions(question.rule.dependent_question_id);">
-													<option value="">-- <?= __('Select One') ?> --</option>
-												</select>
-											</div>
-										</td>
-										<td>
-											<div class="input select">
-												<select chosen
-													multiple="multiple"
-													data-placeholder="<?=__('Select Question Options') ?>"
-													class="chosen-select"
-													options="SurveyRulesController.questionOptions"
-													ng-model="SurveyRulesController.dependentOptions[question.no]"
-													ng-options="item.survey_question_choice_id as item.survey_question_choice_name for item in SurveyRulesController.questionOptions | filter:SurveyRulesController.filterChoiceBySurveyQuestionId(SurveyRulesController.dependentQuestion[question.no])"
-													ng-init="SurveyRulesController.dependentOptions[question.no] = question.rule.show_options">
-												</select>
-											</div>
-										</td>
-									</tr>
-							</table>
+                                <!-- First row: Question label -->
+                                <tr ng-repeat-start="question in SurveyRulesController.questions">
+                                    <td colspan="3">
+                                        <div class="section-header">{{question.no}}. {{question.name}}</div>
+                                    </td>
+                                </tr>
+
+                                <!-- Second row: Form controls -->
+                                <tr ng-repeat-end>
+                                    <td class="checkbox-column">
+                                        <input type="checkbox"
+                                               class="no-selection-label"
+                                               kd-checkbox-radio
+                                               ng-true-value="1"
+                                               ng-false-value="0"
+                                               ng-model="question.rule.enabled" />
+                                    </td>
+
+                                    <td>
+                                        <div class="input-select-wrapper">
+                                            <select
+                                                ng-options="q.survey_question_id as q.short_name for q in SurveyRulesController.questions | filter:SurveyRulesController.filterByOrderAndType(question.order)"
+                                                ng-model="question.rule.dependent_question_id">
+                                                <option value="">-- <?= __('Select One') ?> --</option>
+                                            </select>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="input select">
+                                            <select
+                                                chosen
+                                                multiple
+                                                data-placeholder="<?= __('Select Question Options') ?>"
+                                                class="chosen-select"
+                                                ng-model="question.rule.show_options"
+                                                ng-options="opt.survey_question_choice_id as opt.survey_question_choice_name for opt in SurveyRulesController.getChoices(question.rule.dependent_question_id, question)">
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                            </table>
 
                             <div class="form-buttons" style="text-align: center" ng-if="SurveyRulesController.canSave">
                                 <button class="btn btn-default btn-save"

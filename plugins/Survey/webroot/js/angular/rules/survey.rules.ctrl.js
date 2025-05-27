@@ -25,6 +25,31 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     vm.initDependentQuestion = initDependentQuestion;
     vm.saveValue = saveValue;
     vm.canSave = false;
+    vm.questions = [
+        {
+            question_id: 123,
+            name: 'What is your age?',
+            short_name: '1. Age',
+            rule: {
+                enabled: 1,
+                dependent_question_id: 456,
+                show_options: [789, 790]
+            },
+            choices: [
+                { survey_question_choice_id: 789, survey_question_choice_name: 'Under 18' },
+                { survey_question_choice_id: 790, survey_question_choice_name: '18-30' }
+            ],
+            allDependentOptions: [
+                {
+                    survey_question_id: 456,
+                    choices: [
+                        { survey_question_choice_id: 801, survey_question_choice_name: 'Yes' },
+                        { survey_question_choice_id: 802, survey_question_choice_name: 'No' }
+                    ]
+                }
+            ]
+        }
+    ];
 
     // Initialisation
     angular.element(document).ready(function() {
@@ -195,13 +220,25 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     }
 
     function populateOptions(dependentQuestionId) {
-        SurveyRulesSvc.getShowIfChoices(vm.surveyFormId, vm.sectionName, dependentQuestionId)
-        .then(function(response)
-        {
-            console.log(response);
-            vm.questionOptions = response.data;
-        });
+        if (dependentQuestionId !== undefined && !isNaN(dependentQuestionId)) {
+            SurveyRulesSvc.getShowIfChoices(vm.surveyFormId, vm.sectionName, dependentQuestionId)
+                .then(function(response)
+            {
+                console.log(response);
+                vm.questionOptions = response.data;
+            });
+        } else {
+            vm.questionOptions = [];        }
     }
+    // function populateOptions(dependentQuestionId) {
+    //     console.log(dependentQuestionId);
+    //     SurveyRulesSvc.getShowIfChoices(vm.surveyFormId, vm.sectionName, dependentQuestionId)
+    //     .then(function(response)
+    //     {
+    //         console.log(response);
+    //         vm.questionOptions = response.data;
+    //     });
+    // }
 
     function initEnabled(question) {
         var no = question.no;
