@@ -1978,19 +1978,18 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             ,main_q.academic_period_id
             ,main_q.education_grade_id
             ,ind_gpa.education_grades_gpa_id;
-            ) gpa_final
-    ";
+        ";
 
 
         $result = $connection->execute($sql)->fetch('assoc');
-        Log::debug('GPA SQL: ' . $sql);
-        Log::debug('GPA Result: ' . print_r($result,true));
-        Log::debug('GPA: ' . $result['gpa'] ?? 0.00);
-        Log::debug('GPA ID: ' . $educationGradeGpaId);
-        Log::debug('Student ID: ' . $studentId);
-        Log::debug('Institution ID: ' . $institutionId);
-        Log::debug('Academic Period ID: ' . $academicPeriodId);
-        Log::debug('Education Grade ID: ' . $educationGradeId);
+//        Log::debug('GPA SQL: ' . $sql);
+//        Log::debug('GPA Result: ' . print_r($result,true));
+//        Log::debug('GPA: ' . $result['gpa'] ?? 0.00);
+//        Log::debug('GPA ID: ' . $educationGradeGpaId);
+//        Log::debug('Student ID: ' . $studentId);
+//        Log::debug('Institution ID: ' . $institutionId);
+//        Log::debug('Academic Period ID: ' . $academicPeriodId);
+//        Log::debug('Education Grade ID: ' . $educationGradeId);
         return $result['cum_gpa'] ?? 0.00;
     }
     /**
