@@ -15,7 +15,10 @@ use Cake\Http\Session;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Table; // POCOR-9162
 use Institution\Model\Table\ReportCardGpaTable; // POCOR-9162
-use Institution\Model\Table\ReportCardCumulativeGpaTable; // POCOR-9162
+use Institution\Model\Table\ReportCardCumulativeGpaTable;
+use Cake\ORM\Entity; // POCOR-9143
+
+// POCOR-9162
 
 class ReportCardsTable extends AppTable
 {
@@ -1945,10 +1948,28 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
+    /**
+     * Excel export logic for initializing AssessmentItemResults per student, subject, and assessment period.
+     *
+     * This function was refactored to use shared helper functions such as `getLastMark()` and `evaluateGradingForMarks()`
+     * from the Assessment module to ensure consistent mark retrieval and formatting. Prior versions used manual
+     * calculations and formatting, which led to duplication and inconsistencies.
+     *
+     * POCOR-9143: Centralized mark calculation and formatting logic to reduce redundancy and ensure consistency
+     * across the application (UI and export tools).
+     *
+     * @param \Cake\Event\Event $event The event object
+     * @param \ArrayAccess $params Parameters passed to the event listener (student_id, institution_class_id, etc.)
+     * @param \ArrayAccess $extra Extra context data (assessment_id, assessment_period_ids, etc.)
+     * @return array The search results.
+     *
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra): array
     {
         $student_id = $params['student_id'];
         $institution_id = $params['institution_id'];
+        $marksBySubject = [];
         if (isset($params['institution_class_id'])
             && isset($extra['assessment_id'])
             && isset($extra['assessment_period_ids'])
@@ -1963,48 +1984,92 @@ class ReportCardsTable extends AppTable
 
 
             // to only process the query if the class has subjects
-            $marksBySubject = [];
+
             $subjectList = $AssessmentItems
-                    ->find('list', [
-                        'keyField' => 'education_subject_id',
-                        'valueField' => 'education_subject_id'
-                    ])
-                    ->find('assessmentItemsInClass', [
-                        'assessment_id' => $extra['assessment_id'],
-                        'class_id' => $params['institution_class_id']
-                    ])
-                    ->toArray();
+                ->find('list', [
+                    'keyField' => 'education_subject_id',
+                    'valueField' => 'education_subject_id'
+                ])
+                ->find('assessmentItemsInClass', [
+                    'assessment_id' => $extra['assessment_id'],
+                    'class_id' => $params['institution_class_id']
+                ])
+                ->toArray();
 
-                // 🦕 Loop through subjects and collect latest marks
-                foreach ($subjectList as $subjectId) {
-                    foreach ($extra['assessment_period_ids'] as $periodId) {
-                        $options = [
-                            'student_id' => $student_id,
-                            'institution_id' => $institution_id,
-                            'academic_period_id' => $params['academic_period_id'],
-                            'education_grade_id' => $extra['report_card_education_grade_id'],
-                            'education_subject_id' => $subjectId,
-                            'assessment_period_id' => $periodId,
-                            'assessment_id' => $extra['assessment_id']
-                        ];
+            // 🦕 Loop through subjects and collect latest marks
+            foreach ($subjectList as $subjectId) {
+                foreach ($extra['assessment_period_ids'] as $periodId) {
+                    $options = [
+                        'student_id' => $student_id,
+                        'institution_id' => $institution_id,
+                        'academic_period_id' => $params['academic_period_id'],
+                        'education_grade_id' => $extra['report_card_education_grade_id'],
+                        'education_subject_id' => $subjectId,
+                        'assessment_period_id' => $periodId,
+                        'assessment_id' => $extra['assessment_id']
+                    ];
 
-                        $marks = $AssessmentItemResults::getLastMark($options);
-                        $exemptions = $AssessmentItemResults::getLastExemptions($options);
+                    $marks = $AssessmentItemResults::getLastMark($options);
+                    $exemptions = $AssessmentItemResults::getLastExemptions($options);
+                    $exemption = array_shift($exemptions);
 
-                        if (!empty($exemptions)) {
-                            $marksBySubject[$student_id][$subjectId][$periodId] = 'EXEMPTED';
-                        } elseif (!empty($marks)) {
-                            $marksBySubject[$student_id][$subjectId][$periodId] = round($marks[0]['marks'], 2);
-                        } else {
-                            $marksBySubject[$student_id][$subjectId][$periodId] = null;
+                    if (!empty($exemption) && isset($exemption['type']) && $exemption['type'] > 0) {
+                        $marksBySubject[$student_id][$subjectId][$periodId] = $exemption['type'] == 1 ? 'Unassigned' : 'Exempted';
+                    } elseif (!empty($marks)) {
+                        $rawMark = round($marks[0]['marks'], 2);
+                        $entity = new \Cake\ORM\Entity($marks[0]);
+                        $entity->set('marks', $rawMark);
+                        $entity = $AssessmentItemResults::evaluateGradingForMarks($entity);
+
+                        $resultType = $entity->get('assessment_grading_type')->get('result_type') ?? 'MARKS';
+
+                        switch ($resultType) {
+                            case 'MARKS':
+                                $formatted = number_format($rawMark, 2);
+                                break;
+                            case 'GRADES':
+                                $grading = $entity->get('assessment_grading_option');
+                                $formatted = $grading->code . ' - ' . $grading->name;
+                                break;
+                            case 'DURATION':
+                                $duration = number_format($rawMark, 2);
+                                [$minutes, $seconds] = explode(".", $duration);
+                                $formatted = $minutes . ' : ' . $seconds;
+                                break;
+                            default:
+                                $formatted = '';
+                                break;
                         }
+
+                        $marksBySubject[$student_id][$subjectId][$periodId] = $formatted;
+                    } else {
+                        $marksBySubject[$student_id][$subjectId][$periodId] = null;
                     }
                 }
             }
+        }
+        $entityResults = [];
 
-        // End POCOR-6752
-            Log::debug(print_r([__FUNCTION__ => $marksBySubject],true));
-            return $marksBySubject;
+        foreach ($marksBySubject as $studentId => $subjectData) {
+            foreach ($subjectData as $subjectId => $periodData) {
+                foreach ($periodData as $periodId => $formattedMark) {
+                    $entityResults[] = new Entity([
+                        'student_id' => $studentId,
+                        'education_subject_id' => $subjectId,
+                        'assessment_period_id' => $periodId,
+                        'marks_formatted' => $formattedMark,
+                        'assessment_id' => $extra['assessment_id'],
+                        'academic_period_id' => $params['academic_period_id'],
+                        'education_grade_id' => $extra['report_card_education_grade_id'],
+                        'institution_id' => $params['institution_id'],
+                        'institution_classes_id' => $params['institution_class_id'] ?? null, // in case it's optional
+                    ], ['source' => 'Assessment.AssessmentItemResults']);
+                }
+            }
+        }
+
+//        Log::debug(print_r([__FUNCTION__ => $entityResults], true));
+        return $entityResults;
 
     }
 
