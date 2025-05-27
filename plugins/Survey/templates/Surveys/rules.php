@@ -34,7 +34,7 @@ $institutionId = $session->read('Institution.Institutions.id');
 				<select class="form-control"
 					ng-options="item.value as item.text for item in SurveyRulesController.surveyFormOptions"
 					ng-model="SurveyRulesController.surveyFormId"
-					ng-change="SurveyRulesController.getSurveySections(SurveyRulesController.surveyFormId);"
+					ng-change="SurveyRulesController.getSurveySections();"
 				></select>
 				</div>
 			</div>
@@ -45,7 +45,7 @@ $institutionId = $session->read('Institution.Institutions.id');
                             id="surver-sections"
                             ng-options="item.value as item.text for item in SurveyRulesController.surveySectionOptions"
                             ng-model="SurveyRulesController.sectionName"
-                            ng-change="SurveyRulesController.onChangeSection(SurveyRulesController.sectionName)">
+                            ng-change="SurveyRulesController.onChangeSection()">
 					</select>
 				</div>
 			</div>
@@ -63,9 +63,9 @@ $institutionId = $session->read('Institution.Institutions.id');
 									</tr>
 								</thead>
                                 <!-- First row: Question label -->
-                                <tr ng-repeat-start="question in SurveyRulesController.questions">
+                                <tr ng-repeat-start="(key, question) in SurveyRulesController.questions">
                                     <td colspan="3">
-                                        <div class="section-header">{{question.no}}. {{question.name}}</div>
+                                        <div class="section-header">{{key}}. {{question.name}}</div>
                                     </td>
                                 </tr>
 
@@ -77,14 +77,18 @@ $institutionId = $session->read('Institution.Institutions.id');
                                                kd-checkbox-radio
                                                ng-true-value="1"
                                                ng-false-value="0"
+                                               ng-disabled="SurveyRulesController.getDependentQuestions(question.order).length === 0"
                                                ng-model="question.rule.enabled" />
                                     </td>
 
                                     <td>
                                         <div class="input-select-wrapper">
                                             <select
-                                                ng-options="q.survey_question_id as q.short_name for q in SurveyRulesController.questions | filter:SurveyRulesController.filterByOrderAndType(question.order)"
-                                                ng-model="question.rule.dependent_question_id">
+                                                ng-disabled="SurveyRulesController.getDependentQuestions(question.order).length === 0"
+                                                ng-model="question.rule.dependent_question_id"
+                                                ng-change="SurveyRulesController.updateDependentQuestion(question)"
+                                                ng-options="q.id as q.short_name for q in SurveyRulesController.getDependentQuestions(question.order)"
+                                                >
                                                 <option value="">-- <?= __('Select One') ?> --</option>
                                             </select>
                                         </div>
@@ -95,10 +99,11 @@ $institutionId = $session->read('Institution.Institutions.id');
                                             <select
                                                 chosen
                                                 multiple
+                                                ng-disabled="!question.dependentQuestion || !question.dependentQuestion.choices"
                                                 data-placeholder="<?= __('Select Question Options') ?>"
                                                 class="chosen-select"
                                                 ng-model="question.rule.show_options"
-                                                ng-options="opt.survey_question_choice_id as opt.survey_question_choice_name for opt in SurveyRulesController.getChoices(question.rule.dependent_question_id, question)">
+                                                ng-options="opt.id as opt.survey_question_choice_name for opt in question.dependentQuestion.choices">
                                             </select>
                                         </div>
                                     </td>

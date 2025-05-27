@@ -25,31 +25,83 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     vm.initDependentQuestion = initDependentQuestion;
     vm.saveValue = saveValue;
     vm.canSave = false;
-    vm.questions = [
-        {
-            question_id: 123,
+    vm.questions = {
+        1: {
+            id: 1,
+            name: 'Do you have age?',
+            short_name: '1. Have Age',
+            order: 0,
+            field_type: 'DROPDOWN',
+            choices: [
+                { id: 801, survey_question_choice_name: 'Yes' },
+                { id: 802, survey_question_choice_name: 'No' }
+            ],
+            rule: {
+                enabled: 0,
+                dependent_question_id: null,
+                show_options: null
+            }
+        },
+        2: {
+            id: 2,
             name: 'What is your age?',
-            short_name: '1. Age',
+            short_name: '2. Your Age',
+            order: 1,
             rule: {
                 enabled: 1,
-                dependent_question_id: 456,
-                show_options: [789, 790]
+                dependent_question_id: 1,
+                show_options: [801, 802]
             },
-            choices: [
-                { survey_question_choice_id: 789, survey_question_choice_name: 'Under 18' },
-                { survey_question_choice_id: 790, survey_question_choice_name: '18-30' }
-            ],
-            allDependentOptions: [
+            dependentQuestion:
                 {
-                    survey_question_id: 456,
+                    id: 1,
+                    name: 'Do you have age?',
+                    short_name: '1. Do age',
                     choices: [
-                        { survey_question_choice_id: 801, survey_question_choice_name: 'Yes' },
-                        { survey_question_choice_id: 802, survey_question_choice_name: 'No' }
+                        { id: 801, survey_question_choice_name: 'Yes' },
+                        { id: 802, survey_question_choice_name: 'No' }
                     ]
                 }
-            ]
+
+        },
+        3: {
+            id: 3,
+            name: 'Do you have name?',
+            short_name: '3. Have Name',
+            order: 2,
+            field_type: 'DROPDOWN',
+            choices: [
+                { id: 803, survey_question_choice_name: 'Ha' },
+                { id: 804, survey_question_choice_name: 'Yok' }
+            ],
+            rule: {
+                enabled: 0,
+                dependent_question_id: null,
+                show_options: null
+            }
+        },
+        4: {
+            id: 4,
+            name: 'What is your name?',
+            short_name: '4. Your name',
+            order: 3,
+            rule: {
+                enabled: 1,
+                dependent_question_id: 3,
+                show_options: [803, 804]
+            },
+            dependentQuestion:
+                {
+                    id: 3,
+                    name: 'Do you have name?',
+                    short_name: '3. Do name',
+                    choices: [
+                        { id: 803, survey_question_choice_name: 'Ha' },
+                        { id: 804, survey_question_choice_name: 'Yok' }
+                    ]
+                }
         }
-    ];
+    };
 
     // Initialisation
     angular.element(document).ready(function() {
@@ -83,9 +135,9 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         ;
     });
 
-    function getSurveySections(surveyFormId) {
+    function getSurveySections() {
+        const surveyFormId = vm.surveyFormId;
         SurveyRulesSvc.getSections(surveyFormId).then(function (response) {
-
             const sections = response.data || [];
 
             // Build dropdown options
@@ -103,12 +155,14 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                 } else {
                     vm.sectionName = options[0].value;
                 }
-                vm.getQuestionsFromSection(surveyFormId, vm.sectionName);
+                vm.getQuestionsFromSection();
             }
         });
     }
 
-    function getQuestionsFromSection(surveyFormId, sectionName) {
+    function getQuestionsFromSection() {
+        const surveyFormId = vm.surveyFormId;
+        const sectionName = vm.sectionName;
         UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
 
         SurveyRulesSvc.getQuestions(surveyFormId, sectionName)
@@ -189,10 +243,10 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
             });
     }
 
-    function onChangeSection(sectionName) {
-        vm.sectionName = sectionName;
-        // console.log(sectionName);
-        vm.getQuestionsFromSection(vm.surveyFormId, sectionName);
+    function onChangeSection() {
+        var sectionName = vm.sectionName;
+        console.log(sectionName);
+        vm.getQuestionsFromSection();
     }
 
     function filterByOrderAndType(order) {
@@ -206,7 +260,25 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
             return false;
         }
     }
+    vm.getDependentQuestions = function(currentOrder) {
+        return Object.values(vm.questions).filter(function(item) {
+            return item.order < currentOrder && item.field_type === 'DROPDOWN';
+        });
+    };
+    vm.updateDependentQuestion = function(question) {
+        const selected = vm.findQuestionById(question.rule.dependent_question_id);
+        if (question.rule.dependent_question_id) {
+            question.dependentQuestion = angular.copy(selected);
+        } else {
+            question.dependentQuestion = null;
+        }
+    };
 
+    vm.findQuestionById = function(id) {
+        return Object.values(vm.questions).find(function(q) {
+            return q.id === id;
+        });
+    };
     function filterChoiceBySurveyQuestionId(surveyQuestionId) {
         return function (item) {
             if (surveyQuestionId == '' || surveyQuestionId == undefined) {
