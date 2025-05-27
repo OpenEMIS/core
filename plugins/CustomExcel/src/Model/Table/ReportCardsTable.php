@@ -313,11 +313,11 @@ class ReportCardsTable extends AppTable
 
             if (!empty($student_id) && !empty($institution_id) &&
                 !empty($education_grade_id) && !empty($academic_period_id)) {
-                ReportCardGpaTable::addGpaReportCards(
-                    $student_id,
-                    $academic_period_id,
-                    $institution_id,
-                    $education_grade_id);
+//                ReportCardGpaTable::addGpaReportCards(
+//                    $student_id,
+//                    $academic_period_id,
+//                    $institution_id,
+//                    $education_grade_id);
                 ReportCardCumulativeGpaTable::addGpaReportCards(
                     $student_id,
                     $academic_period_id,

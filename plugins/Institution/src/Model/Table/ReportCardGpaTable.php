@@ -911,7 +911,7 @@ class ReportCardGpaTable extends ControllerActionTable
      * @param int $educationGradeGpaId
      * @return float GPA value (0.00 if no result)
      */
-    private static function getGpaForStudentGpa(
+    public static function getGpaForStudentGpa(
         int $institutionId,
         int $studentId,
         int $academicPeriodId,
@@ -1135,7 +1135,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $result['gpa'] ?? 0.00;
     }
 
-    private static function insertGpaPerStudentPerGpa(
+    public static function insertGpaPerStudentPerGpa(
         $institutionId,
         $studentId,
         $academicPeriodId,
