@@ -269,12 +269,15 @@ class AppraisalBehavior extends Behavior
                     $tabName = Text::slug($section);
                     if (empty($tabElements)) {
                         $selectedAction = $tabName;
-                    } else { //POCOR-8802
-                        if(isset($url['?']) && $url['?'] != $tabName) {
+                    } else { // POCOR-9123
+                        if (isset($url['?']) && $url['?'] != $tabName) {
                             unset($url['?']);
                         }
                     }
+
                     $url['tab_section'] = $tabName;
+                    $url['?']['tab_section'] = $tabName; // POCOR-9123
+
                     $tabElements[$tabName] = [
                         'url' => $url,
                         'text' => $section,
