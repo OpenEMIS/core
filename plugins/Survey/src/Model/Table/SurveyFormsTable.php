@@ -633,6 +633,7 @@ class SurveyFormsTable extends CustomFormsTable
 
     public function findHavingDropDownQuestions(Query $query, array $options)
     {
+        // POCOR-9147
         $subquery = $this->find()
             ->select([$this->aliasField('id')])
             ->innerJoinWith('CustomFields')

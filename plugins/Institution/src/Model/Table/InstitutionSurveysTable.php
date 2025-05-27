@@ -210,7 +210,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             foreach ($rules as $key => $rule) {
                 foreach ($rule as $supportFieldKey => $options) {
                     $supportQuestionOptions = json_decode($options);
-
+                    // POCOR-9147 start
                     if (!empty($supportQuestionOptions)) {
                         if (isset($newData[$supportFieldKey])) {
                             $userSelectedOption = $newData[$supportFieldKey]['number_value'];
@@ -233,6 +233,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                             return $this->controller->redirect($this->url('view'));
                         }
                     }
+                    // POCOR-9147 end
                 }
             }
         }

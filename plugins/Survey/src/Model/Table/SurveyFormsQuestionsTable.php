@@ -63,6 +63,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 
 	public function findSurveyFormChoices(Query $query, array $options)
 	{
+        // POCOR-9147
         $section = $options['section'] ?? -1;
         $survey_form_id = $options['survey_form_id'] ?? -1;
         $survey_question_id = $options['survey_question_id'] ?? -1;
@@ -87,7 +88,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 			;
 			return $query;
 	}
-
+    // POCOR-9147
 	public function findForSurveyRules(Query $query, array $options)
 	{
 //        Log::debug('SurveyFormsQuestionsTable::findSurveyRules');

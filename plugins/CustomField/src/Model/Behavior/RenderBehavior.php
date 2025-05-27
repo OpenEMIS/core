@@ -67,7 +67,7 @@ class RenderBehavior extends Behavior {
 
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
         // POCOR-9105 start
-
+        // POCOR-9147 start
         try {
             $entity_array = $entity->toArray();
         } catch (\Throwable $e) {
@@ -80,7 +80,7 @@ class RenderBehavior extends Behavior {
                 $entity_array = [];
             }
         }
-
+        // POCOR-9147 end
         $survey_form_id = $entity_array['survey_form_id'];
         if($survey_form_id == null) {
             $survey_form_id = $entity->survey_form_id;
