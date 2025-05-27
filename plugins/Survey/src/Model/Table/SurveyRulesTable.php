@@ -55,7 +55,7 @@ class SurveyRulesTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         // POCOR-8921, POCOR-9104 start
-        Log::debug(print_r($entity,true));
+//        Log::debug(print_r($entity,true));
         if ($entity->enabled == 1) {
             if (empty($entity->dependent_question_id) ||
                 empty($entity->survey_form_id) ||
