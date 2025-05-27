@@ -55,7 +55,7 @@ class GenerateAllInstitutionReportCardsShell extends Shell
                 $excelParams = new ArrayObject([]);
                 $excelParams['className'] = 'CustomExcel.InstitutionReportCards';
                 $excelParams['requestQuery'] = $recordToProcess;
-				
+
                 try {
                     $this->InstitutionReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
@@ -70,7 +70,12 @@ class GenerateAllInstitutionReportCardsShell extends Shell
             }
         }
         try {
-            posix_kill(getmypid(), 9);
+            $pid = getmypid();
+            if (function_exists('posix_kill')) {
+                posix_kill($pid, 9);
+            } else {
+                exec("kill -15 $pid"); // Works on Unix-like systems
+            }
         } catch (\Exception $exception) {
             $this->out($exception->getMessage());
             error_reporting($previousErrorReporting);
