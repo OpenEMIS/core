@@ -18,14 +18,13 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     vm.getSurveySections = getSurveySections;
     vm.getQuestionsFromSection = getQuestionsFromSection;
     vm.onChangeSection = onChangeSection;
-    vm.filterByOrderAndType = filterByOrderAndType;
-    vm.filterChoiceBySurveyQuestionId = filterChoiceBySurveyQuestionId;
     vm.populateOptions = populateOptions;
     vm.initEnabled = initEnabled;
     vm.initDependentQuestion = initDependentQuestion;
     vm.saveValue = saveValue;
     vm.canSave = false;
     vm.questions = {};
+    vm.originalRules = {};
 
     // Initialisation
     angular.element(document).ready(function() {
@@ -156,6 +155,9 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
                 });
 
                 vm.questions = formatted;
+                angular.forEach(vm.questions, function (q) {
+                    vm.originalRules[q.id] = angular.copy(q.rule);
+                });
             })
             .catch(console.error)
             .finally(() => {
@@ -193,6 +195,9 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
         } else {
             question.dependentQuestion = null;
         }
+        if (vm.isDependentInvalid(question)) {
+            question.rule.enabled = 0;
+        }
     };
 
     vm.findQuestionById = function(id) {
@@ -200,17 +205,39 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
             return q.id === id;
         });
     };
-    function filterChoiceBySurveyQuestionId(surveyQuestionId) {
-        return function (item) {
-            if (surveyQuestionId == '' || surveyQuestionId == undefined) {
-                return false;
-            } else if (item.survey_question_id == surveyQuestionId) {
-                return true;
-            } else {
-                return false;
-            }
+
+    vm.isDependentInvalid = function(question) {
+        return !question.dependentQuestion ||
+            !question.dependentQuestion.choices ||
+            question.dependentQuestion.choices.length === 0;
+    };
+
+    $scope.$watch(
+        function () {
+            return JSON.stringify(
+                Object.keys(vm.questions).map(function (key) {
+                    const q = vm.questions[key];
+                    return {
+                        id: q.id,
+                        rule: q.rule
+                    };
+                })
+            );
+        },
+        function (newVal, oldVal) {
+            vm.canSave = Object.values(vm.questions).some(function (q) {
+                const original = vm.originalRules[q.id];
+                if (!original) return false;
+
+                return (
+                    q.rule.enabled !== original.enabled ||
+                    q.rule.dependent_question_id !== original.dependent_question_id ||
+                    JSON.stringify(q.rule.show_options || []) !== JSON.stringify(original.show_options || [])
+                );
+            });
         }
-    }
+    );
+
 
     function populateOptions(dependentQuestionId) {
         if (dependentQuestionId !== undefined && !isNaN(dependentQuestionId)) {
@@ -244,49 +271,65 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     }
 
     function saveValue() {
-        // console.log(vm);
-    	var questionIds = vm.questionId;
-    	var enabled = vm.enabled;
-    	var dependentQuestions = vm.dependentQuestion;
-    	var dependentOptions = vm.dependentOptions;
-        var data = [];
-        angular.forEach(questionIds, function (surveyQuestionId, key) {
-            if (dependentQuestions.hasOwnProperty(key)) {
-                if (dependentOptions.hasOwnProperty(key)) {
-                    const optionsArray = dependentOptions[key];
-                    if (Array.isArray(optionsArray) && optionsArray.length > 0) {
-                        var dependentQuestionId = dependentQuestions[key];
-                        var options = JSON.stringify(dependentOptions[key]);
-                        var data = {
-                            survey_form_id: vm.surveyFormId,
-                            enabled: enabled[key],
-                            survey_question_id: surveyQuestionId,
-                            dependent_question_id: dependentQuestionId,
-                            show_options: options
-                        };
-                        this.push(data);
-                    }
-                }
+        const saveData = [];
+        const deleteData = [];
+
+        angular.forEach(vm.questions, function (question) {
+            const rule = question.rule || {};
+            const surveyQuestionId = question.id;
+            const surveyFormId = vm.surveyFormId;
+
+            const isEnabled = rule.enabled == 1 &&
+                rule.dependent_question_id &&
+                Array.isArray(rule.show_options) &&
+                rule.show_options.length > 0;
+
+            const original = vm.originalRules[surveyQuestionId];
+            const wasEnabled = original && original.enabled == 1;
+
+            // Push to save list if valid
+            if (isEnabled) {
+                saveData.push({
+                    survey_form_id: surveyFormId,
+                    survey_question_id: surveyQuestionId,
+                    enabled: rule.enabled,
+                    dependent_question_id: rule.dependent_question_id,
+                    show_options: JSON.stringify(rule.show_options)
+                });
             }
-        }, data);
-        UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
-		SurveyRulesSvc.saveData(data)
-        .then(function (response){
-            vm.getQuestionsFromSection(vm.surveyFormId, vm.sectionName);
-            AlertSvc.success($scope, "The record has been added successfully.");
-            var newHash = 'anchorTop';
-            if ($location.hash() !== newHash) {
-              $location.hash(newHash);
-            } else {
-              $anchorScroll();
+
+            // Push to delete list if it *was* enabled and is now disabled/invalid
+            if (wasEnabled && !isEnabled) {
+                deleteData.push({
+                    survey_form_id: surveyFormId,
+                    survey_question_id: surveyQuestionId
+                });
             }
-        }, function(error){
-            console.error(error);
-        })
-        .finally(function() {
-            UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
         });
 
+        UtilsSvc.isAppendSpinner(true, 'survey-rules-table');
+
+        // Run saves and deletes in parallel
+        $q.all([
+            SurveyRulesSvc.saveData(saveData),
+            SurveyRulesSvc.deleteData(deleteData)
+        ])
+            .then(function () {
+                vm.getQuestionsFromSection(vm.surveyFormId, vm.sectionName);
+                AlertSvc.success($scope, "The record has been added successfully.");
+                const newHash = 'anchorTop';
+                if ($location.hash() !== newHash) {
+                    $location.hash(newHash);
+                } else {
+                    $anchorScroll();
+                }
+            })
+            .catch(function (error) {
+                console.error(error);
+            })
+            .finally(function () {
+                UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
+            });
     }
 
 }

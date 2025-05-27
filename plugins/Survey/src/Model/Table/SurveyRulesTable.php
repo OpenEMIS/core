@@ -26,6 +26,7 @@ class SurveyRulesTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         $this->setTable('survey_rules');
+        $this->setPrimaryKey(['survey_form_id', 'survey_question_id']);
         parent::initialize($config);
         $this->belongsTo('SurveyForms',                     ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
         $this->belongsTo('SurveyQuestions',                 ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
@@ -54,26 +55,16 @@ class SurveyRulesTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         // POCOR-8921, POCOR-9104 start
-//        Log::debug('SurveyRulesTable beforeSave 1');
-//        Log::debug(print_r($entity, true));
+        Log::debug(print_r($entity,true));
         if ($entity->enabled == 1) {
-            if (empty($entity->dependent_question_id)) {
-                $event->stopPropagation();
-                return;
-            }
-            if (empty($entity->survey_form_id)) {
-                $event->stopPropagation();
-                return;
-            }
-            if (empty($entity->survey_question_id)) {
+            if (empty($entity->dependent_question_id) ||
+                empty($entity->survey_form_id) ||
+                empty($entity->survey_question_id)) {
                 $event->stopPropagation();
                 return;
             }
         }
-        // POCOR-8921, POCOR-9104 end
         $entity->id = Text::uuid();
-//        Log::debug('SurveyRulesTable beforeSave 2');
-//        Log::debug(print_r($entity, true));
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)

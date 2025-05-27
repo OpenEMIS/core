@@ -77,7 +77,7 @@ $institutionId = $session->read('Institution.Institutions.id');
                                                kd-checkbox-radio
                                                ng-true-value="1"
                                                ng-false-value="0"
-                                               ng-disabled="SurveyRulesController.getDependentQuestions(question.order).length === 0"
+                                               ng-disabled="SurveyRulesController.isDependentInvalid(question)"
                                                ng-model="question.rule.enabled" />
                                     </td>
 
@@ -111,9 +111,10 @@ $institutionId = $session->read('Institution.Institutions.id');
 
                             </table>
 
-                            <div class="form-buttons" style="text-align: center" ng-if="SurveyRulesController.canSave">
+                            <div class="form-buttons" style="text-align: center">
                                 <button class="btn btn-default btn-save"
                                         value="save" type="button"
+                                        ng-disabled="!SurveyRulesController.canSave"
                                         ng-click="SurveyRulesController.saveValue()">
                                     <i class="fa fa-check"></i><?= __('Save') ?>
                                 </button>

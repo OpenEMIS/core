@@ -20,7 +20,8 @@ function SurveyRulesSvc($q, KdOrmSvc) {
         getSections: getSections,
         getQuestions: getQuestions,
         getShowIfChoices: getShowIfChoices,
-        saveData: saveData
+        saveData: saveData,
+        deleteData: deleteData
     };
 
     return service;
@@ -51,7 +52,7 @@ function SurveyRulesSvc($q, KdOrmSvc) {
 
     function getQuestions(surveyFormId, sectionName) {
         let options = {survey_form_id: surveyFormId, section: sectionName};
-        console.log(options);
+        // console.log(options);
         return SurveyFormsQuestionsTable
             .select()
             .find('ForSurveyRules', options) // POCOR-9147
@@ -75,6 +76,18 @@ function SurveyRulesSvc($q, KdOrmSvc) {
     function saveData(ruleData) {
         var promises = [];
         angular.forEach(ruleData, function(rule, key) {
+            // console.log(rule);
+            promises.push(SurveyRulesTable.save(rule));
+        }, this);
+        return $q.all(promises);
+    };
+    function deleteData(ruleData) {
+        var promises = [];
+        angular.forEach(ruleData, function(rule, key) {
+            // console.log(rule);
+            rule.dependent_question_id = 0;
+            rule.enabled = 0;
+            rule.show_options = "";
             promises.push(SurveyRulesTable.save(rule));
         }, this);
         return $q.all(promises);
