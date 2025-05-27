@@ -167,6 +167,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
 
         SurveyRulesSvc.getQuestions(surveyFormId, sectionName)
             .then(function (response) {
+                console.log(response);
                 const screenWidth = window.innerWidth;
 
                 const truncateText = (text) => {
