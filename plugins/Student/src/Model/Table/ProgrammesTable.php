@@ -118,7 +118,8 @@ class ProgrammesTable extends ControllerActionTable
 		$this->fields['openemis_no']['visible'] = 'false';
 		$this->fields['institution_id']['type'] = 'hidden'; // POCOR-8980 start
 		$this->field('institution'); // POCOR-8980 end
-		$this->fields['academic_period_id']['sort'] = ['field' => 'AcademicPeriods.name'];
+		// $this->fields['academic_period_id']['sort'] = ['field' => 'AcademicPeriods.name'];
+		$this->fields['academic_period_id']['sort'] = ['field' => 'academic_period_id']; //POCOR-9170
 		$this->fields['registration_number']['visible'] = 'false'; //POCOR-8870
 
 		$this->setFieldOrder([
