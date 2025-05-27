@@ -108,12 +108,12 @@ class StaffAppraisalsTable extends ControllerActionTable
         $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
-            ->requirePresence('appraisal_period_id','create')
-            ->requirePresence('appraisal_period_id','edit')
-            ->requirePresence('appraisal_type_id','create')
-            ->requirePresence('appraisal_type_id','edit')
-            ->requirePresence('appraisal_form_id','create')
-            ->requirePresence('appraisal_form_id','edit')
+            ->requirePresence('appraisal_period_id','create') // POCOR-9123
+            ->requirePresence('appraisal_period_id','edit') // POCOR-9123
+            ->requirePresence('appraisal_type_id','create') // POCOR-9123
+            ->requirePresence('appraisal_type_id','edit') // POCOR-9123
+            ->requirePresence('appraisal_form_id','create') // POCOR-9123
+            ->requirePresence('appraisal_form_id','edit') // POCOR-9123
             ->add('appraisal_period_from', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
@@ -308,7 +308,7 @@ class StaffAppraisalsTable extends ControllerActionTable
             ])
             ->where([
                 $this->aliasField('id') => $institutionStaffAppraisalsId,
-                $AppraisalFormsCriteriasScores->aliasField('final_score') => 1
+                $AppraisalFormsCriteriasScores->aliasField('final_score IS NOT NULL') // POCOR-9123
             ])
             ->innerJoin([$AppraisalFormsCriteriasScores->getAlias() => $AppraisalFormsCriteriasScores->getTable()], [
                 $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id = ') . $this->aliasField('appraisal_form_id'),
@@ -346,7 +346,7 @@ class StaffAppraisalsTable extends ControllerActionTable
 
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(Event $event, $attr, $action, ServerRequest $request) // POCOR-9123
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Staff > Career > Appraisals';
