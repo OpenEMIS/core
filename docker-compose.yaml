@@ -16,7 +16,7 @@ services:
     - DB_USER=admin
     - DB_PASSWORD=demo
     volumes:
-      - ./docker-config/config/.env:/var/www/html/api/.env
+      - ./api/.env:/var/www/html/api/.env
     networks:
       - openemis-network
   db:
@@ -30,7 +30,7 @@ services:
       - MYSQL_PASSWORD=demo
     volumes:
       - ./db_data:/var/lib/mysql
-      - ./docker-config/sql/core-4.24.0.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
+      - ./docker-config/sql/prd_cor_dmo_schema.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
       - ./docker-config/sql/my.cnf:/etc/my.cnf
     networks:
       - openemis-network
