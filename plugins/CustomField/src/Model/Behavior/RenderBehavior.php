@@ -71,29 +71,14 @@ class RenderBehavior extends Behavior {
         try {
             $entity_array = $entity->toArray();
         } catch (\Throwable $e) {
-//            Log::debug(print_r($e->getMessage(),true));
-//            Log::debug(print_r($entity, true));
-            $this->_table->Alert->warning(
-                __("This survey form 1 seems to have errors. Please ask administrator to review all survey rules before saving"),
-                ['type' => 'string', 'reset' => true]
-            );
-//            $this->_table->controller->redirect( $this->_table->url('view'));
             try {
                 $arrentity = $entity;
                 $arrentity->unsetProperty('_joinData'); // if exists
                 $arrentity->clean(); // resets dirty tracking, optional
                 $entity_array = $arrentity->extract($arrentity->visibleProperties());
             } catch (\Throwable $e) {
-                Log::debug(print_r($e->getMessage(), true));
-                Log::debug(print_r($arrentity, true));
-
-                $this->_table->Alert->error(
-                    __("This survey form 2 seems to have errors. Please ask administrator to review all survey rules before saving"),
-                    ['type' => 'string', 'reset' => true]
-                );
                 $entity_array = [];
             }
-//            return $html;
         }
 
         $survey_form_id = $entity_array['survey_form_id'];
