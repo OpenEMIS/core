@@ -1947,181 +1947,65 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
+        $student_id = $params['student_id'];
+        $institution_id = $params['institution_id'];
+        if (isset($params['institution_class_id'])
+            && isset($extra['assessment_id'])
+            && isset($extra['assessment_period_ids'])
+            && !empty($extra['assessment_period_ids'])
+            && isset($institution_id)
+            && isset($student_id)
+            && isset($extra['report_card_education_grade_id'])
+            && isset($params['academic_period_id'])) {
             $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+
             $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
 
-            $subjectList = $AssessmentItems
-                ->find('list', [
-                    'keyField' => 'education_subject_id',
-                    'valueField' => 'education_subject_id'
-                ])
-                ->find('assessmentItemsInClass', [
-                    'assessment_id' => $extra['assessment_id'],
-                    'class_id' => $params['institution_class_id']
-                ])
-                ->toArray();
 
             // to only process the query if the class has subjects
-            $conditions = [];
-            if (!empty($subjectList)) {
-                $conditions = [
-                    $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
-                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
-                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
-                    $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
-                    $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
-                    $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
-                ];
-            } else {
-                $conditions = ['1 = 0'];
+            $marksBySubject = [];
+            $subjectList = $AssessmentItems
+                    ->find('list', [
+                        'keyField' => 'education_subject_id',
+                        'valueField' => 'education_subject_id'
+                    ])
+                    ->find('assessmentItemsInClass', [
+                        'assessment_id' => $extra['assessment_id'],
+                        'class_id' => $params['institution_class_id']
+                    ])
+                    ->toArray();
+
+                // 🦕 Loop through subjects and collect latest marks
+                foreach ($subjectList as $subjectId) {
+                    foreach ($extra['assessment_period_ids'] as $periodId) {
+                        $options = [
+                            'student_id' => $student_id,
+                            'institution_id' => $institution_id,
+                            'academic_period_id' => $params['academic_period_id'],
+                            'education_grade_id' => $extra['report_card_education_grade_id'],
+                            'education_subject_id' => $subjectId,
+                            'assessment_period_id' => $periodId,
+                            'assessment_id' => $extra['assessment_id']
+                        ];
+
+                        $marks = $AssessmentItemResults::getLastMark($options);
+                        $exemptions = $AssessmentItemResults::getLastExemptions($options);
+
+                        if (!empty($exemptions)) {
+                            $marksBySubject[$student_id][$subjectId][$periodId] = 'EXEMPTED';
+                        } elseif (!empty($marks)) {
+                            $marksBySubject[$student_id][$subjectId][$periodId] = round($marks[0]['marks'], 2);
+                        } else {
+                            $marksBySubject[$student_id][$subjectId][$periodId] = null;
+                        }
+                    }
+                }
             }
 
-            $entity = $AssessmentItemResults->find()
-                ->innerJoin(
-                    [$this->getAlias() => $this->getTable()],
-                    [
-                        $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
-                        $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
-                        $this->aliasField('education_grade_id = ') . $AssessmentItemResults->aliasField('education_grade_id'),
-                        $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
-                        $this->aliasField('institution_class_id') => $params['institution_class_id']
-                    ]
-                )
-                ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
-                //POCOR-6846: START
-                ->order([
-                    $AssessmentItemResults->aliasField('created') => 'DESC'
+        // End POCOR-6752
+            Log::debug(print_r([__FUNCTION__ => $marksBySubject],true));
+            return $marksBySubject;
 
-                ])
-                //POCOR-6846: END
-                ->where($conditions)
-                ->formatResults(function (ResultSetInterface $results) {
-                    return $results->map(function ($row) {
-                        $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
-                        //POCOR-9143[START]
-                        $AssessmentItemStudentExemptions = TableRegistry::get('Institution.AssessmentItemStudentExemptions');
-                        $AssessmentItemStudentExemptionsData = $AssessmentItemStudentExemptions
-                        ->find('all')
-                        ->where([
-                            $AssessmentItemStudentExemptions->aliasField('assessment_id') => $row['assessment_id'],
-                            $AssessmentItemStudentExemptions->aliasField('student_id') => $row['student_id'],
-                            $AssessmentItemStudentExemptions->aliasField('institution_class_id') => $row['institution_classes_id'],
-                            $AssessmentItemStudentExemptions->aliasField('education_grade_id') => $row['education_grade_id'],
-                            $AssessmentItemStudentExemptions->aliasField('education_subject_id') => $row['education_subject_id'],
-                            $AssessmentItemStudentExemptions->aliasField('assessment_period_id') => $row['assessment_period_id']
-                        ])
-                        ->first();
-                        if(!empty($AssessmentItemStudentExemptionsData)){
-                            $row['marks_formatted'] = ($AssessmentItemStudentExemptionsData->type == 1) ? 'Exempt' : "Unassign" ;
-                        }else{
-                            switch ($resultType) {
-                                case 'MARKS':
-                                    $row['marks_formatted'] = number_format($row['marks'], 2);
-                                    break;
-                                case 'GRADES':
-                                    $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
-                                    break;
-                                case 'DURATION':
-                                    if (strlen($row['marks']) > 0) {
-                                        $duration = number_format($row['marks'], 2);
-
-                                        list($minutes, $seconds) = explode(".", $duration, 2);
-                                        $row['marks_formatted'] = $minutes . " : " . $seconds;
-                                        break;
-                                    }
-                                default:
-                                    $row['marks_formatted'] = '';
-                                    break;
-                            }
-                        }
-                        //POCOR-9143[END]
-                        return $row;
-                    });
-                })
-                ->toArray();
-
-            //After transferring from School A to School B all data copy but report card is blank now this issue fixed Start POCOR-6752,
-            if (empty($entity)) {
-                $condition = [];
-                if (!empty($subjectList)) {
-                    $condition = [
-                        $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
-                        $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
-                        $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
-                        $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
-                        $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
-                        $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
-                    ];
-                } else {
-                    $condition = ['1 = 0'];
-                }
-
-                $entity = $AssessmentItemResults->find()
-                    ->innerJoin(
-                        [$this->getAlias() => $this->getTable()],
-                        [
-                            $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
-                            $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
-                            $this->aliasField('education_grade_id = ') . $AssessmentItemResults->aliasField('education_grade_id'),
-                            $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id')
-                        ]
-                    )
-                    ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
-                    ->order([
-                        $AssessmentItemResults->aliasField('created') => 'DESC'
-
-                    ])
-                    ->where($condition)
-                    ->formatResults(function (ResultSetInterface $results) {
-                        return $results->map(function ($row) {
-                            $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
-                            //POCOR-9143[START]
-                            $AssessmentItemStudentExemptions = TableRegistry::get('Institution.AssessmentItemStudentExemptions');
-                            $AssessmentItemStudentExemptionsData = $AssessmentItemStudentExemptions
-                            ->find('all')
-                            ->where([
-                                $AssessmentItemStudentExemptions->aliasField('assessment_id') => $row['assessment_id'],
-                                $AssessmentItemStudentExemptions->aliasField('student_id') => $row['student_id'],
-                                $AssessmentItemStudentExemptions->aliasField('institution_class_id') => $row['institution_classes_id'],
-                                $AssessmentItemStudentExemptions->aliasField('education_grade_id') => $row['education_grade_id'],
-                                $AssessmentItemStudentExemptions->aliasField('education_subject_id') => $row['education_subject_id'],
-                                $AssessmentItemStudentExemptions->aliasField('assessment_period_id') => $row['assessment_period_id']
-                            ])
-                            ->first();
-                            if(!empty($AssessmentItemStudentExemptionsData)){
-                                $row['marks_formatted'] = ($AssessmentItemStudentExemptionsData->type == 1) ? 'Exempt' : "Unassign" ;
-                            }else{
-                                switch ($resultType) {
-                                    case 'MARKS':
-                                        $row['marks_formatted'] = number_format($row['marks'], 2);
-                                        break;
-                                    case 'GRADES':
-                                        $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
-                                        break;
-                                    case 'DURATION':
-                                        if (strlen($row['marks']) > 0) {
-                                            $duration = number_format($row['marks'], 2);
-
-                                            list($minutes, $seconds) = explode(".", $duration, 2);
-                                            $row['marks_formatted'] = $minutes . " : " . $seconds;
-                                            break;
-                                        }
-                                    default:
-                                        $row['marks_formatted'] = '';
-                                        break;
-                                }
-                            }
-                            //POCOR-9143[END]
-                            return $row;
-                        });
-                    })
-                    ->toArray();
-            }// End POCOR-6752
-
-            return $entity;
-        }
     }
 
     public function onExcelTemplateInitialiseOutcomeTemplates(Event $event, array $params, ArrayObject $extra)
