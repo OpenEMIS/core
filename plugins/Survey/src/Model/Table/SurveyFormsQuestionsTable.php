@@ -19,7 +19,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
         $this->hasOne('SurveyRules', [  // ✅ only ONE rule per form-question
             'className' => 'Survey.SurveyRules',
             'foreignKey' => 'survey_question_id',
-//            'bindingKey' => 'survey_question_id',
+            'bindingKey' => 'survey_question_id',
             'conditions' => [
                 'SurveyRules.survey_form_id = SurveyFormsQuestions.survey_form_id'
             ],
@@ -105,7 +105,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 		$query
             ->contain([
                 'SurveyRules',
-                'CustomFields'
+                'CustomFields' => ['CustomFieldOptions']
             ])
 			->enableAutoFields(true) // POCOR-8465
 			->order([$this->aliasField('order') => 'ASC'])// POCOR-8729
