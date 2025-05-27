@@ -1,4 +1,7 @@
-### [4.25.2] - 2025-05-22
+### [4.26.0] - 2025-05-27
+- Implemented: Develop changes to student report card generatation to include gpa and cumulative gpa
+
+### [4.25.3] - 2025-05-22
 - Bug Fixed: Institutions > Performances > Report Cards : Cumulative GPA placeholder is not displaying any values upon generating
 
 ### [4.25.2] - 2025-05-21
