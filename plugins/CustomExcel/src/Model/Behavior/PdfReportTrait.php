@@ -330,10 +330,7 @@ trait PdfReportTrait
                 if ($cell->childNodes->length === 1 && $cell->firstChild->nodeType === XML_TEXT_NODE) {
                     $rawText = trim($cell->textContent);
 
-                        $rawText = "\xC2\xA0 " . trim($rawText) . " \xC2\xA0";
-
-                        $cell->nodeValue = ''; // Clear original
-
+                    $rawText = "\xC2\xA0 " . trim($rawText) . " \xC2\xA0"; // POCOR-9171 start
 
                     if (mb_strlen($rawText) > 100) {
                         // Split long text into lines
@@ -368,7 +365,7 @@ trait PdfReportTrait
                             'style',
                             $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;'
                         );
-                    }else{
+                    }else{ // POCOR-9171 start
 
                         $cell->nodeValue = ''; // Clear original
                         $div = $dom->createElement('div');
@@ -376,6 +373,7 @@ trait PdfReportTrait
                         $div->appendChild($dom->createTextNode($rawText));
 
                         $cell->appendChild($div);
+                        // POCOR-9171 end
                     }
                 }
 
@@ -652,11 +650,21 @@ trait PdfReportTrait
         //POCOR-6916 end
         for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
             $sheetStatus = $objSpreadsheet->getSheet($sheetIndex)->getSheetState(); //POCOR-7077
+            // POCOR-9171 start
+            $pageSetup = $objSpreadsheet->getSheet($sheetIndex)->getPageSetup();
+
+            $orientation = $pageSetup->getOrientation();
+            if ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT) {
+                $pageSize = [245, 400];
+            } elseif ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE) {
+                $pageSize = [400, 245];
+            }
+            // POCOR-9171 end
             if ($sheetStatus === 'visible') { // POCOR-7077
                 // Create new mPDF instance for the current sheet
                 $pdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
-                    'format' => [400, 245] // Custom landscape format (POCOR-7750)
+                    'format' => $pageSize // Custom landscape format (POCOR-7750)
                 ]);
                 $pdf->autoScriptToLang = true;  // Automatically select language-specific fonts (POCOR-7264)
                 $pdf->autoLangToFont = true;    // Match language to font (POCOR-7264)
