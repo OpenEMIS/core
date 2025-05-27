@@ -1,4 +1,5 @@
 <?php
+
 namespace Import\Model\Behavior;
 
 use ArrayObject;
@@ -17,17 +18,17 @@ class ImportResultBehavior extends ImportBehavior
             case 'add':
                 $downloadUrl = $toolbarButtons['back']['url'];
                 $downloadUrl[0] = 'template';
-                if ($buttons['add']['url']['action']=='ImportInstitutionSurveys') {
+                if ($buttons['add']['url']['action'] == 'ImportInstitutionSurveys') {
                     $downloadUrl[1] = $buttons['add']['url'][1];
                 }
-                $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
+                $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
                 break;
         }
 
         //back button
         if (!empty($this->getConfig('backUrl'))) {
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
-        } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
+        } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
             $back = [];
 
             if ($this->_table->request->getAttribute('params')['pass'][0] == 'add') {
@@ -47,11 +48,11 @@ class ImportResultBehavior extends ImportBehavior
         unset($toolbarButtons['back']['url'][0]);
     }
 
-/******************************************************************************************************************
-**
-** Actions
-**
-******************************************************************************************************************/    
+    /******************************************************************************************************************
+     **
+     ** Actions
+     **
+     ******************************************************************************************************************/
 
     public function results()
     {
@@ -86,12 +87,12 @@ class ImportResultBehavior extends ImportBehavior
         }
     }
 
-/******************************************************************************************************************
-**
-** Import Functions
-**
-******************************************************************************************************************/
-    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = '')
+    /******************************************************************************************************************
+     **
+     ** Import Functions
+     **
+     ******************************************************************************************************************/
+    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = ''): void
     {
         //set the image
         $activeSheet = $objPHPExcel->getActiveSheet();
@@ -122,18 +123,18 @@ class ImportResultBehavior extends ImportBehavior
     public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign = 2, $applyFillFontSetting = [], $applyCellBorder = [])
     {
         if (empty($applyFillFontSetting)) {
-            $applyFillFontSetting = ['s'=>2, 'e'=>2];
+            $applyFillFontSetting = ['s' => 2, 'e' => 2];
         }
 
         if (empty($applyCellBorder)) {
-            $applyCellBorder = ['s'=>2, 'e'=>2];
+            $applyCellBorder = ['s' => 2, 'e' => 2];
         }
 
         $activeSheet = $objPHPExcel->getActiveSheet();
 
         // merging should start from cell C1 instead of A1 since the title is already set in cell C1 in beginExcelHeaderStyling()
-        if (!in_array($headerLastAlpha, ['A','B','C'])) {
-            $activeSheet->mergeCells('C1:'. $headerLastAlpha .'1');
+        if (!in_array($headerLastAlpha, ['A', 'B', 'C'])) {
+            $activeSheet->mergeCells('C1:' . $headerLastAlpha . '1');
         }
 
         $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
@@ -143,10 +144,10 @@ class ImportResultBehavior extends ImportBehavior
                 'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
             ]
         ];
-        $activeSheet->getStyle("A1:". $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
-        $activeSheet->getStyle("A". $applyFillFontSetting['s'] .":". $headerLastAlpha . $applyFillFontSetting['e'])->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
-        $activeSheet->getStyle("A". $applyFillFontSetting['s'] .":". $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
-        $activeSheet->getStyle("A". $applyCellBorder['s'] .":". $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
+        $activeSheet->getStyle("A1:" . $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
+        $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
+        $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
+        $activeSheet->getStyle("A" . $applyCellBorder['s'] . ":" . $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
     }
 
     public function setResultDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
@@ -155,17 +156,16 @@ class ImportResultBehavior extends ImportBehavior
 
         $activeSheet = $objPHPExcel->getActiveSheet();
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName,  __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) .' '. $dataSheetName);
-        $this->beginExcelTopTittle($objPHPExcel, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) .' '. $dataSheetName);
+        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName,  __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) . ' ' . $dataSheetName);
+        $this->beginExcelTopTittle($objPHPExcel, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) . ' ' . $dataSheetName);
         foreach ($header as $key => $value) {
             $alpha = $this->getExcelColumnAlpha($key);
             $activeSheet->setCellValue($alpha . 2, $value);
         }
 
-        $headerLastAlpha = $this->getExcelColumnAlpha(count($header)-1);
+        $headerLastAlpha = $this->getExcelColumnAlpha(count($header) - 1);
         $lastRowToAlign = 2;
         $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign);
-
     }
 
     protected function _generateDownloadableFile($data, $type, $header, $systemDateFormat)
@@ -197,11 +197,11 @@ class ImportResultBehavior extends ImportBehavior
                 }
                 $activeSheet->getRowDimension(($index + $rowData))->setRowHeight(15);
                 foreach ($values as $key => $value) {
-                    $alpha = $this->getExcelColumnAlpha($key + 1); 
+                    $alpha = $this->getExcelColumnAlpha($key + 1);
                     $activeSheet->setCellValue($alpha . ($index + $rowData), $value);
                     $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
 
-                    if ($key == (count($values)) && $type == 'failed') { 
+                    if ($key == (count($values)) && $type == 'failed') {
                         $suggestedRowHeight = $this->suggestRowHeight(strlen($value), 15);
                         $activeSheet->getRowDimension(($index + $rowData))->setRowHeight($suggestedRowHeight);
                         $activeSheet->getStyle($alpha . ($index + $rowData))->getAlignment()->setWrapText(true);
@@ -236,7 +236,5 @@ class ImportResultBehavior extends ImportBehavior
         }
 
         return $header == $cellsValue;
-    }     
-
-       
+    }
 }
