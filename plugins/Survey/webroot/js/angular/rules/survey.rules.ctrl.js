@@ -25,83 +25,7 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
     vm.initDependentQuestion = initDependentQuestion;
     vm.saveValue = saveValue;
     vm.canSave = false;
-    vm.questions = {
-        1: {
-            id: 1,
-            name: 'Do you have age?',
-            short_name: '1. Have Age',
-            order: 0,
-            field_type: 'DROPDOWN',
-            choices: [
-                { id: 801, survey_question_choice_name: 'Yes' },
-                { id: 802, survey_question_choice_name: 'No' }
-            ],
-            rule: {
-                enabled: 0,
-                dependent_question_id: null,
-                show_options: null
-            }
-        },
-        2: {
-            id: 2,
-            name: 'What is your age?',
-            short_name: '2. Your Age',
-            order: 1,
-            rule: {
-                enabled: 1,
-                dependent_question_id: 1,
-                show_options: [801, 802]
-            },
-            dependentQuestion:
-                {
-                    id: 1,
-                    name: 'Do you have age?',
-                    short_name: '1. Do age',
-                    choices: [
-                        { id: 801, survey_question_choice_name: 'Yes' },
-                        { id: 802, survey_question_choice_name: 'No' }
-                    ]
-                }
-
-        },
-        3: {
-            id: 3,
-            name: 'Do you have name?',
-            short_name: '3. Have Name',
-            order: 2,
-            field_type: 'DROPDOWN',
-            choices: [
-                { id: 803, survey_question_choice_name: 'Ha' },
-                { id: 804, survey_question_choice_name: 'Yok' }
-            ],
-            rule: {
-                enabled: 0,
-                dependent_question_id: null,
-                show_options: null
-            }
-        },
-        4: {
-            id: 4,
-            name: 'What is your name?',
-            short_name: '4. Your name',
-            order: 3,
-            rule: {
-                enabled: 1,
-                dependent_question_id: 3,
-                show_options: [803, 804]
-            },
-            dependentQuestion:
-                {
-                    id: 3,
-                    name: 'Do you have name?',
-                    short_name: '3. Do name',
-                    choices: [
-                        { id: 803, survey_question_choice_name: 'Ha' },
-                        { id: 804, survey_question_choice_name: 'Yok' }
-                    ]
-                }
-        }
-    };
+    vm.questions = {};
 
     // Initialisation
     angular.element(document).ready(function() {
@@ -167,82 +91,78 @@ function SurveyRulesController($scope, $anchorScroll, $location, $filter, $q, Ut
 
         SurveyRulesSvc.getQuestions(surveyFormId, sectionName)
             .then(function (response) {
-                console.log(response);
-                const screenWidth = window.innerWidth;
+                const questions = response.data || [];
 
-                const truncateText = (text) => {
-                    const limits = [
-                        { width: 767, length: 30 },
-                        { width: 1280, length: 96 },
-                        { width: 1366, length: 110 },
-                        { width: 1500, length: 120 },
-                        { width: 1800, length: 150 },
-                        { width: 1920, length: 170 }
-                    ];
+                // Build a map indexed by survey_question_id for fast lookup
+                const questionsById = {};
+                questions.forEach((q) => {
+                    questionsById[q.survey_question_id] = q;
+                });
 
-                    for (const limit of limits) {
-                        if (screenWidth <= limit.width && text.length > limit.length) {
-                            return text.substring(0, limit.length) + '...';
+                const formatted = {};
+                questions.forEach((question, index) => {
+                    const number = index + 1;
+
+                    const shortName = `${number}. ${question.name}`;
+                    const fieldType = question.custom_field?.field_type || null;
+
+                    const choices = (question.custom_field?.custom_field_options || []).map(opt => ({
+                        id: opt.id,
+                        survey_question_choice_name: opt.name
+                    }));
+
+                    const ruleData = question.survey_rule || {};
+                    let showOptions = [];
+                    try {
+                        showOptions = JSON.parse(ruleData.show_options || '[]');
+                    } catch (e) {
+                        showOptions = [];
+                    }
+
+                    const rule = {
+                        id: ruleData.id || null,
+                        enabled: ruleData.enabled || 0,
+                        dependent_question_id: ruleData.dependent_question_id || null,
+                        show_options: showOptions
+                    };
+
+                    const item = {
+                        id: question.survey_question_id,
+                        name: question.name,
+                        short_name: shortName,
+                        order: question.order,
+                        field_type: fieldType,
+                        choices: choices,
+                        rule: rule
+                    };
+
+                    // If there's a dependent_question_id, attach dependentQuestion
+                    if (rule.dependent_question_id) {
+                        const dep = questionsById[rule.dependent_question_id];
+                        if (dep) {
+                            item.dependentQuestion = {
+                                id: dep.survey_question_id,
+                                name: dep.name,
+                                short_name: `${number}. ${dep.name}`,
+                                choices: (dep.custom_field?.custom_field_options || []).map(opt => ({
+                                    id: opt.id,
+                                    survey_question_choice_name: opt.name
+                                }))
+                            };
                         }
                     }
 
-                    return text;
-                };
-
-                const mapRule = (question) => {
-                    if (question.survey_form_id !== surveyFormId) {
-                        return {
-                            id: null,
-                            enabled: 0,
-                            dependent_question_id: undefined,
-                            show_options: undefined
-                        };
-                    }
-
-                    if (question.survey_rule_enabled == null) {
-                        return {
-                            id: null,
-                            enabled: 0,
-                            dependent_question_id: undefined,
-                            show_options: undefined
-                        };
-                    }
-
-                    let showOptions;
-                    try {
-                        showOptions = JSON.parse(question.show_options);
-                    } catch {
-                        showOptions = undefined;
-                    }
-
-                    return {
-                        id: question.id || null,
-                        enabled: question.survey_rule_enabled,
-                        dependent_question_id: question.dependent_question,
-                        show_options: showOptions
-                    };
-                };
-
-                vm.surveyQuestions = (response.data || []).map((question, index) => {
-                    const shortName = truncateText(question.name);
-                    const number = index + 1;
-
-                    return {
-                        no: number,
-                        survey_question_id: question.survey_question_id,
-                        name: question.name,
-                        short_name: `${number}. ${shortName}`,
-                        order: question.order,
-                        field_type: question.custom_field?.field_type || null,
-                        rule: mapRule(question)
-                    };
+                    formatted[number] = item;
                 });
+
+                vm.questions = formatted;
             })
             .catch(console.error)
             .finally(() => {
                 UtilsSvc.isAppendSpinner(false, 'survey-rules-table');
             });
     }
+
 
     function onChangeSection() {
         var sectionName = vm.sectionName;
