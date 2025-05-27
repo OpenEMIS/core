@@ -50,11 +50,11 @@ function SurveyRulesSvc($q, KdOrmSvc) {
     };
 
     function getQuestions(surveyFormId, sectionName) {
+        let options = {survey_form_id: surveyFormId, section: sectionName};
+        console.log(options);
         return SurveyFormsQuestionsTable
             .select()
-            .contain(['CustomFields'])
-            .where({survey_form_id: surveyFormId, section: sectionName})
-            .find('SurveyRules', {survey_form_id: surveyFormId, section: sectionName}) // POCOR-9147
+            .find('ForSurveyRules', options) // POCOR-9147
             //.order(['order']) //POCOR-8465
             .ajax({defer: true})
             ;

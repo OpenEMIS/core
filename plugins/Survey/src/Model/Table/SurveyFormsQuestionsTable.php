@@ -16,7 +16,21 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 		$this->belongsTo('CustomForms', ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
 		$this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
 
+        $this->hasOne('SurveyRules', [  // ✅ only ONE rule per form-question
+            'className' => 'Survey.SurveyRules',
+            'foreignKey' => 'survey_question_id',
+//            'bindingKey' => 'survey_question_id',
+            'conditions' => [
+                'SurveyRules.survey_form_id = SurveyFormsQuestions.survey_form_id'
+            ],
+            'joinType' => 'LEFT'
+        ]);
 
+//        $this->hasMany('SurveyQuestionChoices', [
+//            'className' => 'CustomField.CustomFieldOptions',
+//            'foreignKey' => 'survey_question_id',
+//            'bindingKey' => 'survey_question_id'
+//        ]);
 		$this->addBehavior('Reorder', ['enabled' => false]);
 		// $this->removeBehavior('Reorder');
 		$this->addBehavior('Restful.RestfulAccessControl', [
@@ -74,7 +88,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 			return $query;
 	}
 
-	public function findSurveyRules(Query $query, array $options)
+	public function findForSurveyRules(Query $query, array $options)
 	{
 //        Log::debug('SurveyFormsQuestionsTable::findSurveyRules');
 //        Log::debug(print_r($options, true));
@@ -89,21 +103,14 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
         }
         // POCOR-9147 end
 		$query
-			->leftJoin(
-				['SurveyRules' => 'survey_rules'],
-				[
-					'SurveyRules.survey_form_id = ' . $this->aliasField('survey_form_id'),
-					'SurveyRules.survey_question_id = ' . $this->aliasField('survey_question_id')
-				]
-			)
-			->select([
-				'survey_rule_enabled' => 'SurveyRules.enabled',
-				'dependent_question' => 'SurveyRules.dependent_question_id',
-				'show_options' => 'SurveyRules.show_options',
-			])
+            ->contain([
+                'SurveyRules',
+                'CustomFields'
+            ])
 			->enableAutoFields(true) // POCOR-8465
 			->order([$this->aliasField('order') => 'ASC'])// POCOR-8729
 			;
+//        Log::debug($query->sql());
 		return $query;
 	}
 }
