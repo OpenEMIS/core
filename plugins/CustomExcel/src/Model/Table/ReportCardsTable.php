@@ -430,7 +430,7 @@ class ReportCardsTable extends AppTable
                 $reportCardEndDate = $extra['report_card_end_date'];
                 $studentId = $entity->student_id;
 
-                $UserBodyMasses = self::getDynamicTableInstance('User.UserBodyMasses');
+                $UserBodyMasses = self::getDynamicTableInstance('User.UserBodyMasses'); // POCOR-9162
                 $userBodyMassData = $UserBodyMasses->find()
                     ->where([
                         $UserBodyMasses->aliasField('security_user_id') => $studentId,
@@ -466,7 +466,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseFirstGuardian(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id'])) {
-            $StudentGuardians = self::getDynamicTableInstance('Student.Guardians');
+            $StudentGuardians = self::getDynamicTableInstance('Student.Guardians'); // POCOR-9162
             $entity = $StudentGuardians
                 ->find()
                 ->select([
@@ -504,7 +504,7 @@ class ReportCardsTable extends AppTable
 
                         $row['contact'] = [];
 
-                        $UserContacts = self::getDynamicTableInstance('User.Contacts');
+                        $UserContacts = self::getDynamicTableInstance('User.Contacts'); // POCOR-9162
                         $userContactResults = $UserContacts
                             ->find()
                             ->contain(['ContactTypes.ContactOptions'])
@@ -530,7 +530,7 @@ class ReportCardsTable extends AppTable
         if (isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
             //$Extracurriculars = self::getDynamicTableInstance('Student.Extracurriculars');
-            $Extracurriculars = self::getDynamicTableInstance('student_extracurriculars');
+            $Extracurriculars = self::getDynamicTableInstance('student_extracurriculars'); // POCOR-9162
             $entity = $Extracurriculars->find()
                 //->contain('ExtracurricularTypes')
                 ->where([
@@ -563,7 +563,7 @@ class ReportCardsTable extends AppTable
     {
         if (isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
-            $Awards = self::getDynamicTableInstance('User.Awards');
+            $Awards = self::getDynamicTableInstance('User.Awards'); // POCOR-9162
 
             $query = $Awards->find();
             $dateFormat = $query->func()->date_format([
@@ -590,7 +590,7 @@ class ReportCardsTable extends AppTable
     {
         if (isset($params['student_id']) && isset($params['academic_period_id']) && isset($params['institution_id']) && isset($extra['report_card_education_grade_id'])) {
 
-            $InstitutionStudents = self::getDynamicTableInstance('Institution.Students');
+            $InstitutionStudents = self::getDynamicTableInstance('Institution.Students'); // POCOR-9162
 
             $query = $InstitutionStudents->find();
             $dateFormat = $query->func()->date_format([
@@ -617,11 +617,11 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionStudentsReportCardsComments(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['report_card_id']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
-            $StudentsReportCardsComments = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCardsComments');
-            $ReportCardSubjects = self::getDynamicTableInstance('ReportCard.ReportCardSubjects');
+            $StudentsReportCardsComments = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCardsComments'); // POCOR-9162
+            $ReportCardSubjects = self::getDynamicTableInstance('ReportCard.ReportCardSubjects'); // POCOR-9162
             /**POCOR-6810 starts- modified query to get only assigned subjects of student*/
-            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
-            $SecurityUsers = self::getDynamicTableInstance('security_users');//POCOR-5227
+            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
+            $SecurityUsers = self::getDynamicTableInstance('security_users');//POCOR-5227 // POCOR-9162
             $AssessmentItemData = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
@@ -640,7 +640,7 @@ class ReportCardsTable extends AppTable
                 return $entity;
             }
 
-            $ModifiedSecurityUsers = self::getDynamicTableInstance('security_users');//POCOR-5054
+            $ModifiedSecurityUsers = self::getDynamicTableInstance('security_users');//POCOR-5054 // POCOR-9162
             foreach ($AssessmentItemData as $value) {
                 $reprotCardComment = $StudentsReportCardsComments->find()
                     ->select([
@@ -719,7 +719,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id'])) {
-            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions'); // POCOR-9162
             $entity = $Institutions->get($params['institution_id'], ['contain' => ['Providers', 'Areas', 'AreaAdministratives']]);
             return $entity;
         }
@@ -729,11 +729,11 @@ class ReportCardsTable extends AppTable
     {
         //POCOR-8013 rewritten
         if (isset($params['institution_id'])) {
-            $SecurityRoles = self::getDynamicTableInstance('Security.SecurityRoles');
+            $SecurityRoles = self::getDynamicTableInstance('Security.SecurityRoles'); // POCOR-9162
             $staffRoleId = $SecurityRoles->getPrincipalRoleId();
             $institutionId = $params['institution_id'];
             //POCOR-8093 to fetch staff position
-            $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles');
+            $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles'); // POCOR-9162
             $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
             $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             if (!empty($staff)) {
@@ -748,11 +748,11 @@ class ReportCardsTable extends AppTable
     {
         //POCOR-8013 rewritten
         if (isset($params['institution_id'])) {
-            $SecurityRoles = self::getDynamicTableInstance('Security.SecurityRoles');
+            $SecurityRoles = self::getDynamicTableInstance('Security.SecurityRoles'); // POCOR-9162
             $staffRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
             $institutionId = $params['institution_id'];
             //POCOR-8093 to fetch staff position
-            $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles');
+            $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles'); // POCOR-9162
             $staffPosnId = $StaffPositionTitles->getDeputyPrincipalRoleId();
             $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             if (!empty($staff)) {
@@ -767,7 +767,7 @@ class ReportCardsTable extends AppTable
     {
 
         if (isset($params['institution_class_id'])) {
-            $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
+            $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses'); // POCOR-9162
             $entity = $InstitutionClasses->get($params['institution_class_id'], [
                 'contain' => [
                     'Staff' => [
@@ -823,7 +823,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionSubjectStudents(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
-            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
+            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
             $entity = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
@@ -841,7 +841,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionSubjectStudentsWithName(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
-            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
+            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
             $subjectObj = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
@@ -878,7 +878,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentBehaviours(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $StudentBehaviours = self::getDynamicTableInstance('Institution.StudentBehaviours');
+            $StudentBehaviours = self::getDynamicTableInstance('Institution.StudentBehaviours'); // POCOR-9162
 
             $entity = $StudentBehaviours->find()
                 ->contain('StudentBehaviourCategories')
@@ -901,12 +901,12 @@ class ReportCardsTable extends AppTable
             $startDate = $extra['report_card_start_date']->format('Y-m-d');
             $endDate = $extra['report_card_end_date']->format('Y-m-d');
             /**POCOR-6685 starts - modified main table as suggested by client*/
-            $InstitutionStudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences');
+            $InstitutionStudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences'); // POCOR-9162
             //POCOR-7050 start
-            $configVal = self::getDynamicTableInstance('config_items');
+            $configVal = self::getDynamicTableInstance('config_items'); // POCOR-9162
             $configData = $configVal->find()->select(['val' => $configVal->aliasField('value')])->where([$configVal->aliasField('code') => 'calculate_daily_attendance'])->first();
             $configOption = $configData['val'];
-            $InstitutionStudentAbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details');
+            $InstitutionStudentAbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details'); // POCOR-9162
             $studentAbsenceResults = $InstitutionStudentAbsences
                 ->find()
                 ->innerJoin(
@@ -928,9 +928,9 @@ class ReportCardsTable extends AppTable
 
             /**POCOR-6685 ends*/
             /**POCOR-7040 ends*/
-            $AbsenceTypes = self::getDynamicTableInstance('Institution.AbsenceTypes');
+            $AbsenceTypes = self::getDynamicTableInstance('Institution.AbsenceTypes'); // POCOR-9162
             $absenceTypes = $AbsenceTypes->getCodeList();
-            $studentAttendanceMarkedRecords = self::getDynamicTableInstance('student_attendance_marked_records');
+            $studentAttendanceMarkedRecords = self::getDynamicTableInstance('student_attendance_marked_records'); // POCOR-9162
 
             $results = [];
             foreach ($absenceTypes as $key => $code) {
@@ -939,7 +939,7 @@ class ReportCardsTable extends AppTable
             }
             $results['TOTAL_ABSENCE']['number_of_days'] = 0;
             $period = array(1, 2);
-            $InstitutionStudentAbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details');
+            $InstitutionStudentAbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details'); // POCOR-9162
             $checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period' => $InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id') => $params['student_id'], $InstitutionStudentAbsenceDetails->aliasField('education_grade_id') => $params['education_grade_id'], $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $params['institution_class_id'], $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $params['academic_period_id']])->toArray();
             $countPeriod = array();
             foreach ($checkstudent as $val) {
@@ -984,13 +984,13 @@ class ReportCardsTable extends AppTable
             $startDate = $extra['report_card_start_date']->format('Y-m-d');
             $endDate = $extra['report_card_end_date']->format('Y-m-d');
             /**POCOR-6685 starts - modified main table as suggested by client*/
-            $InstitutionStudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences');
+            $InstitutionStudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences'); // POCOR-9162
             //POCOR-7050 start
-            $configVal = self::getDynamicTableInstance('config_items');
+            $configVal = self::getDynamicTableInstance('config_items'); // POCOR-9162
             $configData = $configVal->find()->select(['val' => $configVal->aliasField('value')])->where([$configVal->aliasField('code') => 'calculate_daily_attendance'])->first();
             $configOption = $configData['val'];
 
-            $InstitutionStudentAbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details');
+            $InstitutionStudentAbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details'); // POCOR-9162
             $studentAbsenceResults = $InstitutionStudentAbsenceDetails
                 ->find()
                 ->innerJoin(
@@ -1014,9 +1014,9 @@ class ReportCardsTable extends AppTable
             //POCOR-7050 end
             /**POCOR-6685 ends*/
             /**POCOR-7040 ends*/
-            $AbsenceTypes = self::getDynamicTableInstance('Institution.AbsenceTypes');
+            $AbsenceTypes = self::getDynamicTableInstance('Institution.AbsenceTypes'); // POCOR-9162
             $absenceTypes = $AbsenceTypes->getCodeList();
-            $studentAttendanceMarkedRecords = self::getDynamicTableInstance('student_attendance_marked_records');
+            $studentAttendanceMarkedRecords = self::getDynamicTableInstance('student_attendance_marked_records'); // POCOR-9162
 
             $results = [];
             foreach ($absenceTypes as $key => $code) {
@@ -1291,7 +1291,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyTemplates(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $CompetencyTemplates = self::getDynamicTableInstance('Competency.CompetencyTemplates');
+            $CompetencyTemplates = self::getDynamicTableInstance('Competency.CompetencyTemplates'); // POCOR-9162
 
             $query = $CompetencyTemplates->find()
                 ->innerJoinWith('Periods')
@@ -1317,8 +1317,8 @@ class ReportCardsTable extends AppTable
     //POCOR-7315::Start
     public function onExcelTemplateInitialiseAttendanceAge(Event $event, array $params, ArrayObject $extra)
     {
-        $EducationGradesTable = self::getDynamicTableInstance('Education.EducationGrades');
-        $ConfigItemsTable = self::getDynamicTableInstance('Configuration.ConfigItems');
+        $EducationGradesTable = self::getDynamicTableInstance('Education.EducationGrades'); // POCOR-9162
+        $ConfigItemsTable = self::getDynamicTableInstance('Configuration.ConfigItems'); // POCOR-9162
         $results = [];
         $EducationGrades = $EducationGradesTable->get($params['education_grade_id']);
         $AgePlus = $ConfigItemsTable->find()->where(['code' => 'admission_age_plus'])->first();
@@ -1339,9 +1339,9 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyPeriodsByTemplate(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $CompetencyPeriods = self::getDynamicTableInstance('Competency.CompetencyPeriods');
-            $AbsenceTypesTable = self::getDynamicTableInstance('absence_types');
-            $InstitutionStudentAbsenceDays = self::getDynamicTableInstance('institution_student_absence_days');
+            $CompetencyPeriods = self::getDynamicTableInstance('Competency.CompetencyPeriods'); // POCOR-9162
+            $AbsenceTypesTable = self::getDynamicTableInstance('absence_types'); // POCOR-9162
+            $InstitutionStudentAbsenceDays = self::getDynamicTableInstance('institution_student_absence_days'); // POCOR-9162
             $conn = ConnectionManager::get('default');
             $entity = $CompetencyPeriods->find()
                 ->select([
@@ -1464,7 +1464,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyPeriods(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $CompetencyPeriods = self::getDynamicTableInstance('Competency.CompetencyPeriods');
+            $CompetencyPeriods = self::getDynamicTableInstance('Competency.CompetencyPeriods'); // POCOR-9162
 
             $entity = $CompetencyPeriods->find()
                 ->where([
@@ -1484,7 +1484,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyItems(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids'])) {
-            $CompetencyItems = self::getDynamicTableInstance('Competency.CompetencyItems');
+            $CompetencyItems = self::getDynamicTableInstance('Competency.CompetencyItems'); // POCOR-9162
 
             // only get items in periods within the report card date
             $entity = $CompetencyItems->find()
@@ -1504,7 +1504,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyCriterias(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids'])) {
-            $CompetencyCriterias = self::getDynamicTableInstance('Competency.CompetencyCriterias');
+            $CompetencyCriterias = self::getDynamicTableInstance('Competency.CompetencyCriterias'); // POCOR-9162
 
             // only get criterias linked to items in periods within the report card date
             $entity = $CompetencyCriterias->find()
@@ -1524,7 +1524,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentCompetencyPeriodComments(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $CompetencyPeriodComments = self::getDynamicTableInstance('Institution.InstitutionCompetencyPeriodComments');
+            $CompetencyPeriodComments = self::getDynamicTableInstance('Institution.InstitutionCompetencyPeriodComments'); // POCOR-9162
 
             $entity = $CompetencyPeriodComments->find()
                 ->where([
@@ -1543,7 +1543,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentCompetencyItemComments(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $CompetencyItemComments = self::getDynamicTableInstance('Institution.InstitutionCompetencyItemComments');
+            $CompetencyItemComments = self::getDynamicTableInstance('Institution.InstitutionCompetencyItemComments'); // POCOR-9162
 
             $entity = $CompetencyItemComments->find()
                 ->where([
@@ -1562,7 +1562,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyCriteriasWithResults(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['academic_period_id'])) {
-            $CompetencyCriterias = self::getDynamicTableInstance('Competency.CompetencyCriterias');
+            $CompetencyCriterias = self::getDynamicTableInstance('Competency.CompetencyCriterias'); // POCOR-9162
 
             // only get criterias linked to items in periods within the report card date
             $entity = $CompetencyCriterias->find()
@@ -1617,7 +1617,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $StudentCompetencyResults = self::getDynamicTableInstance('Institution.InstitutionCompetencyResults');
+            $StudentCompetencyResults = self::getDynamicTableInstance('Institution.InstitutionCompetencyResults'); // POCOR-9162
 
             $entity = $StudentCompetencyResults->find()
                 ->contain('CompetencyGradingOptions')
@@ -1637,7 +1637,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseAssessments(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
-            $Assessments = self::getDynamicTableInstance('Assessment.Assessments');
+            $Assessments = self::getDynamicTableInstance('Assessment.Assessments'); // POCOR-9162
 
             $entity = $Assessments->find()
                 ->where([
@@ -1656,7 +1656,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['assessment_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-9162
 
             // Fetch the query result using all() to get the actual result set
             $query = $AssessmentPeriods->find()
@@ -1683,8 +1683,8 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseAssessmentItems(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['assessment_id']) && isset($params['institution_class_id'])) {
-            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
-            $StudentSubjects = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems'); // POCOR-9162
+            $StudentSubjects = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
             $entity = $AssessmentItems
                 ->find('assessmentItemsInClass', [
                     'assessment_id' => $extra['assessment_id'],
@@ -1732,7 +1732,7 @@ class ReportCardsTable extends AppTable
                 ->group('education_subject_id')
 
                 ->toArray();*/
-            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
+            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
             $AssessmentItemData = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
@@ -2783,12 +2783,13 @@ class ReportCardsTable extends AppTable
     {
         $entity = null;
         if (!empty($params['student_id']) && !empty($params['institution_id']) && !empty($params['academic_period_id'])) {
+            // POCOR-9162 start
             $educationSubjects = self::getDynamicTableInstance('Education.EducationSubjects');
             $academicPeriod = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
             $educationGrades = self::getDynamicTableInstance('Education.EducationGrades');
             $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
             $GradesGpa = self::getDynamicTableInstance('Gpa.EducationGradesGpa');
-
+            // POCOR-9162 end
             $subquery = $GradesGpa->find()
                 ->select(['education_grade_id', 'max_start_date' => $GradesGpa->find()->func()->max('start_date')])
                 ->where(['gpa_grading_type_id IS NOT' => null])
@@ -2855,7 +2856,7 @@ class ReportCardsTable extends AppTable
             return $entity;
     }
     /**
-     * POCOR-8391 added
+     * POCOR-9162 added
      * Get a dynamic table instance with all associations.
      *
      * @param string $tableName
