@@ -68,27 +68,18 @@ class RenderBehavior extends Behavior {
     protected function processRelevancyDisabled($entity, $html, $fieldId, &$formHelper, $unlockFields) {
         // POCOR-9105 start
 
-        $visibleFields = $entity->getVisible();
-        foreach ($visibleFields as $field) {
-            if (!is_string($field)) {
-                // We found a problem before calling toArray()
-                $this->Alert->error(
-                    "You have some problem",
-                    ['type' => 'string', 'reset' => true]
-                );
-
-                return $html;
-            }
-        }
         try {
             $entity_array = $entity->toArray();
         } catch (\Throwable $e) {
+            Log::debug(print_r($e->getMessage(),true));
+            Log::debug(print_r($entity, true));
             $this->_table->Alert->error(
                 __("This survey form seems to have errors. Please ask administrator to review all survey rules before saving"),
                 ['type' => 'string', 'reset' => true]
             );
             $this->_table->controller->redirect( $this->_table->url('view'));
-            return $html;
+            $entity_array = [];
+//            return $html;
         }
 
         $survey_form_id = $entity_array['survey_form_id'];
