@@ -1512,7 +1512,8 @@ class StudentReportCardsTable extends AppTable
                 ->where([
                     $StudentsGpa->aliasField('student_id') => $params['student_id'],
                     $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
-                    $GradesGpa->aliasField('gpa_grading_type_id IS NOT') => NULL
+                    $GradesGpa->aliasField('gpa_grading_type_id IS NOT') => NULL,
+                    $StudentsGpa->aliasField('cumulative_gpa IS NOT') => NULL //POCOR-9144
                 ])->group([$StudentsGpa->aliasField('education_grade_id')])
                 ->toArray();
             $entity = [];
