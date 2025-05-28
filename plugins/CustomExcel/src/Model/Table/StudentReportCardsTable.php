@@ -1374,9 +1374,12 @@ class StudentReportCardsTable extends AppTable
                         "result_type" => $subject["result_type"],
                         "requirement" => $subject['requirement'],
                         "start_date" => $subject['start_date'],
-                        "outcome_period_start_date" => $outcomePeriodDetails->start_date ? $outcomePeriodDetails->start_date->format('d/m/Y') : "",
-                        "outcome_period_end_date" => $outcomePeriodDetails->end_date ? $outcomePeriodDetails->end_date->format('d/m/Y') : "",
-                        "outcome_result" => $subject['outcome_result'],
+                        // "outcome_period_start_date" => $outcomePeriodDetails->start_date ? $outcomePeriodDetails->start_date->format('d/m/Y') : "",
+                        // "outcome_period_end_date" => $outcomePeriodDetails->end_date ? $outcomePeriodDetails->end_date->format('d/m/Y') : "",
+                        //Commented above line as per comment on POCOR-9108
+                        "outcome_period_start_date" => "",
+                        "outcome_period_end_date" => "",
+                        "outcome_result" => $subject['outcome_result'] ? $subject['outcome_result'] : $subject["total_mark"],
                         "student_candidate_number" => $subject['student_candidate_number'],
 
                     ];
@@ -1512,7 +1515,8 @@ class StudentReportCardsTable extends AppTable
                 ->where([
                     $StudentsGpa->aliasField('student_id') => $params['student_id'],
                     $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
-                    $GradesGpa->aliasField('gpa_grading_type_id IS NOT') => NULL
+                    $GradesGpa->aliasField('gpa_grading_type_id IS NOT') => NULL,
+                    $StudentsGpa->aliasField('cumulative_gpa IS NOT') => NULL //POCOR-9144
                 ])->group([$StudentsGpa->aliasField('education_grade_id')])
                 ->toArray();
             $entity = [];
