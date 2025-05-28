@@ -41,14 +41,14 @@ class SurveysTable extends AppTable
             'pages' => false
         ]);
         $this->addBehavior('Report.ReportList');
-//        $this->addBehavior('Report.CustomFieldList', [
-//            'moduleKey' => null,
-//            'model' => 'Institution.InstitutionSurveys',
-//            'formKey' => 'survey_form_id',
-//            'formFilterClass' => null,
-//            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-//            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
-//        ]);
+        $this->addBehavior('Report.CustomFieldList', [
+            'moduleKey' => null,
+            'model' => 'Institution.InstitutionSurveys',
+            'formKey' => 'survey_form_id',
+            'formFilterClass' => null,
+            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
+        ]);
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
@@ -62,14 +62,14 @@ class SurveysTable extends AppTable
             ->notEmptyString('academic_period_id')
             ->notEmptyString('institution_status')
             ->notEmptyString('status')
-            ->notEmptyString('survey_form')
+            ->notEmptyString('survey_form_id')
             ->notEmptyString('institution_id');
 
         $feature = $this->request->getData($this->getAlias())['feature'];
         $registryAlias = $this->getRegistryAlias();
         if (in_array($feature, ['Report.SurveysReport'])) {
             $validator = $validator
-                    ->notEmptyString('survey_form')
+                    ->notEmptyString('survey_form_id')
                     ->notEmptyString('table_question')
                     ->notEmptyString('survey_section');
         }
@@ -136,16 +136,6 @@ class SurveysTable extends AppTable
             }
             return $attr;
         }
-    }
-
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
-    {
-        $sheets[] = [
-            'name' => $this->getAlias(),
-            'table' => $this,
-            'query' => $this->find(),
-            'orientation' => 'landscape'
-        ];
     }
 
 //    public function onExcelAfterHeader(Event $event, ArrayObject $settings)
@@ -358,6 +348,30 @@ class SurveysTable extends AppTable
 //        }
 //    }
 //
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
+        $sheets[] = [
+            'name' => $this->getAlias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
+        ];
+
+        $conditions = [];
+        $requestData = json_decode($settings['process']['params']);
+
+        $conditions = $this->conditionsWithInstitutionAndArea($conditions, $requestData);
+        $conditions = $this->conditionsWithSurveyStatus($conditions, $requestData);
+        $conditions = $this->conditionsWithSurveyFormId($conditions, $requestData);
+        $conditions = $this->conditionsWithInstitutionStatus($conditions, $requestData);
+        $conditions = $this->conditionsWithAcademicPeriod($conditions, $requestData);
+        $surveyFormId = $requestData->survey_form_id;
+        $this->setCondition($conditions);
+        $forms = $this->getForms($surveyFormId);
+        foreach ($forms as $formId => $formName) {
+            $this->excelContent($sheets, $formName, null, $formId);
+        }
+    }
 //    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
 //    {
 //        // Setting request data and modifying fetch condition
@@ -447,14 +461,7 @@ class SurveysTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
 
-        $conditions = [];
-        $requestData = json_decode($settings['process']['params']);
-
-        $conditions = $this->conditionsWithInstitutionAndArea($conditions, $requestData);
-        $conditions = $this->conditionsWithSurveyStatus($conditions, $requestData);
-        $conditions = $this->conditionsWithSurveyFormId($conditions, $requestData);
-        $conditions = $this->conditionsWithInstitutionStatus($conditions, $requestData);
-        $conditions = $this->conditionsWithAcademicPeriod($conditions, $requestData);
+        $conditions = $this->getCondition();
         $query->select([
             'code' => 'Institutions.code',
             'area' => 'Areas.name',
@@ -630,10 +637,10 @@ class SurveysTable extends AppTable
                     }
 
 
-                    if (!(isset($data['survey_form']))) {
+                    if (!(isset($data['survey_form_id']))) {
                         $option = $attr['options'];
                         reset($option);
-                        $data['survey_form'] = key($option);
+                        $data['survey_form_id'] = key($option);
                         $attr['attr']['select'] = false;
                         $attr['select'] = false;
                         $request = $request->withData($this->getAlias(), $data);
@@ -1220,7 +1227,7 @@ private static function getDynamicTableInstance(string $tableName): Table
      */
     private function conditionsWithSurveyFormId(array $conditions, mixed $requestData): array
     {
-        $surveyFormId = $requestData->survey_form;
+        $surveyFormId = $requestData->survey_form_id;
         if (!empty($surveyFormId)) {
             $conditions['SurveyForms.id'] = $surveyFormId;
         }
