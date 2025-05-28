@@ -3,20 +3,17 @@ namespace Report\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
-use Cake\I18n\Time;
-use Cake\I18n\Date;
 use Cake\Validation\Validator;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
-//POCOR-6695
+
 
 class SurveysTable extends AppTable
 {
@@ -181,7 +178,7 @@ class SurveysTable extends AppTable
 //            $userId = $requestData->user_id;
 //            $superAdmin = $requestData->super_admin;
 //
-//            $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+//            $SurveyFormsFilters = self::getDynamicTableInstance('Survey.SurveyFormsFilters');
 //            $institutionType = $SurveyFormsFilters->find()
 //                ->where([
 //                    $SurveyFormsFilters->aliasField('survey_form_id').' = '.$surveyFormId,
@@ -371,7 +368,7 @@ class SurveysTable extends AppTable
 //        $institutionStatus = $requestData->institution_status;
 //        $areaId = $requestData->area_id;
 //
-//        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+//        $WorkflowStatusesTable = self::getDynamicTableInstance('Workflow.WorkflowStatuses');
 //
 //        if (!empty($academicPeriodId) && empty($areaId)) { //POCOR-7046
 //            $surveyStatuses = $WorkflowStatusesTable->WorkflowModels->getWorkflowStatusesCode('Institution.InstitutionSurveys');
@@ -537,9 +534,9 @@ class SurveysTable extends AppTable
 //
 //        $surveyForm = $requestData->survey_form;
 //
-//        $SurveyQuestions = TableRegistry::get('Survey.SurveyQuestions');
-//        $SurveyTblColumns = TableRegistry::get('Survey.SurveyTableColumns');
-//        $surveyFormsQuestion = TableRegistry::get('Survey.SurveyFormsQuestions');
+//        $SurveyQuestions = self::getDynamicTableInstance('Survey.SurveyQuestions');
+//        $SurveyTblColumns = self::getDynamicTableInstance('Survey.SurveyTableColumns');
+//        $surveyFormsQuestion = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
 //        $SurveyTblColumnRes = $SurveyTblColumns
 //            ->find()
 //            ->select([
@@ -655,7 +652,7 @@ class SurveysTable extends AppTable
             $feature = $this->request->getData($this->getAlias())['feature'];
             $surveyForm = $this->request->getData($this->getAlias())['survey_form_id'];
             // $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
-            $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
+            $SurveyStatusTable = self::getDynamicTableInstance('Survey.SurveyStatuses');
             $academicPeriodOptions = $SurveyStatusTable
                 ->find('list', [
                     'keyField' => 'academic_id',
@@ -887,7 +884,7 @@ class SurveysTable extends AppTable
 
     //POCOR-8515 starts
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = self::getDynamicTableInstance('Area.Areas');
         $result = $Areas->find()
                             ->where([
                                 $Areas->aliasField('parent_id') => $id
@@ -949,8 +946,8 @@ class SurveysTable extends AppTable
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
                     $SurveyStatusTable = TableRegistry::get ('Survey.SurveyStatuses');
-                    $surveyQuestions = TableRegistry::get('FieldOption.IdentityTypes');
-                    $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+                    $surveyQuestions = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+                    $surveySection = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
                     $surveyFormOptions = $surveySection
                         ->find('list', ['keyField' => 'id', 'valueField' => 'section'])
                         ->where([
@@ -1004,9 +1001,9 @@ class SurveysTable extends AppTable
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
-                    $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
-                    $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+                    $SurveyStatusTable = self::getDynamicTableInstance('Survey.SurveyStatuses');
+                    $surveySection = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
+                    $surveyQuestion = self::getDynamicTableInstance('Survey.SurveyQuestions');
                     $surveyFormOptions = $surveySection
                                         ->find('list', ['keyField' => 'survey_question_id', 'valueField' => 'name'])
                                         ->where([
@@ -1118,7 +1115,7 @@ private static function getDynamicTableInstance(string $tableName): Table
      */
     private function conditionsWithInstitutionAndArea(array $conditions, mixed $requestData): array
     {
-        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutions = self::getDynamicTableInstance('Institution.Institutions');
         $institutionID = $requestData->institution_id;
 
         if ($institutionID > 0) {
@@ -1179,10 +1176,10 @@ private static function getDynamicTableInstance(string $tableName): Table
         $status = $requestData->status;
 
         if (!empty($status) && $status != "all") {
-            $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-            $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-            $WorkflowStatuses = TableRegistry::get('Workflow.WorkflowStatuses');
-            $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
+            $WorkflowModels = self::getDynamicTableInstance('Workflow.WorkflowModels');
+            $WorkflowSteps = self::getDynamicTableInstance('Workflow.WorkflowSteps');
+            $WorkflowStatuses = self::getDynamicTableInstance('Workflow.WorkflowStatuses');
+            $WorkflowStatusesSteps = self::getDynamicTableInstance('Workflow.WorkflowStatusesSteps');
             $statusData = $this->find()->select([
                 "status_id" => $this->aliasField('status_id'),
                 "status_name" => $WorkflowSteps->aliasField('name')
