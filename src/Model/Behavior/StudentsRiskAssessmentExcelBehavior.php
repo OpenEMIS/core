@@ -317,7 +317,7 @@ private function getFields($table, $settings, $label)
 
    $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
    $fields = $event->getResult();
-   Log::debug(print_r($fields, true));
+//   Log::debug(print_r($fields, true));
    return $fields;
 }
 
