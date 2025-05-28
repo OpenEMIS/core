@@ -232,7 +232,7 @@ class RisksTable extends ControllerActionTable
         $criteriaData = $this->getCriteriasData();
         $tableHeaders = $this->getMessage('Risk.TableHeader');
         $tableCells = [];
-        $criteriaOptions = ['' => '-- '.__('Select Criteria').' --'] + $this->getCriteriasOptions();
+        $criteriaOptions = $this->getCriteriasOptions();
 
         $alias = $this->getAlias();
         $fieldKey = 'risk_criterias';
@@ -274,7 +274,16 @@ class RisksTable extends ControllerActionTable
                 $this->clearRequestData($alias, $fieldKey);
                 $this->getCriteriasToData($entity, $fieldKey, $alias);
             }
-            $tableCells = $this->populateRiskCriteriaTableCells($alias, $fieldKey, $criteriaOptions, $tableCells, $Form);
+
+            $tableCells = $this->populateRiskCriteriaTableCells($alias,
+                $fieldKey,
+                $criteriaOptions,
+                $tableCells,
+                $Form);
+            if(!empty($tableCells)){
+//                dd($tableCells);
+//                $tableCells = [];
+            }
         }
 
         $attr['tableHeaders'] = $tableHeaders;
@@ -527,15 +536,37 @@ class RisksTable extends ControllerActionTable
 
         if (isset($data[$alias]) && isset($data[$alias]['criteria_type'])) {
             $criteriaType = $data[$alias]['criteria_type'];
-            $operator = $this->getCriteriasDetails($criteriaType)['operator'];
+            if($criteriaType) {
 
-            $data[$alias][$fieldKey][] = [
-                'criteria' => $criteriaType,
-                'operator' => $operator,
-                'threshold' => '',
-                'risk_value' => '',
-                'risk_id' => 0
-            ];
+                if (is_array($criteriaType)) {
+                    $criteriaTypes = $criteriaType["_ids"];
+//                dd($criteriaTypes);
+                    foreach ($criteriaTypes as $criteriaType) {
+                        $operator = $this->getCriteriasDetails($criteriaType)['operator'] ?? null;
+                        if (isset($criteriaType) && isset($operator)) {
+                            $data[$alias][$fieldKey][] = [
+                                'criteria' => $criteriaType,
+                                'operator' => $operator,
+                                'threshold' => '',
+                                'risk_value' => '',
+                                'risk_id' => 0
+                            ];
+                        }
+                    }
+                } else {
+                    $operator = $this->getCriteriasDetails($criteriaType)['operator'] ?? null;
+                    if (isset($criteriaType) && isset($operator)) {
+                        $data[$alias][$fieldKey][] = [
+                            'criteria' => $criteriaType,
+                            'operator' => $operator,
+                            'threshold' => '',
+                            'risk_value' => '',
+                            'risk_id' => 0
+                        ];
+                    }
+                }
+            }
+
 
             unset($data[$alias]['criteria_type']);
         }
@@ -757,88 +788,84 @@ class RisksTable extends ControllerActionTable
         return $criterias;
     }
 
-    /**
-     * @param string $alias
-     * @param string $fieldKey
-     * @param $trainerTypeOptions
-     * @param array $tableCells
-     * @param $Form
-     * @return array
-     */
     private function populateRiskCriteriaTableCells(string $alias, string $fieldKey, $criteriaOptions, array $tableCells, $Form): array
     {
-        $class = __CLASS__;
-        $line = __LINE__;
         $data = $this->request->getData();
-        Log::debug('Data {data} in {class}, {line}', ['data' => $data, 'class' => $class, 'line' => $line]);
-        $associated = $data[$alias];
-        //echo "<pre>"; print_r($associated);die;
-        if(!isset($data[$alias][$fieldKey])) {
-            $criteriaType = $data[$alias]['criteria_type'] ?? null;
-            //echo "<pre>"; print_r($criteriaType);die;
-            $operator = $this->getCriteriasDetails($criteriaType)['operator'] ?? null;
-            if (isset($criteriaType) && isset($operator)) {
-                $data[$alias][$fieldKey][] = [
-                    'criteria' => $criteriaType,
+        $selectedCriteriaIds = $data[$alias]['criteria_type']['_ids'] ?? [];
+
+        // Initialize if not already present
+        $data[$alias][$fieldKey] = $data[$alias][$fieldKey] ?? [];
+
+        // Index current criteria for easy lookup
+        $existing = [];
+        foreach ($data[$alias][$fieldKey] as $entry) {
+            if (isset($entry['criteria'])) {
+                $existing[$entry['criteria']] = $entry;
+            }
+        }
+
+        // Reset to only keep those that are currently selected
+        $data[$alias][$fieldKey] = [];
+
+        foreach ($selectedCriteriaIds as $criteriaId) {
+            // Keep existing values if present
+            if (isset($existing[$criteriaId])) {
+                $entry = $existing[$criteriaId];
+            } else {
+                $operator = $this->getCriteriasDetails($criteriaId)['operator'] ?? null;
+                $entry = [
+                    'criteria' => $criteriaId,
                     'operator' => $operator,
                     'threshold' => '',
                     'risk_value' => '',
                     'risk_id' => 0
                 ];
             }
+
+            $data[$alias][$fieldKey][] = $entry;
         }
-        if (isset($data[$alias]) && isset($data[$alias][$fieldKey])) {
-            $associated = $data[$alias][$fieldKey];
-        
-            // Check if $associated is an array and process each item
-            if (is_array($associated)) {
-                foreach ($associated as $key => $value) {
-                    if (is_string($value)) {
-                        $decoded = $this->paramsDecode($value);
-                        $associated[$key] = $decoded;
-                    }
-                }
+
+        // Build table cells
+        foreach ($data[$alias][$fieldKey] as $key => $obj) {
+            $rowData = [];
+            $criteriaType = $obj['criteria'];
+            $operator = $obj['operator'];
+            $threshold = $obj['threshold'];
+            $riskId = $obj['risk_id'] ?? 0;
+            $id = $obj['id'] ?? null;
+
+            $cell = $criteriaOptions[$criteriaType] ?? $criteriaType;
+
+            if ($criteriaType === 'StatusRepeated') {
+                $cell = 'Student Status'; // Or get from details
             }
 
-            foreach ($associated as $key => $obj) {
-                // Ensure $obj is an array
-                if (!is_array($obj)) {
-                    throw new Exception("Unexpected data format: " . var_export($obj, true));
-                }
-        
-                $rowData = [];
-                $criteriaType = $obj['criteria'];
-                $operator = $obj['operator'];
-                $threshold = $obj['threshold'];
-                $riskId = $obj['risk_id'];
-                $id = $obj['id'];
-        
-                if ($criteriaType == 'StatusRepeated') {
-                    // for status the criteria name will be student status.
-                    $cell = $criteriaData[$criteriaType]['name'];
-                } else {
-                    $cell = $criteriaOptions[$criteriaType];
-                }
-        
-                if (isset($obj['id'])) {
-                    $cell .= $Form->hidden("$alias.$fieldKey.$key.id", ['value' => $id]);
-                }
-                $cell .= $Form->hidden("$alias.$fieldKey.$key.criteria", ['value' => $criteriaType]);
-                $cell .= $Form->hidden("$alias.$fieldKey.$key.operator", ['value' => $operator]);
-                $cell .= $Form->hidden("$alias.$fieldKey.$key.threshold", ['value' => $threshold]);
-                $cell .= $Form->hidden("$alias.$fieldKey.$key.risk_id", ['value' => $riskId]);
-        
-                $rowData[] = $cell;
-                $rowData[] = $this->operatorTypes[$operator];
-                $rowData[] = $Form->input("$alias.$fieldKey.$key.threshold", $this->getThresholdParams($criteriaType));
-                $rowData[] = $Form->input("$alias.$fieldKey.$key.risk_value", ['type' => 'number', 'label' => false, 'min' => 1, 'max' => 99]);
-                $rowData[] = $this->getDeleteButton();
-                $tableCells[] = $rowData;
+            if ($id) {
+                $cell .= $Form->hidden("$alias.$fieldKey.$key.id", ['value' => $id]);
             }
+
+            $cell .= $Form->hidden("$alias.$fieldKey.$key.criteria", ['value' => $criteriaType]);
+            $cell .= $Form->hidden("$alias.$fieldKey.$key.operator", ['value' => $operator]);
+            $cell .= $Form->hidden("$alias.$fieldKey.$key.threshold", ['value' => $threshold]);
+            $cell .= $Form->hidden("$alias.$fieldKey.$key.risk_id", ['value' => $riskId]);
+
+            $rowData[] = $cell;
+            $rowData[] = $this->operatorTypes[$operator] ?? $operator;
+            $rowData[] = $Form->input("$alias.$fieldKey.$key.threshold", $this->getThresholdParams($criteriaType));
+            $rowData[] = $Form->input("$alias.$fieldKey.$key.risk_value", [
+                'type' => 'number',
+                'label' => false,
+                'min' => 1,
+                'max' => 99
+            ]);
+            $rowData[] = $this->getDeleteButton();
+
+            $tableCells[] = $rowData;
         }
-        
+
         return $tableCells;
     }
+
 
     /**
      * @param $entity
