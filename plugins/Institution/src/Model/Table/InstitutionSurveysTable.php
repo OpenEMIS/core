@@ -212,6 +212,11 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $supportQuestionOptions = json_decode($options);
                     // POCOR-9147 start
                     if (!empty($supportQuestionOptions)) {
+                    // POCOR-9129 start
+                    if(!is_array($supportQuestionOptions)) {
+                        $supportQuestionOptions = [];
+                    }
+                    // POCOR-9129 end
                         if (isset($newData[$supportFieldKey])) {
                             $userSelectedOption = $newData[$supportFieldKey]['number_value'];
 
