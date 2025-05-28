@@ -791,55 +791,58 @@ class RisksTable extends ControllerActionTable
     private function populateRiskCriteriaTableCells(string $alias, string $fieldKey, $criteriaOptions, array $tableCells, $Form): array
     {
         $data = $this->request->getData();
+        $isAdd = isset($data['submit']) && $data['submit'] === 'addCriterias';
+        $isSave = isset($data['submit']) && $data['submit'] === 'save';
+
+        if (!$isAdd && !$isSave) {
+            return $tableCells; // No form activity, return untouched
+        }
+
         $selectedCriteriaIds = $data[$alias]['criteria_type']['_ids'] ?? [];
 
         // Initialize if not already present
-        $data[$alias][$fieldKey] = $data[$alias][$fieldKey] ?? [];
+        $existingRows = $data[$alias][$fieldKey] ?? [];
 
-        // Index current criteria for easy lookup
-        $existing = [];
-        foreach ($data[$alias][$fieldKey] as $entry) {
+        // Build an index of existing values
+        $existingById = [];
+        foreach ($existingRows as $entry) {
             if (isset($entry['criteria'])) {
-                $existing[$entry['criteria']] = $entry;
+                $existingById[$entry['criteria']] = $entry;
             }
         }
 
-        // Reset to only keep those that are currently selected
-        $data[$alias][$fieldKey] = [];
-
+        // Prepare a fresh field structure based on selected criteria
+        $updatedRows = [];
         foreach ($selectedCriteriaIds as $criteriaId) {
-            // Keep existing values if present
-            if (isset($existing[$criteriaId])) {
-                $entry = $existing[$criteriaId];
-            } else {
-                $operator = $this->getCriteriasDetails($criteriaId)['operator'] ?? null;
-                $entry = [
-                    'criteria' => $criteriaId,
-                    'operator' => $operator,
-                    'threshold' => '',
-                    'risk_value' => '',
-                    'risk_id' => 0
-                ];
-            }
+            // Retain previous values if available
+            $entry = $existingById[$criteriaId] ?? [
+                'criteria' => $criteriaId,
+                'operator' => $this->getCriteriasDetails($criteriaId)['operator'] ?? null,
+                'threshold' => '',
+                'risk_value' => '',
+                'risk_id' => 0
+            ];
 
-            $data[$alias][$fieldKey][] = $entry;
+            $updatedRows[] = $entry;
         }
 
-        // Build table cells
-        foreach ($data[$alias][$fieldKey] as $key => $obj) {
-            $rowData = [];
+        // Build the display table rows
+        foreach ($updatedRows as $key => $obj) {
             $criteriaType = $obj['criteria'];
-            $operator = $obj['operator'];
-            $threshold = $obj['threshold'];
+            $operator = $obj['operator'] ?? '';
+            $threshold = $obj['threshold'] ?? '';
+            $riskValue = $obj['risk_value'] ?? '';
             $riskId = $obj['risk_id'] ?? 0;
             $id = $obj['id'] ?? null;
 
-            $cell = $criteriaOptions[$criteriaType] ?? $criteriaType;
+            $rowData = [];
 
+            $criteriaLabel = $criteriaOptions[$criteriaType] ?? $criteriaType;
             if ($criteriaType === 'StatusRepeated') {
-                $cell = 'Student Status'; // Or get from details
+                $criteriaLabel = 'Student Status';
             }
 
+            $cell = $criteriaLabel;
             if ($id) {
                 $cell .= $Form->hidden("$alias.$fieldKey.$key.id", ['value' => $id]);
             }
@@ -851,20 +854,29 @@ class RisksTable extends ControllerActionTable
 
             $rowData[] = $cell;
             $rowData[] = $this->operatorTypes[$operator] ?? $operator;
-            $rowData[] = $Form->input("$alias.$fieldKey.$key.threshold", $this->getThresholdParams($criteriaType));
+
+            $rowData[] = $Form->input("$alias.$fieldKey.$key.threshold", array_merge(
+                $this->getThresholdParams($criteriaType),
+                ['value' => $threshold]
+            ));
+
             $rowData[] = $Form->input("$alias.$fieldKey.$key.risk_value", [
                 'type' => 'number',
                 'label' => false,
                 'min' => 1,
-                'max' => 99
+                'max' => 99,
+                'value' => $riskValue
             ]);
-            $rowData[] = $this->getDeleteButton();
+
+            // Optional: Add your JS-based delete button here
+            // $rowData[] = $this->getDeleteButton();
 
             $tableCells[] = $rowData;
         }
 
         return $tableCells;
     }
+
 
 
     /**
