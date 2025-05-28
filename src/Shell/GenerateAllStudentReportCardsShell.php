@@ -22,7 +22,7 @@ class GenerateAllStudentReportCardsShell extends Shell
 
     public function main()
     {
-        
+
         if (!empty($this->args[0]) && !empty($this->args[1])) {
             $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllStudentReportCards', getmypid(), $this->args[0], '', $this->args[1]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
@@ -50,11 +50,11 @@ class GenerateAllStudentReportCardsShell extends Shell
                     'student_id' => $recordToProcess['student_id'],
                     'education_grade_id' => $recordToProcess['education_grade_id'],
                 ]);
-                
+
                 $excelParams = new ArrayObject([]);
                 $excelParams['className'] = 'CustomExcel.StudentReportCards';
                 $excelParams['requestQuery'] = $recordToProcess;
-                
+
                 try {
                     $this->StudentReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
@@ -71,7 +71,12 @@ class GenerateAllStudentReportCardsShell extends Shell
         }
 
         try {
-            posix_kill(getmypid(), 9);
+            $pid = getmypid();
+            if (function_exists('posix_kill')) {
+                posix_kill($pid, 9);
+            } else {
+                exec("kill -15 $pid"); // Works on Unix-like systems
+            }
         } catch (\Exception $exception) {
             $this->out($exception->getMessage());
         }
