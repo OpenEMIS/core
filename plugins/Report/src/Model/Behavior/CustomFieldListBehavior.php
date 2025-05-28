@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
+use Cake\Log\Log;
 
 class CustomFieldListBehavior extends Behavior {
 	protected $_defaultConfig = [
@@ -83,6 +84,9 @@ class CustomFieldListBehavior extends Behavior {
 
 	// Model.excel.onExcelUpdateFields
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+        if(isset($settings['sheet']['customFieldOptions'])){
+            $this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
+        }
 		$filterValue = null;
 		if (isset($settings['sheet']['key'])) {
 			$filterValue = $settings['sheet']['key'];
@@ -133,7 +137,10 @@ class CustomFieldListBehavior extends Behavior {
 							$field['field'] = 'custom_field';
 							$field['type'] = 'custom_field';
 							$field['label'] = $customField['name'] . ' ('.$col[$i]['name'].', '.$rw['name'].')';
-							$field['customField'] = ['id' => $customField['id'], 'field_type' => $customField['field_type'], 'col_id' => $col[$i]['id'], 'row_id' => $rw['id']];
+							$field['customField'] = ['id' => $customField['id'],
+                                'field_type' => $customField['field_type'],
+                                'col_id' => $col[$i]['id'],
+                                'row_id' => $rw['id']];
 							$excelFields[] = $field;
 						}
 					}
@@ -163,15 +170,14 @@ class CustomFieldListBehavior extends Behavior {
 
 		$fields->exchangeArray($excelFields);
 		// Setting the list of options into the sheet for easier fetching
-		if(isset($settings['sheet']['customFieldOptions'])){
-			$this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
-		}
+
 	}
 
 	// Model.excel.onExcelRenderCustomField
 	public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr) {
 		// Getting the temporary field values that is set
 		$tmpFieldValues = $this->getTmpFieldValues();
+//        Log::debug(print_r(['tmpValues' => $tmpFieldValues],true));
 
 		// If the field value is not for the particular record, refetch the field values and set
 		// the temporary field values
@@ -197,10 +203,18 @@ class CustomFieldListBehavior extends Behavior {
 			}
 			$tmpFieldValues = $this->setTmpFieldValues($fieldValues);
 		}
-
+        $customFieldAttributes = $attr['customField'];
+//        Log::debug(print_r([
+//            'id' => $entity->id,
+//            'arr' => $customFieldAttributes,
+//            'tmpvalues' => $tmpFieldValues],true));
 		// Check if the temporary field value has this record information.
-		if (isset($tmpFieldValues[$entity->id])) {
-			return $this->getCustomFieldValue($tmpFieldValues[$entity->id], $attr['customField'], $this->getCustomFieldOptionsList());
+        $customFieldValues = $tmpFieldValues[$entity->id];
+        if (isset($customFieldValues)) {
+            $customFieldOptionsList = $this->getCustomFieldOptionsList();
+            return $this->getCustomFieldValue($customFieldValues,
+                $customFieldAttributes,
+                $customFieldOptionsList);
 		} else {
 			return '';
 		}
@@ -302,16 +316,16 @@ class CustomFieldListBehavior extends Behavior {
 	 *	@return array Form ID of Form Names
 	 */
 	public function getForms($formId=null) {
-		$condition = [];
 		$formKeyAlias = $this->_table->aliasField($this->getConfig('formKey'));
+        $configCondition = $this->getCondition();
 		if (!(is_null($formId))) {
 			$condition = [$formKeyAlias => $formId];
-			$configCondition = $this->getCondition();
 			$this->setCondition(array_merge($configCondition, $condition));
-		}
+		}else{
+            $formId = $configCondition[$formKeyAlias] ?? -1;
+        }
 
 		$SurveyFormsTable = TableRegistry::get('Survey.SurveyForms');
-
 		return $SurveyFormsTable
 			->find('list', [
 				'keyField' => 'id',
@@ -330,7 +344,7 @@ class CustomFieldListBehavior extends Behavior {
 		if (!(is_null($filterKey))) {
 			$query->where([$this->_table->aliasField($filterKey) => $key]);
 		}
-		
+
 		// If there is any specified query condition
 		$condition = $this->_condition;
 		$query->where($condition);
@@ -338,7 +352,7 @@ class CustomFieldListBehavior extends Behavior {
 		if (is_null($this->getConfig('moduleKey'))) {
 			$query->where([$this->_table->aliasField($this->getConfig('formKey')) => $key]);
 		}
-		
+
 		// Getting the list of available custom field options
 		$optionsValues = $this->CustomFieldValues->CustomFields->CustomFieldOptions->find('list')->toArray();
 
@@ -415,11 +429,17 @@ class CustomFieldListBehavior extends Behavior {
 	/**
 	 *	Function to get the custom headers for each type of the filter
 	 *
-	 *	@param int | null $filterValue The id value of the filterKey
+	 *	@param int | null $formId The id value of the filterKey
 	 *	@return array The value of the header and the custom fields
 	 */
-	public function getCustomFields($filterValue=null) {
-		$customFields = [];
+	public function getCustomFields($formId=null) {
+        $formKeyAlias = $this->_table->aliasField($this->getConfig('formKey'));
+        $configCondition = $this->getCondition();
+        if (!$formId) {
+            $formId = $configCondition[$formKeyAlias] ?? -1;
+        }
+
+        $customFields = [];
 		$customFormFields = [];
 		$customModuleKey = $this->getConfig('moduleKey');
 		if (is_null($customModuleKey)) {
@@ -428,14 +448,14 @@ class CustomFieldListBehavior extends Behavior {
 			$customFormFields = $SurveyFormsTable
 				->find()
 				->contain(['CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-				->where([$SurveyFormsTable->aliasField('id') => $filterValue])
+				->where([$SurveyFormsTable->aliasField('id') => $formId])
 				->toArray();
-		} elseif (!(empty($filterValue))) {
+		} elseif (!(empty($formId))) {
 			// If there is a filter specified
 			$customFilterKey = $this->CustomFormsFilters->CustomFilters->getForeignKey();
 			$customFormFields = $this->CustomFormsFilters
 				->find()
-				->where([$this->CustomFormsFilters->aliasField($customFilterKey).' IN' => [$filterValue, 0]])
+				->where([$this->CustomFormsFilters->aliasField($customFilterKey).' IN' => [$formId, 0]])
 				->contain(['CustomForms', 'CustomForms.CustomFields.CustomTableColumns', 'CustomForms.CustomFields.CustomTableRows'])
 				->toArray();
 		} else {
@@ -521,74 +541,60 @@ class CustomFieldListBehavior extends Behavior {
 	/**
 	 *	Function to get the custom values for each field values specified
 	 *
-	 *	@param int $fieldValue List of field values
+	 *	@param array $customFieldValues List of field values
 	 *	@param array $customFields Array containing the custom fields for each of the $filterKeys specified
 	 *	@param array $customFieldOptionList The list of the available custom field options for dropdown and checkbox answers
 	 *	@return array The value base on the custom field and the field values specified
 	 */
-	public function getCustomFieldValue($fieldValue, $customField, $customFieldOptionsList) {
+	public function getCustomFieldValue(array $customFieldValues, $customFieldAttributes, $customFieldOptionsList) {
+
 		// List of options
 		$optionsValues = $customFieldOptionsList;
-		$answer = '';
+		$answer = 'no answer';
 		// Handle existing field types, if there are new field types please add another function for it
-		$type = strtolower($customField['field_type']);
+		$type = strtolower($customFieldAttributes['field_type']);
+        $id = $customFieldAttributes['id'];
 		if (method_exists($this, $type)) {
-			$ans = $this->$type($fieldValue, $customField, $optionsValues);
+			$ans = $this->$type($customFieldValues, $id, $optionsValues);
 			if (!(is_null($ans))) {
 				$answer = $ans;
 			}
-		}
+		} else {
+            return $customFieldValues[$id] ?? 'not found';
+        }
 		return $answer;
 	}
 
-	private function text($data, $field, $options=[]) {
-		if (isset($data[$field['id']])) {
-			return $data[$field['id']];
-		} else {
-			return '';
-		}
+	private function text($data, $id, $options=[]) {
+		return $data[$id] ?? 'text';
 	}
 
-	private function number($data, $field, $options=[]) {
-		if (isset($data[$field['id']])) {
-			return $data[$field['id']];
-		} else {
-			return '';
-		}
+	private function number($data, $id, $options=[]) {
+        return $data[$id] ?? 'number';
 	}
 
-	private function decimal($data, $field, $options=[]) {
-		if (isset($data[$field['id']])) {
-			return $data[$field['id']];
-		} else {
-			return '';
-		}
-	}
+	private function decimal($data, $id, $options=[]) {
+        return $data[$id] ?? 'decimal';
+    }
 
-	private function textarea($data, $field, $options=[]) {
-		if (isset($data[$field['id']])) {
-			return $data[$field['id']];
-		} else {
-			return '';
-		}
-	}
+	private function textarea($data, $id, $options=[]) {
+        return $data[$id] ?? 'textarea';
+    }
 
-	private function dropdown($data, $field, $options=[]) {
-		if (isset($data[$field['id']])) {
-			if (isset($options[$data[$field['id']]])) {
-				return $options[$data[$field['id']]];
-			} else {
-				return '';
-			}
-		} else {
-			return '';
-		}
-	}
+	private function dropdown($data, $id, $options=[]) {
+        $thisData = $data[$id] ?? 0;
+        Log::debug(print_r(['thisData' => $thisData,
+            'options' => $options],true));
+        $neededData = $options[$thisData] ?? 'dropdown';
+        return $neededData;
+    }
 
-	private function checkbox($data, $field, $options=[]) {
-		if (isset($data[$field['id']])) {
-			$values = explode(",", $data[$field['id']]);
-			$returnValue = '';
+	private function checkbox($data, $id, $options=[]) {
+		if (isset($data[$id])) {
+            Log::debug(print_r(['thisData' => $data[$id],
+                'options' => $options],true));
+			$values = explode(",", $data[$id]);
+			$returnValue = 'checkbox 1';
 			foreach ($values as $value) {
 				if (isset($options[$value])) {
 					if (empty($returnValue)) {
@@ -600,30 +606,30 @@ class CustomFieldListBehavior extends Behavior {
 			}
 			return $returnValue;
 		} else {
-			return '';
+			return 'checkbox 2';
 		}
 	}
 
-	private function date($data, $field, $options=[]) {
-		if (isset($data[$field['id']])) {
-			$date = date_create_from_format('Y-m-d', $data[$field['id']]);
+	private function date($data, $id, $options=[]) {
+		if (isset($data[$id])) {
+			$date = date_create_from_format('Y-m-d', $data[$id]);
 			return $this->_table->formatDate($date);
 		} else {
-			return '';
+			return 'date';
 		}
 	}
 
-	private function time($data, $field, $options=[]) {
-		if (isset($data[$field['id']])) {
-			$time = date_create_from_format('G:i:s', $data[$field['id']]);
+	private function time($data, $id, $options=[]) {
+		if (isset($data[$id])) {
+			$time = date_create_from_format('G:i:s', $data[$id]);
 			return $this->_table->formatTime($time);
 		} else {
-			return '';
+			return 'time';
 		}
 	}
 
-	private function student_list($data, $field, $options=[]) {
-		return null;
+	private function student_list($data, $id, $options=[]) {
+		return 'student_list';
 	}
 	//POCOR[POCOR-8471]
 	// public function table($data, $field, $options=[]): Table {
