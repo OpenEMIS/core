@@ -31,7 +31,7 @@
     <?php
         $alias = $ControllerAction['table']->getAlias();
         // only when adding new indexes able to add criterias.
-        if ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') {
+        if ($ControllerAction['action'] == 'add') {
 //            echo $this->Form->input("$alias.criteria_type", [
 //                'type' => 'select',
 //                'label' => __('Add Criteria'),
