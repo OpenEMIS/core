@@ -210,6 +210,11 @@ class InstitutionSurveysTable extends ControllerActionTable
             foreach ($rules as $key => $rule) {
                 foreach ($rule as $supportFieldKey => $options) {
                     $supportQuestionOptions = json_decode($options);
+                    // POCOR-9129 start
+                    if(!is_array($supportQuestionOptions)) {
+                        $supportQuestionOptions = [];
+                    }
+                    // POCOR-9129 end
                     if (isset($newData[$supportFieldKey])) {
                         $userSelectedOption = $newData[$supportFieldKey]['number_value'];
                         if (!(in_array($userSelectedOption, $supportQuestionOptions)) && $newData[$key]['mandatory'] == 1) {
