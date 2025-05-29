@@ -6,6 +6,7 @@ use Cake\ORM\TableRegistry;
 use DOMDocument;//POCOR-8529
 use DOMElement; //POCOR-9052
 use DOMXPath;//POCOR-8529
+use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup; // POCOR-9171
 /*
     This trait is for ExcelReportBehavior.php
     To separate PDF logic
@@ -654,10 +655,33 @@ trait PdfReportTrait
             $pageSetup = $objSpreadsheet->getSheet($sheetIndex)->getPageSetup();
 
             $orientation = $pageSetup->getOrientation();
+            $pageSizeP = [230, 350]; // A4 in mm
+            $pageSizeL = [350, 230]; // A4 in mm
+//            $fitToPage = $pageSetup->getFitToPage();     // true/false
+//            $fitToWidth = $pageSetup->getFitToWidth();   // integer
+//            $fitToHeight = $pageSetup->getFitToHeight(); // integer
+//            if ($pageSetup->getPaperSize() === PageSetup::PAPERSIZE_A4) {
+//                // If Excel used scaling (like 48%), adjust accordingly
+//                $scale = $pageSetup->getScale(); // 48
+//                if ($scale > 0 && $scale < 120) {
+//                    $pageSizeXP = [
+//                        round(210 * $scale / 100),
+//                        round(297 * $scale / 100)
+//                    ];
+//                    $pageSizeXL = [
+//                        round(297 * $scale / 100),
+//                        round(210 * $scale / 100)
+//                    ];
+//                    Log::debug(print_r([$pageSizeXP, $pageSizeXL],true));
+//                }
+//            }
+
             if ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT) {
-                $pageSize = [245, 400];
+                $pageSize = $pageSizeP; // A4
+                $orientation = 'P';
             } elseif ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE) {
-                $pageSize = [400, 245];
+                $pageSize = $pageSizeL;
+                $orientation = 'L';
             }
             // POCOR-9171 end
             if ($sheetStatus === 'visible') { // POCOR-7077
@@ -684,7 +708,7 @@ trait PdfReportTrait
                 // Debug logs for visual inspection
                 $writeDebugPdf = function($html, $filename) use ($outputPathBase) {
                     $zdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 245]]);
-                    $zdf->SetDisplayMode('fullpage');
+                    $zdf->SetDisplayMode('real');
                     $zdf->AddPage('L');
                     $zdf->WriteHTML($html);
                     $zdf->Output(LOGS . $filename, 'F');
@@ -749,7 +773,7 @@ trait PdfReportTrait
         $filePaths = [];
         $basePath = $filepath;
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+            $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
             $mpdf->autoScriptToLang = true; //POCOR-7264
             $mpdf->autoLangToFont = true; //POCOR-7264
             $filepath = $basePath.'_'.$sheetIndex;
@@ -805,7 +829,7 @@ trait PdfReportTrait
        $mpdf->autoScriptToLang = true; //POCOR-7264
        $mpdf->autoLangToFont = true; //POCOR-7264
        if ($filenames) {
-           echo "<pre>";print_r($mpdf);die; //This is very unusual code need to debug again
+//           echo "<pre>";print_r($mpdf);die; //This is very unusual code need to debug again
            $filesTotal = sizeof($filenames);
            $mpdf->SetImportUse();
 
@@ -850,7 +874,29 @@ trait PdfReportTrait
     {
         // $mpdf = new \Mpdf\Mpdf(array('utf-8', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
         //$mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 220]]); //POCOR-7090
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [410, 280]]); //POCOR-8961
+                $tmpdf = new \Mpdf\Mpdf(['mode' => 'utf-8']); //POCOR-8961
+        $width = 297;
+        $height = 210;
+        if ($filenames) {
+            if (isset($filenames[0])) {
+                $curFile = $filenames[0];
+                if (file_exists($curFile)) {
+                    $tmpdf->SetSourceFile($curFile);
+                    $tplId = $tmpdf->ImportPage(1);
+                    $wh = $tmpdf->getTemplateSize($tplId);
+                    $orientation = trim($wh['orientation']) ?? 'L';
+                    $width = $wh['width'] ?? 297;
+                    $height = $wh['height'] ?? 210;
+                }
+            }
+        }
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8',
+            'format' => [$width,$height],
+//            'margin_left' => 40,
+//            'margin_right' => 10,
+//            'margin_top' => 30,
+//            'margin_bottom' => 30,
+        ]); //POCOR-8961
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
@@ -866,22 +912,33 @@ trait PdfReportTrait
                     $pageCount = $mpdf->SetSourceFile($curFile);
                     for ($p = 1; $p <= $pageCount; $p++) {
                         $tplId = $mpdf->ImportPage($p);
-                        $wh = $mpdf->getTemplateSize($tplId);
+                        $tplSize = $mpdf->getTemplateSize($tplId);
+//                        Log::debug(print_r($wh,true));
+                        $orientation = trim($wh['orientation']) ?? 'L';
+                        $tplWidth = $tplSize['width'];
+                        $tplHeight = $tplSize['height'];
+                        $pageWidth = $mpdf->w;
+                        $pageHeight = $mpdf->h;
+
+// Calculate center offsets
+                        $offsetX = ($pageWidth - $tplWidth) / 2;
+                        $offsetY = ($pageHeight - $tplHeight) / 2;
+
+// Add page with exact size if needed
+
                         if (($p==1)){
                             $mpdf->state = 0;
                             $mpdf->SetFontSize(1);
                             $mpdf->SetDisplayMode('fullpage');
-                            $mpdf->AddPage('L');
-
-                            $mpdf->UseTemplate ($tplId);
+                            $mpdf->AddPage($tplSize['orientation'], '', '', '', '', '', '', '', '', '', '', [$tplWidth, $tplHeight]);
+                            $mpdf->UseTemplate($tplId, $offsetX, $offsetY);
                         }
                         else {
                             $mpdf->state = 1;
                             $mpdf->SetFontSize(1);
                             $mpdf->SetDisplayMode('fullpage');
-                            $mpdf->AddPage('L');
-
-                            $mpdf->UseTemplate($tplId);
+                            $mpdf->AddPage($tplSize['orientation'], '', '', '', '', '', '', '', '', '', '', [$tplWidth, $tplHeight]);
+                            $mpdf->UseTemplate($tplId, $offsetX, $offsetY);
                         }
                     }
                 }
