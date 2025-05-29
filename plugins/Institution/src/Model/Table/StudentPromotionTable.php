@@ -1091,6 +1091,7 @@ class StudentPromotionTable extends AppTable
         //$this->validator()->remove('education_grade_id', 'required');
 
         $process = function ($model, $entity) use ($event, $data) {
+            $data = $data->getArrayCopy();
             // Removal of some fields that are not in use in the table validation
             $errors = $entity->getErrors();
             $studentStatus = $data[$this->getAlias()]['student_status_id'];
@@ -1167,6 +1168,7 @@ class StudentPromotionTable extends AppTable
     {
         //$params = $this->ControllerAction->getQueryString();
         //$institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $data = $data->getArrayCopy();
         $params = $this->getQueryString();
         $institutionId = $this->getQueryString('institution_id');
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
