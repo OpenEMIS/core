@@ -94,7 +94,7 @@ class SurveysTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('survey_form_id', ['type' => 'hidden']);
         $this->ControllerAction->field('survey_section', ['type' => 'hidden']); //POCOR-6695
-        $this->ControllerAction->field('composite_question', ['type' => 'hidden']); //POCOR-6695
+        $this->ControllerAction->field('table_question', ['type' => 'hidden']); //POCOR-6695
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_id', ['attr' => ['label' => __('Area Education')]]);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
@@ -1171,14 +1171,10 @@ public function onUpdateFieldSurveySection(Event $event, array $attr, $action, S
         }
     }
 
-public function onUpdateFieldCompositeQuestion(Event $event, array $attr, $action, ServerRequest $request)
+public function onUpdateFieldTableQuestion(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $surveyQuestionId = $this->request->getData($this->getAlias())['survey_section'];
-        if (isset($surveyQuestionId)) {
-            $surveyQuestionId = $this->request->getData($this->getAlias())['survey_section'];
-        } else {
-            $surveyQuestionId = '';
-        }
+        $surveyQuestionId = $this->request->getData($this->getAlias())['survey_section'] ?? '';
+        $surveyFormId = $this->request->getData($this->getAlias())['survey_form_id'] ?? -1;
         $surveySectionQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions')
             ->find('all', ['conditions' => ['id' => $surveyQuestionId]])
             ->first();
@@ -1196,16 +1192,18 @@ public function onUpdateFieldCompositeQuestion(Event $event, array $attr, $actio
                 if ($feature == 'Report.SurveysReport') {
                     $SurveyStatusTable = self::getDynamicTableInstance('Survey.SurveyStatuses');
                     $surveyFormQuestions = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
-                    $surveyQuestion = self::getDynamicTableInstance('Survey.SurveyQuestions');
                     $surveyFormOptions = $surveyFormQuestions
                         ->find('list', ['keyField' => 'survey_question_id', 'valueField' => 'name'])
-                        ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
-                            [$surveyFormQuestions->aliasField('survey_question_id = ') . $surveyQuestion->aliasField('id')
-                                ])
-                    ->where([
+                        ->matching('CustomFields', function ($q) {
+                            return $q->where(['CustomFields.field_type IN'  => ['REPEATER', 'STAFF_LIST', 'STUDENT_LIST']]);
+                        })
+                        ->where([
                         $surveyFormQuestions->aliasField('section') =>
-                            $surveySectionQuestionName
-                        ])->toArray();
+                            $surveySectionQuestionName,
+                        $surveyFormQuestions->aliasField('survey_form_id') =>
+                            $surveyFormId
+                        ])
+                        ->toArray();
                     if (!empty($surveyFormOptions)) {
                         $attr['options'] = $surveyFormOptions;
                         $attr['onChangeReload'] = true;
@@ -1248,7 +1246,7 @@ public function onUpdateFieldCompositeQuestion(Event $event, array $attr, $actio
             case 'survey_section':
                 return __('Survey Section');
             case 'table_question':
-                return __('Table Question');
+                return __('Repeater Question');
             case 'status':
                 return __('Survey Status');
             default:

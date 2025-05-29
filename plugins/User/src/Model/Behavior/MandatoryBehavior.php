@@ -68,14 +68,14 @@ class MandatoryBehavior extends Behavior
         $value = $data->value;
 
         $ConfigItemOptions = TableRegistry::get('Configuration.ConfigItemOptions');
-        if($optionType) {
+        if($optionType) { // POCOR-9116
             $result = $ConfigItemOptions
                 ->find()
                 ->where([$ConfigItemOptions->aliasField('option_type') => $optionType,
                     $ConfigItemOptions->aliasField('value') => $value])
                 ->first();
             return $result->option;
-        } else {
+        } else { // POCOR-9116
             return '';
         }
     }

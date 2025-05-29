@@ -9,7 +9,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
-use Cake\Log\Log;
+use Cake\Log\Log; // POCOR-9116
 
 class CustomFieldListBehavior extends Behavior
 {
@@ -90,6 +90,7 @@ class CustomFieldListBehavior extends Behavior
     // Model.excel.onExcelUpdateFields
 
     /**
+     * // POCOR-9116
      *    Function to get the filter of the given model
      *
      * @param string $model The code of of the custom module
@@ -336,6 +337,7 @@ class CustomFieldListBehavior extends Behavior
     }
 
     /**
+     * // POCOR-9116
      *    Function to get the custom headers for each type of the filter
      *
      * @param int | null $formId The id value of the filterKey
@@ -358,7 +360,7 @@ class CustomFieldListBehavior extends Behavior
             $customFormFields = $SurveyFormsTable
                 ->find()
                 ->contain(['CustomFields.CustomTableColumns', 'CustomFields.CustomTableRows'])
-                ->where([$SurveyFormsTable->aliasField('id') => $formId])
+                ->where([$SurveyFormsTable->aliasField('id') => $formId]) // POCOR-9116
                 ->toArray();
         } elseif (!(empty($formId))) {
             // If there is a filter specified
@@ -410,7 +412,7 @@ class CustomFieldListBehavior extends Behavior
 
     // Function to generate the excel content
 
-    public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderCustomField(Event $event, Entity $entity, array $attr) // POCOR-9116
     {
         // Getting the temporary field values that is set
         $tmpFieldValues = $this->getTmpFieldValues();
@@ -516,7 +518,7 @@ class CustomFieldListBehavior extends Behavior
         return $fieldValue;
     }
 
-    private function getTableCellValues($tableCustomFieldIds, $recordId)
+    private function getTableCellValues($tableCustomFieldIds, $recordId) // POCOR-9116
     {
         if (!empty($tableCustomFieldIds)) {
             $TableCellTable = $this->CustomTableCells;
@@ -570,6 +572,7 @@ class CustomFieldListBehavior extends Behavior
     }
 
     /**
+     * // POCOR-9116
      *    Function to get the custom values for each field values specified
      *
      * @param array $customFieldValues List of field values
@@ -676,7 +679,7 @@ class CustomFieldListBehavior extends Behavior
         return '';
     }
     //POCOR[POCOR-8471]
-     public function table_field($data, $id, $options=[]): string {
+     public function table_field($data, $id, $options=[]): string { // POCOR-9116
          $colId = $options['col_id'] ?? 0;
          $rowId = $options['row_id'] ?? 0;
          return $data[$id][$colId][$rowId] ?? '';
