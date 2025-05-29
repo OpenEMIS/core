@@ -1374,9 +1374,12 @@ class StudentReportCardsTable extends AppTable
                         "result_type" => $subject["result_type"],
                         "requirement" => $subject['requirement'],
                         "start_date" => $subject['start_date'],
-                        "outcome_period_start_date" => $outcomePeriodDetails->start_date ? $outcomePeriodDetails->start_date->format('d/m/Y') : "",
-                        "outcome_period_end_date" => $outcomePeriodDetails->end_date ? $outcomePeriodDetails->end_date->format('d/m/Y') : "",
-                        "outcome_result" => $subject['outcome_result'],
+                        // "outcome_period_start_date" => $outcomePeriodDetails->start_date ? $outcomePeriodDetails->start_date->format('d/m/Y') : "",
+                        // "outcome_period_end_date" => $outcomePeriodDetails->end_date ? $outcomePeriodDetails->end_date->format('d/m/Y') : "",
+                        //Commented above line as per comment on POCOR-9108
+                        "outcome_period_start_date" => "",
+                        "outcome_period_end_date" => "",
+                        "outcome_result" => $subject['outcome_result'] ? $subject['outcome_result'] : $subject["total_mark"],
                         "student_candidate_number" => $subject['student_candidate_number'],
 
                     ];
