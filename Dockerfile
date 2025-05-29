@@ -1,10 +1,10 @@
 # === Frontend ===
-# FROM node:12.14.1 AS frontend-builder
-# WORKDIR /app
-# COPY ./frontend/ ./
-# RUN npm install && \
-#     npm install -g @angular/cli@11.2.19
-# RUN ng build --output-path=./dist
+FROM node:12.14.1 AS frontend-builder
+WORKDIR /app
+COPY ./frontend/ ./
+RUN npm install && \
+    npm install -g @angular/cli@11.2.19
+RUN ng build --output-path=./dist
 
 # === Backed + Apache Stage ===
 FROM php:8.3-apache AS backend
@@ -30,9 +30,10 @@ RUN composer update && \
     php artisan jwt:secret && \
     php artisan config:cache
 WORKDIR /var/www/html
-# COPY --from=frontend-builder /app/dist ./webroot/js/angular/dist/
-# RUN mv ./webroot/js/angular/dist/styles.css ./webroot/css/angular/main/ && \
-RUN    chown -R www-data:www-data ./webroot && \
+COPY --from=frontend-builder /app/dist ./webroot/js/angular/dist/
+RUN mv ./webroot/js/angular/dist/styles.css ./webroot/css/angular/main/
+RUN chown -R www-data:www-data ./webroot && \
     mkdir logs && \
     chmod -R 777 /var/www/html/webroot /var/www/html/api/storage /var/www/html/logs
+RUN rm -rf /var/lib/apt/lists/*
 CMD ["apache2-foreground"]

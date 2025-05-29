@@ -17,20 +17,23 @@ services:
     - DB_PASSWORD=demo
     volumes:
       - ./api/.env:/var/www/html/api/.env
-    networks:
+    networks:   
       - openemis-network
   db:
     image: mysql:8.1
     container_name: openemis-db
     restart: always
+    entrypoint: sh -c "chmod 644 /etc/my.cnf && exec docker-entrypoint.sh mysqld"
     environment:
       - MYSQL_DATABASE=prd_cor_dmo
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_USER=admin
       - MYSQL_PASSWORD=demo
     volumes:
+      # - ./db_schema:/var/lib/mysql
+      # - ./docker-config/sql/prd_cor_dmo_schema.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
       - ./db_data:/var/lib/mysql
-      - ./docker-config/sql/prd_cor_dmo_schema.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
+      - ./docker-config/sql/core-4.24.0.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
       - ./docker-config/sql/my.cnf:/etc/my.cnf
     networks:
       - openemis-network

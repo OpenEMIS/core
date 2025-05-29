@@ -81,3 +81,4 @@ frontend/node_modules
 api/storage/api-docs
 
 db_data
+db_schema
