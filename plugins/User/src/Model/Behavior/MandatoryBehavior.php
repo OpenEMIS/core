@@ -68,11 +68,16 @@ class MandatoryBehavior extends Behavior
         $value = $data->value;
 
         $ConfigItemOptions = TableRegistry::get('Configuration.ConfigItemOptions');
-        $result = $ConfigItemOptions
-            ->find()
-            ->where([$ConfigItemOptions->aliasField('option_type') => $optionType, $ConfigItemOptions->aliasField('value') => $value])
-            ->first();
-        return $result->option;
+        if($optionType) {
+            $result = $ConfigItemOptions
+                ->find()
+                ->where([$ConfigItemOptions->aliasField('option_type') => $optionType,
+                    $ConfigItemOptions->aliasField('value') => $value])
+                ->first();
+            return $result->option;
+        } else {
+            return '';
+        }
     }
 
     public function addOnInitialize(Event $event, Entity $entity)

@@ -1,4 +1,5 @@
 <?php
+
 namespace Report\Model\Table;
 
 use ArrayObject;
@@ -14,14 +15,13 @@ use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
 
-
 class SurveysTable extends AppTable
 {
-    private $surveyStatuses = [];
     const OPEN = 1;
     const PENDINGAPPROVAL = 2;
     const COMPLETED = 3;
     const SURVEY_DISABLED = -1;
+    private $surveyStatuses = [];
     private $_dynamicFieldName = 'custom_field_data';//POCOR-8525
 
 
@@ -46,8 +46,14 @@ class SurveysTable extends AppTable
             'model' => 'Institution.InstitutionSurveys',
             'formKey' => 'survey_form_id',
             'formFilterClass' => null,
-            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
+            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers',
+                'foreignKey' => 'institution_survey_id',
+                'dependent' => true,
+                'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells',
+                'foreignKey' => 'institution_survey_id',
+                'dependent' => true,
+                'cascadeCallbacks' => true]
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
     }
@@ -60,20 +66,21 @@ class SurveysTable extends AppTable
             ->notEmptyString('area_level_id')
             ->notEmptyString('area_id')
             ->notEmptyString('academic_period_id')
-            ->notEmptyString('institution_status')
-            ->notEmptyString('status')
             ->notEmptyString('survey_form_id')
+            ->notEmptyString('institution_status')
             ->notEmptyString('institution_id');
 
         $feature = $this->request->getData($this->getAlias())['feature'];
         $registryAlias = $this->getRegistryAlias();
         if (in_array($feature, ['Report.SurveysReport'])) {
             $validator = $validator
-                    ->notEmptyString('survey_form_id')
-                    ->notEmptyString('table_question')
-                    ->notEmptyString('survey_section');
+                ->notEmptyString('survey_form_id')
+                ->notEmptyString('table_question')
+                ->notEmptyString('survey_section');
+        } else {
+            $validator->notEmptyString('status');
         }
-        if(!$feature) {
+        if (!$feature) {
             $validator = $validator
                 ->notEmptyString('feature');
         }
@@ -87,11 +94,11 @@ class SurveysTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('survey_form_id', ['type' => 'hidden']);
         $this->ControllerAction->field('survey_section', ['type' => 'hidden']); //POCOR-6695
-        $this->ControllerAction->field('table_question', ['type' => 'hidden']); //POCOR-6695
+        $this->ControllerAction->field('composite_question', ['type' => 'hidden']); //POCOR-6695
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_id', ['attr' => ['label' => __('Area Education')]]);
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('institution_status_id');
+        $this->ControllerAction->field('institution_status');
         $this->ControllerAction->field('status', ['type' => 'hidden']);
         $this->ControllerAction->field('format');
     }
@@ -100,10 +107,11 @@ class SurveysTable extends AppTable
     public function addBeforeAction(Event $event)
     {
         $this->ControllerAction->field('area_id',
-            ['type' => 'hidden', 'attr' => ['label'=>__('Area Name')]]);
+            ['type' => 'hidden', 'attr' => ['label' => __('Area Name')]]);
     }
+
     //POCOR - 7415 end
-    public function onUpdateFieldInstitutionStatusId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->controller->getInstitutionStatusOptions($this->getAlias());
@@ -350,12 +358,12 @@ class SurveysTable extends AppTable
 //
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $sheets[] = [
-            'name' => $this->getAlias(),
-            'table' => $this,
-            'query' => $this->find(),
-            'orientation' => 'landscape'
-        ];
+//        $sheets[] = [
+//            'name' => $this->getAlias(),
+//            'table' => $this,
+//            'query' => $this->find(),
+//            'orientation' => 'landscape'
+//        ];
 
         $conditions = [];
         $requestData = json_decode($settings['process']['params']);
@@ -458,6 +466,191 @@ class SurveysTable extends AppTable
 //        $event->stopPropagation();
 //    }
 
+    /**
+     * @param array $conditions
+     * @param mixed $requestData
+     * @return array
+     */
+    private function conditionsWithInstitutionAndArea(array $conditions, mixed $requestData): array
+    {
+        $institutions = self::getDynamicTableInstance('Institution.Institutions');
+        $institutionID = $requestData->institution_id;
+
+        if ($institutionID > 0) {
+            $conditions['Institutions.id'] = $institutionID;
+        } else {
+            $areaId = $requestData->area_id;
+            $selectedArea = $requestData->area_id;
+            if ($areaId != -1 && $areaId != '' && $areaId != 0) {
+                $areaIds = [];
+                $allgetArea = $this->getChildren($selectedArea, $areaIds);
+                $selectedArea1[] = $selectedArea;
+                if (!empty($allgetArea)) {
+                    $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+                } else {
+                    $allselectedAreas = $selectedArea1;
+                }
+
+                $conditions[$institutions->aliasField('area_id IN')] = $allselectedAreas;
+            }
+        }
+        return $conditions;
+    }
+
+    /**
+     * POCOR-8391
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+public function getChildren($id, $idArray)
+    {
+        $Areas = self::getDynamicTableInstance('Area.Areas');
+        $result = $Areas->find()
+            ->where([
+                $Areas->aliasField('parent_id') => $id
+            ])
+            ->toArray();
+        foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+            $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
+    }
+
+    /**
+     * @param array $conditions
+     * @param mixed $requestData
+     * @return array
+     */
+    private function conditionsWithSurveyStatus(array $conditions, mixed $requestData): array
+    {
+        $status = $requestData->status;
+
+        if (!empty($status) && $status != "all") {
+            $WorkflowModels = self::getDynamicTableInstance('Workflow.WorkflowModels');
+            $WorkflowSteps = self::getDynamicTableInstance('Workflow.WorkflowSteps');
+            $WorkflowStatuses = self::getDynamicTableInstance('Workflow.WorkflowStatuses');
+            $WorkflowStatusesSteps = self::getDynamicTableInstance('Workflow.WorkflowStatusesSteps');
+            $statusData = $this->find()->select([
+                "status_id" => $this->aliasField('status_id'),
+                "status_name" => $WorkflowSteps->aliasField('name')
+            ])
+                ->innerJoin([$WorkflowSteps->getAlias() => $WorkflowSteps->getTable()], [
+                    $WorkflowSteps->aliasField('id=') . $this->aliasField('status_id')
+                ])
+                ->innerJoin([$WorkflowStatusesSteps->getAlias() => $WorkflowStatusesSteps->getTable()], [
+                    $WorkflowStatusesSteps->aliasField('workflow_step_id=') . $WorkflowSteps->aliasField('id')
+                ])
+                ->innerJoin([$WorkflowStatuses->getAlias() => $WorkflowStatuses->getTable()], [
+                    $WorkflowStatuses->aliasField('id=') . $WorkflowStatusesSteps->aliasField('workflow_status_id')
+                ])
+                ->innerJoin([$WorkflowModels->getAlias() => $WorkflowModels->getTable()], [
+                    $WorkflowModels->aliasField('id=') . $WorkflowStatuses->aliasField('workflow_model_id')
+                ])->where([
+                    $WorkflowModels->aliasField('name') => "Institutions > Survey > Forms",
+                    $WorkflowStatuses->aliasField('id') => $status
+                ])->group($this->aliasField('status_id'))
+                ->toArray();
+
+            foreach ($statusData as $key => $value) {
+                $statusList[] = $value['status_id'];
+            }
+            $statusCondition = [
+                $this->aliasField('status_id') . ' IN ' => array_values($statusList)
+            ];
+            $conditions = array_merge($conditions, $statusCondition);
+        }
+        return $conditions;
+        //POCOR-7821 end
+    }
+
+    /**
+     * @param array $conditions
+     * @param mixed $requestData
+     * @return array
+     */
+    private function conditionsWithSurveyFormId(array $conditions, mixed $requestData): array
+    {
+        $surveyFormId = $requestData->survey_form_id;
+        if (!empty($surveyFormId)) {
+            $conditions['SurveyForms.id'] = $surveyFormId;
+        }
+        return $conditions;
+        //POCOR-7821 end
+    }
+
+    /**
+     * @param array $conditions
+     * @param mixed $requestData
+     * @return array
+     */
+    private function conditionsWithInstitutionStatus(array $conditions, mixed $requestData): array
+    {
+        $institutionStatus = $requestData->institution_status;
+        if ($institutionStatus) {
+            $conditions['Statuses.name'] = $institutionStatus;
+        }
+        return $conditions;
+    }
+
+    /**
+     * @param array $conditions
+     * @param mixed $requestData
+     * @return array
+     */
+    private function conditionsWithAcademicPeriod(array $conditions, mixed $requestData): array
+    {
+        $academicPeriodId = $requestData->academic_period_id;
+        if ($academicPeriodId) {
+            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        }
+        return $conditions;
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
 
@@ -533,7 +726,7 @@ class SurveysTable extends AppTable
         ];
         $fields[] = [
             'key' => 'Statuses_name',
-            'field' =>'Statuses_name',
+            'field' => 'Statuses_name',
             'type' => 'string',
             'label' => __('Institution Status')
         ];
@@ -597,6 +790,8 @@ class SurveysTable extends AppTable
 //        }
     }
 
+    //POCOR-8515 starts
+
     public function onUpdateFieldSurveyFormId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
@@ -651,7 +846,7 @@ class SurveysTable extends AppTable
                 }
             }
         }
-    }
+    }//POCOR-8515 ends
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -684,6 +879,8 @@ class SurveysTable extends AppTable
         }
     }
 
+    //POCOR-6695 Starts
+
     public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
 
@@ -696,7 +893,7 @@ class SurveysTable extends AppTable
                 if ($feature == $this->getRegistryAlias()) {
                     $surveyStatuses = $this->Workflow->getWorkflowStatuses('Institution.InstitutionSurveys');
                     $attr['type'] = 'select';
-                    $arrAll = array("all" => "All" );
+                    $arrAll = array("all" => "All");
                     $collectionData = new Collection($surveyStatuses);
                     $attr['options'] = $collectionData->prepend($arrAll)->toArray();
                     $attr['select'] = false;
@@ -710,22 +907,24 @@ class SurveysTable extends AppTable
                 }
             }
         }
-    }
+    }//End of POCOR-6695
 
+    //POCOR-6695 Starts
 
     public function onExcelGetStatusId(Event $event, Entity $entity)
     {
         $status = $entity->status_id;
-        if($status == 1 || $status == -1) {
+        if ($status == 1 || $status == -1) {
             return "Open";
         }
-        if($status ==  2){
+        if ($status == 2) {
             return "PENDINGAPPROVAL";
         }
-        if($status == 3){
+        if ($status == 3) {
             return "COMPLETED";
         }
-    }
+    }//End of POCOR-6695
+
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (!isset($request->getData($this->getAlias())['feature'])) {
@@ -739,8 +938,8 @@ class SurveysTable extends AppTable
 
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
-                $attr['select'] = false;
-                $attr['options'] = ['-1' => __('All Areas Level')] + $areaOptions->toArray();
+            $attr['select'] = false;
+            $attr['options'] = ['-1' => __('All Areas Level')] + $areaOptions->toArray();
             $attr['onChangeReload'] = true;
         } else {
             $attr['type'] = 'hidden';
@@ -749,33 +948,20 @@ class SurveysTable extends AppTable
         return $attr;
     }
 
-    function array_flatten($array) {
-        if (!is_array($array)) { return false; }
-        $result = array();
-        foreach ($array as $key => $value) {
-            if (is_array($value)) {
-                $result = array_merge($result, $this->array_flatten($value));
-            } else {
-                $result = array_merge($result, array($key => $value));
-            }
-        }
-        return $result;
-    }
-
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         //POCOR-8515 Starts
         $selectedArea = $request->getData($this->getAlias())['area_id'];
         $areaIds = [];
-        $selectedArea1[]= $selectedArea;
-        if(!empty($selectedArea)){
+        $selectedArea1[] = $selectedArea;
+        if (!empty($selectedArea)) {
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
-            if(!empty($allgetArea)){
+            if (!empty($allgetArea)) {
                 $areaId = array_merge($selectedArea1, $allgetArea);
-            }else{
+            } else {
                 $areaId = $selectedArea1;
             }
-        }else{
+        } else {
             $areaId = $selectedArea1;
         }//POCOR-8515 ends
 
@@ -822,8 +1008,8 @@ class SurveysTable extends AppTable
                 }
 
                 $institutionList = $institutionQuery->toArray();
-                foreach($institutionList AS $institutionListData){
-                    $institutionListArr[] = array($institutionListData['id'] => $institutionListData['code']. ' - ' .$institutionListData['name']);
+                foreach ($institutionList AS $institutionListData) {
+                    $institutionListArr[] = array($institutionListData['id'] => $institutionListData['code'] . ' - ' . $institutionListData['name']);
                 }
                 $institutionList = $this->array_flatten($institutionListArr);
             }
@@ -856,7 +1042,7 @@ class SurveysTable extends AppTable
                         }
 
                         $institutionList = $institutionQuery->toArray();
-                    }else{
+                    } else {
                         $institutionQuery = $InstitutionsTable
                             ->find('list', [
                                 'keyField' => 'id',
@@ -889,20 +1075,21 @@ class SurveysTable extends AppTable
         return $attr;
     }
 
-    //POCOR-8515 starts
-    public function getChildren($id, $idArray) {
-        $Areas = self::getDynamicTableInstance('Area.Areas');
-        $result = $Areas->find()
-                            ->where([
-                                $Areas->aliasField('parent_id') => $id
-                            ])
-                             ->toArray();
-        foreach ($result as $key => $value) {
-            $idArray[] = $value['id'];
-           $idArray = $this->getChildren($value['id'], $idArray);
+    function array_flatten($array)
+    {
+        if (!is_array($array)) {
+            return false;
         }
-        return $idArray;
-    }//POCOR-8515 ends
+        $result = array();
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $result = array_merge($result, $this->array_flatten($value));
+            } else {
+                $result = array_merge($result, array($key => $value));
+            }
+        }
+        return $result;
+    }
 
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -940,8 +1127,7 @@ class SurveysTable extends AppTable
         return $attr;
     }
 
-    //POCOR-6695 Starts
-    public function onUpdateFieldSurveySection(Event $event, array $attr, $action, ServerRequest $request)
+public function onUpdateFieldSurveySection(Event $event, array $attr, $action, ServerRequest $request)
     {
         $surveyForm = $this->request->getData($this->getAlias())['survey_form_id'];
         if ($action == 'add') {
@@ -952,7 +1138,7 @@ class SurveysTable extends AppTable
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = TableRegistry::get ('Survey.SurveyStatuses');
+                    $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
                     $surveyQuestions = self::getDynamicTableInstance('FieldOption.IdentityTypes');
                     $surveySection = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
                     $surveyFormOptions = $surveySection
@@ -983,23 +1169,23 @@ class SurveysTable extends AppTable
                 }
             }
         }
-    }//End of POCOR-6695
-    //POCOR-6695 Starts
-    public function onUpdateFieldTableQuestion(Event $event, array $attr, $action, ServerRequest $request)
+    }
+
+public function onUpdateFieldCompositeQuestion(Event $event, array $attr, $action, ServerRequest $request)
     {
         $surveyQuestionId = $this->request->getData($this->getAlias())['survey_section'];
-        if(isset($surveyQuestionId)){
+        if (isset($surveyQuestionId)) {
             $surveyQuestionId = $this->request->getData($this->getAlias())['survey_section'];
-        }else{
+        } else {
             $surveyQuestionId = '';
         }
         $surveySectionQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions')
-                ->find('all', ['conditions' => ['id' => $surveyQuestionId]])
-                ->first();
-        if(!empty($surveySectionQuestions)){
-           $surveySectionQuestionName  = $surveySectionQuestions->section;
-        }else{
-          $surveySectionQuestionName = '';
+            ->find('all', ['conditions' => ['id' => $surveyQuestionId]])
+            ->first();
+        if (!empty($surveySectionQuestions)) {
+            $surveySectionQuestionName = $surveySectionQuestions->section;
+        } else {
+            $surveySectionQuestionName = '';
         }
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -1009,14 +1195,17 @@ class SurveysTable extends AppTable
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
                     $SurveyStatusTable = self::getDynamicTableInstance('Survey.SurveyStatuses');
-                    $surveySection = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
+                    $surveyFormQuestions = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
                     $surveyQuestion = self::getDynamicTableInstance('Survey.SurveyQuestions');
-                    $surveyFormOptions = $surveySection
-                                        ->find('list', ['keyField' => 'survey_question_id', 'valueField' => 'name'])
-                                        ->where([
-                                            $surveySection->aliasField('section') =>
-                                            $surveySectionQuestionName
-                                        ])->toArray();
+                    $surveyFormOptions = $surveyFormQuestions
+                        ->find('list', ['keyField' => 'survey_question_id', 'valueField' => 'name'])
+                        ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
+                            [$surveyFormQuestions->aliasField('survey_question_id = ') . $surveyQuestion->aliasField('id')
+                                ])
+                    ->where([
+                        $surveyFormQuestions->aliasField('section') =>
+                            $surveySectionQuestionName
+                        ])->toArray();
                     if (!empty($surveyFormOptions)) {
                         $attr['options'] = $surveyFormOptions;
                         $attr['onChangeReload'] = true;
@@ -1037,7 +1226,7 @@ class SurveysTable extends AppTable
                 }
             }
         }
-    }//End of POCOR-6695
+    }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -1058,180 +1247,12 @@ class SurveysTable extends AppTable
                 return __('Institution Status');
             case 'survey_section':
                 return __('Survey Section');
-             case 'table_question':
+            case 'table_question':
                 return __('Table Question');
             case 'status':
                 return __('Survey Status');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
-    }
-/**
- * POCOR-8391
- * Get a dynamic table instance with all associations.
- *
- * @param string $tableName
- * @return \Cake\ORM\Table
- */
-private static function getDynamicTableInstance(string $tableName): Table
-{
-    // Parse plugin and table names if dot notation is used
-    $locator = TableRegistry::getTableLocator();
-    try {
-        return $locator->get($tableName);
-    } catch (\Exception $exception) {
-
-    }
-    $parts = explode('.', $tableName);
-    $plugin = count($parts) > 1 ? $parts[0] : null;
-    $table = count($parts) > 1 ? $parts[1] : $parts[0];
-
-    // Convert the table name to camel case as expected by CakePHP conventions
-    $tableFullAlias = Inflector::camelize($tableName);
-    $tableAlias = Inflector::camelize($table);
-
-    // Create the fully qualified class name if a plugin is specified
-    if ($plugin) {
-        $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
-    } else {
-        $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
-    }
-    // Check if the table instance already exists
-    if (!$locator->exists($tableFullAlias)) {
-        // Check if the specific table class exists
-        if (!class_exists($className)) {
-            $className = Table::class; // Fallback to generic Table class
-        }
-
-        // Configure a new table instance
-        $locator->setConfig($tableAlias, [
-            'className' => $className,
-            'table' => $table,
-            'alias' => $tableAlias,
-        ]);
-    }
-
-    // Return the table instance
-    return $locator->get($tableFullAlias);
-}
-
-    /**
-     * @param array $conditions
-     * @param mixed $requestData
-     * @return array
-     */
-    private function conditionsWithInstitutionAndArea(array $conditions, mixed $requestData): array
-    {
-        $institutions = self::getDynamicTableInstance('Institution.Institutions');
-        $institutionID = $requestData->institution_id;
-
-        if ($institutionID > 0) {
-            $conditions['Institutions.id'] = $institutionID;
-        } else {
-            $areaId = $requestData->area_id;
-            $selectedArea = $requestData->area_id;
-            if ($areaId != -1 && $areaId != '' && $areaId != 0) {
-                $areaIds = [];
-                $allgetArea = $this->getChildren($selectedArea, $areaIds);
-                $selectedArea1[] = $selectedArea;
-                if (!empty($allgetArea)) {
-                    $allselectedAreas = array_merge($selectedArea1, $allgetArea);
-                } else {
-                    $allselectedAreas = $selectedArea1;
-                }
-
-                $conditions[$institutions->aliasField('area_id IN')] = $allselectedAreas;
-            }
-        }
-        return $conditions;
-    }
-
-    /**
-     * @param array $conditions
-     * @param mixed $requestData
-     * @return array
-     */
-    private function conditionsWithAcademicPeriod(array $conditions, mixed $requestData): array
-    {
-        $academicPeriodId = $requestData->academic_period_id;
-        if ($academicPeriodId) {
-            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
-        }
-        return $conditions;
-    }
-/**
-     * @param array $conditions
-     * @param mixed $requestData
-     * @return array
-     */
-    private function conditionsWithInstitutionStatus(array $conditions, mixed $requestData): array
-    {
-        $institutionStatus = $requestData->institution_status;
-       if ($institutionStatus) {
-            $conditions['Statuses.name'] = $institutionStatus;
-        }
-        return $conditions;
-    }
-
-    /**
-     * @param array $conditions
-     * @param mixed $requestData
-     * @return array
-     */
-    private function conditionsWithSurveyStatus(array $conditions, mixed $requestData): array
-    {
-        $status = $requestData->status;
-
-        if (!empty($status) && $status != "all") {
-            $WorkflowModels = self::getDynamicTableInstance('Workflow.WorkflowModels');
-            $WorkflowSteps = self::getDynamicTableInstance('Workflow.WorkflowSteps');
-            $WorkflowStatuses = self::getDynamicTableInstance('Workflow.WorkflowStatuses');
-            $WorkflowStatusesSteps = self::getDynamicTableInstance('Workflow.WorkflowStatusesSteps');
-            $statusData = $this->find()->select([
-                "status_id" => $this->aliasField('status_id'),
-                "status_name" => $WorkflowSteps->aliasField('name')
-            ])
-                ->innerJoin([$WorkflowSteps->getAlias() => $WorkflowSteps->getTable()], [
-                    $WorkflowSteps->aliasField('id=') . $this->aliasField('status_id')
-                ])
-                ->innerJoin([$WorkflowStatusesSteps->getAlias() => $WorkflowStatusesSteps->getTable()], [
-                    $WorkflowStatusesSteps->aliasField('workflow_step_id=') . $WorkflowSteps->aliasField('id')
-                ])
-                ->innerJoin([$WorkflowStatuses->getAlias() => $WorkflowStatuses->getTable()], [
-                    $WorkflowStatuses->aliasField('id=') . $WorkflowStatusesSteps->aliasField('workflow_status_id')
-                ])
-                ->innerJoin([$WorkflowModels->getAlias() => $WorkflowModels->getTable()], [
-                    $WorkflowModels->aliasField('id=') . $WorkflowStatuses->aliasField('workflow_model_id')
-                ])->where([
-                    $WorkflowModels->aliasField('name') => "Institutions > Survey > Forms",
-                    $WorkflowStatuses->aliasField('id') => $status
-                ])->group($this->aliasField('status_id'))
-                ->toArray();
-
-            foreach ($statusData as $key => $value) {
-                $statusList[] = $value['status_id'];
-            }
-            $statusCondition = [
-                $this->aliasField('status_id') . ' IN ' => array_values($statusList)
-            ];
-            $conditions = array_merge($conditions, $statusCondition);
-        }
-        return $conditions;
-        //POCOR-7821 end
-    }
-
-    /**
-     * @param array $conditions
-     * @param mixed $requestData
-     * @return array
-     */
-    private function conditionsWithSurveyFormId(array $conditions, mixed $requestData): array
-    {
-        $surveyFormId = $requestData->survey_form_id;
-        if (!empty($surveyFormId)) {
-            $conditions['SurveyForms.id'] = $surveyFormId;
-        }
-        return $conditions;
-        //POCOR-7821 end
     }
 }
