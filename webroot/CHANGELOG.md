@@ -1,3 +1,9 @@
+### [4.26.1] - 2025-05-28
+- Bug Fixed: Institutions > Students > Pending Admission > Bulk Admission: User receives a 404 error message when transferring students.
+- Bug Fixed: Institutions>Surveys>Forms: Survey is getting 404 when saving
+- Bug Fixed: Institutions>Dashboard: Staff attendance dashboard should calculate attendance based on time in
+- Bug Fixed: Administration>Profile>Students: Subject result should show for assessment configuration and date completed/date started should show
+
 ### [4.26.0] - 2025-05-27
 - Implemented: Develop changes to student report card generatation to include gpa and cumulative gpa
 
