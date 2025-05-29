@@ -52,7 +52,7 @@ class SurveysReportTable extends AppTable
         $institutionStatus = $requestData->institution_status;
         $areaId = $requestData->area_id;
         $selectedArea = $requestData->area_id;
-        $surveyFormId = $requestData->survey_form_id;
+        $surveyFormId = $requestData->survey_form_id; // POCOR-9116
 
         $surveyForms = TableRegistry::get('Survey.SurveyForms');
         $institutions = TableRegistry::get('Institution.Institutions');
