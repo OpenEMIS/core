@@ -1,3 +1,6 @@
 .git*
 .editorconfig
 db_data
+Dockerfile.Main
+docker-compose.yaml
+.dockerignore
