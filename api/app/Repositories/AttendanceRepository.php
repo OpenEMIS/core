@@ -66,7 +66,7 @@ class AttendanceRepository extends Controller
             $params = $request->all();
 
             //For POCOR-8216/8215 start...
-            //$limit = config('constantvalues.defaultPaginateLimit');   
+            //$limit = config('constantvalues.defaultPaginateLimit');
             if(isset($params['limit'])){
                 $limit = $params['limit'];
                 $list = $this->findSchoolAcademicPeriod($params, $limit);
@@ -75,7 +75,7 @@ class AttendanceRepository extends Controller
             }
             //For POCOR-8216/8215 end...
             return $list;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Academic Periods List from DB',
@@ -92,7 +92,7 @@ class AttendanceRepository extends Controller
             $period = AcademicPeriod::where('id', $academic_period_id)->first();
             $configItems1 = ConfigItem::where('code', 'first_day_of_week')->first();
 
-            
+
             // If First of week is sunday change the value to 7, because sunday with the '0' value unable to be displayed
             $firstDayOfWeek = $configItems1->value??"";
 
@@ -112,13 +112,13 @@ class AttendanceRepository extends Controller
             $startDate = $period->start_date;
             $endDate = $period->end_date;
             $nextDate = date('Y-m-d', strtotime("+1 day", strtotime($startDate)));
-            
+
             $weekIndex = 1;
             $weeks = [];
-            
+
             $daysInWeek = $lastDayIndex;
             $startDate = Carbon::parse($startDate);
-            
+
 
             do {
 
@@ -130,14 +130,14 @@ class AttendanceRepository extends Controller
 
                 $startDateNew = $startDate->format('Y-m-d');
                 $endDateNew = $endDate->format('Y-m-d');
-                
+
                 $weeks[$weekIndex++] = [$startDateNew, $endDateNew];
 
                 $startDate = $endDate->copy();
                 $startDate->addDay();
-                
+
             } while ($endDate->lt($period->end_date));
-            
+
             return $weeks;
 
         } catch (\Exception $e){
@@ -175,19 +175,19 @@ class AttendanceRepository extends Controller
             $academic_period_id = $params['academic_period_id'];
             $list = AcademicPeriod::where('id', $academic_period_id)->first();
 
-            
+
             if($list){
                 $todayDate = date("Y-m-d");
                 $weekOptions = [];
                 $selectedIndex = 0;
 
                 $weeks = $this->getAttendanceWeeks($academic_period_id);
-                
+
                 $weekStr = __('Week') . ' %d (%s - %s)';
                 $currentWeek = null;
 
                 foreach ($weeks as $index => $dates) {
-                    
+
                     $startDay = $dates[0];
                     $endDay = $dates[1];
                     $weekAttr = [];
@@ -216,7 +216,7 @@ class AttendanceRepository extends Controller
                 }
 
                 $weekOptions[$selectedIndex]['selected'] = true;
-                
+
                 $list->weeks = $weekOptions;
 
                 return $list;
@@ -224,7 +224,7 @@ class AttendanceRepository extends Controller
                 return [];
             }
 
-            
+
         } catch (\Exception $e){
             return [];
         }
@@ -259,8 +259,8 @@ class AttendanceRepository extends Controller
                     $firstDayOfWeek = 0;
                 }
             }
-            
-            
+
+
             $configItems2 = $configItems->where('code', 'days_per_week')->first();
             $daysPerWeek = 0;
             if($configItems2){
@@ -274,7 +274,7 @@ class AttendanceRepository extends Controller
             }
 
             $weeks = $this->getAttendanceWeeks($academicPeriodId);
-            
+
             $week = $weeks[$weekId];
 
             if (isset($params['exclude_all']) && $params['exclude_all']) {
@@ -294,7 +294,7 @@ class AttendanceRepository extends Controller
                 $schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
             }
 
-            
+
             $firstDayOfWeek = $week[0];
             $today = null;
 
@@ -302,20 +302,20 @@ class AttendanceRepository extends Controller
             $startDate = Carbon::createFromFormat('Y-m-d', $week[0]);
             $endDate = Carbon::createFromFormat('Y-m-d', $week[1]);
 
-      
+
             $dateRange = CarbonPeriod::create($startDate, $endDate);
 
             $dateRange = $dateRange->toArray();
 
 
-       
+
             foreach($dateRange as $key => $startdate){
                 $startdateformat = Carbon::create($startdate)->toFormattedDateString();
-                
+
                 $date = $startdate->format('Y-m-d');
-                
+
                 $dayOfWeek = $key + 1;
-                
+
                 if(in_array($dayOfWeek, $schooldays)){
                     if ($schoolClosedRequired == false) {
                         $schoolClosed = false;
@@ -324,12 +324,12 @@ class AttendanceRepository extends Controller
 
                         if ($schoolClosed) {
                             $sql = "SELECT institution_shift_periods.period_id  FROM calendar_event_dates
-                                INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id 
-                                INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id 
-                                        AND calendar_events.institution_id = institution_shifts.institution_id 
-                                        AND calendar_events.institution_shift_id = institution_shifts.shift_option_id 
+                                INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id
+                                INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id
+                                        AND calendar_events.institution_id = institution_shifts.institution_id
+                                        AND calendar_events.institution_shift_id = institution_shifts.shift_option_id
                                 INNER JOIN calendar_types ON calendar_types.id = calendar_events.calendar_type_id
-                                INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id 
+                                INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id
                                 WHERE calendar_event_dates.date = '" . $date . "' AND calendar_types.is_attendance_required = 0";
 
                             $result = DB::select($sql);
@@ -353,10 +353,10 @@ class AttendanceRepository extends Controller
                         'day' => __($startdate->format('l')),
                         'name' => __($startdate->format('l')) . ' (' . $startdateformat . ') ' . $suffix,
                         'date' => $date,
-                        'current_week_number_selected' => $current_week_number_selected, 
+                        'current_week_number_selected' => $current_week_number_selected,
                         'day_number' => $day_number
                     ];
-                    
+
                     if ($schoolClosed) {
                         $data['closed'] = true;
                         $data['periods'] = $closedPeriods;
@@ -364,9 +364,9 @@ class AttendanceRepository extends Controller
 
                     $dayOptions[] = $data;
                 }
-                
+
             }
-            
+
             return $dayOptions;
 
         } catch (\Exception $e) {
@@ -385,7 +385,7 @@ class AttendanceRepository extends Controller
 
 
             $dateEvents = CalendarEventDate::with(
-                        'calendarEvent', 
+                        'calendarEvent',
                         'calendarEvent.calendarType'
                     )
                     ->whereHas('calendarEvent', function ($q) use($institutionId){
@@ -441,7 +441,7 @@ class AttendanceRepository extends Controller
             $user_id = $user->id;
 
             //Getting the baseUrl
-            $baseUrl = url('/');                
+            $baseUrl = url('/');
             $base_url = preg_replace("(^https?://)", "", $baseUrl );
 
             $base_url = str_replace("/api", "", $base_url );
@@ -455,10 +455,10 @@ class AttendanceRepository extends Controller
 
 
             $conditionQuery[] = "'institution_id', '=', ".  $institutionId;
-            
+
             if ($superAdmin == 0) {
                 $conditionQuery = $this->setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, $conditionQuery);
-                
+
             }
 
 
@@ -466,10 +466,10 @@ class AttendanceRepository extends Controller
             list($weekStartDate, $weekEndDate) =
                 $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
 
-            
+
 
             $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId);
-            
+
 
             $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate);
 
@@ -479,12 +479,12 @@ class AttendanceRepository extends Controller
             $conditionQuery = $conditionQueryArray[0]??[];
             $conditionQueryOR = $conditionQueryArray[1]??[];
 
-            
+
 
             //Gets all the days in the selected week based on its start date end date
             $workingDaysArr = $this->getWorkingDays($weekStartDate, $weekEndDate);
 
-            
+
             $query = InstitutionStaff::select('institution_staff.*');
 
             if ($shiftId != -1) {
@@ -513,7 +513,7 @@ class AttendanceRepository extends Controller
                 $query = $query->where('start_date', '<=', $weekStartDate)
                         ->where('start_date', '<=', $weekEndDate);
             }
-            
+
 
             $query = $query->where(function ($q) use($weekStartDate, $weekEndDate) {
                 $q->where('end_date', Null)->orWhere('end_date', '>=', $weekEndDate);
@@ -527,7 +527,7 @@ class AttendanceRepository extends Controller
 
             $query = $query->orderBy('security_users.first_name')
                         ->groupBy('institution_staff.staff_id');
-            
+
 
             //For POCOR-8215/8216 start...
             if(isset($params['order'])){
@@ -548,7 +548,7 @@ class AttendanceRepository extends Controller
 
             $total = count($data);
             $resp = [];
-            
+
             foreach ($data['data'] as $k => $d) {
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['FTE'] = $d['FTE'];
@@ -578,21 +578,21 @@ class AttendanceRepository extends Controller
                 if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
                     $staffRecords = $attendanceByStaffIdRecords[$staffId];
                 }
-               
+
                 if (array_key_exists($staffId, $leaveByStaffIdRecords)) {
                     $staffLeaveRecords = $leaveByStaffIdRecords[$staffId];
                     $staffLeaveRecords = array_slice($staffLeaveRecords, 0, 2);
                 }
 
                 $staffTimeRecords = [];
-                
+
                 foreach ($workingDaysArr as $dateObj) {
                     $dateStr = $dateObj->format('Y-m-d');
                     $formattedDate = $dateObj->format('F d, Y');
-                    
+
                     $found = false;
                     foreach ($staffRecords as $attendanceRecord) {
-                        
+
                         $staffAttendanceDate = date('Y-m-d', strtotime($attendanceRecord['date']));
 
                         if ($dateStr == $staffAttendanceDate) {
@@ -646,7 +646,7 @@ class AttendanceRepository extends Controller
 
                         $dateFrom = date('Y-m-d', strtotime($staffLeaveRecord['date_from']));
                         $dateTo = date('Y-m-d', strtotime($staffLeaveRecord['date_to']));
-                        
+
                         if ($dateFrom <= $key && $dateTo >= $key) {
                             $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
                             $leaveRecord['startTime'] = isset($staffLeaveRecord['start_time']) ? date('H:i:s', strtotime($staffLeaveRecord['start_time'])) : "";
@@ -656,7 +656,7 @@ class AttendanceRepository extends Controller
                         }
                     }
 
-                    
+
                     //dd($base_url);
                     /*$url = [
                         'plugin' => 'Institution',
@@ -690,7 +690,7 @@ class AttendanceRepository extends Controller
             //For POCOR-8291 end...
 
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Staff Attendances List from DB',
@@ -711,9 +711,9 @@ class AttendanceRepository extends Controller
                 $conditionQuery[] = "'staff_id', '=', " .$user_id;
             } elseif ($ownAttendanceView == 0 && $otherAttendanceView == 1) {
                 $conditionQuery[] = "'staff_id', '!=', " .$user_id;;
-            }   
+            }
 
-            
+
             return $conditionQuery;
 
         } catch (\Exception $e) {
@@ -775,7 +775,7 @@ class AttendanceRepository extends Controller
 
             $allStaffAttendances = $allStaffAttendancesQuery->get()->toArray();
             //$allStaffAttendances = $allStaffAttendancesQuery->get();
-            
+
 
             //$attendanceByStaffIdRecords = \Hash::combine($allStaffAttendances, '{n}.id', '{n}', '{n}.staff_id');
 
@@ -798,9 +798,9 @@ class AttendanceRepository extends Controller
 
 
     public function getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $archive = false)
-    {   
+    {
         $dataArr = [];
-        
+
         if (!$archive) {
             //$StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
             $allStaffLeaves = new InstitutionStaffLeave();
@@ -812,7 +812,7 @@ class AttendanceRepository extends Controller
                     ->where('institution_staff_leave.academic_period_id', $academicPeriodId);
 
             if ($weekEndDate == $weekStartDate) {
-            
+
                 $allStaffLeaves = $allStaffLeaves->where('date_to', '>=', $weekEndDate)->where('date_from', '<=', $weekStartDate);
             } else {
                 $allStaffLeaves = $allStaffLeaves->where(function($q) use($weekStartDate, $weekEndDate){
@@ -839,7 +839,7 @@ class AttendanceRepository extends Controller
                     ->where('academic_period_id', $academicPeriodId);
 
             if ($weekEndDate == $weekStartDate) {
-            
+
                 $allStaffLeaves = $allStaffLeaves->where('date_to', '>=', $weekEndDate)->where('date_from', '<=', $weekStartDate);
             } else {
                 $allStaffLeaves = $allStaffLeaves->where(function($q) use($weekStartDate, $weekEndDate){
@@ -867,7 +867,7 @@ class AttendanceRepository extends Controller
                 $dataArr[$sL['staff_id']][$sL['id']] = $sL;
             }
         }
-        
+
         return $dataArr;
     }
 
@@ -876,7 +876,7 @@ class AttendanceRepository extends Controller
     {
         $conditionQuery[] = "'start_date', '<=', '$weekStartDate'";
         $conditionQuery[] = "'start_date', '<=', '$weekEndDate'";
-        
+
         $conditionQueryOr[] = "'end_date', '=', NULL";
         $conditionQueryOr[] = "'end_date', '>=', '$weekEndDate'";
 
@@ -901,7 +901,7 @@ class AttendanceRepository extends Controller
                 $workingDaysArr[] = $date;
             }
         }
-        
+
         return $workingDaysArr;
     }
 
@@ -919,7 +919,7 @@ class AttendanceRepository extends Controller
             6 => 'Saturday',
         ];
         $ConfigItems = new ConfigItem();
-        
+
         $ConfigItems1 = $ConfigItems->where('code', 'first_day_of_week')->first();
         $firstDayOfWeek = $ConfigItems1->value??0;
         if($firstDayOfWeek == ""){
@@ -929,7 +929,7 @@ class AttendanceRepository extends Controller
         if($firstDayOfWeek == ""){
             $firstDayOfWeek = 1;
         }
-        
+
         $ConfigItems2 = $ConfigItems->where('code', 'days_per_week')->first();
         $daysPerWeek = $ConfigItems2->value??0;
 
@@ -975,10 +975,10 @@ class AttendanceRepository extends Controller
         try {
             $params = $request->all();
             $academicPeriodId = $params['academic_period_id'];
-            
+
 
             $limit = config('constantvalues.defaultPaginateLimit');
-                
+
             if(isset($params['limit'])){
                 $limit = $params['limit'];
             }
@@ -1002,7 +1002,7 @@ class AttendanceRepository extends Controller
 
             $returnArr = [];
             foreach($lists as $k => $list){
-                
+
                 if($list['institutionId'] == $institutionId){
                     $shiftName = $list['shiftOptionName'];
                 } else {
@@ -1022,10 +1022,10 @@ class AttendanceRepository extends Controller
                 $defaultSelect['selected'] = true;
                 array_unshift($returnArr, $defaultSelect);
             }
-            
+
 
             return $returnArr;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Institution Shift Options from DB',
@@ -1043,7 +1043,7 @@ class AttendanceRepository extends Controller
             $params = $request->all();
             $params['academic_period_id'] = $academicPeriodId;
             $limit = config('constantvalues.defaultPaginateLimit');
-                
+
             $resp = [];
 
             if(isset($params['limit'])){
@@ -1051,13 +1051,13 @@ class AttendanceRepository extends Controller
             }
 
             $list = $this->findWeeksForPeriod($params, $limit);
-            
+
             $total = 0;
             if(!empty($list)){
                 $resp['list'] = $list;
                 $resp['total'] = 1;
             }
-            
+
             return $resp;
         } catch (\Exception $e) {
             Log::error(
@@ -1078,7 +1078,7 @@ class AttendanceRepository extends Controller
             $params['week_id'] = $weekId;
 
             $limit = config('constantvalues.defaultPaginateLimit');
-                
+
             $resp = [];
 
             if(isset($params['limit'])){
@@ -1086,7 +1086,7 @@ class AttendanceRepository extends Controller
             }
 
             $list = $this->findDaysForPeriodWeek($params);
-            
+
             $total = 0;
             if(!empty($list)){
                 $resp['list'] = $list;
@@ -1128,7 +1128,7 @@ class AttendanceRepository extends Controller
             $grade_id = $gradeId;
             $academic_period_id = $options['academic_period_id']??0;
             $institution_class_id = $options['institution_class_id']??0;
-            
+
             $day_id = strval($options['day_id']??NULL);
             $date = new DateTime($day_id);
             $day_id = $date->format('Y-m-d'); // Format the date as desired
@@ -1166,11 +1166,11 @@ class AttendanceRepository extends Controller
                     $col = 'student_attendance_types.'.$options['order'];
                     $list = $list->orderBy($col, $orderBy);
                 }
-                            
+
                 if(isset($options['limit'])){
                     $limit = $options['limit'];
                     $resp = $list->paginate($limit)->toArray();
-                    
+
                 } else {
                     $resp['data'] = $list->get()->toArray();
                 }
@@ -1186,11 +1186,11 @@ class AttendanceRepository extends Controller
                     $col = 'student_attendance_types.'.$options['order'];
                     $list = $list->orderBy($col, $orderBy);
                 }
-                            
+
                 if(isset($options['limit'])){
                     $limit = $options['limit'];
                     $resp = $list->paginate($limit)->toArray();
-                    
+
                 } else {
                     $resp['data'] = $list->get()->toArray();
                 }
@@ -1211,12 +1211,12 @@ class AttendanceRepository extends Controller
     public function allSubjectsByClassPerAcademicPeriod($params, $institutionId, $gradeId, $classId)
     {
         try {
-            $institutionId = $institutionId;       
+            $institutionId = $institutionId;
             $institutionClassId = $classId;
             $educationGradeId = $gradeId;
             $academicPeriodId = $params['academic_period_id'];
             $staff = JWTAuth::user();
-            
+
 
             $scheduleTimetablesData = InstitutionScheduleTimetables::where('institution_class_id', $institutionClassId)->where('academic_period_id', $academicPeriodId)->get()->toArray();
 
@@ -1254,13 +1254,13 @@ class AttendanceRepository extends Controller
             //For POCOR-8215/8216 end...
 
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Subjects List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return $this->sendErrorResponse('Subjects List Not Found');
         }
     }
@@ -1272,7 +1272,7 @@ class AttendanceRepository extends Controller
         try {
             $checkAccess = checkAccess();
             $roles = $checkAccess['roleIds'];
-            
+
             $QueryResult = SecurityRoleFunctions::leftjoin('security_functions', 'security_functions.id', '=', 'security_role_functions.security_function_id')
                     ->where('security_functions.controller', 'Institutions')
                     ->whereIn('security_role_id', $roles)
@@ -1288,7 +1288,7 @@ class AttendanceRepository extends Controller
             if(!empty($QueryResult)){
                 return true;
             }
-              
+
             return false;
 
         } catch (\Exception $e) {
@@ -1319,7 +1319,7 @@ class AttendanceRepository extends Controller
             $resp['total'] = $total;
 
             return $resp;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Student Attendance Mark Type from DB',
@@ -1396,11 +1396,11 @@ class AttendanceRepository extends Controller
 
 
                 $periodsData = $periodsData->orderBy('student_attendance_per_day_periods.order', 'ASC')->get()->toArray();
-                
+
 
                 $options = [];
                 $periodsDataId = [];
-                $j = 0;  
+                $j = 0;
                 for ($k = 0; $k <= $attendencePerDay; ++$k) {
                     if(count($periodsData) > 0 && isset($periodsData[$k])){
                         $periodsDataId[] =  $periodsData[$k]['id'];
@@ -1413,21 +1413,21 @@ class AttendanceRepository extends Controller
                     $periodsDataId = array_combine(range(1, count($periodsDataId)), array_values($periodsDataId));
                     $periodsDataId = array_flip($periodsDataId);
                 }
-                
+
                 for ($i = 1; $i <= $attendencePerDay; ++$i) {
                     $id = $i;
                     $name = "Period ".$i;
 
                     if(count($periodsDataId) > 0 && count($periodsData) > 0){
                         if(isset($periodsDataId[$periodsData[$j]['id']])){
-                            
+
                             $id = $periodsDataId[$periodsData[$j]['id']];
                             //$id = $i;
-                            
+
                         }
                         if(isset($periodsData[$j]) && isset($periodsData[$j]['name'])){
                             $name = $periodsData[$j]['name'];
-                        } 
+                        }
                     }
 
                     $options[] = [
@@ -1436,7 +1436,7 @@ class AttendanceRepository extends Controller
                     ];
                     $j++;
                 }
-                
+
                 return $options;
             }
             return [];
@@ -1607,7 +1607,7 @@ class AttendanceRepository extends Controller
 
 
                 $query = $query->groupby('institution_students.student_id')->orderBy('security_users.first_name');
-                
+
             }
 
 
@@ -1676,7 +1676,7 @@ class AttendanceRepository extends Controller
                     if(isset($subjectId) && $subjectId > 0){
                         $result = $result->where('institution_student_absence_details.subject_id', $subjectId);
                     }
-                        
+
                     $result = $result->first();
 
 
@@ -1800,7 +1800,7 @@ class AttendanceRepository extends Controller
                     $array['school_closed_required'] = true;
 
                     $dayList = $this->findDaysForPeriodWeek($array);
-                    
+
 
                     $studentListResult = InstitutionClassStudents::join('student_statuses', 'student_statuses.id', '=', 'institution_class_students.student_status_id')
                         ->where('academic_period_id', $academicPeriodId)
@@ -1837,7 +1837,7 @@ class AttendanceRepository extends Controller
                         if(isset($subjectId) && $subjectId > 0){
                             $result = $result->where('institution_student_absence_details.subject_id', $subjectId);
                         }
-                            
+
                         $result = $result->get()->toArray();
 
                         $isMarkedRecords = StudentAttendanceMarkedRecords::select('date', 'period', 'no_scheduled_class')
@@ -1957,13 +1957,13 @@ class AttendanceRepository extends Controller
             ];
 
             //For POCOR-8290 end...
-            
+
             $total = count($list);
             $resp['url'] = $urlData;
-            
+
 
             return $resp;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Student Attendance List from DB',
@@ -1980,13 +1980,13 @@ class AttendanceRepository extends Controller
         try {
             $institutionId = $institutionId;
             $institutionClassId = $classId;
-            $educationGradeId = $gradeId;     
+            $educationGradeId = $gradeId;
 
             $academicPeriodId = $options['academic_period_id'];
             $day = $options['day_id'];
             $period = $options['attendance_period_id'];
             $subjectId = $options['subject_id'];
-            
+
             $array['institution_class_id'] = $institutionClassId;
             $array['education_grade_id'] = $educationGradeId;
             $array['institution_id'] = $institutionId;
@@ -2055,17 +2055,17 @@ class AttendanceRepository extends Controller
                     ->where('date', $date)
                     ->count();
 
-            
+
 
             $attendancePerDay = $this->getAttendancePerDayByClass($institutionClassId, $academicPeriodId);
-            
+
             $ClassAttendanceRecordsData = InstitutionClassAttendanceRecord::where('institution_class_id', $institutionClassId)
                     ->where('academic_period_id', $academicPeriodId)
                     ->where('year', $year)
                     ->where('month', $month)
                     ->first();
 
-            
+
             if(empty($ClassAttendanceRecordsData)){
                 $markedType = self::NOT_MARKED;
             }
@@ -2103,7 +2103,7 @@ class AttendanceRepository extends Controller
                 'Failed in markedRecordAfterSave',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return false;
         }
     }
@@ -2115,9 +2115,9 @@ class AttendanceRepository extends Controller
         $academicPeriodId = $options['academic_period_id'];
         $dayId = $options['day_id'];
         $educationGradeId = $options['education_grade_id'];
-        
+
         $attendanceOptions = $this->getAttendancePerDayOptionsByClass($institionClassId, $academicPeriodId, $dayId, $educationGradeId);
-        
+
         return $attendanceOptions;
     }
 
@@ -2126,7 +2126,7 @@ class AttendanceRepository extends Controller
     {
         try {
             $gradeData = InstitutionClassGrades::where('institution_class_id', $institionClassId)->first();
-            
+
             if (!is_null($gradeData)) {
 
                 $attendancePerDay = StudentAttendanceMarkType::select('student_attendance_mark_types.id')
@@ -2138,7 +2138,7 @@ class AttendanceRepository extends Controller
 
                 if (!is_null($attendancePerDay)) {
                     $attendancePerDayId = $attendancePerDay->id;
-                    
+
                     $modelData = StudentAttendancePerDayPeriod::select('period as id', 'name')->where('student_attendance_mark_type_id', $attendancePerDayId)->get()->toArray();
 
                     if (empty($modelData)) {
@@ -2146,7 +2146,7 @@ class AttendanceRepository extends Controller
                         'id' => 1,
                         'name' => 'Period 1'
                         ];
-                 
+
                         return $data;
                     }
 
@@ -2156,7 +2156,7 @@ class AttendanceRepository extends Controller
                         'id' => 1,
                         'name' => 'Period 1'
                     ];
-                 
+
                     return $data;
                 }
 
@@ -2187,7 +2187,7 @@ class AttendanceRepository extends Controller
             $data = $this->getStudentAttendanceList($params, $institutionId, $gradeId, $classId);
 
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to export students attendances from DB.',
@@ -2274,7 +2274,7 @@ class AttendanceRepository extends Controller
 
             $headers = ['Date ( DD/MM/YYYY )', 'Student Attendance Type Code', 'Period', 'Institution Subject Name', ' OpenEMIS ID', 'Absence Type Code', 'Student Absence Reason Code', 'Comment'];
             $results = Excel::toArray(new StudentAttendanceImport(), $params['file']);
-            
+
             if (empty($results[0][1])) {
                 return 2; //Header is not present...
             }
@@ -2305,14 +2305,14 @@ class AttendanceRepository extends Controller
             }
 
             $rowsCount = count($results[0]) - 2;
-            
+
             if ($rowsCount > config('constantvalues.importExcelRules.maxRows')) {
                 return 7; //File can not have more than 2000 records.
             }
 
             $import = $this->importStudentAttendances($results,  $params, $currentAcademicPeriod);
             return $import;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to import students attendances in DB.',
@@ -2324,16 +2324,16 @@ class AttendanceRepository extends Controller
 
 
     public function importStudentAttendances($results,  $params, $currentAcademicPeriod)
-    {   
+    {
         DB::beginTransaction();
         try {
-            
+
             $i = -1;
             $validation = [];
             $updated_data = [];
             $add_data = [];
             $importResponse = [];
-            
+
             foreach ($results[0] as $key => $row) {
                 $errors = [];
                 $i++;
@@ -2348,11 +2348,11 @@ class AttendanceRepository extends Controller
                     continue;
                 }
                 //For POCOR-8628 End...
-                
+
                 if(is_numeric($row[0])){
                     $row[0] = Date::excelToDateTimeObject($row[0])->format('d/m/Y');
                 }
-                
+
                 if (!$row[0]) { //Date
                     $label = $results[0][1][0];
                     $errors[$label] = 'Date is required.';
@@ -2372,7 +2372,7 @@ class AttendanceRepository extends Controller
                     } else {
                         $date = str_replace('/', '-', $row[0]);
                         $date = date('Y-m-d', strtotime($date));
-                        
+
                         if($date < $currentAcademicPeriod->start_date || $date > $currentAcademicPeriod->end_date){
                             $label = $results[0][1][0];
                             $errors[$label] = 'Invalid date value. Date should be between '.$currentAcademicPeriod->start_date.' and '.$currentAcademicPeriod->end_date.' for current academic period.';
@@ -2411,7 +2411,7 @@ class AttendanceRepository extends Controller
                         $errors[$label] = 'Student absence reason code is required.';
                     }
                 }
-                
+
                 $allRows = [
                     $results[0][1][0] => $row[0],
                     $results[0][1][1] => $row[1],
@@ -2432,7 +2432,7 @@ class AttendanceRepository extends Controller
                 } else {
                     $academicPeriodId = $currentAcademicPeriod->id;
                     $user = SecurityUsers::where('openemis_no', $row[4])->where('is_student', 1)->first();
-                    
+
                     $institutionClassStudent = InstitutionClassStudents::where('student_id', $user->id??0)
                             ->where('institution_id', $params['institution_id'])
                             ->where('institution_class_id', $params['institution_class_id'])
@@ -2508,7 +2508,7 @@ class AttendanceRepository extends Controller
                                 'errors' => $errors
                             ];
                     }*/
-                    
+
                     if($user && $institutionClassStudent && $absenceType){
                         $date = str_replace('/', '-', $row[0]);
                         $date = date('Y-m-d', strtotime($date));
@@ -2522,7 +2522,7 @@ class AttendanceRepository extends Controller
                             'period' => $row[2],
                             'subject_id' => $row[3]
                         ])->first();
-                    
+
                         $insert = [];
                         $updateArr = [];
                         $storeArr = [];
@@ -2533,7 +2533,7 @@ class AttendanceRepository extends Controller
                         }
 
                         if(!$check){
-                           
+
                             $addArr['education_grade_id'] = (int)$institutionClassGrade->education_grade_id??0;
                             $addArr['academic_period_id'] = (int)$academicPeriodId;
                             $addArr['institution_id'] = (int)$params['institution_id'];
@@ -2562,7 +2562,7 @@ class AttendanceRepository extends Controller
                                 // ]);
                                 dd($e); // Re-throw for further debugging if necessary
                             }
-                            
+
                             $add_data[] = [
                                 'row_number' => $i,
                                 'data' => $allRows,
@@ -2642,7 +2642,7 @@ class AttendanceRepository extends Controller
                     'rows' => $validation,
                 ],
             ];
-  
+
             DB::commit();
             return $importResponse;
 
@@ -2652,7 +2652,7 @@ class AttendanceRepository extends Controller
                 'Failed in importStudentAttendances method.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return false;
         }
     }
@@ -2664,7 +2664,7 @@ class AttendanceRepository extends Controller
             $institutionId = $params['institution_id'];
             $academicPeriodId = $params['academic_period_id'];
             $institutionClassId = $params['institution_class_id'];
-            $educationGradeId = $params['education_grade_id'];        
+            $educationGradeId = $params['education_grade_id'];
             $day = $params['day_id'];
 
             $studentAttendanceMarkedRecords = StudentAttendanceMarkedRecords::where([
@@ -2768,7 +2768,7 @@ class AttendanceRepository extends Controller
         try {
             $institution_id = $params['institution_id']??0;
             $institutionClassIds = InstitutionClasses::where('institution_id', $institution_id)->pluck('id')->toArray();
-            
+
             $academicPeriodArrayOne = InstitutionClassAttendanceRecordsArchive::whereIn('institution_class_id', $institutionClassIds)->pluck('academic_period_id')->toArray();
 
             $academicPeriodArrayTwo = InstitutionStudentAbsencesArchived::where('institution_id', $institution_id)->pluck('academic_period_id')->toArray();
@@ -2959,7 +2959,7 @@ class AttendanceRepository extends Controller
 
 
             }
-            
+
             if ($weekly) {
                 $query = $this->getOverlapWeekCondition($query, $weekStartDay, $weekEndDay);
                 return [];
@@ -3028,7 +3028,7 @@ class AttendanceRepository extends Controller
                 $studentWithdraw = $studentWithdraw->where('effective_date', '>=', $weekStartDay)->where('effective_date', '<=', $weekEndDay);
             }
             $studentWithdraw = $studentWithdraw->pluck('institution_student_withdraw.student_id')->toArray();
-            
+
             if ($studentWithdraw) {
                 foreach ($studentWithdraw as $withdrawStudent) {
                     $withdrawStudentIds[] = $withdrawStudent['student_id'];
@@ -3128,7 +3128,7 @@ class AttendanceRepository extends Controller
                 'Failed in getAttendanceDailyQueryWithMarkedRecords method.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return false;
         }
     }
@@ -3145,7 +3145,7 @@ class AttendanceRepository extends Controller
                 'Failed in getAttendanceDailyQueryWithAbsenceReasons method.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return false;
         }
     }
@@ -3177,7 +3177,7 @@ class AttendanceRepository extends Controller
                 'Failed in getAttendanceDailySelectFields method.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return false;
         }
     }
@@ -3240,7 +3240,7 @@ class AttendanceRepository extends Controller
                     ->get()
                     ->toArray();
             return $list;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to export students attendances archive from DB.',
@@ -3277,8 +3277,8 @@ class AttendanceRepository extends Controller
 
             $getStudentAbsenceReason = getStudentAbsenceReason();
 
-            
-            
+
+
             $getNewArray = $this->getNewArray($getStudentAttendanceType, $getNumberOfPeriods, $getInstutionClassSubject, $getInstutionClassStudent, $getAbsenceTypes, $getStudentAbsenceReason);
             return $getNewArray;
 
@@ -3307,7 +3307,7 @@ class AttendanceRepository extends Controller
                     $newRow[] = null;
                     $newRow[] = null;
                 }
-                
+
 
                 // Number of periods data
                 if (isset($array2[$i])) {
@@ -3388,7 +3388,7 @@ class AttendanceRepository extends Controller
                 ->leftJoin('institutions', 'institutions.id', '=', 'institution_staff_attendances.institution_id')
                 ->get();
             return $staffAttendancesDetails;
-                            
+
         } catch (\Throwable $th) {
             Log::error(
                 'Failed to fetch Staff Attendances Details from DB',
@@ -3401,4 +3401,4 @@ class AttendanceRepository extends Controller
 }
 
 
-        
+
