@@ -601,7 +601,6 @@ class StaffController extends AppController
         //$institutionName = $session->read('Institution.Institutions.name');
         $institutionId = $this->getInstitutionID();
         $staffId = $this->getStaffID();
-
         $this->Institutions = TableRegistry::get('Institution.Institutions');
         $activeInstitution = $this->Institutions->get($institutionId);
         $institutionName = $activeInstitution->name;

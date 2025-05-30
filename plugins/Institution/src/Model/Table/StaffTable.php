@@ -4370,12 +4370,16 @@ class StaffTable extends ControllerActionTable
                     if ($dayId != -1) {
                         $row->date = $dateStr;
                     }
+                    $queryString = $this->getQueryString();
+                    $queryString['user_id'] = $staffId;
+                    $queryString['institution_id'] = $institution_id;
+                    $encodedQueryString = $this->paramsEncode($queryString);
                     $historyUrl = Router::url([
                         'plugin' => 'Staff',
                         'controller' => 'Staff',
                         'action' => 'InstitutionStaffAttendanceActivities',
-                        'index',
-                        '?' => ['user_id' => $staffId, 'institution_id' => $institution_id]
+                        '0' => 'index',
+                        '1' => $encodedQueryString
                        // 'user_id' => $staffId
                     ]);
                     $row->historyUrl = $historyUrl;
