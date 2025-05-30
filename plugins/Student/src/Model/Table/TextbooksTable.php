@@ -142,6 +142,9 @@ class TextbooksTable extends ControllerActionTable {
             }
         } else {
             $studentId = $this->getStudentID();
+            if(empty($studentId)){
+                $studentId = $session->read('Student.Students.id');
+            }
         }
         // end POCOR-1893
 
