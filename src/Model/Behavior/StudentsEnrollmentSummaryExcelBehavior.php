@@ -123,7 +123,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
         $generate($_settings);
 
-        $labelArray = array("Name","Code","Academic Period","Education Grade","Gender","Number of Students","Student Status");  //POCOR-6712
+        $labelArray = array("Name","Code","Academic Period","Education Programme","Education Grade","Gender","Number of Students","Student Status");  //POCOR-6712
 
         foreach($labelArray as $label) {
             $headerRow[] = $this->getFields($this->_table, $settings, $label);
@@ -166,9 +166,11 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         $academicPeriodId = $requestData->academic_period_id;
         $areaEducationId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
+        $education_programme_id = $requestData->education_programme_id;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $StudentsEnrollmentSummary = TableRegistry::get('Institution.InstitutionStudents');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $area_id_array=[];
         if(!empty($areaEducationId)){
             $Areas = TableRegistry::get('Area.Areas');
@@ -207,6 +209,10 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         if(!empty($institutionId) && $institutionId > 0){
             $conditions[$Institutions->aliasfield('id')] = $institutionId;
         }
+        $conditionEdn = [];
+        if($education_programme_id != -1){
+            $conditionEdn[$EducationGrades->aliasfield('education_programme_id')] = $education_programme_id; //POCOR-8867
+        }
         $institutionsList = $Institutions
                                 ->find()
                                 ->select([
@@ -235,6 +241,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                     'academic_period_name' => 'AcademicPeriods.name',
                                     'gender_name' =>'Genders.name',
                                     'education_grade_name' => 'EducationGrades.name',
+                                    'edu_pro' => 'EducationProgrammes.name',
                                     'status_name' => 'StudentStatuses.name',
                                     'first_name' => 'Users.first_name',
                                     'last_name' => 'Users.last_name',
@@ -256,6 +263,9 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ->leftJoin(['EducationGrades' => 'education_grades'], [
                                                 $StudentsEnrollmentSummary->aliasfield('education_grade_id').' = ' . 'EducationGrades.id'
                                             ])
+                                ->leftJoin(['EducationProgrammes' => 'education_programmes'], [
+                                                 'EducationGrades.education_programme_id = ' . 'EducationProgrammes.id' //POCOR-8867
+                                            ])
                                 ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                                                 $StudentsEnrollmentSummary->aliasfield('academic_period_id').' = ' . 'AcademicPeriods.id'
                                             ])
@@ -264,11 +274,15 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 ])
                                 ->where([
                                     'Genders.id IS NOT NULL', 'AcademicPeriods.id' => $academicPeriodId,
-                                    $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id,
+                                     $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id,
+                                     $StudentsEnrollmentSummary->aliasfield('student_status_id') => 1,
+                                     $conditionEdn,
+                                     
                                     //POCOR-6620[START]
                                     //$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus  //POCOR-6712
                                     //POCOR-6620[END]
                                 ]);
+                               // echo "<pre>";print_r($instStudData);exit;
                                 // if ($institutionId > 0) {
                                 //     $instStudData->where([$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus]);
                                 // }
@@ -289,6 +303,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                     !empty($value['education_grade_name']) ? $value['education_grade_name'] : ' 0',
                                     !empty($value['gender_name'])          ? $value['gender_name']          : ' 0',
                                     !empty($value['status_name'])          ? $value['status_name']          : ' 0',    //POCOR-6712
+                                    !empty($value['edu_pro']) ? $value['edu_pro'] : ' 0', //POCOR-8867
                                 ];
                                 $check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']] = $value['end_date']->format('Y-m-d');
                             }
@@ -301,6 +316,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 !empty($value['education_grade_name']) ? $value['education_grade_name'] : ' 0',
                                 !empty($value['gender_name'])          ? $value['gender_name']          : ' 0',
                                 !empty($value['status_name'])          ? $value['status_name']          : ' 0',    //POCOR-6712
+                                !empty($value['edu_pro']) ? $value['edu_pro'] : ' 0', //POCOR-8867
 
                             ];
                         }
@@ -318,9 +334,11 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                     'institution_name' => $user[0],
                     'year' => $user[2],
                     'status_name' => $user[5],   //POCOR-6712
+                    'EduProg' => $user[6], //POCOR-8867
                 ];
             }
         }
+
         $final_result = [];
         foreach ( $prepare_result_array as $institution_code => $institution_code_data) {
             foreach ( $institution_code_data as $grade => $grade_data ) {
@@ -330,10 +348,12 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                             $status_data['institution_name'],
                             $institution_code,
                             $status_data['year'],
+                            $status_data['EduProg'], //POCOR-8867
                             $grade,
                             $gender,
                             $status_data['count'],
                             $status_data['status_name'],   //POCOR-6712
+                            
                         ];
                      }
                 }

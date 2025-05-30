@@ -180,11 +180,14 @@ class InstitutionStandardsTable extends AppTable
             $attr['onChangeReload'] = true;
             
             if (empty($this->request->getData($this->getAlias())['academic_period_id'])) {
-                    //$request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
-                    $requestData = $this->request->getData($this->getAlias());
-                    $requestData['academic_period_id'] = $currentPeriod;
-                    $this->request = $this->request->withData($this->getAlias(), $requestData);
-                }
+                //$request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
+                $requestData = $this->request->getData($this->getAlias());
+                $requestData['academic_period_id'] = $currentPeriod;
+                $this->request = $this->request->withData($this->getAlias(), $requestData);
+            }
+            if($feature == 'Institution.InstitutionConsumablesReport') { //POCOR-9058
+                $attr['type'] = 'hidden';
+            }
             return $attr;
         }
     }

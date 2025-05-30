@@ -1,0 +1,38 @@
+
+table {
+    font-size: 18px;
+    border: 1px solid #DDD;
+    width: -webkit-fill-available;
+}
+table thead th {
+    text-align: center;
+    border: 1px solid #DDD;
+    padding: 10px;
+}
+
+table tbody td {
+    border: 1px solid #DDD;  
+    padding: 10px;
+    text-align: center;
+}
+
+::ng-deep .second-pane .menu-btn.mb-2 {
+    display: none !important;
+}
+
+.font-size15 {
+    font-size: 15px;
+}
+
+::ng-deep button .fa-info::before {
+    position: relative !important;
+    left: 4px !important;
+}
+
+.schedule-data {
+    background-color: #eeeeee;
+}
+
+.schedule-data:hover {
+    background-color: #fff;
+}
