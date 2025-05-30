@@ -1,0 +1,337 @@
+<?php
+
+namespace App\Models\Api5;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class SummaryIscedSectors extends Model
+{
+    use HasFactory;
+
+    protected $table = 'summary_isced_sectors';
+
+    // ✅ Allow mass assignment
+    protected $fillable = ['academic_period_id', 'academic_period_name', 'institution_sector_id', 'institution_sector_name', 'education_system_id', 'education_system_name', 'education_level_isced_id', 'education_level_isced_name', 'education_level_isced_level', 'total_instiutions', 'total_electricity_institutions', 'total_computer_institutions', 'total_teaching_computer_institutions', 'total_internet_institutions', 'total_toilet_institutions', 'total_improved_toilet_institutions', 'total_single_sex_toilet_institutions', 'total_improved_single_sex_toilet_institutions', 'total_in_use_toilet_institutions', 'total_in_use_improved_toilet_institutions', 'total_in_use_single_sex_toilet_institutions', 'total_improved_in_use_single_sex_toilet_institutions', 'total_drinking_water_institutions', 'total_functional_drinking_water_institutions', 'total_handwashing_facility_institutions', 'total_accessible_room_institutions'];
+
+    // ✅ Disable Laravel's default timestamps
+    public $timestamps = false;
+
+    // ✅ Treat 'modified' and 'created' as timestamps
+    protected $dates = ['modified', 'created'];
+
+    // ✅ Define the primary key
+
+    public $incrementing = false;
+    protected $primaryKey = null;
+
+
+    // Override getKeyForSaveQuery to handle composite keys
+
+
+/**
+ * @OA\PathItem(
+ *     path="/api/v5/summary-isced-sectors"
+ * )
+ */
+public function _swaggerPath() {}
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/summary-isced-sectors",
+ *     summary="Get list of SummaryIscedSectors",
+ *     tags={"SummaryIscedSectors"},
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Maximum number of results to return",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=false,
+ *         description="Page number for paginated results",
+ *         @OA\Schema(type="number")
+ *     ),
+ *     @OA\Parameter(
+ *         name="orderby",
+ *         in="query",
+ *         required=false,
+ *         description="Field to order results by",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order direction: asc or desc",
+ *         @OA\Schema(type="string", enum={"asc", "desc"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="_fields",
+ *         in="query",
+ *         required=false,
+ *         description="Comma-separated list of fields to include in response",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="message",
+ *                 type="string",
+ *                 example="Successful."
+ *             ),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="array",
+ *                 @OA\Items(
+ *                     type="object",
+                          @OA\Property(property="academic_period_id", type="integer", example=null),
+                          @OA\Property(property="academic_period_name", type="string", example=null),
+                          @OA\Property(property="institution_sector_id", type="integer", example=null),
+                          @OA\Property(property="institution_sector_name", type="string", example=null),
+                          @OA\Property(property="education_system_id", type="integer", example=null),
+                          @OA\Property(property="education_system_name", type="string", example=null),
+                          @OA\Property(property="education_level_isced_id", type="integer", example=null),
+                          @OA\Property(property="education_level_isced_name", type="string", example=null),
+                          @OA\Property(property="education_level_isced_level", type="integer", example=null),
+                          @OA\Property(property="total_instiutions", type="integer", example=null),
+                          @OA\Property(property="total_electricity_institutions", type="integer", example=null),
+                          @OA\Property(property="total_computer_institutions", type="integer", example=null),
+                          @OA\Property(property="total_teaching_computer_institutions", type="integer", example=null),
+                          @OA\Property(property="total_internet_institutions", type="integer", example=null),
+                          @OA\Property(property="total_toilet_institutions", type="integer", example=null),
+                          @OA\Property(property="total_improved_toilet_institutions", type="integer", example=null),
+                          @OA\Property(property="total_single_sex_toilet_institutions", type="integer", example=null),
+                          @OA\Property(property="total_improved_single_sex_toilet_institutions", type="integer", example=null),
+                          @OA\Property(property="total_in_use_toilet_institutions", type="integer", example=null),
+                          @OA\Property(property="total_in_use_improved_toilet_institutions", type="integer", example=null),
+                          @OA\Property(property="total_in_use_single_sex_toilet_institutions", type="integer", example=null),
+                          @OA\Property(property="total_improved_in_use_single_sex_toilet_institutions", type="integer", example=null),
+                          @OA\Property(property="total_drinking_water_institutions", type="integer", example=null),
+                          @OA\Property(property="total_functional_drinking_water_institutions", type="integer", example=null),
+                          @OA\Property(property="total_handwashing_facility_institutions", type="integer", example=null),
+                          @OA\Property(property="total_accessible_room_institutions", type="integer", example=null)
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerList() {}
+
+/**
+ * @OA\Post(
+ *     path="/api/v5/summary-isced-sectors",
+ *     summary="Create a new SummaryIscedSectors",
+ *     tags={"SummaryIscedSectors"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="academic_period_id", type="integer", example=null),
+                     @OA\Property(property="academic_period_name", type="string", example=null),
+                     @OA\Property(property="institution_sector_id", type="integer", example=null),
+                     @OA\Property(property="institution_sector_name", type="string", example=null),
+                     @OA\Property(property="education_system_id", type="integer", example=null),
+                     @OA\Property(property="education_system_name", type="string", example=null),
+                     @OA\Property(property="education_level_isced_id", type="integer", example=null),
+                     @OA\Property(property="education_level_isced_name", type="string", example=null),
+                     @OA\Property(property="education_level_isced_level", type="integer", example=null),
+                     @OA\Property(property="total_instiutions", type="integer", example=null),
+                     @OA\Property(property="total_electricity_institutions", type="integer", example=null),
+                     @OA\Property(property="total_computer_institutions", type="integer", example=null),
+                     @OA\Property(property="total_teaching_computer_institutions", type="integer", example=null),
+                     @OA\Property(property="total_internet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_improved_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_single_sex_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_improved_single_sex_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_in_use_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_in_use_improved_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_in_use_single_sex_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_improved_in_use_single_sex_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_drinking_water_institutions", type="integer", example=null),
+                     @OA\Property(property="total_functional_drinking_water_institutions", type="integer", example=null),
+                     @OA\Property(property="total_handwashing_facility_institutions", type="integer", example=null),
+                     @OA\Property(property="total_accessible_room_institutions", type="integer", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Created successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     )
+ * )
+ */
+public function _swaggerCreate() {}
+
+
+/**
+ * @OA\Get(
+ *     path="/api/v5/summary-isced-sectors/{id}",
+ *     summary="Get SummaryIscedSectors by ID",
+ *     tags={"SummaryIscedSectors"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the SummaryIscedSectors",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerView() {}
+
+/**
+ * @OA\Put(
+ *     path="/api/v5/summary-isced-sectors/{id}",
+ *     summary="Update SummaryIscedSectors",
+ *     tags={"SummaryIscedSectors"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the SummaryIscedSectors",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             type="object",
+                     @OA\Property(property="academic_period_id", type="integer", example=null),
+                     @OA\Property(property="academic_period_name", type="string", example=null),
+                     @OA\Property(property="institution_sector_id", type="integer", example=null),
+                     @OA\Property(property="institution_sector_name", type="string", example=null),
+                     @OA\Property(property="education_system_id", type="integer", example=null),
+                     @OA\Property(property="education_system_name", type="string", example=null),
+                     @OA\Property(property="education_level_isced_id", type="integer", example=null),
+                     @OA\Property(property="education_level_isced_name", type="string", example=null),
+                     @OA\Property(property="education_level_isced_level", type="integer", example=null),
+                     @OA\Property(property="total_instiutions", type="integer", example=null),
+                     @OA\Property(property="total_electricity_institutions", type="integer", example=null),
+                     @OA\Property(property="total_computer_institutions", type="integer", example=null),
+                     @OA\Property(property="total_teaching_computer_institutions", type="integer", example=null),
+                     @OA\Property(property="total_internet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_improved_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_single_sex_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_improved_single_sex_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_in_use_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_in_use_improved_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_in_use_single_sex_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_improved_in_use_single_sex_toilet_institutions", type="integer", example=null),
+                     @OA\Property(property="total_drinking_water_institutions", type="integer", example=null),
+                     @OA\Property(property="total_functional_drinking_water_institutions", type="integer", example=null),
+                     @OA\Property(property="total_handwashing_facility_institutions", type="integer", example=null),
+                     @OA\Property(property="total_accessible_room_institutions", type="integer", example=null)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Updated successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Invalid data"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerUpdate() {}
+
+/**
+ * @OA\Delete(
+ *     path="/api/v5/summary-isced-sectors/{id}",
+ *     summary="Delete SummaryIscedSectors",
+ *     tags={"SummaryIscedSectors"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the SummaryIscedSectors",
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Response(
+ *         response=204,
+ *         description="Deleted successfully"
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Not found"
+ *     )
+ * )
+ */
+public function _swaggerDelete() {}
+    protected function getKeyForSaveQuery()
+    {
+        $query = $this->newQueryWithoutScopes();
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    // Override setKeysForSaveQuery to handle composite keys
+    protected function setKeysForSaveQuery($query)
+    {
+        $keyName = $this->getKeyName();
+        if(!is_array($keyName)){
+            $keyName = [$keyName];;
+        }
+        foreach ($keyName as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+
+    public static function getValidationRules(): array
+    {
+        return [
+            // Add validation rules here
+        ];
+    }
+
+
+}
