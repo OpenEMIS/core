@@ -3,6 +3,8 @@
 - Bug Fixed: Institutions > Staff > Career > Appraisal > Add > Save: When saving appraisal form, there is a 404 error: array_key_exists(): Argument #2 ($array) must be of type array, ArrayObject given
 - Bug Fixed: Institutions > Performances > Report Cards : Update assessment marks placeholder to display Exempted and Unassigned accordingly
 - Bug Fixed: Administration>Survey>Forms>Rules: Rules are not showing correctly
+- Bug Fixed: Administrations > System Setup > Field Options > Students Withdraw Reasons: 404 error when saving
+- Bug Fixed: Administration>Communication>Alert Rules: Student number should be student name
 - Bug Fixed: Institutions > General > Overview> Export: When exporting for an institution, system exports all institutions instead of the selected institution
 - Bug Fixed: Guardians > Academic > Textbooks tab : Page should be retrieving the list of textbook that is given to student
 
