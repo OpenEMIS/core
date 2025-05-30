@@ -13,7 +13,11 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Log\Log; // POCOR-8921
+use Cake\Log\Log;
+use Cake\ORM\Table;
+use Cake\Utility\Inflector;
+
+// POCOR-8921
 
 class SurveyRulesTable extends ControllerActionTable
 {
@@ -22,6 +26,7 @@ class SurveyRulesTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         $this->setTable('survey_rules');
+        $this->setPrimaryKey(['survey_form_id', 'survey_question_id']);
         parent::initialize($config);
         $this->belongsTo('SurveyForms',                     ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
         $this->belongsTo('SurveyQuestions',                 ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
@@ -50,26 +55,16 @@ class SurveyRulesTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         // POCOR-8921, POCOR-9104 start
-//        Log::debug('SurveyRulesTable beforeSave 1');
-//        Log::debug(print_r($entity, true));
+//        Log::debug(print_r($entity,true));
         if ($entity->enabled == 1) {
-            if (empty($entity->dependent_question_id)) {
-                $event->stopPropagation();
-                return;
-            }
-            if (empty($entity->survey_form_id)) {
-                $event->stopPropagation();
-                return;
-            }
-            if (empty($entity->survey_question_id)) {
+            if (empty($entity->dependent_question_id) ||
+                empty($entity->survey_form_id) ||
+                empty($entity->survey_question_id)) {
                 $event->stopPropagation();
                 return;
             }
         }
-        // POCOR-8921, POCOR-9104 end
         $entity->id = Text::uuid();
-//        Log::debug('SurveyRulesTable beforeSave 2');
-//        Log::debug(print_r($entity, true));
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -121,7 +116,7 @@ class SurveyRulesTable extends ControllerActionTable
         $showOptions = $event->getSubject() // POCOR-8465
             ->HtmlField->decodeEscapeHtmlEntity($showOptions);
         $showOptions = json_decode($showOptions, true);
-        $SurveyQuestionChoicesTable = TableRegistry::get('Survey.SurveyQuestionChoices');
+        $SurveyQuestionChoicesTable = self::getDynamicTableInstance('Survey.SurveyQuestionChoices');
         if (!empty($showOptions)) {
             $options = $SurveyQuestionChoicesTable
                 ->find()
@@ -153,82 +148,114 @@ class SurveyRulesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // Survey form options
         $serverRequest = $this->request;
-        $surveyFormOptions = $this->SurveyForms
-            ->find('list')
-            ->order([
-                $this->SurveyForms->aliasField('name')
-            ])
-            ->toArray();
-        $surveyFormOptions = ['' => '-- '.__('All Surveys').' --'] + $surveyFormOptions;
-        $surveyFormId = $serverRequest->getQuery('survey_form_id');
+        $surveyFormId = $serverRequest->getQuery('survey_form_id') ?? null;
+        $sectionId = is_numeric($serverRequest->getQuery('section_id')) ? intval($serverRequest->getQuery('section_id')) : null;
+
+        $surveyFormOptions = $this->getSurveyFormOptions();
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
 
-        // Survey sections
+        if (!empty($surveyFormId)) {
+            $sectionOptions = $this->getSurveySectionOptions($surveyFormId);
 
-        if (!empty($surveyFormId))
-        {
-            $SurveyFormsQuestionsTable = TableRegistry::get('Survey.SurveyFormsQuestions');
-
-            $surveySections = $SurveyFormsQuestionsTable
-                ->find('list', [
-                    'keyField' => 'survey_section',
-                    'valueField' => 'survey_section'
-                ])
-                ->select(['survey_section' => $SurveyFormsQuestionsTable->aliasField('section')])
-                ->where([
-                    $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
-                    $SurveyFormsQuestionsTable->aliasField('section').' IS NOT NULL'
-                ])
-                ->distinct([$SurveyFormsQuestionsTable->aliasField('section')])
-                ->order([$SurveyFormsQuestionsTable->aliasField('order')])
-                ->toArray();
-
-            $sectionOptions = ['0' => '-- '.__('Select Section').' --'] + $surveySections;
-            $sectionOptions = array_values($sectionOptions);
-            // original section options will not be translated
             $originalOptions = $sectionOptions;
-            $sectionId = $serverRequest->getQuery('section_id');
+            $sectionOptions = array_map(function ($option) {
+                return $option === '' ? __('No Section') : $option;
+            }, $sectionOptions);
+
+            if ($sectionId === null && count($sectionOptions) >= 1) {
+                $sectionId = 1;
+            }
+
+            $query->where([$this->aliasField('survey_form_id') => $surveyFormId]);
+
+            if ($sectionId > 0) {
+                $sectionName = $originalOptions[$sectionId] ?? null;
+
+                if ($sectionName !== null) {
+                    $questionIds = $this->getQuestionIdsBySection($surveyFormId, $sectionName);
+                    $query->where([$this->aliasField('survey_question_id').' IN' => $questionIds]);
+                }
+            }
             $this->advancedSelectOptions($sectionOptions, $sectionId);
             $this->controller->set(compact('sectionOptions'));
         }
 
-        if (!empty($surveyFormId)) {
-
-            $query->where([$this->aliasField('survey_form_id') => $surveyFormId]);
-
-            // Checking if the survey form id and the section id is 0 or empty
-            if (!empty($sectionId))
-            {
-                //get section text from original section options
-                $section = $originalOptions[$sectionId];
-
-                // Subquery for questions
-                $questionIds = $SurveyFormsQuestionsTable
-                    ->find()
-                    ->select([$SurveyFormsQuestionsTable->aliasField('survey_question_id')])
-                    ->where([
-                        $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
-                        $SurveyFormsQuestionsTable->aliasField('section') => $section
-                    ]);
-                $query->where([$this->aliasField('survey_question_id').' IN ' => $questionIds]);
-            }
-        }
-
-        // for searching survey forms, questions, dependent questions
-        $search = $this->getSearchKey();
-        if (!empty($search)) {
-            $query->contain(['SurveyForms', 'SurveyQuestions', 'DependentQuestions']);
-
-            $extra['OR'] = [
-                [$this->SurveyForms->aliasField('name').' LIKE' => '%' . $search . '%'],
-                [$this->SurveyQuestions->aliasField('name').' LIKE' => '%' . $search . '%'],
-                [$this->DependentQuestions->aliasField('name').' LIKE' => '%' . $search . '%']
-            ];
-        }
+        $this->applySearchConditions($query, $extra);
     }
+
+
+    private function getSurveyFormOptions(): array
+    {
+        $SurveyFormsTable = $this->SurveyForms;
+
+        $options = $SurveyFormsTable
+            ->find('list')
+            ->order([$SurveyFormsTable->aliasField('name')])
+            ->matching('CustomFields', function ($q) {
+                return $q->where(['CustomFields.field_type' => 'DROPDOWN']);
+            })
+            ->group([$SurveyFormsTable->aliasField('id')])
+            ->toArray();
+
+        return ['' => '-- '.__('All Surveys').' --'] + $options;
+    }
+
+    private function getSurveySectionOptions($surveyFormId): array
+    {
+        $SurveyFormsQuestionsTable = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
+
+        $sections = $SurveyFormsQuestionsTable
+            ->find('list', [
+                'keyField' => 'survey_section',
+                'valueField' => 'survey_section'
+            ])
+            ->select(['survey_section' => $SurveyFormsQuestionsTable->aliasField('section')])
+            ->where([
+                $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
+                $SurveyFormsQuestionsTable->aliasField('section').' IS NOT NULL'
+            ])
+            ->matching('CustomFields', function ($q) {
+                return $q->where(['CustomFields.field_type' => 'DROPDOWN']);
+            })
+            ->distinct([$SurveyFormsQuestionsTable->aliasField('section')])
+            ->order([$SurveyFormsQuestionsTable->aliasField('order')])
+            ->toArray();
+
+        return array_values(['0' => '-- '.__('Select Section').' --'] + $sections);
+    }
+
+    private function getQuestionIdsBySection($surveyFormId, $section)
+    {
+        $SurveyFormsQuestionsTable = self::getDynamicTableInstance('Survey.SurveyFormsQuestions');
+
+        return $SurveyFormsQuestionsTable
+            ->find()
+            ->select([$SurveyFormsQuestionsTable->aliasField('survey_question_id')])
+            ->where([
+                $SurveyFormsQuestionsTable->aliasField('survey_form_id') => $surveyFormId,
+                $SurveyFormsQuestionsTable->aliasField('section') => $section
+            ]);
+    }
+
+    private function applySearchConditions(Query $query, ArrayObject $extra): void
+    {
+        $search = $this->getSearchKey();
+        if (empty($search)) {
+            return;
+        }
+
+        $query->contain(['SurveyForms', 'SurveyQuestions', 'DependentQuestions']);
+
+        $extra['OR'] = [
+            [$this->SurveyForms->aliasField('name').' LIKE' => "%$search%"],
+            [$this->SurveyQuestions->aliasField('name').' LIKE' => "%$search%"],
+            [$this->DependentQuestions->aliasField('name').' LIKE' => "%$search%"]
+        ];
+    }
+
+
 
     public function findSurveyRulesList(Query $query, array $options)
     {
@@ -283,4 +310,54 @@ class SurveyRulesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }
