@@ -9,16 +9,12 @@
 			]);
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
-			$noticeStatusRead = [
-	            -1 => 'All',
-	             1 => 'Read',
-	             0 => 'Unread'
-	        ];
+			
 			echo $this->Form->input('notice_status', array(
 				'class' => 'form-control',
 				'label' => false,
-				'options' => $noticeStatusRead,
-				'default' => 'All',
+				'options' => $noticeOption,
+				'default' => $noticeStatus,
 				'url' => $baseUrl,
 				'data-named-key' => 'notice_status'
 			));

@@ -186,7 +186,7 @@ class OpenEmisComponent extends Component
             ['Notices' => 'notices'],
             ['Notices.id = NoticeRoles.notice_id']
         )
-        ->where(['SecurityGroupUsers.security_user_id' => $userId, 'Notices.status' => 1])
+        ->where(['SecurityGroupUsers.security_user_id IS' => $userId, 'Notices.status' => 1])
         ->enableHydration(false);
 
     $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
@@ -197,7 +197,7 @@ class OpenEmisComponent extends Component
         $seenNoticesQuery = $userNotices->find()
             ->select(['notice_id'])
             ->where([
-                'SecurityUserNotices.security_user_id' => $userId,
+                'SecurityUserNotices.security_user_id IS' => $userId,
                 'SecurityUserNotices.notice_id IN' => $assignedNoticeIds
             ])
             ->enableHydration(false);
