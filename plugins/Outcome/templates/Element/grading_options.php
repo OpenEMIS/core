@@ -1,30 +1,28 @@
 <?php if ($action == 'add' || $action == 'edit') : ?>
 	<style>
 		table th label.table-header-label {
-		  background-color: transparent;
-		  border: medium none;
-		  margin: 0;
-		  padding: 0;
+			background-color: transparent;
+			border: medium none;
+			margin: 0;
+			padding: 0;
 		}
 	</style>
 
 	<div class="input clearfix">
 		<div class="clearfix">
-		<?php
-			echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Option').'</span>', [
-				'label' => __('Grading Options'),
-				'type' => 'button',
-				'class' => 'btn btn-default',
-				'aria-expanded' => 'true',
-				'onclick' => "$('#reload').val('addOption').click();",
-				'required' =>'required'
-			]);
+
+			<?php
+			echo '<label>' . __('Grading Options') . '</label>';
+			echo '<button type="button" class="btn btn-default" aria-expanded="true" onclick="$(\'#reload\').val(\'addOption\').click();">';
+			echo '<i class="fa fa-plus"></i> <span>' . __('Add New Option') . '</span>';
+			echo '</button>';
+
 			$this->Form->unlockField('OutcomeGradingTypes.grading_options');
-		?>
+			?>
 		</div>
 		<div class="table-wrapper full-width">
 			<div class="table-responsive">
-			    <table class="table table-curved table-input row-align-top">
+				<table class="table table-curved table-input row-align-top">
 					<thead>
 						<tr>
 							<th><label class="table-header-label"><?= __('Code') ?></label></th>
@@ -38,52 +36,47 @@
 						<tbody>
 							<?php foreach ($data['grading_options'] as $i => $option) : ?>
 								<?php
-		                            $fieldPrefix = $ControllerAction['table']->getAlias() . ".grading_options.$i";
-		                        ?>
+								$fieldPrefix = $ControllerAction['table']->getAlias() . ".grading_options.$i";
+								?>
 								<tr>
 									<td>
 										<?php
-											if ($option->has('id')) {
-												echo $this->Form->hidden("$fieldPrefix.id", ['value' => $option->id]);
-											}
-											echo $this->Form->hidden("$fieldPrefix.outcome_grading_type_id", ['value' => $option->outcome_grading_type_id]);
+										if ($option->has('id')) {
+											echo $this->Form->hidden("$fieldPrefix.id", ['value' => $option->id]);
+										}
+										echo $this->Form->hidden("$fieldPrefix.outcome_grading_type_id", ['value' => $option->outcome_grading_type_id]);
 
-											echo $this->Form->input("$fieldPrefix.code", [
-                                                'type' => 'string',
-                                                'label' => false
-                                            ]);
+										echo $this->Form->input("$fieldPrefix.code", [
+											'type' => 'string',
+											'label' => false
+										]);
 										?>
 									</td>
 									<td>
 										<?php
-											echo $this->Form->input("$fieldPrefix.name", [
-                                                'type' => 'string',
-                                                'label' => false
-                                            ]);
+										echo $this->Form->input("$fieldPrefix.name", [
+											'type' => 'string',
+											'label' => false
+										]);
 										?>
 									</td>
 									<td>
 										<?php
-											echo $this->Form->input("$fieldPrefix.description", [
-                                                'type' => 'textarea',
-                                                'label' => false
-                                            ]);
+										echo $this->Form->input("$fieldPrefix.description", [
+											'type' => 'textarea',
+											'label' => false
+										]);
 										?>
 									</td>
 									<td>
 										<?php
-											if (!empty($option->institution_outcome_results)) {
-												echo __('In use');
-											} else {
-												echo $this->Form->input('<i class="fa fa-trash"></i> <span>'.__('Delete').'</span>', [
-													'label' => false,
-													'type' => 'button',
-													'class' => 'btn btn-dropdown action-toggle btn-single-action',
-													'title' => __('Delete'),
-													'aria-expanded' => 'true',
-													'onclick' => "jsTable.doRemove(this); "
-												]);
-											}
+										if (!empty($option->institution_outcome_results)) {
+											echo __('In use');
+										} else {
+											echo '<button type="button" class="btn btn-dropdown action-toggle btn-single-action" title="' . __('Delete') . '" onclick="jsTable.doRemove(this);">
+												<i class="fa fa-trash"></i> <span>' . __('Delete') . '</span>
+											</button>';
+										}
 										?>
 									</td>
 								</tr>
