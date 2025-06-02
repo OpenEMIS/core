@@ -167,70 +167,70 @@ class StaffLeaveTable extends AppTable {
                 });
             });
             //POCOR-5762 ends
-//        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-//    return $results->map(function ($row) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+    return $results->map(function ($row) {
 
-//        $StaffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
-//        $StaffCustomField = TableRegistry::get('StaffCustomField.StaffCustomFields');
+        $StaffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
+        $StaffCustomField = TableRegistry::get('StaffCustomField.StaffCustomFields');
 
-//        $customFieldData = $StaffCustomFieldValues->find()
-//            ->select([
-//                'custom_field_id' => 'StaffCustomFields.id',
-//                'custom_field_name' => 'StaffCustomFields.name',
-//                'text_value' => 'StaffCustomFieldValues.text_value',
-//                'number_value' =>'StaffCustomFieldValues.number_value',
-//                'decimal_value' => 'StaffCustomFieldValues.decimal_value',
-//                'textarea_value' =>'StaffCustomFieldValues.textarea_value',
-//                'date_value' =>'StaffCustomFieldValues.date_value'
-//            ])
-//            ->innerJoin(
-//                ['StaffCustomFields' => 'staff_custom_fields'],
-//                [
-//                    'StaffCustomFields.id = StaffCustomFieldValues.staff_custom_field_id'
-//                ]
-//            )
-//            ->where(['StaffCustomFieldValues.staff_id' => $row['staff_id']])
-//            ->toArray();
-//        /*echo "<pre>"; print_r($customFieldData);die;*/
-//        if (!empty($customFieldData)) {
-//            foreach ($customFieldData as $data) {
-//                if (!isset($data->custom_field_name) || empty($data->custom_field_id)) {
-//                    continue;
-//                }
-//                if (!is_null($data->text_value) && $data->text_value !== '') {
-//                    $row[$data->custom_field_name] = $data->text_value;
-//                }
-//                if (!empty($data->custom_field_id)) {
-//                    // Assign number_value if valid
-//                    if (isset($data->number_value) && is_numeric($data->number_value)) {
-//                        $row[$data->custom_field_name] = $data->number_value;
-//                    } else {
-//                        $row[$data->custom_field_name] = null;
-//                    }
-//
-//                    // Assign decimal_value if valid
-//                    if (isset($data->decimal_value) && is_numeric($data->decimal_value)) {
-//                        $row[$data->custom_field_name] = $data->decimal_value;
-//                    } else {
-//                        $row[$data->custom_field_name] = null;
-//                    }
-//                }
-//                if (!is_null($data->textarea_value) && $data->textarea_value !== '') {
-//                    $row[$data->custom_field_name] = $data->textarea_value;
-//                } else {
-//                    $row[$data->custom_field_name] = 'null';
-//                }
-//                if (!is_null($data->date_value) && $data->date_value !== '') {
-//                    $row[$data->custom_field_name] = $data->date_value;
-//                } else {
-//                    $row[$data->custom_field_name] = 'null';
-//                }
-//            }
-//        }
-//        //echo "<pre>";print_r($row);die('testt');
-//        return $row;
-//    });
-//});
+        $customFieldData = $StaffCustomFieldValues->find()
+            ->select([
+                'custom_field_id' => 'StaffCustomFields.id',
+                'custom_field_name' => 'StaffCustomFields.name',
+                'text_value' => 'StaffCustomFieldValues.text_value',
+                'number_value' =>'StaffCustomFieldValues.number_value',
+                'decimal_value' => 'StaffCustomFieldValues.decimal_value',
+                'textarea_value' =>'StaffCustomFieldValues.textarea_value',
+                'date_value' =>'StaffCustomFieldValues.date_value'
+            ])
+            ->innerJoin(
+                ['StaffCustomFields' => 'staff_custom_fields'],
+                [
+                    'StaffCustomFields.id = StaffCustomFieldValues.staff_custom_field_id'
+                ]
+            )
+            ->where(['StaffCustomFieldValues.staff_id' => $row['staff_id']])
+            ->toArray();
+        /*echo "<pre>"; print_r($customFieldData);die;*/
+        if (!empty($customFieldData)) {
+            foreach ($customFieldData as $data) {
+                if (!isset($data->custom_field_name) || empty($data->custom_field_id)) {
+                    continue;
+                }
+                if (!is_null($data->text_value) && $data->text_value !== '') {
+                    $row[$data->custom_field_name] = $data->text_value;
+                }
+                if (!empty($data->custom_field_id)) {
+                    // Assign number_value if valid
+                    if (isset($data->number_value) && is_numeric($data->number_value)) {
+                        $row[$data->custom_field_name] = $data->number_value;
+                    } else {
+                        $row[$data->custom_field_name] = null;
+                    }
+
+                    // Assign decimal_value if valid
+                    if (isset($data->decimal_value) && is_numeric($data->decimal_value)) {
+                        $row[$data->custom_field_name] = $data->decimal_value;
+                    } else {
+                        $row[$data->custom_field_name] = null;
+                    }
+                }
+                if (!is_null($data->textarea_value) && $data->textarea_value !== '') {
+                    $row[$data->custom_field_name] = $data->textarea_value;
+                } else {
+                    $row[$data->custom_field_name] = 'null';
+                }
+                if (!is_null($data->date_value) && $data->date_value !== '') {
+                    $row[$data->custom_field_name] = $data->date_value;
+                } else {
+                    $row[$data->custom_field_name] = 'null';
+                }
+            }
+        }
+        //echo "<pre>";print_r($row);die('testt');
+        return $row;
+    });
+});
 
     }
 
@@ -301,26 +301,26 @@ class StaffLeaveTable extends AppTable {
             'label' => __('Identity Number')
         ];
 
-//        $StaffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
-//
-//        $customFieldData = $StaffCustomFields->find()
-//            ->select([
-//                'custom_field_id' => 'StaffCustomFields.id',
-//                'custom_field' => 'StaffCustomFields.name'
-//            ])
-//            ->toArray();
-//
-//        foreach($customFieldData as $data) {
-//           // $custom_field_id = $data->custom_field_id;
-//            $custom_field_id = $data->custom_field;
-//            $custom_field = $data->custom_field;
-//            $newFields[] = [
-//                'key' => '',
-//                'field' => $custom_field_id,
-//                'type' => 'string',
-//                'label' => __($custom_field)
-//            ];
-//        }
+        $StaffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
+
+        $customFieldData = $StaffCustomFields->find()
+            ->select([
+                'custom_field_id' => 'StaffCustomFields.id',
+                'custom_field' => 'StaffCustomFields.name'
+            ])
+            ->toArray();
+
+        foreach($customFieldData as $data) {
+           // $custom_field_id = $data->custom_field_id;
+            $custom_field_id = $data->custom_field;
+            $custom_field = $data->custom_field;
+            $newFields[] = [
+                'key' => '',
+                'field' => $custom_field_id,
+                'type' => 'string',
+                'label' => __($custom_field)
+            ];
+        }
 
         $newFields[] = [
             'key' => 'StaffLeave.staff_id',
