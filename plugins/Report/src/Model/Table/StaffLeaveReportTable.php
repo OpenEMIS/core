@@ -20,8 +20,8 @@ class StaffLeaveReportTable extends AppTable {
         $this->addBehavior('Excel', [
             'excludes' => ['end_academic_period_id']
         ]);
-
-
+        
+       
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -51,12 +51,12 @@ class StaffLeaveReportTable extends AppTable {
             $conditions[$this->aliasField('staff_leave_type_id')] = $staffLeaveTypeId;
         }
         if (!empty($areaId) && $areaId != -1) {
-            $conditions['Institutions.area_id'] = $areaId;
+            $conditions['Institutions.area_id'] = $areaId; 
         }
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
-                'institution_name' => 'Institutions.name',
+                'institution_name' => 'Institutions.name',  
                 'status' => 'WorkFlowSteps.name',
                 'assignee' => $query->func()->concat([
                     'Users.first_name' => 'literal',
@@ -88,7 +88,7 @@ class StaffLeaveReportTable extends AppTable {
             ->innerJoin(['Staffs' => 'security_users'], [
                             'Staffs.id = ' . $this->aliasfield('staff_id'),
                         ])
-
+           
             ->leftJoin(['WorkFlowSteps' => 'workflow_steps'], [
                             $this->aliasfield('status_id') . ' = WorkFlowSteps.id'
                         ])
@@ -101,53 +101,52 @@ class StaffLeaveReportTable extends AppTable {
              ->leftJoin(['StaffLeaveTypes' => 'staff_leave_types'], [
                            $this->aliasfield('staff_leave_type_id') . ' = StaffLeaveTypes.id'
                         ])
-            ->where($conditions);
-        // removed custom fields POCOR-9109
-//			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-//				return $results->map(function ($row) {
-//
-//					$StaffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
-//
-//					$customFieldData = $StaffCustomFieldValues->find()
-//						->select([
-//							'custom_field_id' => 'StaffCustomFields.id',
-//							'staff_custom_field_values.text_value',
-//							'staff_custom_field_values.number_value',
-//							'staff_custom_field_values.decimal_value',
-//							'staff_custom_field_values.textarea_value',
-//							'staff_custom_field_values.date_value'
-//						])
-//						->innerJoin(
-//							['StaffCustomFields' => 'staff_custom_fields'],
-//							[
-//								'StaffCustomFields.id = staff_custom_field_values.staff_custom_field_id'
-//							]
-//						)
-//						->where(['staff_custom_field_values.staff_id' => $row['staff_id']])
-//						->toArray();
-//
-//					foreach($customFieldData as $data) {
-//						if(!empty($data->text_value)) {
-//							$row[$data->custom_field_id] = $data->text_value;
-//						}
-//						if(!empty($data->number_value)) {
-//							$row[$data->custom_field_id] = $data->number_value;
-//						}
-//						if(!empty($data->decimal_value)) {
-//							$row[$data->custom_field_id] = $data->decimal_value;
-//						}
-//						if(!empty($data->textarea_value)) {
-//							$row[$data->custom_field_id] = $data->textarea_value;
-//						}
-//						if(!empty($data->date_value)) {
-//							$row[$data->custom_field_id] = $data->date_value;
-//
-//						}
-//
-//					}
-//					return $row;
-//				});
-//			});
+            ->where($conditions); 
+			$query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+				return $results->map(function ($row) {
+					
+					$StaffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
+					
+					$customFieldData = $StaffCustomFieldValues->find()
+						->select([
+							'custom_field_id' => 'StaffCustomFields.id',
+							'staff_custom_field_values.text_value',
+							'staff_custom_field_values.number_value',
+							'staff_custom_field_values.decimal_value',
+							'staff_custom_field_values.textarea_value',
+							'staff_custom_field_values.date_value'
+						])
+						->innerJoin(
+							['StaffCustomFields' => 'staff_custom_fields'],
+							[
+								'StaffCustomFields.id = staff_custom_field_values.staff_custom_field_id'
+							]
+						)
+						->where(['staff_custom_field_values.staff_id' => $row['staff_id']])
+						->toArray();
+					
+					foreach($customFieldData as $data) {
+						if(!empty($data->text_value)) {
+							$row[$data->custom_field_id] = $data->text_value;
+						} 
+						if(!empty($data->number_value)) {
+							$row[$data->custom_field_id] = $data->number_value;
+						}
+						if(!empty($data->decimal_value)) {
+							$row[$data->custom_field_id] = $data->decimal_value;
+						}
+						if(!empty($data->textarea_value)) {
+							$row[$data->custom_field_id] = $data->textarea_value;
+						}
+						if(!empty($data->date_value)) {
+							$row[$data->custom_field_id] = $data->date_value;
+							
+						}
+						
+					}
+					return $row;
+				});
+			});
     }
 
     public function onExcelRenderDateFrom(Event $event, Entity $entity, $attr)
@@ -181,7 +180,7 @@ class StaffLeaveReportTable extends AppTable {
         }
         return $entity->end_time;
     }
-
+    
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
         $identityTypeName = '';
@@ -200,27 +199,27 @@ class StaffLeaveReportTable extends AppTable {
             'type' => 'string',
             'label' => __('Institution Code')
         ];
-
+        
         $extraFields[] = [
             'key' => '',
             'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institution Name')
         ];
-
+        
         $extraFields[] = [
             'key' => '',
             'field' => 'academic_period',
             'type' => 'string',
             'label' => __('Academic Period')
         ];
-
+        
          $extraFields[] = [
             'key' => 'Staffs.openemis_no',
             'field' => 'openemis_number',
             'type' => 'string',
             'label' => __('OpenEMIS ID')
-        ];
+        ];  
 
 
          $extraFields[] = [
@@ -228,7 +227,7 @@ class StaffLeaveReportTable extends AppTable {
             'field' => 'staff_name',
             'type' => 'string',
             'label' => __('Staff Name')
-        ];
+        ];  
 
          $extraFields[] = [
             'key' => 'identity_type',
@@ -236,7 +235,7 @@ class StaffLeaveReportTable extends AppTable {
             'type' => 'string',
             'label' => __('Identity Type')
         ];
-
+        
 
          $extraFields[] = [
             'key' => 'Users.identity_number',
@@ -244,7 +243,7 @@ class StaffLeaveReportTable extends AppTable {
             'type' => 'string',
             'label' => __('Identity Number')
         ];
-
+        
 
          $extraFields[] = [
             'key' => 'StaffLeaveTypes.name',
@@ -272,24 +271,24 @@ class StaffLeaveReportTable extends AppTable {
             'field' => 'Number_of_days',
             'type' => 'integer',
             'label' => __('Number of days')
-        ];
+        ];  
 
 
-
+        
          $extraFields[] = [
             'key' => '',
             'field' => 'full_day',
             'type' => 'string',
             'label' => __('Full Time')
-        ];
+        ];  
 
          $extraFields[] = [
             'key' => '',
             'field' => 'start_time',
             'type' => 'start_time',
             'label' => __('Start Time')
-        ];
-
+        ];  
+        
 
 
          $extraFields[] = [
@@ -297,8 +296,8 @@ class StaffLeaveReportTable extends AppTable {
             'field' => 'end_time',
             'type' => 'end_time',
             'label' => __('End Time')
-        ];
-
+        ];  
+        
         $extraFields[] = [
             'key' => '',
             'field' => 'assignee',
@@ -306,13 +305,13 @@ class StaffLeaveReportTable extends AppTable {
             'label' => __('Assignee')
         ];
 
-
+       
         $extraFields[] = [
             'key' => 'WorkflowSteps.name',
             'field' => 'status',
             'type' => 'string',
             'label' => __('Status')
-        ];
+        ];  
 
        $extraFields[] = [
             'key' => '',
@@ -320,29 +319,29 @@ class StaffLeaveReportTable extends AppTable {
             'type' => 'string',
             'label' => __('Comments')
         ];
-
-//		$StaffCustomFields = TableRegistry::get('staff_custom_fields');
-//
-//		$customFieldData = $StaffCustomFields->find()
-//			->select([
-//				'custom_field_id' => 'staff_custom_fields.id',
-//				'custom_field' => 'staff_custom_fields.name'
-//			])
-//			->toArray();
-//
-//		foreach($customFieldData as $data) {
-//			$custom_field_id = $data->custom_field_id;
-//			$custom_field = $data->custom_field;
-//			$extraFields[] = [
-//				'key' => '',
-//				'field' => $custom_field_id,
-//				'type' => 'string',
-//				'label' => __($custom_field)
-//			];
-//		}
-//
+		
+		$StaffCustomFields = TableRegistry::get('staff_custom_fields');
+					
+		$customFieldData = $StaffCustomFields->find()
+			->select([
+				'custom_field_id' => 'staff_custom_fields.id',
+				'custom_field' => 'staff_custom_fields.name'
+			])
+			->toArray();
+		
+		foreach($customFieldData as $data) {
+			$custom_field_id = $data->custom_field_id;
+			$custom_field = $data->custom_field;
+			$extraFields[] = [
+				'key' => '',
+				'field' => $custom_field_id,
+				'type' => 'string',
+				'label' => __($custom_field)
+			];
+		}
+					
         $newFields = $extraFields;
-
+        
         $fields->exchangeArray($newFields);
     }
 }
