@@ -167,6 +167,10 @@ class ReportCardGpaTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $this->controller->set(compact('academicPeriodOptions', 'academicPeriodId'));
 
+        // Set selected academic period - POCOR-9185
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('selectedAcademicPeriod'));
+
         // Education Grade options
         $availableGrades = $InstitutionGrades->find()
             ->where([
