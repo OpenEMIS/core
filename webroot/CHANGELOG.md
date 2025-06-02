@@ -1,3 +1,29 @@
+### [4.26.2] - 2025-05-30
+- Bug Fixed: Institutions > Performance > Report Cards : Paddings and Border should follow what is configured in the template
+- Bug Fixed: Institutions > Staff > Career > Appraisal > Add > Save: When saving appraisal form, there is a 404 error: array_key_exists(): Argument #2 ($array) must be of type array, ArrayObject given
+- Bug Fixed: Institutions > Performances > Report Cards : Update assessment marks placeholder to display Exempted and Unassigned accordingly
+- Bug Fixed: Administration>Survey>Forms>Rules: Rules are not showing correctly
+- Bug Fixed: Administrations > System Setup > Field Options > Students Withdraw Reasons: 404 error when saving
+- Bug Fixed: Administration>Communication>Alert Rules: Student number should be student name
+- Bug Fixed: Institutions > General > Overview> Export: When exporting for an institution, system exports all institutions instead of the selected institution
+- Bug Fixed: Guardians > Academic > Textbooks tab : Page should be retrieving the list of textbook that is given to student
+
+### [4.26.1] - 2025-05-28
+- Bug Fixed: Institutions > Students > Pending Admission > Bulk Admission: User receives a 404 error message when transferring students.
+- Bug Fixed: Institutions>Surveys>Forms: Survey is getting 404 when saving
+- Bug Fixed: Institutions>Dashboard: Staff attendance dashboard should calculate attendance based on time in
+- Bug Fixed: Administration>Profile>Students: Subject result should show for assessment configuration and date completed/date started should show
+
+### [4.26.0] - 2025-05-27
+- Implemented: Develop changes to student report card generatation to include gpa and cumulative gpa
+
+### [4.25.3] - 2025-05-22
+- Bug Fixed: Institutions > Performances > Report Cards : Cumulative GPA placeholder is not displaying any values upon generating
+
+### [4.25.2] - 2025-05-21
+- Bug Fixed: Institutions>Performance>GPA: Gpa is not generated correctly for Easter Summer
+- Bug Fixed: Institutions > Performance > GPA > Cumulative GPA : Page displays a 404 error message when generating cumulative GPA.
+
 ### [4.25.1] - 2025-05-20
 - Bug Fixed: Institutions>Performance>GPA:The 1st gpa configured generates gpa meanwhile the 2nd gpa configured not showing any gpa
 
