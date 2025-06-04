@@ -1,22 +1,17 @@
 services:
   core:
-    build:
-      context: .
-      dockerfile: Dockerfile.Main
+    build: .
     container_name: openemis-core
     restart: always
     ports:
     - "3000:80"
-    # - "25:25"
     depends_on: 
     - db                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
     environment:
     - DB_HOST=db
-    - DB_NAME=prd_cor_dmo
-    - DB_USER=admin
-    - DB_PASSWORD=demo
     volumes:
       - ./api/.env:/var/www/html/api/.env
+      - config:/var/www/html/config
     networks:   
       - openemis-network
   db:
@@ -25,20 +20,12 @@ services:
     restart: always
     entrypoint: sh -c "chmod 644 /etc/my.cnf && exec docker-entrypoint.sh mysqld"
     environment:
-      - MYSQL_DATABASE=prd_cor_dmo
       - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=admin
-      - MYSQL_PASSWORD=demo
     volumes:
-      # - ./db_schema:/var/lib/mysql
-      # - ./docker-config/sql/prd_cor_dmo_schema.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
-      - ./db_data:/var/lib/mysql
-      - ./docker-config/sql/core-4.24.0.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
+      - db:/var/lib/mysql
       - ./docker-config/sql/my.cnf:/etc/my.cnf
     networks:
       - openemis-network
-    # ports:
-      # - "3307:3306"
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: openemis-phpmyadmin
@@ -49,12 +36,11 @@ services:
     - db
     environment:
       - PMA_HOST=db
-      - PMA_USER=admin
-      - PMA_PASSWORD=demo
     networks:
       - openemis-network
 volumes:
-  db_data:
+  db:
+  config:
 networks:
   openemis-network:
     driver: bridge
