@@ -376,6 +376,7 @@ class SurveysTable extends AppTable
         $surveyFormId = $requestData->survey_form_id;
         $this->setCondition($conditions);
         $forms = $this->getForms($surveyFormId);
+//        Log::debug(print_r([__FUNCTION__ . '1' => $sheets],true));
         foreach ($forms as $formId => $formName) {
             $this->excelContent($sheets, $formName, null, $formId);
         }
@@ -674,21 +675,21 @@ public function getChildren($id, $idArray)
             ]);
         $query->where([$conditions])
             ->group(['Surveys.id']); //POCOR-8226 added group by to avoid duplicates
-        $debug = false;
-        if ($debug) {
-            // Clone the query to avoid mutating the original one
-            $clonedQuery = clone $query;
-
-            // Get SQL for debugging
-            $sql = $clonedQuery->sql();
-
-            // Execute and dump results (optional: limit rows to avoid big output)
-            $results = $clonedQuery->limit(10)->toArray();
-
-            // Use CakePHP's built-in debug tools
-            Log::debug("SQL: " . $sql);
-            Log::debug(print_r(["Preview Results" => $results], true));
-        }
+//        $debug = false;
+//        if ($debug) {
+//            // Clone the query to avoid mutating the original one
+//            $clonedQuery = clone $query;
+//
+//            // Get SQL for debugging
+//            $sql = $clonedQuery->sql();
+//
+//            // Execute and dump results (optional: limit rows to avoid big output)
+//            $results = $clonedQuery->limit(10)->toArray();
+//
+//            // Use CakePHP's built-in debug tools
+//            Log::debug("SQL: " . $sql);
+//            Log::debug(print_r(["Preview Results" => $results], true));
+//        }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)

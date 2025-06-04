@@ -174,7 +174,7 @@ class CustomFieldListBehavior extends Behavior
         $optionsValues = $this->CustomFieldValues->CustomFields->CustomFieldOptions->find('list')->toArray();
 //        Log::debug(print_r([__FUNCTION__ => $optionsValues], true));
         // The excel spreadsheets
-        $sheets[] = [
+        $sheets[$name] = [
             'name' => __($name),
             'table' => $this->_table,
             'query' => $query,
