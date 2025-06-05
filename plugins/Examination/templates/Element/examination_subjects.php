@@ -34,13 +34,23 @@ use Cake\I18n\Time;
                                 <?php
                                     if ($item->has('education_subject') && $item->education_subject->has('name')) {
                                         echo $item->education_subject->name;
+                                    } else {
+                                        echo $item->education_subject_name ?? '';
                                     }
                                 ?>
                             </td>
-                            <td><?= $item->examination_grading_type->name ?></td>
-                            <td><?= !is_null($item->examination_date) ? $item->examination_date->format('d-m-Y') : '' ?></td>
-                            <td><?php if($item->start_date instanceof Time || $item->start_date instanceof Date){!is_null($item->start_time) ? $item->start_time->format('H:i A') : '' ;} ?></td>
-                            <td><?php if($periodObj->start_date instanceof Time || $periodObj->start_date instanceof Date){!is_null($item->end_time) ? $item->end_time->format('H:i A') : '';}  ?></td>
+                            <td>
+                                <?php
+                                    if ($item->has('examination_grading_type') && $item->examination_grading_type->has('name')) {
+                                        echo $item->examination_grading_type->name;
+                                    } else {
+                                        echo $item->grading_type_name ?? '';
+                                    }
+                                ?>
+                            </td>
+                            <td><?= !is_null($item->examination_date) && $item->examination_date instanceof Date ? $item->examination_date : $item->examination_date ?></td>
+                            <td><?php if($item->start_time instanceof Time || $item->start_time instanceof Date){ echo !is_null($item->start_time) ? $item->start_time->format('H:i A') : '' ;} else { echo $item->start_time;} ?></td>
+                            <td><?php if($item->end_time instanceof Time || $item->end_time instanceof Date){echo !is_null($item->end_time) ? $item->end_time->format('H:i A') : '';} else { echo $item->end_time;}  ?></td>
                             <?php endif?>
                         </tr>
                     <?php endforeach ?>
