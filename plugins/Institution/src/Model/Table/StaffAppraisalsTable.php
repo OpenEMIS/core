@@ -18,10 +18,10 @@ use Cake\I18n\FrozenTime;
 use Cake\I18n\FrozenDate;
 
 class StaffAppraisalsTable extends ControllerActionTable
-{    
+{
     public $staff;
 
-    public function initialize(array $config): void
+    public function initialize( $config): void
     {
         $this->setTable('institution_staff_appraisals');
         parent::initialize($config);
@@ -108,6 +108,12 @@ class StaffAppraisalsTable extends ControllerActionTable
         $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
+            ->requirePresence('appraisal_period_id','create') // POCOR-9123
+            ->requirePresence('appraisal_period_id','edit') // POCOR-9123
+            ->requirePresence('appraisal_type_id','create') // POCOR-9123
+            ->requirePresence('appraisal_type_id','edit') // POCOR-9123
+            ->requirePresence('appraisal_form_id','create') // POCOR-9123
+            ->requirePresence('appraisal_form_id','edit') // POCOR-9123
             ->add('appraisal_period_from', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
@@ -157,7 +163,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
             }
         }
-        $institutionId = $this->getInstitutionID(); // POCOR-8688 
+        $institutionId = $this->getInstitutionID(); // POCOR-8688
         $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
     }
 
@@ -166,7 +172,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->setupTabElements();
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Appraisals','Staff - Career');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Appraisals','Staff - Career');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -197,7 +203,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         $broadcaster = $this;
         $listeners = [];
         $listeners[] = $this->AppraisalForms->AppraisalFormsCriteriasScores;
-        
+
         $this->dispatchEventToModels('Model.InstitutionStaffAppraisal.addAfterSave', [$entity], $broadcaster, $listeners);
     }
 
@@ -302,7 +308,7 @@ class StaffAppraisalsTable extends ControllerActionTable
             ])
             ->where([
                 $this->aliasField('id') => $institutionStaffAppraisalsId,
-                $AppraisalFormsCriteriasScores->aliasField('final_score') => 1
+                $AppraisalFormsCriteriasScores->aliasField('final_score IS NOT NULL') // POCOR-9123
             ])
             ->innerJoin([$AppraisalFormsCriteriasScores->getAlias() => $AppraisalFormsCriteriasScores->getTable()], [
                 $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id = ') . $this->aliasField('appraisal_form_id'),
@@ -340,7 +346,7 @@ class StaffAppraisalsTable extends ControllerActionTable
 
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(Event $event, $attr, $action, ServerRequest $request) // POCOR-9123
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Staff > Career > Appraisals';
@@ -382,7 +388,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -398,12 +404,12 @@ class StaffAppraisalsTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -463,7 +469,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function onExcelRenderDate(Event $event, Entity $entity, $attr)
     {
         $field = $entity->{$attr['field']};
-        
+
         if (!empty($field)) {
             if ($field instanceof FrozenTime || $field instanceof FrozenDate) {
                 return $this->formatDate($field);
@@ -474,7 +480,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         } else {
             return $field;
         }
-        
+
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
@@ -482,7 +488,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         $query->contain([
             'AppraisalPeriods.AcademicPeriods', 'AppraisalForms',
             'AppraisalTypes'
-        ]); 
+        ]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
