@@ -69,11 +69,11 @@ class AuditSecuritiesGroupUserRolesTable extends AppTable
                     'security_roles.id = AuditSecuritiesGroupUserRoles.security_role_id',
                 ]
             ])
-            ->innerJoin(['institutions' => 'institutions'], [
+            ->leftJoin(['institutions' => 'institutions'], [
                 [
                     'institutions.security_group_id = AuditSecuritiesGroupUserRoles.security_group_id',
                 ]
-            ])
+            ]) //POCOR-9183
             ->leftJoin(['area_groups' => '(SELECT security_group_areas.security_group_id
             ,GROUP_CONCAT(DISTINCT(areas.name)) area_name FROM security_group_areas INNER JOIN areas ON areas.id = security_group_areas.area_id GROUP BY security_group_areas.security_group_id)'], [
                 [
