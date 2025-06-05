@@ -299,11 +299,10 @@ class GpaSystemTable extends ControllerActionTable {
 
     public function checkGpaRecords($entity)
     {
-        $InstitutionStudentsGpa = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsGpa')->find()->where(['id' =>14])->count();
-        $Cumulative = TableRegistry::getTableLocator()->get('Gpa.Cumulative')->find()->where(['main_education_grade_id' => 208])->count();
+        $InstitutionStudentsGpa = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsGpa')->find()->where(['education_grades_gpa_id' =>$entity->id])->count();
 
 
-        if ($InstitutionStudentsGpa || $Cumulative) {
+        if ($InstitutionStudentsGpa) {
             $result = true;
         }
         return $result;
