@@ -365,10 +365,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
         $process = function ($model, $entity) use ($data, $textbookCode) {
             $newEntities = [];
-
             if (array_key_exists('textbooks_students', $data[$this->getAlias()])) {
 
                 $textbooks = $data[$this->getAlias()]['textbooks_students'];
+                $allocated_to = $data[$this->getAlias()]['allocated_to'];
 
                 if (count($textbooks)) {
 
@@ -379,7 +379,8 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         $obj['textbook_status_id'] = $textbook['textbook_status_id'];
                         $obj['textbook_condition_id'] = $textbook['textbook_condition_id'];
 
-                        $obj['security_user_id'] = $textbook['security_user_id'];
+                        // $obj['security_user_id'] = $textbook['security_user_id'];
+                        $obj['security_user_id'] = $allocated_to;
 
                         $obj['institution_id'] = $entity->institution_id;
                         $obj['academic_period_id'] = $entity->academic_period_id;
