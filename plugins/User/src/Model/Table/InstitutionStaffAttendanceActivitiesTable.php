@@ -14,7 +14,7 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
-use Page\Traits\EncodingTrait;
+// use Page\Traits\EncodingTrait;
 
 class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable 
 {
@@ -103,7 +103,6 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
         $this->request->withQueryParams(['academic_period_id' => $selectedPeriod]);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
         // End setup periods
-
         if ($selectedPeriod != 0) {
             $todayDate = date("Y-m-d");
             $this->controller->set(compact('periodOptions', 'selectedPeriod'));
@@ -233,7 +232,6 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
                 ];
                 $conditions = array_merge($conditions, $dateConditions);
             }
-            
             $query
                 ->find('all')
                 ->innerJoin([$InstitutionStaffAttendances->getAlias() => $InstitutionStaffAttendances->getTable()], [
@@ -243,7 +241,8 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
 
             $queryString = $this->getQueryString();//POCOR-8359
             $encodedQueryString = $this->paramsEncode($queryString);  //POCOR-8359
-            $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];//POCOR-8359
+            //Commented for POCOR-3128
+            // $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];//POCOR-8359
         }
     }
 

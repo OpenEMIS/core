@@ -1691,20 +1691,33 @@ class StaffTable extends ControllerActionTable
                 $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
                 $userId = $entity->_matchingData['Users']->id;
 
+                //POCOR-3128[START]
                 $icon = '<i class="fa fa-history"></i>';
+                // $url = [
+                //     'plugin' => 'Institution',
+                //     'institutionId' => $institutionId,
+                //     'controller' => 'StaffHistories',
+                //     'action' => 'index'
+                // ];
                 $url = [
                     'plugin' => 'Institution',
-                    'institutionId' => $institutionId,
-                    'controller' => 'StaffHistories',
-                    'action' => 'index'
+                    'institution_id' => $institutionId,
+                    //'controller' => 'StudentHistories',
+                    //'action' => 'index',
+                    'controller' => 'Institutions',//POCOR-8333
+                    'action' => 'StaffHistories',//POCOR-8333
+                    '0' => 'index',//POCOR-8333
+                    '1' => $encodedQueryString
                 ];
 
                 $buttons['history'] = $buttons['view'];
                 $buttons['history']['label'] = $icon . __('History');
                 $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
                     'security_user_id' => $userId,
-                    'user_type' => 'Staff'
+                    'user_type' => 'Staff',
+                    'institution_id' => $entity->institution->id
                 ]);
+                //POCOR-3128[END]
             }
             // end POCOR-3125 history button permission
         }
