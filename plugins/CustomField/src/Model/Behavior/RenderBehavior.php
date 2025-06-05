@@ -69,7 +69,8 @@ class RenderBehavior extends Behavior {
         // POCOR-9105 start
         // POCOR-9147 start
         try {
-            $entity_array = $entity->toArray();
+            // $entity_array = $entity->toArray();
+            $entity_array = $entity;
         } catch (\Throwable $e) {
             try {
                 $arrentity = $entity;
