@@ -1,3 +1,18 @@
+### [4.27.0] - 2025-06-05
+- Implemented: Develop student report cards placeholder for class rank and grade rank
+- Bug Fixed: Institutions > Survey > Forms > View > Edit > Teachers and Staff : User receives a 404 error message when editing.
+- Bug Fixed: Institutions>General>Shifts: As a super admin, user is unable to edit/update any existing shifts in the system.
+- Bug Fixed: Reports > Institutions > Staff Leave: The column Date From and Date To is not showing any data eventhough there are leave applied
+- Bug Fixed: Reports > Survey > Institutions: Data is not showing for table field answer
+- Bug Fixed: Administration > Security > Roles: Unable to reorder the system roles
+- Bug Fixed: API: 500 internal server error for file content
+- Bug Fixed: Institution > Surveys > Forms: Reduce the width of table question fields in surveys for number
+- Bug Fixed: Institutions>Visits>Add: User should be able to add
+- Bug Fixed: Institutions > Performance > GPA : Page doesn't change when selecting a different year.
+- Bug Fixed: Institutions > Students > Special Needs > Assessments: When searching for assignee in the special needs assessment page, the page does not load the list of users to be selected
+- Bug Fixed: Institutions > Students > GPA Tab : Inconsistent Cumulative GPA
+- Bug Fixed: The OpenEMIS Core http / https configuration should be dynamic
+
 ### [4.26.2] - 2025-05-30
 - Bug Fixed: Institutions > Performance > Report Cards : Paddings and Border should follow what is configured in the template
 - Bug Fixed: Institutions > Staff > Career > Appraisal > Add > Save: When saving appraisal form, there is a 404 error: array_key_exists(): Argument #2 ($array) must be of type array, ArrayObject given
