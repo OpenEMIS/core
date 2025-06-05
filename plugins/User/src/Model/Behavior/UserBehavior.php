@@ -93,6 +93,14 @@ class UserBehavior extends Behavior
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        // POCOR-9101 start
+        if(trim($entity->email) == ''){
+            $entity->email = null;
+        }
+        if(trim($entity->mobile_number) == ''){
+            $entity->mobile_number = null;
+        }
+        // POCOR-9101 end
         if ($entity->isNew()) {
             $entity->preferred_language = 'en';
         } else {
