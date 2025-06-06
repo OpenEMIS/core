@@ -6,77 +6,57 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
-<?php
-$backUrl = [
-    'plugin' => $this->request->getParam('plugin'),
-    'controller' => $this->request->getParam('controller'),
-    'action' => 'ExamResults',
-    'index'
-];
-echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
-?>
-<!-- POCOR-7509 start -->
-<?php if ($_sync) : ?>
     <?php
-    $param = [
-        'academic_period_id' => $this->request->getParam('academic_period_id'),
-        'examination_id' => $this->request->getParam('examination_id'),
-        'examination_centre_id' => $this->request->getParam('examination_centre_id')
-    ];
-    $syncUrl = [
-        'plugin' => 'Examination',
-        'controller' => 'Examinations',
-        'action' => 'syncResultsExam',
-        'academic_period_id' => $this->request->getQuery('academic_period_id'),
-        'examination_id' => $this->request->getQuery('examination_id'),
-        'examination_centre_id' => $this->request->getQuery('examination_centre_id')
-    ];
-    echo $this->Html->link('<i class="fa fa-refresh"></i>', $syncUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Sync'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
+        $backUrl = [
+            'plugin' => $this->request->getParam('plugin'),
+            'controller' => $this->request->getParam('controller'),
+            'action' => 'ExamResults',
+            'index'
+        ];
+        echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
     ?>
-<?php endif; ?>
-<!-- POCOR-7509 end -->
-<?php if ($_edit) : ?>
-    <!-- Show buttons when action is view: -->
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit'); ?>" ng-show="action == 'view'" ng-click="ExaminationsResultsController.onEditClick()">
-        <i class="fa kd-edit"></i>
-    </button>
-    <!-- End -->
+    <?php if ($_edit) : ?>
+        <!-- Show buttons when action is view: -->
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="ExaminationsResultsController.onEditClick()">
+            <i class="fa kd-edit"></i>
+        </button>
+        <!-- End -->
 
-    <!-- Show buttons when action is edit: -->
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back'); ?>" ng-show="action == 'edit'" ng-click="ExaminationsResultsController.onBackClick()">
-        <i class="fa kd-back"></i>
-    </button>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Save'); ?>" ng-show="action == 'edit'" ng-click="ExaminationsResultsController.onSaveClick()">
-        <i class="fa fa-save"></i>
-    </button>
-    <!-- End -->
-<?php endif; ?>
+        <!-- Show buttons when action is edit: -->
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit'" ng-click="ExaminationsResultsController.onBackClick()">
+            <i class="fa kd-back"></i>
+        </button>
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Save');?>" ng-show="action == 'edit'" ng-click="ExaminationsResultsController.onSaveClick()">
+            <i class="fa fa-save"></i>
+        </button>
+        <!-- End -->
+    <?php endif; ?>
 <?php
 $this->end();
 
 $this->start('panelBody');
 ?>
-<div class="alert {{ExaminationsResultsController.class}}" ng-hide="ExaminationsResultsController.message == null">
-    <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{ExaminationsResultsController.message}}
-</div>
+    <div class="alert {{ExaminationsResultsController.class}}" ng-hide="ExaminationsResultsController.message == null">
+        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{ExaminationsResultsController.message}}
+    </div>
 
-<?= $this->element('Examination.Examinations/controls'); ?>
+    <?= $this->element('Examination.Examinations/controls'); ?>
 
-<div ng-init="">
-    <div class="scrolltabs sticky-content">
-        <scrollable-tabset show-tooltips="false" show-drop-down="false">
-            <uib-tabset justified="true">
-                <uib-tab heading="{{subject.code + ' - ' + subject.name}}" ng-repeat="subject in ExaminationsResultsController.subjects" ng-click="ExaminationsResultsController.onChangeSubject(ExaminationsResultsController.academicPeriodId,ExaminationsResultsController.examinationId,subject)">
-                </uib-tab>
-            </uib-tabset>
-            <div class="tabs-divider"></div>
-        </scrollable-tabset>
+    <div ng-init="">
+        <div class="scrolltabs sticky-content">
+            <scrollable-tabset show-tooltips="false" show-drop-down="false">
+                <uib-tabset justified="true">
+                    <uib-tab heading="{{subject.code + ' - ' + subject.name}}" ng-repeat="subject in ExaminationsResultsController.subjects" ng-click="ExaminationsResultsController.onChangeSubject(ExaminationsResultsController.academicPeriodId,ExaminationsResultsController.examinationId,subject)">
+                    </uib-tab>
+                </uib-tabset>
+                <div class="tabs-divider"></div>
+            </scrollable-tabset>
 
-        <div id="examination-result-table" class="table-wrapper">
-            <div ng-if="ExaminationsResultsController.gridOptions" kd-ag-grid="ExaminationsResultsController.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
+            <div id="examination-result-table" class="table-wrapper">
+                <div ng-if="ExaminationsResultsController.gridOptions" kd-ag-grid="ExaminationsResultsController.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
+            </div>
         </div>
     </div>
-</div>
 
 <?php
 $this->end();
