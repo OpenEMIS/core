@@ -1,4 +1,5 @@
 <?php
+
 namespace Examination\Model\Table;
 
 use ArrayObject;
@@ -14,8 +15,11 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\Utility\Security;
 use Cake\Http\ServerRequest;
+use Cake\I18n\FrozenTime;
 
-class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable {
+
+class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
+{
     use OptionsTrait;
 
     public function initialize(array $config): void
@@ -90,7 +94,8 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
             ->requirePresence('auto_assign_to_room');
     }*/
 
-    public function implementedEvents(): array {
+    public function implementedEvents(): array
+    {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         $events['Model.Examinations.afterUnregister'] = 'examinationsAfterUnregister';
@@ -144,9 +149,39 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
     {
         $this->controller->getStudentsTab();
     }
+    //POCOR-7509
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->select([
+            'ExaminationCentresExaminationsStudents.id',
+            'ExaminationCentresExaminationsStudents.student_id',
+            'ExaminationCentresExaminationsStudents.academic_period_id',
+            'ExaminationCentresExaminationsStudents.examination_id',
+            'ExaminationCentresExaminationsStudents.registration_number',
+            'ExaminationCentresExaminationsStudents.examination_centre_id',
+            'ExaminationCentresExaminationsStudents.sync_status',
+            'ExaminationCentresExaminationsStudents.last_synced',
 
+            'Users.openemis_no',
+            'Users.first_name',
+            'Users.middle_name',
+            'Users.third_name',
+            'Users.last_name',
+            'Users.preferred_name',
+            'Users.date_of_birth',
+            'Users.identity_number',
+
+            'MainIdentityTypes.name',
+            'Genders.name',
+            'MainNationalities.name',
+
+            'Institutions.code',
+            'Institutions.name'
+        ]);
+    }
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+
         // bulk registration button
         $toolbarAttr = [
             'class' => 'btn btn-xs btn-default',
@@ -161,7 +196,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         $button['attr']['title'] = __('Bulk Register');
         $extra['toolbarButtons']['bulkAdd'] = $button;
 
-         // single registration button
+        // single registration button
         if (isset($extra['toolbarButtons']['add']['url'])) {
             $extra['toolbarButtons']['add']['url']['action'] = 'RegistrationDirectory';
             $extra['toolbarButtons']['add']['url'][0] = 'index';
@@ -170,30 +205,66 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Registered Students','Examinations');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration', 'Registered Students', 'Examinations');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
+
+        //POCOR-7509 start
+
+        $syncUserConfigured = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')->getOpenemisExamConfiguration();
+
+        if ($syncUserConfigured) {
+            $examinationId = $this->request->getQuery('examination_id');
+
+            if (($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute']) || $this->AccessControl->isAdmin())
+                && !empty($examinationId) && $examinationId != -1
+            ) {
+                $syncUrl = [
+                    'plugin' => 'Examination',
+                    'controller' => 'Examinations',
+                    'action' => 'syncStudentsToExam',
+                ];
+
+                $syncButton =  [
+                    'url' => $syncUrl,
+                    'type' => 'button',
+                    'label' => '<i class="kd-process"></i>',
+                    'attr' => [
+                        'class' => 'btn btn-xs btn-default icon-big',
+                        'data-toggle' => 'tooltip',
+                        'data-placement' => 'bottom',
+                        'escape' => false,
+                        'title' => __('Sync')
+                    ]
+                ];
+
+                $extra['toolbarButtons']['sync'] = $syncButton;
+            }
+        }
+
+        //POCOR-7509 end
     }
+
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         // Set the header of the page
-        $this->controller->set('contentHeader', __('Examination') . ' - ' .__('Single Student Registration'));
+        $this->controller->set('contentHeader', __('Examination') . ' - ' . __('Single Student Registration'));
 
         $query = $this->ControllerAction->getQueryString();
 
@@ -223,18 +294,28 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 $this->field('special_need_accommodations');
                 $this->field('registration_number', ['type' => 'string', 'length' => 20]);
                 $this->field('auto_assign_to_room', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
-                $this->field('subject_id');//POCOR-7512
+                $this->field('subject_id'); //POCOR-7512
                 $this->setFieldOrder([
-                    'student_id', 'date_of_birth', 'gender_id', 'special_needs', 'exam_details_header', 'academic_period_id', 'examination_id', 'education_grade_id', 'examination_centre_id', 'special_need_accommodations', 'registration_number', 'auto_assign_to_room','subject_id'
+                    'student_id',
+                    'date_of_birth',
+                    'gender_id',
+                    'special_needs',
+                    'exam_details_header',
+                    'academic_period_id',
+                    'examination_id',
+                    'education_grade_id',
+                    'examination_centre_id',
+                    'special_need_accommodations',
+                    'registration_number',
+                    'auto_assign_to_room',
+                    'subject_id'
                 ]);
-
             } else {
                 $this->Alert->error('general.notExists', ['reset' => 'override']);
                 $url = $this->url('index');
                 $event->stopPropagation();
                 return $this->controller->redirect($url);
             }
-
         } else {
             $url = $this->url('index');
             $event->stopPropagation();
@@ -271,7 +352,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 $gender = $attr['entity']->gender->name;
             }
 
-            $attr['attr']['value'] = !empty($gender)? $gender: '';
+            $attr['attr']['value'] = !empty($gender) ? $gender : '';
             $attr['type'] = 'readonly';
         }
 
@@ -293,7 +374,6 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
             $attr['type'] = 'element';
             $attr['data'] = $needsArray;
             $attr['element'] = 'Examination.special_needs';
-
         }
 
         return $attr;
@@ -337,7 +417,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 $this->advancedSelectOptions($examinationOptions, $examinationId, [
                     'message' => '{{label}} - ' . $this->getMessage('InstitutionExaminationStudents.notAvailableForRegistration'),
                     'selectOption' => false,
-                    'callable' => function($id) use ($Examinations, $todayDate) {
+                    'callable' => function ($id) use ($Examinations, $todayDate) {
                         return $Examinations
                             ->find()
                             ->where([
@@ -350,7 +430,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 ]);
             }
 
-            $attr['options'] = !empty($examinationOptions)? $examinationOptions: [];
+            $attr['options'] = !empty($examinationOptions) ? $examinationOptions : [];
             $attr['onChangeReload'] = 'changeExaminationId';
             $attr['type'] = 'select';
         }
@@ -382,8 +462,8 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 $gradeId = $Examinations['education_grade']['id'];
             }
 
-            $attr['attr']['value'] = !empty($gradeName)? $gradeName: '';
-            $attr['value'] = !empty($gradeId)? $gradeId: '';
+            $attr['attr']['value'] = !empty($gradeName) ? $gradeName : '';
+            $attr['value'] = !empty($gradeId) ? $gradeId : '';
             $attr['type'] = 'readonly';
         }
 
@@ -406,7 +486,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                     ->toArray();
             }
 
-            $attr['options'] = !empty($examCentreOptions)? $examCentreOptions: [];
+            $attr['options'] = !empty($examCentreOptions) ? $examCentreOptions : [];
             $attr['type'] = 'chosenSelect';
             $attr['select'] = true;
             $attr['attr']['multiple'] = false;
@@ -436,7 +516,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 }
             }
 
-            $attr['attr']['value'] = !empty($specialNeeds)? $specialNeeds: '';
+            $attr['attr']['value'] = !empty($specialNeeds) ? $specialNeeds : '';
             $attr['type'] = 'readonly';
         }
 
@@ -473,7 +553,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                         $Students->aliasField('student_status_id') => $enrolledStatus
                     ])
                     ->first();
-                
+
                 $obj = [];
                 $obj['examination_centre_id'] = $selectedExaminationCentre;
                 $obj['student_id'] = $requestData[$this->getAlias()]['student_id'];
@@ -488,16 +568,15 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 // if current student
                 if (!empty($existInInstitution)) {
                     $obj['institution_id'] = $existInInstitution->institution_id;
-                }
-                else{//POCOR-7393 starts (4th case)
+                } else { //POCOR-7393 starts (4th case)
                     $result = $Students
-                    ->find()
-                    ->where([
-                        $Students->aliasField('student_id') => $requestData[$this->getAlias()]['student_id'],
-                        // $Students->aliasField('academic_period_id') => $requestData[$this->getAlias()]['academic_period_id'],
-                    ])
-                    ->order( [$Students->aliasField('created')=>"DESC"])
-                    ->first();
+                        ->find()
+                        ->where([
+                            $Students->aliasField('student_id') => $requestData[$this->getAlias()]['student_id'],
+                            // $Students->aliasField('academic_period_id') => $requestData[$this->getAlias()]['academic_period_id'],
+                        ])
+                        ->order([$Students->aliasField('created') => "DESC"])
+                        ->first();
                     $obj['institution_id'] = $result->institution_id;
                 }
                 //POCOR-7393 ends (4th case)
@@ -514,14 +593,13 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                             'examination_subject_id' => $examItemId
                         ]
                     ];
-
                 }
 
                 $patchOptions['associated'] = [
                     'ExaminationCentresExaminationsSubjects' => ['validate' => false]
                 ];
 
-                $success = $this->getConnection()->transactional(function() use ($obj, $entity, $patchOptions) {
+                $success = $this->getConnection()->transactional(function () use ($obj, $entity, $patchOptions) {
                     $examCentreStudentEntity = $this->newEntity($obj, $patchOptions);
                     if ($examCentreStudentEntity->getErrors('student_id')) {
                         $entity->getErrors('student_id', $examCentreStudentEntity->getErrors('student_id'));
@@ -537,26 +615,27 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
 
                 if ($success) {
                     //POCOR-7512 start
-                    if($entity->examination_subjects){
+                    if ($entity->examination_subjects) {
                         $examinationStudentSubjects = TableRegistry::get('Examination.ExaminationStudentSubjects');
-                        if(!empty($requestData[$this->getAlias()]['student_id'])){
-                              foreach($entity->examination_subjects as $Key=>$value){
-                                  if($value['selected'] == 1){
-                                  $data=$examinationStudentSubjects->newEntity([
-                                            'student_id'=>$requestData[$this->getAlias()]['student_id'],
-                                            'examination_subject_id'=>$value['subject_id']
-                                          ]);
-                                  $result=$examinationStudentSubjects->save($data);
-                              }}
+                        if (!empty($requestData[$this->getAlias()]['student_id'])) {
+                            foreach ($entity->examination_subjects as $Key => $value) {
+                                if ($value['selected'] == 1) {
+                                    $data = $examinationStudentSubjects->newEntity([
+                                        'student_id' => $requestData[$this->getAlias()]['student_id'],
+                                        'examination_subject_id' => $value['subject_id']
+                                    ]);
+                                    $result = $examinationStudentSubjects->save($data);
+                                }
                             }
-                       } 
+                        }
+                    }
                     //POCOR-7512 end
                     $studentCount = $this->find()
                         ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
                         ->group([$this->aliasField('student_id')])
                         ->count();
 
-                    $this->ExaminationCentresExaminations->updateAll(['total_registered' => $studentCount],['examination_centre_id' => $entity->examination_centre_id, 'examination_id' => $entity->examination_id]);
+                    $this->ExaminationCentresExaminations->updateAll(['total_registered' => $studentCount], ['examination_centre_id' => $entity->examination_centre_id, 'examination_id' => $entity->examination_id]);
                 }
 
                 // auto assignment to a room
@@ -564,17 +643,19 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                     if ($success) {
                         $examCentreRooms = $this->ExaminationCentres->ExaminationCentreRooms
                             ->find()
-                            ->leftJoin(['ExaminationCentreRoomsExaminationsStudents' => 'examination_centre_rooms_examinations_students'],
+                            ->leftJoin(
+                                ['ExaminationCentreRoomsExaminationsStudents' => 'examination_centre_rooms_examinations_students'],
                                 [
-                                    'ExaminationCentreRoomsExaminationsStudents.examination_centre_room_id = '.$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id'),
-                                    'ExaminationCentreRoomsExaminationsStudents.examination_id = '.$selectedExamination
+                                    'ExaminationCentreRoomsExaminationsStudents.examination_centre_room_id = ' . $this->ExaminationCentres->ExaminationCentreRooms->aliasField('id'),
+                                    'ExaminationCentreRoomsExaminationsStudents.examination_id = ' . $selectedExamination
                                 ]
                             )
                             ->order([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')])
                             ->select([
                                 $this->ExaminationCentres->ExaminationCentreRooms->aliasField('id'),
                                 $this->ExaminationCentres->ExaminationCentreRooms->aliasField('number_of_seats'),
-                                'seats_taken' => 'COUNT(ExaminationCentreRoomsExaminationsStudents.student_id)'])
+                                'seats_taken' => 'COUNT(ExaminationCentreRoomsExaminationsStudents.student_id)'
+                            ])
                             ->where([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('examination_centre_id') => $selectedExaminationCentre])
                             ->group([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')])
                             ->toArray();
@@ -617,75 +698,168 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         return $process;
     }
     //POCOR-7512 start
-    public function onUpdateFieldSubjectId(Event $event, array $attr, $action, $request){
+    public function onUpdateFieldSubjectId(Event $event, array $attr, $action, $request)
+    {
         $subjects = [];
         if ($action == 'add') {
             if (!empty($request->getData()[$this->getAlias()]['examination_id'])) {
-                $ExaminationSubjects=TableRegistry::get('Examination.ExaminationSubjects');
-                $subjects=$ExaminationSubjects->find()->where([
-                                 $ExaminationSubjects->aliasField('examination_id')=>$request->getData()[$this->getAlias()]['examination_id']   
-                          ])->toArray();
-                }
-        $attr['label']="Education Subjects";
-        $attr['type'] = 'element';
-        $attr['element'] = 'Examination.institution_examination_subjects';
-        $attr['data'] = $subjects;
-        return $attr;
-    }}
+                $ExaminationSubjects = TableRegistry::get('Examination.ExaminationSubjects');
+                $subjects = $ExaminationSubjects->find()->where([
+                    $ExaminationSubjects->aliasField('examination_id') => $request->getData()[$this->getAlias()]['examination_id']
+                ])->toArray();
+            }
+            $attr['label'] = "Education Subjects";
+            $attr['type'] = 'element';
+            $attr['element'] = 'Examination.institution_examination_subjects';
+            $attr['data'] = $subjects;
+            return $attr;
+        }
+    }
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-   
-      $subjectTable=TableRegistry::get('Examination.ExaminationSubjects');
-      $subjectData=$subjectTable->find('all')->
-                                  select([
-                                  'id'=> $subjectTable->aliasField('id'),
-                                  'name'=> $subjectTable->aliasField('name'),
-                                  'code'=>$subjectTable->aliasField('code'),])->
-                                  where([$subjectTable->aliasField('examination_id')=>$entity->examination_id])->toArray();
-      $entity['examination_subjects']=$subjectData;
 
-      $this->field('academic_period_id', ['type' => 'readonly']);
-      $this->field('examination_id', ['type' => 'readonly']);
-      $this->field('openemis_no', ['type' => 'readonly']);
-      $this->field('student_id', ['type' => 'readonly']);
-     
-    
-      $this->field('examination_subjects',[
-          'type'=>'element','element'=>'Examination.institution_examination_subjects','data'=>$entity['examination_subjects']
-      ]);
-      $this->setFieldOrder(['academic_period_id','examination_id','registration_number','openemis_no','student_id','examination_subjects']);
-  }
-  public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {
-   
-        $examinationStudentSubjects=TableRegistry::get('Examination.ExaminationStudentSubjects');
-        $examinationSubjects = $examinationStudentSubjects->find()
-                                   ->where(['student_id'=>$entity->student_id]
-                                   )->toArray();  
-        if($examinationSubjects){
-        foreach($examinationSubjects as $data){
-                $deleteEntity =   $examinationStudentSubjects->delete($examinationStudentSubjects->get($data->id));
-        } 
-        }
-       
-        $entitydata=[];
-        foreach($entity->examination_subjects as $Key=>$value){
-       
-                if($value['selected']==1){
-                    $studSubArr=array(
-                        'student_id'=>$entity->student_id,
-                        'examination_subject_id'=>$value['subject_id']
-                    );
-                    $new = $examinationStudentSubjects->newEntity($studSubArr);
-                    $new=  $examinationStudentSubjects->patchEntity($new, $studSubArr);
-                   
-                    $examinationStudentSubjects->save($new);
-                }
-              ;
-            }
-          
-      
+        $subjectTable = TableRegistry::get('Examination.ExaminationSubjects');
+        $subjectData = $subjectTable->find('all')->select([
+            'id' => $subjectTable->aliasField('id'),
+            'name' => $subjectTable->aliasField('name'),
+            'code' => $subjectTable->aliasField('code'),
+        ])->where([$subjectTable->aliasField('examination_id') => $entity->examination_id])->toArray();
+        $entity['examination_subjects'] = $subjectData;
+
+        $this->field('academic_period_id', ['type' => 'readonly']);
+        $this->field('examination_id', ['type' => 'readonly']);
+        $this->field('openemis_no', ['type' => 'readonly']);
+        $this->field('student_id', ['type' => 'readonly']);
+
+
+        $this->field('examination_subjects', [
+            'type' => 'element',
+            'element' => 'Examination.institution_examination_subjects',
+            'data' => $entity['examination_subjects']
+        ]);
+        $this->setFieldOrder(['academic_period_id', 'examination_id', 'registration_number', 'openemis_no', 'student_id', 'examination_subjects']);
     }
-  //POCOR-7512 end
-}
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
 
+        $examinationStudentSubjects = TableRegistry::get('Examination.ExaminationStudentSubjects');
+        $examinationSubjects = $examinationStudentSubjects->find()
+            ->where(
+                ['student_id' => $entity->student_id]
+            )->toArray();
+        if ($examinationSubjects) {
+            foreach ($examinationSubjects as $data) {
+                $deleteEntity =   $examinationStudentSubjects->delete($examinationStudentSubjects->get($data->id));
+            }
+        }
+
+        $entitydata = [];
+        foreach ($entity->examination_subjects as $Key => $value) {
+
+            if ($value['selected'] == 1) {
+                $studSubArr = array(
+                    'student_id' => $entity->student_id,
+                    'examination_subject_id' => $value['subject_id']
+                );
+                $new = $examinationStudentSubjects->newEntity($studSubArr);
+                $new =  $examinationStudentSubjects->patchEntity($new, $studSubArr);
+
+                $examinationStudentSubjects->save($new);
+            };
+        }
+    }
+    //POCOR-7509 start
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $referrerUrl = $this->request->referer();
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        if ($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute'])) {
+
+            $syncUserConfigured = TableRegistry::getTableLocator()->get('Configuration.ConfigExternalDataSourceExam')->getOpenemisExamConfiguration();
+
+            if (!empty($syncUserConfigured)) {
+
+                $params = [
+                    'institution_id' => $entity->institution->id,
+                    'academic_period_id' => $entity->academic_period_id,
+                    'examination_id' => $entity->examination_id,
+                    'examination_centre_id' => $entity->examination_centre_id,
+                    'openemis_no' => $entity->openemis_no,
+                    'referrer' => $referrerUrl,
+                ];
+
+                $url = [
+                    'plugin' => 'Examination',
+                    'controller' => 'Examinations',
+                    'action' => 'syncStudentsToExam',
+                ];
+
+
+                $buttons['sync'] = [
+                    'label' => '<i class="kd-process"></i>' . __('Sync'),
+                    'attr' => [
+                        'role' => 'menuitem',
+                        'tabindex' => '-1',
+                        'escape' => false
+                    ],
+                    'url' => $this->setQueryString($url, $params),
+                ];
+            }
+        }
+
+        return $buttons;
+    }
+
+    /**
+     * Returns the sync status as a human-readable string.
+     *
+     * @param \Cake\Event\Event $event The event instance.
+     * @param \Cake\ORM\Entity $entity The entity object.
+     * @return string|null The human-readable sync status.
+     */
+    public function onGetSyncStatus(Event $event, Entity $entity)
+    {
+
+        switch ($entity->sync_status) {
+            case 1:
+                return 'Completed'; // Sync completed
+            case -1:
+                return 'Error'; // Error during sync
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Returns the last synced timestamp as a formatted string.
+     *
+     * @param \Cake\Event\Event $event The event instance.
+     * @param \Cake\ORM\Entity $entity The entity object.
+     * @return string|null The formatted date/time of the last sync.
+     */
+
+    public function onGetLastSynced(Event $event, Entity $entity)
+    {
+
+        if ($entity->last_synced instanceof FrozenTime || $entity->last_synced instanceof \DateTime) {
+            return $entity->last_synced->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+    public function indexAfterAction(Event $event, $data)
+    {
+        $this->field('date_of_birth', ['visible' => false]);
+        $this->field('gender_id', ['visible' => false]);
+        $this->field('identity_type', ['visible' => false]);
+        $this->field('nationality', ['visible' => false]);
+        $this->field('identity_number', ['visible' => false]);
+        $this->field('repeated', ['visible' => false]);
+        $this->field('transferred', ['visible' => false]);
+        $this->field('sync_status', ['visible' => true]);
+        $this->field('last_synced', ['visible' => true]);
+    }
+
+    //POCOR-7509 end
+}
