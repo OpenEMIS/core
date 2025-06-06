@@ -20,8 +20,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 COPY . .
 WORKDIR /var/www/html/api
-RUN apt install git -y
-RUN --mount=type=ssh rm composer.lock && composer install && composer dump-autoload
+RUN composer update && composer dump-autoload
 RUN php artisan config:clear && \
     php artisan cache:clear && \
     php artisan view:clear && \
@@ -31,9 +30,10 @@ RUN php artisan config:clear && \
     php artisan config:cache
 WORKDIR /var/www/html
 COPY --from=frontend-builder /app/dist ./webroot/js/angular/dist/
-RUN mv ./webroot/js/angular/dist/styles.css ./webroot/css/angular/main/
-RUN chown -R www-data:www-data /var/www/html && \
-    mkdir logs && \
-    chmod -R 777 /var/www/html/webroot /var/www/html/api/storage /var/www/html/logs
-RUN rm -rf /var/lib/apt/lists/*
+RUN mv ./webroot/js/angular/dist/styles.css ./webroot/css/angular/main/ &&\
+    mkdir -p logs && \
+    rm -rf /var/www/html/docker-config /var/www/html/frontend &&\
+    chmod -R 777 /var/www/html/webroot /var/www/html/api/storage /var/www/html/logs &&\
+    chown -R www-data:www-data /var/www/html &&\
+    rm -rf /var/lib/apt/lists/* 
 CMD ["apache2-foreground"]
