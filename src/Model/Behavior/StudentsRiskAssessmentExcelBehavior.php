@@ -13,7 +13,6 @@ use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use XLSXWriter;
 use Cake\ORM\TableRegistry;
-use Cake\Log\Log;
 
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
@@ -44,7 +43,7 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-    	$this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
+    	$this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
     	if (!isset($config['filename'])) {
     		$this->setConfig('filename', $this->_table->getAlias());
     	}
@@ -139,10 +138,7 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
 
     	$generate($_settings);
 
-    	$labelArray = array("code", "name", "academic_period",
-            "risk_type", "openEMIS_ID", "default_identity_type",
-            "identity_number", "student_first_name", "risk_index",
-            "risk_criterias");
+    	$labelArray = array("code", "name", "academic_period", "risk_type", "openEMIS_ID", "default_identity_type", "identity_number", "student_first_name", "risk_index", "risk_criterias");
 
     	foreach($labelArray as $label) {
             $headerRow[] = $this->getFields($this->_table, $settings, $label);
@@ -277,10 +273,10 @@ private function getData($settings)
             ->find()
             ->select([$riskCriterias->aliasField('criteria'),
                 $institutionStudentRisks->aliasField('total_risk')])
-            ->leftJoin([$studentRisksCriterias->getAlias() => $studentRisksCriterias->getTable()], [
+            ->leftJoin([$studentRisksCriterias->alias() => $studentRisksCriterias->table()], [
                 $studentRisksCriterias->aliasField('institution_student_risk_id = ') . $institutionStudentRisks->aliasField('id')
             ])
-            ->leftJoin([$riskCriterias->getAlias() => $riskCriterias->getTable()], [
+            ->leftJoin([$riskCriterias->alias() => $riskCriterias->table()], [
                 $studentRisksCriterias->aliasField('risk_criteria_id = ') . $riskCriterias->aliasField('id')
             ])
             ->where([
@@ -316,9 +312,7 @@ private function getFields($table, $settings, $label)
    $module = $this->_table->getAlias();
 
    $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
-   $fields = $event->getResult();
-//   Log::debug(print_r($fields, true));
-   return $fields;
+   return $event->getResult();
 }
 
 private function getFooter()
@@ -327,53 +321,53 @@ private function getFooter()
    return $footer;
 }
 
-    private function getValue($entity, $table, $attr)
-    {
-        $value = '';
-        $field = $attr['field'];
-        $type = $attr['type'];
-        $style = [];
+private function getValue($entity, $table, $attr)
+{
+   $value = '';
+   $field = $attr['field'];
+   $type = $attr['type'];
+   $style = [];
 
-        if (!empty($entity)) {
-            if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
-                $method = 'onExcelRender' . Inflector::camelize($type);
-                if (!$this->eventMap($method)) {
-                    $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity, $attr]);
-                } else {
-                    $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
-                }
-                if ($event->getResult()) {
-                    $returnedResult = $event->getResult();
-                    if (is_array($returnedResult)) {
-                        $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
-                        $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
-                    } else {
-                        $value = $returnedResult;
-                    }
-                }
-            } else {
-                $method = 'onExcelGet' . Inflector::camelize($field);
-                $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->getResult()) {
-                    $returnedResult = $event->getResult();
-                    if (is_array($returnedResult)) {
-                        $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
-                        $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
-                    } else {
-                        $value = $returnedResult;
-                    }
-                } elseif ($entity->has($field)) {
-                    if ($this->isForeignKey($table, $field)) {
-                        $associatedField = $this->getAssociatedKey($table, $field);
-                        if ($entity->has($associatedField)) {
-                            $value = $entity->{$associatedField}->name;
-                        }
-                    } else {
-                        $value = $entity->{$field};
-                    }
-                }
-            }
+   if (!empty($entity)) {
+      if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
+         $method = 'onExcelRender' . Inflector::camelize($type);
+         if (!$this->eventMap($method)) {
+            $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity, $attr]);
+        } else {
+            $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
         }
+        if ($event->getResult()) {
+            $returnedResult = $event->getResult();
+            if (is_array($returnedResult)) {
+               $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
+               $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
+           } else {
+               $value = $returnedResult;
+           }
+       }
+   } else {
+     $method = 'onExcelGet' . Inflector::camelize($field);
+     $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
+     if ($event->getResult()) {
+        $returnedResult = $event->getResult();
+        if (is_array($returnedResult)) {
+           $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
+           $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
+       } else {
+           $value = $returnedResult;
+       }
+   } elseif ($entity->has($field)) {
+    if ($this->isForeignKey($table, $field)) {
+       $associatedField = $this->getAssociatedKey($table, $field);
+       if ($entity->has($associatedField)) {
+          $value = $entity->{$associatedField}->name;
+      }
+  } else {
+   $value = $entity->{$field};
+}
+}
+}
+}
 
 $specialCharacters = ['=', '@'];
 $firstCharacter = substr($value, 0, 1);
