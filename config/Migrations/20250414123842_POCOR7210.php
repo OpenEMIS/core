@@ -18,7 +18,7 @@ class POCOR7210 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_7210_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_7210_security_functions` SELECT * FROM `security_functions`');
         //alter
-        $this->execute("ALTER TABLE `notices` ADD COLUMN `status` INT(11) NOT NULL  AFTER `message`' COMMENT '1 -> Enable, 0 -> Disable'");
+        $this->execute("ALTER TABLE `notices` ADD COLUMN `status` INT(11) NOT NULL COMMENT '1 → Enable, 0 → Disable' AFTER `message`");
 
         $this->execute('ALTER TABLE `notices` ADD COLUMN `subject` VARCHAR(255) NOT NULL AFTER `id`');
         $this->execute('
@@ -70,11 +70,22 @@ class POCOR7210 extends AbstractMigration
     // rollback
     public function down()
     {
-        // Restore table
+        $this->execute('ALTER TABLE `notices` DROP COLUMN `status`');
+
+        // Remove foreign keys before dropping tables
+        $this->execute('ALTER TABLE `notice_roles` DROP FOREIGN KEY `fk_notice_roles_security_role`');
+        $this->execute('ALTER TABLE `notice_roles` DROP FOREIGN KEY `fk_notice_roles_notice`');
+        $this->execute('ALTER TABLE `security_user_notices` DROP FOREIGN KEY `fk_notice_roles_security_user`');
+        $this->execute('ALTER TABLE `security_user_notices` DROP FOREIGN KEY `fk_notice_user`');
+
+        // Drop newly created tables
+        $this->execute('DROP TABLE IF EXISTS `notice_roles`');
+        $this->execute('DROP TABLE IF EXISTS `security_user_notices`');
+
+        // Restore original tables
         $this->execute('DROP TABLE IF EXISTS `notices`');
         $this->execute('RENAME TABLE `zz_7210_notices` TO `notices`');
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `zz_7210_security_functions` TO `security_functions`');
-        $this->execute('DROP TABLE IF EXISTS `notice_roles`');
     }
 }
