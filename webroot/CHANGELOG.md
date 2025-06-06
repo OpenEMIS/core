@@ -1,3 +1,34 @@
+### [4.27.0] - 2025-06-05
+- Implemented: Develop student report cards placeholder for class rank and grade rank
+- Bug Fixed: Institutions > Survey > Forms > View > Edit > Teachers and Staff : User receives a 404 error message when editing.
+- Bug Fixed: Institutions>General>Shifts: As a super admin, user is unable to edit/update any existing shifts in the system.
+- Bug Fixed: Reports > Institutions > Staff Leave: The column Date From and Date To is not showing any data eventhough there are leave applied
+- Bug Fixed: Reports > Survey > Institutions: Data is not showing for table field answer
+- Bug Fixed: Administration > Security > Roles: Unable to reorder the system roles
+- Bug Fixed: API: 500 internal server error for file content
+- Bug Fixed: Institution > Surveys > Forms: Reduce the width of table question fields in surveys for number
+- Bug Fixed: Institutions>Visits>Add: User should be able to add
+- Bug Fixed: Institutions > Performance > GPA : Page doesn't change when selecting a different year.
+- Bug Fixed: Institutions > Students > Special Needs > Assessments: When searching for assignee in the special needs assessment page, the page does not load the list of users to be selected
+- Bug Fixed: Institutions > Students > GPA Tab : Inconsistent Cumulative GPA
+- Bug Fixed: The OpenEMIS Core http / https configuration should be dynamic
+
+### [4.26.2] - 2025-05-30
+- Bug Fixed: Institutions > Performance > Report Cards : Paddings and Border should follow what is configured in the template
+- Bug Fixed: Institutions > Staff > Career > Appraisal > Add > Save: When saving appraisal form, there is a 404 error: array_key_exists(): Argument #2 ($array) must be of type array, ArrayObject given
+- Bug Fixed: Institutions > Performances > Report Cards : Update assessment marks placeholder to display Exempted and Unassigned accordingly
+- Bug Fixed: Administration>Survey>Forms>Rules: Rules are not showing correctly
+- Bug Fixed: Administrations > System Setup > Field Options > Students Withdraw Reasons: 404 error when saving
+- Bug Fixed: Administration>Communication>Alert Rules: Student number should be student name
+- Bug Fixed: Institutions > General > Overview> Export: When exporting for an institution, system exports all institutions instead of the selected institution
+- Bug Fixed: Guardians > Academic > Textbooks tab : Page should be retrieving the list of textbook that is given to student
+
+### [4.26.1] - 2025-05-28
+- Bug Fixed: Institutions > Students > Pending Admission > Bulk Admission: User receives a 404 error message when transferring students.
+- Bug Fixed: Institutions>Surveys>Forms: Survey is getting 404 when saving
+- Bug Fixed: Institutions>Dashboard: Staff attendance dashboard should calculate attendance based on time in
+- Bug Fixed: Administration>Profile>Students: Subject result should show for assessment configuration and date completed/date started should show
+
 ### [4.26.0] - 2025-05-27
 - Implemented: Develop changes to student report card generatation to include gpa and cumulative gpa
 
