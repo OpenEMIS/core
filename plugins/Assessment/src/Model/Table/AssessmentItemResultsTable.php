@@ -451,6 +451,56 @@ class AssessmentItemResultsTable extends AppTable
         }
     }
 
+    /**
+     * Evaluates the grading type and determines the appropriate grading option for a given assessment mark.
+     *
+     * This method checks the grading type (MARKS, GRADES, DURATION) associated with the assessment item
+     * and matches the mark against the defined grading options. It sets the `assessment_grading_option_id`
+     * and attaches the related `assessment_grading_option` and `assessment_grading_type` entities to the provided entity.
+     *
+     * POCOR-9143: Ensures grading logic is applied consistently across all assessments.
+     *
+     * @param \Cake\ORM\Entity $entity Entity containing `marks`, `assessment_id`, `assessment_period_id`, and `education_subject_id`
+     * @return \Cake\ORM\Entity The updated entity with `assessment_grading_option`, `assessment_grading_option_id`, and `assessment_grading_type` set
+     *
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function evaluateGradingForMarks(Entity $entity): Entity
+    {
+        $educationSubjectId = $entity->education_subject_id;
+        $assessmentId = $entity->assessment_id;
+        $assessmentPeriodId = $entity->assessment_period_id;
+
+        $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes');
+        $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
+            ->find()
+            ->contain('AssessmentGradingTypes.GradingOptions')
+            ->where([
+                $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubjectId,
+                $AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId,
+                $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assessmentPeriodId
+            ])
+            ->first();
+
+        if ($assessmentItemsGradingTypeEntity?->assessment_grading_type) {
+            $gradingType = $assessmentItemsGradingTypeEntity->assessment_grading_type;
+            $entity->set('assessment_grading_type', $gradingType);
+
+            if (in_array($gradingType->result_type, ['MARKS', 'DURATION']) &&
+                !empty($gradingType->grading_options)) {
+                foreach ($gradingType->grading_options as $gradingOptionObj) {
+                    if ($entity->marks >= $gradingOptionObj->min && $entity->marks <= $gradingOptionObj->max) {
+                        $entity->set('assessment_grading_option', $gradingOptionObj);
+                        $entity->set('assessment_grading_option_id', $gradingOptionObj->id);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $entity;
+    }
+
     public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId, $institutionClassesId, $assessmentPeriodId, $institutionId)
     {
         $query = $this->find();
@@ -943,7 +993,7 @@ class AssessmentItemResultsTable extends AppTable
                 'education_subject_id' => 'assessment_items.education_subject_id',
                 'assessment_period_id' => $exemptions_table->aliasField('assessment_period_id'),
                 'assessment_id' => $exemptions_table->aliasField('assessment_id'),
-                'type' => $exemptions_table->aliasField('type')//POCOR-9042 
+                'type' => $exemptions_table->aliasField('type')//POCOR-9042
             ])
             ->innerJoin(['assessment_items' => 'assessment_items'],
                 [$exemptions_table->aliasField('assessment_id') . ' = assessment_items.assessment_id AND ' .

@@ -13,6 +13,12 @@ use App\Model\Table\AppTable;
 use Cake\I18n\FrozenTime;//POCOR-7319
 use Cake\Http\Session;
 use Cake\Datasource\ConnectionManager;
+use Cake\ORM\Table; // POCOR-9162
+use Institution\Model\Table\ReportCardGpaTable; // POCOR-9162
+use Institution\Model\Table\ReportCardCumulativeGpaTable;
+use Cake\ORM\Entity; // POCOR-9143
+
+// POCOR-9162
 
 class ReportCardsTable extends AppTable
 {
@@ -150,13 +156,14 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
     {
-        $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $StudentsReportCards = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCards'); // POCOR-9162
         if (!$StudentsReportCards->exists($params)) {
             // insert student report card record if it does not exist
             $params['status'] = $StudentsReportCards::IN_PROGRESS;
             $params['started_on'] = date('Y-m-d H:i:s');
             $newEntity = $StudentsReportCards->newEntity($params);
             $StudentsReportCards->save($newEntity);
+
         } else {
             // update status to in progress if record exists
             $StudentsReportCards->updateAll([
@@ -164,11 +171,12 @@ class ReportCardsTable extends AppTable
                 'started_on' => date('Y-m-d H:i:s')
             ], $params);
         }
+
     }
 
     public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
     {
-        $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $StudentsReportCards = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCards'); // POCOR-9162
         $studentReportCardData = $StudentsReportCards
             ->find()
             ->select([
@@ -219,7 +227,7 @@ class ReportCardsTable extends AppTable
         $status = $StudentsReportCards::GENERATED;
 
         //POCOR-6716[START]
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems'); // POCOR-9162
         $timeZone = $ConfigItems->value("time_zone");
         date_default_timezone_set($timeZone);
         $currentTimeZone = date("Y-m-d H:i:s");
@@ -235,7 +243,7 @@ class ReportCardsTable extends AppTable
 
         //POCOR-7319 starts
         //saving generated report card entries in reprt_card_processes_table
-        $ReportCardProcesses = TableRegistry::Get('ReportCard.ReportCardProcesses');
+        $ReportCardProcesses = self::getDynamicTableInstance('ReportCard.ReportCardProcesses'); // POCOR-9162
         $ReportCardProcessesData = $ReportCardProcesses->find()
             ->where([
                 'report_card_id' => $params['report_card_id'],
@@ -257,7 +265,7 @@ class ReportCardsTable extends AppTable
         //POCOR-7319 ends
 
 
-        // $ReportCardProcesses = TableRegistry::Get('ReportCard.ReportCardProcesses');
+        // $ReportCardProcesses = self::getDynamicTableInstance('ReportCard.ReportCardProcesses');
         // $ReportCardProcesses->deleteAll([
         //     'report_card_id' => $params['report_card_id'],
         //     'institution_class_id' => $params['institution_class_id'],
@@ -285,7 +293,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseReportCards(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['report_card_id'])) {
-            $ReportCards = TableRegistry::get('ReportCard.ReportCards');
+            $ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards'); // POCOR-9162
             $entity = $ReportCards->get($params['report_card_id'], ['contain' => ['AcademicPeriods', 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']]);
 
             $extra['report_card_start_date'] = $entity->start_date;
@@ -298,10 +306,31 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentsReportCards(Event $event, array $params, ArrayObject $extra)
     {
-        $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+        $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa'); // POCOR-9162
         if (isset($params['report_card_id'], $params['student_id'], $params['institution_id'], $params['academic_period_id'], $extra['report_card_education_grade_id'])) {
-            $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            // POCOR-9162 start
+            $student_id = $params['student_id'];
+            $institution_id = $params['institution_id'];
+            $education_grade_id = $params['education_grade_id'];
+            $academic_period_id = $params['academic_period_id'];
+
+            if (!empty($student_id) && !empty($institution_id) &&
+                !empty($education_grade_id) && !empty($academic_period_id)) {
+//                ReportCardGpaTable::addGpaReportCards(
+//                    $student_id,
+//                    $academic_period_id,
+//                    $institution_id,
+//                    $education_grade_id);
+                ReportCardCumulativeGpaTable::addGpaReportCards(
+                    $student_id,
+                    $academic_period_id,
+                    $institution_id,
+                    $education_grade_id);
+            }
+
+            $StudentsReportCards = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCards');
+            $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+            // POCOR-9162 end
             $dateFormat = $ConfigItems->value('date_format');
 
             //POCOR-8967 -- START
@@ -404,7 +433,7 @@ class ReportCardsTable extends AppTable
                 $reportCardEndDate = $extra['report_card_end_date'];
                 $studentId = $entity->student_id;
 
-                $UserBodyMasses = TableRegistry::get('User.UserBodyMasses');
+                $UserBodyMasses = self::getDynamicTableInstance('User.UserBodyMasses'); // POCOR-9162
                 $userBodyMassData = $UserBodyMasses->find()
                     ->where([
                         $UserBodyMasses->aliasField('security_user_id') => $studentId,
@@ -440,7 +469,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseFirstGuardian(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id'])) {
-            $StudentGuardians = TableRegistry::get('Student.Guardians');
+            $StudentGuardians = self::getDynamicTableInstance('Student.Guardians'); // POCOR-9162
             $entity = $StudentGuardians
                 ->find()
                 ->select([
@@ -478,7 +507,7 @@ class ReportCardsTable extends AppTable
 
                         $row['contact'] = [];
 
-                        $UserContacts = TableRegistry::get('User.Contacts');
+                        $UserContacts = self::getDynamicTableInstance('User.Contacts'); // POCOR-9162
                         $userContactResults = $UserContacts
                             ->find()
                             ->contain(['ContactTypes.ContactOptions'])
@@ -503,8 +532,8 @@ class ReportCardsTable extends AppTable
     {
         if (isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
-            //$Extracurriculars = TableRegistry::get('Student.Extracurriculars');
-            $Extracurriculars = TableRegistry::get('student_extracurriculars');
+            //$Extracurriculars = self::getDynamicTableInstance('Student.Extracurriculars');
+            $Extracurriculars = self::getDynamicTableInstance('student_extracurriculars'); // POCOR-9162
             $entity = $Extracurriculars->find()
                 //->contain('ExtracurricularTypes')
                 ->where([
@@ -537,7 +566,7 @@ class ReportCardsTable extends AppTable
     {
         if (isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
-            $Awards = TableRegistry::get('User.Awards');
+            $Awards = self::getDynamicTableInstance('User.Awards'); // POCOR-9162
 
             $query = $Awards->find();
             $dateFormat = $query->func()->date_format([
@@ -564,7 +593,7 @@ class ReportCardsTable extends AppTable
     {
         if (isset($params['student_id']) && isset($params['academic_period_id']) && isset($params['institution_id']) && isset($extra['report_card_education_grade_id'])) {
 
-            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $InstitutionStudents = self::getDynamicTableInstance('Institution.Students'); // POCOR-9162
 
             $query = $InstitutionStudents->find();
             $dateFormat = $query->func()->date_format([
@@ -591,11 +620,11 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionStudentsReportCardsComments(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['report_card_id']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
-            $StudentsReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
-            $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
+            $StudentsReportCardsComments = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCardsComments'); // POCOR-9162
+            $ReportCardSubjects = self::getDynamicTableInstance('ReportCard.ReportCardSubjects'); // POCOR-9162
             /**POCOR-6810 starts- modified query to get only assigned subjects of student*/
-            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-            $SecurityUsers = TableRegistry::get('security_users');//POCOR-5227
+            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
+            $SecurityUsers = self::getDynamicTableInstance('security_users');//POCOR-5227 // POCOR-9162
             $AssessmentItemData = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
@@ -614,7 +643,7 @@ class ReportCardsTable extends AppTable
                 return $entity;
             }
 
-            $ModifiedSecurityUsers = TableRegistry::get('security_users');//POCOR-5054
+            $ModifiedSecurityUsers = self::getDynamicTableInstance('security_users');//POCOR-5054 // POCOR-9162
             foreach ($AssessmentItemData as $value) {
                 $reprotCardComment = $StudentsReportCardsComments->find()
                     ->select([
@@ -693,7 +722,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id'])) {
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions'); // POCOR-9162
             $entity = $Institutions->get($params['institution_id'], ['contain' => ['Providers', 'Areas', 'AreaAdministratives']]);
             return $entity;
         }
@@ -703,11 +732,11 @@ class ReportCardsTable extends AppTable
     {
         //POCOR-8013 rewritten
         if (isset($params['institution_id'])) {
-            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            $SecurityRoles = self::getDynamicTableInstance('Security.SecurityRoles'); // POCOR-9162
             $staffRoleId = $SecurityRoles->getPrincipalRoleId();
             $institutionId = $params['institution_id'];
             //POCOR-8093 to fetch staff position
-            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles'); // POCOR-9162
             $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
             $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             if (!empty($staff)) {
@@ -722,11 +751,11 @@ class ReportCardsTable extends AppTable
     {
         //POCOR-8013 rewritten
         if (isset($params['institution_id'])) {
-            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            $SecurityRoles = self::getDynamicTableInstance('Security.SecurityRoles'); // POCOR-9162
             $staffRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
             $institutionId = $params['institution_id'];
             //POCOR-8093 to fetch staff position
-            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $StaffPositionTitles = self::getDynamicTableInstance('Institution.StaffPositionTitles'); // POCOR-9162
             $staffPosnId = $StaffPositionTitles->getDeputyPrincipalRoleId();
             $staff = self::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             if (!empty($staff)) {
@@ -741,7 +770,7 @@ class ReportCardsTable extends AppTable
     {
 
         if (isset($params['institution_class_id'])) {
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses'); // POCOR-9162
             $entity = $InstitutionClasses->get($params['institution_class_id'], [
                 'contain' => [
                     'Staff' => [
@@ -797,7 +826,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionSubjectStudents(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
-            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
             $entity = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
@@ -815,7 +844,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionSubjectStudentsWithName(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
-            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
             $subjectObj = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
@@ -852,7 +881,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentBehaviours(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
+            $StudentBehaviours = self::getDynamicTableInstance('Institution.StudentBehaviours'); // POCOR-9162
 
             $entity = $StudentBehaviours->find()
                 ->contain('StudentBehaviourCategories')
@@ -875,12 +904,12 @@ class ReportCardsTable extends AppTable
             $startDate = $extra['report_card_start_date']->format('Y-m-d');
             $endDate = $extra['report_card_end_date']->format('Y-m-d');
             /**POCOR-6685 starts - modified main table as suggested by client*/
-            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            $InstitutionStudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences'); // POCOR-9162
             //POCOR-7050 start
-            $configVal = TableRegistry::get('config_items');
+            $configVal = self::getDynamicTableInstance('config_items'); // POCOR-9162
             $configData = $configVal->find()->select(['val' => $configVal->aliasField('value')])->where([$configVal->aliasField('code') => 'calculate_daily_attendance'])->first();
             $configOption = $configData['val'];
-            $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
+            $InstitutionStudentAbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details'); // POCOR-9162
             $studentAbsenceResults = $InstitutionStudentAbsences
                 ->find()
                 ->innerJoin(
@@ -902,9 +931,9 @@ class ReportCardsTable extends AppTable
 
             /**POCOR-6685 ends*/
             /**POCOR-7040 ends*/
-            $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
+            $AbsenceTypes = self::getDynamicTableInstance('Institution.AbsenceTypes'); // POCOR-9162
             $absenceTypes = $AbsenceTypes->getCodeList();
-            $studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
+            $studentAttendanceMarkedRecords = self::getDynamicTableInstance('student_attendance_marked_records'); // POCOR-9162
 
             $results = [];
             foreach ($absenceTypes as $key => $code) {
@@ -913,7 +942,7 @@ class ReportCardsTable extends AppTable
             }
             $results['TOTAL_ABSENCE']['number_of_days'] = 0;
             $period = array(1, 2);
-            $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
+            $InstitutionStudentAbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details'); // POCOR-9162
             $checkstudent = $InstitutionStudentAbsenceDetails->find()->select(['period' => $InstitutionStudentAbsenceDetails->aliasField('period')])->where([$InstitutionStudentAbsenceDetails->aliasField('student_id') => $params['student_id'], $InstitutionStudentAbsenceDetails->aliasField('education_grade_id') => $params['education_grade_id'], $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $params['institution_class_id'], $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $params['academic_period_id']])->toArray();
             $countPeriod = array();
             foreach ($checkstudent as $val) {
@@ -958,13 +987,13 @@ class ReportCardsTable extends AppTable
             $startDate = $extra['report_card_start_date']->format('Y-m-d');
             $endDate = $extra['report_card_end_date']->format('Y-m-d');
             /**POCOR-6685 starts - modified main table as suggested by client*/
-            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            $InstitutionStudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences'); // POCOR-9162
             //POCOR-7050 start
-            $configVal = TableRegistry::get('config_items');
+            $configVal = self::getDynamicTableInstance('config_items'); // POCOR-9162
             $configData = $configVal->find()->select(['val' => $configVal->aliasField('value')])->where([$configVal->aliasField('code') => 'calculate_daily_attendance'])->first();
             $configOption = $configData['val'];
 
-            $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
+            $InstitutionStudentAbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details'); // POCOR-9162
             $studentAbsenceResults = $InstitutionStudentAbsenceDetails
                 ->find()
                 ->innerJoin(
@@ -988,9 +1017,9 @@ class ReportCardsTable extends AppTable
             //POCOR-7050 end
             /**POCOR-6685 ends*/
             /**POCOR-7040 ends*/
-            $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
+            $AbsenceTypes = self::getDynamicTableInstance('Institution.AbsenceTypes'); // POCOR-9162
             $absenceTypes = $AbsenceTypes->getCodeList();
-            $studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
+            $studentAttendanceMarkedRecords = self::getDynamicTableInstance('student_attendance_marked_records'); // POCOR-9162
 
             $results = [];
             foreach ($absenceTypes as $key => $code) {
@@ -1265,7 +1294,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyTemplates(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
+            $CompetencyTemplates = self::getDynamicTableInstance('Competency.CompetencyTemplates'); // POCOR-9162
 
             $query = $CompetencyTemplates->find()
                 ->innerJoinWith('Periods')
@@ -1275,7 +1304,7 @@ class ReportCardsTable extends AppTable
                     'Periods.start_date >=' => $extra['report_card_start_date'],
                     'Periods.end_date <=' => $extra['report_card_end_date']
                 ])
-                ->group(['CompetencyTemplates.id']); 
+                ->group(['CompetencyTemplates.id']);
 
             $results = $query->toArray();
 
@@ -1291,8 +1320,8 @@ class ReportCardsTable extends AppTable
     //POCOR-7315::Start
     public function onExcelTemplateInitialiseAttendanceAge(Event $event, array $params, ArrayObject $extra)
     {
-        $EducationGradesTable = TableRegistry::get('Education.EducationGrades');
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $EducationGradesTable = self::getDynamicTableInstance('Education.EducationGrades'); // POCOR-9162
+        $ConfigItemsTable = self::getDynamicTableInstance('Configuration.ConfigItems'); // POCOR-9162
         $results = [];
         $EducationGrades = $EducationGradesTable->get($params['education_grade_id']);
         $AgePlus = $ConfigItemsTable->find()->where(['code' => 'admission_age_plus'])->first();
@@ -1313,9 +1342,9 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyPeriodsByTemplate(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
-            $AbsenceTypesTable = TableRegistry::get('absence_types');
-            $InstitutionStudentAbsenceDays = TableRegistry::get('institution_student_absence_days');
+            $CompetencyPeriods = self::getDynamicTableInstance('Competency.CompetencyPeriods'); // POCOR-9162
+            $AbsenceTypesTable = self::getDynamicTableInstance('absence_types'); // POCOR-9162
+            $InstitutionStudentAbsenceDays = self::getDynamicTableInstance('institution_student_absence_days'); // POCOR-9162
             $conn = ConnectionManager::get('default');
             $entity = $CompetencyPeriods->find()
                 ->select([
@@ -1438,7 +1467,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyPeriods(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
+            $CompetencyPeriods = self::getDynamicTableInstance('Competency.CompetencyPeriods'); // POCOR-9162
 
             $entity = $CompetencyPeriods->find()
                 ->where([
@@ -1458,7 +1487,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyItems(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids'])) {
-            $CompetencyItems = TableRegistry::get('Competency.CompetencyItems');
+            $CompetencyItems = self::getDynamicTableInstance('Competency.CompetencyItems'); // POCOR-9162
 
             // only get items in periods within the report card date
             $entity = $CompetencyItems->find()
@@ -1478,7 +1507,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyCriterias(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids'])) {
-            $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
+            $CompetencyCriterias = self::getDynamicTableInstance('Competency.CompetencyCriterias'); // POCOR-9162
 
             // only get criterias linked to items in periods within the report card date
             $entity = $CompetencyCriterias->find()
@@ -1498,7 +1527,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentCompetencyPeriodComments(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $CompetencyPeriodComments = TableRegistry::get('Institution.InstitutionCompetencyPeriodComments');
+            $CompetencyPeriodComments = self::getDynamicTableInstance('Institution.InstitutionCompetencyPeriodComments'); // POCOR-9162
 
             $entity = $CompetencyPeriodComments->find()
                 ->where([
@@ -1517,7 +1546,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentCompetencyItemComments(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $CompetencyItemComments = TableRegistry::get('Institution.InstitutionCompetencyItemComments');
+            $CompetencyItemComments = self::getDynamicTableInstance('Institution.InstitutionCompetencyItemComments'); // POCOR-9162
 
             $entity = $CompetencyItemComments->find()
                 ->where([
@@ -1536,7 +1565,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseCompetencyCriteriasWithResults(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['academic_period_id'])) {
-            $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
+            $CompetencyCriterias = self::getDynamicTableInstance('Competency.CompetencyCriterias'); // POCOR-9162
 
             // only get criterias linked to items in periods within the report card date
             $entity = $CompetencyCriterias->find()
@@ -1591,7 +1620,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $StudentCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
+            $StudentCompetencyResults = self::getDynamicTableInstance('Institution.InstitutionCompetencyResults'); // POCOR-9162
 
             $entity = $StudentCompetencyResults->find()
                 ->contain('CompetencyGradingOptions')
@@ -1611,7 +1640,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseAssessments(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
-            $Assessments = TableRegistry::get('Assessment.Assessments');
+            $Assessments = self::getDynamicTableInstance('Assessment.Assessments'); // POCOR-9162
 
             $entity = $Assessments->find()
                 ->where([
@@ -1630,7 +1659,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['assessment_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-9162
 
             // Fetch the query result using all() to get the actual result set
             $query = $AssessmentPeriods->find()
@@ -1644,7 +1673,7 @@ class ReportCardsTable extends AppTable
             $results = $query->toArray();
 
             if (!empty($results)) {
-                $extra['assessment_period_ids'] = array_column($results, 'id'); 
+                $extra['assessment_period_ids'] = array_column($results, 'id');
             }
 
             return $results;
@@ -1657,8 +1686,8 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseAssessmentItems(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['assessment_id']) && isset($params['institution_class_id'])) {
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-            $StudentSubjects = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems'); // POCOR-9162
+            $StudentSubjects = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
             $entity = $AssessmentItems
                 ->find('assessmentItemsInClass', [
                     'assessment_id' => $extra['assessment_id'],
@@ -1685,8 +1714,8 @@ class ReportCardsTable extends AppTable
     {
         if (isset($extra['assessment_id']) && isset($params['institution_class_id'])) {
             //Start: POCOR-6769
-            /*$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-            $StudentSubjects = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            /*$AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
+            $StudentSubjects = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
             $AssessmentItemData = $AssessmentItems
                 ->find('assessmentItemsInClass', [
                     'assessment_id' => $extra['assessment_id'],
@@ -1706,7 +1735,7 @@ class ReportCardsTable extends AppTable
                 ->group('education_subject_id')
 
                 ->toArray();*/
-            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-9162
             $AssessmentItemData = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $params['student_id'],
@@ -1727,9 +1756,9 @@ class ReportCardsTable extends AppTable
                 return $entity;
             }//POCOR-6327 ends
 
-            $Staff = TableRegistry::get('institution_staff'); //POCOR-7157
-            $endAssignment = TableRegistry::get('staff_statuses')->findByCode('END_OF_ASSIGNMENT')->first()->id; //POCOR-7157 pass this in where clause
-            $StudentSubjectStaff = TableRegistry::get('institution_subject_staff');
+            $Staff = self::getDynamicTableInstance('institution_staff'); //POCOR-7157
+            $endAssignment = self::getDynamicTableInstance('staff_statuses')->findByCode('END_OF_ASSIGNMENT')->first()->id; //POCOR-7157 pass this in where clause
+            $StudentSubjectStaff = self::getDynamicTableInstance('institution_subject_staff');
             foreach ($AssessmentItemData as $value) {
                 $StudentSubjectStaffData = $StudentSubjectStaff->find()
                     ->select([
@@ -1779,8 +1808,8 @@ class ReportCardsTable extends AppTable
         if (isset($params['institution_class_id']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['education_grade_id']) && isset($params['academic_period_id'])) {
 
             // To get the Assessment Item that template selected subject
-            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
             $query = $AssessmentItemResults->find();
 
             $selectedColumns = [
@@ -1859,7 +1888,7 @@ class ReportCardsTable extends AppTable
                 ->toArray();
 
             // To get the student subject based on the template selected subject
-            $StudentSubjects = TableRegistry::get('Student.StudentSubjects');
+            $StudentSubjects = self::getDynamicTableInstance('Student.StudentSubjects');
             $studentRegisteredSubjectAndInsideTemplate = [];
             foreach ($entity as $value) {
                 $studentSubjectsQuery = $StudentSubjects->find();
@@ -1890,7 +1919,7 @@ class ReportCardsTable extends AppTable
     {
         if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
 
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
 
             $entity = $AssessmentItems->find()
                 ->find('assessmentItemsInClass', [
@@ -1919,11 +1948,42 @@ class ReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
+    /**
+     * Excel export logic for initializing AssessmentItemResults per student, subject, and assessment period.
+     *
+     * This function was refactored to use shared helper functions such as `getLastMark()` and `evaluateGradingForMarks()`
+     * from the Assessment module to ensure consistent mark retrieval and formatting. Prior versions used manual
+     * calculations and formatting, which led to duplication and inconsistencies.
+     *
+     * POCOR-9143: Centralized mark calculation and formatting logic to reduce redundancy and ensure consistency
+     * across the application (UI and export tools).
+     *
+     * @param \Cake\Event\Event $event The event object
+     * @param \ArrayAccess $params Parameters passed to the event listener (student_id, institution_class_id, etc.)
+     * @param \ArrayAccess $extra Extra context data (assessment_id, assessment_period_ids, etc.)
+     * @return array The search results.
+     *
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra): array
     {
-        if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
-            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+        $student_id = $params['student_id'];
+        $institution_id = $params['institution_id'];
+        $marksBySubject = [];
+        if (isset($params['institution_class_id'])
+            && isset($extra['assessment_id'])
+            && isset($extra['assessment_period_ids'])
+            && !empty($extra['assessment_period_ids'])
+            && isset($institution_id)
+            && isset($student_id)
+            && isset($extra['report_card_education_grade_id'])
+            && isset($params['academic_period_id'])) {
+            $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
+
+
+            // to only process the query if the class has subjects
 
             $subjectList = $AssessmentItems
                 ->find('list', [
@@ -1936,140 +1996,87 @@ class ReportCardsTable extends AppTable
                 ])
                 ->toArray();
 
-            // to only process the query if the class has subjects
-            $conditions = [];
-            if (!empty($subjectList)) {
-                $conditions = [
-                    $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
-                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
-                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
-                    $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
-                    $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
-                    $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
-                ];
-            } else {
-                $conditions = ['1 = 0'];
-            }
+            // 🦕 Loop through subjects and collect latest marks
+            foreach ($subjectList as $subjectId) {
+                foreach ($extra['assessment_period_ids'] as $periodId) {
+                    $options = [
+                        'student_id' => $student_id,
+                        'institution_id' => $institution_id,
+                        'academic_period_id' => $params['academic_period_id'],
+                        'education_grade_id' => $extra['report_card_education_grade_id'],
+                        'education_subject_id' => $subjectId,
+                        'assessment_period_id' => $periodId,
+                        'assessment_id' => $extra['assessment_id']
+                    ];
 
-            $entity = $AssessmentItemResults->find()
-                ->innerJoin(
-                    [$this->getAlias() => $this->getTable()],
-                    [
-                        $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
-                        $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
-                        $this->aliasField('education_grade_id = ') . $AssessmentItemResults->aliasField('education_grade_id'),
-                        $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
-                        $this->aliasField('institution_class_id') => $params['institution_class_id']
-                    ]
-                )
-                ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
-                //POCOR-6846: START
-                ->order([
-                    $AssessmentItemResults->aliasField('created') => 'DESC'
+                    $marks = $AssessmentItemResults::getLastMark($options);
+                    $exemptions = $AssessmentItemResults::getLastExemptions($options);
+                    $exemption = array_shift($exemptions);
 
-                ])
-                //POCOR-6846: END
-                ->where($conditions)
-                ->formatResults(function (ResultSetInterface $results) {
-                    return $results->map(function ($row) {
-                        $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
+                    if (!empty($exemption) && isset($exemption['type']) && $exemption['type'] > 0) {
+                        $marksBySubject[$student_id][$subjectId][$periodId] = $exemption['type'] == 1 ? 'Unassigned' : 'Exempted';
+                    } elseif (!empty($marks)) {
+                        $rawMark = round($marks[0]['marks'], 2);
+                        $entity = new \Cake\ORM\Entity($marks[0]);
+                        $entity->set('marks', $rawMark);
+                        $entity = $AssessmentItemResults::evaluateGradingForMarks($entity);
+
+                        $resultType = $entity->get('assessment_grading_type')->get('result_type') ?? 'MARKS';
 
                         switch ($resultType) {
                             case 'MARKS':
-                                $row['marks_formatted'] = number_format($row['marks'], 2);
+                                $formatted = number_format($rawMark, 2);
                                 break;
                             case 'GRADES':
-                                $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
+                                $grading = $entity->get('assessment_grading_option');
+                                $formatted = $grading->code . ' - ' . $grading->name;
                                 break;
                             case 'DURATION':
-                                if (strlen($row['marks']) > 0) {
-                                    $duration = number_format($row['marks'], 2);
-
-                                    list($minutes, $seconds) = explode(".", $duration, 2);
-                                    $row['marks_formatted'] = $minutes . " : " . $seconds;
-                                    break;
-                                }
+                                $duration = number_format($rawMark, 2);
+                                [$minutes, $seconds] = explode(".", $duration);
+                                $formatted = $minutes . ' : ' . $seconds;
+                                break;
                             default:
-                                $row['marks_formatted'] = '';
+                                $formatted = '';
                                 break;
                         }
 
-                        return $row;
-                    });
-                })
-                ->toArray();
-
-            //After transferring from School A to School B all data copy but report card is blank now this issue fixed Start POCOR-6752,
-            if (empty($entity)) {
-                $condition = [];
-                if (!empty($subjectList)) {
-                    $condition = [
-                        $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
-                        $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
-                        $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
-                        $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
-                        $AssessmentItemResults->aliasField('academic_period_id') => $params['academic_period_id'],
-                        $AssessmentItemResults->aliasField('education_subject_id IN') => $subjectList
-                    ];
-                } else {
-                    $condition = ['1 = 0'];
+                        $marksBySubject[$student_id][$subjectId][$periodId] = $formatted;
+                    } else {
+                        $marksBySubject[$student_id][$subjectId][$periodId] = null;
+                    }
                 }
-
-                $entity = $AssessmentItemResults->find()
-                    ->innerJoin(
-                        [$this->getAlias() => $this->getTable()],
-                        [
-                            $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
-                            $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
-                            $this->aliasField('education_grade_id = ') . $AssessmentItemResults->aliasField('education_grade_id'),
-                            $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id')
-                        ]
-                    )
-                    ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
-                    ->order([
-                        $AssessmentItemResults->aliasField('created') => 'DESC'
-
-                    ])
-                    ->where($condition)
-                    ->formatResults(function (ResultSetInterface $results) {
-                        return $results->map(function ($row) {
-                            $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
-
-                            switch ($resultType) {
-                                case 'MARKS':
-                                    $row['marks_formatted'] = number_format($row['marks'], 2);
-                                    break;
-                                case 'GRADES':
-                                    $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
-                                    break;
-                                case 'DURATION':
-                                    if (strlen($row['marks']) > 0) {
-                                        $duration = number_format($row['marks'], 2);
-
-                                        list($minutes, $seconds) = explode(".", $duration, 2);
-                                        $row['marks_formatted'] = $minutes . " : " . $seconds;
-                                        break;
-                                    }
-                                default:
-                                    $row['marks_formatted'] = '';
-                                    break;
-                            }
-
-                            return $row;
-                        });
-                    })
-                    ->toArray();
-            }// End POCOR-6752
-
-            return $entity;
+            }
         }
+        $entityResults = [];
+
+        foreach ($marksBySubject as $studentId => $subjectData) {
+            foreach ($subjectData as $subjectId => $periodData) {
+                foreach ($periodData as $periodId => $formattedMark) {
+                    $entityResults[] = new Entity([
+                        'student_id' => $studentId,
+                        'education_subject_id' => $subjectId,
+                        'assessment_period_id' => $periodId,
+                        'marks_formatted' => $formattedMark,
+                        'assessment_id' => $extra['assessment_id'],
+                        'academic_period_id' => $params['academic_period_id'],
+                        'education_grade_id' => $extra['report_card_education_grade_id'],
+                        'institution_id' => $params['institution_id'],
+                        'institution_classes_id' => $params['institution_class_id'] ?? null, // in case it's optional
+                    ], ['source' => 'Assessment.AssessmentItemResults']);
+                }
+            }
+        }
+
+//        Log::debug(print_r([__FUNCTION__ => $entityResults], true));
+        return $entityResults;
+
     }
 
     public function onExcelTemplateInitialiseOutcomeTemplates(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+            $OutcomeTemplates = self::getDynamicTableInstance('Outcome.OutcomeTemplates');
 
             $entity = $OutcomeTemplates
                 ->find()
@@ -2092,7 +2099,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseOutcomePeriods(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
-            $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+            $OutcomePeriods = self::getDynamicTableInstance('Outcome.OutcomePeriods');
 
             $entity = $OutcomePeriods->find()
                 ->where([
@@ -2116,8 +2123,8 @@ class ReportCardsTable extends AppTable
 
             $classId = $params['institution_class_id'];
             $studentId = $params['student_id'];
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-            $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
+            $EducationSubjects = self::getDynamicTableInstance('Education.EducationSubjects');
+            $OutcomePeriods = self::getDynamicTableInstance('Outcome.OutcomePeriods');
             $mergeEntity = [];
 
             $entity = $EducationSubjects
@@ -2163,7 +2170,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseOutcomeCriterias(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['academic_period_id']) && isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids'])) {
-            $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
+            $OutcomeCriterias = self::getDynamicTableInstance('Outcome.OutcomeCriterias');
 
             $entity = $OutcomeCriterias->find()
                 ->where([
@@ -2191,7 +2198,7 @@ class ReportCardsTable extends AppTable
     {
         if (isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids']) && isset($extra['outcome_periods_ids']) && !empty($extra['outcome_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
 
-            $OutcomeSubjectComments = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
+            $OutcomeSubjectComments = self::getDynamicTableInstance('Institution.InstitutionOutcomeSubjectComments');
             $entity = $OutcomeSubjectComments->find()
                 ->where([
                     $OutcomeSubjectComments->aliasField('outcome_template_id IN ') => $extra['outcome_templates_ids'],
@@ -2208,7 +2215,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentOutcomeResults(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids']) && isset($extra['outcome_periods_ids']) && !empty($extra['outcome_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $StudentOutcomeResults = TableRegistry::get('Institution.InstitutionOutcomeResults');
+            $StudentOutcomeResults = self::getDynamicTableInstance('Institution.InstitutionOutcomeResults');
 
             $entity = $StudentOutcomeResults->find()
                 ->contain('OutcomeGradingOptions')
@@ -2227,8 +2234,8 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
-            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
             $query = $AssessmentItemResults->find();
 
             $selectedColumns = [
@@ -2315,7 +2322,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseGroupAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['assessment_id'])) {
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods');
 
             $selectedColumns = [
                 'academic_term_value' => '(
@@ -2346,8 +2353,8 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseAssessmentTermResults(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
-            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
             $query = $AssessmentItemResults->find();
 
             $selectedColumns = [
@@ -2445,13 +2452,13 @@ class ReportCardsTable extends AppTable
     {
         if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
 
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
             $nextAcademicPeriodId = $AcademicPeriods->getNextAcademicPeriodId($params['academic_period_id']);
             $studentId = $params['student_id'];
             $institutionId = $params['institution_id'];
 
             if(isset($nextAcademicPeriodId)){
-                $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+                $InstitutionSubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
 
                 $institutionSubjectStudentsEntities = $InstitutionSubjectStudents->find()
                     ->select([
@@ -2493,7 +2500,7 @@ class ReportCardsTable extends AppTable
         if ($condition) {
             $studentId = $params['student_id'];
             $institutionId = $params['institution_id'];
-            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $InstitutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');
             $institutionClassStudentsEntities = $InstitutionClassStudents->find()
                 ->select(['InstitutionClasses.name'])
                 ->where([
@@ -2514,7 +2521,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentIdentities(Event $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id'])) {
-            $UserIdentities = TableRegistry::get('user_identities');
+            $UserIdentities = self::getDynamicTableInstance('user_identities');
 
             $entity = $UserIdentities
                 ->find()
@@ -2547,12 +2554,12 @@ class ReportCardsTable extends AppTable
      public static function getInstitutionSecurityStaff($institutionId, $staffPosnId)
      {
 
-         $Staff = TableRegistry::get('Institution.Staff');
+         $Staff = self::getDynamicTableInstance('Institution.Staff');
          $institutionSecurityGroupsIds = self::getInstitutionSecurityGroupsIds($institutionId);
  //        Log::debug('$institutionSecurityGroupsIds');
  //        Log::debug($institutionSecurityGroupsIds);
-         $institutionsPositions = TableRegistry::get('Institution.InstitutionPosition');//POCOR-8093
-         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+         $institutionsPositions = self::getDynamicTableInstance('Institution.InstitutionPosition');//POCOR-8093
+         $StaffStatuses = self::getDynamicTableInstance('Staff.StaffStatuses');
          $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
          //POCOR-8798
          if(!empty($staffPosnId)){
@@ -2634,7 +2641,7 @@ class ReportCardsTable extends AppTable
      */
     private static function getInstitutionSecurityGroupsIds($institution_id)
     {
-        $securityGroupInstitutions = TableRegistry::get('security_group_institutions');
+        $securityGroupInstitutions = self::getDynamicTableInstance('security_group_institutions');
         $distinctResults = $securityGroupInstitutions
             ->find('all')
             ->select(['security_group_id'])
@@ -2661,16 +2668,24 @@ class ReportCardsTable extends AppTable
      */
     public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpa(Event $event, array $params, ArrayObject $extra)
     {
-        if (!empty($params['student_id']) && !empty($params['institution_id']) &&
-            !empty($params['education_grade_id']) && !empty($params['academic_period_id'])) {
-            $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+        $student_id = $params['student_id'];
+        $institution_id = $params['institution_id'];
+        $education_grade_id = $params['education_grade_id'];
+        $academic_period_id = $params['academic_period_id'];
+        $entity = null;
+
+        if (!empty($student_id) && !empty($institution_id) &&
+            !empty($education_grade_id) && !empty($academic_period_id)) {
+
+//            Log::debug(print_r([__FUNCTION__ => $newGPAs],true));
+            $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
             $entity = $StudentsGpa->find()
                 ->select(['gpa' =>$StudentsGpa->aliasField('gpa')])
                 ->where([
-                    $StudentsGpa->aliasField('student_id') => $params['student_id'],
-                    $StudentsGpa->aliasField('education_grade_id') => $params['education_grade_id'],
-                    $StudentsGpa->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
+                    $StudentsGpa->aliasField('student_id') => $student_id,
+                    $StudentsGpa->aliasField('education_grade_id') => $education_grade_id,
+                    $StudentsGpa->aliasField('academic_period_id') => $academic_period_id,
+                    $StudentsGpa->aliasField('institution_id') => $institution_id,
                     $StudentsGpa->aliasField('education_grades_gpa_id') . ' IS NOT' => null //POCOR-9057
                 ])
                 ->first();
@@ -2691,11 +2706,11 @@ class ReportCardsTable extends AppTable
     {
         $entity = null;
         if (!empty($params['student_id']) && !empty($params['institution_id']) && !empty($params['academic_period_id'])) {
-            $educationSubjects = TableRegistry::get('Education.EducationSubjects');
-            $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $educationGrades = TableRegistry::get('Education.EducationGrades');
-            $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
-            $GradesGpa = TableRegistry::get('Gpa.EducationGradesGpa');
+            $educationSubjects = self::getDynamicTableInstance('Education.EducationSubjects');
+            $academicPeriod = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+            $educationGrades = self::getDynamicTableInstance('Education.EducationGrades');
+            $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
+            $GradesGpa = self::getDynamicTableInstance('Gpa.EducationGradesGpa');
             $result = $StudentsGpa->find()
                     ->select(['gpa' => $StudentsGpa->aliasField('gpa'),
                             'cumulative_gpa' => $StudentsGpa->aliasField('cumulative_gpa'),
@@ -2749,12 +2764,13 @@ class ReportCardsTable extends AppTable
     {
         $entity = null;
         if (!empty($params['student_id']) && !empty($params['institution_id']) && !empty($params['academic_period_id'])) {
-            $educationSubjects = TableRegistry::get('Education.EducationSubjects');
-            $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $educationGrades = TableRegistry::get('Education.EducationGrades');
-            $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
-            $GradesGpa = TableRegistry::get('Gpa.EducationGradesGpa');
-
+            // POCOR-9162 start
+            $educationSubjects = self::getDynamicTableInstance('Education.EducationSubjects');
+            $academicPeriod = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+            $educationGrades = self::getDynamicTableInstance('Education.EducationGrades');
+            $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
+            $GradesGpa = self::getDynamicTableInstance('Gpa.EducationGradesGpa');
+            // POCOR-9162 end
             $subquery = $GradesGpa->find()
                 ->select(['education_grade_id', 'max_start_date' => $GradesGpa->find()->func()->max('start_date')])
                 ->where(['gpa_grading_type_id IS NOT' => null])
@@ -2820,5 +2836,52 @@ class ReportCardsTable extends AppTable
         }
             return $entity;
     }
-    
+    /**
+     * POCOR-9162 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
 }
