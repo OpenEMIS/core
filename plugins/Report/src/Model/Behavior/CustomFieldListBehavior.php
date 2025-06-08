@@ -77,7 +77,11 @@ class CustomFieldListBehavior extends Behavior
                     $name = $this->_table->getAlias();
                     $this->excelContent($sheets, $name);
                 }
-            }
+            } else { // POCOR-9126 start
+                Log::debug(__FUNCTION__ . '7');
+                $name = $this->_table->getAlias();
+                $this->excelContent($sheets, $name);
+            } // POCOR-9126 end
         } else {
             // For Surveys only
             $forms = $this->getForms();
