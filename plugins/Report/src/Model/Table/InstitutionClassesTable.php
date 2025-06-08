@@ -51,6 +51,12 @@ class InstitutionClassesTable extends AppTable
         $this->addBehavior('Report.AreaList');//POCOR-7794
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
+        $this->addBehavior('Report.CustomFieldList', [
+            'model' => 'Institution.InstitutionClasses',
+            'formFilterClass' => null,
+            'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionClassesCustomFieldValues', 'foreignKey' => 'institution_class_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_class_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+        ]);
     }
 
     public function beforeAction(Event $event)
