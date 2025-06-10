@@ -14,6 +14,9 @@ use Cake\Log\Log;
 use PHPExcel_IOFactory;
 
 use Import\Model\Behavior\ImportResultBehavior;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 
 class ImportOutcomeResultBehavior extends ImportResultBehavior
 {
@@ -81,7 +84,14 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             }
 
             $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
-            $education_subject_id = $this->_table->request->query['education_subject'];
+            $data = $this->_table->getQueryString();
+            dd([__FUNCTION__ => $data]);
+            $template = $data['outcome_template'];
+            $education_subject_id = $data['education_subject_id'];
+            $classId = $data['class'];
+            $outcome_period_id = $data['outcome_period'];
+            $institution_id = $data['institution_id'];
+            $academic_period_id = $data['academic_period'];
             $subjectName = $educationSubjectsTable->get($education_subject_id)->name;
 
             // check correct template
@@ -89,7 +99,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             // POCOR- 7987 moved up
             $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
             // calculate outcome criterias
-            $template = $this->_table->request->query['outcome_template'];
+
 
             $educationGradeId = $outcomeTemplatesTable->find()
                 ->where([
@@ -99,14 +109,13 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 ->first();
 
             //calculate number of student
-            $classId = $this->_table->request->query['class'];
             $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
             $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
             $arrayStudent = $institutionClassStudentsTable->find()
                 ->matching('Users')
                 ->matching('InstitutionClasses')
                 ->matching('EducationGrades')
-                ->matching($studentStatusesTable->alias(), function ($q) use ($studentStatusesTable) {
+                ->matching($studentStatusesTable->getAlias(), function ($q) use ($studentStatusesTable) {
                     return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
                 })
                 ->where([
@@ -168,11 +177,11 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                         'comments' => $comment,
                         'student_id' => $User->id,
                         'outcome_template_id' => $template,
-                        'outcome_period_id' => $this->_table->request->data['ImportOutcomeResults']['outcome_period'],
+                        'outcome_period_id' => $outcome_period_id,
                         'education_grade_id' => $educationGradeId,
                         'education_subject_id' => $education_subject_id,
-                        'institution_id' => $this->_table->request->session()->read('Institution.Institutions.id'),
-                        'academic_period_id' => $this->_table->request->data['ImportOutcomeResults']['academic_period']
+                        'institution_id' => $institution_id,
+                        'academic_period_id' => $academic_period_id
                     ]);
 
                     $institutionOutcomeSubjectCommentsTable->save($institutionOutcomeSubjectCommentsData);
@@ -347,7 +356,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
     public function template()
     {
         $folder = $this->prepareDownload();
-        $modelName = $this->config('model');
+        $modelName = $this->getConfig('model');
         $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
         // Do not lcalize file name as certain non-latin characters might cause issue
         $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
@@ -355,7 +364,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
         $dataSheetName = $this->getExcelLabel('general', 'data');
 
-        $objPHPExcel = new \PHPExcel();
+        $objPHPExcel = new Spreadsheet();
 
         $headerRow3 = array("OpenEMIS ID", "Student Name", "Outcome Grading Option Id");
 
@@ -364,8 +373,13 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $this->setCodesDataTemplate($objPHPExcel);
 
         $objPHPExcel->setActiveSheetIndex(0);
-        $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
-        $objWriter->save($excelPath);
+//        $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+        $objWriter = new Xlsx($objPHPExcel);;
+        try {
+            $objWriter->save($excelPath);
+        } catch (\Throwable $th) {
+
+        }
 
         $this->performDownload($excelFile);
         die;
@@ -383,10 +397,17 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $objPHPExcel->setActiveSheetIndex(0);
         $activeSheet = $objPHPExcel->getActiveSheet();
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) . ' ' . $dataSheetName);
+        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) . ' ' . $dataSheetName);
 
         $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
-        $education_subject_id = $this->_table->request->query['education_subject'];
+        $data = $this->_table->getQueryString();
+//        dd($data);
+        $template = $data['outcome_template'];
+        $education_subject_id = $data['education_subject'];
+        $classId = $data['class'];
+        $outcome_period_id = $data['outcome_period'];
+        $institution_id = $data['institution_id'];
+        $academic_period_id = $data['academic_period'];
         $name = $educationSubjectsTable->get($education_subject_id)->name;
 
         $activeSheet->setCellValue("A2", $name);
@@ -398,7 +419,6 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $activeSheet->setCellValue($alpha . 3, $value);
         }
 
-        $template = $this->_table->request->query['outcome_template'];
         // POCOR- 7987:start
         $outcomeTemplatesTable = TableRegistry::get('Outcome.OutcomeTemplates');
         // calculate outcome criterias
@@ -432,7 +452,6 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $activeSheet->getRowDimension(1)->setRowHeight(80);
         $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
 
-        $classId = $this->_table->request->query['class'];
         $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
         $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
         $arrayStudent = $institutionClassStudentsTable->find()
@@ -447,7 +466,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             ->matching('Users')
             ->matching('InstitutionClasses')
             ->matching('EducationGrades')
-            ->matching($studentStatusesTable->alias(), function ($q) use ($studentStatusesTable) {
+            ->matching($studentStatusesTable->getAlias(), function ($q) use ($studentStatusesTable) {
                 return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
             })
             ->where([
@@ -482,8 +501,10 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
     public function setCodesDataTemplate($objPHPExcel)
     {
         $outcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
-        $education_subject_id = $this->_table->request->query['education_subject'];
-        $template = $this->_table->request->query['outcome_template'];
+        $data = $this->_table->getQueryString();
+        $template = $data['outcome_template'];
+        $education_subject_id = $data['education_subject'];
+        $classId = $data['class'];
 
         $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
         $outcomeCriteriasArray = $outcomeCriteriasTable->find()
@@ -493,14 +514,14 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             ])
             ->toArray();
 
-        $classId = $this->_table->request->query['class'];
+
         $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
         $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
         $studentArray = $institutionClassStudentsTable->find()
             ->matching('Users')
             ->matching('InstitutionClasses')
             ->matching('EducationGrades')
-            ->matching($studentStatusesTable->alias(), function ($q) use ($studentStatusesTable) {
+            ->matching($studentStatusesTable->getAlias(), function ($q) use ($studentStatusesTable) {
                 return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
             })
             ->where([
@@ -538,8 +559,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             for ($i = 4; $i < count($studentArray) + 4; $i++) {
                 $objPHPExcel->setActiveSheetIndex(0);
                 $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
-                $objValidation->setType(\PHPExcel_Cell_DataValidation::TYPE_LIST);
-                $objValidation->setErrorStyle(\PHPExcel_Cell_DataValidation::STYLE_INFORMATION);
+                $objValidation->setType(DataValidation::TYPE_LIST);
+                $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
                 $objValidation->setAllowBlank(false);
                 $objValidation->setShowInputMessage(true);
                 $objValidation->setShowErrorMessage(true);
