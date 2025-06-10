@@ -175,7 +175,9 @@ class InstitutionsTable extends ControllerActionTable
         //POCOR-6520 starts: add isset condition only
 
         $request = Router::getRequest();
-        if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel' && $request->getParam('action')=="Institutions"){//POCOR-8538
+        if ($request !== null && isset($request->getParam('pass')[0])
+            && $request->getParam('pass')[0] != 'excel'
+            && $request->getParam('action')=="Institutions"){//POCOR-8538
             $this->addBehavior('CustomField.Record', [
                 'fieldKey' => 'institution_custom_field_id',
                 'tableColumnKey' => 'institution_custom_table_column_id',
@@ -681,6 +683,13 @@ class InstitutionsTable extends ControllerActionTable
         $instituteType = $sheetData['institute_tabs_type'];
         $academicPeriod = $this->InstitutionShifts->AcademicPeriods->getCurrent();
         $institutionId = $this->getInstitutionID();
+//        POCOR-9139 start
+        if($institutionId && is_numeric($institutionId)) {
+            $query->where([
+                $this->aliasField('id') => $institutionId
+            ]);
+        }
+//        POCOR-9139 end
         if ($instituteType != 'Contact People' && $instituteType != 'Shifts' && $instituteType != 'Overview') { //POCOR-6880
             $query
                 ->select(['area_code' => 'Areas.code', 'shift_name' => 'ShiftOptions.name', 'Owner' => 'Institutions.name', 'Occupier' => 'Institutions.name', 'shift_start_time' => 'InstitutionShifts.start_time', 'shift_end_time' => 'InstitutionShifts.end_time'])

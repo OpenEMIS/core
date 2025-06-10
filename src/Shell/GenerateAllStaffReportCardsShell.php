@@ -49,11 +49,11 @@ class GenerateAllStaffReportCardsShell extends Shell
                     'institution_id' => $recordToProcess['institution_id'],
                     'staff_id' => $recordToProcess['staff_id'],
                 ]);
-				
+
                 $excelParams = new ArrayObject([]);
                 $excelParams['className'] = 'CustomExcel.StaffReportCards';
                 $excelParams['requestQuery'] = $recordToProcess;
-				
+
                 try {
                     $this->StaffReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
@@ -69,7 +69,12 @@ class GenerateAllStaffReportCardsShell extends Shell
             }
         }
         try {
-            posix_kill(getmypid(), 9);
+            $pid = getmypid();
+            if (function_exists('posix_kill')) {
+                posix_kill($pid, 9);
+            } else {
+                exec("kill -15 $pid"); // Works on Unix-like systems
+            }
         } catch (\Exception $exception) {
             $this->out($exception->getMessage());
         }
