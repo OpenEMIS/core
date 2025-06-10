@@ -3,14 +3,13 @@
 #
 # Description     : Multi stage build for OpenEMIS Core using  Angular, PHP
 #                   followed by deployment on Apache HTTP Server
-# Author          : Rachit Mittal(rachit.mittal@@dataforall.org)
 # Created         : 2025-06-04
 # Version         : 1.0.0
 #
 # Usage           : docker build .
 #
 # Notes           :  - Uses Angular CLI 11.2.19 and Node 12.14.1
-#                    - Uses PHP 8.3-apache 
+#                    - Uses PHP 8.3-apache
 #                    - Output is served by Apache 2.4
 ####################################################################################
 
