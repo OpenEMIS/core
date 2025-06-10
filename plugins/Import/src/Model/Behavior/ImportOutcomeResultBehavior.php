@@ -17,6 +17,8 @@ use Import\Model\Behavior\ImportResultBehavior;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class ImportOutcomeResultBehavior extends ImportResultBehavior
 {
@@ -394,6 +396,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
     public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
     {
+        parent::setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type);
         $objPHPExcel->setActiveSheetIndex(0);
         $activeSheet = $objPHPExcel->getActiveSheet();
 
@@ -438,140 +441,284 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             ])
             ->toArray();
 
-        $suggestedRowHeight = 0;
+        // Initialize suggestedRowHeight *before* the loop, ideally to a reasonable default
+        $defaultRowHeight = $activeSheet->getRowDimension(2)->getRowHeight();
+
+// If the defaultRowHeight is -1 (auto-height) or not explicitly set,
+// initialize suggestedRowHeight to a sensible default like 15 points.
+        if ($defaultRowHeight === -1 || $defaultRowHeight === null) {
+            $suggestedRowHeight = 15; // A common default height in points
+        } else {
+            $suggestedRowHeight = $defaultRowHeight;
+        }
+
+// --- Get the source style from Column A (assuming A2 for the header row) ---
+        $sourceStyle = $activeSheet->getStyle('A2');
+
+// Extract specific style properties
+        $sourceFill = $sourceStyle->getFill();
+        $sourceFont = $sourceStyle->getFont();
+        $sourceAlignment = $sourceStyle->getAlignment(); // <--- Get the Alignment object
+
+        $sourceBackgroundColor = $sourceFill->getStartColor()->getArgb();
+        $sourceFontColor = $sourceFont->getColor()->getArgb();
+        $sourceFontSize = $sourceFont->getSize();
+        $sourceFontBold = $sourceFont->getBold();
+
+// Extract alignment properties
+        $sourceHorizontalAlignment = $sourceAlignment->getHorizontal(); // <--- Get horizontal alignment
+        $sourceVerticalAlignment = $sourceAlignment->getVertical();     // <--- Get vertical alignment
+
+
         foreach ($arrayOutcomeCriterias as $key => $value) {
-            $key = $key + 2;
-            $alpha = $this->getExcelColumnAlpha($key);
+            $column = $key + 2; // This will be 2 (C), 3 (D), 4 (E), etc.
+            $alpha = $this->getExcelColumnAlpha($column);
+
             $activeSheet->setCellValue($alpha . 1, $value->id);
-            $activeSheet->setCellValue($alpha . 2, $value->name);
-            if ($this->suggestRowHeight(strlen($value->name), 15) > $suggestedRowHeight) {
-                $suggestedRowHeight = $this->suggestRowHeight(strlen($value->name), 15);
-            }
+
+            // Clean up line breaks in $value->name
+            $cleanedName = str_replace(["\r\n", "\r"], "\n", $value->name);
+
+            // Set value for the name cell with cleaned line breaks
+            $activeSheet->setCellValue($alpha . 2, $cleanedName);
+
+            // --- Apply consistent styling for column headers (Row 2) ---
+            $cellStyle = $activeSheet->getStyle($alpha . 2);
+
+            // Apply extracted background color
+            $cellStyle->getFill()->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB($sourceBackgroundColor);
+
+            // Apply extracted font color, size, and boldness
+            $cellStyle->getFont()->getColor()->setARGB($sourceFontColor);
+            $cellStyle->getFont()->setSize($sourceFontSize);
+            $cellStyle->getFont()->setBold($sourceFontBold);
+
+            // Apply extracted alignment properties <--- NEW
+            $cellStyle->getAlignment()->setHorizontal($sourceHorizontalAlignment);
+            $cellStyle->getAlignment()->setVertical($sourceVerticalAlignment);
+
+            // Set wrap text (as per your previous requirement)
+            $cellStyle->getAlignment()->setWrapText(true);
+
+            // Set column width (as per your previous requirement)
             $activeSheet->getColumnDimension($alpha)->setWidth(35);
+
+            // Recalculate suggested row height based on the cleaned name
+            $currentCellHeight = $this->suggestRowHeight(strlen($cleanedName), 15);
+            if ($currentCellHeight > $suggestedRowHeight) {
+                $suggestedRowHeight = $currentCellHeight;
+            }
         }
-        $activeSheet->getRowDimension(1)->setRowHeight(80);
-        $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
 
-        $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-        $arrayStudent = $institutionClassStudentsTable->find()
-            ->select([
-                $institutionClassStudentsTable->Users->aliasField('openemis_no'),
-                $institutionClassStudentsTable->Users->aliasField('first_name'),
-                $institutionClassStudentsTable->Users->aliasField('middle_name'),
-                $institutionClassStudentsTable->Users->aliasField('third_name'),
-                $institutionClassStudentsTable->Users->aliasField('last_name'),
-                $institutionClassStudentsTable->Users->aliasField('preferred_name'),
-            ])
-            ->matching('Users')
-            ->matching('InstitutionClasses')
-            ->matching('EducationGrades')
-            ->matching($studentStatusesTable->getAlias(), function ($q) use ($studentStatusesTable) {
-                return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
-            })
-            ->where([
-                $institutionClassStudentsTable->aliasField('institution_class_id') => $classId,
-                $institutionClassStudentsTable->aliasField('education_grade_id') => $educationGradeId // POCOR- 7987
-            ])
-            ->order([
-                $institutionClassStudentsTable->Users->aliasField('first_name'),
-                $institutionClassStudentsTable->Users->aliasField('last_name')
-            ])
-            ->toArray();
-
-        $i = 4;
-        foreach ($arrayStudent as $key => $value) {
-            $activeSheet->setCellValue('A' . $i, $value->_matchingData['Users']->openemis_no);
-            $activeSheet->setCellValue('B' . $i, $value->_matchingData['Users']->name);
-            $i++;
-            $activeSheet->getColumnDimension('A')->setAutoSize(true);
-            $activeSheet->getColumnDimension('B')->setAutoSize(true);
-
+// --- Apply the maximum calculated row height to the entire row AFTER the loop ---
+        if ($suggestedRowHeight > $activeSheet->getRowDimension(2)->getRowHeight()) { // Only apply if it's actually larger than default
+            $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
         }
+
+        // After the loop, apply the suggested row height to the entire row if needed
+//        if ($suggestedRowHeight > 15) {
+//            $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
+//        }
+//        $activeSheet->getRowDimension(1)->setRowHeight(80);
+//        $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
+
+//        $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+//        $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+//        $arrayStudent = $institutionClassStudentsTable->find()
+//            ->select([
+//                $institutionClassStudentsTable->Users->aliasField('openemis_no'),
+//                $institutionClassStudentsTable->Users->aliasField('first_name'),
+//                $institutionClassStudentsTable->Users->aliasField('middle_name'),
+//                $institutionClassStudentsTable->Users->aliasField('third_name'),
+//                $institutionClassStudentsTable->Users->aliasField('last_name'),
+//                $institutionClassStudentsTable->Users->aliasField('preferred_name'),
+//            ])
+//            ->matching('Users')
+//            ->matching('InstitutionClasses')
+//            ->matching('EducationGrades')
+//            ->matching($studentStatusesTable->getAlias(), function ($q) use ($studentStatusesTable) {
+//                return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
+//            })
+//            ->where([
+//                $institutionClassStudentsTable->aliasField('institution_class_id') => $classId,
+//                $institutionClassStudentsTable->aliasField('education_grade_id') => $educationGradeId // POCOR- 7987
+//            ])
+//            ->order([
+//                $institutionClassStudentsTable->Users->aliasField('first_name'),
+//                $institutionClassStudentsTable->Users->aliasField('last_name')
+//            ])
+//            ->toArray();
+//
+//        $i = 4;
+//        foreach ($arrayStudent as $key => $value) {
+//            $activeSheet->setCellValue('A' . $i, $value->_matchingData['Users']->openemis_no);
+//            $activeSheet->setCellValue('B' . $i, $value->_matchingData['Users']->name);
+//            $i++;
+//            $activeSheet->getColumnDimension('A')->setAutoSize(true);
+//            $activeSheet->getColumnDimension('B')->setAutoSize(true);
+//
+//        }
         // -1 to start from A, +2 is for education subject and outcome-->, -1+2=+1
         $arrayLastAlpha = $this->getExcelColumnAlpha(count($arrayOutcomeCriterias) + 1);
         $activeSheet->mergeCells('C3:' . $arrayLastAlpha . '3');
         // -1 to start from A, +2 is for education subject and outcome-->, +1 comment after criteria name, -1+2+1=+2
-        $Comment = $this->getExcelColumnAlpha(count($arrayOutcomeCriterias) + 2);
-        $activeSheet->setCellValue($Comment . '3', "Comment");
+        $countCriterias = count($arrayOutcomeCriterias);
+        $Comment = $this->getExcelColumnAlpha($countCriterias + 2);
+        $activeSheet->setCellValue($Comment . '3', __("Comment"));
         $activeSheet->getColumnDimension($Comment)->setAutoSize(true);
 
     }
 
-    public function setCodesDataTemplate($objPHPExcel)
+    public function __setCodesDataTemplate($objPHPExcel)
     {
-        $outcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions');
-        $data = $this->_table->getQueryString();
-        $template = $data['outcome_template'];
-        $education_subject_id = $data['education_subject'];
-        $classId = $data['class'];
+        $sheetName = __('References');
+        $objPHPExcel->createSheet(1);
+        $objPHPExcel->setActiveSheetIndex(1); // Activate the new sheet
 
-        $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
-        $outcomeCriteriasArray = $outcomeCriteriasTable->find()
-            ->where([
-                $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
-                $outcomeCriteriasTable->aliasField('outcome_template_id') => $template
-            ])
-            ->toArray();
+        $this->beginExcelHeaderStyling($objPHPExcel, $sheetName);
 
+        $objPHPExcel->getActiveSheet()->getRowDimension(3)->setRowHeight(25);
 
-        $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
-        $studentArray = $institutionClassStudentsTable->find()
-            ->matching('Users')
-            ->matching('InstitutionClasses')
-            ->matching('EducationGrades')
-            ->matching($studentStatusesTable->getAlias(), function ($q) use ($studentStatusesTable) {
-                return $q->where([$studentStatusesTable->aliasField('code') => 'CURRENT']);
-            })
-            ->where([
-                $institutionClassStudentsTable->aliasField('institution_class_id') => $classId
-            ])
-            ->toArray();
-        //A is 0 in excel column, so 2 is C
-        for ($column = 2; $column < count($outcomeCriteriasArray) + 2; ++$column) {
-            $sheet = $objPHPExcel->getSheet(0);
-            $cell = $sheet->getCellByColumnAndRow($column, 1);
-            $outcomeId = $cell->getValue();
-            $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias');
-            $outcomeGradingTypeId = $outcomeCriteriasTable->find()
+        // --- Start: Data Fetching Logic (ported from __setCodesDataTemplate concept) ---
+        // You'll need to pass 'outcome_template', 'education_subject', and 'class'
+        // to this function or fetch them here if they're available from another source.
+        // For demonstration, let's assume you have access to a way to get these.
+        // For now, I'll use placeholders. You need to replace these with actual values.
+
+        $data = $this->_table->getQueryString(); // Assuming this fetches the necessary data
+        $template = $data['outcome_template'] ?? null; // Replace with actual template ID
+        $education_subject_id = $data['education_subject'] ?? null; // Replace with actual subject ID
+        $classId = $data['class'] ?? null; // Replace with actual class ID
+
+        // Initialize an array to hold the structured data for the "References" sheet
+        $codesData = [];
+
+        // Fetch Outcome Criterias (similar to __setCodesDataTemplate)
+        if ($education_subject_id && $template) {
+            $outcomeCriteriasTable = TableRegistry::get('Outcome.OutcomeCriterias'); // Use getTable for newer CakePHP
+            $outcomeCriteriasArray = $outcomeCriteriasTable->find()
                 ->where([
-                    $outcomeCriteriasTable->aliasField('id') => $outcomeId,
+                    $outcomeCriteriasTable->aliasField('education_subject_id') => $education_subject_id,
+                    $outcomeCriteriasTable->aliasField('outcome_template_id') => $template
                 ])
-                ->extract('outcome_grading_type_id')
-                ->first();
-
-            $gradeOptionArray = $outcomeGradingOptionsTable->find()
-                ->select(['name'])
-                ->where([$outcomeGradingOptionsTable->aliasField('outcome_grading_type_id') => $outcomeGradingTypeId])
                 ->toArray();
 
-            $dropDownList = '';
-            foreach ($gradeOptionArray as $singleGradeOptionArray) {
-                if ($singleGradeOptionArray->name == end($gradeOptionArray)->name) {
-                    $dropDownList .= $singleGradeOptionArray->name;
-                } else {
-                    $dropDownList .= $singleGradeOptionArray->name . ', ';
+            // Prepare data for the first column block: Outcome Criterias (if you want them listed)
+            if (!empty($outcomeCriteriasArray)) {
+                $outcomeCriteriaNames = [];
+                foreach($outcomeCriteriasArray as $criteria) {
+                    // Assuming 'name' or 'title' is the displayable field
+                    $outcomeCriteriaNames[$criteria->id] = [$criteria->title ?? $criteria->name]; // Make sure it's an array of array for cells
+                }
+                $codesData[] = [
+                    'sheetName' => __('Outcome Criterias'),
+                    'data' => $outcomeCriteriaNames,
+                    'noDropDownList' => true // Don't make dropdowns for these
+                ];
+            }
+        }
+
+
+        // Fetch Grading Options based on Outcome Criterias
+        if (!empty($outcomeCriteriasArray)) {
+            $outcomeGradingOptionsTable = TableRegistry::get('Outcome.OutcomeGradingOptions'); // Use getTable for newer CakePHP
+            $processedGradingTypeIds = []; // To avoid duplicate columns for the same grading type
+
+            foreach ($outcomeCriteriasArray as $criteria) {
+                $outcomeGradingTypeId = $criteria->outcome_grading_type_id;
+
+                // Only fetch and add grading options once per grading type
+                // if (!in_array($outcomeGradingTypeId, $processedGradingTypeIds)) {
+                    $gradeOptionArray = $outcomeGradingOptionsTable->find()
+                        ->select(['name'])
+                        ->where([$outcomeGradingOptionsTable->aliasField('outcome_grading_type_id') => $outcomeGradingTypeId])
+                        ->toArray();
+
+                    if (!empty($gradeOptionArray)) {
+                        $gradeOptionsForSheet = [];
+                        foreach ($gradeOptionArray as $singleGradeOption) {
+                            $gradeOptionsForSheet[] = [$singleGradeOption->name]; // Each option as an array for the cell
+                        }
+
+                        $codesData[] = [
+                            'sheetName' => 'Grades for Type ' . $outcomeGradingTypeId, // Dynamic name
+                            'data' => $gradeOptionsForSheet,
+                            // You might want a lookupColumn here if you intend to use it for dropdowns later
+                            'lookupColumn' => 1 // The column where these values start within this block (always 1 if it's the only value)
+                        ];
+                        $processedGradingTypeIds[$criteria->outcome_grading_type_id] = $outcomeGradingTypeId;
+                    }
+                // }
+            }
+        }
+
+        // --- End: Data Fetching Logic ---
+
+
+        $lastColumn = -1;
+        $currentRowHeight = $objPHPExcel->getActiveSheet()->getRowDimension(2)->getRowHeight();
+        foreach ($codesData as $columnOrder => $modelArr) {
+            $modelData = $modelArr['data']; // This is now like [['A+'], ['Pass'], ['Fail']]
+            $firstColumn = $lastColumn == -1 ? 1 : 1 + $lastColumn ;
+            // POCOR-8343: modelDataCount is typically 1 for single columns like grades,
+            // but it iterates through each row of the first item in modelData
+            $modelDataCount = !empty($modelArr['data'][0]) ? count($modelArr['data'][0]) : 0;
+            $lastColumn = $firstColumn + $modelDataCount - 1;
+
+            $objPHPExcel->getActiveSheet()->mergeCells($this->getExcelColumnAlpha($firstColumn) . "2:" . $this->getExcelColumnAlpha($lastColumn) . "2");
+            $objPHPExcel->getActiveSheet()->setCellValue($this->getExcelColumnAlpha($firstColumn) . "2", $modelArr['sheetName']);
+            if (strlen($modelArr['sheetName']) < 50) {
+                $objPHPExcel->getActiveSheet()->getColumnDimension($this->getExcelColumnAlpha($firstColumn))->setAutoSize(true);
+            } else {
+                $currentRowHeight = $this->suggestRowHeight(strlen($modelArr['sheetName']), $currentRowHeight);
+                $objPHPExcel->getActiveSheet()->getRowDimension(2)->setRowHeight($currentRowHeight);
+                $objPHPExcel->getActiveSheet()->getStyle($this->getExcelColumnAlpha($firstColumn) . "2")->getAlignment()->setWrapText(true);
+            }
+
+            // This loop populates the cells
+            foreach ($modelData as $index => $sets) { // $sets will be like ['A+'] or ['Pass']
+                foreach ($sets as $key => $value) { // $key will be 0, $value will be 'A+'
+                    $alpha = $this->getExcelColumnAlpha(($key + $firstColumn)); // $key + $firstColumn will simply be $firstColumn
+                    $objPHPExcel->getActiveSheet()->setCellValue($alpha . ($index + 3), $value); // Populate A3, A4, A5 etc.
+                    $objPHPExcel->getActiveSheet()->getColumnDimension($alpha)->setAutoSize(true);
                 }
             }
 
-            $alpha = $this->getExcelColumnAlpha($column);
-            for ($i = 4; $i < count($studentArray) + 4; $i++) {
-                $objPHPExcel->setActiveSheetIndex(0);
-                $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
-                $objValidation->setType(DataValidation::TYPE_LIST);
-                $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
-                $objValidation->setAllowBlank(false);
-                $objValidation->setShowInputMessage(true);
-                $objValidation->setShowErrorMessage(true);
-                $objValidation->setShowDropDown(true);
-                $objValidation->setFormula1('"' . $dropDownList . '"');
+            // This part applies data validation (dropdowns) to the *first* sheet (index 0)
+            // based on the data in the *current* sheet (index 1, 'References')
+            if (count($modelData) > 1 && !isset($modelArr['noDropDownList'])) {
+                $lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
+                $alpha = $this->getExcelColumnAlpha($columnOrder); // This 'alpha' is tricky. It determines the column on sheet 0.
+                $lookupColumnAlpha = $this->getExcelColumnAlpha($lookupColumn); // Column on sheet 1 for dropdown source
+                ($this->isCustomText()) ? $lookupStart = 4 : $lookupStart = 3; // Starting row for dropdown list on sheet 1
+
+                for ($i = $lookupStart; $i < 103; $i++) { // Loop for rows on sheet 0
+                    $objPHPExcel->setActiveSheetIndex(0); // Switch to the main sheet
+                    $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
+                    $objValidation->setType(DataValidation::TYPE_LIST);
+                    $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+                    $objValidation->setAllowBlank(false);
+                    $objValidation->setShowInputMessage(true);
+                    $objValidation->setShowErrorMessage(true);
+                    $objValidation->setShowDropDown(true);
+                    // The formula to reference the data on the 'References' sheet
+                    $listLocation = "'" . $sheetName . "'!$" . $lookupColumnAlpha . "$4:$" . $lookupColumnAlpha . "$" . (count($modelData) + 2);
+                    $objValidation->setFormula1($listLocation);
+                }
+                $objPHPExcel->setActiveSheetIndex(1); // Switch back to the 'References' sheet
             }
+        }
+
+        if ($lastColumn > -1) { //if got no reference data.
+            $headerLastAlpha = $this->getExcelColumnAlpha($lastColumn);
+            $objPHPExcel->getActiveSheet()->getStyle("A2:" . $headerLastAlpha . "2")->getFont()->setBold(true)->setSize(12);
+            $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, 3, ['s' => 3, 'e' => 3], ['s' => 2, 'e' => 3]);
         }
     }
 
     /**
-     * Extract the values in every columns
+     * Extract the values in every column
      * @param array $references the variables/arrays in this array are for references
      * @param ArrayObject $tempRow for holding converted values extracted from the excel sheet on a per row basis
      * @param ArrayObject $originalRow for holding the original value extracted from the excel sheet on a per row basis
