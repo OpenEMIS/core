@@ -158,7 +158,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
                 $attr['options'] = $this->_stepsOptions;
                 $attr['onChangeReload'] = 'changeStatus';
             break;
-            
+
             case 'reconfirm':
                 $selectedStatus = $this->_currentData['status'];
                 $attr['attr']['value'] = $this->_stepsOptions[$selectedStatus];
@@ -356,6 +356,7 @@ class BulkStudentAdmissionTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
         $process = function ($model, $entity) use ($event, $data) {
+            $data = $data->getArrayCopy(); // POCOR-9146
             // Removal of some fields that are not in use in the table validation
             $errors = $entity->getErrors();
             $queryString = $this->getQueryString();
