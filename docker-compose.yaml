@@ -17,6 +17,8 @@ services:
     - DB_PASSWORD=demo
     volumes:
       - ./docker-config/config/.env:/var/www/html/api/.env
+    networks:
+      - openemis-network
   db:
     image: mysql:8.1
     container_name: openemis-db
@@ -29,6 +31,8 @@ services:
     volumes:
       - ./db_data:/var/lib/mysql
       - ./docker-config/sql/prd_cor_dmo.sql:/docker-entrypoint-initdb.d/prd_cor_dmo.sql
+    networks:
+      - openemis-network
     # ports:
       # - "3307:3306"
   phpmyadmin:
@@ -43,5 +47,10 @@ services:
       - PMA_HOST=db
       - PMA_USER=admin
       - PMA_PASSWORD=demo
+    networks:
+      - openemis-network
 volumes:
   db_data:
+networks:
+  openemis-network:
+    driver: bridge
