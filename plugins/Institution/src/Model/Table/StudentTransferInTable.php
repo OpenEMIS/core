@@ -136,8 +136,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
+
         $this->field('requested_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
         $this->field('institution_id', ['type' => 'hidden']);
@@ -152,45 +151,120 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'previous_institution_id', 'start_date', 'education_grade_id', 'institution_class_id']);
 
         // back button
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarAttr = [
+        $this->addStudentsExtraButtons($extra['toolbarButtons']); // POCOR-9155
+    }
+
+
+    private function addStudentsExtraButtons($toolbarButtons1): void  // POCOR-9155
+    {
+// back button
+        // Generate encoded query string once
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+// Common button attributes
+        $baseBtnAttr = [
             'class' => 'btn btn-xs btn-default',
             'data-toggle' => 'tooltip',
             'data-placement' => 'bottom',
-            'escape' => false
+            'escape' => false,
         ];
-        $toolbarButtonsArray['back']['type'] = 'button';
-        $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
-        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
-        $toolbarButtonsArray['back']['attr']['title'] = __('Back');
-        $toolbarButtonsArray['back']['url']['plugin'] = 'Institution';
-        $toolbarButtonsArray['back']['url']['controller'] = 'Institutions';
-        $toolbarButtonsArray['back']['url']['action'] = 'Students';
-        $toolbarButtonsArray['back']['url'][0] = 'index';
-        $toolbarButtonsArray['back']['url'][1] = $encodedQueryString;
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-//        $this->log('before_check');
-        if ($this->checkUserAccess()) {
-            $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+
+// Add back button
+        $toolbarButtons = $toolbarButtons1->getArrayCopy();
+        $toolbarButtons['back'] = [
+            'type' => 'button',
+            'label' => '<i class="fa kd-back"></i>',
+            'attr' => array_merge($baseBtnAttr, ['title' => __('Back')]),
+            'url' => [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Students',
+                0 => 'index',
+                1 => $encodedQueryString
+            ]
+        ];
+
+// Define all extra toolbar buttons
+        $extraButtons = [
+            'add' => [
+                'permission' => ['Institutions', 'Students', 'add'],
+                'action' => 'Students',
+                'icon' => '<i class="fa fa-plus"></i>',
+                'title' => __('Add')
+            ],
+            'graduate' => [
+                'permission' => ['Institutions', 'Promotion', 'add'],
+                'action' => 'Promotion',
+                'icon' => '<i class="fa kd-graduate"></i>',
+                'title' => __('Promotion / Repeating / Graduation')
+            ],
+            'transfer' => [
+                'permission' => ['Institutions', 'Transfer', 'add'],
+                'action' => 'Transfer',
+                'icon' => '<i class="fa kd-transfer"></i>',
+                'title' => __('Transfer')
+            ],
+            'undo' => [
+                'permission' => ['Institutions', 'Undo', 'add'],
+                'action' => 'Undo',
+                'icon' => '<i class="fa kd-undo"></i>',
+                'title' => __('Undo')
+            ],
+        ];
+            $extraButtons['bulkTransferIn'] = [
+                'permission' => ['Institutions', 'Transfer', 'add'],
+                'action' => 'BulkStudentTransferIn',
+                'next_action' => 'edit',
+                'icon' => '<i class="fa kd-transfer"></i>',
+                'title' => __('Bulk Student Transfer In')
+            ];
+
+        foreach ($extraButtons as $key => $config) {
+            if (!empty($config['external'])) {
+                $toolbarButtons[$key] = [
+                    'type' => 'link',
+                    'label' => $config['icon'],
+                    'attr' => array_merge($baseBtnAttr, [
+                        'title' => $config['title'],
+                        'target' => '_blank'
+                    ]),
+                    'url' => $config['url']
+                ];
+                continue;
+            }
+
+            if (!empty($config['permission']) &&
+                !$this->AccessControl->check($config['permission'])) {
+                continue;
+            }
+
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'action' => 'BulkStudentTransferIn',
-                '0' => 'edit',
-                '1' => $encodedQueryString
+                'action' => $config['action'],
+                0 => $config['next_action'] ?? 'add',
+                1 => $encodedQueryString
             ];
-            $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
-            $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
-            $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Student Transfer In');
-            $toolbarButtonsArray['bulkAdmission']['url'] = $url;
-            $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        }        // End bulk Student Transfer In button POCOR-5677 end
+
+            if (!empty($config['extraParams'])) {
+                $url = array_merge($url, ['?' => $config['extraParams']]);
+            }
+
+            $toolbarButtons[$key] = [
+                'type' => 'button',
+                'label' => $config['icon'],
+                'attr' => array_merge($baseBtnAttr, ['title' => $config['title']]),
+                'url' => $url
+            ];
     }
 
+        $toolbarButtons1->exchangeArray($toolbarButtons);
+    }
     /**
      * @return bool
      */
-    private function checkUserAccess()
+    private function checkUserAccessForPendingTransferIn()
     {
         $check = false;
         $newQ = clone $this->query();
