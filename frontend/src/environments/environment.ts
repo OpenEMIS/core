@@ -7,7 +7,8 @@ export const environment = {
   //baseUrl: 'http://127.0.0.1:8000/exams/api' /* Local Laravel V6*/
   // baseUrl: 'http://127.0.0.1:8000' /* Local Laravel V8*/
   //baseUrl: "https://dmo-tst2.openemis.org/exams/api" /* DMO-TST */,
-  baseUrl: 'https://dmo-tst.openemis.org/core/api/v4/'
+  // baseUrl: 'https://dmo-tst.openemis.org/core/api/v4/'
+  baseUrl: 'http://localhost:80/api/v4'
   // baseUrl: 'https://demo.openemis.org/core/api/v4/'
 
   // baseUrl: 'http://openemis.n2.iworklab.com/api' /* Staging */
