@@ -273,19 +273,21 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
                 $queryParams['period'] = '';
                 $this->request = $this->request->withQueryParams($queryParams);
             }
-            $selectedPeriod = $this->getQueryString('period', $periodOptions);
-            $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-                'message' => '{{label}} - ' . $this->getMessage('general.noSubjects'),
-                'callable' => function ($id) use ($Subjects, $institutionId) {
-                    return $Subjects
-                        ->find()
-                        ->where([
-                            $Subjects->aliasField('institution_id') => $institutionId,
-                            $Subjects->aliasField('academic_period_id') => $id
-                        ])->count();
-                }
-            ]);
-
+            //POCOR-9112
+            if(!empty($this->request->getQuery('period'))){
+                $selectedPeriod = $this->getQueryString('period', $periodOptions);
+                $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+                    'message' => '{{label}} - ' . $this->getMessage('general.noSubjects'),
+                    'callable' => function ($id) use ($Subjects, $institutionId) {
+                        return $Subjects
+                            ->find()
+                            ->where([
+                                $Subjects->aliasField('institution_id') => $institutionId,
+                                $Subjects->aliasField('academic_period_id') => $id
+                            ])->count();
+                    }
+                ]);
+            }
             $attr['options'] = $periodOptions;
             $attr['onChangeReload'] = 'changePeriod';
         }
@@ -302,11 +304,13 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
             $SubjectStaff = $this->SubjectStaff;
 
             if ($action == 'add') {
-                $selectedPeriod = $request->getQuery['period'];
+                //POCOR-9112
+                // $selectedPeriod = $request->getQuery['period'];
+                $selectedPeriod = $request->getData()['InstitutionQualityVisits']['academic_period_id'];
             } elseif ($action == 'edit') {
                 $selectedPeriod = $attr['entity']->academic_period_id;
             }
-            // echo "<pre>";print_r($request);die;
+            
             $classOptions = [];
             if (!is_null($selectedPeriod)) {
                 $classOptions = $this->Subjects
@@ -315,26 +319,27 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
                         $this->Subjects->aliasField('institution_id') => $institutionId,
                         $this->Subjects->aliasField('academic_period_id') => $selectedPeriod
                     ])
+                    ->group($this->Subjects->aliasField('id'))
                     ->toArray();
                 $classOptions = ['' => __('-- Select Subject --')] + $classOptions;
-
                 if (is_null($request->getQuery('subject'))) {
                     $queryParams = $this->request->getQueryParams();
                     $queryParams['subject'] = '';
                     $this->request = $this->request->withQueryParams($queryParams);
                 }
-                $selectedClass = $this->getQueryString('subject', $classOptions);
-                $this->advancedSelectOptions($classOptions, $selectedClass, [
-                    'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
-                    'callable' => function ($id) use ($SubjectStaff) {
-                        return $SubjectStaff
-                            ->find()
-                            ->where([
-                                $SubjectStaff->aliasField('institution_subject_id') => $id
-                            ])
-                            ->count();
-                    }
-                ]);
+                //POCOR-9112
+                // $selectedClass = $this->getQueryString('subject', $classOptions);
+                // $this->advancedSelectOptions($classOptions, $selectedClass, [
+                //     'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
+                //     'callable' => function ($id) use ($SubjectStaff) {
+                //         return $SubjectStaff
+                //             ->find()
+                //             ->where([
+                //                 $SubjectStaff->aliasField('institution_subject_id') => $id
+                //             ])
+                //             ->count();
+                //     }
+                // ]);
             }
 
             $attr['options'] = $classOptions;
@@ -353,7 +358,8 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
             } elseif ($action == 'edit') {
                 $selectedClass = $attr['entity']->institution_subject_id;
             }
-
+            //POCOR-9112
+            $selectedClass = $request->getData()['InstitutionQualityVisits']['institution_subject_id'];
             $staffOptions = [];
             if (!is_null($selectedClass)) {
                 $staff = $this->SubjectStaff
