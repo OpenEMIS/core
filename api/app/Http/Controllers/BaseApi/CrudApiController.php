@@ -1489,6 +1489,7 @@ class CrudApiController extends Controller
         return response()->json(['error' => $message], $statusCode);
     }
 
+    // POCOR-9135 start
     /**
      * Return a JSON success response.
      *
@@ -1499,9 +1500,43 @@ class CrudApiController extends Controller
      */
     private function successResponse($message, $data, $statusCode = 200)
     {
-        return response()->json(['message' => $message, 'data' => $data], $statusCode);
+        $safeData = $this->sanitizeForJson($data);
+        Log::info("Response data: " . print_r($safeData, true)); // POCOR-9135
+        return response()->json(['message' => $message, 'data' => $safeData], $statusCode);
     }
 
+    private function sanitizeForJson($data)
+    {
+        // Handle Laravel model objects
+        if ($data instanceof \Illuminate\Database\Eloquent\Model) {
+            $data = $data->toArray(); // Extract attributes to array
+        }
+
+        // Handle paginator and collection
+        if ($data instanceof \Illuminate\Pagination\LengthAwarePaginator || $data instanceof \Illuminate\Support\Collection) {
+            $data = $data->toArray();
+        }
+
+        if (is_array($data)) {
+            // Is it a list or an associative array?
+            if (array_keys($data) === range(0, count($data) - 1)) {
+                foreach ($data as $index => $item) {
+                    $data[$index] = $this->sanitizeForJson($item);
+                }
+            } else {
+                foreach ($data as $key => $value) {
+                    $data[$key] = $this->sanitizeForJson($value);
+                }
+            }
+        } elseif (is_string($data)) {
+            if (!mb_check_encoding($data, 'UTF-8')) {
+                return base64_encode($data);
+            }
+        }
+
+        return $data;
+    }
+// POCOR-9135 end
 // POCOR-8966 end
 
 
