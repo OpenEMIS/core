@@ -10,6 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use App\Model\Table\AppTable;
 use Cake\Http\ServerRequest;
+use Cake\Datasource\ConnectionManager;//POCOR-8658
 
 class StudentReportCardsTable extends AppTable
 {
@@ -73,7 +74,7 @@ class StudentReportCardsTable extends AppTable
                 'OutcomeSubjects',
                 'StudentOutcomeSubjectComments',
                 'OutcomeCriterias',
-
+                'ClassAndLevelRanking'//POCOR-8658
             ]
         ]);
     }
@@ -116,13 +117,14 @@ class StudentReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyPeriods'] = 'onExcelTemplateInitialiseCompetencyPeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyItems'] = 'onExcelTemplateInitialiseCompetencyItems';
 
-         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
-         $events['ExcelTemplates.Model.onExcelTemplateInitialiseSubjectTeacher'] = 'onExcelTemplateInitialiseSubjectTeacher';
-         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeTemplates'] = 'onExcelTemplateInitialiseOutcomeTemplates';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseSubjectTeacher'] = 'onExcelTemplateInitialiseSubjectTeacher';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeTemplates'] = 'onExcelTemplateInitialiseOutcomeTemplates';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomePeriods'] = 'onExcelTemplateInitialiseOutcomePeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeSubjects'] = 'onExcelTemplateInitialiseOutcomeSubjects';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentOutcomeSubjectComments'] = 'onExcelTemplateInitialiseStudentOutcomeSubjectComments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseOutcomeCriterias'] = 'onExcelTemplateInitialiseOutcomeCriterias';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassAndLevelRanking'] = 'onExcelTemplateInitialiseClassAndLevelRanking';//POCOR-8658
         return $events;
     }
 
@@ -1861,5 +1863,64 @@ class StudentReportCardsTable extends AppTable
             return $entity;
         }
     }
-    
+    //POCOR-8658 starts
+    public function onExcelTemplateInitialiseClassAndLevelRanking(Event $event, array $params, ArrayObject $extra)
+    {
+        if (empty($params['academic_period_id']) && empty($params['student_id'])) {
+            return [];
+        }
+        $studentId = $params['student_id'];
+        $academicPeriodId = $params['academic_period_id'];
+
+        $connection = ConnectionManager::get('default');
+        $studentsData = $connection->execute("SELECT
+            academic_periods.name AS 'academic_period',
+            institutions.name AS 'institution_name',
+            institutions.code AS 'institution_code',
+            education_grades.name AS 'education_grade',
+            institution_classes.name AS 'class_name',
+            security_users.openemis_no AS 'student_openemis_no',
+            security_users.first_name AS 'student_first_name',
+            security_users.last_name AS 'student_last_name',
+            institution_subjects.name AS 'institution_subject',
+            CASE
+                WHEN institution_subject_students.total_mark IS NOT NULL THEN institution_subject_students.total_mark
+            ELSE ''
+                END AS 'total_mark',
+            RANK() OVER ( PARTITION BY institution_classes.name, institution_subjects.name ORDER BY institution_subject_students.total_mark DESC) AS 'class_ranking',
+            RANK() OVER ( PARTITION BY institutions.name, education_grades.name, institution_subjects.name ORDER BY institution_subject_students.total_mark DESC) AS 'level_ranking'
+        FROM institution_subject_students
+        INNER JOIN institution_classes ON institution_classes.id = institution_subject_students.institution_class_id
+        INNER JOIN security_users ON security_users.id = institution_subject_students.student_id
+        INNER JOIN institution_subjects ON institution_subjects.id = institution_subject_students.institution_subject_id
+        INNER JOIN institutions ON institutions.id = institution_subject_students.institution_id
+        INNER JOIN education_grades ON education_grades.id = institution_subject_students.education_grade_id
+        INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id
+        WHERE academic_periods.id = " . $academicPeriodId . " AND institution_subject_students.student_id = " . $studentId . " AND LENGTH(institution_subject_students.total_mark) > 0
+        ORDER BY institutions.name, education_grades.name, institution_subjects.name, 'Level Ranking', 'Class Ranking';")->fetchAll(\PDO::FETCH_ASSOC);
+
+        $entity = $result = [];
+        if (!empty($studentsData)) {
+            foreach ($studentsData as $key => $data) {
+                $result = [
+                    'id' => $key,
+                    'institution_name' => !empty($data['institution_name']) ? $data['institution_name'] : '',
+                    'academic_period' => !empty($data['academic_period']) ? $data['academic_period'] : '',
+                    'institution_code' => !empty($data['institution_code']) ? $data['institution_code'] : '',
+                    'education_grade' => !empty($data['education_grade']) ? $data['education_grade'] : '',
+                    'class_name' => !empty($data['class_name']) ? $data['class_name'] : '',
+                    'student_openemis_no' => !empty($data['student_openemis_no']) ? $data['student_openemis_no'] : '',
+                    'student_first_name' => !empty($data['student_first_name']) ? $data['student_first_name'] : '',
+                    'student_last_name' => !empty($data['student_last_name']) ? $data['student_last_name'] : '',
+                    'institution_subject' => !empty($data['institution_subject']) ? $data['institution_subject'] : '',
+                    'total_mark' => !empty($data['total_mark']) ? $data['total_mark'] : '',
+                    'class_ranking' => !empty($data['class_ranking']) ? $data['class_ranking'] : '',
+                    'level_ranking' => !empty($data['level_ranking']) ? $data['level_ranking'] : ''
+                ];
+                $entity[] = $result;
+            }
+        }
+        return $entity;
+    }
+    //POCOR-8658 ends
 }
