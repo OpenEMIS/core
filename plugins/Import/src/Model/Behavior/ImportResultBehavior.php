@@ -20,7 +20,17 @@ class ImportResultBehavior extends ImportBehavior
                 $downloadUrl[0] = 'template';
                 if ($buttons['add']['url']['action'] == 'ImportInstitutionSurveys') {
                     $downloadUrl[1] = $buttons['add']['url'][1];
+                } else if ($buttons['add']['url']['action'] == 'ImportOutcomeResults') {
+                    $data = $this->_table->request->getData('ImportOutcomeResults');
+                    unset($data['id']);
+                    unset($data['select_file']);
+                    $data['institution_id'] = $this->institutionId;
+                    $downloadUrl[1] = $this->_table->paramsEncode($data);
+                } else {
+
+                    $downloadUrl[1] = $buttons['add']['url'][1];
                 }
+//                dd($downloadUrl);
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
                 break;
         }
@@ -38,7 +48,8 @@ class ImportResultBehavior extends ImportBehavior
                 $back[0] = 'add';
             };
 
-            if (!array_key_exists($back['action'], $this->_table->ControllerAction->models)) {
+            $models = $this->_table->ControllerAction->models;
+            if (!isset($models[$back['action']])) {
                 $back['action'] = str_replace('Institution', '', $back['action']);
             }
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
@@ -80,11 +91,12 @@ class ImportResultBehavior extends ImportBehavior
                 $this->_table->Alert->ok($message, ['type' => 'string', 'reset' => true]);
             }
             // define data as empty entity so that the view file will not throw an undefined notice
-            $this->_table->controller->set('data', $this->_table->newEntity());
+            $this->_table->controller->set('data', $this->_table->newEntity([]));
             $this->_table->ControllerAction->renderView('/ControllerAction/view');
         } else {
             return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
         }
+        return $this->_table->controller->redirect($this->_table->ControllerAction->url('add'));
     }
 
     /******************************************************************************************************************
@@ -92,7 +104,7 @@ class ImportResultBehavior extends ImportBehavior
      ** Import Functions
      **
      ******************************************************************************************************************/
-    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = ''): void
+    public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $defaultTitle = ''): void
     {
         //set the image
         $activeSheet = $objPHPExcel->getActiveSheet();
