@@ -69,9 +69,6 @@ class SendingAlertShell extends Shell
                 ['id' => $obj->id]
             );
 
-            if($feature = 'Messaging'){
-
-            }
         }
     }
 
@@ -114,43 +111,43 @@ class SendingAlertShell extends Shell
             $http = new Client();
 
             // Temporary log to inspect outgoing SMS payload before sending
-            Log::info('Preparing to send SMS via Twilio' . print_r([
-                'to' => $to,
-                'from' => $from,
-                'message' => $cleanMessage
-            ], true));
+//            Log::info('Preparing to send SMS via Twilio' . print_r([
+//                'to' => $to,
+//                'from' => $from,
+//                'message' => $cleanMessage
+//            ], true));
 
-//            try {
-//                // Send POST request to Twilio API
-//                $response = $http->post(
-//                    "https://api.twilio.com/2010-04-01/Accounts/{$sid}/Messages.json",
-//                    [
-//                        'From' => $from,
-//                        'To' => $to,
-//                        'Body' => $cleanMessage
-//                    ],
-//                    [
-//                        'auth' => [
-//                            'username' => $sid,
-//                            'password' => $token
-//                        ],
-//                        'headers' => [
-//                            'Content-Type' => 'application/x-www-form-urlencoded'
-//                        ]
-//                    ]
-//                );
-//
-//                // Check response status
-//                if ($response->isOk()) {
-//                    $this->out('SMS sent to: ' . $to);
-//                } else {
-//                    $this->err('Failed to send SMS to ' . $to . ': ' . $response->getStringBody());
-//                }
-//            } catch (\Exception $e) {
-//                // Log and report exception if the request fails
-//                $this->err('Exception when sending SMS: ' . $e->getMessage());
-//                Log::error('Twilio SMS exception', ['message' => $e->getMessage()]);
-//            }
+            try {
+                // Send POST request to Twilio API
+                $response = $http->post(
+                    "https://api.twilio.com/2010-04-01/Accounts/{$sid}/Messages.json",
+                    [
+                        'From' => $from,
+                        'To' => $to,
+                        'Body' => $cleanMessage
+                    ],
+                    [
+                        'auth' => [
+                            'username' => $sid,
+                            'password' => $token
+                        ],
+                        'headers' => [
+                            'Content-Type' => 'application/x-www-form-urlencoded'
+                        ]
+                    ]
+                );
+
+                // Check response status
+                if ($response->isOk()) {
+                    $this->out('SMS sent to: ' . $to);
+                } else {
+                    $this->err('Failed to send SMS to ' . $to . ': ' . $response->getStringBody());
+                }
+            } catch (\Exception $e) {
+                // Log and report exception if the request fails
+                $this->err('Exception when sending SMS: ' . $e->getMessage());
+                Log::error('Twilio SMS exception', ['message' => $e->getMessage()]);
+            }
         } else {
             // Log if credentials/configs are missing
             $this->err('Failed to send SMS to ' . $to . ': Check Twilio SMS Configuration');
