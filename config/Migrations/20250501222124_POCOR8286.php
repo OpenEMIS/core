@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 use Migrations\AbstractMigration;
 use Cake\Log\Log;
+use Cake\Utility\Text;
 
 class POCOR8286 extends AbstractMigration
 {
     private const CONFIG_TYPE = 'External Alert Service - SMS';
-    private const OPTION_TYPE = 'external_alert_service_sms';
-    private const ITEM_SMS = 'external_alert_service_sms_config';
+
 
     public function up(): void
     {
@@ -16,24 +16,41 @@ class POCOR8286 extends AbstractMigration
         $this->backupTables();
         $this->removeSmsConfigItems();
         $this->insertConfigItems();
-        $this->insertConfigItemOptions();
+        $this->insertNewExternalDataSourceAttributes();
     }
 
     private function backupTables(): void
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         $this->backupTable('config_items', 'z_8286_config_items');
-        $this->backupTable('config_item_options', 'z_8286_config_item_options');
+        $this->backupTable('external_data_source_attributes', 'z_8286_external_data_source_attributes');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+
     }
 
     private function backupTable(string $original, string $backup): void
     {
         if (!$this->hasTable($backup)) {
             $this->execute("CREATE TABLE `$backup` LIKE `$original`");
+
+            // Check if the 'modified' column exists
+            $table = $this->table($original);
+            $columns = $table->getColumns($original);
+            if (in_array('modified', $columns)) {
+                // Update zero dates in the 'modified' column to NULL
+                $this->execute("
+            UPDATE `$original`
+            SET `modified` = NULL
+            WHERE `modified` = '0000-00-00 00:00:00'
+        ");
+            }
+
+            // Insert data into the backup table
             $this->execute("INSERT INTO `$backup` SELECT * FROM `$original`");
+
             Log::info("Backed up `$original` to `$backup`");
         }
+
     }
 
     private function removeSmsConfigItems(): void
@@ -44,41 +61,19 @@ class POCOR8286 extends AbstractMigration
 
     private function insertConfigItems(): void
     {
+        // 1345,
+        //Twilio,external_alert_service_sms_twilio,External Alert Service - SMS,Twilio,1,"",1,1,1,Dropdown,online_services,2,2025-05-02 08:13:24,1,2025-05-02 00:09:39
         $items = [
             [
-                'name' => 'SMS Provider',
-                'code' => self::ITEM_SMS,
+                'name' => 'Twilio',
+                'code' => 'external_alert_service_sms_twilio',
+                'type' => self::CONFIG_TYPE,
+                'label' => 'Twilio',
                 'visible' => 1,
                 'editable' => 1,
                 'field_type' => 'Dropdown',
-                'option_type' => self::OPTION_TYPE,
+                'option_type' => 'online_services',
             ],
-//            [
-//                'name' => 'Status',
-//                'code' => 'sms_status',
-//                'visible' => 1,
-//                'editable' => 1,
-//                'field_type' => 'Dropdown',
-//                'option_type' => 'online_services',
-//            ],
-//            [
-//                'name' => 'Account SID',
-//                'code' => 'sms_account_sid',
-//                'visible' => 1,
-//                'editable' => 1
-//            ],
-//            [
-//                'name' => 'SMS Auth Token',
-//                'code' => 'sms_auth_token',
-//                'visible' => 1,
-//                'editable' => 1
-//            ],
-//            [
-//                'name' => 'SMS Number',
-//                'code' => 'sms_number',
-//                'visible' => 1,
-//                'editable' => 1
-//            ]
         ];
 
         foreach ($items as $item) {
@@ -100,7 +95,7 @@ class POCOR8286 extends AbstractMigration
                  `option_type`, `created_user_id`, `created`)
                 VALUES
                 ('{$item['name']}', '{$item['code']}', '" . self::CONFIG_TYPE . "',
-                 '{$item['name']}', '', '', '1', {$item['editable']},
+                 '{$item['label']}', '0', '0', '0', {$item['editable']},
                  {$item['visible']}, $fieldType, $optionType, 1, CURRENT_TIMESTAMP)
             ");
                 Log::info("Inserted config item: {$item['name']}");
@@ -109,39 +104,40 @@ class POCOR8286 extends AbstractMigration
     }
 
 
-    private function insertConfigItemOptions(): void
+    public function insertNewExternalDataSourceAttributes()
     {
-        $options = [
-            ['option' => 'Twilio', 'value' => 'Twilio'],
-            ['option' => 'Nexmo (Vonage API)', 'value' => 'Nexmo'],
-            ['option' => 'Plivo', 'value' => 'Plivo'],
-            ['option' => 'MessageBird', 'value' => 'MessageBird'],
-            ['option' => 'Sinch', 'value' => 'Sinch'],
-            ['option' => 'Clickatell', 'value' => 'Clickatell'],
-            ['option' => 'Textlocal', 'value' => 'Textlocal'],
-            ['option' => 'Zenvia', 'value' => 'Zenvia'],
-            ['option' => 'Infobip', 'value' => 'Infobip'],
-            ['option' => 'Telesign', 'value' => 'Telesign'],
-            ['option' => 'Bandwidth', 'value' => 'Bandwidth'],
-            ['option' => 'SMSGlobal', 'value' => 'SMSGlobal'],
+        $table = $this->table('external_data_source_attributes');
+
+        $attributes = [
+            // API Credentials
+            ['account_sid', 'Account SID', 'openemis'],
+            ['auth_token', 'Auth Token', 'YWRtaW46ZGVtbwjhfh'],
+            ['number', 'Number', '+13472492183'],
+//            ['twilio_api_url', 'API URL', 'https://api.twilio.com/2010-04-01/Accounts/'],
+//            ['twilio_api_version', 'API Version', '2010-04-01'],
+//            ['twilio_api_method', 'API Method', 'POST'],
+//            ['twilio_api_timeout', 'API Timeout', '30'],
+//            ['twilio_api_response_format', 'API Response Format', 'json'],
+//            ['twilio_api_auth_type', 'API Auth Type', 'Basic'],
+
         ];
 
-        foreach ($options as $data) {
-            $existing = $this->fetchRow("
-            SELECT id FROM `config_item_options`
-            WHERE `option_type` = '" . self::OPTION_TYPE . "'
-              AND `option` = '{$data['option']}'
-        ");
+        $data = array_map(fn($attr) => $this->generateExternalDataSourceAttribute('Twilio', ...$attr), $attributes);
 
-            if (empty($existing)) {
-                $this->execute("
-                INSERT INTO `config_item_options`
-                (`option_type`, `option`, `value`, `order`, `visible`)
-                VALUES ('" . self::OPTION_TYPE . "', '{$data['option']}', '{$data['value']}', 0, 1)
-            ");
-                Log::info("Inserted option: {$data['option']}");
-            }
-        }
+        $table->insert($data)->save();
+    }
+
+    private function generateExternalDataSourceAttribute($type, $field, $name, $value)
+    {
+        return [
+            'id' => Text::uuid(),
+            'external_data_source_type' => $type,
+            'attribute_field' => $field,
+            'attribute_name' => $name,
+            'value' => $value,
+            'created' => date('Y-m-d H:i:s'),
+            'created_user_id' => 1,
+        ];
     }
 
 
@@ -155,7 +151,7 @@ class POCOR8286 extends AbstractMigration
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         $this->restoreTable('config_items', 'z_8286_config_items');
-        $this->restoreTable('config_item_options', 'z_8286_config_item_options');
+        $this->restoreTable('external_data_source_attributes', 'z_8286_external_data_source_attributes');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         Log::info("Restored tables from backups");
     }
