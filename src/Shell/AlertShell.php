@@ -240,9 +240,9 @@ class AlertShell extends Shell
                             }
                         }
 
-                        if (!empty($user->phone)) {
-                            if (!in_array($user->phone, $contactList['phone'])) {
-                                $contactList['phone'][] = $user->phone;
+                        if (!empty($user->mobile_number)) {
+                            if (!in_array($user->mobile_number, $contactList['mobile_number'])) {
+                                $contactList['phone'][] = $user->mobile_number;
                             }
                         }
                     }
@@ -313,10 +313,9 @@ class AlertShell extends Shell
                         }
                     }
 
-                    if (!empty($user->phone)) {
-                        $phoneRecipient = $user->name . ' (' . $user->phone . ')';
-                        if (!in_array($user->phone, $contactList['phone'])) {
-                            $contactList['phone'][] = $user->phone;
+                    if (!empty($user->mobile_number)) {
+                        if (!in_array($user->mobile_number, $contactList['phone'])) {
+                            $contactList['phone'][] = $user->mobile_number;
                         }
                     }
                 }
