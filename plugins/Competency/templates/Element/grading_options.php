@@ -17,7 +17,7 @@
 	<div class="input clearfix">
 		<div class="clearfix">
 		<?php
-			echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Option').'</span>', [
+			echo $this->Form->input(__('Add New Option'), [
 				'label' => __('Criteria Grading Options'),
 				'type' => 'button',
 				'class' => 'btn btn-default',
@@ -50,7 +50,8 @@
 					<tbody id='table_grading_options'>
 
 						<?php
-						if (count($data->grading_options)>0) :
+
+						if ($data->grading_options && count($data->grading_options)>0) :
 							// iterate each row
 							foreach ($data->grading_options as $key => $record) :
 								$rowErrors = $record->getErrors();
@@ -117,8 +118,8 @@
 											if ($gradingOptions[$data->grading_options[$key]['id']]) {
 												echo __('In use');
 											} else {
-												echo $this->Form->input('<i class="fa fa-trash"></i> <span>'.__('Delete').'</span>', [
-													'label' => false,
+												echo $this->Form->input(__('Delete'), [
+													'label' => __('Delete'),
 													'type' => 'button',
 													'class' => 'btn btn-dropdown action-toggle btn-single-action',
 													'title' => __('Delete'),

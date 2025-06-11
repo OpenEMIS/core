@@ -25,185 +25,15 @@ class InsertedRecords extends Model
     public $incrementing = false;
 
      // Override getKeyForSaveQuery to handle composite keys
-/**
- * @OA\PathItem(
- *     path="/api/v5/inserted-records"
- * )
- */
-public function _swaggerPath() {}
 
-/**
- * @OA\Get(
- *     path="/api/v5/inserted-records",
- *     summary="Get list of InsertedRecords",
- *     tags={"InsertedRecords"},
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="Successful."
- *             ),
- *             @OA\Property(
- *                 property="data",
- *                 type="array",
- *                 @OA\Items(
- *                     type="object",
-                          @OA\Property(property="id", type="integer", example=null),
-                          @OA\Property(property="inserted_date", type="integer", example=null),
-                          @OA\Property(property="reference_table", type="string", example=null),
-                          @OA\Property(property="reference_key", type="string", example=null),
-                          @OA\Property(property="data", type="string", example=null),
-                          @OA\Property(property="action_type", type="string", example=null),
-                          @OA\Property(property="created_user_id", type="integer", example=null),
-                          @OA\Property(property="created", type="string", format="date-time", example=null)
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerList() {}
 
-/**
- * @OA\Get(
- *     path="/api/v5/inserted-records/{id}",
- *     summary="Get InsertedRecords by ID",
- *     tags={"InsertedRecords"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InsertedRecords",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
 
-/**
- * @OA\Post(
- *     path="/api/v5/inserted-records",
- *     summary="Create a new InsertedRecords",
- *     tags={"InsertedRecords"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="inserted_date", type="integer", example=null),
-                     @OA\Property(property="reference_table", type="string", example=null),
-                     @OA\Property(property="reference_key", type="string", example=null),
-                     @OA\Property(property="data", type="string", example=null),
-                     @OA\Property(property="action_type", type="string", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Created successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerCreate() {}
 
-/**
- * @OA\Put(
- *     path="/api/v5/inserted-records/{id}",
- *     summary="Update InsertedRecords",
- *     tags={"InsertedRecords"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InsertedRecords",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="id", type="integer", example=null),
-                     @OA\Property(property="inserted_date", type="integer", example=null),
-                     @OA\Property(property="reference_table", type="string", example=null),
-                     @OA\Property(property="reference_key", type="string", example=null),
-                     @OA\Property(property="data", type="string", example=null),
-                     @OA\Property(property="action_type", type="string", example=null),
-                     @OA\Property(property="created_user_id", type="integer", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Updated successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerUpdate() {}
 
-/**
- * @OA\Delete(
- *     path="/api/v5/inserted-records/{id}",
- *     summary="Delete InsertedRecords",
- *     tags={"InsertedRecords"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the InsertedRecords",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerDelete() {}
+
+
+
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
@@ -240,9 +70,4 @@ public function _swaggerDelete() {}
     }
 
 
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }

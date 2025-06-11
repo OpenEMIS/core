@@ -66,9 +66,13 @@ class InstitutionService extends Controller
                 $resp[$k]['area_name'] = $data['area_education']['name'];
                 $resp[$k]['area_code'] = $data['area_education']['code'];
                 $resp[$k]['area_administrative_id'] = $data['area_administrative_id'];
-                $resp[$k]['area_administrative_name'] = $data['area_administratives']['name'];
-                $resp[$k]['area_administrative_code'] = $data['area_administratives']['code'];
-
+                if($data['area_administrative_id'] != 0 || $data['area_administrative_id'] != null){
+                    $resp[$k]['area_administrative_name'] = $data['area_administratives']['name'];
+                    $resp[$k]['area_administrative_code'] = $data['area_administratives']['code'];
+                }else{
+                  $resp[$k]['area_administrative_name'] = "N/A"; 
+                  $resp[$k]['area_administrative_code'] = "N/A";
+                } //POCOR-8990
                 $resp[$k]['institution_locality_id'] = $data['institution_locality_id'];
                 $resp[$k]['institution_locality_name'] = $data['institution_localities']['name']??"";
                 $resp[$k]['institution_locality_international_code'] = $data['institution_localities']['international_code']??"";
@@ -410,6 +414,7 @@ class InstitutionService extends Controller
                         'user_first_name' => $student->securityUser->first_name,
                         'user_last_name' => $student->securityUser->last_name,
                         'institution_class' => $student->class->name,
+                        'institution_class_id' => $student->class->id,
                         'user_gender' => $student->securityUser->gender->name,
                         'user_status' => $student->studentStatus->name,
                         'special_needs' => $student->securityUser->specialNeed ? 1 : 0

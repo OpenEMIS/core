@@ -121,16 +121,18 @@ class AreapickerBehavior extends Behavior
                     $list = $this->getAreaLevelName($targetModel, $areaId);
                     $after = $field;
                     foreach ($list as $key => $area) {
+                        $level_name = $area['level_name'] ?? ""; // POCOR-9008
+                        $area_name = $area['area_name'] ?? ""; // POCOR-9008
                         if ($this->isCAv4()) {
                             $this->_table->field($field.$key, [
                                 'type' => 'readonly',
-                                'attr' => ['label' => __($area['level_name']), 'value' => __($area['area_name'])],
+                                'attr' => ['label' => __($level_name), 'value' => __($area_name)],
                                 'after' => $after
                             ]);
                         } else {
                             $this->_table->ControllerAction->field($field.$key, [
                                 'type' => 'disabled',
-                                'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
+                                'attr' => ['label' => __($level_name), 'value' => $area_name],
                                 'after' => $after
                             ]);
                         }
@@ -155,18 +157,20 @@ class AreapickerBehavior extends Behavior
                 }
                 $after = $field;
                 foreach ($list as $key => $area) {
+                    $level_name = $area['level_name'] ?? ""; // POCOR-9008
+                    $area_name = $area['area_name'] ?? ""; // POCOR-9008
                     if ($this->isCAv4()) {
                         $this->_table->field($field.$key, [
                             'type' => 'disabled',
-                            'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
-                            'value' => __($area['area_name']),
+                            'attr' => ['label' => __($level_name), 'value' => $area_name],
+                            'value' => __($area_name),
                             'after' => $after
                         ]);
                     } else {
                         $this->_table->ControllerAction->field($field.$key, [
                             'type' => 'readonly',
-                            'attr' => ['label' => __($area['level_name'])],
-                            'value' => __($area['area_name']),
+                            'attr' => ['label' => __($level_name)],
+                            'value' => __($area_name),
                             'after' => $after
                         ]);
                     }

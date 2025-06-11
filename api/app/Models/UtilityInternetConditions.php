@@ -21,10 +21,17 @@ class UtilityInternetConditions extends Model
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
-    
-    
+
 
      // Override getKeyForSaveQuery to handle composite keys
+
+
+
+
+
+
+
+
     protected function getKeyForSaveQuery()
     {
         $query = $this->newQueryWithoutScopes();
