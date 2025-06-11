@@ -28,7 +28,7 @@ services:
     environment:
     - DB_HOST=db    # Specifies the DB_Host as DB container
     volumes:
-      - ./api/.env:/var/www/html/core/api/.env     # Bind mounting the .env file
+      # - ./api/.env:/var/www/html/core/api/.env     # Bind mounting the .env file
       - config:/var/www/html/core/config     # Volume mounting for config
     networks:
       - openemis-network    # Specifies the network
