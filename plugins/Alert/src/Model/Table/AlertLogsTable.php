@@ -16,8 +16,8 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\I18n\FrozenTime;
-use Cake\I18n\FrozenDate;
+use Cake\I18n\FrozenTime; // POCOR-8286
+use Cake\I18n\FrozenDate; // POCOR-8286
 
 class AlertLogsTable extends ControllerActionTable
 {
@@ -144,10 +144,8 @@ class AlertLogsTable extends ControllerActionTable
         }// end if have assignee id in the recordEntity
     }
 
-    public function insertAlertLog($method, $feature, $email, $subject = null, $message = null)
+    public function insertAlertLog($method, $feature, $recipient, $subject = null, $message = null)
     {
-        $today = FrozenTime::now();
-        $todayDate = FrozenDate::now();
 
         // general feature options from alertRules
         $AlertRules = TableRegistry::get('Alert.AlertRules');
@@ -169,7 +167,7 @@ class AlertLogsTable extends ControllerActionTable
             $entity = $this->newEntity([
                 'feature' => $feature,
                 'method' => $method,
-                'destination' => $email,
+                'destination' => $recipient,
                 'status' => 0,
                 'subject' => $subject,
                 'message' => $message,
@@ -187,26 +185,23 @@ class AlertLogsTable extends ControllerActionTable
 
     }
 
-    public function insertSystemUpdateAlertLog($method, $feature, $email, $subject = null, $message = null)
+    public function insertSystemUpdateAlertLog($method, $feature, $recipients, $subject = null, $message = null)
     {
-        $today = FrozenTime::now();
-        $todayDate = FrozenDate::now();
 
         // general feature options from alertRules
         $AlertRules = TableRegistry::get('Alert.AlertRules');
-        $alertFeatures = $AlertRules->getFeatureOptions();
 
         // checksum hash($subject,$message)
         $checksum = Security::hash($subject . ',' . $message, 'sha256');
         // to update and add new records into the alert_logs
         $result_checksum = TableRegistry::get('Alert.AlertLogs')->find()->where(['checksum' => $checksum])->first();
         if(empty($result_checksum)){
-            $emailsArray = explode(", ", $email);
-            foreach($emailsArray AS $emailData){
+            $recipientArray = explode(",", $recipients);
+            foreach($recipientArray AS $recipient){
                 $entity = $this->newEntity([
                     'feature' => $feature,
                     'method' => $method,
-                    'destination' => $emailData,
+                    'destination' => $recipient,
                     'status' => 0,
                     'subject' => $subject,
                     'message' => $message,
@@ -226,14 +221,8 @@ class AlertLogsTable extends ControllerActionTable
 
     }
 
-    public function insertStudentAdmissionAlertLog($method, $feature, $email, $subject = null, $message = null)
+    public function insertStudentAdmissionAlertLog($method, $feature, $recipient, $subject = null, $message = null)
     {
-        $today = FrozenTime::now();
-        $todayDate = FrozenDate::now();
-
-        // general feature options from alertRules
-        $AlertRules = TableRegistry::get('Alert.AlertRules');
-        $alertFeatures = $AlertRules->getFeatureOptions();
 
         // checksum hash($subject,$message)
         $checksum = Security::hash($subject . ',' . $message, 'sha256');
@@ -241,7 +230,7 @@ class AlertLogsTable extends ControllerActionTable
         $entity = $this->newEntity([
             'feature' => $feature,
             'method' => $method,
-            'destination' => $email,
+            'destination' => $recipient,
             'status' => 0,
             'subject' => $subject,
             'message' => $message,

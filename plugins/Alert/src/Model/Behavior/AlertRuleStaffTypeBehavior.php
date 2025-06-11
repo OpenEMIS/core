@@ -15,7 +15,7 @@ class AlertRuleStaffTypeBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StaffType',
             'name' => 'Staff Type',
-            'method' => ['Email','SMS'],
+            'method' => ['Email','SMS'], // POCOR-8286
             'threshold' => [
                 'value' => [
                     'type' => 'integer',
@@ -88,6 +88,8 @@ class AlertRuleStaffTypeBehavior extends AlertRuleBehavior
                         'message' => __('Value must be within 1 to 30')
                     ]
                 ]);
+                $model->setValidator('forSave', $validator); // POCOR-8286
+
             }
         }
     }

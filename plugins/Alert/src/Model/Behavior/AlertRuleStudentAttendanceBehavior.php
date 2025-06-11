@@ -14,7 +14,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StudentAttendance', //POCOR-6584
         'name' => 'Student Absent',
-        'method' => ['Email','SMS'],
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [],
         'placeholder' => [
             '${total_days}' => 'Total number of unexcused absence.',
@@ -63,6 +63,8 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
                         'rule' => ['range', 1, 30]
                     ]
                 ]);
+                $model->setValidator('forSave', $validator); // POCOR-8286
+
             }
         }
     }

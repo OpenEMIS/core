@@ -12,11 +12,12 @@ class POCOR8286 extends AbstractMigration
 
     public function up(): void
     {
-
+//        return;
         $this->backupTables();
         $this->removeSmsConfigItems();
         $this->insertConfigItems();
         $this->insertNewExternalDataSourceAttributes();
+        $this->addMethodField();
     }
 
     private function backupTables(): void
@@ -24,34 +25,69 @@ class POCOR8286 extends AbstractMigration
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         $this->backupTable('config_items', 'z_8286_config_items');
         $this->backupTable('external_data_source_attributes', 'z_8286_external_data_source_attributes');
+        $this->backupTable('messaging', 'z_8286_messaging');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
 
     }
 
     private function backupTable(string $original, string $backup): void
     {
-        if (!$this->hasTable($backup)) {
-            $this->execute("CREATE TABLE `$backup` LIKE `$original`");
-
-            // Check if the 'modified' column exists
-            $table = $this->table($original);
-            $columns = $table->getColumns($original);
-            if (in_array('modified', $columns)) {
-                // Update zero dates in the 'modified' column to NULL
-                $this->execute("
-            UPDATE `$original`
-            SET `modified` = NULL
-            WHERE `modified` = '0000-00-00 00:00:00'
-        ");
-            }
-
-            // Insert data into the backup table
-            $this->execute("INSERT INTO `$backup` SELECT * FROM `$original`");
-
-            Log::info("Backed up `$original` to `$backup`");
+        if ($this->hasTable($backup)) {
+            Log::warning("Backup table `$backup` already exists. Skipping backup.");
+            return;
         }
 
+        try {
+            // 1. Create backup structure
+            $this->execute("CREATE TABLE `$backup` LIKE `$original`");
+
+            // 2. Get column names
+            $table = $this->table($original);
+            $columns = $table->getColumns();
+            $columnNames = array_map(fn($col) => $col->getName(), $columns);
+
+            Log::info('Table columns: ' . print_r($columnNames, true));
+
+            // 3. Normalize 'modified' if exists
+            if (in_array('modified', $columnNames)) {
+                // Backup current SQL mode
+                $sqlModeRow = $this->fetchRow("SELECT @@SESSION.sql_mode AS sql_mode");
+                $currentSqlMode = $sqlModeRow['sql_mode'] ?? '';
+                $safeSqlMode = addslashes($currentSqlMode);
+
+                // Temporarily disable SQL mode
+                $this->execute("SET SESSION sql_mode = ''");
+
+                try {
+                    $this->execute("
+                    UPDATE `$original`
+                    SET `modified` = NULL
+                    WHERE `modified` = '0000-00-00 00:00:00'
+                ");
+                    Log::info("Successfully changed '0000-00-00 00:00:00' to NULL in `$original`");
+                } finally {
+                    // Restore original SQL mode
+                    $this->execute("SET SESSION sql_mode = '$safeSqlMode'");
+                }
+            }
+
+            // 4. Copy data into backup
+            $this->execute("INSERT INTO `$backup` SELECT * FROM `$original`");
+
+            Log::info("Successfully backed up `$original` to `$backup`");
+
+        } catch (\Throwable $e) {
+            // Cleanup failed backup table
+            if ($this->hasTable($backup)) {
+                $this->execute("DROP TABLE `$backup`");
+                Log::warning("Backup failed; dropped incomplete backup table `$backup`");
+            }
+
+            // Re-throw to stop migration
+            throw $e;
+        }
     }
+
 
     private function removeSmsConfigItems(): void
     {
@@ -112,6 +148,7 @@ class POCOR8286 extends AbstractMigration
             // API Credentials
             ['account_sid', 'Account SID', 'openemis'],
             ['auth_token', 'Auth Token', 'YWRtaW46ZGVtbwjhfh'],
+<<<<<<< HEAD:config/Migrations/20250501222124_POCOR8286.php
             ['number', 'Number', '+13472492183'],
 //            ['twilio_api_url', 'API URL', 'https://api.twilio.com/2010-04-01/Accounts/'],
 //            ['twilio_api_version', 'API Version', '2010-04-01'],
@@ -119,6 +156,9 @@ class POCOR8286 extends AbstractMigration
 //            ['twilio_api_timeout', 'API Timeout', '30'],
 //            ['twilio_api_response_format', 'API Response Format', 'json'],
 //            ['twilio_api_auth_type', 'API Auth Type', 'Basic'],
+=======
+            ['twilio_number', 'Number', '+13472492183'],
+>>>>>>> 5932b1c6e0 (adding comments):config/Migrations/20250603172831_POCOR8286.php
 
         ];
 
@@ -126,7 +166,21 @@ class POCOR8286 extends AbstractMigration
 
         $table->insert($data)->save();
     }
+    private function addMethodField(): void
+    {
+        $table = $this->table('messaging');
+        $columns = $table->getColumns();
+        $columnNames = array_map(fn($col) => $col->getName(), $columns);
 
+        Log::info('Current columns in `messaging`: ' . implode(', ', $columnNames));
+
+        if (!in_array('method', $columnNames)) {
+            $this->execute("ALTER TABLE `messaging` ADD `method` VARCHAR(50) NOT NULL DEFAULT 'Email' AFTER `status`;");
+            Log::info("Added 'method' field to 'messaging' table");
+        } else {
+            Log::info("'method' field already exists in 'messaging' table – skipping");
+        }
+    }
     private function generateExternalDataSourceAttribute($type, $field, $name, $value)
     {
         return [
@@ -152,6 +206,7 @@ class POCOR8286 extends AbstractMigration
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         $this->restoreTable('config_items', 'z_8286_config_items');
         $this->restoreTable('external_data_source_attributes', 'z_8286_external_data_source_attributes');
+        $this->restoreTable('messaging', 'z_8286_messaging');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         Log::info("Restored tables from backups");
     }
