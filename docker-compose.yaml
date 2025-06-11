@@ -28,8 +28,8 @@ services:
     environment:
     - DB_HOST=db    # Specifies the DB_Host as DB container
     volumes:
-      - ./api/.env:/var/www/html/api/.env     # Bind mounting the .env file
-      - config:/var/www/html/config     # Volume mounting for config
+      - ./api/.env:/var/www/html/core/api/.env     # Bind mounting the .env file
+      - config:/var/www/html/core/config     # Volume mounting for config
     networks:
       - openemis-network    # Specifies the network
   db:
@@ -41,7 +41,7 @@ services:
       - MYSQL_ROOT_PASSWORD=root # Specifies the MySQL root password
     volumes:
       - db:/var/lib/mysql   # Volume mounting the db data
-      - ./docker-config/sql/my.cnf:/etc/my.cnf    # Bind mounting the mysql config file
+      - ./docker-config/mysql/my.cnf:/etc/my.cnf    # Bind mounting the mysql config file
     networks:
       - openemis-network    # Specifies the network
   phpmyadmin:
