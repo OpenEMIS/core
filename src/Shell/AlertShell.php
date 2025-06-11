@@ -241,7 +241,7 @@ class AlertShell extends Shell
                         }
 
                         if (!empty($user->mobile_number)) {
-                            if (!in_array($user->mobile_number, $contactList['mobile_number'])) {
+                            if (!in_array($user->mobile_number, $contactList['phone'])) {
                                 $contactList['phone'][] = $user->mobile_number;
                             }
                         }
