@@ -60,7 +60,11 @@ WORKDIR /var/www/html/core/api
 RUN apt install -y git && composer update && composer dump-autoload
 
 # This clears the config, cache, view, route and generate the jwt and key for application and then caches the config
-RUN php artisan config:clear && \
+RUN cp .env.example .env && \
+    sed -i "s|DB_HOST=.*|DB_HOST=db|g" ./.env &&\
+    sed -i "s|DB_USERNAME=.*|DB_USERNAME=root|g" ./.env &&\
+    sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=root|g" ./.env &&\
+    php artisan config:clear && \
     php artisan cache:clear && \
     php artisan view:clear && \
     php artisan route:clear && \
@@ -85,6 +89,5 @@ RUN mv ./webroot/js/angular/dist/styles.css ./webroot/css/angular/main/ &&\
     chown -R www-data:www-data /var/www/html &&\
     # Deletes the apt cache to reduce image size
     rm -rf /var/lib/apt/lists/*
-
 # Container Start Command
 CMD ["apache2-foreground"]
