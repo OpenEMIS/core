@@ -15,7 +15,7 @@ class AlertRuleSystemUpdatesBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'SystemUpdates',
         'name' => 'System Updates',
-        'method' => ['Email','SMS'],
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [
             // 'value' => [
             //     'type' => 'integer',

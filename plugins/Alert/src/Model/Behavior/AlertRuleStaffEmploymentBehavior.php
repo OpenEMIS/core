@@ -15,7 +15,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StaffEmployment',
             'name' => 'Staff Employment',
-            'method' => ['Email','SMS'],
+            'method' => ['Email','SMS'], // POCOR-8286
             'threshold' => [
                 'value' => [
                     'type' => 'integer',
@@ -87,6 +87,8 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                         'message' => __('Staff employment must be between 1 to 365')
                     ]
                 ]);
+                $model->setValidator('forSave', $validator); // POCOR-8286
+
             }
         }
     }

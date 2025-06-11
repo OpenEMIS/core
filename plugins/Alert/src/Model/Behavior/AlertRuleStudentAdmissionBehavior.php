@@ -17,7 +17,7 @@ class AlertRuleStudentAdmissionBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StudentAdmission',
         'name' => 'Student Admission',
-        'method' => ['Email','SMS'],
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [
             'workflow_steps' => [
                 'type' => 'chosenSelect',
@@ -56,6 +56,8 @@ class AlertRuleStudentAdmissionBehavior extends AlertRuleBehavior
                         'message' => __('Value must be within 1 to 30')
                     ]
                 ]);
+                $model->setValidator('forSave', $validator); // POCOR-8286
+
             }
         }
     }

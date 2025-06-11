@@ -43,7 +43,7 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->rule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                $validator = $model->getValidator();
                 $validator->add('absence_type_id', 'notBlank', ['rule' => 'notBlank']);
                 $validator->requirePresence('absence_type_id');
                 $validator->add('days_absent', 'notBlank', ['rule' => 'notBlank']);
@@ -52,6 +52,8 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
                     'rule' => ['naturalNumber', false],
                     'message' => __('Please enter a valid number more than 0.')
                 ]);
+                $model->setValidator('forSave', $validator);
+
             }
         }
     }

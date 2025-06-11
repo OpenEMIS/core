@@ -14,7 +14,7 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'LicenseRenewal',
         'name' => 'License Renewal',
-        'method' => ['Email','SMS'],
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [
             'value' => [
                 'type' => 'integer',
