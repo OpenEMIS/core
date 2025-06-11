@@ -16,9 +16,7 @@ use Cake\Validation\Validator;
 use Cake\ORM\Table;
 use Cake\Log\Log;
 
-// POCOR-8849
-// POCOR-8849
-
+// POCOR-8286
 class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
 {
     public $id;
@@ -32,13 +30,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-//    public function validationCustom(Validator $validator): Validator
-//    {
-//        $validator = $this->validationDefault($validator);
-//        return $validator->requirePresence('url', false);
-//    }
-
-    public function validationDefault(Validator $validator): Validator // POCOR-8849
+    public function validationDefault(Validator $validator): Validator
     {
 
         $validator = parent::validationDefault($validator);
@@ -60,7 +52,6 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        // POCOR-7981 Start
         if ($this->action == 'index') {
             $this->field('visible', ['visible' => false]);
             $this->field('editable', ['visible' => false]);
