@@ -16,7 +16,9 @@ use Cake\Validation\Validator;
 use Cake\ORM\Table;
 use Cake\Log\Log;
 
+
 // POCOR-8286
+
 class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
 {
     public $id;
@@ -78,7 +80,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
             $this->field('code', ['visible' => false]);
             $this->field('name', ['visible' => ['index' => true]]);
             $this->field('default_value', ['visible' => false]);
-            $this->field('value_selection', ['visible' => false]); // POCOR-8849
+            $this->field('value_selection', ['visible' => false]);
 
             $this->field('type', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
             $this->field('label', ['visible' => ['view' => true, 'edit' => true], 'type' => 'readonly']);
@@ -88,10 +90,10 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
                 $this->checkController();
             }
             dd($this->getFields());
-            // POCOR-7981 END
+
         }
 
-        // Start POCOR-5188
+
         $is_manual_exist = $this->getManualUrl('Administration', 'External Alert Service - SMS', 'System Configurations');
         if (!empty($is_manual_exist)) {
             $btnAttr = [
@@ -109,13 +111,13 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
-        // End POCOR-5188
+
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('value', ['visible' => true]);
-        // POCOR-7981
+
         $this->field('attributes', ['type' => 'external_alert_service_sms']);
     }
 
@@ -123,14 +125,14 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
     {
         $tableHeaders = [__('Attribute Name'), __('Value')];
         $tableCells = [];
-        $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes'); // POCOR-8849
+        $ExternalDataSourceAttributes = self::getDynamicTableInstance('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalDataSourceAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
                 'valueField' => 'value'
             ])
             ->where([
-                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $entity->name // POCOR-7981
+                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $entity->name
             ])
             ->order('attribute_field')
             ->toArray();
@@ -139,9 +141,9 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         }
 
         if ($action == 'view') {
-            if (isset($attributes['password'])) { // POCOR-8849
-                $attributes['password'] = '*****'; // POCOR-8849
-            } // POCOR-8849
+            if (isset($attributes['password'])) {
+                $attributes['password'] = '*****';
+            }
 
             foreach ($attributes as $key => $obj) {
                 $rowData = [];
@@ -153,14 +155,14 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->getSubject()->renderElement('Configuration.external_data_source', ['attr' => $attr]); // POCOR-8849
+        return $event->getSubject()->renderElement('Configuration.external_data_source', ['attr' => $attr]);
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request) // POCOR-8849
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {
-        // POCOR-7981 START
+
         if (in_array($action, ['edit'])) {
-            $optionTable = self::getDynamicTableInstance('Configuration.ConfigItemOptions'); // POCOR-8849
+            $optionTable = self::getDynamicTableInstance('Configuration.ConfigItemOptions');
             $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
                 ->where([
                     'ConfigItemOptions.option_type' => 'completeness',
@@ -171,15 +173,15 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
             $attr['onChangeReload'] = true;
             $this->setExternalAttributes($attr['entity']);
         }
-        // POCOR-7981 END
+
 
         return $attr;
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
-        // POCOR-7981 START
-        $alias = $this->getAlias(); // POCOR-8849
+
+        $alias = $this->getAlias();
         $data = $requestData[$alias];
         $source = $entity['name'];
 
@@ -192,7 +194,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
             $patchOption['validate'] = 'Custom';
         }
 
-        if ($source == 'Jordan CSPD') {//POCOR-6930
+        if ($source == 'Jordan CSPD') {
             $patchOption['validate'] = 'JordanCSPD';
         }
 
