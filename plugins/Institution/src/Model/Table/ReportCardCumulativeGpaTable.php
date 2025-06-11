@@ -469,7 +469,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
+//        Log::debug(print_r([$params['student_id'],
+//            $params['academic_period_id'],
+//            $params['institution_id'],
+//            $params['education_grade_id']],true));
         if ($params) {
             self::addGpaReportCards($params['student_id'],
                 $params['academic_period_id'],
@@ -1034,7 +1037,17 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             ->toArray();
         $gpaIds = array_column($nameOption, 'id');
         $gpaGPAs = [];
-        foreach ($gpaIds as $gpaId) {
+        foreach ($gpaIds as $gpaId) { // POCOR-9177 FIRST CALCULATE ALL GPA
+//            Log::debug('GPA ID: ' . $gpaId);
+            $newGPA = ReportCardGpaTable::insertGpaPerStudentPerGpa( // POCOR-9162
+                $institutionId,
+                $studentId,
+                $academicPeriodId,
+                $educationGradeId,
+                $gpaId);
+            $gpaGPAs[] = $newGPA;
+        }
+        foreach ($gpaIds as $gpaId) { // POCOR-9177 THEN CALCULATE ALL CUM_GPA
 //            Log::debug('GPA ID: ' . $gpaId);
             $newGPA = self::insertCumulativeGpaPerStudentPerGpa( // POCOR-9162
                 $institutionId,
@@ -1044,6 +1057,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 $gpaId);
             $gpaGPAs[] = $newGPA;
         }
+//        Log::debug(print_r($gpaGPAs, true));
         return $gpaGPAs;
         // POCOR-9162 middle
 ////        $selectedAcademicPeriodId = $selectedAcademicPeriodId;
@@ -1662,15 +1676,22 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 'education_grades_gpa_id' => $educationGradeGpaId,
             ])
             ->first();
+        // POCOR-9177 start: make it less
+        $new = false;
         if ($existing) {
-            $existing = $gpaTable->patchEntity($existing, [
-                'gpa' => $gpa,
-                'cumulative_gpa' => $cum_gpa,
-                'modified_user_id' => $userId,
-                'modified' => FrozenTime::now()
-            ]);
+//            Log::debug(print_r([$gpa, $cum_gpa, $existing], true));
+            if ($existing->gpa != $gpa || $existing->cumulative_gpa != $cum_gpa) {
+                $new = true;
+                $existing   = $gpaTable->patchEntity($existing, [
+                    'gpa' => $gpa,
+                    'cumulative_gpa' => $cum_gpa,
+                    'modified_user_id' => $userId,
+                    'modified' => FrozenTime::now()
+                ]);
+            }
         } else {
-            $existing = $gpaTable->newEntity([
+            $new = true;
+                $existing = $gpaTable->newEntity([
                 'student_id' => $studentId,
                 'institution_id' => $institutionId,
                 'academic_period_id' => $academicPeriodId,
@@ -1682,16 +1703,21 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 'created' => FrozenTime::now()
             ]);
         }
-        $conn = $gpaTable->getConnection();
-        $conn->begin();
 
-        if ($gpaTable->save($existing)) {
-            $conn->commit();
-            return $existing; // or whatever
-        } else {
-            $conn->rollback();
-            throw new \Exception("Failed to save GPA record.");
+        if ($new) {
+            $conn = $gpaTable->getConnection();
+            $conn->begin();
+            if ($gpaTable->save($existing)) {
+                $conn->commit();
+                return $existing; // or whatever
+            } else {
+                $conn->rollback();
+                throw new \Exception("Failed to save GPA record.");
+            }
+        }else{
+            return $existing;
         }
+        // POCOR-9177 end
     }
 
     /**
