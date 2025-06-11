@@ -148,17 +148,7 @@ class POCOR8286 extends AbstractMigration
             // API Credentials
             ['account_sid', 'Account SID', 'openemis'],
             ['auth_token', 'Auth Token', 'YWRtaW46ZGVtbwjhfh'],
-<<<<<<< HEAD:config/Migrations/20250501222124_POCOR8286.php
-            ['number', 'Number', '+13472492183'],
-//            ['twilio_api_url', 'API URL', 'https://api.twilio.com/2010-04-01/Accounts/'],
-//            ['twilio_api_version', 'API Version', '2010-04-01'],
-//            ['twilio_api_method', 'API Method', 'POST'],
-//            ['twilio_api_timeout', 'API Timeout', '30'],
-//            ['twilio_api_response_format', 'API Response Format', 'json'],
-//            ['twilio_api_auth_type', 'API Auth Type', 'Basic'],
-=======
-            ['twilio_number', 'Number', '+13472492183'],
->>>>>>> 5932b1c6e0 (adding comments):config/Migrations/20250603172831_POCOR8286.php
+            ['twilio_number', 'Number', '+13472492183']
 
         ];
 
