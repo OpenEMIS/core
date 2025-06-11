@@ -15,6 +15,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
 use Cake\Datasource\ConnectionManager;
 
+
 class AlertRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -69,6 +70,11 @@ class AlertRulesTable extends ControllerActionTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
+            // POCOR-8286 start
+            if(isset($data['method']) && !empty($data['method'])) {
+                $data['method'] = implode(',', array_map('trim', $data['method']['_ids']));
+            }
+            // POCOR-8286 end
             if (isset($data['feature']) && !empty($data['feature'])) {
                 $alertRuleTypes = $this->getAlertRuleTypes();
                 $thresholdConfig = $alertRuleTypes[$data['feature']]['threshold'];
@@ -288,15 +294,32 @@ class AlertRulesTable extends ControllerActionTable
     //POCOR-8690[START]
     public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         if ($action == 'add'||$action == 'edit') {
             $entity = $attr['entity'];
-            if($entity->feature)
-            {
-            $attr['type'] = 'readonly';
-            $attr['value'] = $this->getMethod($entity->feature);;
-            $attr['attr']['value'] =$this->getMethod($entity->feature);;
+        // POCOR-8286 start
+            if($entity->feature) {
+                $methods = $this->getMethod($entity->feature);
+
+                if (!is_array($methods)) {
+                    $attr['type'] = 'readonly';
+                } else {
+                    $attr['type'] = 'chosenSelect';
+                    $attr['options'] = array_combine($methods, $methods);
+
+                    // NEW: parse the string into array
+                    if (!empty($entity->method)) {
+                        $attr['value'] = explode(',', $entity->method);
+                        $attr['attr']['value'] = $attr['value'];
+                    }
+                }
             }
+<<<<<<< HEAD
            
+=======
+            // POCOR-8286 end
+
+>>>>>>> d350577135 (added new way to alert)
         }
 
         return $attr;
@@ -326,6 +349,7 @@ class AlertRulesTable extends ControllerActionTable
 
     public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
     {
+<<<<<<< HEAD
         //POCOR-8869[START]
         $admissionFeature = $this->request->getData()['AlertRules']['feature'];
         if($admissionFeature == 'StudentAdmission'){
@@ -335,11 +359,22 @@ class AlertRulesTable extends ControllerActionTable
                 if ($entity->has('feature')) {
                     $feature = $entity->feature;
     
+=======
+        // POCOR-9100 start
+        $SecurityRoles = $this->SecurityRoles;
+        if ($action == 'add' || $action == 'edit') {
+
+            $entity = $attr['entity'];
+                if ($entity->has('feature')) {
+                    $feature = $entity->feature;
+
+>>>>>>> d350577135 (added new way to alert)
                     if (in_array($feature, ['ScholarshipApplication'])) {
                         $attr['type'] = 'disabled';
                         $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
                         $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
                     } else {
+<<<<<<< HEAD
                         $roleOptions = $this->SecurityRoles
                             ->find('list')
                             ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->getPrimaryKey()), $this->SecurityRoles->aliasField('name')])
@@ -349,6 +384,18 @@ class AlertRulesTable extends ControllerActionTable
     
                         $attr['type'] = 'chosenSelect';
                         $attr['options'] = $roleOptions;
+=======
+                    $roleOptions = $SecurityRoles
+                        ->find('list')
+                        ->select([$SecurityRoles->aliasField($SecurityRoles->getPrimaryKey()),
+                            $SecurityRoles->aliasField('name')])
+                            ->find('visible')
+                            ->find('order')
+                            ->toArray();
+
+                        $attr['type'] = 'chosenSelect';
+                    if ($feature == 'StudentAdmission') {
+>>>>>>> d350577135 (added new way to alert)
                         $filteredRoles = array_filter($roleOptions, function ($role) {
                             return $role === "Guardian";
                         }, ARRAY_FILTER_USE_BOTH);
@@ -642,10 +689,10 @@ class AlertRulesTable extends ControllerActionTable
     //         $attr['value'] = $this->getMethod($entity->feature);;
     //         $attr['attr']['value'] =$this->getMethod($entity->feature);;
     //         }
-           
+
     //     }
 
     //     return $attr;
     // }
-    //POCOR-8341 end 
+    //POCOR-8341 end
 }

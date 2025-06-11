@@ -17,7 +17,7 @@ class AlertRuleStudentAdmissionBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StudentAdmission',
         'name' => 'Student Admission',
-        'method' => 'Email',
+        'method' => ['Email','SMS'],
         'threshold' => [
             'workflow_steps' => [
                 'type' => 'chosenSelect',

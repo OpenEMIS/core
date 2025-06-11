@@ -15,7 +15,7 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StaffLeave',
             'name' => 'Staff Leave',
-            'method' => 'Email',
+            'method' => ['Email','SMS'],
             'threshold' => [
                 'value' => [
                     'type' => 'integer',

@@ -15,7 +15,7 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'RetirementWarning',
         'name' => 'Retirement Warning',
-        'method' => 'Email',
+        'method' => ['Email','SMS'],
         'threshold' => [
             'value' => [
                 'type' => 'integer',

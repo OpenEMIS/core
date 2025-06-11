@@ -14,7 +14,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StudentAttendance', //POCOR-6584
         'name' => 'Student Absent',
-        'method' => 'Email',
+        'method' => ['Email','SMS'],
         'threshold' => [],
         'placeholder' => [
             '${total_days}' => 'Total number of unexcused absence.',
