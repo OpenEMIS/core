@@ -16,8 +16,8 @@ use Cake\Validation\Validator;
 use Cake\ORM\Table;
 use Cake\Log\Log;
 
-
 // POCOR-8286
+
 
 class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
 {
@@ -92,7 +92,6 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
             dd($this->getFields());
 
         }
-
 
         $is_manual_exist = $this->getManualUrl('Administration', 'External Alert Service - SMS', 'System Configurations');
         if (!empty($is_manual_exist)) {
@@ -227,14 +226,12 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
                 $requestData[$alias]['private_key'] = $privateKey . '.' . $protectedKey;
             }
         }
-        // POCOR-7981 END
+
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
-        //POCOR-6930, 7981 Starts
-        $errors = $entity->getErrors(); // POCOR-8849
-//        dd(['entity' => $entity, 'patchOption' => $patchOption]);
+        $errors = $entity->getErrors();
         $source = $entity->name;
         if(empty($entity->password)){
             $entity->password = $entity->getOriginal('password');
@@ -260,8 +257,8 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
     {
 
         $source = $entity->name;
-        $this->field('value', ['visible' => true, 'entity' => $entity]); // POCOR-7981
-        $this->field('value_selection', ['visible' => false]); //POCOR-7981 not used field
+        $this->field('value', ['visible' => true, 'entity' => $entity]);
+        $this->field('value_selection', ['visible' => false]);
         switch ($source) {
             case 'OpenEMIS Core':
                 $this->field('api_url', ['type' => 'string', 'required' => 'required']);
@@ -283,7 +280,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
                 $this->field('user_endpoint_uri', ['type' => 'hidden']);
 
                 break;
-            // POCOR-7981
+
             case 'Custom':
                 $this->field('token_uri');
                 $this->field('record_uri');
@@ -321,9 +318,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
                 $this->field('nationality_mapping');
                 $this->field('address_mapping');
                 $this->field('postal_mapping');
-                break;//POCOR-6930 Ends
-            // POCOR-7981 END
-            // POCOR-7981 START
+                break;
             case 'UNHCR':
                 $this->field('secret_code');
                 $this->field('url');
@@ -334,7 +329,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         }
     }
 
-    // POCOR-7981
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add'])) {
@@ -342,10 +337,8 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         }
     }
 
-    //POCOR-7981:Start
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-//        $optionTable = self::getDynamicTableInstance('Configuration.ConfigItemOptions');
         $query
             ->select(
                 [$this->aliasField('id'),
