@@ -18,7 +18,6 @@ use Page\Traits\OptionListTrait;
 use Cake\I18n\I18n;
 use Cake\Database\Schema\TableSchema;
 use Cake\Http\ServerRequest;
-use Cake\I18n\FrozenTime;
 
 class AppTable extends Table
 {
@@ -191,19 +190,18 @@ class AppTable extends Table
 
     /**
      * For calling from view files
-     * @param  Time|FrozenTime|null   $dateObject [description]
+     * @param  Time   $dateObject [description]
      * @return [type]             [description]
      */
     public function formatDate($dateObject)
     {
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('date_format');
-        // POCOR-8286 start
-        if ($dateObject instanceof Time || $dateObject instanceof FrozenTime) {
-            return $dateObject->format($format);
+        $value = '';
+        if (is_object($dateObject)) {
+            $value = $dateObject->format($format);
         }
-        return  '';
-        // POCOR-8286 end
+        return $value;
     }
 
     // Event: 'ControllerAction.Model.onFormatTime'
