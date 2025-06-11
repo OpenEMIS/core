@@ -16,6 +16,8 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate;
 
 class AlertLogsTable extends ControllerActionTable
 {
@@ -144,8 +146,8 @@ class AlertLogsTable extends ControllerActionTable
 
     public function insertAlertLog($method, $feature, $email, $subject = null, $message = null)
     {
-        $today = Time::now();
-        $todayDate = Date::now();
+        $today = FrozenTime::now();
+        $todayDate = FrozenDate::now();
 
         // general feature options from alertRules
         $AlertRules = TableRegistry::get('Alert.AlertRules');
@@ -187,8 +189,8 @@ class AlertLogsTable extends ControllerActionTable
 
     public function insertSystemUpdateAlertLog($method, $feature, $email, $subject = null, $message = null)
     {
-        $today = Time::now();
-        $todayDate = Date::now();
+        $today = FrozenTime::now();
+        $todayDate = FrozenDate::now();
 
         // general feature options from alertRules
         $AlertRules = TableRegistry::get('Alert.AlertRules');
@@ -226,8 +228,8 @@ class AlertLogsTable extends ControllerActionTable
 
     public function insertStudentAdmissionAlertLog($method, $feature, $email, $subject = null, $message = null)
     {
-        $today = Time::now();
-        $todayDate = Date::now();
+        $today = FrozenTime::now();
+        $todayDate = FrozenDate::now();
 
         // general feature options from alertRules
         $AlertRules = TableRegistry::get('Alert.AlertRules');
@@ -280,14 +282,14 @@ class AlertLogsTable extends ControllerActionTable
                 if (empty($availablePlaceholder) || $workflow) {
                     // for workflow alert
                     $value = Hash::get($vars, $placeholder);
-                    if ($value instanceof Date || $value instanceof \Cake\I18n\Date) {
+                    if ($value instanceof FrozenDate || $value instanceof \Cake\I18n\Date) {
                         $value = $this->formatDate($value);
                     }
                     $message = str_replace($replace, $value, $message);
                 } else if (array_key_exists('${' . $placeholder . '}', $availablePlaceholder)) {
                     // for attendance alert (alert rules)
                     $value = Hash::get($vars, $placeholder);
-                    if ($value instanceof Date || $value instanceof \Cake\I18n\Date) {
+                    if ($value instanceof FrozenDate || $value instanceof \Cake\I18n\Date) {
                         $value = $this->formatDate($value);
                     }
                     $message = str_replace($replace, $value, $message);

@@ -1,12 +1,11 @@
 <?php
 namespace App\Shell;
 
-use Cake\I18n\Date;
-use Cake\I18n\Time;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Entity;
+
 use Cake\Console\Shell;
 use Cake\Mailer\Email;
+use Cake\Http\Client;
+use Cake\I18n\FrozenTime;
 
 class SendingAlertShell extends Shell
 {
@@ -14,14 +13,11 @@ class SendingAlertShell extends Shell
     {
         parent::initialize();
         $this->loadModel('Alert.AlertLogs');
-        $this->loadModel('Alert.AlertRules');
     }
 
     public function main()
     {
-        // sending the email to the destination and update the alertLogs status.
-        $today = Time::now();
-        $todayDate = Date::now();
+        $today = FrozenTime::now();
 
         $feature = !empty($this->args[0]) ? $this->args[0] : 0;
         $alertLogId = !empty($this->args[1]) ? $this->args[1] : 0;
@@ -31,32 +27,67 @@ class SendingAlertShell extends Shell
                 'status' => 0,
                 'feature' => $feature,
                 'id' => $alertLogId
-            ]) // pending
+            ])
             ->all();
 
         foreach ($alertLogsList as $obj) {
-            $emailArray = explode(', ', $obj->destination); // also can used
+            $methods = array_map('trim', explode(',', $obj->method));
 
-            $sendTo = [];
-            foreach ($emailArray as $item) {
-                list($name, $email) = explode('<', $item);
-                $name = trim($name);
-                $email = str_replace('>', '', $email);
-                $sendTo[$email] = $name;
+            if (in_array('Email', $methods)) {
+                $emailArray = explode(', ', $obj->destination);
+
+                $sendTo = [];
+                foreach ($emailArray as $item) {
+                    list($name, $email) = explode('<', $item);
+                    $name = trim($name);
+                    $email = str_replace('>', '', $email);
+                    $sendTo[$email] = $name;
+                }
+
+                $emailObj = new Email('openemis');
+                $emailObj
+                    ->setTo($sendTo)
+                    ->setSubject($obj->subject)
+                    ->send($obj->message);
+
+                $this->out('Email sent to: ' . implode(', ', array_keys($sendTo)));
             }
 
-            // sending Email if the destination email is exist
-            $emailObj = new Email('openemis');
-            $emailObj
-                ->setTo($sendTo)
-                ->setSubject($obj->subject)
-                ->send($obj->message);
+            if (in_array('SMS', $methods)) {
+                $phoneArray = explode(', ', $obj->destination);
+                foreach ($phoneArray as $phone) {
+                    $this->sendTwilioSms($phone, $obj->message);
+                }
+            }
 
-            // update the alertLog
             $this->AlertLogs->updateAll(
                 ['status' => 1, 'processed_date' => $today],
                 ['id' => $obj->id]
             );
+        }
+    }
+
+    public function sendTwilioSms($to, $message)
+    {
+        $sid = 'YOUR_TWILIO_SID';
+        $token = 'YOUR_TWILIO_AUTH_TOKEN';
+        $from = 'YOUR_TWILIO_PHONE_NUMBER';
+
+        $http = new Client(['auth' => [$sid, $token]]);
+
+        $response = $http->post(
+            "https://api.twilio.com/2010-04-01/Accounts/{$sid}/Messages.json",
+            [
+                'From' => $from,
+                'To' => $to,
+                'Body' => $message
+            ]
+        );
+
+        if ($response->isOk()) {
+            $this->out('SMS sent to: ' . $to);
+        } else {
+            $this->err('Failed to send SMS to ' . $to . ': ' . $response->getStringBody());
         }
     }
 }

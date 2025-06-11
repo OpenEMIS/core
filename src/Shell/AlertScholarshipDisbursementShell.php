@@ -48,20 +48,17 @@ class AlertScholarshipDisbursementShell extends AlertShell
                         $vars['threshold'] = $thresholdArray;
 
                         if (!empty($rule['security_roles'])) {
-                            $emailList = $this->getEmailList($rule['security_roles']);
-                            $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
-                            $subject = $this->AlertLogs->replaceMessage($feature, $rule->subject, $vars);
-                            $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
-                            $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
+                            $institutionId = null;
+                            $this->insertAlertLogs($rule, $institutionId, $feature, $vars);
                         }
                     }
 
-                    
 
-                    
+
+
                 }
             }
-            
+
             sleep(10);
             $filesArray = $dir->find($processName . '.stop');
         } while (empty($filesArray));
