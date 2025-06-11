@@ -144,26 +144,58 @@ class AlertLogsTable extends ControllerActionTable
         }// end if have assignee id in the recordEntity
     }
 
-    public function insertAlertLog($method, $feature, $recipient, $subject = null, $message = null)
+    // POCOR-8286-start
+    public function insertAlertLog(string $method, string $feature, string $recipient, ?string $subject = null, ?string $message = null): void
     {
+        $alertFeatures = TableRegistry::getTableLocator()->get('Alert.AlertRules')->getFeatureOptions();
+        $checksum = $this->generateChecksum($subject, $message);
 
-        // general feature options from alertRules
-        $AlertRules = TableRegistry::get('Alert.AlertRules');
-        $alertFeatures = $AlertRules->getFeatureOptions();
-
-        // checksum hash($subject,$message)
-        $checksum = Security::hash($subject . ',' . $message, 'sha256');
-
-        // to update and add new records into the alert_logs
         if ($this->exists(['checksum' => $checksum]) && array_key_exists($feature, $alertFeatures)) {
-            $record = $this->find()
-                ->where(['checksum' => $checksum])
-                ->first();
+            $record = $this->find()->where(['checksum' => $checksum])->first();
 
-            if ($record->status == 0) {
+            if ($record && $record->status === 0) {
                 $this->save($record);
             }
-        } else {
+
+            return;
+        }
+
+        $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
+    }
+
+    public function insertSystemUpdateAlertLog(string $method, string $feature, string $recipients, ?string $subject = null, ?string $message = null): void
+    {
+        $checksum = $this->generateChecksum($subject, $message);
+        $existing = $this->find()->where(['checksum' => $checksum])->first();
+
+        if (!$existing) {
+            $recipientArray = array_map('trim', explode(',', $recipients));
+            $this->createAndSendAlertLog($method, $feature, $recipientArray, $subject, $message, $checksum);
+        }
+    }
+
+    public function insertStudentAdmissionAlertLog(string $method, string $feature, string $recipient, ?string $subject = null, ?string $message = null): void
+    {
+        $checksum = $this->generateChecksum($subject, $message);
+        $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
+    }
+
+    private function generateChecksum(?string $subject, ?string $message): string
+    {
+        return Security::hash("{$subject},{$message}", 'sha256');
+    }
+
+    private function createAndSendAlertLog(
+        string $method,
+        string $feature,
+        array $recipients,
+        ?string $subject,
+        ?string $message,
+        string $checksum
+    ): void {
+        $savedIds = [];
+
+        foreach ($recipients as $recipient) {
             $entity = $this->newEntity([
                 'feature' => $feature,
                 'method' => $method,
@@ -173,77 +205,19 @@ class AlertLogsTable extends ControllerActionTable
                 'message' => $message,
                 'checksum' => $checksum
             ]);
-            //POCOR-6023 starts
-            $saveData = $this->save($entity);
 
-            if(!empty($saveData)){
-                $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
-                $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
-            }//POCOR-6023 ends
+            $saved = $this->save($entity);
 
-        }
-
-    }
-
-    public function insertSystemUpdateAlertLog($method, $feature, $recipients, $subject = null, $message = null)
-    {
-
-        // general feature options from alertRules
-        $AlertRules = TableRegistry::get('Alert.AlertRules');
-
-        // checksum hash($subject,$message)
-        $checksum = Security::hash($subject . ',' . $message, 'sha256');
-        // to update and add new records into the alert_logs
-        $result_checksum = TableRegistry::get('Alert.AlertLogs')->find()->where(['checksum' => $checksum])->first();
-        if(empty($result_checksum)){
-            $recipientArray = explode(",", $recipients);
-            foreach($recipientArray AS $recipient){
-                $entity = $this->newEntity([
-                    'feature' => $feature,
-                    'method' => $method,
-                    'destination' => $recipient,
-                    'status' => 0,
-                    'subject' => $subject,
-                    'message' => $message,
-                    'checksum' => $checksum
-                ]);
-                $saveData = $this->save($entity);
+            if ($saved) {
+                $savedIds[] = $saved->id;
             }
         }
 
-        if(!empty($saveData)){
-            // $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
-            $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['feature' => $feature])->all();
-            foreach($result AS $resultData){
-                $this->triggerSendingAlertShell('SendingAlert', $feature, $resultData['id']);
-            }
+        foreach ($savedIds as $id) {
+            $this->triggerSendingAlertShell('SendingAlert', $feature, $id);
         }
-
     }
-
-    public function insertStudentAdmissionAlertLog($method, $feature, $recipient, $subject = null, $message = null)
-    {
-
-        // checksum hash($subject,$message)
-        $checksum = Security::hash($subject . ',' . $message, 'sha256');
-        // to update and add new records into the alert_logs
-        $entity = $this->newEntity([
-            'feature' => $feature,
-            'method' => $method,
-            'destination' => $recipient,
-            'status' => 0,
-            'subject' => $subject,
-            'message' => $message,
-            'checksum' => $checksum
-        ]);
-        $saveData = $this->save($entity);
-
-        if(!empty($saveData)){
-            $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
-            $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
-        }
-
-    }
+    // POCOR-8286 end
 
     public function replaceMessage($feature, $message, $vars, $workflow = false)
     {
