@@ -115,6 +115,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
     {
         $this->field('value', ['visible' => true]);
 
+
         $this->field('attributes', ['type' => 'external_alert_service_sms']);
     }
 
@@ -152,7 +153,8 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->getSubject()->renderElement('Configuration.external_data_source', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Configuration.external_alert_service_sms', ['attr' => $attr]);
+
     }
 
     public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
@@ -182,10 +184,11 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         $data = $requestData[$alias];
         $source = $entity['name'];
 
-        if ($source == 'UNHCR') {
+        if ($source == 'Twilio') {
             $patchOption['validate'] = true;
             return;
         }
+
 
         if ($source == 'Custom') {
             $patchOption['validate'] = 'Custom';
@@ -258,7 +261,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         $this->field('value', ['visible' => true, 'entity' => $entity]);
         $this->field('value_selection', ['visible' => false]);
         switch ($source) {
-            case 'OpenEMIS Core':
+            case 'Twilio':
                 $this->field('api_url', ['type' => 'string', 'required' => 'required']);
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'password', 'required' => 'required', 'attr' => ['value' => ''], 'autocomplete' => 'off']);
