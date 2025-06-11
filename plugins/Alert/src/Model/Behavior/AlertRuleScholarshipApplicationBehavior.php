@@ -14,7 +14,7 @@ class AlertRuleScholarshipApplicationBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'ScholarshipApplication',
         'name' => 'Scholarship Application',
-        'method' => 'Email',
+        'method' => ['Email','SMS'],
         'threshold' => [
             'value' => [
                 'type' => 'integer',
@@ -102,7 +102,7 @@ class AlertRuleScholarshipApplicationBehavior extends AlertRuleBehavior
 
     public function onScholarshipApplicationSetupFields(Event $event, Entity $entity)
     {
-        $this->onAlertRuleSetupFields($event, $entity);   
+        $this->onAlertRuleSetupFields($event, $entity);
     }
 
     public function onGetScholarshipApplicationThreshold(Event $event, Entity $entity)

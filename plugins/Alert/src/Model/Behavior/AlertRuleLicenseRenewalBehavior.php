@@ -14,7 +14,7 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'LicenseRenewal',
         'name' => 'License Renewal',
-        'method' => 'Email',
+        'method' => ['Email','SMS'],
         'threshold' => [
             'value' => [
                 'type' => 'integer',

@@ -14,7 +14,7 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'LicenseValidity',
         'name' => 'License Validity',
-        'method' => 'Email',
+        'method' => ['Email','SMS'],
         'threshold' => [
             'value' => [
                 'type' => 'integer',

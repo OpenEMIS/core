@@ -15,7 +15,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'StaffEmployment',
             'name' => 'Staff Employment',
-            'method' => 'Email',
+            'method' => ['Email','SMS'],
             'threshold' => [
                 'value' => [
                     'type' => 'integer',

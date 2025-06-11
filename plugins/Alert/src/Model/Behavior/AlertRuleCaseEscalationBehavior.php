@@ -9,13 +9,13 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-/* POCOR-7462 for cases alert rule */ 
+/* POCOR-7462 for cases alert rule */
 class AlertRuleCaseEscalationBehavior extends AlertRuleBehavior
 {
     protected $_defaultConfig = [
         'feature' => 'CaseEscalation',
         'name' => 'Case Escalation',
-        'method' => 'Email',
+        'method' => ['Email','SMS'],
         'threshold' => [
             'value' => [
                 'type' => 'integer',
@@ -46,7 +46,7 @@ class AlertRuleCaseEscalationBehavior extends AlertRuleBehavior
             '${assignee.third_name}'=>'Assignee Third Name.',
             '${assignee.last_name}'=>'Assignee Last Name.',
         ]
-       
+
      ];
 
     public function initialize(array $config): void
@@ -83,5 +83,5 @@ class AlertRuleCaseEscalationBehavior extends AlertRuleBehavior
     }
 
 
-   
+
 }
