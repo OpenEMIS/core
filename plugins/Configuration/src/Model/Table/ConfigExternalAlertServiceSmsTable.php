@@ -88,8 +88,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
                 $extra['elements']['controls'] = $this->buildSystemConfigFilters();
                 $this->checkController();
             }
-            dd($this->getFields());
-
+//            dd($this->getFields());
         }
 
         $is_manual_exist = $this->getManualUrl('Administration', 'External Alert Service - SMS', 'System Configurations');
@@ -344,7 +343,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
                     $this->aliasField('label'),
                     $this->aliasField('value')]
             )->where([
-                $this->aliasField('type') => 'External Data Source - Identity'
+                $this->aliasField('type') => 'External Alert Service - SMS'
             ]);
     }
 
