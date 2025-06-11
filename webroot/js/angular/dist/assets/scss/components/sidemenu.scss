@@ -1,0 +1,233 @@
+@charset "UTF-8";
+
+
+
+/* Sidemenu V1.1.1 */
+
+.kdx-left-menu {
+    background-color: $whiteColor;
+    list-style: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    margin: $noMargin;
+    padding: $noPadding;
+    overflow: auto;
+    transform: translateZ(0);
+
+    .panel-group {
+        .nav {
+            flex-direction: column;
+
+            li {
+                width: 100%;
+                position: relative;
+
+                a {
+                    @extend .ellipsis;
+
+                    font-family: $bodyFont !important;
+                    color: $bodyTextColor !important;
+                    font-size: $bodyTextSize !important;
+                    line-height: calc(#{$bodyTextSize} + #{$textLineHeightDiff}) !important;
+                    text-decoration: none;
+                    display: block;
+                    width: 100%;
+                    min-width: 100px; 
+                    padding: $padding10;
+                    outline: 0 !important;
+                    line-height: 16px;
+                    cursor: pointer;
+
+                    &.selected {
+                        background-color: #F2F2F2 !important;
+
+                        &:hover {
+                            color: $bodyTextColor !important;
+                        }
+                    }
+
+                    &.accordion-toggle {
+                        &:after {
+                            font-family: $fontAwesome;
+                            font-size: $bodyTextSize;
+                            line-height: calc(#{$bodyTextSize} + #{$textLineHeightDiff}) !important;
+                            color: $bodyTextColor;
+                            content: "\f0da";
+                            position: absolute;
+                            right: 5px;
+                            left: auto;
+                            top: 50%;
+                            transform: translate(-50%, -50%);
+
+                            .rtl & {
+                                content: "\f0d9";
+                                right: unset !important;
+                                left: 15px !important;
+                                font-size: calc(#{$bodyTextSize} + #{$textSizeDiffArabic}) !important;
+                                line-height: calc(#{$bodyTextSize} + #{$textSizeDiffArabic} + #{$textLineHeightDiff}) !important;
+                            }
+                        }
+
+                        &.expand {
+                            font-weight: bold;
+
+                            &:after {
+                                content: "\f0d7" !important;
+                            }
+
+                            &:hover {
+                                color: $whiteColor !important;
+
+                                &:after {
+                                    color: $whiteColor !important;
+                                }
+                            }
+                        }
+
+                        &:hover {
+                            color: $whiteColor !important;
+
+                            &:after {
+                                color: $whiteColor !important;
+                            }
+                        }
+                    }
+
+                    &:hover {
+                        color: $whiteColor !important;
+                        background-image: none !important;
+                        transition: all 0.5s ease;
+                    }
+
+                    &:focus {
+                        transition: all 0.5s ease;
+                    }
+
+                    & > i {
+                        margin-right: $margin5;
+                    }
+
+                    & > span {
+                        font-weight: bold;
+                    }
+
+                    @media #{$tabletLandscape} {
+                        font-size: $textSizeM !important;
+                        line-height: calc(#{$textSizeM} + #{$textLineHeightDiff}) !important; // height: 45px;
+                    }
+
+                    .rtl & {
+                        font-size: calc(#{$bodyTextSize} + #{$textSizeDiffArabic}) !important;
+                        line-height: calc(#{$bodyTextSize} + #{$textSizeDiffArabic} + #{$textLineHeightDiff}) !important;
+
+                        @media #{$tabletLandscape} {
+                            font-size: calc(#{$textSizeM} + #{$textSizeDiffArabic}) !important;
+                            line-height: calc(#{$textSizeM} + #{$textSizeDiffArabic} + #{$textLineHeightDiff}) !important;
+                        }
+                    }
+                }
+
+                ul {
+                    &.toggle {
+                        // Animation for menu accordion expand/collapse
+                        @keyframes toggleUl {
+                            from {
+                                margin-left: -10px;
+                                max-height: 0;
+                                opacity: 0;
+                            }
+
+                            to {
+                                margin-left: $noMargin;
+                                max-height: 2000px;
+                                opacity: 1;
+                            }
+                        }
+
+                        animation-name: toggleUl;
+                        animation-duration: 0.35s;
+                        animation-fill-mode: forwards;
+                        animation-timing-function: ease-in;
+                    }
+
+                    &.untoggle {
+                        //Animation for menu accordion expand/collapse
+                        @keyframes closeUl {
+                            from {
+                                max-height: 200px;
+                                opacity: 1;
+                            }
+
+                            to {
+                                max-height: 0;
+                                opacity: 0;
+                            }
+                        }
+
+                        animation-name: closeUl;
+                        animation-duration: 0.2s;
+                        animation-fill-mode: forwards;
+                        animation-timing-function: ease-out;
+                        overflow: hidden;
+                    }
+                }            
+            }
+        }
+    }
+}
+
+.rtl {
+    .kdx-left-menu {
+        .panel-group {
+            .nav {
+                li {
+                    a {
+                        i {
+                            margin-right: $noMargin;
+                            margin-left: $margin5;
+                        }
+                    }
+
+                    ul {
+                        &.toggle {
+                            //Animation for menu accordion expand/collapse
+                            @-webkit-keyframes toggleUlRTL {
+                                from {
+                                    margin-right: -10px;
+                                    max-height: 0;
+                                    opacity: 0;
+                                }
+
+                                to {
+                                    margin-right: $noMargin;
+                                    max-height: 2000px;
+                                    opacity: 1;
+                                }
+                            }
+
+                            @keyframes toggleUlRTL {
+                                from {
+                                    margin-right: -10px;
+                                    max-height: 0;
+                                    opacity: 0;
+                                }
+
+                                to {
+                                    margin-right: $noMargin;
+                                    max-height: 2000px;
+                                    opacity: 1;
+                                }
+                            }
+
+                            // -webkit-animation: toggleUlRTL 0.5s forwards;
+                            animation: toggleUlRTL 0.5s forwards;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

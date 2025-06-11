@@ -23,266 +23,13 @@ use InstitutionScope;
 
     protected $appends = ['code_name'];
 
-    /**
-     * @OA\PathItem(
-     *     path="/api/v5/institutions"
-     * )
-     */
-    public function _swaggerPath() {}
 
-    /**
-     * @OA\Get(
-     *     path="/api/v5/institutions",
-     *     summary="Get list of Institutions",
-     *     tags={"Institutions"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Successful operation",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(
-     *                 property="message",
-     *                 type="string",
-     *                 example="Successful."
-     *             ),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-    @OA\Property(property="id", type="integer", example=null),
-    @OA\Property(property="name", type="string", example=null),
-    @OA\Property(property="alternative_name", type="string", example=null),
-    @OA\Property(property="code", type="string", example=null),
-    @OA\Property(property="address", type="string", example=null),
-    @OA\Property(property="postal_code", type="string", example=null),
-    @OA\Property(property="contact_person", type="string", example=null),
-    @OA\Property(property="telephone", type="string", example=null),
-    @OA\Property(property="fax", type="string", example=null),
-    @OA\Property(property="email", type="string", example=null),
-    @OA\Property(property="website", type="string", example=null),
-    @OA\Property(property="date_opened", type="string", format="date", example=null),
-    @OA\Property(property="year_opened", type="integer", example=null),
-    @OA\Property(property="date_closed", type="string", format="date", example=null),
-    @OA\Property(property="year_closed", type="integer", example=null),
-    @OA\Property(property="longitude", type="string", example=null),
-    @OA\Property(property="latitude", type="string", example=null),
-    @OA\Property(property="logo_name", type="string", example=null),
-    @OA\Property(property="logo_content", type="string", example=null),
-    @OA\Property(property="shift_type", type="integer", example=null),
-    @OA\Property(property="classification", type="integer", example=null),
-    @OA\Property(property="area_id", type="integer", example=null),
-    @OA\Property(property="area_administrative_id", type="integer", example=null),
-    @OA\Property(property="institution_locality_id", type="integer", example=null),
-    @OA\Property(property="institution_type_id", type="integer", example=null),
-    @OA\Property(property="institution_ownership_id", type="integer", example=null),
-    @OA\Property(property="institution_status_id", type="integer", example=null),
-    @OA\Property(property="institution_sector_id", type="integer", example=null),
-    @OA\Property(property="institution_provider_id", type="integer", example=null),
-    @OA\Property(property="institution_gender_id", type="integer", example=null),
-    @OA\Property(property="security_group_id", type="integer", example=null),
-    @OA\Property(property="modified_user_id", type="integer", example=null),
-    @OA\Property(property="modified", type="string", format="date-time", example=null),
-    @OA\Property(property="created_user_id", type="integer", example=null),
-    @OA\Property(property="created", type="string", format="date-time", example=null)
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
-     *     )
-     * )
-     */
-    public function _swaggerList() {}
 
-    /**
-     * @OA\Get(
-     *     path="/api/v5/institutions/{id}",
-     *     summary="Get Institutions by ID",
-     *     tags={"Institutions"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the Institutions",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Successful operation"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Not found"
-     *     )
-     * )
-     */
-    public function _swaggerView() {}
 
-    /**
-     * @OA\Post(
-     *     path="/api/v5/institutions",
-     *     summary="Create a new Institutions",
-     *     tags={"Institutions"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             type="object",
-    @OA\Property(property="id", type="integer", example=null),
-    @OA\Property(property="name", type="string", example=null),
-    @OA\Property(property="alternative_name", type="string", example=null),
-    @OA\Property(property="code", type="string", example=null),
-    @OA\Property(property="address", type="string", example=null),
-    @OA\Property(property="postal_code", type="string", example=null),
-    @OA\Property(property="contact_person", type="string", example=null),
-    @OA\Property(property="telephone", type="string", example=null),
-    @OA\Property(property="fax", type="string", example=null),
-    @OA\Property(property="email", type="string", example=null),
-    @OA\Property(property="website", type="string", example=null),
-    @OA\Property(property="date_opened", type="string", format="date", example=null),
-    @OA\Property(property="year_opened", type="integer", example=null),
-    @OA\Property(property="date_closed", type="string", format="date", example=null),
-    @OA\Property(property="year_closed", type="integer", example=null),
-    @OA\Property(property="longitude", type="string", example=null),
-    @OA\Property(property="latitude", type="string", example=null),
-    @OA\Property(property="logo_name", type="string", example=null),
-    @OA\Property(property="logo_content", type="string", example=null),
-    @OA\Property(property="shift_type", type="integer", example=null),
-    @OA\Property(property="classification", type="integer", example=null),
-    @OA\Property(property="area_id", type="integer", example=null),
-    @OA\Property(property="area_administrative_id", type="integer", example=null),
-    @OA\Property(property="institution_locality_id", type="integer", example=null),
-    @OA\Property(property="institution_type_id", type="integer", example=null),
-    @OA\Property(property="institution_ownership_id", type="integer", example=null),
-    @OA\Property(property="institution_status_id", type="integer", example=null),
-    @OA\Property(property="institution_sector_id", type="integer", example=null),
-    @OA\Property(property="institution_provider_id", type="integer", example=null),
-    @OA\Property(property="institution_gender_id", type="integer", example=null),
-    @OA\Property(property="security_group_id", type="integer", example=null),
-    @OA\Property(property="modified_user_id", type="integer", example=null),
-    @OA\Property(property="modified", type="string", format="date-time", example=null),
-    @OA\Property(property="created_user_id", type="integer", example=null),
-    @OA\Property(property="created", type="string", format="date-time", example=null)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Created successfully"
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Invalid data"
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
-     *     )
-     * )
-     */
-    public function _swaggerCreate() {}
 
-    /**
-     * @OA\Put(
-     *     path="/api/v5/institutions/{id}",
-     *     summary="Update Institutions",
-     *     tags={"Institutions"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the Institutions",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             type="object",
-    @OA\Property(property="id", type="integer", example=null),
-    @OA\Property(property="name", type="string", example=null),
-    @OA\Property(property="alternative_name", type="string", example=null),
-    @OA\Property(property="code", type="string", example=null),
-    @OA\Property(property="address", type="string", example=null),
-    @OA\Property(property="postal_code", type="string", example=null),
-    @OA\Property(property="contact_person", type="string", example=null),
-    @OA\Property(property="telephone", type="string", example=null),
-    @OA\Property(property="fax", type="string", example=null),
-    @OA\Property(property="email", type="string", example=null),
-    @OA\Property(property="website", type="string", example=null),
-    @OA\Property(property="date_opened", type="string", format="date", example=null),
-    @OA\Property(property="year_opened", type="integer", example=null),
-    @OA\Property(property="date_closed", type="string", format="date", example=null),
-    @OA\Property(property="year_closed", type="integer", example=null),
-    @OA\Property(property="longitude", type="string", example=null),
-    @OA\Property(property="latitude", type="string", example=null),
-    @OA\Property(property="logo_name", type="string", example=null),
-    @OA\Property(property="logo_content", type="string", example=null),
-    @OA\Property(property="shift_type", type="integer", example=null),
-    @OA\Property(property="classification", type="integer", example=null),
-    @OA\Property(property="area_id", type="integer", example=null),
-    @OA\Property(property="area_administrative_id", type="integer", example=null),
-    @OA\Property(property="institution_locality_id", type="integer", example=null),
-    @OA\Property(property="institution_type_id", type="integer", example=null),
-    @OA\Property(property="institution_ownership_id", type="integer", example=null),
-    @OA\Property(property="institution_status_id", type="integer", example=null),
-    @OA\Property(property="institution_sector_id", type="integer", example=null),
-    @OA\Property(property="institution_provider_id", type="integer", example=null),
-    @OA\Property(property="institution_gender_id", type="integer", example=null),
-    @OA\Property(property="security_group_id", type="integer", example=null),
-    @OA\Property(property="modified_user_id", type="integer", example=null),
-    @OA\Property(property="modified", type="string", format="date-time", example=null),
-    @OA\Property(property="created_user_id", type="integer", example=null),
-    @OA\Property(property="created", type="string", format="date-time", example=null)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Updated successfully"
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Invalid data"
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Not found"
-     *     )
-     * )
-     */
-    public function _swaggerUpdate() {}
 
-    /**
-     * @OA\Delete(
-     *     path="/api/v5/institutions/{id}",
-     *     summary="Delete Institutions",
-     *     tags={"Institutions"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the Institutions",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=204,
-     *         description="Deleted successfully"
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Not found"
-     *     )
-     * )
-     */
-    public function _swaggerDelete() {}
+
+
     public function areaAdministratives()
     {
         return $this->belongsTo(AreaAdministratives::class, 'area_administrative_id', 'id');
@@ -378,8 +125,15 @@ use InstitutionScope;
 
             // Apply institution filter only if the user does not have access to all institutions
             if (!$permissionService->getAllowAllInstitutions()) {
-                $query->whereIn('id', $allowedInstitutions);
+                $query->whereIn('institutions.id', $allowedInstitutions);
             }
         });
     }
+
+    //For POCOR-8252 Start...
+    public function area()
+    {
+        return $this->belongsTo(Areas::class, 'area_id', 'id');
+    }
+    //For POCOR-8252 End...
 }

@@ -78,7 +78,7 @@ class CumulativeTable extends ControllerActionTable {
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('main_education_grade_id', ['type' => 'select']);
-        $this->field('gpa_education_programme_id', ['type' => 'hidden']);
+        $this->field('gpa_education_programme_id'); //POCOR-8962
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->setFieldOrder(['academic_period_id', 'gpa_education_programme_id','main_education_grade_id', 'gpa_grading_type_id']);
     }
@@ -134,7 +134,17 @@ class CumulativeTable extends ControllerActionTable {
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
         $gpa = TableRegistry::get('Gpa.EducationGradesGpa');
         if ($action == 'view') {
-            $attr['visible'] = false;
+            //POCOR-8962
+            $getId = $this->paramsDecode($this->request->getParam('pass')[1]);
+            $recordId = $getId['id'];
+            $mainEducationGradeId = $this->find()->where(['id' => $recordId])->first()->main_education_grade_id;
+            $academic_period_id = $gpa->find()->where([$gpa->aliasField('education_grade_id') => $mainEducationGradeId])->first()->academic_period_id;
+            $gradeId = $this->find()->where([$this->aliasField('id') => $recordId])->first()->main_education_grade_id;
+            $programmeId = $this->GpaEducationGrades->get($gradeId)->education_programme_id;
+               // echo "<pre>";print_r($programmeId);exit;
+            $attr['type'] = 'readonly';
+            $attr['value'] = $EducationProgrammes->get($programmeId)->name;
+            $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
         } else if ($action == 'add') {
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
@@ -486,6 +496,15 @@ class CumulativeTable extends ControllerActionTable {
             $event->stopPropagation();
             //return $this->controller->redirect($url);
             return $entity;
+        }
+    }
+
+    //POCOR-8962
+    public function onGetGpaEducationProgrammeId(Event $event, Entity $entity)
+    {
+        if($this->action == 'index') {
+            $programmeGradeName = $entity->education_grade->programme_name;
+            return $programmeGradeName;
         }
     }
 

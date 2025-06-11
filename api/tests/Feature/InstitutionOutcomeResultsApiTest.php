@@ -7,8 +7,8 @@ use Tests\Traits\PrimaryKeyStringTrait;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use App\Models\InstitutionOutcomeResults;
-use App\Models\SecurityUsers as TestSecurityUser;
+use App\Models\Api5\InstitutionOutcomeResults;
+use App\Models\Api5\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
 

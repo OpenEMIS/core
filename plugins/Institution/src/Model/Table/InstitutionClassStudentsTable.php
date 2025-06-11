@@ -576,8 +576,8 @@ class InstitutionClassStudentsTable extends AppTable
                 switch ($resultType) {
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
-                        if ($result['mark'] != 'EXEMPT') {
-                            $this->assessmentPeriodWeightedMark += ($result['marks'] * $attr['assessmentPeriodWeight']);
+                        if ($result['mark'] != 'EXEMPT' && $result['mark'] != 'UNASSIGN') {//POCOR-9042 add 'UNASSIGN' condition
+                            $this->assessmentPeriodWeightedMark += ((float)$result['marks'] * (float)$attr['assessmentPeriodWeight']);
                             $this->assessmentPeriodWeights[] = $attr['assessmentPeriodWeight'];
                         }
                         $printedResult = $result['mark'];
@@ -1398,6 +1398,15 @@ class InstitutionClassStudentsTable extends AppTable
         $assessment_item_id = preg_replace("/[^a-fA-F0-9\-]/", "", $options['assessment_item_id']);  // Still using assessment_item_id for reference
         $assessment_period_id = intval($options['assessment_period_id']);
         $institution_class_id = intval($options['institution_class_id']);
+
+        //POCOR-9114 -- START Check if the assessment_period_ids are multiple
+        if (!empty($options['assessment_period_combo'])) {
+            $assessment_period_ids = array_filter(
+                array_map('intval', explode('_', $options['assessment_period_combo']))
+            );
+        }
+        //POCOR-9114 -- END
+
 //        Log::debug(print_r([$assessment_item_id, $assessment_period_id, $institution_class_id], true));
         $where = [
             'institution_classes.id = ' . $institution_class_id,
@@ -1413,7 +1422,8 @@ class InstitutionClassStudentsTable extends AppTable
                     $this->aliasField('student_id') . ' = assessment_item_student_exemptions.student_id',
                     $this->aliasField('institution_class_id') . ' = assessment_item_student_exemptions.institution_class_id',
                     $this->aliasField('education_grade_id') . ' = assessment_item_student_exemptions.education_grade_id',
-                    'assessment_item_student_exemptions.assessment_period_id = ' . $assessment_period_id
+                    //'assessment_item_student_exemptions.assessment_period_id = ' . $assessment_period_id
+                    'assessment_item_student_exemptions.assessment_period_id IN (' . implode(',', $assessment_period_ids) . ')' //POCOR-9114
                 ]
             )
             ->leftJoin(
@@ -1461,6 +1471,7 @@ class InstitutionClassStudentsTable extends AppTable
                 'assessment_items.assessment_id',
                 'assessment_items.education_subject_id',
                 'assessment_items.classification',
+                'type' => 'assessment_item_student_exemptions.type',//POCOR-9042
             ])
             ->disableHydration();
 //        Log::debug($query->sql());
@@ -1472,7 +1483,9 @@ class InstitutionClassStudentsTable extends AppTable
                 ($row['middle_name']) ? $fullName[] = $row['middle_name'] : '';
                 ($row['third_name']) ? $fullName[] = $row['third_name'] : '';
                 ($row['last_name']) ? $fullName[] = $row['last_name'] : '';
-                $row['is_exempt'] = ($row['assessment_id']) ? true : false;
+                $row['is_exempt'] = ($row['assessment_id'] && $row['type'] == 1) ? true : false;//POCOR-9042
+                $row['is_unassign'] = ($row['assessment_id'] && $row['type'] == 2) ? true : false;//POCOR-9042
+                $row['is_unassign'] = $row['type'];//POCOR-9042
 
                 $name = implode(' ', $fullName);
 
@@ -1488,6 +1501,8 @@ class InstitutionClassStudentsTable extends AppTable
                     'assessment_period_id' => $row['assessment_period_id'],
                     'assessment_item_id' => $row['assessment_id'],  // Use assessment_id now
                     'is_exempt' => $row['is_exempt'],
+                    'is_unassign' => $row['is_unassign'],//POCOR-9042
+                    'type' => $row['type'],//POCOR-9042
                     'student_status_name' => __($row['student_status_name'])
                 ];
             });

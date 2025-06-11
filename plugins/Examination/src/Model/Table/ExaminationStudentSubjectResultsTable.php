@@ -35,6 +35,7 @@ class ExaminationStudentSubjectResultsTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+
         $this->getExamGrading($entity);
     }
 
@@ -111,31 +112,10 @@ class ExaminationStudentSubjectResultsTable extends AppTable
 
     private function getExamGrading(Entity $entity)
     {
-        $ExaminationSubjects = TableRegistry::get('Examination.ExaminationSubjects');
-        $examItemEntity = $ExaminationSubjects
-            ->find()
-            ->contain(['ExaminationGradingTypes.GradingOptions'])
-            ->where([
-                $ExaminationSubjects->aliasField('examination_id') => $entity->examination_id,
-                $ExaminationSubjects->aliasField('id') => $entity->examination_subject_id
-            ])
-            ->first();
-
-        if ($examItemEntity->has('examination_grading_type')) {
-            $resultType = $examItemEntity->examination_grading_type->result_type;
-            if ($resultType == 'MARKS') {
-                if ($examItemEntity->examination_grading_type->has('grading_options') && !empty($examItemEntity->examination_grading_type->grading_options)) {
-                    foreach ($examItemEntity->examination_grading_type->grading_options as $key => $obj) {
-                        if ($entity->marks >= $obj->min && $entity->marks <= $obj->max) {
-                            $entity->examination_grading_option_id = $obj->id;
-                        }
-                    }
-                }
-                $entity->total_mark = round($entity->marks * $examItemEntity->weight, 2);
-            } else if ($resultType == 'GRADES') {
-                $entity->total_mark = NULL;
-            }
-        }
+        // POCOR-9021 start
+        $this->setAcademicPeriodId($entity);
+        $this->setGradingOptionAndTotalMark($entity);
+        // POCOR-9021 end
     }
 
     public function getExaminationStudentSubjectResults($academicPeriodId, $examinationId, $studentId) {
@@ -161,5 +141,55 @@ class ExaminationStudentSubjectResultsTable extends AppTable
             ];
         }
         return $returnArray;
+    }
+
+    /**
+     * @param Entity $entity
+     * @return void
+     * POCOR-9021
+     */
+    private function setAcademicPeriodId(Entity $entity): void
+    {
+        $Examinations = $this->Examinations;
+        $examEntity = $Examinations
+            ->find()
+            ->where([
+                ('id') => $entity->examination_id
+            ])
+            ->first();
+        $entity->academic_period_id = $examEntity->academic_period_id;
+    }
+
+    /**
+     * @param Entity $entity
+     * @return void
+     * POCOR-9021
+     */
+    private function setGradingOptionAndTotalMark(Entity $entity): void
+    {
+        $ExaminationSubjects = $this->ExaminationSubjects;
+        $examItemEntity = $ExaminationSubjects
+            ->find()
+            ->contain(['ExaminationGradingTypes.GradingOptions'])
+            ->where([
+                $ExaminationSubjects->aliasField('examination_id') => $entity->examination_id,
+                $ExaminationSubjects->aliasField('id') => $entity->examination_subject_id
+            ])
+            ->first();
+        if ($examItemEntity->has('examination_grading_type')) {
+            $resultType = $examItemEntity->examination_grading_type->result_type;
+            if ($resultType == 'MARKS') {
+                if ($examItemEntity->examination_grading_type->has('grading_options') && !empty($examItemEntity->examination_grading_type->grading_options)) {
+                    foreach ($examItemEntity->examination_grading_type->grading_options as $key => $obj) {
+                        if ($entity->marks >= $obj->min && $entity->marks <= $obj->max) {
+                            $entity->examination_grading_option_id = $obj->id;
+                        }
+                    }
+                }
+                $entity->total_mark = round($entity->marks * $examItemEntity->weight, 2);
+            } else if ($resultType == 'GRADES') {
+                $entity->total_mark = NULL;
+            }
+        }
     }
 }

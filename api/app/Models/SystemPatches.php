@@ -26,172 +26,8 @@ class SystemPatches extends Model
     public $incrementing = false;
 
 
+    // Override getKeyForSaveQuery to handle composite keys
 
-     // Override getKeyForSaveQuery to handle composite keys
-/**
- * @OA\PathItem(
- *     path="/api/v5/system-patches"
- * )
- */
-public function _swaggerPath() {}
-
-/**
- * @OA\Get(
- *     path="/api/v5/system-patches",
- *     summary="Get list of SystemPatches",
- *     tags={"SystemPatches"},
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="Successful."
- *             ),
- *             @OA\Property(
- *                 property="data",
- *                 type="array",
- *                 @OA\Items(
- *                     type="object",
-                          @OA\Property(property="issue", type="string", example=null),
-                          @OA\Property(property="version", type="string", example=null),
-                          @OA\Property(property="created", type="string", format="date-time", example=null)
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerList() {}
-
-/**
- * @OA\Get(
- *     path="/api/v5/system-patches/{id}",
- *     summary="Get SystemPatches by ID",
- *     tags={"SystemPatches"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the SystemPatches",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerView() {}
-
-/**
- * @OA\Post(
- *     path="/api/v5/system-patches",
- *     summary="Create a new SystemPatches",
- *     tags={"SystemPatches"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="issue", type="string", example=null),
-                     @OA\Property(property="version", type="string", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Created successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     )
- * )
- */
-public function _swaggerCreate() {}
-
-/**
- * @OA\Put(
- *     path="/api/v5/system-patches/{id}",
- *     summary="Update SystemPatches",
- *     tags={"SystemPatches"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the SystemPatches",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             type="object",
-                     @OA\Property(property="issue", type="string", example=null),
-                     @OA\Property(property="version", type="string", example=null),
-                     @OA\Property(property="created", type="string", format="date-time", example=null)
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Updated successfully"
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Invalid data"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerUpdate() {}
-
-/**
- * @OA\Delete(
- *     path="/api/v5/system-patches/{id}",
- *     summary="Delete SystemPatches",
- *     tags={"SystemPatches"},
- *     @OA\Parameter(
- *         name="id",
- *         in="path",
- *         required=true,
- *         description="ID of the SystemPatches",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=204,
- *         description="Deleted successfully"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Unauthorized"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Not found"
- *     )
- * )
- */
-public function _swaggerDelete() {}
 
     public static function getValidationRules(): array
     {
@@ -199,11 +35,10 @@ public function _swaggerDelete() {}
             // Add validation rules here
         ];
     }
-
-
-
-
-    public function _swaggerHelper() {
-        return;
-    }
 }
+
+
+
+
+
+
