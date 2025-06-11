@@ -4,7 +4,7 @@
 # Description     : Multi stage build for OpenEMIS Core using  Angular, PHP
 #                   followed by deployment on Apache HTTP Server
 # Created         : 2025-06-04
-# Version         : 1.0.0
+# Version         : 4.28.0
 #
 # Usage           : docker build .
 #
