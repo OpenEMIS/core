@@ -153,13 +153,17 @@ class AlertShell extends Shell
 
     public function getStudentAdmissionEmailList($securityRoleRecords, $institutionId = null)
     {
-        $emailList = [];
+        $contactList = [
+            'email' => [],
+            'phone' => []
+        ];
 
         foreach ($securityRoleRecords as $securityRolesObj) {
             $options = [
                 'securityRoleId' => $securityRolesObj->id
             ];
 
+<<<<<<< HEAD
             // all staff within securityRole and institution
             $emailListResult = $this->Users
                 ->find('studentAdmissionEmailList', $options)
@@ -180,12 +184,34 @@ class AlertShell extends Shell
         }
 
         return $emailList;
+=======
+        if (empty($recipient)) {
+            return $contactList;
+        }
+        if (!empty($recipient->email)) {
+            $emailRecipient = $recipient->name . ' <' . $recipient->email . '>';
+            if (!in_array($emailRecipient, $contactList['email'])) {
+                $contactList['email'][] = $emailRecipient;
+            }
+        }
+
+        if (!empty($recipient->phone)) {
+            if (!in_array($recipient->phone, $contactList['phone'])) {
+                $contactList['phone'][] = $recipient->phone;
+            }
+        }
+        return $contactList;
+>>>>>>> 5d9357f00a (made changes to shells, check todo)
     }
 
     //POCOR-8341[START]
     public function getRoleAssociatedEmailList($securityRoleRecords)
     {
-        $emailList = [];
+
+        $contactList = [
+            'email' => [],
+            'phone' => []
+        ];
 
         foreach ($securityRoleRecords as $securityRolesObj) {
             $securityRolesId = [
@@ -206,11 +232,17 @@ class AlertShell extends Shell
                 ->toArray();
               
                 if (!empty($emailListResult)) {
-                    foreach ($emailListResult as $obj) {
-                        if (!empty($obj->email)) {
-                            $recipient = $obj->name . ' <' . $obj->email . '>';
-                            if (!in_array($recipient, $emailList)) {
-                                $emailList[] = $recipient;
+                    foreach ($emailListResult as $user) {
+                        if (!empty($user->email)) {
+                            $emailRecipient = $user->name . ' <' . $user->email . '>';
+                            if (!in_array($emailRecipient, $contactList['email'])) {
+                                $contactList['email'][] = $emailRecipient;
+                            }
+                        }
+
+                        if (!empty($user->phone)) {
+                            if (!in_array($user->phone, $contactList['phone'])) {
+                                $contactList['phone'][] = $user->phone;
                             }
                         }
                     }
@@ -218,8 +250,79 @@ class AlertShell extends Shell
             }
         }
 
-        return $emailList;
+        return $contactList;
     }
     //POCOR-8341[END]
+    /**
+     * @param mixed $rule
+     * @param $institutionId
+     * @param $feature
+     * @param mixed $vars
+     * @return void
+     */
+    protected function insertAlertLogs(mixed $rule, $institutionId, $feature, mixed $vars): void
+    {
+        $contactList = $this->getAlertContactList($rule['security_roles'], $institutionId);
 
+        $methods = array_map('trim', explode(',', $rule->method));
+
+        $subject = $this->AlertLogs->replaceMessage($feature, $rule->subject, $vars);
+        $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
+
+        foreach ($methods as $method) {
+            if ($method === 'Email' && !empty($contactList['email'])) {
+                $email = implode(', ', $contactList['email']);
+                $this->AlertLogs->insertAlertLog($method, $rule->feature, $email, $subject, $message);
+            }
+
+            if ($method === 'SMS' && !empty($contactList['phone'])) {
+                $phoneList = implode(', ', $contactList['phone']);
+                $this->AlertLogs->insertAlertLog($method, $rule->feature, $phoneList, $subject, $message);
+            }
+        }
+    }
+
+    public function getAlertContactList($securityRoleRecords, $institutionId = null): array
+    {
+        $contactList = [
+            'email' => [],
+            'phone' => []
+        ];
+
+        foreach ($securityRoleRecords as $securityRolesObj) {
+            $options = [
+                'securityRoleId' => $securityRolesObj->id
+            ];
+
+            if (!is_null($institutionId)) {
+                $options['institutionId'] = $institutionId;
+            }
+
+            $result = $this->SecurityGroupUsers
+                ->find('emailList', $options)
+                ->toArray();
+
+            if (!empty($result)) {
+                foreach ($result as $obj) {
+                    $user = $obj->_matchingData['Users'];
+
+                    if (!empty($user->email)) {
+                        $emailRecipient = $user->name . ' <' . $user->email . '>';
+                        if (!in_array($emailRecipient, $contactList['email'])) {
+                            $contactList['email'][] = $emailRecipient;
+                        }
+                    }
+
+                    if (!empty($user->phone)) {
+                        $phoneRecipient = $user->name . ' (' . $user->phone . ')';
+                        if (!in_array($user->phone, $contactList['phone'])) {
+                            $contactList['phone'][] = $user->phone;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $contactList;
+    }
 }

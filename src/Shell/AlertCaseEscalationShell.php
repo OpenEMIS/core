@@ -41,13 +41,7 @@ class AlertCaseEscalationShell extends AlertShell
                         $institutionId = $vars['institution']['id'];
                     }
                     if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
-                        $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
-                        $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
-                        // subject and message for alert email
-                        $subject = $this->AlertLogs->replaceMessage($feature, $rule->subject, $vars);
-                        $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
-                        // insert record to  the alertLog
-                        $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
+                        $this->insertAlertLogs($rule, $institutionId, $feature, $vars);
 
                 }}
             }
