@@ -18,7 +18,6 @@ use Cake\Log\Log;
 
 // POCOR-8286
 
-
 class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
 {
     public $id;
