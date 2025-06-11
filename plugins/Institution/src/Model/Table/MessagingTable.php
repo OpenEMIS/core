@@ -122,75 +122,161 @@ class MessagingTable extends ControllerActionTable
             'method', // POCOR-8286
             'subject', 'message']);
     }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
+        $this->getConnection()->begin();
 
-        $entity->institution_id = $this->getInstitutionID();
-        if ($this->request->getParam('pass')[0] == 'edit') {
-            //deleting messaging_security_role entries
-            $SecurityRoleData = $this->MessagingSecurityRoles->find()->where(['message_id' => $entity->id])->toArray();
-            if ($SecurityRoleData) {
-                foreach ($SecurityRoleData as $SecurityRoleEntity) {
-                    $deleteEntity =  $this->MessagingSecurityRoles->delete($SecurityRoleEntity);
-                }
+        try {
+            // Ensure institution ID is set
+            if (!$entity->institution_id) {
+                $entity->institution_id = $this->getInstitutionID();
             }
-            //deleting message_recipients entries
-            $MessageRecipientData = $this->MessageRecipients->find()->where(['message_id' => $entity->id])->toArray();
-            if ($MessageRecipientData) {
-                foreach ($MessageRecipientData as $MessageRecipientEntity) {
-                    $deleteRecipientEntity =  $this->MessageRecipients->delete($MessageRecipientEntity);
-                }
+
+            // Parse methods
+            $methods = array_map('trim', explode(',', $entity->method ?? ''));
+            $roles = $this->getSecurityRolesFromEntity($entity);
+            $recipients = $this->getRecipientList($entity);
+
+            // 1. Handle MessagingSecurityRoles sync
+            $this->syncMessagingSecurityRoles($entity->id, $entity->security_role_id['_ids'] ?? []);
+
+            // 2. Build final recipient list based on method(s)
+            $finalRecipientIds = $this->getRecipientIdsByMethod($methods, $roles, $recipients);
+//            dd([$methods, $roles, $recipients, $finalRecipientIds]);
+            // 3. Handle MessageRecipients sync
+            $this->syncMessageRecipients($entity->id, $finalRecipientIds);
+
+            $this->getConnection()->commit();
+
+        } catch (\Exception $e) {
+            $this->getConnection()->rollback();
+            Log::error('Error in afterSave: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function getSecurityRolesFromEntity(Entity $entity): array
+    {
+        return TableRegistry::get('Security.SecurityRoles')
+            ->find()
+            ->where(['id IN' => $entity->security_role_id['_ids'] ?? []])
+            ->extract('code')
+            ->map(function ($val) {
+                return strtolower($val);
+            })
+            ->toArray();
+
+//        return $lowered;
+    }
+
+    private function getRecipientIdsByMethod(array $methods, array $roles, array $recipients): array
+    {
+        $ids = [];
+
+        foreach ($methods as $method) {
+            switch (strtolower($method)) {
+                case 'email':
+                    $ids = array_merge($ids, $this->getEmailRecipientIds($recipients, $roles));
+                    break;
+
+                case 'sms':
+                    $ids = array_merge($ids, $this->getSmsRecipientIds($recipients, $roles));
+                    break;
+
+                default:
+                    Log::warning("Unknown messaging method: $method");
             }
         }
-        $security_role_data = [];
-        //saving messaging_security_roles entries
-        if (!empty($entity->security_role_id['_ids'])) {
-            foreach ($entity->security_role_id['_ids'] as $key => $value) {
-                $SecurityRolesData = ['message_id' => $entity->id, 'security_role_id' => $value];
-                $security_role_data[] = $value;
-                $SecurityRolesEntity = $this->MessagingSecurityRoles->newEntity($SecurityRolesData);
-                $result = $this->MessagingSecurityRoles->save($SecurityRolesEntity);
-                unset($SecurityRolesEntity);
-                unset($result);
+
+        return array_unique($ids);
+    }
+
+    private function getEmailRecipientIds(array $recipients, array $roles): array
+    {
+        $ids = [];
+
+        foreach ($recipients as $person) {
+            if (in_array('student', $roles) && !empty($person['student_email'])) {
+                $ids[] = $person['student_id'];
+            }
+
+            if (in_array('guardian', $roles) && !empty($person['guardian_email'])) {
+                $ids[] = $person['guardian_id'];
             }
         }
-        $recipientList = $this->getRecipientList($entity); // POCOR-8286
-        $student = 0;
-        $guardian = 0;
-        foreach ($security_role_data as $key => $value) {
-            $SecurityRoleName = TableRegistry::get('Security.SecurityRoles')->get($value)->name;
-            if (strtolower($SecurityRoleName) == "student") {
-                $student = 1;
-            } else if (strtolower($SecurityRoleName) == "guardian") {
-                $guardian = 1;
+
+        return $ids;
+    }
+
+    private function getSmsRecipientIds(array $recipients, array $roles): array
+    {
+        $ids = [];
+
+        foreach ($recipients as $person) {
+            if (in_array('student', $roles) && !empty($person['student_phone'])) {
+                $ids[] = $person['student_id'];
             }
-            unset($SecurityRoleName);
+
+            if (in_array('guardian', $roles) && !empty($person['guardian_phone'])) {
+                $ids[] = $person['guardian_id'];
+            }
         }
 
-        //saving message_recipients entries
-        if (!empty($recipientList)) {
-            foreach ($recipientList as $key => $student) {
-                //echo "<pre>";print_r($value['student_email']);die;
-                if ($student) {
-                    if (!empty($student['student_email'])) {
-                        $RecipientEntity = ['message_id' => $entity->id, 'recipient_id' => $student['student_id']];
-                        $RecipientEntity = $this->MessageRecipients->newEntity($RecipientEntity);
-                        $saveData = $this->MessageRecipients->save($RecipientEntity);
-                        unset($RecipientEntity);
-                        unset($saveData);
-                    }
-                }
+        return $ids;
+    }
 
-                if ($guardian) {
-                    if (!empty($student['guardian_email'])) {
-                        $RecipientEntity = ['message_id' => $entity->id, 'recipient_id' => $student['guardian_id']];
-                        $RecipientEntity = $this->MessageRecipients->newEntity($RecipientEntity);
-                        $saveData = $this->MessageRecipients->save($RecipientEntity);
-                        unset($RecipientEntity);
-                        unset($saveData);
-                    }
-                }
-            }
+    private function syncMessagingSecurityRoles(int $messageId, array $newRoleIds): void
+    {
+        $existingRoleIds = $this->MessagingSecurityRoles
+            ->find()
+            ->where(['message_id' => $messageId])
+            ->extract('security_role_id')
+            ->toArray();
+
+        $toAdd = array_diff($newRoleIds, $existingRoleIds);
+        $toRemove = array_diff($existingRoleIds, $newRoleIds);
+
+        if ($toRemove) {
+            $this->MessagingSecurityRoles->deleteAll([
+                'message_id' => $messageId,
+                'security_role_id IN' => $toRemove
+            ]);
+        }
+
+        foreach ($toAdd as $roleId) {
+            $entity = $this->MessagingSecurityRoles->newEntity([
+                'message_id' => $messageId,
+                'security_role_id' => $roleId
+            ]);
+            $this->MessagingSecurityRoles->save($entity);
+        }
+    }
+
+    private function syncMessageRecipients(int $messageId, array $newRecipientIds): void
+    {
+        $existingIds = $this->MessageRecipients
+            ->find()
+            ->where(['message_id' => $messageId])
+            ->extract('recipient_id')
+            ->toArray();
+
+        $toAdd = array_diff($newRecipientIds, $existingIds);
+        $toRemove = array_diff($existingIds, $newRecipientIds);
+
+        if ($toRemove) {
+            $this->MessageRecipients->deleteAll([
+                'message_id' => $messageId,
+                'recipient_id IN' => $toRemove
+            ]);
+        }
+
+        foreach ($toAdd as $recipientId) {
+            $entity = $this->MessageRecipients->newEntity([
+                'message_id' => $messageId,
+                'recipient_id' => $recipientId
+            ]);
+            $this->MessageRecipients->save($entity);
         }
     }
 
@@ -199,6 +285,11 @@ class MessagingTable extends ControllerActionTable
         // POCOR-8286 start
         if (!$entity->institution_id) {
             $entity->institution_id = $this->getInstitutionID();
+        }
+        if ($entity->status == 1) {
+            $this->Alert->warning('Message Already Sent', ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('index'));
         }
         $patchOptions['validate'] = true;
         $entity = $this->patchEntity($entity, $data->getArrayCopy(), $patchOptions->getArrayCopy());
@@ -234,6 +325,12 @@ class MessagingTable extends ControllerActionTable
                 default:
                     $this->log("Unknown method '$method'", 'error');
             }
+        }
+        if ($entity->status === 1) {
+            $result = $this->save($entity);
+            $this->Alert->success('Messaging.email');
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('index'));
         }
     }
     // POCOR-8286 end
@@ -295,7 +392,7 @@ class MessagingTable extends ControllerActionTable
 //    }
 
     // POCOR-8286
-    private function sendEmailMessages($entity, $recipientList, $SecurityRoles): void
+    private function sendEmailMessages(&$entity, $recipientList, $SecurityRoles): void
     {
         $emailList = [];
 
@@ -314,15 +411,18 @@ class MessagingTable extends ControllerActionTable
         foreach ($emailList as $recipient) {
             $AlertLogs->insertAlertLog("Email", "Messaging", $recipient, $entity->subject, $entity->message);
         }
+        if($emailList){
+            $entity->status = 1;
+        }
     }
 
     // POCOR-8286
-    private function sendSmsMessages($entity, $query, $SecurityRoles): void
+    private function sendSmsMessages(&$entity, $recipients, $SecurityRoles): void
     {
         $phoneList = [];
         $AlertLogs = TableRegistry::get('Alert.AlertLogs');
 
-        foreach ($query as $studentData) {
+        foreach ($recipients as $studentData) {
             if (in_array("student", $SecurityRoles) && !empty($studentData->student_phone)) {
                 $phoneList[] = $studentData->student_phone;
             }
@@ -338,6 +438,9 @@ class MessagingTable extends ControllerActionTable
             $AlertLogs->insertAlertLog("SMS", "Messaging", $recipient, $entity->subject, $entity->message);
 
 //            $this->sendTwilioSms($number, $entity->message);
+        }
+        if($phoneList){
+            $entity->status = 1;
         }
     }
 
@@ -775,7 +878,7 @@ class MessagingTable extends ControllerActionTable
     // POCOR-8286 start
     public function getRecipientList($entity)
     {
-        $query = [];
+
         $where = $this->buildRecipientWhere($entity);
 
         $isSubjectLevel = in_array($entity->recipient_level_id, [4, 5]);
