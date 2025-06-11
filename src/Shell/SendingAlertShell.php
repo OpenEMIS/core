@@ -68,6 +68,10 @@ class SendingAlertShell extends Shell
                 ['status' => 1, 'processed_date' => $today],
                 ['id' => $obj->id]
             );
+
+            if($feature = 'Messaging'){
+
+            }
         }
     }
 
