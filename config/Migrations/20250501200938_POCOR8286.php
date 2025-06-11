@@ -53,32 +53,32 @@ class POCOR8286 extends AbstractMigration
                 'field_type' => 'Dropdown',
                 'option_type' => self::OPTION_TYPE,
             ],
-            [
-                'name' => 'Status',
-                'code' => 'sms_status',
-                'visible' => 1,
-                'editable' => 1,
-                'field_type' => 'Dropdown',
-                'option_type' => 'online_services',
-            ],
-            [
-                'name' => 'Account SID',
-                'code' => 'sms_account_sid',
-                'visible' => 1,
-                'editable' => 1
-            ],
-            [
-                'name' => 'SMS Auth Token',
-                'code' => 'sms_auth_token',
-                'visible' => 1,
-                'editable' => 1
-            ],
-            [
-                'name' => 'SMS Number',
-                'code' => 'sms_number',
-                'visible' => 1,
-                'editable' => 1
-            ]
+//            [
+//                'name' => 'Status',
+//                'code' => 'sms_status',
+//                'visible' => 1,
+//                'editable' => 1,
+//                'field_type' => 'Dropdown',
+//                'option_type' => 'online_services',
+//            ],
+//            [
+//                'name' => 'Account SID',
+//                'code' => 'sms_account_sid',
+//                'visible' => 1,
+//                'editable' => 1
+//            ],
+//            [
+//                'name' => 'SMS Auth Token',
+//                'code' => 'sms_auth_token',
+//                'visible' => 1,
+//                'editable' => 1
+//            ],
+//            [
+//                'name' => 'SMS Number',
+//                'code' => 'sms_number',
+//                'visible' => 1,
+//                'editable' => 1
+//            ]
         ];
 
         foreach ($items as $item) {

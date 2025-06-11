@@ -47,6 +47,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
                 ->notEmptyString('sms_auth_token', __('Please enter the Auth Token'))
                 ->notEmptyString('sms_number', __('Please enter the SMS Number'));
         }
+        return $validator;
 
     }
 
@@ -86,11 +87,12 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
                 $extra['elements']['controls'] = $this->buildSystemConfigFilters();
                 $this->checkController();
             }
+            dd($this->getFields());
             // POCOR-7981 END
         }
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Administration', 'External Data Source - Identity', 'System Configurations');
+        $is_manual_exist = $this->getManualUrl('Administration', 'External Alert Service - SMS', 'System Configurations');
         if (!empty($is_manual_exist)) {
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
