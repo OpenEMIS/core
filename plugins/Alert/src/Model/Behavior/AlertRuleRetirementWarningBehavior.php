@@ -15,7 +15,7 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
     protected $_defaultConfig = [
         'feature' => 'RetirementWarning',
         'name' => 'Retirement Warning',
-        'method' => 'Email', // No SMS as the function is hardcoded
+        'method' => ['Email','SMS'], // POCOR-8286
         'threshold' => [
             'value' => [
                 'type' => 'integer',
