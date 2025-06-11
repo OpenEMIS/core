@@ -24,12 +24,12 @@ WORKDIR /app
 COPY ./frontend/ ./
 
 # Replace the baseUrl
-RUN sed -i "s|baseUrl:.*|baseUrl: 'http://localhost:80/api/v4'|" ./src/environments/environment.ts
+RUN sed -i "s|baseUrl:.*|baseUrl: 'http://localhost:80/core/api/v4'|" ./src/environments/environment.ts
 # Install Dependencies
 RUN npm install && \
     npm install -g @angular/cli@11.2.19
 # Build the Frontend Angular Application
-RUN ng build --output-path=./dist
+RUN ng build --base-href /core/ --output-path=./dist
 
 # === Second Stage: PHP Backed + Apache Stage ===
 # Uses the php image with apache as base image
@@ -52,12 +52,12 @@ RUN a2enmod rewrite headers && \
 # Copies the composer binary from it's image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Sets the working directory and copies the application code
-WORKDIR /var/www/html
+WORKDIR /var/www/html/core
 COPY . .
 
 # Sets the working directory and update the composer dependencies and autoloads the class file
-WORKDIR /var/www/html/api
-# RUN composer update && composer dump-autoload
+WORKDIR /var/www/html/core/api
+RUN apt install -y git && composer update && composer dump-autoload
 
 # This clears the config, cache, view, route and generate the jwt and key for application and then caches the config
 RUN php artisan config:clear && \
@@ -69,7 +69,7 @@ RUN php artisan config:clear && \
     php artisan config:cache
 
 # Sets the Working Direcory
-WORKDIR /var/www/html
+WORKDIR /var/www/html/core
 
 # Copies the frontend application code from previous stage
 COPY --from=frontend-builder /app/dist ./webroot/js/angular/dist/
@@ -78,13 +78,13 @@ RUN mv ./webroot/js/angular/dist/styles.css ./webroot/css/angular/main/ &&\
     # Creates the log directory
     mkdir -p logs && \
     # Deletes the redundant folder to reduce image size
-    rm -rf /var/www/html/docker-config /var/www/html/frontend &&\
+    rm -rf /var/www/html/core/docker-config /var/www/html/core/frontend &&\
     # Modifies the permission
-    chmod -R 777 /var/www/html/webroot /var/www/html/api/storage /var/www/html/logs &&\
+    chmod -R 777 /var/www/html/core/webroot /var/www/html/core/api/storage /var/www/html/core/logs &&\
     # Modifies ownership
     chown -R www-data:www-data /var/www/html &&\
     # Deletes the apt cache to reduce image size
     rm -rf /var/lib/apt/lists/*
 
-    # Container Start Command
+# Container Start Command
 CMD ["apache2-foreground"]
