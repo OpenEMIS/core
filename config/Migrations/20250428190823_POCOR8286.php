@@ -6,13 +6,13 @@ use Cake\Log\Log;
 
 class POCOR8286 extends AbstractMigration
 {
-    private const CONFIG_TYPE = 'External Data Source';
-    private const OPTION_TYPE = 'external_data_source';
-    private const ITEM_SMS = 'sms_config';
+    private const CONFIG_TYPE = 'External Alert Service - SMS';
+    private const OPTION_TYPE = 'external_alert_service_sms';
+    private const ITEM_SMS = 'external_alert_service_sms_config';
 
     public function up(): void
     {
-        return;
+
         $this->backupTables();
         $this->removeSmsConfigItems();
         $this->insertConfigItems();
@@ -49,16 +49,20 @@ class POCOR8286 extends AbstractMigration
                 'name' => 'SMS Provider',
                 'code' => self::ITEM_SMS,
                 'visible' => 1,
-                'editable' => 1
+                'editable' => 1,
+                'field_type' => 'Dropdown',
+                'option_type' => self::OPTION_TYPE,
             ],
             [
-                'name' => 'SMS Status',
+                'name' => 'Status',
                 'code' => 'sms_status',
                 'visible' => 1,
-                'editable' => 1
+                'editable' => 1,
+                'field_type' => 'Dropdown',
+                'option_type' => 'online_services',
             ],
             [
-                'name' => 'SMS Account SID',
+                'name' => 'Account SID',
                 'code' => 'sms_account_sid',
                 'visible' => 1,
                 'editable' => 1
@@ -79,57 +83,71 @@ class POCOR8286 extends AbstractMigration
 
         foreach ($items as $item) {
             $existing = $this->fetchRow("
-                SELECT id FROM `config_items`
-                WHERE `name` = '{$item['name']}'
-                  AND `code` = '{$item['code']}'
-                  AND `type` = '" . self::CONFIG_TYPE . "'
-            ");
+            SELECT id FROM `config_items`
+            WHERE `name` = '{$item['name']}'
+              AND `code` = '{$item['code']}'
+              AND `type` = '" . self::CONFIG_TYPE . "'
+        ");
 
             if (empty($existing)) {
+                $fieldType = isset($item['field_type']) ? "'{$item['field_type']}'" : "''";
+                $optionType = isset($item['option_type']) ? "'{$item['option_type']}'" : "''";
+
                 $this->execute("
-                    INSERT INTO `config_items`
-                    (`name`, `code`, `type`, `label`, `value`, `value_selection`,
-                     `default_value`, `editable`, `visible`, `field_type`,
-                     `option_type`, `created_user_id`, `created`)
-                    VALUES
-                    ('{$item['name']}', '{$item['code']}', '" . self::CONFIG_TYPE . "',
-                     '{$item['name']}', '', '', '1', {$item['editable']},
-                     {$item['visible']}, 'Text', '', 1, CURRENT_TIMESTAMP)
-                ");
+                INSERT INTO `config_items`
+                (`name`, `code`, `type`, `label`, `value`, `value_selection`,
+                 `default_value`, `editable`, `visible`, `field_type`,
+                 `option_type`, `created_user_id`, `created`)
+                VALUES
+                ('{$item['name']}', '{$item['code']}', '" . self::CONFIG_TYPE . "',
+                 '{$item['name']}', '', '', '1', {$item['editable']},
+                 {$item['visible']}, $fieldType, $optionType, 1, CURRENT_TIMESTAMP)
+            ");
                 Log::info("Inserted config item: {$item['name']}");
             }
         }
     }
 
+
     private function insertConfigItemOptions(): void
     {
         $options = [
             ['option' => 'Twilio', 'value' => 'Twilio'],
-            ['option' => 'Enabled', 'value' => '1'],
-            ['option' => 'Disabled', 'value' => '0']
+            ['option' => 'Nexmo (Vonage API)', 'value' => 'Nexmo'],
+            ['option' => 'Plivo', 'value' => 'Plivo'],
+            ['option' => 'MessageBird', 'value' => 'MessageBird'],
+            ['option' => 'Sinch', 'value' => 'Sinch'],
+            ['option' => 'Clickatell', 'value' => 'Clickatell'],
+            ['option' => 'Textlocal', 'value' => 'Textlocal'],
+            ['option' => 'Zenvia', 'value' => 'Zenvia'],
+            ['option' => 'Infobip', 'value' => 'Infobip'],
+            ['option' => 'Telesign', 'value' => 'Telesign'],
+            ['option' => 'Bandwidth', 'value' => 'Bandwidth'],
+            ['option' => 'SMSGlobal', 'value' => 'SMSGlobal'],
         ];
 
         foreach ($options as $data) {
             $existing = $this->fetchRow("
-                SELECT id FROM `config_item_options`
-                WHERE `option_type` = '" . self::OPTION_TYPE . "'
-                  AND `option` = '{$data['option']}'
-            ");
+            SELECT id FROM `config_item_options`
+            WHERE `option_type` = '" . self::OPTION_TYPE . "'
+              AND `option` = '{$data['option']}'
+        ");
 
             if (empty($existing)) {
                 $this->execute("
-                    INSERT INTO `config_item_options`
-                    (`option_type`, `option`, `value`, `order`, `visible`)
-                    VALUES ('" . self::OPTION_TYPE . "', '{$data['option']}', '{$data['value']}', 0, 1)
-                ");
+                INSERT INTO `config_item_options`
+                (`option_type`, `option`, `value`, `order`, `visible`)
+                VALUES ('" . self::OPTION_TYPE . "', '{$data['option']}', '{$data['value']}', 0, 1)
+            ");
                 Log::info("Inserted option: {$data['option']}");
             }
         }
     }
 
+
     public function down(): void
     {
-        return;
+
         $this->restoreTables();
     }
 
