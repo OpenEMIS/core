@@ -1090,10 +1090,11 @@ class UsersTable extends AppTable
         if ($entity->has('contact_error')) {
             return false;
         }
-        Log::debug(__FUNCTION__);
-        Log::debug(print_r(['errors' => $entity->getErrors(),
-            'options' => $options,
-            'event' => $event],true));
+        // POCOR-9101
+//        Log::debug(__FUNCTION__);
+//        Log::debug(print_r(['errors' => $entity->getErrors(),
+//            'options' => $options,
+//            'event' => $event],true));
         return true;
     }
 
@@ -1161,7 +1162,7 @@ class UsersTable extends AppTable
             $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
 
         }
-        Log::debug(__FUNCTION__);
+//        Log::debug(__FUNCTION__); // POCOR-9101
     // POCOR-8683 end
 
     }
