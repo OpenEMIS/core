@@ -151,57 +151,38 @@ class AlertShell extends Shell
         return $emailList;
     }
 
-    public function getStudentAdmissionEmailList($securityRoleRecords, $institutionId = null)
+    /*
+     * POCOR-9100 refactured
+     */
+    public function getStudentAdmissionEmailList($recipient_id, $institutionId = null)
     {
         $contactList = [
             'email' => [],
             'phone' => []
         ];
 
-        foreach ($securityRoleRecords as $securityRolesObj) {
-            $options = [
-                'securityRoleId' => $securityRolesObj->id
-            ];
 
-<<<<<<< HEAD
-            // all staff within securityRole and institution
-            $emailListResult = $this->Users
-                ->find('studentAdmissionEmailList', $options)
-                ->toArray()
-            ;
+        // here only one reciever
+        $recipient = $this->Users
+            ->find('all')
+            ->where(['id' => $recipient_id])
+            ->first();
 
-            // combine all email to the email list
-            if (!empty($emailListResult)) {
-                foreach ($emailListResult as $obj) {
-                    if (!empty($obj->email)) {
-                        $recipient = $obj->name . ' <' . $obj->email . '>';
-                        if (!in_array($recipient, $emailList)) {
-                            $emailList[] = $recipient;
-                        }
-                    }
-                }
-            }
-        }
-
-        return $emailList;
-=======
         if (empty($recipient)) {
             return $contactList;
         }
         if (!empty($recipient->email)) {
-            $emailRecipient = $recipient->name . ' <' . $recipient->email . '>';
-            if (!in_array($emailRecipient, $contactList['email'])) {
-                $contactList['email'][] = $emailRecipient;
+            $receiver = $recipient->name . ' <' . $recipient->email . '>';
+            if (!in_array($recipient, $contactList['email'])) {
+                $contactList[] = $receiver;
             }
         }
-
         if (!empty($recipient->phone)) {
-            if (!in_array($recipient->phone, $contactList['phone'])) {
-                $contactList['phone'][] = $recipient->phone;
+            if (!in_array($recipient, $contactList['phone'])) {
+                $contactList['phone'] = $recipient->phone;
             }
         }
         return $contactList;
->>>>>>> 5d9357f00a (made changes to shells, check todo)
     }
 
     //POCOR-8341[START]
@@ -217,11 +198,11 @@ class AlertShell extends Shell
             $securityRolesId = [
                 'id' => $securityRolesObj->id
             ];
-            
+
             $securityUserList = $this->SecurityGroupUsers
                 ->find('all', $securityRolesId)
                 ->toArray();
-            
+
             foreach($securityUserList AS $emailListResultData){
                 $securityUserId = [
                     'id' => $emailListResultData->security_user_id
@@ -230,7 +211,7 @@ class AlertShell extends Shell
                 $emailListResult = $this->Users
                 ->find('emailList', $securityUserId)
                 ->toArray();
-              
+
                 if (!empty($emailListResult)) {
                     foreach ($emailListResult as $user) {
                         if (!empty($user->email)) {

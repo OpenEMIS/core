@@ -15,7 +15,6 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
 use Cake\Datasource\ConnectionManager;
 
-
 class AlertRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -352,7 +351,7 @@ class AlertRulesTable extends ControllerActionTable
 
     public function processAlertRoleAttributes(array $attr, string $action): array
     {
-        $entity = $attr['entity'];
+                $entity = $attr['entity'];
         $feature = $entity->get('feature') ?? $this->request->getData('AlertRules.feature');
 
         if (!in_array($action, ['add', 'edit'], true)) {
@@ -372,9 +371,9 @@ class AlertRulesTable extends ControllerActionTable
 
     private function assignToAssignee(array $attr): array
     {
-        $attr['type'] = 'disabled';
-        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+                        $attr['type'] = 'disabled';
+                        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+                        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
         return $attr;
     }
 
@@ -383,10 +382,10 @@ class AlertRulesTable extends ControllerActionTable
         $roleOptions = $this->getVisibleSecurityRoles();
 
         $filteredRoles = array_filter($roleOptions, function ($roleName) {
-            return $roleName === 'Guardian';
+            return $roleName === 'Guardian' || 'Student';
         });
 
-        $attr['type'] = 'chosenSelect';
+                        $attr['type'] = 'chosenSelect';
         $attr['options'] = $filteredRoles;
         return $attr;
     }

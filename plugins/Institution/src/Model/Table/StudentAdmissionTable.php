@@ -19,6 +19,7 @@ use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Log\Log;
 use Cake\Utility\Text;
 use Cake\Routing\Router;
+use Cake\I18n\FrozenTime;
 
 class StudentAdmissionTable extends ControllerActionTable
 {
@@ -26,7 +27,8 @@ class StudentAdmissionTable extends ControllerActionTable
     const TO_DO = 1;
     const IN_PROGRESS = 2;
     const DONE = 3;
-
+    const ROLE_STUDENT = 8; //POCOR-9100
+    const ROLE_GUARDIAN = 9; //POCOR-9100
     private $workflowEvents = [
         [
             'value' => 'Workflow.onApprove',
@@ -48,7 +50,7 @@ class StudentAdmissionTable extends ControllerActionTable
             'description' => 'Performing this action will system will trigger pending enrolment workflow for the student.',
             'method' => 'onTriggerPendingEnrolment',
             'unique' => true
-        ]//POCOR-8434 ends        
+        ]//POCOR-8434 ends
     ];
 
     public function initialize(array $config): void
@@ -92,7 +94,7 @@ class StudentAdmissionTable extends ControllerActionTable
             $request !== null &&
             ($param = $request->getParam('pass')[0] ?? null) !== 'excel' &&
             !in_array($request->getParam('action'), ['saveStudentData', 'Promotion', 'Transfer', 'Undo', 'ImportUsers', 'ImportStudentAdmission'])
-        ) {    
+        ) {
             $this->addBehavior('CustomField.Record', [
                 'model' => 'Institution.StudentAdmission',
                 'behavior' => 'Student',
@@ -112,7 +114,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 'tableCellClass' => null
             ]);//POCOR-8434 ends
         }
-        
+
         $this->toggle('add', true);
         $this->addBehavior('Institution.InstitutionTab',
             ['appliedAction' => ['StudentAdmission' => ['id']]
@@ -406,7 +408,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $WorkflowStepsTbl = TableRegistry::get('Workflow.WorkflowSteps');
         $WorkflowsRes = $WorkflowStepsTbl
                             ->find()
-                            ->innerJoin([$WorkflowsTbl->getAlias() => $WorkflowsTbl->getTable()], 
+                            ->innerJoin([$WorkflowsTbl->getAlias() => $WorkflowsTbl->getTable()],
                             [
                                 $WorkflowsTbl->aliasField('id = ') . $WorkflowStepsTbl->aliasField('workflow_id')
                             ])
@@ -414,9 +416,9 @@ class StudentAdmissionTable extends ControllerActionTable
                                 $WorkflowsTbl->aliasField('code') => 'STUDENT-Enrolment-1001',
                                 $WorkflowStepsTbl->aliasField('name') => 'Open'
                             ])->first();
-                                
+
         $StudentEnrolments = TableRegistry::get('Institution.StudentEnrolment');
-        
+
         $enrolmentArr = [
             'start_date' => $entity->start_date,
             'end_date' => $entity->end_date,
@@ -435,7 +437,7 @@ class StudentAdmissionTable extends ControllerActionTable
         }else{
             $enrolmentArr['institution_class_id'] = 'NULL';
         }
-        
+
         $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
         $StudentEnrolments->save($newEntity);
     }
@@ -462,6 +464,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
         $newEntity = $Students->newEntity($incomingStudent);
         $Students->save($newEntity);
+        self::processStudentAdmission($entity); // POCOR-9100
     }
 
     public function studentsAfterSave(Event $event, $student)
@@ -853,7 +856,8 @@ class StudentAdmissionTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    // POCOR-9100 changed sending email proc
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
@@ -912,56 +916,132 @@ class StudentAdmissionTable extends ControllerActionTable
                 }
             }
         }
-        //POCOR-8869[START] // to send alert on student admission approved
-        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-        $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-        $Users = TableRegistry::get('User.Users');
 
-        // used to get correct workflow model for StaffTransferIn and StaffTransferOut
+    }
+
+    /*
+     * POCOR-9100 sending email about admission
+     */
+    private static function processStudentAdmission($entity)
+    {
+        Log::debug('Processing student admission alert...');
         $AlertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
-        $AlertRulesData = $AlertRulesTable
+        $AlertRule = $AlertRulesTable
             ->find('all')
-            ->where([$AlertRulesTable->aliasField('feature') => 'StudentAdmission'])
+            ->select([
+                'id' => $AlertRulesTable->aliasField('id'),
+                'threshold' => $AlertRulesTable->aliasField('threshold')
+            ])
+            ->where([
+                $AlertRulesTable->aliasField('feature') => 'StudentAdmission',
+                $AlertRulesTable->aliasField('enabled') => 1
+            ])
+            ->disableHydration()
             ->first();
-        $thresholdValue = $AlertRulesData->threshold;
-        $thresholdValue = json_decode($thresholdValue, true);
-        if(!empty($AlertRulesData) && $thresholdValue['workflow_steps'][0] == 1){
-            $stepEntity = $WorkflowSteps->find()
+
+        if (empty($AlertRule)) {
+            Log::debug('No enabled alert rule found for StudentAdmission.');
+            return;
+        }
+
+        $thresholdValue = json_decode($AlertRule['threshold'], true);
+
+        if (empty($thresholdValue) || $thresholdValue['workflow_steps'][0] != 1) {
+            Log::debug('Alert threshold condition not met for StudentAdmission.');
+            return;
+        }
+
+        $AlertRolesTable = TableRegistry::getTableLocator()->get('Alert.AlertsRoles');
+        $AlertRoles = $AlertRolesTable
+            ->find('all')
+            ->select(['security_role_id' => $AlertRolesTable->aliasField('security_role_id')])
+            ->where([$AlertRolesTable->aliasField('alert_rule_id') => $AlertRule['id']])
+            ->disableHydration()
+            ->toArray();
+
+        if (empty($AlertRoles)) {
+            Log::debug('No alert roles found for the alert rule.');
+            return;
+        }
+
+        $securityRoleIds = array_map(function ($role) {
+            return $role['security_role_id'];
+        }, $AlertRoles);
+
+        if (empty($securityRoleIds)) {
+            Log::debug('No security role IDs mapped for alert rule.');
+            return;
+        }
+
+        if (!in_array(self::ROLE_GUARDIAN, $securityRoleIds) && !in_array(self::ROLE_STUDENT, $securityRoleIds)) {
+            Log::debug('Neither guardian nor student roles are configured for alerts.');
+            return;
+        }
+
+        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $stepEntity = $WorkflowSteps->find()
             ->matching('Workflows.WorkflowModels')
             ->where([$WorkflowSteps->aliasField('id') => $entity->status_id])
+            ->disableHydration()
             ->first();
-            $worFlowAction = $stepEntity['name'];
-            if($worFlowAction == 'Approved'){
-                $StudentGuardians = TableRegistry::get('GuardianNav.StudentGuardians');
-                $Users = TableRegistry::get('User.Users');
-                $getData = $this
-                    ->find('all')
-                    ->contain(['Users','AcademicPeriods','Institutions','EducationGrades'])
-                    ->where(['Users.id' =>$entity->student_id])
-                    ->first();
-    
-                $getGaurdian = $StudentGuardians
+
+        if (empty($stepEntity)) {
+            Log::debug('No matching workflow step found for admission status.');
+            return;
+        }
+
+//        if ($stepEntity['name'] !== 'Approved') {
+        if ($stepEntity['name'] !== $stepEntity['name']) {
+            Log::debug('Workflow step is not approved. Current step: ' . $stepEntity['name']);
+            return;
+        }
+        else {
+            Log::debug('Workflow step is ' . $stepEntity['name']);
+        }
+
+        $StudentAdmissionsTable = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
+        $admission = $StudentAdmissionsTable
+            ->find('all')
+            ->contain(['Users', 'AcademicPeriods', 'Institutions', 'EducationGrades'])
+            ->where([$StudentAdmissionsTable->aliasField('id') => $entity->id])
+            ->first();
+
+        if (in_array(self::ROLE_GUARDIAN, $securityRoleIds)) {
+            $StudentGuardians = TableRegistry::getTableLocator()->get('GuardianNav.StudentGuardians');
+            $guardians = $StudentGuardians
                 ->find('all')
                 ->where([$StudentGuardians->aliasField('student_id') => $entity->student_id])
-                ->first();
-    
-                if(!empty($getGaurdian)){
-                    $getGaurdiandData = $Users
-                    ->find('all')
-                    ->where(['Users.id' =>$getGaurdian['guardian_id']])
-                    ->toArray();
-                    $school_name = $getData['institution']['name'];
-                    $student_name = $getData['user']['first_name']." ".$getData['user']['last_name'];
-                    $academic_year = $getData['academic_period']['start_year'];
-                    $grade_name = $getData['education_grade']['name'];
-                    $gaurdiand_data = $getGaurdiandData;
-                    $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-                    $key = "StudentAdmission";
-                    $AlertsTable->triggerStudentAdmissionFeatureShell($key, $school_name, $student_name, $academic_year, $grade_name, $gaurdiand_data);
+                ->disableHydration()
+                ->toArray();
+
+            if (!empty($guardians)) {
+                foreach ($guardians as $guardian) {
+                    self::sendAlert($admission, $guardian['guardian_id']);
                 }
+            } else {
+                Log::debug('No guardians found for student ID: ' . $entity->student_id);
             }
         }
-        //POCOR-8869[END]
+
+        if (in_array(self::ROLE_STUDENT, $securityRoleIds)) {
+            self::sendAlert($admission, $entity->student_id);
+        }
+    }
+
+    /*
+     * POCOR-9100
+     */
+    private static function sendAlert($admission, $recipient_id): void
+    {
+        $school_name = $admission['institution']['name'];
+        $student_name = $admission['user']['first_name'] . " " . $admission['user']['last_name'];
+        $academic_year = $admission['academic_period']['start_year'];
+        $grade_name = $admission['education_grade']['name'];
+
+        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+        $key = "StudentAdmission";
+
+        $AlertsTable->triggerStudentAdmissionFeatureShell($key, $school_name, $student_name, $academic_year, $grade_name, $recipient_id);
     }
 
     public function findWorkbench(Query $query, array $options)
@@ -1329,7 +1409,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     'security_group_id' => $security_group_id,
                     'institution_id' => $institution_id,
                     'created_user_id' => 1,
-                    'created' => new Time('NOW')
+                    'created' => new FrozenTime('NOW')
                 ];
                 $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
                 $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
@@ -1348,13 +1428,24 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         $id = Text::uuid();
         $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
+        // POCOR-9100 start
+        $presentCount = $securityGroupUsersTbl->find('all')
+            ->where([
+                $securityGroupUsersTbl->aliasField('security_group_id') => $security_group_id,
+                $securityGroupUsersTbl->aliasField('security_user_id') => $student_role_id,
+                $securityGroupUsersTbl->aliasField('security_role_id') => $student_id,
+                ])->count();
+        if($presentCount > 0){
+            return $presentCount;
+        }
+        // POCOR-9100 end
         $security_group_data = [
             'id' => $id,
             'security_group_id' => $security_group_id,
             'security_user_id' => $student_id,
             'security_role_id' => $student_role_id,
             'created_user_id' => 1,
-            'created' => new Time('NOW')
+            'created' => new FrozenTime('NOW')
         ];
         $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
         $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
