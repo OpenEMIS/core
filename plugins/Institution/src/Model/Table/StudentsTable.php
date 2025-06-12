@@ -2393,7 +2393,9 @@ class StudentsTable extends ControllerActionTable
 
         $dataSet = [];
         foreach ($studentByGrades as $value) {
-            $dataSet[] = [__($value['grade']), $value['count']];
+            $gradeName = $value['grade'] ?? 'Deleted Grade'; // POCOR-9150
+            $gradeCount = $value['count'] ?? 0; // POCOR-9150
+            $dataSet[] = [__($gradeName), $gradeCount]; // POCOR-9150
         }
         $params['dataSet'] = $dataSet;
         unset($InstitutionRecords);
