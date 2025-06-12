@@ -6,8 +6,6 @@ use Cake\Console\Shell;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 
-use App\Shell\AlertShell;
-
 class AlertAttendanceShell extends AlertShell
 {
     public function initialize(): void

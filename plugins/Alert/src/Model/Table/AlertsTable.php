@@ -281,6 +281,8 @@ class AlertsTable extends ControllerActionTable
                 return __('Frequency');
             case 'name':
                 return __('Name');
+            case 'last_run_date':
+                return __('Last Run');
             case 'created_user_id':
                 return __('Created By');
             case 'created':

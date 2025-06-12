@@ -25,43 +25,88 @@ class StudentAdmissionShell extends AlertShell
         $processName = $this->processName;
         $feature = $this->featureName;
 
-        // Assign default values if arguments are missing
-        $school_name = !empty($this->args[0]) ? $this->args[0] : '';
-        $student_name = !empty($this->args[1]) ? $this->args[1] : '';
-        $academic_year = !empty($this->args[2]) ? $this->args[2] : '';
-        $grade_name = !empty($this->args[3]) ? $this->args[3] : '';
-        $recipient_id = !empty($this->args[4]) ? $this->args[4] : ''; // POCOR-9100
+        // 🧼 Safer argument parsing with fallback defaults
+        $school_name   = $this->args[0] ?? '';
+        $student_name  = $this->args[1] ?? '';
+        $academic_year = $this->args[2] ?? '';
+        $grade_name    = $this->args[3] ?? '';
+        $recipient_id  = $this->args[4] ?? '';
 
-        $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => FrozenTime::now()], ['process_name' => $processName]); // POCOR-9100
+        // 🧠 Decode recipient IDs — fallback to empty array if decoding fails
+        $recipient_ids = json_decode($recipient_id, true) ?? [];
+
+        // 🕒 Mark alerts in progress
+        $this->Alerts->updateAll(
+            ['process_id' => getmypid(), 'modified' => FrozenTime::now()],
+            ['process_name' => $processName]
+        );
 
         $rules = $this->getAlertRules($feature);
-//        Log::debug(print_r($rules, true));
 
         foreach ($rules as $rule) {
-            $contactList = $this->getStudentAdmissionEmailList($recipient_id); // POCOR-9100
+            $contactList = $this->getStudentAdmissionContactList($recipient_ids);
             $methods = array_map('trim', explode(',', $rule->method));
 
-            // Prepare replacements
-                $placeholders = ['${school_name}', '${student_name}', '${academic_year}', '${grade_name}'];
-                $values = [$school_name, $student_name, $academic_year, $grade_name];
+            // ✏️ Placeholder replacement
+            $placeholders = ['${school_name}', '${student_name}', '${academic_year}', '${grade_name}'];
+            $values = [$school_name, $student_name, $academic_year, $grade_name];
 
-                // Replace all placeholders in subject and message
-                $subject = str_replace($placeholders, $values, $rule->subject);
-                $message = str_replace($placeholders, $values, $rule->message);
+            $subject = str_replace($placeholders, $values, $rule->subject);
+            $message = str_replace($placeholders, $values, $rule->message);
 
-                // Insert into alert log
+            // 📨 Dispatch alerts
             foreach ($methods as $method) {
                 if ($method === 'Email' && !empty($contactList['email'])) {
-                    $email = implode(', ', $contactList['email']);
-                    $this->AlertLogs->insertStudentAdmissionAlertLog($method, $rule->feature, $email, $subject, $message);
+                    $emailList = implode(', ', $contactList['email']);
+                    $this->AlertLogs->insertStudentAdmissionAlertLog($method, $rule->feature, $emailList, $subject, $message);
                 }
 
                 if ($method === 'SMS' && !empty($contactList['phone'])) {
                     $phoneList = implode(', ', $contactList['phone']);
                     $this->AlertLogs->insertStudentAdmissionAlertLog($method, $rule->feature, $phoneList, $subject, $message);
                 }
-
-//                Log::debug('Student Admission Alert Log: ' . $rule->method . ' - ' . $rule->feature . ' - ' . $email . ' - ' . $subject . ' - ' . $message, ['scope' => ['email']]);
+            }
         }
     }
+
+    public function getStudentAdmissionContactList($recipient_ids)
+    {
+        $contactList = [
+            'email' => [],
+            'phone' => []
+        ];
+        if (empty($recipient_ids)) {
+            return $contactList;
+        }
+        $options = ['recipients' => $recipient_ids];
+
+            // all staff within securityRole and institution
+            $recipientList = $this->Users
+                ->find('recipientList', $options)
+                ->toArray()
+            ;
+        if (empty($recipientList)) {
+            return $contactList;
+        }
+            // combine all email to the email list
+            if (!empty($recipientList)) {
+                foreach ($recipientList as $recipient) {
+                    if (!empty($recipient->email)) {
+                        $recipient_mail = $recipient->name . ' <' . $recipient->email . '>';
+                        if (!in_array($recipient_mail, $contactList['email'])) {
+                            $contactList['email'][] = $recipient_mail;
+                        }
+                    }
+
+
+                    if (!empty($recipient->mobile_number)) {
+                        if (!in_array($recipient->mobile_number, $contactList['phone'])) {
+                            $contactList['phone'][] = $recipient->mobile_number;
+                        }
+                    }
+                }
+            }
+        return $contactList;
+    }
+
 }

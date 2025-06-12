@@ -1,4 +1,5 @@
 <?php
+
 namespace Alert\Model\Table;
 
 use ArrayObject;
@@ -63,15 +64,14 @@ class AlertRulesTable extends ControllerActionTable
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
                 'provider' => 'table'
-            ])
-            ;
+            ]);
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
             // POCOR-8286 start
-            if(isset($data['method']) && !empty($data['method'])) {
+            if (isset($data['method']) && !empty($data['method'])) {
                 $data['method'] = implode(',', array_map('trim', $data['method']['_ids']));
             }
             // POCOR-8286 end
@@ -91,6 +91,11 @@ class AlertRulesTable extends ControllerActionTable
                 }
             }
         }
+    }
+
+    public function getAlertRuleTypes()
+    {
+        return $this->alertTypeFeatures;
     }
 
     public function afterSaveCommit(Event $event, Entity $entity)
@@ -127,7 +132,7 @@ class AlertRulesTable extends ControllerActionTable
         $logsTable = TableRegistry::get('Alert.AlertLogs');
         $featureOptions = $logsTable->getFeatureOptions();
         array_shift($featureOptions);
-         //POCOR-7558 end
+        //POCOR-7558 end
         if (!empty($featureOptions)) {
             $featureOptions = ['-1' => __('All Features')] + $featureOptions;
         }
@@ -139,8 +144,8 @@ class AlertRulesTable extends ControllerActionTable
         $extra['elements']['control'] = [
             'name' => 'Alert/controls',
             'data' => [
-                'featureOptions'=>$featureOptions,
-                'selectedFeature'=>$selectedFeature,
+                'featureOptions' => $featureOptions,
+                'selectedFeature' => $selectedFeature,
             ],
             'options' => [],
             'order' => 3
@@ -148,24 +153,36 @@ class AlertRulesTable extends ControllerActionTable
         // end element control
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','AlertRules','Communications');
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration', 'AlertRules', 'Communications');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
+    }
+
+    public function getFeatureOptions()
+    {
+        $featureOptions = [];
+        foreach ($this->alertTypeFeatures as $key => $obj) {
+            $featureOptions[$obj['feature']] = __(Inflector::humanize(Inflector::underscore($obj['feature'])));
+        }
+
+        ksort($featureOptions);
+
+        return $featureOptions;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -181,20 +198,65 @@ class AlertRulesTable extends ControllerActionTable
         $this->extractThresholdValuesFromEntity($entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function extractThresholdValuesFromEntity(Entity $entity)
     {
-        $this->setupFields($event, $entity);
-    }
+        $thresholdArray = json_decode($entity->threshold, true);
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->setupFields($event, $entity);
-        $this->field('alert_features', ['visible' => false]);
-    }
+        if (is_array($thresholdArray)) {
+            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($entity->feature);
+            $thresholdConfig = $alertTypeDetails[$entity->feature]['threshold'];
+            foreach ($thresholdArray as $field => $value) {
+                $entity->{$field} = $value;
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
-    {
-        $query->contain(['SecurityRoles']);
+                if (array_key_exists($field, (array)$thresholdConfig) && isset($thresholdConfig[$field]['type'])) {
+                    $fieldType = $thresholdConfig[$field]['type'];
+                    // for threshold with type chosenSelect type
+                    if ($fieldType == 'chosenSelect') {
+                        $lookupModel = $thresholdConfig[$field]['lookupModel'];
+                        if (isset($lookupModel)) {//POCOR-7462
+                            $Model = TableRegistry::get($lookupModel);
+                            if (is_array($value)) {
+                                $entity->{$field} = [];
+                                foreach ($value as $modelId) {
+                                    $entity->{$field}[] = $Model->get($modelId);
+                                }
+                            }
+                        }
+                        //POCOR-7462 start
+                        if ($thresholdConfig[$field]['options'] == "Cases.workflow_steps") {
+                            $Model = TableRegistry::get('workflow_steps');
+                            if (is_array($value)) {
+                                $entity->{$field} = [];
+                                foreach ($value as $modelId) {
+                                    $entity->{$field}[] = $Model->get($modelId);
+                                }
+                            }
+                        }
+                        //POCOR-7462 end
+
+                        if ($thresholdConfig[$field]['options'] == "StudentAdmission.workflow_steps") {
+                            $Model = TableRegistry::get('Workflow.WorkflowSteps');
+                            $Workflows = TableRegistry::get('Workflow.Workflows');
+                            $WorkflowsData = $Workflows->find()
+                                ->where(['code' => 'STUDENT-ADMISSION-1001'])
+                                ->first();
+                            $ModelData = $Model->find()
+                                ->where(['workflow_id' => $WorkflowsData->workflow_model_id, 'name' => 'Approved'])
+                                ->first();
+                            $ModelDataId = $ModelData->id;
+                            if (is_array($value)) {
+                                $entity->{$field} = [];
+                                // foreach ($value as $modelId) {
+                                $entity->{$field}[] = $Model->get($ModelDataId);
+                                // }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
     }
 
     public function getAlertTypeDetailsByFeature($feature)
@@ -209,32 +271,53 @@ class AlertRulesTable extends ControllerActionTable
         return $alertTypeDetails;
     }
 
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($event, $entity);
+    }
+
+    public function setupFields(Event $event, Entity $entity)
+    {
+        // Rule setting section
+        $this->field('rule_setup', ['type' => 'section']);
+        $this->field('feature', ['type' => 'select', 'entity' => $entity]);
+        $this->field('enabled', ['type' => 'select']);
+        //POCOR-8690[START]
+        // $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
+        $this->field('method', [
+            'after' => 'threshold',
+            'entity' => $entity,
+        ]);
+        //POCOR-8690[END]
+        $this->field('security_roles', ['after' => 'method', 'entity' => $entity]);
+        $this->field('threshold', ['after' => 'security_roles', 'entity' => $entity]);
+
+        // Alert section
+        $this->field('alert_content', ['type' => 'section', 'after' => 'threshold']);
+        $this->field('alert_features', ['type' => 'custom_criterias', 'after' => 'message']);
+
+        if ($entity->has('feature') && !empty($entity->feature)) {
+            $event = $this->dispatchEvent('AlertRule.' . $entity->feature . '.SetupFields', [$entity], $this);
+            if ($event->isStopped()) {
+                return $event->getResult();
+            }
+        }
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($event, $entity);
+        $this->field('alert_features', ['visible' => false]);
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query)
+    {
+        $query->contain(['SecurityRoles']);
+    }
+
     public function getAlertTypeDetailsByAlias($alias)
     {
         return $this->alertTypeFeatures[$alias];
-    }
-
-    public function getFeatureOptions()
-    {
-        $featureOptions = [];
-        foreach ($this->alertTypeFeatures as $key => $obj) {
-            $featureOptions[$obj['feature']] = __(Inflector::humanize(Inflector::underscore($obj['feature'])));
-        }
-
-        ksort($featureOptions);
-
-        return $featureOptions;
-    }
-
-    public function getMethod($feature)
-    {
-        $method = '';
-        if (!empty($feature)) {
-            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
-            $method = $alertTypeDetails[$feature]['method'];
-        }
-
-        return $method;
     }
 
     public function getThresholdType($feature)
@@ -261,18 +344,24 @@ class AlertRulesTable extends ControllerActionTable
         return $entity->enabled == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
+    //POCOR-8690[START]
+
     public function onGetThreshold(Event $event, Entity $entity)
     {
         // temporary solution
         $origEntity = $this->get($entity->id);
         if ($origEntity->has('feature') && !empty($origEntity->feature)) {
-            $event = $this->dispatchEvent('AlertRule.onGet.'.$origEntity->feature.'.Threshold', [$origEntity], $this);
-            if ($event->isStopped()) { return $event->getResult(); }
+            $event = $this->dispatchEvent('AlertRule.onGet.' . $origEntity->feature . '.Threshold', [$origEntity], $this);
+            if ($event->isStopped()) {
+                return $event->getResult();
+            }
             if (!empty($event->getResult())) {
                 return $event->getResult();
             }
         }
     }
+
+    //POCOR-8690[END]
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -291,14 +380,13 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    //POCOR-8690[START]
     public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
     {
 
-        if ($action == 'add'||$action == 'edit') {
+        if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
-        // POCOR-8286 start
-            if($entity->feature) {
+            // POCOR-8286 start
+            if ($entity->feature) {
                 $methods = $this->getMethod($entity->feature);
 
                 if (!is_array($methods)) {
@@ -320,7 +408,17 @@ class AlertRulesTable extends ControllerActionTable
 
         return $attr;
     }
-    //POCOR-8690[END]
+
+    public function getMethod($feature)
+    {
+        $method = '';
+        if (!empty($feature)) {
+            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
+            $method = $alertTypeDetails[$feature]['method'];
+        }
+
+        return $method;
+    }
 
     public function addEditOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
@@ -342,7 +440,6 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-
     public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
     {
         // POCOR-8286 start
@@ -351,7 +448,7 @@ class AlertRulesTable extends ControllerActionTable
 
     public function processAlertRoleAttributes(array $attr, string $action): array
     {
-                $entity = $attr['entity'];
+        $entity = $attr['entity'];
         $feature = $entity->get('feature') ?? $this->request->getData('AlertRules.feature');
 
         if (!in_array($action, ['add', 'edit'], true)) {
@@ -371,11 +468,13 @@ class AlertRulesTable extends ControllerActionTable
 
     private function assignToAssignee(array $attr): array
     {
-                        $attr['type'] = 'disabled';
-                        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-                        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+        $attr['type'] = 'disabled';
+        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
         return $attr;
     }
+
+    // POCOR-8286 end
 
     private function assignToGuardianOnly(array $attr): array
     {
@@ -385,15 +484,8 @@ class AlertRulesTable extends ControllerActionTable
             return $roleName === 'Guardian' || 'Student';
         });
 
-                        $attr['type'] = 'chosenSelect';
-        $attr['options'] = $filteredRoles;
-        return $attr;
-    }
-
-    private function assignToAllRoles(array $attr): array
-    {
         $attr['type'] = 'chosenSelect';
-        $attr['options'] = $this->getVisibleSecurityRoles();
+        $attr['options'] = $filteredRoles;
         return $attr;
     }
 
@@ -409,7 +501,13 @@ class AlertRulesTable extends ControllerActionTable
             ->find('order')
             ->toArray();
     }
-    // POCOR-8286 end
+
+    private function assignToAllRoles(array $attr): array
+    {
+        $attr['type'] = 'chosenSelect';
+        $attr['options'] = $this->getVisibleSecurityRoles();
+        return $attr;
+    }
 
     public function onUpdateFieldThreshold(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -421,8 +519,10 @@ class AlertRulesTable extends ControllerActionTable
         }
 
         if ($entity->has('feature') && !empty($entity->feature)) {
-            $event = $this->dispatchEvent('AlertRule.UpdateField.'.$entity->feature.'.Threshold', [$attr, $action, $request], $this);
-            if ($event->isStopped()) { return $event->getResult(); }
+            $event = $this->dispatchEvent('AlertRule.UpdateField.' . $entity->feature . '.Threshold', [$attr, $action, $request], $this);
+            if ($event->isStopped()) {
+                return $event->getResult();
+            }
             if (!empty($event->getResult())) {
                 $attr = $event->getResult();
 
@@ -456,39 +556,13 @@ class AlertRulesTable extends ControllerActionTable
             }
         }
 
-        return (!empty($role))? implode(', ', $role): ' ';
+        return (!empty($role)) ? implode(', ', $role) : ' ';
     }
 
-    public function setupFields(Event $event, Entity $entity)
-    {
-        // Rule setting section
-        $this->field('rule_setup', ['type' => 'section']);
-        $this->field('feature', ['type' => 'select', 'entity' => $entity]);
-        $this->field('enabled', ['type' => 'select']);
-        //POCOR-8690[START]
-        // $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
-        $this->field('method', [
-            'after' => 'threshold',
-            'entity' => $entity,
-        ]);
-        //POCOR-8690[END]
-        $this->field('security_roles', ['after' => 'method', 'entity' => $entity]);
-        $this->field('threshold', ['after' => 'security_roles', 'entity' => $entity]);
-
-        // Alert section
-        $this->field('alert_content', ['type' => 'section', 'after' => 'threshold']);
-        $this->field('alert_features', ['type' => 'custom_criterias', 'after' => 'message']);
-
-        if ($entity->has('feature') && !empty($entity->feature)) {
-            $event = $this->dispatchEvent('AlertRule.'.$entity->feature.'.SetupFields', [$entity], $this);
-            if ($event->isStopped()) { return $event->getResult(); }
-        }
-    }
-
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'add' || $action == 'edit') {
-            $tableHeaders =[__('Keywords'), __('Remarks')];
+            $tableHeaders = [__('Keywords'), __('Remarks')];
             $tableCells = [];
             $fieldKey = 'alert_features';
 
@@ -515,91 +589,30 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
 
-    public function getAlertRuleTypes() {
-        return $this->alertTypeFeatures;
-    }
-
-    public function addAlertRuleType($newAlertRuleType, $_config) {
+    public function addAlertRuleType($newAlertRuleType, $_config)
+    {
         $this->alertTypeFeatures[$newAlertRuleType] = $_config;
     }
 
-    public function extractThresholdValuesFromEntity(Entity $entity)
+    //POCOR-7558 start
+
+    public function getLastRunDate()
     {
-        $thresholdArray = json_decode($entity->threshold, true);
-
-        if (is_array($thresholdArray)) {
-            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($entity->feature);
-            $thresholdConfig = $alertTypeDetails[$entity->feature]['threshold'];
-            foreach ($thresholdArray as $field => $value) {
-                $entity->{$field} = $value;
-
-                if (array_key_exists($field, (array)$thresholdConfig) && isset($thresholdConfig[$field]['type'])) {
-                    $fieldType = $thresholdConfig[$field]['type'];
-                    // for threshold with type chosenSelect type
-                    if ($fieldType == 'chosenSelect') {
-                        $lookupModel = $thresholdConfig[$field]['lookupModel'];
-                        if(isset($lookupModel)){//POCOR-7462
-                        $Model = TableRegistry::get($lookupModel);
-                        if (is_array($value)) {
-                            $entity->{$field} = [];
-                            foreach ($value as $modelId) {
-                                $entity->{$field}[] = $Model->get($modelId);
-                            }
-                        }
-                        }
-                        //POCOR-7462 start
-                        if($thresholdConfig[$field]['options']=="Cases.workflow_steps"){
-                            $Model = TableRegistry::get('workflow_steps');
-                            if (is_array($value)) {
-                                $entity->{$field} = [];
-                                foreach ($value as $modelId) {
-                                    $entity->{$field}[] = $Model->get($modelId);
-                                }
-                            }
-                        }
-                        //POCOR-7462 end
-
-                        if($thresholdConfig[$field]['options']=="StudentAdmission.workflow_steps"){
-                            $Model = TableRegistry::get('Workflow.WorkflowSteps');
-                            $Workflows = TableRegistry::get('Workflow.Workflows');
-                            $WorkflowsData = $Workflows->find()
-                                    ->where(['code' => 'STUDENT-ADMISSION-1001'])
-                                    ->first();
-                            $ModelData = $Model->find()
-                                    ->where(['workflow_id' => $WorkflowsData->workflow_model_id, 'name' => 'Approved'])
-                                    ->first();
-                            $ModelDataId = $ModelData->id;
-                            if (is_array($value)) {
-                                $entity->{$field} = [];
-                                // foreach ($value as $modelId) {
-                                    $entity->{$field}[] = $Model->get($ModelDataId);
-                                // }
-                            }
-                        }
-
-                    }
-                }
-            }
-        }
-
-    }
-     //POCOR-7558 start
-    public function getLastRunDate(){
         //POCOR-8575[START]
         $connection = ConnectionManager::get('default');
         $connection->execute("DELETE FROM system_processes WHERE `status` = 3;");
         //POCOR-8575[END]
         $systemProcess = TableRegistry::get('SystemProcesses');
-        $data=$systemProcess->find()->select([
-             'name'=> $systemProcess->aliasField('name'),
-             'end_date'=> $systemProcess->aliasField('end_date'),
+        $data = $systemProcess->find()->select([
+            'name' => $systemProcess->aliasField('name'),
+            'end_date' => $systemProcess->aliasField('end_date'),
         ])->group([$systemProcess->aliasField('name')])
-          ->order([$systemProcess->aliasField('end_date') => 'DESC'])
-          ->toArray();
+            ->order([$systemProcess->aliasField('end_date') => 'DESC'])
+            ->toArray();
 
-        $result=[];
-        foreach($data as $key=>$value){
-            $result[$value['name']]= $value['end_date'];
+        $result = [];
+        foreach ($data as $key => $value) {
+            $result[$value['name']] = $value['end_date'];
         }
         return $result;
     }
@@ -654,7 +667,7 @@ class AlertRulesTable extends ControllerActionTable
             case 'staff_leave_type':
                 return __('Staff Leave Type');
             default:
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
     ////POCOR-8341 start
