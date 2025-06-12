@@ -244,22 +244,24 @@ class AlertsTable extends ControllerActionTable
     }
 
         //POCOR-8869[START]
-        public function triggerStudentAdmissionFeatureShell($shellName, $school_name, $student_name, $academic_year, $grade_name, $gaurdiand_data)
+        //POCOR-9100 small changes
+        public function triggerStudentAdmissionFeatureShell($shellName, $school_name, $student_name, $academic_year, $grade_name, $recipient_id)
         {
-            $args = '';
-            $args .= !is_null($school_name) ? ' "'.$school_name.'"' : '';
+            $args = !is_null($school_name) ? ' "' . $school_name . '"' : '';
             $args .= !is_null($student_name) ? ' "'.$student_name.'"' : '';
             $args .= !is_null($academic_year) ? ' "'.$academic_year.'"' : '';
             $args .= !is_null($grade_name) ? ' "'.$grade_name.'"' : '';
-            // Ensure $gaurdiand_data is properly formatted
-            if (!empty($gaurdiand_data)) {
-                if (is_array($gaurdiand_data)) {
-                    $args .= " '".json_encode($gaurdiand_data)."'";
+            //POCOR-9100 start
+            // Ensure $recipient_id is properly formatted
+            if (!empty($recipient_id)) {
+                if (is_array($recipient_id)) {
+                    $args .= " '".json_encode($recipient_id)."'";
                 } else {
-                    $args .= " '".$gaurdiand_data."'";
+                    $args .= " '".$recipient_id."'";
                 }
             }
-    
+            //POCOR-9100 end
+
             $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
             $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
@@ -267,7 +269,7 @@ class AlertsTable extends ControllerActionTable
             Log::write('debug', $shellCmd);
         }
         //POCOR-8869[START]
-    
+
 
    //POCOR-7558 start
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
@@ -279,10 +281,6 @@ class AlertsTable extends ControllerActionTable
                 return __('Frequency');
             case 'name':
                 return __('Name');
-            case 'last_run_date':
-                return __('Last Run');
-            case 'last_run_date':
-                return __('Last Run');
             case 'created_user_id':
                 return __('Created By');
             case 'created':
