@@ -60,7 +60,7 @@ class LicenseClassificationsTable extends ControllerActionTable
         $this->field('license_type_id');
     }
 
-    public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $parentFieldOptions = $this->getLicenseTypes();

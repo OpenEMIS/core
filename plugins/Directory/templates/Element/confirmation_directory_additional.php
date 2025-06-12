@@ -47,6 +47,25 @@
     </div>
 </div>
 <div class="row section-header header-space-lg"><?= __('Other Information') ?></div>
+<div class="input string {{emailRequired}}" ng-show="!emailSkipped">
+    <label><?= __('Email') ?></label>
+    <input ng-model="selectedUserData.email"
+           ng-change="unsetError('email')"
+           type="email">
+    <div ng-if="error.email" class="error-message">
+        <p>{{ error.email }}</p>
+    </div>
+</div>
+<div class="input string {{mobileRequired}}" ng-show="!mobileSkipped">
+    <label><?= __('Mobile Number') ?></label>
+    <input ng-model="selectedUserData.mobile_number"
+           ng-change="unsetError('mobile_number')"
+           type="tel">
+    <div ng-if="error.mobile_number" class="error-message">
+        <p>{{ error.mobile_number }}</p>
+    </div>
+
+</div>
 <div class="input select {{contactsRequired}}" ng-show="!contactSkipped">
     <label><?= __('Contact Type') ?></label>
     <div class="input-select-wrapper">
