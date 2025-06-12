@@ -1125,15 +1125,15 @@ class StudentsTable extends ControllerActionTable
             // $field_name = 'security_user_id';
             // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-            $table_name = 'Institution.InstitutionStudentAdmission';
+            $table_name = 'Institution.StudentAdmission'; // POCOR-9101 fixed class name
             $field_name = 'student_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-            $table_name = 'Institution.InstitutionStudentSurveys';
+            $table_name = 'Student.StudentSurveys'; // POCOR-9101 fixed class name
             $field_name = 'student_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-            $table_name = 'Institution.StudentStatusUpdates';
+            $table_name = 'Institution.StudentStatusUpdates'; // POCOR-9101 fixed class name
             $field_name = 'security_user_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
@@ -2393,7 +2393,9 @@ class StudentsTable extends ControllerActionTable
 
         $dataSet = [];
         foreach ($studentByGrades as $value) {
-            $dataSet[] = [__($value['grade']), $value['count']];
+            $gradeName = $value['grade'] ?? 'Deleted Grade'; // POCOR-9150
+            $gradeCount = $value['count'] ?? 0; // POCOR-9150
+            $dataSet[] = [__($gradeName), $gradeCount]; // POCOR-9150
         }
         $params['dataSet'] = $dataSet;
         unset($InstitutionRecords);
