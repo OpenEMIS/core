@@ -151,42 +151,8 @@ class AlertShell extends Shell
         return $emailList;
     }
 
-    /*
-     * POCOR-9100 refactured
-     */
-    public function getStudentAdmissionEmailList($recipient_id, $institutionId = null)
-    {
-        $contactList = [
-            'email' => [],
-            'phone' => []
-        ];
-
-
-        // here only one reciever
-        $recipient = $this->Users
-            ->find('all')
-            ->where(['id' => $recipient_id])
-            ->first();
-
-        if (empty($recipient)) {
-            return $contactList;
-        }
-        if (!empty($recipient->email)) {
-            $receiver = $recipient->name . ' <' . $recipient->email . '>';
-            if (!in_array($recipient, $contactList['email'])) {
-                $contactList[] = $receiver;
-            }
-        }
-        if (!empty($recipient->phone)) {
-            if (!in_array($recipient, $contactList['phone'])) {
-                $contactList['phone'] = $recipient->phone;
-            }
-        }
-        return $contactList;
-    }
-
     //POCOR-8341[START]
-    public function getRoleAssociatedEmailList($securityRoleRecords)
+    public function getRoleAssociatedContactList($securityRoleRecords)
     {
 
         $contactList = [

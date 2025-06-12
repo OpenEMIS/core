@@ -1,20 +1,16 @@
 <?php
 namespace App\Shell;
 
-use Cake\I18n\Date;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenDate;
+use Cake\I18n\FrozenTime;
 use Cake\Console\Shell;
 use Cake\Filesystem\Folder;
-use Cake\Filesystem\File;
-
-use App\Shell\AlertShell;
 
 class AlertStaffLeaveShell extends AlertShell
 {
     public function initialize(): void
     {
         parent::initialize();
-
         $this->loadModel('Institution.StaffLeave');
     }
 
@@ -24,41 +20,51 @@ class AlertStaffLeaveShell extends AlertShell
         $processName = $this->processName;
         $feature = $this->featureName;
 
-        $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => Time::now()], ['process_name' => $processName]);
+        $this->Alerts->updateAll([
+            'process_id' => getmypid(),
+            'modified' => FrozenTime::now()
+        ], ['process_name' => $processName]);
 
-        $dir = new Folder(ROOT . DS . 'tmp'); // path to tmp folder
+        $dir = new Folder(ROOT . DS . 'tmp');
 
         do {
             $rules = $this->getAlertRules($feature);
 
             foreach ($rules as $rule) {
-                $threshold = $rule->threshold;
-                $thresholdArray = json_decode($threshold, true);
+                $thresholdArray = json_decode($rule->threshold, true);
+                $data = $this->getAlertData($rule->threshold, $model);
 
-                $data = $this->getAlertData($threshold, $model);
-
-                foreach ($data as $key => $vars) {
+                foreach ($data as $vars) {
                     $vars['threshold'] = $thresholdArray;
-                    $institutionId = $vars['institution']['id'];
+                    $institutionId = $vars['institution']['id'] ?? null;
 
-                    // add the employment period to $vars.
-                    $dateTo = $vars['date_to'];
-                    $diff = date_diff(new Date(), $dateTo);
-                    $diffDays = $diff->days;
+                    $dateTo = $vars['date_to'] ?? null;
+                    if ($dateTo instanceof \DateTimeInterface) {
+                        $diff = $dateTo->diff(FrozenDate::now());
+                        $vars['day_difference'] = $diff->days;
+                    } else {
+                        $vars['day_difference'] = null;
+                    }
 
-                    $vars['day_difference'] = $diffDays;
-                    // end of adding age to $vars
-
-                    if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
+                    if (!empty($rule['security_roles']) && !empty($institutionId)) {
                         $this->insertAlertLogs($rule, $institutionId, $feature, $vars);
                     }
                 }
             }
-            sleep(10);
 
-            $filesArray = $dir->find($processName . '.stop');
+            sleep(10); // Still hardcoded, optional to extract
+
+            $filesArray = $dir->find($processName . '\.stop'); // escape dot for regex
         } while (empty($filesArray));
 
-        $this->Alerts->updateAll(['process_id' => NULL, 'modified' => Time::now()], ['process_name' => $processName]);
+        $this->Alerts->updateAll([
+            'process_id' => null,
+            'modified' => FrozenTime::now()
+        ], ['process_name' => $processName]);
+    }
+
+    public function logAlert($method, $feature, $recipient, $subject, $message): void
+    {
+        $this->AlertLogs->insertAlertLog($method, $feature, $recipient, $subject, $message);
     }
 }
