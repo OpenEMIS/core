@@ -92,7 +92,10 @@ class StudentAttendanceSummaryTable extends AppTable
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
 
-        if ($institutionId <= 0 && !empty($institutionTypeId) && $institutionTypeId != 0 && $institutionTypeId != -1) { //POCOR-7879
+        if ($institutionId <= 0
+            && !empty($institutionTypeId)
+            && $institutionTypeId != 0
+            && $institutionTypeId != -1) { //POCOR-7879
             $conditions[$this->aliasField('institution_id IN')] = $institutionIds;
         }
 
@@ -165,7 +168,7 @@ class StudentAttendanceSummaryTable extends AppTable
                     // POCOR-8902 start
                     if ($row->date instanceof \Cake\I18n\FrozenDate) {
                         $row->date = $row->date->format('Y-m-d'); // Change format as needed
-                    } 
+                    }
                     // POCOR-8902 end
 
                     if ($row->total_female_students == 0) {
@@ -204,7 +207,7 @@ class StudentAttendanceSummaryTable extends AppTable
                     if ($row->total_students_late == 0) {
                         $row->total_students_late = '-';
                     }
-                    return $row; 
+                    return $row;
                 });
             });
 
@@ -322,7 +325,7 @@ class StudentAttendanceSummaryTable extends AppTable
             'type' => 'string',
             'label' => __('Total No. Students Late')
         ];
-        
+
         $fields->exchangeArray($extraField);
     }
 
@@ -354,8 +357,8 @@ class StudentAttendanceSummaryTable extends AppTable
         $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
         $institutionGradeResults = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId, true);
         $gradeOptions = [];
-        
-        if ($educationGradeId != -1) {
+
+        if ($educationGradeId > 0) {
             if(in_array($educationGradeId, $institutionGradeResults)){
                 $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
             }else{
@@ -386,7 +389,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $sheets = [];
         foreach ($gradeOptions as $gradeId => $gradeName) {
             $where = [];
-            if ($institutionId != 0) {
+            if ($institutionId > 0) {
                 $where[$this->aliasField('institution_id')] = $institutionId;
             }
             $query = $this
@@ -411,7 +414,7 @@ class StudentAttendanceSummaryTable extends AppTable
                 'orientation' => 'landscape'
             ];
         }
-        
+
         return $sheets;
     }
 }
