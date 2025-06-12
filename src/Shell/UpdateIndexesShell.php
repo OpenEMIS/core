@@ -10,6 +10,7 @@ use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
 use Cake\I18n\FrozenDate;
 
+// This file for generate risk for single institution
 class UpdateIndexesShell extends Shell
 {
     public function initialize(): void
@@ -43,7 +44,7 @@ class UpdateIndexesShell extends Shell
                 $this->autoUpdateRisks($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId);
             }
         }
-        
+        $this->out($institutionId);
         // update the generated_by and generated_on in indexes table
         $this->InstitutionRisks->updateAll(
             [
