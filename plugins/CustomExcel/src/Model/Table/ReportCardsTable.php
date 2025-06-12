@@ -313,6 +313,7 @@ class ReportCardsTable extends AppTable
             $institution_id = $params['institution_id'];
             $education_grade_id = $params['education_grade_id'];
             $academic_period_id = $params['academic_period_id'];
+            $report_card_id = $params['report_card_id'] ?? null; //POCOR-9196
 
             if (!empty($student_id) && !empty($institution_id) &&
                 !empty($education_grade_id) && !empty($academic_period_id)) {
@@ -334,17 +335,60 @@ class ReportCardsTable extends AppTable
             $dateFormat = $ConfigItems->value('date_format');
 
             //POCOR-8967 -- START
-            $entityGPA = $StudentsGpa->find()
-                ->select(['gpa' =>$StudentsGpa->aliasField('gpa')])
+            // $entityGPA = $StudentsGpa->find()
+            //     ->select(['gpa' =>$StudentsGpa->aliasField('gpa')])
+            //     ->where([
+            //         $StudentsGpa->aliasField('student_id') => $params['student_id'],
+            //         $StudentsGpa->aliasField('education_grade_id') => $params['education_grade_id'],
+            //         $StudentsGpa->aliasField('academic_period_id') => $params['academic_period_id'],
+            //         $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
+            //         $StudentsGpa->aliasField('education_grades_gpa_id') . ' IS NOT' => null //POCOR-9057
+            //     ])
+            //     ->first();
+            //POCOR-8967 -- END
+
+            //POCOR-9196 -- START
+            $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
+            $EducationGradesGpa = self::getDynamicTableInstance('Gpa.EducationGradesGpa');
+            $ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards');
+
+            $reportCard = $ReportCards->find()
+                ->select(['start_date', 'end_date'])
                 ->where([
-                    $StudentsGpa->aliasField('student_id') => $params['student_id'],
-                    $StudentsGpa->aliasField('education_grade_id') => $params['education_grade_id'],
-                    $StudentsGpa->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $StudentsGpa->aliasField('institution_id') => $params['institution_id'],
-                    $StudentsGpa->aliasField('education_grades_gpa_id') . ' IS NOT' => null //POCOR-9057
+                    'id' => $report_card_id
                 ])
                 ->first();
-            //POCOR-8967 -- END
+
+            if ($reportCard) {
+                $startDate = $reportCard->start_date->format('Y-m-d');
+                $endDate = $reportCard->end_date->format('Y-m-d');
+
+                $entityGPA = $StudentsGpa->find()
+                    ->select([
+                        'gpa' => $StudentsGpa->aliasField('gpa')
+                    ])
+                    ->join([
+                        'table' => 'education_grades_gpa',
+                        'alias' => 'EducationGradesGpa',
+                        'type' => 'INNER',
+                        'conditions' => [
+                            $StudentsGpa->aliasField('education_grades_gpa_id') . ' = EducationGradesGpa.id',
+                            'EducationGradesGpa.start_date >=' => $startDate,
+                            'EducationGradesGpa.end_date <=' => $endDate,
+                            'EducationGradesGpa.academic_period_id' => $academic_period_id,
+                            'EducationGradesGpa.education_grade_id' => $education_grade_id,
+                        ]
+                    ])
+                    ->where([
+                        $StudentsGpa->aliasField('student_id') => $student_id,
+                        $StudentsGpa->aliasField('education_grade_id') => $education_grade_id,
+                        $StudentsGpa->aliasField('academic_period_id') => $academic_period_id,
+                        $StudentsGpa->aliasField('institution_id') => $institution_id,
+                    ])
+                    ->first();
+            }
+            //POCOR-9196 -- END
+
             $entity = $StudentsReportCards
                 ->find()
                 ->select([
@@ -2666,7 +2710,7 @@ class ReportCardsTable extends AppTable
      * @param array $params Parameters passed to the event.
      * @param ArrayObject $extra Additional data passed to the event.
      */
-    public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpa(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpaOld(Event $event, array $params, ArrayObject $extra)
     {
         $student_id = $params['student_id'];
         $institution_id = $params['institution_id'];
@@ -2690,6 +2734,63 @@ class ReportCardsTable extends AppTable
                 ])
                 ->first();
         }
+        return $entity;
+    }
+
+    public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpa(Event $event, array $params, ArrayObject $extra)
+    { 
+        $student_id = $params['student_id'];
+        $institution_id = $params['institution_id'];
+        $education_grade_id = $params['education_grade_id'];
+        $academic_period_id = $params['academic_period_id'];
+        $report_card_id = $params['report_card_id'] ?? null; //POCOR-9196
+        $entity = null;
+
+        //POCOR-9196 -- changes made for GPA display in report card
+        if (!empty($student_id) && !empty($institution_id) &&
+            !empty($education_grade_id) && !empty($academic_period_id)) {
+
+            $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
+            $EducationGradesGpa = self::getDynamicTableInstance('Gpa.EducationGradesGpa');
+            $ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards');
+
+            $reportCard = $ReportCards->find()
+                ->select(['start_date', 'end_date'])
+                ->where([
+                    'id' => $report_card_id
+                ])
+                ->first();
+
+            if ($reportCard) {
+                $startDate = $reportCard->start_date->format('Y-m-d');
+                $endDate = $reportCard->end_date->format('Y-m-d');
+
+                $entity = $StudentsGpa->find()
+                    ->select([
+                        'gpa' => $StudentsGpa->aliasField('gpa')
+                    ])
+                    ->join([
+                        'table' => 'education_grades_gpa',
+                        'alias' => 'EducationGradesGpa',
+                        'type' => 'INNER',
+                        'conditions' => [
+                            $StudentsGpa->aliasField('education_grades_gpa_id') . ' = EducationGradesGpa.id',
+                            'EducationGradesGpa.start_date >=' => $startDate,
+                            'EducationGradesGpa.end_date <=' => $endDate,
+                            'EducationGradesGpa.academic_period_id' => $academic_period_id,
+                            'EducationGradesGpa.education_grade_id' => $education_grade_id,
+                        ]
+                    ])
+                    ->where([
+                        $StudentsGpa->aliasField('student_id') => $student_id,
+                        $StudentsGpa->aliasField('education_grade_id') => $education_grade_id,
+                        $StudentsGpa->aliasField('academic_period_id') => $academic_period_id,
+                        $StudentsGpa->aliasField('institution_id') => $institution_id,
+                    ])
+                    ->first();
+            }
+        }
+
         return $entity;
     }
 
