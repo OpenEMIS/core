@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use App\Model\Traits\OptionsTrait;
+use Cake\Routing\Router; // POCOR-9166
 
 class StaffSalariesTable extends ControllerActionTable
 {
@@ -2313,6 +2314,8 @@ class StaffSalariesTable extends ControllerActionTable
             ->formatResults(function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
                 return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
                     $staffId = $row->staff_id;
+                    $institution_id = $row->institution_id; // POCOR-9166
+
                     $staffRecords = [];
                     $staffLeaveRecords = [];
 
@@ -2368,13 +2371,20 @@ class StaffSalariesTable extends ControllerActionTable
                         if ($dayId != -1) {
                             $row->date = $dateStr;
                         }
+                        // POCOR-9166 start
+                        $queryString = $this->getQueryString();
+                        $queryString['user_id'] = $staffId;
+                        $queryString['institution_id'] = $institution_id;
+                        $encodedQueryString = $this->paramsEncode($queryString);
                         $historyUrl = Router::url([
                             'plugin' => 'Staff',
                             'controller' => 'Staff',
                             'action' => 'InstitutionStaffAttendanceActivities',
-                            'index',
-                            'user_id' => $staffId
+                            '0' => 'index',
+                            '1' => $encodedQueryString
+                            // 'user_id' => $staffId
                         ]);
+                        // POCOR-9166 end
                         $row->historyUrl = $historyUrl;
                     }
                     // gets all the staff leave
