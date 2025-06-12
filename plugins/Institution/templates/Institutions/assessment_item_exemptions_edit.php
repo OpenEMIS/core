@@ -40,6 +40,7 @@ $this->start('panelBody');
           $ctrl.education_grade_id = <?= $education_grade_id ?>;
           $ctrl.assessment_items =  <?= json_encode($assessment_items) ?>;
           $ctrl.assessment_periods =  <?= json_encode($assessment_periods) ?>;
+          $ctrl.backUrl =  "<?= \Cake\Routing\Router::url($backUrl) ?>";
       '>
     <div class="alert {{$ctrl.messageClass}}" ng-if="$ctrl.message">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{$ctrl.message}}
@@ -106,7 +107,7 @@ $this->start('panelBody');
             class="chosen-select"
                     ng-options="option.id as option.name for option in $ctrl.assessment_periods"
                     ng-model="$ctrl.assessment_period_id"
-                    ng-change="$ctrl.onSubjectChange();$ctrl.checkAndLoadStudents();"
+                    ng-change="$ctrl.onSubjectChange();$ctrl.checkAndLoadStudents();$ctrl.onPeriodChange();"
             >
                 <option value=""><?= __('-- Select --') ?></option>
             </select>
@@ -123,6 +124,7 @@ $this->start('panelBody');
                     ng-options="option.id as option.name for option in $ctrl.excempttype"
                     ng-model="$ctrl.excempttype_id"
                     ng-change="$ctrl.onExcemptTypeChange();$ctrl.checkAndLoadStudents();"
+                    ng-disabled="!$ctrl.actionEnabled"
             >
                 <option value=""><?= __('-- Select --') ?></option>
             </select>
@@ -142,7 +144,10 @@ $this->start('panelBody');
 
         <div class="form-buttons">
             <div class="button-label"></div>
-            <button class="btn btn-default btn-save" type="button" ng-click="$ctrl.postForm();">
+            <button class="btn btn-default btn-save"
+                    type="button"
+                    ng-click="$ctrl.postForm()"
+                    ng-disabled="!$ctrl.saveEnabled">
                 <i class="fa fa-check"></i> <?= __('Save') ?>
             </button>
             <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $backUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
