@@ -643,42 +643,57 @@ class RisksTable extends ControllerActionTable
         // update indexes pid and status
         $pid = getmypid();
         $connection = ConnectionManager::get('default');
-        $statement = $connection->prepare("SELECT `institutions`.id as institution_id,`institution_risks`.* FROM `institutions` inner join `institution_risks` on
-           `institutions`.id=`institution_risks`.institution_id where `institution_risks`.risk_id=".$riskId." ");
+       /* $statement = $connection->prepare("SELECT `institutions`.id as institution_id,`institution_risks`.* FROM `institutions` inner join `institution_risks` on
+           `institutions`.id=`institution_risks`.institution_id where `institution_risks`.risk_id=".$riskId." ");*/
+           $statement = $connection->prepare("
+                SELECT 
+                    institutions.id AS institution_id, 
+                    institution_risks.id AS risk_record_id,
+                    institution_risks.status,
+                    institution_risks.pid,
+                    institution_risks.generated_on,
+                    institution_risks.generated_by,
+                    institution_risks.risk_id
+                FROM institutions
+                LEFT JOIN institution_risks 
+                    ON institutions.id = institution_risks.institution_id 
+                    AND institution_risks.risk_id = ".$riskId."
+            ");
+            
         $statement->execute();
         $result = $statement->fetchAll('obj');
         $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
         foreach($result AS $record){
+            $institutionId = $record->institution_id;
+            
+            // if processing id not null (process still running or process stuck)
+            if (!empty($record->pid)) {
+                exec("kill -9 " . $record->pid);
+            }
 
-        // if processing id not null (process still running or process stuck)
-        if (!empty($record->pid)) {
-            exec("kill -9 " . $record->pid);
+            if (!empty($record) && !empty($record->risk_id)) {
+           // update the status to processing
+                $this->InstitutionRisks->updateAll([
+                    'pid' => $pid,
+                    'status' => 2 // processing
+                ],
+                ['id IS' => $record->id]);
+            } else {
+
+                $entity = $this->InstitutionRisks->newEntity([
+                    'status' => 2, // processing
+                    'pid' => $pid,
+                    'generated_on' => NULL,
+                    'generated_by' => NULL,
+                    'risk_id' => $riskId,
+                    'institution_id' => $institutionId,
+                ]);
+                $this->InstitutionRisks->save($entity);
+            }
+
+            // trigger shell
+            $Risks->triggerUpdateRisksShell('UpdateRisks', $institutionId, $userId, $riskId, $academicPeriodId);
         }
-
-        if (!empty($record)) {
-       // update the status to processing
-            $this->InstitutionRisks->updateAll([
-                'pid' => $pid,
-                'status' => 2 // processing
-            ],
-            ['id' => $record->id]);
-        } else {
-            $entity = $this->InstitutionRisks->newEntity([
-                'status' => 2, // processing
-                'pid' => $pid,
-                'generated_on' => NULL,
-                'generated_by' => NULL,
-                'risk_id' => $riskId,
-                'institution_id' => $institutionId,
-            ]);
-            $this->InstitutionRisks->save($entity);
-        }
-
-        // trigger shell
-        $Risks->triggerUpdateRisksShell('UpdateRisks', $institutionId, $userId, $riskId, $academicPeriodId);
-
-
-    }
         $this->Alert->info(__('Risk.generate'));
 
         // redirect to index page

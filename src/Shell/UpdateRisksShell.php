@@ -1,8 +1,8 @@
 <?php
 namespace App\Shell;
 
-use Cake\I18n\Date;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Console\Shell;
@@ -30,7 +30,7 @@ class UpdateRisksShell extends Shell
         $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
 
         $riskCriteriaData = $this->RiskCriterias->getCriteriaKey($riskId);
-
+   $this->out($institutionId);
         if (!empty($riskCriteriaData)) {
             foreach ($riskCriteriaData as $key => $obj) {
                 $criteriaData = $this->Risks->getCriteriasDetails($key);
@@ -46,7 +46,7 @@ class UpdateRisksShell extends Shell
         $this->InstitutionRisks->updateAll(
             [
                 'generated_by' => $userId,
-                'generated_on' => new Time(),
+                'generated_on' => new FrozenTime(),
                 'pid' => null,
                 'status' => 3 // completed
             ],
@@ -56,7 +56,8 @@ class UpdateRisksShell extends Shell
 
     public function autoUpdateRisks($key, $model, $institutionId, $userId, $academicPeriodId)
     {
-        $today = Time::now();
+
+        $today = FrozenTime::now();
         $CriteriaModel = TableRegistry::get($model);
 
         // get the list of enrolled student in the institution in academic period
