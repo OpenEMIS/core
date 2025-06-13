@@ -56,10 +56,12 @@ class NoticesTable extends ControllerActionTable
         $this->field('status', ['visible' => false,]);
         $this->field('notice_status', ['visible' => true,]);
         $this->setFieldOrder(['subject', 'notice_status', 'created_user_id','created']);
-       $isSuperAdmin = $this->Auth->user('super_admin'); // true/false
+       /*$isSuperAdmin = $this->Auth->user('super_admin'); // true/false
         if($isSuperAdmin){
             $noticeOption = [
                 -1 => 'All',
+                 1 => 'Read',
+                 0 => 'Unread'
             ];
         }else{
            $noticeOption = [
@@ -67,7 +69,12 @@ class NoticesTable extends ControllerActionTable
                  1 => 'Read',
                  0 => 'Unread'
             ];
-        }
+        }*/
+        $noticeOption = [
+                -1 => 'All',
+                 1 => 'Read',
+                 0 => 'Unread'
+        ];
         $noticeStatus = $this->request->getQuery('notice_status') ?? -1;
         $extra['noticeStatusRead'] = $noticeStatusRead;
         $extra['elements']['control'] = [
@@ -108,16 +115,15 @@ class NoticesTable extends ControllerActionTable
                 $this->aliasField('id IN') => $assignedNoticeIds,
                 $this->aliasField('status') => 1
             ]);
+            // Join with user-specific read info
+            $query->leftJoin(
+                ['SecurityUserNotices' => 'security_user_notices'],
+                [
+                    'SecurityUserNotices.notice_id = Notices.id',
+                    'SecurityUserNotices.security_user_id' => $userId
+                ]
+            );
         }
-
-        // Join with user-specific read info
-        $query->leftJoin(
-            ['SecurityUserNotices' => 'security_user_notices'],
-            [
-                'SecurityUserNotices.notice_id = Notices.id',
-                'SecurityUserNotices.security_user_id' => $userId
-            ]
-        );
 
         // Apply read/unread filter ONLY if user is not superadmin
         if (!$isSuperAdmin) {
@@ -126,11 +132,10 @@ class NoticesTable extends ControllerActionTable
             } elseif ($readStatus === '0') {
                 $query->where(['SecurityUserNotices.id IS' => null]); // Unread
             }
+        }else{
+            $query->where([$this->aliasField('status') => 1]); 
         }
     }
-
-
-
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
