@@ -12,7 +12,7 @@ class EmptyCommand extends Command
 
     public function execute(Arguments $args, ConsoleIo $io): int
     {
-        $io->out('<info>Sending alert command is working!</info>');
+        $io->out('<info>Empty command is working!</info>');
         return static::CODE_SUCCESS;
     }
 }
