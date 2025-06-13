@@ -68,6 +68,7 @@ function AssessmentItemExemptionsController(
     ctrl.excempttype_id = 0;//POCOR-9042 ends
     ctrl.savedUk = false; //POCOR-9197 start
     ctrl.backUrl = "";
+    ctrl.alertUrl = "";
     ctrl.actionEnabled = false;
     ctrl.saveEnabled = false;
     ctrl.savedOk = false; //POCOR-9197 end
@@ -412,7 +413,17 @@ function AssessmentItemExemptionsController(
                 .finally(function(){
                     UtilsSvc.isAppendLoader(false);
                     if (ctrl.savedOk) { //POCOR-9197 start
-                        $window.location.href = ctrl.backUrl;
+                        ctrl.alertUrl = ctrl.updateQueryStringParameter(ctrl.alertUrl, 'alertType', 'success');
+                        ctrl.alertUrl = ctrl.updateQueryStringParameter(ctrl.alertUrl, 'message', 'general.edit.success');
+                        var queryString1 = localStorage.getItem('queryString1');
+                        var queryString2 = localStorage.getItem('queryString2');
+                        $http.get(ctrl.alertUrl)
+                            .then(function(response) {
+                                //$window.location.href = Controller.redirectUrl;
+                                console.log(ctrl.alertUrl);
+                                $window.location.href = ctrl.backUrl;
+                            });
+
                     } //POCOR-9197 end
                 });
 

@@ -28,6 +28,7 @@ $this->start('toolbar');
 <?php
 $this->end();
 $this->start('panelBody');
+
 ?>
 <form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate"
       ng-controller="AssessmentItemExemptionsCtrl as $ctrl"
@@ -41,6 +42,7 @@ $this->start('panelBody');
           $ctrl.assessment_items =  <?= json_encode($assessment_items) ?>;
           $ctrl.assessment_periods =  <?= json_encode($assessment_periods) ?>;
           $ctrl.backUrl =  "<?= \Cake\Routing\Router::url($backUrl) ?>";
+          $ctrl.alertUrl =  "<?= \Cake\Routing\Router::url($alertUrl) ?>";
       '>
     <div class="alert {{$ctrl.messageClass}}" ng-if="$ctrl.message">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{$ctrl.message}}
