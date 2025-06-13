@@ -34,7 +34,6 @@ class SendingAlertCommand extends Command
 
         $alertLogsList = $this->AlertLogs->find()
             ->where([
-                'status' => 0,
                 'feature' => $feature,
                 'id' => $alertLogId
             ])
@@ -43,18 +42,33 @@ class SendingAlertCommand extends Command
         foreach ($alertLogsList as $log) {
             $methods = array_map('trim', explode(',', $log->method));
 
-            if (in_array('Email', $methods)) {
-                $this->sendEmail($log, $io);
+            if ($log->status === 0) {
+                // Process only if status is pending
+                if (in_array('Email', $methods)) {
+                    $this->sendEmail($log, $io);
+                }
+
+                if (in_array('SMS', $methods)) {
+                    $this->sendSms($log, $io);
+                }
+
+                // Mark as processed
+                $this->AlertLogs->updateAll(
+                    ['status' => 1, 'processed_date' => $today],
+                    ['id' => $log->id]
+                );
+
+                $io->out("✅ AlertLog ID {$log->id} sent successfully.");
+            } else {
+                // Already sent
+                $io->out("ℹ️ AlertLog ID {$log->id} was already sent. Skipping.");
             }
 
-            if (in_array('SMS', $methods)) {
-                $this->sendSms($log, $io);
-            }
 
-            $this->AlertLogs->updateAll(
-                ['status' => 1, 'processed_date' => $today],
-                ['id' => $log->id]
-            );
+
+        }
+        if ($alertLogsList->isEmpty()) {
+            $io->out("ℹ️ No AlertLog found for feature: '{$feature}' and ID: {$alertLogId}. Skipping.");
         }
 
         return static::CODE_SUCCESS;
