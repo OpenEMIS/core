@@ -1,3 +1,7 @@
+### [4.28.1] - 2025-06-13
+- Bug Fixed: Institutions > Performance > Report Cards > Download PDF: Principal placeholder is displaying teacher's name instead of principal
+- Bug Fixed: Institutions > Performance > Report Cards: Report doesn't display the correct GPA.
+
 ### [4.28.0] - 2025-06-12
 - Implemented: Develop changes to contacts for the Add Student / Staff function
 - Implemented: Develop placeholders for staff profile
