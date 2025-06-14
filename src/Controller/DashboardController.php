@@ -38,20 +38,21 @@ class DashboardController extends AppController
 
         $key = 'alerts_triggered'; // no need for date if we want 8-hour rolling window
 
-        if (!Cache::read($key)) {
+//        if (!Cache::read($key)) {
+            $this->maybeCallAlerts();
             $this->callAlerts();
 
             // Save the key with 8-hour expiration
-            Cache::write($key, true, 'default');
-
-            // Optional: set custom duration if needed
-            Cache::setConfig('default', [
-                'className' => 'File', // or Redis, Apcu, etc.
-                'duration' => '+8 hours',
-                'path' => CACHE,
-                'prefix' => 'my_app_',
-            ]);
-        }
+//            Cache::write($key, true, 'default');
+//
+//            // Optional: set custom duration if needed
+//            Cache::setConfig('default', [
+//                'className' => 'File', // or Redis, Apcu, etc.
+//                'duration' => '+8 hours',
+//                'path' => CACHE,
+//                'prefix' => 'my_app_',
+//            ]);
+//        }
         $this->sendSystemUpdateAlerts(); //POCOR-7559
         $this->sendRetirementWarningAlerts(); //POCOR-8341
     }
@@ -660,6 +661,18 @@ class DashboardController extends AppController
 //            }
 //        }
 //    }
+
+    public function maybeCallAlerts()
+    {
+        $userId = $this->Auth->user('id');
+        $superAdmin = $this->Auth->user('super_admin');
+
+        if ($superAdmin || $this->userCanTriggerAlerts($userId)) {
+            $this->callAlerts();
+        } else {
+            Log::debug("User $userId not authorized to run alerts.");
+        }
+    }
     //POCOR-7558 end
     private function callAlerts()
     {
