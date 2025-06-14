@@ -14,6 +14,8 @@ use Cake\Controller\Controller;
 use Cake\Event\EventInterface;
 use Cake\Http\Client;
 use Cake\Http\Response;
+use Cake\I18n\FrozenTime;
+use Cake\Cache\Cache;
 
 class DashboardController extends AppController
 {
@@ -33,7 +35,23 @@ class DashboardController extends AppController
 
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
-        //$this->callAlerts(); //POCOR-7558
+
+        $key = 'alerts_triggered'; // no need for date if we want 8-hour rolling window
+
+        if (!Cache::read($key)) {
+            $this->callAlerts();
+
+            // Save the key with 8-hour expiration
+            Cache::write($key, true, 'default');
+
+            // Optional: set custom duration if needed
+            Cache::setConfig('default', [
+                'className' => 'File', // or Redis, Apcu, etc.
+                'duration' => '+8 hours',
+                'path' => CACHE,
+                'prefix' => 'my_app_',
+            ]);
+        }
         $this->sendSystemUpdateAlerts(); //POCOR-7559
         $this->sendRetirementWarningAlerts(); //POCOR-8341
     }
@@ -577,72 +595,158 @@ class DashboardController extends AppController
 
 
     //POCOR-7558 start
+//    private function callAlerts()
+//    {
+//        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+//        $AlertsData = $AlertsTable->find('all')
+//            ->where(['frequency !=' => 'Never']) // POCOR-8533-C3
+//            ->toArray();
+////        Log::debug(print_r($AlertsData, true));
+//        $lastRunDates = TableRegistry::getTableLocator()->get('Alert.AlertRules')->getLastRunDate();
+//        $mainAlerts = [];
+//        foreach ($AlertsData as $key => $value) {
+//            $currentDate = FrozenTime::now()->format('Y-m-d');
+//            $otherDate = null;
+//            if(!empty($lastRunDates[$value['name']])) {
+//                   $otherDate = $lastRunDates[$value['name']];
+//            }
+//            $finalDate = null;
+//            if (!empty($otherDate)) {
+//                if($value['frequency'] == "Weekly") {
+//                     $finalDate = $otherDate->modify('+1 week')->format('Y-m-d');
+//                }else if ($value['frequency'] == "Weekly") {
+//                     $finalDate = $otherDate->modify('+1 month')->format('Y-m-d');
+//                }else if ($value['frequency'] == "Monthly") {
+//                     $finalDate = $otherDate->modify('+1 year')->format('Y-m-d');
+//                }else {
+//                     $finalDate = $otherDate->format('Y-m-d');
+//                }
+//            }
+//            if ($currentDate > $finalDate || empty($otherDate)) {
+//                $AlertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
+//                $AlertRules = $AlertRulesTable->find()->
+//                    where([
+//                        $AlertRulesTable->aliasField('feature') => $value['name'],
+//                        $AlertRulesTable->aliasField('enabled') => 1
+//                    ])->toArray();
+//                if (!empty($AlertRules)) {
+//                    foreach ($AlertRules as $data) {
+//                        $mainAlerts[$value['process_name']] = $data;
+//                    }
+//                }
+//            }}
+//
+//        foreach ($mainAlerts as $key => $value) {
+//            $user = $this->Auth->user();
+//            $systemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+//            $systemProcessEntity = $systemProcesses->newEntity([
+//                'name' => $value['feature'],
+//                'status' => 1,
+//                'start_date' => Time::now(),
+//                'model' => $key,
+//                'end_date' => null,
+//                'created_user_id' => $user['id']
+//
+//            ]);
+//            $saveData = $systemProcesses->save($systemProcessEntity);
+//            $AlertsTable->triggerAlertFeatureShell($key);
+//            if (!empty($saveData)) {
+//                $systemProcesses->updateAll([
+//                    'status' => 3,
+//                    'end_date' => Time::now(),
+//                    'modified' => Time::now(),
+//                    'modified_user_id' => $user['id']
+//                ], ['name' => $value['feature']]);
+//            }
+//        }
+//    }
+    //POCOR-7558 end
     private function callAlerts()
     {
-        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-        $AlertsData = $AlertsTable->find('all')
-            ->where(['frequency !=' => 'Never']) // POCOR-8533-C3
-            ->toArray();
-//        Log::debug(print_r($AlertsData, true));
-        $lastRunDates = TableRegistry::getTableLocator()->get('Alert.AlertRules')->getLastRunDate();
+        $alertsTable = TableRegistry::get('Alert.Alerts');
+        $alertRulesTable = TableRegistry::get('Alert.AlertRules');
+        $systemProcessesTable = TableRegistry::get('SystemProcesses');
+
+        $alerts = $alertsTable->find()
+            ->where(['frequency !=' => 'Never']);
+
+        $lastRunDates = $alertRulesTable->getLastRunDate();
         $mainAlerts = [];
-        foreach ($AlertsData as $key => $value) {
-            $currentDate = Time::now()->format('Y-m-d');
-            $otherDate = null;
-            if(!empty($lastRunDates[$value['name']])) {
-                   $otherDate = $lastRunDates[$value['name']];
-            }
-            $finalDate = null;
-            if (!empty($otherDate)) {
-                if($value['frequency'] == "Weekly") {
-                     $finalDate = $otherDate->modify('+1 week')->format('Y-m-d');
-                }else if ($value['frequency'] == "Weekly") {
-                     $finalDate = $otherDate->modify('+1 month')->format('Y-m-d');
-                }else if ($value['frequency'] == "Monthly") {
-                     $finalDate = $otherDate->modify('+1 year')->format('Y-m-d');
-                }else {
-                     $finalDate = $otherDate->format('Y-m-d');
-                }
-            }
-            if ($currentDate > $finalDate || empty($otherDate)) {
-                $AlertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
-                $AlertRules = $AlertRulesTable->find()->
-                    where([
-                        $AlertRulesTable->aliasField('feature') => $value['name'],
-                        $AlertRulesTable->aliasField('enabled') => 1
-                    ])->toArray();
-                if (!empty($AlertRules)) {
-                    foreach ($AlertRules as $data) {
-                        $mainAlerts[$value['process_name']] = $data;
-                    }
-                }
-            }}
 
-        foreach ($mainAlerts as $key => $value) {
-            $user = $this->Auth->user();
-            $systemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
-            $systemProcessEntity = $systemProcesses->newEntity([
-                'name' => $value['feature'],
-                'status' => 1,
-                'start_date' => Time::now(),
-                'model' => $key,
-                'end_date' => null,
-                'created_user_id' => $user['id']
+        foreach ($alerts as $alert) {
+            if ($this->shouldTriggerAlert($alert, $lastRunDates)) {
+                $activeRules = $alertRulesTable->find()
+                    ->where([
+                        $alertRulesTable->aliasField('feature') => $alert['name'],
+                        $alertRulesTable->aliasField('enabled') => 1
+                    ])
+                    ->toArray();
 
-            ]);
-            $saveData = $systemProcesses->save($systemProcessEntity);
-            $AlertsTable->triggerAlertFeatureShell($key);
-            if (!empty($saveData)) {
-                $systemProcesses->updateAll([
-                    'status' => 3,
-                    'end_date' => Time::now(),
-                    'modified' => Time::now(),
-                    'modified_user_id' => $user['id']
-                ], ['name' => $value['feature']]);
+                foreach ($activeRules as $rule) {
+                    $mainAlerts[$alert['process_name']] = $rule; // optionally collect multiple rules
+                }
             }
         }
+
+        foreach ($mainAlerts as $processName => $rule) {
+            $this->triggerSystemProcess($systemProcessesTable, $alertsTable, $rule, $processName);
+        }
     }
-    //POCOR-7558 end
+
+    private function shouldTriggerAlert($alert, $lastRunDates): bool
+    {
+        $currentDate = FrozenTime::now()->format('Y-m-d');
+        $lastRunDate = $lastRunDates[$alert['name']] ?? null;
+
+        if (empty($lastRunDate)) {
+            return true;
+        }
+
+        $nextRunDate = $this->calculateNextRunDate($alert['frequency'], clone $lastRunDate);
+
+        return $currentDate > $nextRunDate;
+    }
+
+    private function calculateNextRunDate(string $frequency, FrozenTime $date): string
+    {
+        switch ($frequency) {
+            case 'Weekly':
+                return $date->modify('+1 week')->format('Y-m-d');
+            case 'Monthly':
+                return $date->modify('+1 month')->format('Y-m-d');
+            case 'Yearly':
+                return $date->modify('+1 year')->format('Y-m-d');
+            default:
+                return $date->format('Y-m-d');
+        }
+    }
+
+
+    private function triggerSystemProcess($systemProcessesTable, $alertsTable, $rule, $processName)
+    {
+        $user = $this->Auth->user();
+        $now = FrozenTime::now();
+
+        $process = $systemProcessesTable->newEntity([
+            'name' => $rule['feature'],
+            'status' => 1,
+            'start_date' => $now,
+            'model' => $processName,
+            'end_date' => null,
+            'created_user_id' => $user['id']
+        ]);
+
+        if ($systemProcessesTable->save($process)) {
+            $alertsTable->triggerAlertFeatureShell($processName);
+
+            $systemProcessesTable->updateAll([
+                'status' => 3,
+                'end_date' => FrozenTime::now(),
+                'modified' => FrozenTime::now(),
+                'modified_user_id' => $user['id']
+            ], ['name' => $rule['feature']]);
+        }
+    }
 
     //[POCOR-7559]
     private function sendSystemUpdateAlerts()
@@ -685,11 +789,11 @@ class DashboardController extends AppController
 
             $jsonResponse = json_decode($responseBody, true);
             $data = array_reverse($jsonResponse['data']);
-            $key = "SystemUpdates";
+            $key = "system_updates";
             foreach ($data as $item) {
                 if ($item['id'] > $maxId) {
                     // $AlertsTable->triggerAlertFeatureShell($key);
-                    $AlertsTable->triggerSystemUpdateAlertFeatureShell($key, $item['version']);
+                    $AlertsTable->triggerSystemUpdateAlertFeatureCommand($key, $item['version']);
                 }
             }
         }

@@ -231,6 +231,23 @@ class AlertsTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
     }
 
+    public function triggerSystemUpdateAlertFeatureCommand($command_name, $params)
+    {
+        $args = '';
+        $args .= !is_null($params) ? ' '.$params : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$command_name.' '.$args;
+        $logs = ROOT . DS . 'logs' . DS . $command_name.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+    }
+
+    /**
+     * Sends alert email to users.
+     *
+     * @deprecated Use triggerSystemUpdateAlertFeatureCommand() instead.
+     */
     public function triggerSystemUpdateAlertFeatureShell($shellName, $params)
     {
         $args = '';
