@@ -443,12 +443,17 @@ class AlertRulesTable extends ControllerActionTable
     public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
     {
         // POCOR-8286 start
-        $this->processAlertRoleAttributes($attr, $action);
+        $attr = $this->processAlertRoleAttributes($attr, $action);
+        return $attr;
     }
 
     public function processAlertRoleAttributes(array $attr, string $action): array
     {
         $entity = $attr['entity'];
+        if(!$entity){
+            return [];
+        }
+
         $feature = $entity->get('feature') ?? $this->request->getData('AlertRules.feature');
 
         if (!in_array($action, ['add', 'edit'], true)) {
@@ -506,6 +511,7 @@ class AlertRulesTable extends ControllerActionTable
     {
         $attr['type'] = 'chosenSelect';
         $attr['options'] = $this->getVisibleSecurityRoles();
+
         return $attr;
     }
 

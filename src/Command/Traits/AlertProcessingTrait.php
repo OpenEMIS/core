@@ -3,12 +3,28 @@
 namespace App\Command\Traits;
 trait AlertProcessingTrait
 {
+    /** @var ConsoleIo|null */
+    protected ?ConsoleIo $io = null;
+
+
+    public function setIo(ConsoleIo $io): void
+    {
+        $this->io = $io;
+    }
+
+    protected function logMsg(string $msg): void
+    {
+        if ($this->io) {
+            $this->io->out($msg);
+        }
+    }
     public function processContactList($rules, $placeholders, $values, $getContactListCallback)
     {
         foreach ($rules as $rule) {
             $contactList = $getContactListCallback($rule); // e.g. getStudentAdmissionContactList() or getRoleAssociatedContactList()
-
+            $this->logMsg(print_r($contactList, true));
             $methods = array_map('trim', explode(',', $rule->method));
+            $this->logMsg(print_r($methods, true));
 
             $subject = str_replace($placeholders, $values, $rule->subject);
             $message = str_replace($placeholders, $values, $rule->message);

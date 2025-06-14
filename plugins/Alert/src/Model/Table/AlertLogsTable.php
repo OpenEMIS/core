@@ -128,7 +128,6 @@ class AlertLogsTable extends ControllerActionTable
                 ) {
                     // Use `find()->first()` to avoid exception if user not found
                     $user = $Users->find()
-                        ->select(['id', 'name'])
                         ->where(['id' => $assigneeData['id']])
                         ->first();
 
@@ -179,9 +178,10 @@ class AlertLogsTable extends ControllerActionTable
     {
         $checksum = $this->generateChecksum($subject, $message);
         $existing = $this->find()->where(['checksum' => $checksum])->first();
-
+        Log::debug('Message existing');
         if (!$existing) {
             $recipientArray = array_map('trim', explode(',', $recipients));
+            Log::debug(print_r(['message is sent to' => $recipientArray],true));
             $this->createAndSendAlertLog($method, $feature, $recipientArray, $subject, $message, $checksum);
         }
     }
@@ -226,7 +226,7 @@ class AlertLogsTable extends ControllerActionTable
         }
 
         foreach ($savedIds as $id) {
-            $this->triggerSendingAlertShell('SendingAlert', $feature, $id);
+            $this->triggerSendingAlertCommand('sending_alert', $feature, $id);
         }
     }
     // POCOR-8286 end

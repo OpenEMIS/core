@@ -38,11 +38,15 @@ class SendingAlertCommand extends Command
                 'id' => $alertLogId
             ])
             ->all();
-
+        $io->out(print_r([
+            'feature' => $feature,
+            'id' => $alertLogId
+        ], true));
+        $io->out(print_r($alertLogsList, true));
         foreach ($alertLogsList as $log) {
             $methods = array_map('trim', explode(',', $log->method));
-
-            if ($log->status === 0) {
+            $io->out(print_r($methods, true));
+            if (intval($log->status) === 0) {
                 // Process only if status is pending
                 if (in_array('Email', $methods)) {
                     $this->sendEmail($log, $io);
