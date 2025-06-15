@@ -235,7 +235,7 @@ class RisksTable extends ControllerActionTable
                 'plugin' => $this->controller->getPlugin(),
                 'controller' => $this->controller->getName(),
                 'action' => 'InstitutionStudentRisks',
-                 0 => 'view',
+                 0 => 'index', // POCOR-8276 - change view to index action
                  1 => $encodedQueryString
 
             ];

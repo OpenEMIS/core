@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Console\Shell;
 use Cake\Log\Log;
 
+// This file for generate risk for all institution
 class UpdateRisksShell extends Shell
 {
     public function initialize(): void
@@ -30,7 +31,6 @@ class UpdateRisksShell extends Shell
         $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
 
         $riskCriteriaData = $this->RiskCriterias->getCriteriaKey($riskId);
-   $this->out($institutionId);
         if (!empty($riskCriteriaData)) {
             foreach ($riskCriteriaData as $key => $obj) {
                 $criteriaData = $this->Risks->getCriteriasDetails($key);
@@ -144,10 +144,10 @@ class UpdateRisksShell extends Shell
             // end debug
 
             // will triggered the aftersave of the model (indexes behavior)
-            $criteriaModelEntity->dirty('modified_user_id', true);
+            $criteriaModelEntity->setDirty('modified_user_id', true);
             $criteriaModelEntity->trigger_from = 'shell';
             $CriteriaModel->save($criteriaModelEntity);
-
+            
             // update the institution student index
             $this->InstitutionStudentRisks->query()
                 ->update()

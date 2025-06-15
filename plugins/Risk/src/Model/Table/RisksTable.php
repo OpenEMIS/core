@@ -17,6 +17,8 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\HtmlTrait;
 use Cake\Http\ServerRequest;
 use Exception;
+use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate;
 
 class RisksTable extends ControllerActionTable
 {
@@ -683,8 +685,8 @@ class RisksTable extends ControllerActionTable
                 $entity = $this->InstitutionRisks->newEntity([
                     'status' => 2, // processing
                     'pid' => $pid,
-                    'generated_on' => NULL,
-                    'generated_by' => NULL,
+                    'generated_on' => new FrozenTime(),
+                    'generated_by' => $userId,
                     'risk_id' => $riskId,
                     'institution_id' => $institutionId,
                 ]);
