@@ -52,6 +52,8 @@ class SyncExamComponent extends Component
      * 
      * Sets up the component configurations and dependencies
      * 
+     * Sets up the component configurations and dependencies
+     * 
      * @param array $config Configuration settings
      * @return void
      */
@@ -59,6 +61,9 @@ class SyncExamComponent extends Component
 
     /**
      * Connect to OpenEMIS Exam Project API and get authentication token
+     * 
+     * Establishes connection with the exam API using provided credentials and obtains
+     * an authentication token for subsequent requests.
      * 
      * Establishes connection with the exam API using provided credentials and obtains
      * an authentication token for subsequent requests.
@@ -79,8 +84,11 @@ class SyncExamComponent extends Component
         $headers = [
             "Accept: application/json, text/plain, */*",
             "Content-Type: application/json",
+            "Accept: application/json, text/plain, */*",
+            "Content-Type: application/json",
         ];
 
+        $loginUrl = $url . self::API_ENDPOINTS['login'];
         $loginUrl = $url . self::API_ENDPOINTS['login'];
 
         // Log connection attempt details
@@ -160,12 +168,18 @@ class SyncExamComponent extends Component
                 } else {
                     Log::write('error', 'Invalid parameters: academic period code or examination code is missing.');
                     $this->Alert->error(__('Invalid parameters: academic period code or examination code is missing.'), ['type' => 'string', 'reset' => true]);
+                    Log::write('error', 'Invalid parameters: academic period code or examination code is missing.');
+                    $this->Alert->error(__('Invalid parameters: academic period code or examination code is missing.'), ['type' => 'string', 'reset' => true]);
                 }
             } else {
                 Log::write('error', 'Connection failed: ' . $response['message']);
                 $this->Alert->error(__('Connection failed: {0}', h($response['message'])), ['type' => 'string', 'reset' => true]);
+                Log::write('error', 'Connection failed: ' . $response['message']);
+                $this->Alert->error(__('Connection failed: {0}', h($response['message'])), ['type' => 'string', 'reset' => true]);
             }
         } else {
+            Log::write('error', 'OpenEMIS Exam Configuration not found.');
+            $this->Alert->error(__('OpenEMIS Exam Configuration not found.'), ['type' => 'string', 'reset' => true]);
             Log::write('error', 'OpenEMIS Exam Configuration not found.');
             $this->Alert->error(__('OpenEMIS Exam Configuration not found.'), ['type' => 'string', 'reset' => true]);
         }
@@ -175,6 +189,10 @@ class SyncExamComponent extends Component
 
     /**
      * Fetch exam results from the API
+     * 
+     * Makes API request to fetch examination results based on the provided parameters.
+     * Creates a temporary file with result data and initiates a background shell task
+     * for processing the data asynchronously.
      * 
      * Makes API request to fetch examination results based on the provided parameters.
      * Creates a temporary file with result data and initiates a background shell task
@@ -191,7 +209,9 @@ class SyncExamComponent extends Component
         // Prepare request headers with authentication token
         $headers = [
             "Accept: application/json, text/plain, */*",
+            "Accept: application/json, text/plain, */*",
             "Authorization: Bearer " . $this->token,
+            "Content-Type: application/json",
             "Content-Type: application/json",
         ];
 
@@ -205,6 +225,7 @@ class SyncExamComponent extends Component
 
         // Build API request URL
         $queryString = http_build_query($params);
+        $resultUrl = $config['url'] . self::API_ENDPOINTS['result'] . "?" . $queryString;
         $resultUrl = $config['url'] . self::API_ENDPOINTS['result'] . "?" . $queryString;
         Log::write('debug', 'Sending results request to: ' . $resultUrl);
         Log::write('debug', 'Request headers: ' . json_encode($headers));
@@ -226,6 +247,9 @@ class SyncExamComponent extends Component
         if ($response['statusCode'] == 200 && isset($responseData['data'])) {
             Log::write('debug', 'Results fetched successfully. Creating temporary file and launching sync shell.');
 
+            // Create temporary file to store results data with unique timestamp
+            $timestamp = time();
+            $tempFile = TMP . 'exam_data_' . $timestamp . '.json';
             // Create temporary file to store results data with unique timestamp
             $timestamp = time();
             $tempFile = TMP . 'exam_data_' . $timestamp . '.json';
@@ -259,9 +283,13 @@ class SyncExamComponent extends Component
                 Log::write('error', __METHOD__ . ' exception syncing exam result: ' . $ex->getMessage());
                 Log::write('error', 'Exception trace: ' . $ex->getTraceAsString());
                 $this->Alert->error(__('Error starting sync process: {0}', $ex->getMessage()), ['type' => 'string', 'reset' => true]);
+                $this->Alert->error(__('Error starting sync process: {0}', $ex->getMessage()), ['type' => 'string', 'reset' => true]);
             }
         } else {
             $errorMessage = $responseData['message'] ?? 'Unknown error';
+            Log::write('error', 'Sync Request Failed: ' . $errorMessage);
+            Log::write('error', 'Full response: ' . json_encode($response));
+            $this->Alert->error(__('Unable to fetch data: {0}', h($errorMessage)), ['type' => 'string', 'reset' => true]);
             Log::write('error', 'Sync Request Failed: ' . $errorMessage);
             Log::write('error', 'Full response: ' . json_encode($response));
             $this->Alert->error(__('Unable to fetch data: {0}', h($errorMessage)), ['type' => 'string', 'reset' => true]);
@@ -272,6 +300,9 @@ class SyncExamComponent extends Component
 
     /**
      * Decrypt sensitive data using provided secret key
+     * 
+     * Uses AES-256-CBC encryption to decrypt sensitive data strings using the
+     * provided secret key. The first 16 bytes of the key are used as the IV.
      * 
      * Uses AES-256-CBC encryption to decrypt sensitive data strings using the
      * provided secret key. The first 16 bytes of the key are used as the IV.
@@ -290,6 +321,9 @@ class SyncExamComponent extends Component
 
     /**
      * Update local sync status based on API response
+     * 
+     * Updates the sync_status and last_synced fields in the local database
+     * for each student based on the response received from the API.
      * 
      * Updates the sync_status and last_synced fields in the local database
      * for each student based on the response received from the API.

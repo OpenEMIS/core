@@ -232,9 +232,12 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
             $examinationId = $this->request->getQuery('examination_id');
 
             if (($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute']) || $this->AccessControl->isAdmin())
+            if (($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute']) || $this->AccessControl->isAdmin())
                 && !empty($examinationId) && $examinationId != -1
             ) {
                 $syncUrl = [
+                    'plugin' => 'Examination',
+                    'controller' => 'Examinations',
                     'plugin' => 'Examination',
                     'controller' => 'Examinations',
                     'action' => 'syncStudentsToExam',
