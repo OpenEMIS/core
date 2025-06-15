@@ -220,6 +220,16 @@ class AlertsTable extends ControllerActionTable
         }
     }
 
+    /**
+     * Triggers a CakePHP shell command with no parameters to send alert messages.
+     *
+     * Used to execute legacy alert shell scripts.
+     *
+     * @param string $shellName Name of the shell command (in Cake format).
+     * @return void
+     *
+     * @deprecated Use {@see triggerAlertCommand()} instead. This method will be removed in future versions.
+     */
     public function triggerAlertFeatureShell($shellName)
     {
         $args = '';
@@ -231,22 +241,46 @@ class AlertsTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
     }
 
-    public function triggerSystemUpdateAlertFeatureCommand($command_name, $params)
+    /**
+     * Triggers a CakePHP command-line script with optional named parameters.
+     *
+     * This is the recommended method for executing alert-related commands.
+     * Parameters are passed as named CLI arguments (e.g. --version=3.2.1).
+     *
+     * @param string $command Name of the command to run (snake_case, no 'Shell' suffix).
+     * @param array<string, string|int|null> $params Associative array of command-line options.
+     *        Example: ['version' => '3.2.1', 'user_id' => 5, 'roles' => '1,2', 'schools' => '4,5']
+     * @return void
+     * @throws \RuntimeException If the command fails to execute.
+     */
+    public function triggerAlertCommand(string $command, array $params = []): void
     {
         $args = '';
-        $args .= !is_null($params) ? ' '.$params : '';
 
-        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$command_name.' '.$args;
-        $logs = ROOT . DS . 'logs' . DS . $command_name.'.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
+        foreach ($params as $key => $value) {
+            if ($value !== null && $value !== '') {
+                $args .= ' --' . $key . '=' . escapeshellarg($value);
+            }
+        }
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $command . $args;
+        $logFile = ROOT . DS . 'logs' . DS . $command . '.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logFile;
+
         exec($shellCmd);
-        Log::write('debug', $shellCmd);
+        Log::write('debug', '[triggerAlertCommand] ' . $shellCmd);
     }
 
     /**
-     * Sends alert email to users.
+     * Triggers a CakePHP shell command with raw parameter string (legacy method).
      *
-     * @deprecated Use triggerSystemUpdateAlertFeatureCommand() instead.
+     * Executes a shell with appended arguments for triggering system update alerts.
+     *
+     * @param string $shellName Name of the shell command (e.g. 'alert_system_updates').
+     * @param string|null $params Raw string of CLI arguments (e.g. '--version=3.2.1').
+     * @return void
+     *
+     * @deprecated Use {@see triggerAlertCommand()} with an associative array instead.
      */
     public function triggerSystemUpdateAlertFeatureShell($shellName, $params)
     {

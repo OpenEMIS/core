@@ -162,35 +162,27 @@ class AlertLogsTable extends ControllerActionTable
 
         if ($this->exists(['checksum' => $checksum])
             && array_key_exists($feature, $alertFeatures)) {
-            $record = $this->find()->where(['checksum' => $checksum])->first();
-
-            if ($record && $record->status === 0) {
-                $this->save($record);
+            $records = $this->find()->where([
+                'checksum' => $checksum,
+                'destination' => $recipient,
+                'status' => 0
+            ])->all();
+            if (!empty($records)) {
+                foreach ($records as $record) {
+                    $this->triggerSendingAlertCommand('sending_alert', $feature, $record->id);
+                }
+                return;
             }
-
-            return;
         }
 
         $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
     }
 
-    public function insertSystemUpdateAlertLog(string $method, string $feature, string $recipients, ?string $subject = null, ?string $message = null): void
-    {
-        $checksum = $this->generateChecksum($subject, $message);
-        $existing = $this->find()->where(['checksum' => $checksum])->first();
-        Log::debug('Message existing');
-        if (!$existing) {
-            $recipientArray = array_map('trim', explode(',', $recipients));
-            Log::debug(print_r(['message is sent to' => $recipientArray],true));
-            $this->createAndSendAlertLog($method, $feature, $recipientArray, $subject, $message, $checksum);
-        }
-    }
-
-    public function insertStudentAdmissionAlertLog(string $method, string $feature, string $recipient, ?string $subject = null, ?string $message = null): void
-    {
-        $checksum = $this->generateChecksum($subject, $message);
-        $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
-    }
+//    public function insertStudentAdmissionAlertLog(string $method, string $feature, string $recipient, ?string $subject = null, ?string $message = null): void
+//    {
+//        $checksum = $this->generateChecksum($subject, $message);
+//        $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
+//    }
 
     private function generateChecksum(?string $subject, ?string $message): string
     {
