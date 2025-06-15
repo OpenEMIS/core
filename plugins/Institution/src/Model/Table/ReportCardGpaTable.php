@@ -19,6 +19,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\I18n\FrozenTime;
+use Cake\Http\Session; // POCOR-9162
 
 /**
  * ReportCardGpaTable class. Generate GPA for student
@@ -166,6 +167,10 @@ class ReportCardGpaTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $this->controller->set(compact('academicPeriodOptions', 'academicPeriodId'));
 
+        // Set selected academic period - POCOR-9185
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('selectedAcademicPeriod'));
+
         // Education Grade options
         $availableGrades = $InstitutionGrades->find()
             ->where([
@@ -305,8 +310,12 @@ class ReportCardGpaTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $gradeId = $this->request->getQuery('education_grade_id');
-        $classId = $this->request->getQuery('class_id');
+        //POCOR-9170[START]
+        // $classId = $this->request->getQuery('class_id');
+        $classId = $this->request->getQuery('institution_class_id');
+        //POCOR-9170[END]
         $gpaName = $this->request->getQuery('gpa_name'); //POCOR-9038
+        $gpaId = $this->request->getQuery('gpa_id'); //POCOR-9170
 
 
         $isUserSuperAdmin = $this->Auth->user('super_admin');
@@ -317,7 +326,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $institutionClassExists = $this->InstitutionClasses->exists([
             $this->InstitutionClasses->getPrimaryKey() => $classId
         ]);
-
+       
         if (!$institutionClassExists) {
             return;
         }
@@ -326,8 +335,8 @@ class ReportCardGpaTable extends ControllerActionTable
         $params = $this->buildParams($gradeId, $classId);
 
         $canGenerateAll = $this->hasGenerateAllPermission($isUserSuperAdmin);
-
-        if ($canGenerateAll && isset($gpaName)) {
+        // if ($canGenerateAll && isset($gpaName)) {
+        if ($canGenerateAll && isset($gpaId)) { // POCOR-9170
             $generateButton = $this->buildGenerateButton($params, $toolbarAttributes);
 
             $gradeId = $this->request->getQuery('education_grade_id') ?? $gradeId;
@@ -486,9 +495,10 @@ class ReportCardGpaTable extends ControllerActionTable
     {
         $params = $this->getQueryString() ?? [];
         $url = $this->url('index');
+        $this->AcademicPeriods =self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods'); // POCOR-9162 start
 
         if ($params) {
-            $this->addGpaReportCards(
+            self::addGpaReportCards( // POCOR-9162
                 $params['student_id'],
                 $params['academic_period_id'],
                 $params['institution_id'],
@@ -506,6 +516,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
     public function generateAll(Event $event, ArrayObject $extra)
     {
+        $this->AcademicPeriods =self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods'); // POCOR-9162
 
         $params = $this->getQueryString();
         $institutionId = $this->getInstitutionID();
@@ -526,7 +537,7 @@ class ReportCardGpaTable extends ControllerActionTable
             foreach($fetchAllRecord as $value){
                 $studentId = $value['student_id'];
                 $educationGradeId = $params['education_grade_id'];
-                $this->addGpaReportCards(
+                self::addGpaReportCards( // POCOR-9162
                     $studentId,
                     $selectedAcademicPeriodId,
                     $institutionId,
@@ -541,14 +552,12 @@ class ReportCardGpaTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    private function addGpaReportCards($studentId,
+    public static function addGpaReportCards($studentId, // POCOR-9162
                                        $academicPeriodId,
                                        $institutionId,
-                                       $educationGradeId)
+                                       $educationGradeId): array
     {
 
-
-        $this->AcademicPeriods =self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
         // first get education grade gpas for this student
         $gpaGrades = self::getDynamicTableInstance('Gpa.GpaSystem');
         $nameOption = $gpaGrades->find()
@@ -560,15 +569,18 @@ class ReportCardGpaTable extends ControllerActionTable
             ])
             ->toArray();
         $gpaIds = array_column($nameOption, 'id');
+        $gpaGPAs = [];
         foreach ($gpaIds as $gpaId) {
 //            Log::debug('GPA ID: ' . $gpaId);
-            $this->insertGpaPerStudentPerGpa(
+            $newGPA = self::insertGpaPerStudentPerGpa( // POCOR-9162
                 $institutionId,
                 $studentId,
                 $academicPeriodId,
                 $educationGradeId,
                 $gpaId);
+            $gpaGPAs[] = $newGPA;
         }
+        return $gpaGPAs;
 
     }
 
@@ -907,7 +919,7 @@ class ReportCardGpaTable extends ControllerActionTable
      * @param int $educationGradeGpaId
      * @return float GPA value (0.00 if no result)
      */
-    private function getGpaForStudentGpa(
+    public static function getGpaForStudentGpa(
         int $institutionId,
         int $studentId,
         int $academicPeriodId,
@@ -1131,22 +1143,27 @@ class ReportCardGpaTable extends ControllerActionTable
         return $result['gpa'] ?? 0.00;
     }
 
-    private function insertGpaPerStudentPerGpa(
+    public static function insertGpaPerStudentPerGpa(
         $institutionId,
         $studentId,
         $academicPeriodId,
         $educationGradeId,
-        $educationGradeGpaId)
+        $educationGradeGpaId): \Cake\Datasource\EntityInterface
     {
-        $gpa = $this->getGpaForStudentGpa($institutionId,
+        $gpa = self::getGpaForStudentGpa($institutionId,
             $studentId,
             $academicPeriodId,
             $educationGradeId,
             $educationGradeGpaId);
 //        $gpa = 0;
-        $userId = $this->Auth->user('id');
+        $session = new Session();
+        if (is_null($session->read('Auth.User.id'))) {
+            $userId = 1;    // Super Admin
+        }else {
+            $userId = $session->read('Auth.User.id');
+        }
 
-        $gpaTable = TableRegistry::get('Institution.InstitutionStudentsGpa');
+        $gpaTable = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
         $existing = $gpaTable->find()
             ->where([
                 'student_id' => $studentId,
@@ -1175,8 +1192,14 @@ class ReportCardGpaTable extends ControllerActionTable
                 'created' => FrozenTime::now()
             ]);
         }
+        $conn = $gpaTable->getConnection();
+        $conn->begin();
 
-        if (!$gpaTable->save($existing)) {
+        if ($gpaTable->save($existing)) {
+            $conn->commit();
+            return $existing; // or whatever
+        } else {
+            $conn->rollback();
             throw new \Exception("Failed to save GPA record.");
         }
 
