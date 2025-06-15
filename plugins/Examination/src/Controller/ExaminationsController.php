@@ -313,6 +313,8 @@ class ExaminationsController extends AppController
         if (isset($requestQuery['queryString'])) {
             $params = $this->ControllerAction->paramsDecode($requestQuery['queryString']);
             $SecurityUsersTable = $this->getTableLocator()->get('Security.Users');
+            $params = $this->ControllerAction->paramsDecode($requestQuery['queryString']);
+            $SecurityUsersTable = $this->getTableLocator()->get('Security.Users');
             $userData = $SecurityUsersTable->find()
                 ->where(['openemis_no' => $params['openemis_no']])
                 ->first();
