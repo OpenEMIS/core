@@ -35,7 +35,7 @@ if ($session->check('System.User.roles')) {
 		    </a>
 		<?php else: ?>
 		    <a class="btn" href="<?= $this->Url->build(['plugin' => 'System', 'controller' => 'Systems', 'action' => 'SystemNotices']) ?>">
-		        <i class="fa fa-envelope" style="color: red;"></i>
+		        <i class="fa fa-envelope fa-lg notification-dot"></i>
 		    </a>
 		<?php endif; ?> <!-- POCOR-7210 end -->
 
