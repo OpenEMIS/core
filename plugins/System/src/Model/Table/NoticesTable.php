@@ -56,20 +56,6 @@ class NoticesTable extends ControllerActionTable
         $this->field('status', ['visible' => false,]);
         $this->field('notice_status', ['visible' => true,]);
         $this->setFieldOrder(['subject', 'notice_status', 'created_user_id','created']);
-       /*$isSuperAdmin = $this->Auth->user('super_admin'); // true/false
-        if($isSuperAdmin){
-            $noticeOption = [
-                -1 => 'All',
-                 1 => 'Read',
-                 0 => 'Unread'
-            ];
-        }else{
-           $noticeOption = [
-                -1 => 'All',
-                 1 => 'Read',
-                 0 => 'Unread'
-            ];
-        }*/
         $noticeOption = [
                 -1 => 'All',
                  1 => 'Read',
