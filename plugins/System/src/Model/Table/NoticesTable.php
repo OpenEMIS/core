@@ -115,7 +115,6 @@ class NoticesTable extends ControllerActionTable
                 $this->aliasField('id IN') => $assignedNoticeIds,
                 $this->aliasField('status') => 1
             ]);
-            // Join with user-specific read info
             $query->leftJoin(
                 ['SecurityUserNotices' => 'security_user_notices'],
                 [
@@ -133,7 +132,12 @@ class NoticesTable extends ControllerActionTable
                 $query->where(['SecurityUserNotices.id IS' => null]); // Unread
             }
         }else{
-            $query->where([$this->aliasField('status') => 1]); 
+            if ($readStatus === '0') {
+                $query->where(['1 = 0']); // if user is superadmin, no unread message for user.
+                return;
+            } else {
+                $query->where([$this->aliasField('status') => 1]); 
+            }
         }
     }
 
