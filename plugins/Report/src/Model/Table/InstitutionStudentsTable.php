@@ -55,6 +55,10 @@ class InstitutionStudentsTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         $educationProgrammeId = $requestData->education_programme_id;
         $statusId = $requestData->status;
+        //POCOR-8416[START]
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+        //POCOR-8416[END]
         $educationlevelId = $requestData->education_level_id;
 
         $Class = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
@@ -85,9 +89,16 @@ class InstitutionStudentsTable extends AppTable  {
             $query->where([$this->aliasField('education_grade_id IN') => $grades]);
         }
         /**POCOR-6919 ends*/ 
+
+        //POCOR-8416[START]
         if ($statusId != 0) {
-            $query->where([$this->aliasField('student_status_id') => $statusId]);
+            if($statusId != -1){
+                $query->where([$this->aliasField('student_status_id') => $statusId]);
+            }else{
+                $query->where([$this->aliasField('student_status_id IN') => [$statuses['GRADUATED'], $statuses['PROMOTED'], $statuses['CURRENT'], $statuses['REPEATED'] , $statuses['TRANSFERRED'], $statuses['WITHDRAWN']]]);
+            }
         }
+        //POCOR-8416[END]
         if ($institution_id != 0) {
             $query->where([$this->aliasField('institution_id') => $institution_id]);
         }
@@ -265,7 +276,7 @@ class InstitutionStudentsTable extends AppTable  {
             ->leftJoin([$IdentityType->getAlias() => $IdentityType->getTable()], [
                 $IdentityType->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
             ])
-            ->group([$this->aliasField('student_id')])
+            ->group([$this->aliasField('student_id'), $this->aliasField('student_status_id')]) // POCOR-8416 Added $this->aliasField('student_status_id') for all status
             ->order([$this->aliasField('education_grade_id')])
             ->formatResults(function (ResultSetInterface $results) use ($statusOptions, $statusId) {
                 return $results->map(function ($row) use ($statusOptions, $statusId) {
