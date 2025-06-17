@@ -1012,7 +1012,7 @@ class AppController extends Controller
 
         $check = $this->AccessControl->check($params);
         if (!$check && $params['plugin'] != 'GuardianNav') { //POCOR-8596
-// POCOR-9100 removed unnecessary logging, may cause merge conflict
+// POCOR-8286; POCOR-9100 removed unnecessary logging, may cause merge conflict
             //            $this->log(__FUNCTION__, 'debug');
 //            if ($params !== null) {
 //                $this->log(print_r($params,true), 'debug');

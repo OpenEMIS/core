@@ -151,7 +151,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity();
 						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->patchEntity($newEntityInstitutionCaseRecord, $linkedRecords, $patchOptions);
 						$this->InstitutionCaseRecords->save($newEntityInstitutionCaseRecord);
-						$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked, $mailed_data);//6023 add param $mailed_data
+						$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked,$mailed_data);//6023 add param $mailed_data
 						echo "saved";
 					}
 

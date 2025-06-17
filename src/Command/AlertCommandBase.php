@@ -80,10 +80,10 @@ abstract class AlertCommandBase extends Command
         try {
             $pendingItems = $this->getPendingItems($featureKey); // abstract
             if(empty($pendingItems)){
-                $this->logMsg("✅ Alert  {$featureKey} has no pending items");
+                $this->logMsg("✅ Alert {$featureKey} has no pending items");
             }
             foreach ($pendingItems as $item) {
-                $placeholders = $this->fillPlaceholders($item); // abstract
+               $placeholders = $this->fillPlaceholders($item); // abstract
                $this->processContactList([$this->rule], $placeholders, fn() => $this->contacts);
             }
         } catch (\Throwable $e) {

@@ -31,7 +31,7 @@ class SystemUpdatesShell extends AlertShell
             $rules = $this->getSystemUpdateAlertRules($feature);
             foreach ($rules as $rule) {
                 if (!empty($rule['security_roles'])) { //check if the alertRule have security role
-                    $contactList = $this->getRoleAssociatedContactList($rule['security_roles']);
+                    $emailList = $this->getSystemUpdateEmailList($rule['security_roles']);
                     $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
                     if(isset($versionNumber)){
                         $vars = $versionNumber;
@@ -64,7 +64,7 @@ class SystemUpdatesShell extends AlertShell
 
             // $filesArray = $dir->find($processName . '.stop');
         // } while (empty($filesArray));
-
+       
 
     }
 }

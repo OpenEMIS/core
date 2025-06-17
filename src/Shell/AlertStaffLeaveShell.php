@@ -1,16 +1,20 @@
 <?php
 namespace App\Shell;
 
-use Cake\I18n\FrozenDate;
-use Cake\I18n\FrozenTime;
+use Cake\I18n\Date;
+use Cake\I18n\Time;
 use Cake\Console\Shell;
 use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
+
+use App\Shell\AlertShell;
 
 class AlertStaffLeaveShell extends AlertShell
 {
     public function initialize(): void
     {
         parent::initialize();
+
         $this->loadModel('Institution.StaffLeave');
     }
 
@@ -20,51 +24,50 @@ class AlertStaffLeaveShell extends AlertShell
         $processName = $this->processName;
         $feature = $this->featureName;
 
-        $this->Alerts->updateAll([
-            'process_id' => getmypid(),
-            'modified' => FrozenTime::now()
-        ], ['process_name' => $processName]);
+        $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => Time::now()], ['process_name' => $processName]);
 
-        $dir = new Folder(ROOT . DS . 'tmp');
+        $dir = new Folder(ROOT . DS . 'tmp'); // path to tmp folder
 
         do {
             $rules = $this->getAlertRules($feature);
 
             foreach ($rules as $rule) {
-                $thresholdArray = json_decode($rule->threshold, true);
-                $data = $this->getAlertData($rule->threshold, $model);
+                $threshold = $rule->threshold;
+                $thresholdArray = json_decode($threshold, true);
 
-                foreach ($data as $vars) {
+                $data = $this->getAlertData($threshold, $model);
+
+                foreach ($data as $key => $vars) {
                     $vars['threshold'] = $thresholdArray;
-                    $institutionId = $vars['institution']['id'] ?? null;
+                    $institutionId = $vars['institution']['id'];
 
-                    $dateTo = $vars['date_to'] ?? null;
-                    if ($dateTo instanceof \DateTimeInterface) {
-                        $diff = $dateTo->diff(FrozenDate::now());
-                        $vars['day_difference'] = $diff->days;
-                    } else {
-                        $vars['day_difference'] = null;
-                    }
+                    // add the employment period to $vars.
+                    $dateTo = $vars['date_to'];
+                    $diff = date_diff(new Date(), $dateTo);
+                    $diffDays = $diff->days;
 
-                    if (!empty($rule['security_roles']) && !empty($institutionId)) {
-                        $this->insertAlertLogs($rule, $institutionId, $feature, $vars);
+                    $vars['day_difference'] = $diffDays;
+                    // end of adding age to $vars
+
+                    if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
+                        $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
+
+                        $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
+
+                        // subject and message for alert email
+                        $subject = $this->AlertLogs->replaceMessage($feature, $rule->subject, $vars);
+                        $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
+
+                        // insert record to  the alertLog
+                        $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
                     }
                 }
             }
+            sleep(10);
 
-            sleep(10); // Still hardcoded, optional to extract
-
-            $filesArray = $dir->find($processName . '\.stop'); // escape dot for regex
+            $filesArray = $dir->find($processName . '.stop');
         } while (empty($filesArray));
 
-        $this->Alerts->updateAll([
-            'process_id' => null,
-            'modified' => FrozenTime::now()
-        ], ['process_name' => $processName]);
-    }
-
-    public function logAlert($method, $feature, $recipient, $subject, $message): void
-    {
-        $this->AlertLogs->insertAlertLog($method, $feature, $recipient, $subject, $message);
+        $this->Alerts->updateAll(['process_id' => NULL, 'modified' => Time::now()], ['process_name' => $processName]);
     }
 }
