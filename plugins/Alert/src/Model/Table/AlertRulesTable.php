@@ -58,9 +58,14 @@ class AlertRulesTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator
     {
+
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this); // POCOR-8286
         return $validator
+            ->notEmptyArray('method')
+            ->notEmptyArray('security_roles')
+            ->notEmptyString('subject')
+            ->notEmptyString('message')
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
                 'provider' => 'table'
@@ -70,10 +75,27 @@ class AlertRulesTable extends ControllerActionTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
+
             // POCOR-8286 start
-            if (isset($data['method']) && !empty($data['method'])) {
+            if (isset($data['method'])
+                && !empty($data['method'])
+                && !empty($data['method']['_ids'])
+            ) {
                 $data['method'] = implode(',', array_map('trim', $data['method']['_ids']));
+            }else{
+                $data['method'] = null;
             }
+//            dd($data['security_roles']);
+            if (isset($data['security_roles'])
+                && !empty($data['security_roles'])
+                && !empty($data['security_roles']['_ids'])
+            ) {
+            }else{
+                $data['security_roles'] = null;
+            }
+            $validator = $this->getValidator();
+            $validator->notEmptyArray('method');
+            $validator->notEmptyArray('security_roles');
             // POCOR-8286 end
             if (isset($data['feature']) && !empty($data['feature'])) {
                 $alertRuleTypes = $this->getAlertRuleTypes();
@@ -278,6 +300,8 @@ class AlertRulesTable extends ControllerActionTable
 
     public function setupFields(Event $event, Entity $entity)
     {
+
+
         // Rule setting section
         $this->field('rule_setup', ['type' => 'section']);
         $this->field('feature', ['type' => 'select', 'entity' => $entity]);
@@ -287,9 +311,14 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('method', [
             'after' => 'threshold',
             'entity' => $entity,
+            'required' => 'required',
+            ['attr' => ['required' => 'required']]
         ]);
         //POCOR-8690[END]
-        $this->field('security_roles', ['after' => 'method', 'entity' => $entity]);
+        $this->field('security_roles', ['after' => 'method',
+            'entity' => $entity,
+            ['attr' => ['required' => true]]]);
+
         $this->field('threshold', ['after' => 'security_roles', 'entity' => $entity]);
 
         // Alert section
@@ -302,8 +331,24 @@ class AlertRulesTable extends ControllerActionTable
                 return $event->getResult();
             }
         }
+//        $this->ControllerAction->addField('busy');
+//        dd($entity);
     }
 
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $errors = $entity->getErrors();
+        if (!empty($errors)) {
+            $errorsMessage = "";
+            foreach ($errors as $fieldName => $error){
+                $fieldName = Inflector::humanize(Inflector::underscore($fieldName));
+                foreach ($error as $key=>$errorMessage){
+                    $errorsMessage .= "$fieldName: $errorMessage<br />";
+                }
+            }
+            $this->Alert->error("$errorsMessage", ['type' => 'string', 'reset' => true]);
+        }
+    }
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
@@ -382,7 +427,6 @@ class AlertRulesTable extends ControllerActionTable
 
     public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
     {
-
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
             // POCOR-8286 start
@@ -442,8 +486,12 @@ class AlertRulesTable extends ControllerActionTable
 
     public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $entity = $attr['entity'];
+        $entity->setError('security_roles', ['This field cannot be empty']);
         // POCOR-8286 start
         $attr = $this->processAlertRoleAttributes($attr, $action);
+        $attr['attr']['required'] = true;
+        $attr['attr']['error'] = 'Wow';
         return $attr;
     }
 
