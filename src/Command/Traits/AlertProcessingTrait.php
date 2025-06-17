@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Command\Traits;
+use Cake\Console\ConsoleOptionParser;
+use Cake\Console\ConsoleIo;
+
 trait AlertProcessingTrait
 {
     /** @var ConsoleIo|null */
@@ -18,29 +21,49 @@ trait AlertProcessingTrait
             $this->io->out($msg);
         }
     }
-    public function processContactList($rules, $placeholders, $values, $getContactListCallback)
+    public function processContactList(array $rules, array $replacements, callable $getContactListCallback): void
     {
         foreach ($rules as $rule) {
-            $contactList = $getContactListCallback($rule); // e.g. getStudentAdmissionContactList() or getRoleAssociatedContactList()
-            $this->logMsg(print_r($contactList, true));
-            $methods = array_map('trim', explode(',', $rule->method));
-            $this->logMsg(print_r($methods, true));
+            $contacts = $getContactListCallback($rule);
 
-            $subject = str_replace($placeholders, $values, $rule->subject);
-            $message = str_replace($placeholders, $values, $rule->message);
+            if (empty($contacts['email']) && empty($contacts['phone'])) {
+                continue;
+            }
 
-            foreach ($methods as $method) {
-                if ($method === 'Email' && !empty($contactList['email'])) {
-                    $this->logAlert($method, $rule->feature, implode(', ', $contactList['email']), $subject, $message);
-                }
+            $subject = str_replace(array_keys($replacements), array_values($replacements), $rule['subject']);
+            $message = str_replace(array_keys($replacements), array_values($replacements), $rule['message']);
 
-                if ($method === 'SMS' && !empty($contactList['phone'])) {
-                    $this->logAlert($method, $rule->feature, implode(', ', $contactList['phone']), $subject, $message);
-                }
+            foreach ($contacts['email'] ?? [] as $email) {
+                $this->logAlert('email', $rule['feature'], $email, $subject, $message);
+            }
+
+            foreach ($contacts['phone'] ?? [] as $phone) {
+                $this->logAlert('sms', $rule['feature'], $phone, $subject, $message);
             }
         }
     }
 
     // Abstract log method to implement per use case
     abstract public function logAlert($method, $feature, $recipient, $subject, $message);
+
+    public function getOptionParser(): ConsoleOptionParser
+    {
+        $parser = parent::getOptionParser();
+
+        return $parser
+            ->addOption('user_id', [
+                'help' => 'ID of the user triggering the alert',
+                'short' => 'u',
+                'default' => null
+            ])
+            ->addOption('rule_id', [
+                'help' => 'Comma-separated list of rule IDs',
+                'default' => 'r'
+            ])
+            ->addOption('process_id', [
+                'help' => 'ID of the process',
+                'default' => 'p'
+            ])
+            ;
+    }
 }

@@ -689,17 +689,15 @@ class DashboardController extends AppController
         $userRoleIds = $isSuperAdmin ? [] : $this->getUserSecurityRoleIds($userId);
 
         $alerts = $this->getUserAccessibleAlerts($alertsTable, $userRoleIds, $isSuperAdmin);
-        Log::debug(print_r(['alerts' => $alerts->toArray()], true));
-        $lastRunDates = $alertRulesTable->getLastRunDate();
-        Log::debug(print_r(['lastRunDates' => $lastRunDates], true));
         $mainAlerts = [];
 
         foreach ($alerts as $alert) {
-            if (in_array($alert['name'], self::SKIPPABLE_ALERTS, true)) {
+            $alert_name = $alert->name;
+            if (in_array($alert_name, self::SKIPPABLE_ALERTS, true)) {
                 continue;
             }
 
-            if ($this->shouldTriggerAlert($alert, $lastRunDates)) {
+            if ($this->shouldTriggerAlert($alert)) {
                 $activeRules = $alertRulesTable->find()
                     ->where([
                         $alertRulesTable->aliasField('feature') => $alert['name'],
@@ -710,10 +708,15 @@ class DashboardController extends AppController
                 foreach ($activeRules as $rule) {
                     $mainAlerts[$alert['process_name']] = $rule;
                 }
+            }else{
+                Log::debug('Should Not Trigger Alert');
             }
         }
 
         foreach ($mainAlerts as $processName => $rule) {
+            if(!is_array($rule)){
+                $rule = $rule->toArray();
+            }
             $this->triggerSystemProcess($systemProcessesTable, $rule, $processName, $userId);
         }
     }
@@ -728,7 +731,10 @@ class DashboardController extends AppController
     {
         if ($isSuperAdmin) {
             return $alertsTable->find()
-                ->where(['frequency !=' => 'Never']);
+                ->where([
+                    'frequency IS NOT' => null,
+                    'frequency NOT IN' => ['Never', 'Once']
+                ]);
         }
 
         return $alertsTable->find()
@@ -736,27 +742,66 @@ class DashboardController extends AppController
             ->matching('AlertRules.AlertsRoles', function ($q) use ($userRoleIds) {
                 return $q->where(['AlertsRoles.security_role_id IN' => $userRoleIds]);
             })
-            ->where(['Alerts.frequency !=' => 'Never']);
+            ->where([
+                'Alerts.frequency IS NOT' => null,
+                'Alerts.frequency NOT IN' => ['Never', 'Once']
+            ]);
     }
 
-    private function shouldTriggerAlert($alert, $lastRunDates): bool
+    private function shouldTriggerAlert($alert): bool
     {
         $currentDate = FrozenTime::now()->format('Y-m-d');
-        $frequency = $alert['frequency'];
+        $frequency = $alert->frequency;
 
-        $lastRunDate = $lastRunDates[$alert['name']] ?? null;
+        $lastRunDate = $this->getLastRunDateForAlert($alert->process_name);
 
-        if (empty($lastRunDate)) {
+        if ($lastRunDate == -1 ) {
+            Log::debug("[Alert: {$alert->name}] Not eligible for run – still active or never completed.");
+            return false;
+        }else if (empty($lastRunDate)) {
+            Log::debug("[Alert: {$alert->name}] Not triggered yet");
+
             return true;
         }
-
+        Log::debug("[Alert: {$alert->name}] $lastRunDate");
         $nextRunDate = $this->calculateNextRunDate($frequency, clone $lastRunDate);
 
         if ($nextRunDate === null) {
+            Log::debug("[Alert: {$alert->name}] Should run once, skipping.");
             return false;
         }
 
         return $currentDate > $nextRunDate;
+    }
+
+    private function getLastRunDateForAlert(string $processName)
+    {
+        $systemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+
+        // Check for active processes first
+        $active = $systemProcesses->find()
+            ->where([
+                'name' => $processName,
+                'status IN' => [1, 2]
+            ])
+            ->first();
+
+        if ($active) {
+            return -1; // Signal active/running, not eligible
+        }
+
+        // Then fetch the last completed run
+        $completed = $systemProcesses->find()
+            ->select(['end_date'])
+            ->where([
+                'name' => $processName,
+                'status' => 3
+            ])
+            ->orderDesc('end_date')
+            ->limit(1)
+            ->first();
+
+        return $completed?->end_date;
     }
 
     private function calculateNextRunDate(string $frequency, FrozenTime $date): ?string
@@ -771,7 +816,7 @@ class DashboardController extends AppController
             case 'Daily':
                 return $date->format('Y-m-d');
             case 'Once':
-                return null; // let shouldTriggerAlert handle it
+                return null; // never run
             default:
                 return '9999-12-31'; // never run
         }
@@ -791,24 +836,18 @@ class DashboardController extends AppController
         ]);
 
         if ($systemProcessesTable->save($process)) {
-            $this->triggerAlertCommand($processName, $userId, $rule['id']);
-
-            $systemProcessesTable->updateAll([
-                'status' => 3,
-                'end_date' => $now,
-                'modified' => $now,
-                'modified_user_id' => $userId
-            ], ['name' => $rule['feature']]);
+            $this->triggerAlertCommand($processName, $userId, $rule['id'], $process->id);;
         }
     }
 
-    public function triggerAlertCommand(string $processName, int $userId,  int $ruleId): void
+    public function triggerAlertCommand(string $processName, int $userId, int $ruleId, int $processId): void
     {
         $command = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $processName)); // CamelCase to snake_case
 
         $args = implode(' ', [
             '--user_id=' . $userId,
-            '--rule_id=' . $ruleId
+            '--rule_id=' . $ruleId,
+            '--process_id=' . $processId
         ]);
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $command . ' ' . $args;
@@ -821,102 +860,102 @@ class DashboardController extends AppController
 
 
     //[POCOR-7559]
-    private function sendSystemUpdateAlerts()
-    {
-        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-        $this->loadModel('System.SystemUpdates');
-        $latestVersion = $this->SystemUpdates->find()
-            ->order([$this->SystemUpdates->aliasField('id') => 'desc'])
-            ->first();
-        $maxId = $latestVersion->id;
-
-        //code to get the latest version[POCOR-7559]
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems'); // POCOR-9113
-        $domain = $ConfigItems->value('version_api_domain');
-        $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
-
-        $http = new Client();
-        try { // POCOR-9113
-            $response = $http->get($api);
-        } catch (\Exception $e) {
-            Log::error('Http Get failed: ' . $e->getMessage());
-            return;
-        }
-        try { // POCOR-9113
-            $status = $response->getStatusCode();
-        } catch (\Exception $e) {
-            Log::error('Http Get failed: ' . $e->getMessage());
-            return;
-        }
-        if ($status == 200) { // POCOR-9113
-            try { // POCOR-9113
-                $responseBody = $response->getBody()->getContents();
-            } catch (\Exception $e) {
-                Log::error('Http Get failed: ' . $e->getMessage());
-                return;
-            }
-
-            //code to get the latest version[POCOR-7559]
-//        $get_response = new Response();
-
-            $jsonResponse = json_decode($responseBody, true);
-            $data = array_reverse($jsonResponse['data']);
-            $key = "system_updates";
-            foreach ($data as $item) {
-                if ($item['id'] > $maxId) {
-                    // $AlertsTable->triggerAlertFeatureShell($key);
-                    $AlertsTable->triggerSystemUpdateAlertFeatureCommand($key, $item['version']);
-                }
-            }
-        }
-    }
-
-    private function sendRetirementWarningAlerts(): void // POCOR-9113
-    {
-        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-        $AlertsData = $AlertsTable->find('all')
-            ->where(['name' => 'RetirementWarning', 'frequency !=' => 'Never'])
-            ->toArray();
-        if(!empty($AlertsData)){
-//            $loggedInUserId = $this->Auth->user(); // POCOR-9113
-            $alertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
-            $alertRuleData = $alertRulesTable->find('all', ['conditions' => ['feature' => 'RetirementWarning', 'enabled' => 1]])->first();
-            if (empty($alertRuleData)) { // POCOR-9113
-                Log::debug('No alert rule data found for RetirementWarning');
-                return;
-            }
-            $alertRolesTable = TableRegistry::getTableLocator()->get('Alert.AlertsRoles');
-            $alertRolesData = $alertRolesTable->find('all', ['conditions' => ['alert_rule_id' => $alertRuleData['id']], 'fields' => ['security_role_id']])->toArray();
-            if( empty($alertRolesData)){ // POCOR-9113
-                Log::debug('No alert roles data found for RetirementWarning');
-                return;
-            }
-            // POCOR-9113
-//            $securityRoleIds = array_map(function ($entity) {
-//                return $entity->security_role_id;
-//            }, $alertRolesData);
-//            if (!is_array($securityRoleIds)) {
-//                $securityRoleIds = [$securityRoleIds]; // Convert to array if it's a single value
+//    private function sendSystemUpdateAlerts()
+//    {
+//        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+//        $this->loadModel('System.SystemUpdates');
+//        $latestVersion = $this->SystemUpdates->find()
+//            ->order([$this->SystemUpdates->aliasField('id') => 'desc'])
+//            ->first();
+//        $maxId = $latestVersion->id;
+//
+//        //code to get the latest version[POCOR-7559]
+//        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems'); // POCOR-9113
+//        $domain = $ConfigItems->value('version_api_domain');
+//        $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
+//
+//        $http = new Client();
+//        try { // POCOR-9113
+//            $response = $http->get($api);
+//        } catch (\Exception $e) {
+//            Log::error('Http Get failed: ' . $e->getMessage());
+//            return;
+//        }
+//        try { // POCOR-9113
+//            $status = $response->getStatusCode();
+//        } catch (\Exception $e) {
+//            Log::error('Http Get failed: ' . $e->getMessage());
+//            return;
+//        }
+//        if ($status == 200) { // POCOR-9113
+//            try { // POCOR-9113
+//                $responseBody = $response->getBody()->getContents();
+//            } catch (\Exception $e) {
+//                Log::error('Http Get failed: ' . $e->getMessage());
+//                return;
 //            }
-//            $securityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers')
-//                                ->find()
-//                                ->where(['security_role_id IN' => $securityRoleIds])
-//                                ->all()
-//                                ->toArray();
-//            $securityUserIds = array_map(function ($entity) {
-//                return $entity->security_user_id;
-//            }, $securityGroupUsers);
-//            $userExist = 0;
-//            if (in_array($loggedInUserId['id'], $securityUserIds)) {
-//                $userExist = 1;
-//            } else {
-//                $userExist = 0;
+//
+//            //code to get the latest version[POCOR-7559]
+////        $get_response = new Response();
+//
+//            $jsonResponse = json_decode($responseBody, true);
+//            $data = array_reverse($jsonResponse['data']);
+//            $key = "system_updates";
+//            foreach ($data as $item) {
+//                if ($item['id'] > $maxId) {
+//                    // $AlertsTable->triggerAlertFeatureShell($key);
+//                    $AlertsTable->triggerSystemUpdateAlertFeatureCommand($key, $item['version']);
+//                }
 //            }
-//            // if($userExist == 1){
-                $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-                $key = "AlertRetirementWarning";
-                $AlertsTable->triggerAlertFeatureShell($key);
-            // }
-        }
-    }
+//        }
+//    }
+
+//    private function sendRetirementWarningAlerts(): void // POCOR-9113
+//    {
+//        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+//        $AlertsData = $AlertsTable->find('all')
+//            ->where(['name' => 'RetirementWarning', 'frequency !=' => 'Never'])
+//            ->toArray();
+//        if(!empty($AlertsData)){
+////            $loggedInUserId = $this->Auth->user(); // POCOR-9113
+//            $alertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
+//            $alertRuleData = $alertRulesTable->find('all', ['conditions' => ['feature' => 'RetirementWarning', 'enabled' => 1]])->first();
+//            if (empty($alertRuleData)) { // POCOR-9113
+//                Log::debug('No alert rule data found for RetirementWarning');
+//                return;
+//            }
+//            $alertRolesTable = TableRegistry::getTableLocator()->get('Alert.AlertsRoles');
+//            $alertRolesData = $alertRolesTable->find('all', ['conditions' => ['alert_rule_id' => $alertRuleData['id']], 'fields' => ['security_role_id']])->toArray();
+//            if( empty($alertRolesData)){ // POCOR-9113
+//                Log::debug('No alert roles data found for RetirementWarning');
+//                return;
+//            }
+//            // POCOR-9113
+////            $securityRoleIds = array_map(function ($entity) {
+////                return $entity->security_role_id;
+////            }, $alertRolesData);
+////            if (!is_array($securityRoleIds)) {
+////                $securityRoleIds = [$securityRoleIds]; // Convert to array if it's a single value
+////            }
+////            $securityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers')
+////                                ->find()
+////                                ->where(['security_role_id IN' => $securityRoleIds])
+////                                ->all()
+////                                ->toArray();
+////            $securityUserIds = array_map(function ($entity) {
+////                return $entity->security_user_id;
+////            }, $securityGroupUsers);
+////            $userExist = 0;
+////            if (in_array($loggedInUserId['id'], $securityUserIds)) {
+////                $userExist = 1;
+////            } else {
+////                $userExist = 0;
+////            }
+////            // if($userExist == 1){
+//                $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+//                $key = "AlertRetirementWarning";
+//                $AlertsTable->triggerAlertFeatureShell($key);
+//            // }
+//        }
+//    }
 }

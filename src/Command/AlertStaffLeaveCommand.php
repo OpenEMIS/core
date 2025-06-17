@@ -76,4 +76,17 @@ class AlertStaffLeaveCommand extends AlertCommandBase
         $this->AlertLogs->insertAlertLog($method, $feature, $recipient, $subject, $message);
         $this->logMsg("✅ Alert logged via {$method} to {$recipient}");
     }
+
+    protected function getPendingItems(string $featureKey): array
+    {
+        // TODO: return an array of items that need to trigger alerts.
+        // For example: return $this->StaffLeave->getNewAlerts($featureKey);
+        return [];
+    }
+
+    protected function fillPlaceholders($item): array
+    {
+        // TODO: return placeholders like ['${leave_date}' => $item['leave_date']]
+        return [];
+    }
 }

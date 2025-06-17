@@ -7,6 +7,8 @@ use Cake\Console\ConsoleIo;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use App\Command\Traits\AlertProcessingTrait;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Log\Log;
+use Cake\I18n\FrozenTime;
 
 abstract class AlertCommandBase extends Command
 {
@@ -35,8 +37,11 @@ abstract class AlertCommandBase extends Command
 
     public function prepareContext(Arguments $args, ConsoleIo $io): bool
     {
-        $this->userId = (int) $args->getOption('user_id');
-        $ruleId = (int) $args->getOption('rule_id');
+        $this->setIo($io);
+        $this->userId = (int)$args->getOption('user_id');
+        $this->ruleId = (int)$args->getOption('rule_id');
+        $this->processId = (int)$args->getOption('process_id');
+        $ruleId = $this->ruleId;
 
         if (!$this->userId || !$ruleId) {
             $io->error("Missing required --user_id or --rule_id.");
@@ -45,7 +50,7 @@ abstract class AlertCommandBase extends Command
 
         try {
             $this->rule = $this->AlertRules->get($ruleId, ['contain' => ['SecurityRoles']]);
-        } catch (RecordNotFoundException $e) {
+        } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
             $io->error("Alert rule with ID {$ruleId} not found.");
             return false;
         }
@@ -64,7 +69,51 @@ abstract class AlertCommandBase extends Command
 
         return true;
     }
+    /**
+     * Main template method to execute feature-based alerts.
+     *
+     * @param string $featureKey Feature identifier (e.g., 'SystemUpdates')
+     * @return int Exit code
+     */
+    protected function runFeatureAlert(string $featureKey): int
+    {
+        try {
+            $pendingItems = $this->getPendingItems($featureKey); // abstract
+            if(empty($pendingItems)){
+                $this->logMsg("✅ Alert  {$featureKey} has no pending items");
+            }
+            foreach ($pendingItems as $item) {
+                $placeholders = $this->fillPlaceholders($item); // abstract
+               $this->processContactList([$this->rule], $placeholders, fn() => $this->contacts);
+            }
+        } catch (\Throwable $e) {
+            $this->failProcess($this->processId, $this->userId, $e);
+            $this->logMsg("[Process Error] " . $e->getMessage());
+            return static::CODE_ERROR;
+        }
 
+        if (!empty($this->processId)) {
+            $this->completeProcess($this->processId, $this->userId);
+        }
+
+        return static::CODE_SUCCESS;
+    }
+
+    /**
+     * Abstract: Should return list of pending items to be alerted.
+     *
+     * @param string $featureKey
+     * @return array List of data items (e.g., versions)
+     */
+    abstract protected function getPendingItems(string $featureKey): array;
+
+    /**
+     * Abstract: Must return an array of placeholders => values for a single data item.
+     *
+     * @param mixed $item The item from getPendingItems()
+     * @return array<string, string>
+     */
+    abstract protected function fillPlaceholders($item): array;
     public function getRoleAssociatedContactList(array $securityRoles): array
     {
         $contactList = ['email' => [], 'phone' => []];
@@ -96,4 +145,58 @@ abstract class AlertCommandBase extends Command
 
         return $contactList;
     }
+
+    public function markProcessRunning(): void
+    {
+        if (empty($this->processId)) {
+            return;
+        }
+
+        $this->loadModel('SystemProcesses');
+        $now = FrozenTime::now();
+
+        $this->SystemProcesses->updateAll([
+            'status' => 2,
+            'modified' => $now,
+            'modified_user_id' => $this->userId,
+            'start_date' => $now
+        ], ['id' => $this->processId]);
+
+        Log::debug("[SystemProcesses] Marked process {$this->processId} as running.");
+    }
+
+    public function failProcess(int $processId, int $userId, $e = null): void
+    {
+        $this->loadModel('SystemProcesses');
+
+        $this->SystemProcesses->updateAll([
+            'status' => -2,
+            'modified' => FrozenTime::now(),
+            'modified_user_id' => $userId
+        ], ['id' => $processId]);
+
+        $errorMessage = '';
+        if ($e instanceof \Throwable) {
+            $errorMessage = $e->getMessage();
+        }
+
+        Log::error("[SystemProcesses] Process $processId failed: $errorMessage");
+    }
+    // In AlertCommandBase.php
+    public function completeProcess(int $processId, int $userId): void
+    {
+        $this->loadModel('SystemProcesses');
+        $now = FrozenTime::now();
+
+        $this->SystemProcesses->updateAll([
+            'status' => 3,
+            'end_date' => $now,
+            'modified' => $now,
+            'modified_user_id' => $userId
+        ], ['id' => $processId]);
+
+        Log::debug("[SystemProcesses] Marked process $processId as completed.");
+    }
+
+
 }

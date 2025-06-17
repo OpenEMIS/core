@@ -618,6 +618,9 @@ class AlertRulesTable extends ControllerActionTable
 
         $result = [];
         foreach ($data as $key => $value) {
+            if(!is_array($value)){
+                $value = $value->toArray();
+            }
             $result[$value['name']] = $value['end_date'];
         }
         return $result;
