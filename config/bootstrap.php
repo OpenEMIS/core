@@ -138,30 +138,58 @@ if (PHP_SAPI === 'cli') {
  */
 
 // Read the configured fullBaseUrl (can be set in app_local.php)
+
+//POCOR-9127 Comment code because of POCOR-9189 starts
+// $fullBaseUrl = Configure::read('App.fullBaseUrl');
+
+// if (!$fullBaseUrl) {
+//     // POCOR-9127 start – Determine protocol and build URL dynamically
+//     $trustProxy = env('TRUST_PROXY', false);
+//     $https = env('HTTPS', false);
+//     $httpXForwardedProto = env('HTTP_X_FORWARDED_PROTO', false);
+
+//     $s = '';
+//     if ($https) {
+//         $s = 's';
+//     } elseif ($trustProxy && $httpXForwardedProto) {
+//         $proto = strtolower(trim(explode(',', $httpXForwardedProto)[0]));
+//         if ($proto === 'https') {
+//             $s = 's';
+//         }
+//     }
+
+//     $host = env('HTTP_HOST', 'localhost');
+//     $fullBaseUrl = 'http' . $s . '://' . $host;
+//     Configure::write('App.fullBaseUrl', $fullBaseUrl);
+//     // POCOR-9127 end
+
+//     unset($host, $s); // clean up
+// }
+// POCOR-9189 ends
+
 $fullBaseUrl = Configure::read('App.fullBaseUrl');
-
 if (!$fullBaseUrl) {
-    // POCOR-9127 start – Determine protocol and build URL dynamically
-    $trustProxy = env('TRUST_PROXY', false);
-    $https = env('HTTPS', false);
-    $httpXForwardedProto = env('HTTP_X_FORWARDED_PROTO', false);
+    /*
+     * When using proxies or load balancers, SSL/TLS connections might
+     * get terminated before reaching the server. If you trust the proxy,
+     * you can enable `$trustProxy` to rely on the `X-Forwarded-Proto`
+     * header to determine whether to generate URLs using `https`.
+     *
+     * See also https://book.cakephp.org/4/en/controllers/request-response.html#trusting-proxy-headers
+     */
+    $trustProxy = false;
 
-    $s = '';
-    if ($https) {
+    $s = null;
+    if (env('HTTPS') || ($trustProxy && env('HTTP_X_FORWARDED_PROTO') === 'https')) {
         $s = 's';
-    } elseif ($trustProxy && $httpXForwardedProto) {
-        $proto = strtolower(trim(explode(',', $httpXForwardedProto)[0]));
-        if ($proto === 'https') {
-            $s = 's';
-        }
     }
+    $s = 's';
 
-    $host = env('HTTP_HOST', 'localhost');
-    $fullBaseUrl = 'http' . $s . '://' . $host;
-    Configure::write('App.fullBaseUrl', $fullBaseUrl);
-    // POCOR-9127 end
-
-    unset($host, $s); // clean up
+    $httpHost = env('HTTP_HOST');
+    if (isset($httpHost)) {
+        $fullBaseUrl = 'http' . $s . '://' . $httpHost;
+    }
+    unset($httpHost, $s);
 }
 
 if ($fullBaseUrl) {
