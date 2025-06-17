@@ -917,6 +917,15 @@ class InstitutionsTable extends AppTable
 
                 switch ($feature) {
                     case 'Report.InstitutionStudents':
+                        //POCOR-8416[START]
+                        $Statuses = self::getDynamicTableInstance('Student.StudentStatuses');
+                        $statusData = $Statuses->find()->select(['id', 'name'])->toArray();
+                        foreach ($statusData as $key => $value) {
+                            $statusOptions[$value->id] = $value->name;
+                        }
+                        $statusOptions = array(-1 => __('All Status')) + $statusOptions;
+                        break;
+                        //POCOR-8416[END]
                     case 'Report.InstitutionStudentEnrollments':
                         $Statuses = self::getDynamicTableInstance('Student.StudentStatuses');
                         $statusData = $Statuses->find()->select(['id', 'name'])->toArray();
