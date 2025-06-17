@@ -1,3 +1,23 @@
+### [4.28.1] - 2025-06-13
+- Bug Fixed: Institutions > Performance > Report Cards > Download PDF: Principal placeholder is displaying teacher's name instead of principal
+- Bug Fixed: Institutions > Performance > Report Cards: Report doesn't display the correct GPA.
+
+### [4.28.0] - 2025-06-12
+- Implemented: Develop changes to contacts for the Add Student / Staff function
+- Implemented: Develop placeholders for staff profile
+- Implemented: Develop changes to special needs assessments list page
+- Implemented: Develop docker and docker-compose files for OpenEMIS Core
+- Bug Fixed: Reports > Institutions > Student Attendance Summary: Data is not updated even after running the insert query to update
+- Bug Fixed: Institutions > Attendance > Staff > View History Log: User receives a 404 error message.
+- Bug Fixed: Administration>System Setup>Risks: User should able to select multiple criteria for risks
+- Bug Fixed: Institutions > Academic > Textbooks : System should save list of students in the table
+- Bug Fixed: Institutions > Student > Page 3 > Search : User is unable to search for a student
+- Bug Fixed: Institutions > Performance > GPA: Buttons aren't being displayed beside the search bar.
+- Bug Fixed: Administration>Performance>GPA: User is able to delete GPA without associated records
+- Bug Fixed: Administration > Performance > Outcomes > Grading Types > Add: Text Field for "Grading Options" displays a html statement.
+- Bug Fixed: Reports > Institutions Classes: When exporting institutions class report, the report does not show the custom fields
+- Bug Fixed: Institutions > Students: User receives a 404 error message (tested in Government Technical Institute)
+
 ### [4.27.0] - 2025-06-05
 - Implemented: Develop student report cards placeholder for class rank and grade rank
 - Bug Fixed: Institutions > Survey > Forms > View > Edit > Teachers and Staff : User receives a 404 error message when editing.
