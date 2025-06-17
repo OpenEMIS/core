@@ -486,12 +486,9 @@ class AlertRulesTable extends ControllerActionTable
 
     public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = $attr['entity'];
-        $entity->setError('security_roles', ['This field cannot be empty']);
         // POCOR-8286 start
         $attr = $this->processAlertRoleAttributes($attr, $action);
         $attr['attr']['required'] = true;
-        $attr['attr']['error'] = 'Wow';
         return $attr;
     }
 
