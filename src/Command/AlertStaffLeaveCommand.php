@@ -1,92 +1,116 @@
 <?php
+
 namespace App\Command;
 
+use App\Command\AlertCommandBase;
 use Cake\Console\Arguments;
-use Cake\Console\Command;
 use Cake\Console\ConsoleIo;
-use Cake\Filesystem\Folder;
 use Cake\I18n\FrozenDate;
-use Cake\I18n\FrozenTime;
+use Cake\ORM\TableRegistry;
 
+/**
+ * Command to send alerts for staff leave reminders.
+ */
 class AlertStaffLeaveCommand extends AlertCommandBase
 {
-    public function execute(Arguments $args, ConsoleIo $io): int
-    {
-        $this->setIo($io);
-        $this->loadModel('Institution.StaffLeave');
-        $model = $this->StaffLeave;
-
-        $processName = $this->processName;
-        $feature = $this->featureName;
-
-        $this->Alerts->updateAll(
-            ['process_id' => getmypid(), 'modified' => FrozenTime::now()],
-            ['process_name' => $processName]
-        );
-
-        $stopFile = ROOT . DS . 'tmp' . DS . "{$processName}.stop";
-
-            // your alert processing logic
-
-
-        do {
-            $rules = $this->getAlertRules($feature);
-
-            foreach ($rules as $rule) {
-                $thresholdArray = json_decode($rule->threshold ?? '{}', true);
-                $data = $this->getAlertData($rule->threshold, $model);
-
-                foreach ($data as $vars) {
-                    $vars['threshold'] = $thresholdArray;
-                    $institutionId = $vars['institution']['id'] ?? null;
-
-                    $dateTo = $vars['date_to'] ?? null;
-                    if ($dateTo instanceof \DateTimeInterface) {
-                        $diff = $dateTo->diff(FrozenDate::now());
-                        $vars['day_difference'] = $diff->days;
-                    } else {
-                        $vars['day_difference'] = null;
-                    }
-
-                    if (!empty($rule['security_roles']) && !empty($institutionId)) {
-                        $this->insertAlertLogs($rule, $institutionId, $feature, $vars);
-                    }
-                }
-            }
-
-            sleep(10);
-
-        } while (!file_exists($stopFile));
-
-        if (file_exists($stopFile)) {
-            unlink($stopFile);
-            $this->logMsg("🧹 Cleaned up stop file: {$stopFile}");
-        }
-
-        $this->Alerts->updateAll(
-            ['process_id' => null, 'modified' => FrozenTime::now()],
-            ['process_name' => $processName]
-        );
-
-        return Command::SUCCESS;
-    }
-
-    public function logAlert($method, $feature, $recipient, $subject, $message): void
+    /**
+     * Log alert (SMS or Email) into alert logs.
+     *
+     * @param string $method Message method (sms/email)
+     * @param string $feature Feature name
+     * @param string $recipient Recipient identifier
+     * @param string $subject Subject text
+     * @param string $message Body text
+     */
+    public function logAlert($method, $feature, $recipient, $subject, $message)
     {
         $this->AlertLogs->insertAlertLog($method, $feature, $recipient, $subject, $message);
-        $this->logMsg("✅ Alert logged via {$method} to {$recipient}");
     }
 
-    protected function getPendingItems(string $featureKey): array
+    /**
+     * Main execute() entry point.
+     */
+    public function execute(Arguments $args, ConsoleIo $io): int
     {
-        // TODO: return an array of items that need to trigger alerts.
-        // For example: return $this->StaffLeave->getNewAlerts($featureKey);
-        return [];
+        if (!$this->prepareContext($args, $io)) {
+            return static::CODE_SUCCESS;
+        }
+
+        return $this->runFeatureAlert('StaffLeave');
     }
 
+    /**
+     * Get pending leave records to alert on.
+     *
+     * @param string $feature Feature key
+     * @return array List of leave entries to alert
+     */
+    protected function getPendingItems(string $feature): array
+    {
+        $this->loadModel('Institution.StaffLeave');
+        $approvedStatusIds = $this->getApprovedStepIds();
+//        $this->logMsg("Approved Statis: " . print_r($approvedStatusIds, true));
+//        $this->logMsg(print_r($approvedStatusIds,true));
+        $threshold = json_decode($this->rule['threshold'], true);
+        $daysBefore = (int)($threshold['value'] ?? 1); // default to 1 day
+        $targetDate = FrozenDate::now()->addDays($daysBefore)->format('Y-m-d');
+        $staff_leave_type = $threshold['staff_leave_type'];
+        $userId = $this->userId;
+        $isSuperAdmin = $this->Users->get($userId)->super_admin;
+        $where = [
+            'StaffLeave.status_id IN' => $approvedStatusIds,
+            'StaffLeave.date_to' => $targetDate,
+            'StaffLeave.staff_leave_type_id' => $staff_leave_type,
+        ];
+        if(!$isSuperAdmin){
+            $institutionIds = $this->SecurityGroupUsers->getInstitutionsByUser($userId);
+            $where['StaffLeave.institution_id IN'] = $institutionIds;
+        }
+        $this->logMsg("Where: " . print_r($where, true));
+
+        return $this->StaffLeave->find()
+            ->matching('StaffLeaveTypes')
+            ->contain(['Users',
+                'Statuses',
+                'Institutions'])
+            ->where($where)->toArray();
+    }
+
+    /**
+     * Map placeholders for a leave alert.
+     *
+     * @param \Cake\Datasource\EntityInterface|array $item
+     * @return array<string, string>
+     */
     protected function fillPlaceholders($item): array
     {
-        // TODO: return placeholders like ['${leave_date}' => $item['leave_date']]
-        return [];
+        return [
+            '${leave_date}' => $item['leave_date'] ?? '',
+            '${user_name}' => $item['user']['name'] ?? ''
+        ];
+    }
+
+    /**
+     *  Function to get the list of the workflow steps by a given workflow model's model and the workflow status code
+     *
+     *  @param string $model The name of the model e.g. Institution.InstitutionSurveys
+     *  @param string $code The code of the workflow status
+     *  @return array The list of workflow steps id
+     */
+    protected function getApprovedStepIds()
+    {
+        $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+        $ids = $WorkflowModelsTable
+            ->find('all')
+            ->matching('Workflows.WorkflowSteps')
+            ->where([
+                $WorkflowModelsTable->aliasField('model') => 'Institution.StaffLeave',
+                'WorkflowSteps.name' => 'Approved'
+            ])
+            ->distinct(['WorkflowSteps.id'])
+            ->select(['id' => 'WorkflowSteps.id'])
+            ->toArray();
+        $distinctIds = array_column($ids, 'id');
+        return array_unique($distinctIds);
     }
 }

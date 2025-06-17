@@ -39,14 +39,18 @@ class SendingAlertCommand extends Command
             ])
             ->all();
         foreach ($alertLogsList as $log) {
-            $methods = array_map('trim', explode(',', $log->method));
+            $methods = array_map(
+                fn($m) => strtolower(trim($m)),
+                explode(',', $log->method)
+            );
+            $io->out("Methods" . print_r($methods, true));
             if (intval($log->status) === 0) {
                 // Process only if status is pending
-                if (in_array('Email', $methods)) {
+                if (in_array('email', $methods)) {
                     $this->sendEmail($log, $io);
                 }
 
-                if (in_array('SMS', $methods)) {
+                if (in_array('sms', $methods)) {
                     $this->sendSms($log, $io);
                 }
 
@@ -74,6 +78,8 @@ class SendingAlertCommand extends Command
 
     private function sendEmail($log, ConsoleIo $io): void
     {
+        $io->out('Subject: ' . $log->subject);
+        $io->out('Message: ' . $log->message);
         $emailArray = explode(', ', $log->destination);
         $sendTo = [];
 
@@ -84,20 +90,26 @@ class SendingAlertCommand extends Command
             }
         }
 
-        $emailObj = new Email('openemis');
-        $emailObj->setTo($sendTo)
-            ->setSubject($log->subject)
-            ->send($log->message);
+//        $emailObj = new Email('openemis');
+//        $emailObj->setTo($sendTo)
+//            ->setSubject($log->subject)
+//            ->send($log->message);
 
         $io->out('Email sent to: ' . implode(', ', array_keys($sendTo)));
+        $io->out('Subject: ' . $log->subject);
+        $io->out('Message: ' . $log->message);
     }
 
     private function sendSms($log, ConsoleIo $io): void
     {
+        $io->out('Subject: ' . $log->subject);
+        $io->out('Message: ' . $log->message);
         $phones = array_map('trim', explode(',', $log->destination));
 
         foreach ($phones as $phone) {
-            $this->sendTwilioSms($phone, $log->message, $io);
+//            $this->sendTwilioSms($phone, $log->message, $io);
+            $io->out('SMS sent to: ' . $phone);
+            $io->out('Message: ' . $log->message);
         }
     }
 
