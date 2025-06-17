@@ -24,7 +24,11 @@ class AlertsTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         parent::initialize($config);
-
+        $this->hasMany('AlertRules', [
+            'className' => 'Alert.AlertRules',
+            'foreignKey' => 'feature',     // in AlertRules
+            'bindingKey' => 'name',        // in Alerts
+        ]);
         $this->statusTypes = $this->getSelectOptions('Alert.status_types');
 
         $this->toggle('add', false);

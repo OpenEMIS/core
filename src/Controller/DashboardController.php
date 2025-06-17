@@ -739,8 +739,8 @@ class DashboardController extends AppController
 
         return $alertsTable->find()
             ->distinct(['Alerts.id'])
-            ->matching('AlertRules.AlertsRoles', function ($q) use ($userRoleIds) {
-                return $q->where(['AlertsRoles.security_role_id IN' => $userRoleIds]);
+            ->matching('AlertRules.SecurityRoles', function ($q) use ($userRoleIds) {
+                return $q->where(['SecurityRoles.id IN' => $userRoleIds]);
             })
             ->where([
                 'Alerts.frequency IS NOT' => null,
