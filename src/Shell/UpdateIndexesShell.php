@@ -40,11 +40,11 @@ class UpdateIndexesShell extends Shell
 
                 // for cli-debug.log to see still updating
                 Log::write('debug', 'Criteria: '. $key);
-                // end debug                
+                // end debug
                 $this->autoUpdateRisks($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId);
             }
         }
-        $this->out($institutionId);
+
         // update the generated_by and generated_on in indexes table
         $this->InstitutionRisks->updateAll(
             [
@@ -128,11 +128,11 @@ class UpdateIndexesShell extends Shell
                 ];
                 break;
         }
-        
+
         $criteriaModelResults = $CriteriaModel->find()
             ->where([$condition])
             ->all();
-        
+
         foreach ($criteriaModelResults as $criteriaModelEntity) {
             $criteriaModelEntityId = $criteriaModelEntity->id;
 
