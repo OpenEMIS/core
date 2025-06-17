@@ -14,6 +14,7 @@ class POCOR8286 extends AbstractMigration
     {
 //        return;
         $this->backupTables();
+        $this->renameStudentAttendance();
         $this->removeSmsConfigItems();
         $this->insertConfigItems();
         $this->insertNewExternalDataSourceAttributes();
@@ -23,6 +24,7 @@ class POCOR8286 extends AbstractMigration
     private function backupTables(): void
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        $this->backupTable('alerts', 'z_8286_alerts');
         $this->backupTable('config_items', 'z_8286_config_items');
         $this->backupTable('external_data_source_attributes', 'z_8286_external_data_source_attributes');
         $this->backupTable('messaging', 'z_8286_messaging');
@@ -89,6 +91,11 @@ class POCOR8286 extends AbstractMigration
     }
 
 
+    private function renameStudentAttendance(): void
+    {
+        $this->execute("UPDATE `alerts` set `name`= 'StudentAttendance' WHERE `name` = 'Student Attendance'");
+        Log::info("Renamed 'Student Attendance' to 'StudentAttendance'");
+    }
     private function removeSmsConfigItems(): void
     {
         $this->execute("DELETE FROM `config_items` WHERE `type` = 'SMS'");
@@ -194,6 +201,7 @@ class POCOR8286 extends AbstractMigration
     private function restoreTables(): void
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        $this->restoreTable('alerts', 'z_8286_alerts');
         $this->restoreTable('config_items', 'z_8286_config_items');
         $this->restoreTable('external_data_source_attributes', 'z_8286_external_data_source_attributes');
         $this->restoreTable('messaging', 'z_8286_messaging');

@@ -20,8 +20,7 @@ use Cake\Cache\Cache;
 class DashboardController extends AppController
 {
     private const SKIPPABLE_ALERTS = [
-        'gaudeamus',
-        'igitur'];
+        'UnmarkedAttendance'];
     private bool $useCacheInCallAlerts = false;
     public function initialize(): void
     {

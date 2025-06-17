@@ -65,7 +65,16 @@ class AlertLicenseValidityShell extends AlertShell
                             // end
 
                             if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
-                                $this->insertAlertLogs($rule, $institutionId, $feature, $vars);
+                                $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
+
+                                $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
+
+                                // subject and message for alert email
+                                $subject = $this->AlertLogs->replaceMessage($feature, $rule->subject, $vars);
+                                $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
+
+                                // insert record to  the alertLog if email available
+                                $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
                             }
                         }
                     }
@@ -78,6 +87,4 @@ class AlertLicenseValidityShell extends AlertShell
 
         $this->Alerts->updateAll(['process_id' => NULL, 'modified' => Time::now()], ['process_name' => $processName]);
     }
-
-
 }
