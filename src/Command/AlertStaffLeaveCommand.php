@@ -72,6 +72,7 @@ class AlertStaffLeaveCommand extends AlertCommandBase
             ->matching('StaffLeaveTypes')
             ->contain(['Users',
                 'Statuses',
+                'StaffLeaveTypes',
                 'Institutions'])
             ->where($where)->toArray();
     }
@@ -84,9 +85,42 @@ class AlertStaffLeaveCommand extends AlertCommandBase
      */
     protected function fillPlaceholders($item): array
     {
+        // Calculate day difference
+        $today = FrozenDate::now();
+        $leaveEndDate = isset($item['date_to']) ? new FrozenDate($item['date_to']) : null;
+        $dayDiff = $leaveEndDate ? $today->diffInDays($leaveEndDate, false) : '';
+
+        // This is assuming your rule is available here
+        $thresholdValue = $this->rule['threshold'] ?? '{}';
+        $threshold = json_decode($thresholdValue, true);
+
         return [
-            '${leave_date}' => $item['leave_date'] ?? '',
-            '${user_name}' => $item['user']['name'] ?? ''
+            '${threshold.value}' => $threshold['value'] ?? '',
+            '${staff_leave_type.name}' => $item['staff_leave_type']['name'] ?? '',
+            '${date_from}' => $item['date_from'] ?? '',
+            '${date_to}' => $item['date_to'] ?? '',
+            '${day_difference}' => (string)$dayDiff,
+
+            '${user.openemis_no}' => $item['user']['openemis_no'] ?? '',
+            '${user.first_name}' => $item['user']['first_name'] ?? '',
+            '${user.middle_name}' => $item['user']['middle_name'] ?? '',
+            '${user.third_name}' => $item['user']['third_name'] ?? '',
+            '${user.last_name}' => $item['user']['last_name'] ?? '',
+            '${user.preferred_name}' => $item['user']['preferred_name'] ?? '',
+            '${user.email}' => $item['user']['email'] ?? '',
+            '${user.address}' => $item['user']['address'] ?? '',
+            '${user.postal_code}' => $item['user']['postal_code'] ?? '',
+            '${user.date_of_birth}' => $item['user']['date_of_birth'] ?? '',
+
+            '${institution.name}' => $item['institution']['name'] ?? '',
+            '${institution.code}' => $item['institution']['code'] ?? '',
+            '${institution.address}' => $item['institution']['address'] ?? '',
+            '${institution.postal_code}' => $item['institution']['postal_code'] ?? '',
+            '${institution.contact_person}' => $item['institution']['contact_person'] ?? '',
+            '${institution.telephone}' => $item['institution']['telephone'] ?? '',
+            '${institution.fax}' => $item['institution']['fax'] ?? '',
+            '${institution.email}' => $item['institution']['email'] ?? '',
+            '${institution.website}' => $item['institution']['website'] ?? '',
         ];
     }
 

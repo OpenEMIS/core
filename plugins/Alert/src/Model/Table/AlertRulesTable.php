@@ -39,7 +39,6 @@ class AlertRulesTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Alert.AlertRuleStudentAttendance');
         //$this->addBehavior('Alert.AlertRuleAttendance');
