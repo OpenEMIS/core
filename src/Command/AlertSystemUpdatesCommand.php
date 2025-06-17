@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Command;
 
 use Cake\Console\Arguments;
@@ -14,34 +15,19 @@ use Cake\ORM\Locator\LocatorAwareTrait;
 class AlertSystemUpdatesCommand extends AlertCommandBase
 {
     use LocatorAwareTrait;
+
     public function logAlert($method, $feature, $recipient, $subject, $message)
     {
-        $this->AlertLogs->insertSystemUpdateAlertLog($method, $feature, $recipient, $subject, $message);
+        $this->AlertLogs->insertAlertLog($method, $feature, $recipient, $subject, $message);
+        $this->logMsg("✅ Alert logged via {$method} to {$recipient}. \nSubject: {$subject}.\nMessage: {$message}");
     }
 
-    public function execute(Arguments $args, ConsoleIo $io): int
+    protected function getPendingItems(string $featureKey): array
     {
-        $alertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-        $alertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
-        $userId = (int) ($args->getOption('user_id') ?? 0);
-        $ruleId = (int) ($args->getOption('rule_id') ?? 0);
-        $featureKey = 'SystemUpdates';
-        $rule = $alertRulesTable->get($ruleId);
-        // 🧪 Dry run: make sure contacts can be built for each rule
-        if (!empty($rule['security_roles'])) {
-            $contactList = $this->getRoleAssociatedContactList($rule['security_roles']);
-            if (empty($contactList)) {
-                Log::debug("[SystemUpdates] No contacts found for rule ID {$rule['id']}");
-                return static::CODE_SUCCESS;
-            }
-        }
-
-        // ✅ Proceed to API check
         $this->loadModel('System.SystemUpdates');
         $latestVersion = $this->SystemUpdates->find()
             ->order([$this->SystemUpdates->aliasField('id') => 'desc'])
             ->first();
-
         $maxId = $latestVersion->id ?? 0;
 
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
@@ -49,49 +35,39 @@ class AlertSystemUpdatesCommand extends AlertCommandBase
         $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
 
         $http = new Client();
-        try {
-            $response = $http->get($api);
-            $status = $response->getStatusCode();
-            $body = $response->getBody()->getContents();
-        } catch (\Exception $e) {
-            Log::error('[SystemUpdates] API request failed: ' . $e->getMessage());
-            return static::CODE_ERROR;
+        $response = $http->get($api);
+        if ($response->getStatusCode() !== 200) {
+            throw new \RuntimeException("API returned HTTP " . $response->getStatusCode());
         }
 
-        if ($status !== 200) {
-            Log::error('[SystemUpdates] API returned HTTP ' . $status);
-            return static::CODE_ERROR;
-        }
-
-        $json = json_decode($body, true);
+        $json = json_decode($response->getBody()->getContents(), true);
         $data = array_reverse($json['data'] ?? []);
 
+        $newVersions = [];
         foreach ($data as $item) {
-            if ($item['id'] <= $maxId) {
-                continue;
+            if ($item['id'] > $maxId && !$this->versionAlreadyAlerted($featureKey, $item['version'])) {
+                $newVersions[] = $item;
             }
-
-            if ($this->versionAlreadyAlerted($featureKey, $item['version'])) {
-                Log::debug("[SystemUpdates] Skipping already alerted version: " . $item['version']);
-                continue;
-            }
-
-            $alertsTable->triggerAlertCommand($featureKey, [
-                'version' => $item['version'],
-                'user_id' => $userId,
-                'roles' => '',
-                'schools' => ''
-            ]);
         }
 
-        return static::CODE_SUCCESS;
+        return $newVersions;
     }
 
-    private function getRoleAssociatedContactList(array $roleIds): array
+    protected function fillPlaceholders($item): array
     {
-        // placeholder logic – assumes role-to-contact mapping is handled
-        return $roleIds ? ['contact@example.com'] : [];
+        return ['${version}' => $item['version']];
     }
+
+
+    public function execute(Arguments $args, ConsoleIo $io): int
+    {
+        if (!$this->prepareContext($args, $io)) {
+            return static::CODE_SUCCESS;
+        }
+
+        return $this->runFeatureAlert('SystemUpdates');
+    }
+
 
     private function versionAlreadyAlerted(string $feature, string $version): bool
     {
@@ -104,23 +80,5 @@ class AlertSystemUpdatesCommand extends AlertCommandBase
                 ])
                 ->count() > 0;
     }
-
-    public function getOptionParser(): ConsoleOptionParser
-    {
-        $parser = parent::getOptionParser();
-
-        return $parser
-            ->addOption('user_id', [
-                'help' => 'ID of the user triggering the alert',
-                'short' => 'u',
-                'default' => null
-            ])
-            ->addOption('rule_id', [
-                'help' => 'Comma-separated list of rule IDs',
-                'default' => 'r'
-            ])
-            ;
-    }
-
 
 }
