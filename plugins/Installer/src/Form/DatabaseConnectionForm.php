@@ -308,7 +308,8 @@ return [
             //     exit();
             //   }
             // $query = '';
-            $sqlScript = file(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            // $sqlScript = file(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            $sqlScript = file(ROOT . DS . 'download' . DS .$fileName.'.sql');
             
             
            
