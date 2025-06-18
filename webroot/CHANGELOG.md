@@ -1,3 +1,6 @@
+### [4.28.2] - 2025-06-18
+- Bug Fixed: Institutions > Performance > Report Cards > Merge and Download: Report Cards are misaligned when using "Merge and Download", but is align when downloaded individually.
+
 ### [4.28.1] - 2025-06-13
 - Bug Fixed: Institutions > Performance > Report Cards > Download PDF: Principal placeholder is displaying teacher's name instead of principal
 - Bug Fixed: Institutions > Performance > Report Cards: Report doesn't display the correct GPA.
