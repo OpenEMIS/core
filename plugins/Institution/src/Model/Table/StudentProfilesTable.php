@@ -409,6 +409,7 @@ class StudentProfilesTable extends ControllerActionTable
                     'education_grade_id' => $educationGradeId,
                     'student_profile_template_id' => $reportCardId
                 ];
+                // POCOR-9165 start
                 $encodedParams = $this->paramsEncode($params);
                 $downloadAllPdfUrl = $this->url('downloadAllPdf');
                 $downloadAllPdfUrl['1'] = $encodedParams;
@@ -416,6 +417,7 @@ class StudentProfilesTable extends ControllerActionTable
                 $downloadAllUrl['1'] = $encodedParams;
                 unset($downloadAllPdfUrl['?']);
                 unset($downloadAllUrl['?']);
+                // POCOR-9165 end
                 if ($generatedCount > 0 || $publishedCount > 0) {
                     $downloadButtonPdf['url'] = $downloadAllPdfUrl;
                     $downloadButtonPdf['type'] = 'button';
@@ -853,7 +855,7 @@ class StudentProfilesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
-            exit();
+            exit(); // POCOR-9165
         } else {
             $event->stopPropagation();
             $this->Alert->warning('StudentProfiles.noFilesToDownload');
@@ -902,7 +904,7 @@ class StudentProfilesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
-            exit();
+            exit(); // POCOR-9165
         } else {
             $event->stopPropagation();
             $this->Alert->warning('StudentProfiles.noFilesToDownload');
