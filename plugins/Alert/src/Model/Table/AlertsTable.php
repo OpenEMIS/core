@@ -43,14 +43,24 @@ class AlertsTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($event, $entity);
+    }
+
+    public function setupFields(Event $event, Entity $entity)
     {
         $this->field('name', ['sort' => false]);
         $this->field('process_name', ['visible' => false]);
         $this->field('process_id', ['visible' => false]);
-        $this->field('frequency',['sort'=>false,'after'=>'process_name']); //POCOR-7558
+        $this->field('frequency',['sort'=>false,'after'=>'name', 'entity' => $entity ]); //POCOR-7558
         $this->field('last_run_date'); //POCOR-7558
         // // $this->field('status', ['after' => 'name']); //POCOR-7558
+
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');
 		if(!empty($is_manual_exist)){
@@ -353,24 +363,42 @@ class AlertsTable extends ControllerActionTable
 
     public function onUpdateFieldFrequency(Event $event, array $attr, $action)
     {
-        $freqOptions=[
-            "Never" => __("Never"), // POCOR-8533
-            "Daily" => __("Daily"),
-            "Weekly" => __("Weekly"),
-            "Monthly" => __("Monthly"),
-            "Yearly" => __("Yearly"),
-            "Once" => __("Once")
+        // POCOR-8286 start
+        $entity = $attr['entity'];
+        $restrictedProcesses = [
+            'AlertAttendance',
+            'AlertStudentAdmission',
+            'AlertStudentEnrollment'
         ];
+
+        if (in_array($entity->process_name, $restrictedProcesses, true)) {
+            $freqOptions = [
+                "Never" => __("Never"), // POCOR-8533
+                "Once" => __("Once")
+            ];
+        } else {
+            $freqOptions = [
+                "Never" => __("Never"), // POCOR-8533
+                "Daily" => __("Daily"),
+                "Weekly" => __("Weekly"),
+                "Monthly" => __("Monthly"),
+                "Yearly" => __("Yearly"),
+                "Once" => __("Once")
+            ];
+        }
+        // POCOR-8286 end
         $attr['type'] = 'select';
         $attr['attr']['options'] = $freqOptions;
-	    $attr['onChangeReload'] = true;
+        $attr['onChangeReload'] = true;
+
         return $attr;
     }
+
 
     public function editBeforeAction(Event $event)
     {
         $this->field('name',['type' => 'readonly']);
-        $this->field('frequency',['after' => 'name']);
+//        $this->field('frequency',['after' => 'name']);
         $this->field('last_run_date', ['visible' => false]);
     }
      //POCOR-7558 end
