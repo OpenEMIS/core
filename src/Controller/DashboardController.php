@@ -688,10 +688,12 @@ class DashboardController extends AppController
         $userRoleIds = $isSuperAdmin ? [] : $this->getUserSecurityRoleIds($userId);
 
         $alerts = $this->getUserAccessibleAlerts($alertsTable, $userRoleIds, $isSuperAdmin);
-        $mainAlerts = [];
 
         foreach ($alerts as $alert) {
-            $alert_name = $alert->name;
+            if(!is_array($alert)){
+                $alert = $alert->toArray();
+            }
+            $alert_name = $alert['name'];
             if (in_array($alert_name, self::SKIPPABLE_ALERTS, true)) {
                 continue;
             }
@@ -705,19 +707,16 @@ class DashboardController extends AppController
                     ->toArray();
 
                 foreach ($activeRules as $rule) {
-                    $mainAlerts[$alert['process_name']] = $rule;
+                    if(!is_array($rule)){
+                        $rule = $rule->toArray();
+                    }
+                    self::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId);
                 }
             }else{
                 Log::debug('Should Not Trigger Alert');
             }
         }
 
-        foreach ($mainAlerts as $processName => $rule) {
-            if(!is_array($rule)){
-                $rule = $rule->toArray();
-            }
-            $this->triggerSystemProcess($systemProcessesTable, $rule, $processName, $userId);
-        }
     }
 
     public function getUserSecurityRoleIds(int $userId): array
@@ -750,19 +749,19 @@ class DashboardController extends AppController
     private function shouldTriggerAlert($alert): bool
     {
         $currentDate = FrozenTime::now()->format('Y-m-d');
-        $frequency = $alert->frequency;
+        $frequency = $alert['frequency'];
 
-        $lastRunDate = $this->getLastRunDateForAlert($alert->process_name);
+        $lastRunDate = $this->getLastRunDateForAlert($alert['process_name']);
 
         if ($lastRunDate == -1 ) {
-            Log::debug("[Alert: {$alert->name}] Not eligible for run – still active or never completed.");
+            Log::debug("[Alert: {$alert['name']}] Not eligible for run – still active or never completed.");
             return false;
         }else if (empty($lastRunDate)) {
-            Log::debug("[Alert: {$alert->name}] Not triggered yet");
+            Log::debug("[Alert: {$alert['name']}] Not triggered yet");
 
             return true;
         }
-        Log::debug("[Alert: {$alert->name}] $lastRunDate");
+        Log::debug("[Alert: {$alert['name']}] $lastRunDate");
         $nextRunDate = $this->calculateNextRunDate($frequency, clone $lastRunDate);
 
         if ($nextRunDate === null) {
@@ -822,7 +821,7 @@ class DashboardController extends AppController
     }
 
 
-    private function triggerSystemProcess($systemProcessesTable, $rule, string $processName, int $userId): void
+    public static function triggerSystemProcess($systemProcessesTable, $rule, string $processName, int $userId, array $extraOptions = []): void
     {
         $now = FrozenTime::now();
 
@@ -835,19 +834,25 @@ class DashboardController extends AppController
         ]);
 
         if ($systemProcessesTable->save($process)) {
-            $this->triggerAlertCommand($processName, $userId, $rule['id'], $process->id);;
+            self::triggerAlertCommand($processName, $userId, $rule['id'], $process->id, $extraOptions);
         }
     }
 
-    public function triggerAlertCommand(string $processName, int $userId, int $ruleId, int $processId): void
+    public static function triggerAlertCommand(string $processName, int $userId, int $ruleId, int $processId, array $extraOptions = []): void
     {
         $command = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $processName)); // CamelCase to snake_case
 
-        $args = implode(' ', [
+        $argsArray = [
             '--user_id=' . $userId,
             '--rule_id=' . $ruleId,
             '--process_id=' . $processId
-        ]);
+        ];
+
+        foreach ($extraOptions as $key => $value) {
+            $argsArray[] = '--' . $key . '=' . escapeshellarg($value);
+        }
+
+        $args = implode(' ', $argsArray);
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $command . ' ' . $args;
         $logPath = ROOT . DS . 'logs' . DS . $command . '.log & echo $!';
