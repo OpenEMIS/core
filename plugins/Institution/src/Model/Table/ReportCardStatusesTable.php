@@ -1056,11 +1056,36 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     private function mergePDFFiles(Array $filenames, $outFile = '', $title = '', $author = '', $subject = '')
     {
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 220]]);
+        // POCOR-9221 start
+        $tmpdf = new \Mpdf\Mpdf(['mode' => 'utf-8']); //POCOR-8961
+        $width = 297;
+        $height = 210;
+        if ($filenames) {
+            if (isset($filenames[0])) {
+                $curFile = $filenames[0];
+                if (file_exists($curFile)) {
+                    $tmpdf->SetSourceFile($curFile);
+                    $tplId = $tmpdf->ImportPage(1);
+                    $wh = $tmpdf->getTemplateSize($tplId);
+                    $orientation = trim($wh['orientation']) ?? 'L';
+                    $width = $wh['width'] ?? 297;
+                    $height = $wh['height'] ?? 210;
+                }
+            }
+        }
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8',
+            'format' => [$width,$height],
+//            'margin_left' => 40,
+//            'margin_right' => 10,
+//            'margin_top' => 30,
+//            'margin_bottom' => 30,
+        ]); //POCOR-8961
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
-
+        $mpdf->autoScriptToLang = true; //POCOR-7264
+        $mpdf->autoLangToFont = true; //POCOR-7264
+        // POCOR-9221 end
 
         if ($filenames) {
             $filesTotal = sizeof($filenames);
@@ -1070,20 +1095,23 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $curFile = $filenames[$i];
                 if (file_exists($curFile)) {
                     $pageCount = $mpdf->SetSourceFile($curFile);
+
                     for ($p = 1; $p <= $pageCount; $p++) {
                         $tplId = $mpdf->ImportPage($p);
-                        $wh = $mpdf->getTemplateSize($tplId);
-                        if (($p == 1)) {
-                            $mpdf->state = 0;
-                            $mpdf->AddPage('L');
-
-                            $mpdf->UseTemplate($tplId);
+                        // POCOR-9221 start
+                        $tplSize = $mpdf->getTemplateSize($tplId);
+//                        Log::debug(print_r($tplSize, true));
+                        // Determine orientation based on width vs. height
+                        if(isset($tplSize['orientation'])) {
+                            $orientation = $tplSize['orientation'];
                         } else {
-                            $mpdf->state = 1;
-                            $mpdf->AddPage('L');
-
-                            $mpdf->UseTemplate($tplId);
+                            $orientation = ($tplSize['w'] > $tplSize['h']) ? 'L' : 'P';
                         }
+                        // Add a page with the original size and orientation
+                        $mpdf->AddPage($orientation, '', '', '', '', $tplSize['width'], $tplSize['height']);
+                        // POCOR-9221 end
+                        // Always use the template ID
+                        $mpdf->UseTemplate($tplId);
                     }
                 }
             }
@@ -1475,7 +1503,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $zip->addFromString($file->file_name, $content);
                     unset($content); // Free up memory
                 }
-            }            
+            }
             $zip->close();
             header("Pragma: public", true);
             header("Expires: 0"); // set expiration time
