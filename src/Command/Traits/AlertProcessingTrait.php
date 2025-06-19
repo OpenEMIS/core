@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Command\Traits;
+
 use Cake\Console\ConsoleOptionParser;
 use Cake\Console\ConsoleIo;
 
@@ -15,12 +16,6 @@ trait AlertProcessingTrait
         $this->io = $io;
     }
 
-    protected function logMsg(string $msg): void
-    {
-        if ($this->io) {
-            $this->io->out($msg);
-        }
-    }
     public function processContactList(array $rules, array $replacements, callable $getContactListCallback): void
     {
         foreach ($rules as $rule) {
@@ -43,8 +38,9 @@ trait AlertProcessingTrait
         }
     }
 
-    // Abstract log method to implement per use case
     abstract public function logAlert($method, $feature, $recipient, $subject, $message);
+
+    // Abstract log method to implement per use case
 
     public function getOptionParser(): ConsoleOptionParser
     {
@@ -54,16 +50,25 @@ trait AlertProcessingTrait
             ->addOption('user_id', [
                 'help' => 'ID of the user triggering the alert',
                 'short' => 'u',
+                'required' => true,
                 'default' => null
             ])
             ->addOption('rule_id', [
                 'help' => 'Comma-separated list of rule IDs',
-                'default' => 'r'
+                'required' => true,
+                'short' => 'r'
             ])
             ->addOption('process_id', [
                 'help' => 'ID of the process',
-                'default' => 'p'
-            ])
-            ;
+                'required' => true,
+                'short' => 'p'
+            ]);
+    }
+
+    protected function logMsg(string $msg): void
+    {
+        if ($this->io) {
+            $this->io->out($msg);
+        }
     }
 }
