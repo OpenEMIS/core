@@ -14,7 +14,7 @@ class POCOR8286 extends AbstractMigration
     {
 //        return;
         $this->backupTables();
-        $this->renameStudentAttendance();
+        $this->changeInAlertsTable();
         $this->removeSmsConfigItems();
         $this->insertConfigItems();
         $this->insertNewExternalDataSourceAttributes();
@@ -91,11 +91,34 @@ class POCOR8286 extends AbstractMigration
     }
 
 
-    private function renameStudentAttendance(): void
+    private function changeInAlertsTable(): void
     {
-        $this->execute("UPDATE `alerts` set `name`= 'StudentAttendance' WHERE `name` = 'Student Attendance'");
+        // 1. Rename 'Student Attendance' to 'StudentAttendance'
+        $this->execute("UPDATE `alerts` SET `name` = 'StudentAttendance' WHERE `name` = 'Student Attendance'");
         Log::info("Renamed 'Student Attendance' to 'StudentAttendance'");
+
+        // 2. Insert new alert for 'StudentEnrollment'
+        $this->execute("
+        INSERT INTO alerts (
+            id, name, process_name, process_id, frequency,
+            modified_user_id, modified, created_user_id, created
+        ) VALUES (
+            NULL, 'StudentEnrollment', 'AlertStudentEnrollment', NULL, 'Never',
+            NULL, NULL, 1, NOW()
+        )
+    ");
+        Log::info("Inserted new alert for 'StudentEnrollment'");
+
+        // 3. Change frequency to 'Once' for specific alerts
+        $this->execute("
+        UPDATE alerts
+        SET frequency = 'Once'
+        WHERE frequency NOT IN ('Never', 'Once')
+          AND process_name IN ('AlertAttendance', 'AlertStudentAdmission')
+    ");
+        Log::info("Updated frequency to 'Once' for alerts with process_name in ('AlertAttendance', 'AlertStudentAdmission')");
     }
+
     private function removeSmsConfigItems(): void
     {
         $this->execute("DELETE FROM `config_items` WHERE `type` = 'SMS'");
