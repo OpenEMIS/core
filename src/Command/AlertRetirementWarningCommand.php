@@ -92,21 +92,21 @@ class AlertRetirementWarningCommand extends AlertCommandBase
 
         $thresholdValue = $this->rule['threshold'] ?? '{}';
         $threshold = json_decode($thresholdValue, true);
-
+//        $this->logMsg(print_r($item, true));
         return [
             '${threshold.value}' => $threshold['value'] ?? '',
             '${age}' => (string)$age,
 
-            '${user.openemis_no}' => $item['user']['openemis_no'] ?? '',
-            '${user.first_name}' => $item['user']['first_name'] ?? '',
-            '${user.middle_name}' => $item['user']['middle_name'] ?? '',
-            '${user.third_name}' => $item['user']['third_name'] ?? '',
-            '${user.last_name}' => $item['user']['last_name'] ?? '',
-            '${user.preferred_name}' => $item['user']['preferred_name'] ?? '',
-            '${user.email}' => $item['user']['email'] ?? '',
-            '${user.address}' => $item['user']['address'] ?? '',
-            '${user.postal_code}' => $item['user']['postal_code'] ?? '',
-            '${user.date_of_birth}' => $item['user']['date_of_birth'] ?? '',
+            '${openemis_no}' => $item['user']['openemis_no'] ?? '',
+            '${first_name}' => $item['user']['first_name'] ?? '',
+            '${middle_name}' => $item['user']['middle_name'] ?? '',
+            '${third_name}' => $item['user']['third_name'] ?? '',
+            '${last_name}' => $item['user']['last_name'] ?? '',
+            '${preferred_name}' => $item['user']['preferred_name'] ?? '',
+            '${email}' => $item['user']['email'] ?? '',
+            '${address}' => $item['user']['address'] ?? '',
+            '${postal_code}' => $item['user']['postal_code'] ?? '',
+            '${date_of_birth}' => $item['user']['date_of_birth'] ?? '',
 
             '${institution.name}' => $item['institution']['name'] ?? '',
             '${institution.code}' => $item['institution']['code'] ?? '',

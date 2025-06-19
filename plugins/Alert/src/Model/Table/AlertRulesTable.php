@@ -89,8 +89,12 @@ class AlertRulesTable extends ControllerActionTable
                 && !empty($data['security_roles'])
                 && !empty($data['security_roles']['_ids'])
             ) {
-            }else{
-                $data['security_roles'] = null;
+            }else {
+//                $feature = $data['feature'];
+//                dd($feature);
+//                if ($feature != 'ScholarshipApplication') {
+                    $data['security_roles'] = null;
+//                }
             }
             $validator = $this->getValidator();
             $validator->notEmptyArray('method');
@@ -122,23 +126,23 @@ class AlertRulesTable extends ControllerActionTable
     public function afterSaveCommit(Event $event, Entity $entity)
     {
         if ($entity->isNew()) {
-            $feature = $entity->feature;
+//            $feature = $entity->feature;
 
-            if (in_array($feature, ['ScholarshipApplication'])) {
-                $AlertRoles = TableRegistry::get('Alert.AlertsRoles');
-
-                $alertRoleData = [
-                    'alert_rule_id' => $entity->id,
-                    'security_role_id' => self::ASSIGN_TO_ASSIGNEE
-                ];
-
-                $alertRoleEntity = $AlertRoles->newEntity($alertRoleData);
-                if ($AlertRoles->save($alertRoleEntity)) {
-                } else {
-                    Log::write('error', 'Error saving roles to assigee.');
-                    Log::write('error', $alertRoleEntity);
-                }
-            }
+//            if (in_array($feature, ['ScholarshipApplication'])) {
+//                $AlertRoles = TableRegistry::get('Alert.AlertsRoles');
+//
+//                $alertRoleData = [
+//                    'alert_rule_id' => $entity->id,
+//                    'security_role_id' => self::ASSIGN_TO_ASSIGNEE
+//                ];
+//
+//                $alertRoleEntity = $AlertRoles->newEntity($alertRoleData);
+//                if ($AlertRoles->save($alertRoleEntity)) {
+//                } else {
+//                    Log::write('error', 'Error saving roles to assigee.');
+//                    Log::write('error', $alertRoleEntity);
+//                }
+//            }
         }
     }
 
@@ -146,7 +150,8 @@ class AlertRulesTable extends ControllerActionTable
     {
         $this->field('message', ['visible' => false]);
         $this->field('enabled', ['options' => $this->getSelectOptions('general.yesno')]);
-        $this->field('security_roles', ['after' => 'method']);
+        $this->field('security_role_ids', ['after' => 'method']);
+//        $this->field('security_moles', ['before' => 'subject']);
 
         // element control
         //POCOR-7558 start
@@ -504,9 +509,9 @@ class AlertRulesTable extends ControllerActionTable
             return $attr;
         }
 
-        if ($feature === 'ScholarshipApplication') {
-            return $this->assignToAssignee($attr);
-        }
+//        if ($feature === 'ScholarshipApplication') {
+//            return $this->assignToAssignee($attr);
+//        }
 
         if ($feature === 'StudentAdmission') {
             return $this->assignToGuardianOnly($attr);
@@ -515,13 +520,13 @@ class AlertRulesTable extends ControllerActionTable
         return $this->assignToAllRoles($attr);
     }
 
-    private function assignToAssignee(array $attr): array
-    {
-        $attr['type'] = 'disabled';
-        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
-        return $attr;
-    }
+//    private function assignToAssignee(array $attr): array
+//    {
+//        $attr['type'] = 'disabled';
+//        $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+//        $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+//        return $attr;
+//    }
 
     // POCOR-8286 end
 
@@ -582,8 +587,9 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetSecurityRoles(Event $event, Entity $entity)
+    public function onGetSecurityRoleIds(Event $event, Entity $entity)
     {
+
         if (!$entity->has('security_roles')) {
             $query = $this->find()
                 ->where([$this->aliasField($this->getPrimaryKey()) => $entity->id])
@@ -595,18 +601,18 @@ class AlertRulesTable extends ControllerActionTable
         }
 
         $role = [];
-        $feature = $this->featureList[$entity->id];
-        if (in_array($feature, ['ScholarshipApplication'])) {
-            $role[] = __(self::ASSIGNEE_ROLE);
-        } else {
+//        $feature = $this->featureList[$entity->id];
+//        if (in_array($feature, ['ScholarshipApplication'])) {
+//            $role[] = __(self::ASSIGNEE_ROLE);
+//        } else {
             if ($data->has('security_roles')) {
                 foreach ($data->security_roles as $key => $value) {
                     $role[] = $value->name;
                 }
             }
-        }
+//        }
 
-        return (!empty($role)) ? implode(', ', $role) : ' ';
+        return (!empty($role)) ? implode(', ', $role) : __('No Role To Send Alert Selected');
     }
 
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
@@ -680,6 +686,8 @@ class AlertRulesTable extends ControllerActionTable
             case 'status':
                 return __('Status');
             case 'security_roles':
+                return __('Security Roles');
+            case 'security_role_ids':
                 return __('Security Roles');
             case 'method':
                 return __('Method');
