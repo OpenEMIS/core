@@ -188,26 +188,60 @@ class PaginatorComponent extends Component
      * @return \Cake\Datasource\ResultSetInterface Query results
      * @throws \Cake\Http\Exception\NotFoundException
      */
+    
+    //POCOR-9188[START]
+    
+    // public function paginate(object $object, array $settings = []): ResultSetInterface
+    // {
+    //     $request = $this->_registry->getController()->getRequest();
+
+    //     try {
+    //         $results = $this->_paginator->paginate(
+    //             $object,
+    //             $request->getQueryParams(),
+    //             $settings
+    //         );
+
+    //         $this->_setPagingParams();
+    //     } catch (PageOutOfBoundsException $e) {
+    //         $this->_setPagingParams();
+
+    //         throw new NotFoundException(null, null, $e);
+    //     }
+
+    //     return $results;
+    // }
+
     public function paginate(object $object, array $settings = []): ResultSetInterface
     {
-        $request = $this->_registry->getController()->getRequest();
-
+        $controller = $this->_registry->getController();
+        $request = $controller->getRequest();
+ 
         try {
             $results = $this->_paginator->paginate(
                 $object,
                 $request->getQueryParams(),
                 $settings
             );
-
             $this->_setPagingParams();
         } catch (PageOutOfBoundsException $e) {
+            // Reset to page 1 and retry
+            $queryParams = $request->getQueryParams();
+            $queryParams['page'] = 1;
+ 
+            $controller->setRequest($request->withQueryParams($queryParams));
+ 
+            $results = $this->_paginator->paginate(
+                $object,
+                $queryParams,
+                $settings
+            );
             $this->_setPagingParams();
-
-            throw new NotFoundException(null, null, $e);
         }
-
+ 
         return $results;
     }
+    //POCOR-9188[END]
 
     /**
      * Merges the various options that Pagination uses.
