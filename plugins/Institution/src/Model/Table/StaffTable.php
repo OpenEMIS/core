@@ -4370,14 +4370,20 @@ class StaffTable extends ControllerActionTable
                     if ($dayId != -1) {
                         $row->date = $dateStr;
                     }
+                    // POCOR-9166 start
+                    $queryString = $this->getQueryString();
+                    $queryString['user_id'] = $staffId;
+                    $queryString['institution_id'] = $institution_id;
+                    $encodedQueryString = $this->paramsEncode($queryString);
                     $historyUrl = Router::url([
                         'plugin' => 'Staff',
                         'controller' => 'Staff',
                         'action' => 'InstitutionStaffAttendanceActivities',
-                        'index',
-                        '?' => ['user_id' => $staffId, 'institution_id' => $institution_id]
+                        '0' => 'index',
+                        '1' => $encodedQueryString
                        // 'user_id' => $staffId
                     ]);
+                    // POCOR-9166 end
                     $row->historyUrl = $historyUrl;
                 }
                 // gets all the staff leave
@@ -4511,6 +4517,8 @@ class StaffTable extends ControllerActionTable
                 $absenceTypes
             ) {
                 $staffId = $row->staff_id;
+                $institution_id = $row->institution_id; // POCOR-9166
+
                 $staffRecords = [];
                 $staffLeaveRecords = [];
 
@@ -4567,13 +4575,20 @@ class StaffTable extends ControllerActionTable
                     if ($day_id != -1) {
                         $row->date = $dateStr;
                     }
+                    // POCOR-9166 start
+                    $queryString = $this->getQueryString();
+                    $queryString['user_id'] = $staffId;
+                    $queryString['institution_id'] = $institution_id;
+                    $encodedQueryString = $this->paramsEncode($queryString);
                     $historyUrl = Router::url([
                         'plugin' => 'Staff',
                         'controller' => 'Staff',
                         'action' => 'InstitutionStaffAttendanceActivities',
-                        'index',
-                        'user_id' => $staffId
+                        '0' => 'index',
+                        '1' => $encodedQueryString
+                        // 'user_id' => $staffId
                     ]);
+                    // POCOR-9166 end
                     $row->historyUrl = $historyUrl;
                 }
                 // gets all the staff leave
