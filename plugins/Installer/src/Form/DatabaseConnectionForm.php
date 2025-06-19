@@ -369,6 +369,11 @@ return [
                     continue; // Skip the DELIMITER line itself
                 }
 
+                // Skip lines that are just the current delimiter
+                if ($trimmedLine === $delimiter) {
+                    continue;
+                }
+
                 // Append the current line to the query
                 $query .= $line . "\n";
 

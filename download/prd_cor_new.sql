@@ -3,9 +3,38 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: tst-rds-001.cylegaoegjx0.ap-southeast-1.rds.amazonaws.com
--- Generation Time: Jun 18, 2025 at 03:10 PM
+-- Generation Time: Jun 19, 2025 at 04:54 AM
 -- Server version: 8.0.32
 -- PHP Version: 7.4.30
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `prd_cor_new`
+--
+
+DELIMITER $$
+
+--
+-- Procedures
+--
+
+$$
+
+DELIMITER ;
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `absence_types`
+--
 
 CREATE TABLE `absence_types` (
   `id` int NOT NULL,
@@ -11865,16 +11894,802 @@ CREATE TABLE `institution_student_absence_details` (
 -- Triggers `institution_student_absence_details`
 --
 DELIMITER $$
-CREATE TRIGGER `trigger_institution_student_absence_details_delete` AFTER DELETE ON `institution_student_absence_details` FOR EACH ROW BEGIN UPDATE summary_area_institution_grade_attendances SET summary_area_institution_grade_attendances.present_female_count = CASE WHEN OLD.absence_type_id != 3 AND COALESCE( ( SELECT COUNT(*) absence_counter FROM ( SELECT institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date absence_date ,institution_student_absence_details.subject_id ,period_counter.attendance_per_day period_attendance_per_day ,subject_counter.subjects_taken ,attendance_type.value FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id INNER JOIN academic_periods ON academic_periods.id = institution_student_absence_details.academic_period_id INNER JOIN ( SELECT student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ,student_attendance_mark_types.attendance_per_day FROM student_mark_type_status_grades INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id INNER JOIN academic_periods ON academic_periods.id = student_mark_type_statuses.academic_period_id WHERE academic_periods.id = OLD.academic_period_id AND student_mark_type_status_grades.education_grade_id = OLD.education_grade_id GROUP BY student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id) period_counter ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id LEFT JOIN ( SELECT institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken FROM institution_subject_students INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id INNER JOIN security_users ON security_users.id = institution_subject_students.student_id WHERE academic_periods.id = OLD.academic_period_id AND institution_subject_students.student_status_id = 1 AND security_users.gender_id = 2 AND institution_subject_students.education_grade_id = OLD.education_grade_id AND institution_subject_students.institution_id = OLD.institution_id GROUP BY institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ) subject_counter ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id AND subject_counter.institution_id = institution_student_absence_details.institution_id AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id AND subject_counter.student_id = institution_student_absence_details.student_id INNER JOIN ( SELECT config_items.value FROM config_items WHERE config_items.code LIKE "calculate_daily_attendance" ) attendance_type WHERE academic_periods.id = OLD.academic_period_id AND institution_student_absence_details.date = OLD.date AND institution_student_absence_details.absence_type_id != 3 AND security_users.gender_id = 2 AND institution_student_absence_details.education_grade_id = OLD.education_grade_id AND institution_student_absence_details.institution_id = OLD.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date HAVING CASE WHEN attendance_type.value = 1 THEN COUNT(*) >= 1 ELSE CASE WHEN institution_student_absence_details.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0) END END ) attend_info GROUP BY attend_info.academic_period_id ,attend_info.institution_id ,attend_info.education_grade_id ), 0 ) < summary_area_institution_grade_attendances.absent_female_count THEN summary_area_institution_grade_attendances.present_female_count + 1 ELSE summary_area_institution_grade_attendances.present_female_count END ,summary_area_institution_grade_attendances.present_male_count = CASE WHEN OLD.absence_type_id != 3 AND COALESCE ( ( SELECT COUNT(*) absence_counter FROM ( SELECT institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date absence_date ,institution_student_absence_details.subject_id ,period_counter.attendance_per_day period_attendance_per_day ,subject_counter.subjects_taken ,attendance_type.value FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id INNER JOIN academic_periods ON academic_periods.id = institution_student_absence_details.academic_period_id INNER JOIN ( SELECT student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ,student_attendance_mark_types.attendance_per_day FROM student_mark_type_status_grades INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id INNER JOIN academic_periods ON academic_periods.id = student_mark_type_statuses.academic_period_id WHERE academic_periods.id = OLD.academic_period_id AND student_mark_type_status_grades.education_grade_id = OLD.education_grade_id GROUP BY student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ) period_counter ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id LEFT JOIN ( SELECT institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken FROM institution_subject_students INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id INNER JOIN security_users ON security_users.id = institution_subject_students.student_id WHERE academic_periods.id = OLD.academic_period_id AND institution_subject_students.student_status_id = 1 AND security_users.gender_id = 1 AND institution_subject_students.education_grade_id = OLD.education_grade_id AND institution_subject_students.institution_id = OLD.institution_id GROUP BY institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ) subject_counter ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id AND subject_counter.institution_id = institution_student_absence_details.institution_id AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id AND subject_counter.student_id = institution_student_absence_details.student_id INNER JOIN ( SELECT config_items.value FROM config_items WHERE config_items.code LIKE "calculate_daily_attendance" ) attendance_type WHERE academic_periods.id = OLD.academic_period_id AND institution_student_absence_details.date = OLD.date AND institution_student_absence_details.absence_type_id != 3 AND security_users.gender_id = 1 AND institution_student_absence_details.education_grade_id = OLD.education_grade_id AND institution_student_absence_details.institution_id = OLD.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date HAVING CASE WHEN attendance_type.value = 1 THEN COUNT(*) >= 1 ELSE CASE WHEN institution_student_absence_details.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0) END END ) attend_info GROUP BY attend_info.academic_period_id ,attend_info.institution_id ,attend_info.education_grade_id ), 0 ) < summary_area_institution_grade_attendances.absent_male_count THEN summary_area_institution_grade_attendances.present_male_count + 1 ELSE summary_area_institution_grade_attendances.present_male_count END ,summary_area_institution_grade_attendances.absent_female_count = CASE WHEN OLD.absence_type_id != 3 AND COALESCE ( ( SELECT COUNT(*) absence_counter FROM ( SELECT institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date absence_date ,institution_student_absence_details.subject_id ,period_counter.attendance_per_day period_attendance_per_day ,subject_counter.subjects_taken ,attendance_type.value FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id INNER JOIN academic_periods ON academic_periods.id = institution_student_absence_details.academic_period_id INNER JOIN ( SELECT student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ,student_attendance_mark_types.attendance_per_day FROM student_mark_type_status_grades INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id INNER JOIN academic_periods ON academic_periods.id = student_mark_type_statuses.academic_period_id WHERE academic_periods.id = OLD.academic_period_id AND student_mark_type_status_grades.education_grade_id = OLD.education_grade_id GROUP BY student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ) period_counter ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id LEFT JOIN ( SELECT institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken FROM institution_subject_students INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id INNER JOIN security_users ON security_users.id = institution_subject_students.student_id WHERE academic_periods.id = OLD.academic_period_id AND institution_subject_students.student_status_id = 1 AND security_users.gender_id = 2 AND institution_subject_students.education_grade_id = OLD.education_grade_id AND institution_subject_students.institution_id = OLD.institution_id GROUP BY institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ) subject_counter ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id AND subject_counter.institution_id = institution_student_absence_details.institution_id AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id AND subject_counter.student_id = institution_student_absence_details.student_id INNER JOIN ( SELECT config_items.value FROM config_items WHERE config_items.code LIKE "calculate_daily_attendance" ) attendance_type WHERE academic_periods.id = OLD.academic_period_id AND institution_student_absence_details.date = OLD.date AND institution_student_absence_details.absence_type_id != 3 AND security_users.gender_id = 2 AND institution_student_absence_details.education_grade_id = OLD.education_grade_id AND institution_student_absence_details.institution_id = OLD.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date HAVING CASE WHEN attendance_type.value = 1 THEN COUNT(*) >= 1 ELSE CASE WHEN institution_student_absence_details.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0) END END ) attend_info GROUP BY attend_info.academic_period_id ,attend_info.institution_id ,attend_info.education_grade_id ), 0 ) < summary_area_institution_grade_attendances.absent_female_count THEN summary_area_institution_grade_attendances.absent_female_count - 1 ELSE summary_area_institution_grade_attendances.absent_female_count END ,summary_area_institution_grade_attendances.absent_male_count = CASE WHEN OLD.absence_type_id != 3 AND COALESCE ( ( SELECT COUNT(*) absence_counter FROM ( SELECT institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date absence_date ,institution_student_absence_details.subject_id ,period_counter.attendance_per_day period_attendance_per_day ,subject_counter.subjects_taken ,attendance_type.value FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id INNER JOIN academic_periods ON academic_periods.id = institution_student_absence_details.academic_period_id INNER JOIN ( SELECT student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ,student_attendance_mark_types.attendance_per_day FROM student_mark_type_status_grades INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id INNER JOIN academic_periods ON academic_periods.id = student_mark_type_statuses.academic_period_id WHERE academic_periods.id = OLD.academic_period_id AND student_mark_type_status_grades.education_grade_id = OLD.education_grade_id GROUP BY student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ) period_counter ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id LEFT JOIN ( SELECT institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken FROM institution_subject_students INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id INNER JOIN security_users ON security_users.id = institution_subject_students.student_id WHERE academic_periods.id = OLD.academic_period_id AND institution_subject_students.student_status_id = 1 AND security_users.gender_id = 1 AND institution_subject_students.education_grade_id = OLD.education_grade_id AND institution_subject_students.institution_id = OLD.institution_id GROUP BY institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ) subject_counter ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id AND subject_counter.institution_id = institution_student_absence_details.institution_id AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id AND subject_counter.student_id = institution_student_absence_details.student_id INNER JOIN ( SELECT config_items.value FROM config_items WHERE config_items.code LIKE "calculate_daily_attendance" ) attendance_type WHERE academic_periods.id = OLD.academic_period_id AND institution_student_absence_details.date = OLD.date AND institution_student_absence_details.absence_type_id != 3 AND security_users.gender_id = 1 AND institution_student_absence_details.education_grade_id = OLD.education_grade_id AND institution_student_absence_details.institution_id = OLD.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date HAVING CASE WHEN attendance_type.value = 1 THEN COUNT(*) >= 1 ELSE CASE WHEN institution_student_absence_details.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0) END END ) attend_info GROUP BY attend_info.academic_period_id ,attend_info.institution_id ,attend_info.education_grade_id ), 0 ) < summary_area_institution_grade_attendances.absent_male_count THEN summary_area_institution_grade_attendances.absent_male_count - 1 ELSE summary_area_institution_grade_attendances.absent_male_count END ,late_female_count = CASE WHEN OLD.absence_type_id = 3 AND COALESCE ( ( SELECT COUNT(DISTINCT(institution_student_absence_details.student_id)) late_counter FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id WHERE institution_student_absence_details.academic_period_id = OLD.academic_period_id AND institution_student_absence_details.date = OLD.date AND institution_student_absence_details.absence_type_id = OLD.absence_type_id AND security_users.gender_id = 2 AND institution_student_absence_details.education_grade_id = OLD.education_grade_id AND institution_student_absence_details.institution_id = OLD.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ), 0 ) < late_female_count THEN late_female_count - 1 ELSE late_female_count END ,late_male_count = CASE WHEN OLD.absence_type_id = 3 AND COALESCE ( ( SELECT COUNT(DISTINCT(institution_student_absence_details.student_id)) late_counter FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id WHERE institution_student_absence_details.academic_period_id = OLD.academic_period_id AND institution_student_absence_details.date = OLD.date AND institution_student_absence_details.absence_type_id = OLD.absence_type_id AND security_users.gender_id = 1 AND institution_student_absence_details.education_grade_id = OLD.education_grade_id AND institution_student_absence_details.institution_id = OLD.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ), 0 ) < late_male_count THEN late_male_count - 1 ELSE late_male_count END WHERE summary_area_institution_grade_attendances.attendance_date = OLD.date AND summary_area_institution_grade_attendances.institution_id = OLD.institution_id AND summary_area_institution_grade_attendances.education_grade_id = OLD.education_grade_id AND summary_area_institution_grade_attendances.academic_period_id = OLD.academic_period_id; END
-$$
+
+CREATE TRIGGER `trigger_institution_student_absence_details_delete`
+AFTER DELETE ON `institution_student_absence_details`
+FOR EACH ROW
+BEGIN
+  -- Update present_female_count
+  UPDATE summary_area_institution_grade_attendances s
+  SET
+    -- For each count, do a subquery to get current count
+    -- and compare with the counts after deletion, then update accordingly
+    present_female_count = CASE
+      WHEN OLD.absence_type_id != 3 AND (
+        SELECT COUNT(*) FROM (
+          SELECT 
+            1
+          FROM institution_student_absence_details iad
+          INNER JOIN security_users su ON su.id = iad.student_id
+          INNER JOIN academic_periods ap ON ap.id = iad.academic_period_id
+          LEFT JOIN (
+            SELECT value FROM config_items WHERE code LIKE 'calculate_daily_attendance' LIMIT 1
+          ) ci ON 1=1
+          WHERE 
+            iad.academic_period_id = OLD.academic_period_id
+            AND iad.institution_id = OLD.institution_id
+            AND iad.education_grade_id = OLD.education_grade_id
+            AND iad.date = OLD.date
+            AND iad.absence_type_id != 3
+            AND su.gender_id = 2
+          GROUP BY 
+            iad.academic_period_id,
+            iad.institution_id,
+            iad.education_grade_id,
+            iad.institution_class_id,
+            iad.student_id,
+            iad.date,
+            iad.subject_id,
+            ci.value,
+            su.gender_id
+          HAVING 
+            CASE
+              WHEN ci.value = 1 THEN COUNT(*) >= 1
+              ELSE 
+                CASE
+                  WHEN iad.subject_id = 0 THEN COUNT(*) >= 1
+                  ELSE COUNT(*) >= 1 -- replace with actual attendance per day
+                END
+            END
+        ) AS sub
+      ) < s.absent_female_count
+      THEN s.present_female_count + 1
+      ELSE s.present_female_count
+    END,
+
+    -- For present_male_count, similar logic with gender_id = 1
+    present_male_count = CASE
+      WHEN OLD.absence_type_id != 3 AND (
+        SELECT COUNT(*) FROM (
+          SELECT 
+            1
+          FROM institution_student_absence_details iad
+          INNER JOIN security_users su ON su.id = iad.student_id
+          INNER JOIN academic_periods ap ON ap.id = iad.academic_period_id
+          LEFT JOIN (
+            SELECT value FROM config_items WHERE code LIKE 'calculate_daily_attendance' LIMIT 1
+          ) ci ON 1=1
+          WHERE 
+            iad.academic_period_id = OLD.academic_period_id
+            AND iad.institution_id = OLD.institution_id
+            AND iad.education_grade_id = OLD.education_grade_id
+            AND iad.date = OLD.date
+            AND iad.absence_type_id != 3
+            AND su.gender_id = 1
+          GROUP BY 
+            iad.academic_period_id,
+            iad.institution_id,
+            iad.education_grade_id,
+            iad.institution_class_id,
+            iad.student_id,
+            iad.date,
+            iad.subject_id,
+            ci.value,
+            su.gender_id
+          HAVING 
+            CASE
+              WHEN ci.value = 1 THEN COUNT(*) >= 1
+              ELSE 
+                CASE
+                  WHEN iad.subject_id = 0 THEN COUNT(*) >= 1
+                  ELSE COUNT(*) >= 1 -- replace as needed
+                END
+            END
+        ) AS sub
+      ) < s.absent_male_count
+      THEN s.present_male_count + 1
+      ELSE s.present_male_count
+    END,
+
+    -- Update absent_female_count
+    absent_female_count = CASE
+      WHEN OLD.absence_type_id != 3 AND (
+        SELECT COUNT(*) FROM (
+          -- same inner query with gender_id = 2
+          SELECT 
+            1
+          FROM institution_student_absence_details iad
+          INNER JOIN security_users su ON su.id = iad.student_id
+          WHERE 
+            iad.academic_period_id = OLD.academic_period_id
+            AND iad.institution_id = OLD.institution_id
+            AND iad.education_grade_id = OLD.education_grade_id
+            AND iad.date = OLD.date
+            AND iad.absence_type_id != 3
+            AND su.gender_id = 2
+          GROUP BY 
+            iad.academic_period_id,
+            iad.institution_id,
+            iad.education_grade_id
+        ) AS sub
+      ) < s.absent_female_count
+      THEN s.absent_female_count - 1
+      ELSE s.absent_female_count
+    END,
+
+    -- Update absent_male_count
+    absent_male_count = CASE
+      WHEN OLD.absence_type_id != 3 AND (
+        SELECT COUNT(*) FROM (
+          -- same inner query with gender_id = 1
+          SELECT 
+            1
+          FROM institution_student_absence_details iad
+          INNER JOIN security_users su ON su.id = iad.student_id
+          WHERE 
+            iad.academic_period_id = OLD.academic_period_id
+            AND iad.institution_id = OLD.institution_id
+            AND iad.education_grade_id = OLD.education_grade_id
+            AND iad.date = OLD.date
+            AND iad.absence_type_id != 3
+            AND su.gender_id = 1
+          GROUP BY 
+            iad.academic_period_id,
+            iad.institution_id,
+            iad.education_grade_id
+        ) AS sub
+      ) < s.absent_male_count
+      THEN s.absent_male_count - 1
+      ELSE s.absent_male_count
+    END,
+
+    -- Update late_female_count
+    late_female_count = CASE
+      WHEN OLD.absence_type_id = 3 AND (
+        SELECT COUNT(DISTINCT iad.student_id)
+        FROM institution_student_absence_details iad
+        INNER JOIN security_users su ON su.id = iad.student_id
+        WHERE
+          iad.academic_period_id = OLD.academic_period_id
+          AND iad.institution_id = OLD.institution_id
+          AND iad.education_grade_id = OLD.education_grade_id
+          AND iad.date = OLD.date
+          AND iad.absence_type_id = 3
+          AND su.gender_id = 2
+        GROUP BY iad.academic_period_id, iad.institution_id, iad.education_grade_id
+      ) < late_female_count
+      THEN late_female_count - 1
+      ELSE late_female_count
+    END,
+
+    -- Update late_male_count
+    late_male_count = CASE
+      WHEN OLD.absence_type_id = 3 AND (
+        SELECT COUNT(DISTINCT iad.student_id)
+        FROM institution_student_absence_details iad
+        INNER JOIN security_users su ON su.id = iad.student_id
+        WHERE
+          iad.academic_period_id = OLD.academic_period_id
+          AND iad.institution_id = OLD.institution_id
+          AND iad.education_grade_id = OLD.education_grade_id
+          AND iad.date = OLD.date
+          AND iad.absence_type_id = 3
+          AND su.gender_id = 1
+        GROUP BY iad.academic_period_id, iad.institution_id, iad.education_grade_id
+      ) < late_male_count
+      THEN late_male_count - 1
+      ELSE late_male_count
+    END
+
+  WHERE
+    summary_area_institution_grade_attendances.attendance_date = OLD.date
+    AND summary_area_institution_grade_attendances.institution_id = OLD.institution_id
+    AND summary_area_institution_grade_attendances.education_grade_id = OLD.education_grade_id
+    AND summary_area_institution_grade_attendances.academic_period_id = OLD.academic_period_id;
+
+END$$
+
 DELIMITER ;
 DELIMITER $$
-CREATE TRIGGER `trigger_institution_student_absence_details_insert` AFTER INSERT ON `institution_student_absence_details` FOR EACH ROW BEGIN UPDATE summary_area_institution_grade_attendances SET summary_area_institution_grade_attendances.present_female_count = CASE WHEN NEW.absence_type_id != 3 AND( SELECT COUNT(*) absence_counter FROM ( SELECT institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date absence_date ,institution_student_absence_details.subject_id ,period_counter.attendance_per_day period_attendance_per_day ,subject_counter.subjects_taken ,attendance_type.value FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id INNER JOIN academic_periods ON academic_periods.id = institution_student_absence_details.academic_period_id INNER JOIN ( SELECT student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ,student_attendance_mark_types.attendance_per_day FROM student_mark_type_status_grades INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id INNER JOIN academic_periods ON academic_periods.id = student_mark_type_statuses.academic_period_id WHERE academic_periods.id = NEW.academic_period_id AND student_mark_type_status_grades.education_grade_id = NEW.education_grade_id GROUP BY student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id) period_counter ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id LEFT JOIN ( SELECT institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken FROM institution_subject_students INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id INNER JOIN security_users ON security_users.id = institution_subject_students.student_id WHERE academic_periods.id = NEW.academic_period_id AND institution_subject_students.student_status_id = 1 AND security_users.gender_id = 2 AND institution_subject_students.education_grade_id = NEW.education_grade_id AND institution_subject_students.institution_id = NEW.institution_id GROUP BY institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ) subject_counter ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id AND subject_counter.institution_id = institution_student_absence_details.institution_id AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id AND subject_counter.student_id = institution_student_absence_details.student_id INNER JOIN ( SELECT config_items.value FROM config_items WHERE config_items.code LIKE "calculate_daily_attendance" ) attendance_type WHERE academic_periods.id = NEW.academic_period_id AND institution_student_absence_details.date = NEW.date AND institution_student_absence_details.absence_type_id != 3 AND security_users.gender_id = 2 AND institution_student_absence_details.education_grade_id = NEW.education_grade_id AND institution_student_absence_details.institution_id = NEW.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date HAVING CASE WHEN attendance_type.value = 1 THEN COUNT(*) >= 1 ELSE CASE WHEN institution_student_absence_details.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0) END END ) attend_info GROUP BY attend_info.academic_period_id ,attend_info.institution_id ,attend_info.education_grade_id ) > summary_area_institution_grade_attendances.absent_female_count THEN summary_area_institution_grade_attendances.present_female_count - 1 ELSE summary_area_institution_grade_attendances.present_female_count END ,summary_area_institution_grade_attendances.present_male_count = CASE WHEN NEW.absence_type_id != 3 AND ( SELECT COUNT(*) absence_counter FROM ( SELECT institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date absence_date ,institution_student_absence_details.subject_id ,period_counter.attendance_per_day period_attendance_per_day ,subject_counter.subjects_taken ,attendance_type.value FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id INNER JOIN academic_periods ON academic_periods.id = institution_student_absence_details.academic_period_id INNER JOIN ( SELECT student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ,student_attendance_mark_types.attendance_per_day FROM student_mark_type_status_grades INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id INNER JOIN academic_periods ON academic_periods.id = student_mark_type_statuses.academic_period_id WHERE academic_periods.id = NEW.academic_period_id AND student_mark_type_status_grades.education_grade_id = NEW.education_grade_id GROUP BY student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ) period_counter ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id LEFT JOIN ( SELECT institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken FROM institution_subject_students INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id INNER JOIN security_users ON security_users.id = institution_subject_students.student_id WHERE academic_periods.id = NEW.academic_period_id AND institution_subject_students.student_status_id = 1 AND security_users.gender_id = 1 AND institution_subject_students.education_grade_id = NEW.education_grade_id AND institution_subject_students.institution_id = NEW.institution_id GROUP BY institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ) subject_counter ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id AND subject_counter.institution_id = institution_student_absence_details.institution_id AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id AND subject_counter.student_id = institution_student_absence_details.student_id INNER JOIN ( SELECT config_items.value FROM config_items WHERE config_items.code LIKE "calculate_daily_attendance" ) attendance_type WHERE academic_periods.id = NEW.academic_period_id AND institution_student_absence_details.date = NEW.date AND institution_student_absence_details.absence_type_id != 3 AND security_users.gender_id = 1 AND institution_student_absence_details.education_grade_id = NEW.education_grade_id AND institution_student_absence_details.institution_id = NEW.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date HAVING CASE WHEN attendance_type.value = 1 THEN COUNT(*) >= 1 ELSE CASE WHEN institution_student_absence_details.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0) END END ) attend_info GROUP BY attend_info.academic_period_id ,attend_info.institution_id ,attend_info.education_grade_id ) > summary_area_institution_grade_attendances.absent_male_count THEN summary_area_institution_grade_attendances.present_male_count - 1 ELSE summary_area_institution_grade_attendances.present_male_count END ,summary_area_institution_grade_attendances.absent_female_count = CASE WHEN NEW.absence_type_id != 3 AND ( SELECT COUNT(*) absence_counter FROM ( SELECT institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date absence_date ,institution_student_absence_details.subject_id ,period_counter.attendance_per_day period_attendance_per_day ,subject_counter.subjects_taken ,attendance_type.value FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id INNER JOIN academic_periods ON academic_periods.id = institution_student_absence_details.academic_period_id INNER JOIN ( SELECT student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ,student_attendance_mark_types.attendance_per_day FROM student_mark_type_status_grades INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id INNER JOIN academic_periods ON academic_periods.id = student_mark_type_statuses.academic_period_id WHERE academic_periods.id = NEW.academic_period_id AND student_mark_type_status_grades.education_grade_id = NEW.education_grade_id GROUP BY student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ) period_counter ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id LEFT JOIN ( SELECT institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken FROM institution_subject_students INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id INNER JOIN security_users ON security_users.id = institution_subject_students.student_id WHERE academic_periods.id = NEW.academic_period_id AND institution_subject_students.student_status_id = 1 AND security_users.gender_id = 2 AND institution_subject_students.education_grade_id = NEW.education_grade_id AND institution_subject_students.institution_id = NEW.institution_id GROUP BY institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ) subject_counter ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id AND subject_counter.institution_id = institution_student_absence_details.institution_id AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id AND subject_counter.student_id = institution_student_absence_details.student_id INNER JOIN ( SELECT config_items.value FROM config_items WHERE config_items.code LIKE "calculate_daily_attendance" ) attendance_type WHERE academic_periods.id = NEW.academic_period_id AND institution_student_absence_details.date = NEW.date AND institution_student_absence_details.absence_type_id != 3 AND security_users.gender_id = 2 AND institution_student_absence_details.education_grade_id = NEW.education_grade_id AND institution_student_absence_details.institution_id = NEW.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date HAVING CASE WHEN attendance_type.value = 1 THEN COUNT(*) >= 1 ELSE CASE WHEN institution_student_absence_details.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0) END END ) attend_info GROUP BY attend_info.academic_period_id ,attend_info.institution_id ,attend_info.education_grade_id ) > summary_area_institution_grade_attendances.absent_female_count THEN summary_area_institution_grade_attendances.absent_female_count + 1 ELSE summary_area_institution_grade_attendances.absent_female_count END ,summary_area_institution_grade_attendances.absent_male_count = CASE WHEN NEW.absence_type_id != 3 AND ( SELECT COUNT(*) absence_counter FROM ( SELECT institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date absence_date ,institution_student_absence_details.subject_id ,period_counter.attendance_per_day period_attendance_per_day ,subject_counter.subjects_taken ,attendance_type.value FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id INNER JOIN academic_periods ON academic_periods.id = institution_student_absence_details.academic_period_id INNER JOIN ( SELECT student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ,student_attendance_mark_types.attendance_per_day FROM student_mark_type_status_grades INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id INNER JOIN academic_periods ON academic_periods.id = student_mark_type_statuses.academic_period_id WHERE academic_periods.id = NEW.academic_period_id AND student_mark_type_status_grades.education_grade_id = NEW.education_grade_id GROUP BY student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ) period_counter ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id LEFT JOIN ( SELECT institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken FROM institution_subject_students INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id INNER JOIN security_users ON security_users.id = institution_subject_students.student_id WHERE academic_periods.id = NEW.academic_period_id AND institution_subject_students.student_status_id = 1 AND security_users.gender_id = 1 AND institution_subject_students.education_grade_id = NEW.education_grade_id AND institution_subject_students.institution_id = NEW.institution_id GROUP BY institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ) subject_counter ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id AND subject_counter.institution_id = institution_student_absence_details.institution_id AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id AND subject_counter.student_id = institution_student_absence_details.student_id INNER JOIN ( SELECT config_items.value FROM config_items WHERE config_items.code LIKE "calculate_daily_attendance" ) attendance_type WHERE academic_periods.id = NEW.academic_period_id AND institution_student_absence_details.date = NEW.date AND institution_student_absence_details.absence_type_id != 3 AND security_users.gender_id = 1 AND institution_student_absence_details.education_grade_id = NEW.education_grade_id AND institution_student_absence_details.institution_id = NEW.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date HAVING CASE WHEN attendance_type.value = 1 THEN COUNT(*) >= 1 ELSE CASE WHEN institution_student_absence_details.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0) END END ) attend_info GROUP BY attend_info.academic_period_id ,attend_info.institution_id ,attend_info.education_grade_id ) > summary_area_institution_grade_attendances.absent_male_count THEN summary_area_institution_grade_attendances.absent_male_count + 1 ELSE summary_area_institution_grade_attendances.absent_male_count END ,late_female_count = CASE WHEN NEW.absence_type_id = 3 AND ( SELECT COUNT(DISTINCT(institution_student_absence_details.student_id)) late_counter FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id WHERE institution_student_absence_details.academic_period_id = NEW.academic_period_id AND institution_student_absence_details.date = NEW.date AND institution_student_absence_details.absence_type_id = NEW.absence_type_id AND security_users.gender_id = 2 AND institution_student_absence_details.education_grade_id = NEW.education_grade_id AND institution_student_absence_details.institution_id = NEW.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ) > late_female_count THEN late_female_count + 1 ELSE late_female_count END ,late_male_count = CASE WHEN NEW.absence_type_id = 3 AND ( SELECT COUNT(DISTINCT(institution_student_absence_details.student_id)) late_counter FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id WHERE institution_student_absence_details.academic_period_id = NEW.academic_period_id AND institution_student_absence_details.date = NEW.date AND institution_student_absence_details.absence_type_id = NEW.absence_type_id AND security_users.gender_id = 1 AND institution_student_absence_details.education_grade_id = NEW.education_grade_id AND institution_student_absence_details.institution_id = NEW.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ) > late_male_count THEN late_male_count + 1 ELSE late_male_count END WHERE summary_area_institution_grade_attendances.attendance_date = NEW.date AND summary_area_institution_grade_attendances.institution_id = NEW.institution_id AND summary_area_institution_grade_attendances.education_grade_id = NEW.education_grade_id AND summary_area_institution_grade_attendances.academic_period_id = NEW.academic_period_id; END
-$$
+
+CREATE TRIGGER `trigger_institution_student_absence_details_insert`
+AFTER INSERT ON `institution_student_absence_details`
+FOR EACH ROW
+BEGIN
+    -- Update present_female_count
+    UPDATE summary_area_institution_grade_attendances s
+    SET
+        present_female_count = CASE
+            WHEN NEW.absence_type_id != 3 AND (
+                SELECT COUNT(*) FROM (
+                    SELECT 
+                        iad.academic_period_id,
+                        iad.institution_id,
+                        iad.education_grade_id,
+                        iad.institution_class_id,
+                        iad.student_id,
+                        iad.date AS absence_date,
+                        iad.subject_id,
+                        period_counter.attendance_per_day AS period_attendance_per_day,
+                        subject_counter.subjects_taken,
+                        ci.value
+                    FROM institution_student_absence_details iad
+                    INNER JOIN security_users su ON su.id = iad.student_id
+                    INNER JOIN academic_periods ap ON ap.id = iad.academic_period_id
+                    INNER JOIN (
+                        SELECT 
+                            student_mark_type_status_grades.education_grade_id,
+                            student_mark_type_statuses.academic_period_id,
+                            student_attendance_mark_types.attendance_per_day
+                        FROM student_mark_type_status_grades
+                        INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
+                        INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
+                        WHERE student_mark_type_statuses.academic_period_id = NEW.academic_period_id
+                          AND student_mark_type_status_grades.education_grade_id = NEW.education_grade_id
+                        GROUP BY 
+                            student_mark_type_status_grades.education_grade_id,
+                            student_mark_type_statuses.academic_period_id
+                    ) period_counter ON 
+                        period_counter.education_grade_id = iad.education_grade_id
+                        AND period_counter.academic_period_id = iad.academic_period_id
+                    LEFT JOIN (
+                        SELECT 
+                            institution_subject_students.academic_period_id,
+                            institution_subject_students.institution_id,
+                            institution_subject_students.education_grade_id,
+                            institution_subject_students.institution_class_id,
+                            institution_subject_students.student_id,
+                            COUNT(DISTINCT institution_subject_students.education_subject_id) AS subjects_taken
+                        FROM institution_subject_students
+                        INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id
+                        INNER JOIN security_users ON security_users.id = institution_subject_students.student_id
+                        WHERE academic_periods.id = NEW.academic_period_id
+                          AND institution_subject_students.student_status_id = 1
+                          AND security_users.gender_id = 2
+                          AND institution_subject_students.education_grade_id = NEW.education_grade_id
+                          AND institution_subject_students.institution_id = NEW.institution_id
+                        GROUP BY 
+                            institution_subject_students.academic_period_id,
+                            institution_subject_students.institution_id,
+                            institution_subject_students.education_grade_id,
+                            institution_subject_students.institution_class_id,
+                            institution_subject_students.student_id
+                    ) subject_counter ON 
+                        subject_counter.academic_period_id = iad.academic_period_id
+                        AND subject_counter.institution_id = iad.institution_id
+                        AND subject_counter.education_grade_id = iad.education_grade_id
+                        AND subject_counter.institution_class_id = iad.institution_class_id
+                        AND subject_counter.student_id = iad.student_id
+                    INNER JOIN (
+                        SELECT value FROM config_items WHERE code LIKE 'calculate_daily_attendance'
+                    ) ci ON 1=1
+                    WHERE
+                        iad.date = NEW.date
+                        AND iad.academic_period_id = NEW.academic_period_id
+                        AND iad.institution_id = NEW.institution_id
+                        AND iad.education_grade_id = NEW.education_grade_id
+                        AND iad.absence_type_id != 3
+                    GROUP BY
+                        iad.academic_period_id,
+                        iad.institution_id,
+                        iad.education_grade_id,
+                        iad.institution_class_id,
+                        iad.student_id,
+                        iad.date,
+                        iad.subject_id,
+                        ci.value
+                    HAVING
+                        CASE
+                            WHEN ci.value = 1 THEN COUNT(*) >= 1
+                            ELSE
+                                CASE
+                                    WHEN iad.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day
+                                    ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
+                                END
+                        END
+                ) AS attend_info
+            ) < s.absent_female_count
+            THEN s.present_female_count - 1
+            ELSE s.present_female_count
+        END,
+
+        -- Update present_male_count
+        present_male_count = CASE
+            WHEN NEW.absence_type_id != 3 AND (
+                SELECT COUNT(*) FROM (
+                    SELECT 
+                        iad.academic_period_id,
+                        iad.institution_id,
+                        iad.education_grade_id,
+                        iad.institution_class_id,
+                        iad.student_id,
+                        iad.date AS absence_date,
+                        iad.subject_id,
+                        period_counter.attendance_per_day AS period_attendance_per_day,
+                        subject_counter.subjects_taken,
+                        ci.value
+                    FROM institution_student_absence_details iad
+                    INNER JOIN security_users su ON su.id = iad.student_id
+                    INNER JOIN academic_periods ap ON ap.id = iad.academic_period_id
+                    INNER JOIN (
+                        SELECT 
+                            student_mark_type_status_grades.education_grade_id,
+                            student_mark_type_statuses.academic_period_id,
+                            student_attendance_mark_types.attendance_per_day
+                        FROM student_mark_type_status_grades
+                        INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
+                        INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
+                        WHERE student_mark_type_statuses.academic_period_id = NEW.academic_period_id
+                          AND student_mark_type_status_grades.education_grade_id = NEW.education_grade_id
+                        GROUP BY 
+                            student_mark_type_status_grades.education_grade_id,
+                            student_mark_type_statuses.academic_period_id
+                    ) period_counter ON 
+                        period_counter.education_grade_id = iad.education_grade_id
+                        AND period_counter.academic_period_id = iad.academic_period_id
+                    LEFT JOIN (
+                        SELECT 
+                            institution_subject_students.academic_period_id,
+                            institution_subject_students.institution_id,
+                            institution_subject_students.education_grade_id,
+                            institution_subject_students.institution_class_id,
+                            institution_subject_students.student_id,
+                            COUNT(DISTINCT institution_subject_students.education_subject_id) AS subjects_taken
+                        FROM institution_subject_students
+                        INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id
+                        INNER JOIN security_users ON security_users.id = institution_subject_students.student_id
+                        WHERE academic_periods.id = NEW.academic_period_id
+                          AND institution_subject_students.student_status_id = 1
+                          AND security_users.gender_id = 1
+                          AND institution_subject_students.education_grade_id = NEW.education_grade_id
+                          AND institution_subject_students.institution_id = NEW.institution_id
+                        GROUP BY 
+                            institution_subject_students.academic_period_id,
+                            institution_subject_students.institution_id,
+                            institution_subject_students.education_grade_id,
+                            institution_subject_students.institution_class_id,
+                            institution_subject_students.student_id
+                    ) subject_counter ON 
+                        subject_counter.academic_period_id = iad.academic_period_id
+                        AND subject_counter.institution_id = iad.institution_id
+                        AND subject_counter.education_grade_id = iad.education_grade_id
+                        AND subject_counter.institution_class_id = iad.institution_class_id
+                        AND subject_counter.student_id = iad.student_id
+                    INNER JOIN (
+                        SELECT value FROM config_items WHERE code LIKE 'calculate_daily_attendance'
+                    ) ci ON 1=1
+                    WHERE
+                        iad.date = NEW.date
+                        AND iad.academic_period_id = NEW.academic_period_id
+                        AND iad.institution_id = NEW.institution_id
+                        AND iad.education_grade_id = NEW.education_grade_id
+                        AND iad.absence_type_id != 3
+                    GROUP BY
+                        iad.academic_period_id,
+                        iad.institution_id,
+                        iad.education_grade_id,
+                        iad.institution_class_id,
+                        iad.student_id,
+                        iad.date,
+                        iad.subject_id,
+                        ci.value
+                    HAVING
+                        CASE
+                            WHEN ci.value = 1 THEN COUNT(*) >= 1
+                            ELSE
+                                CASE
+                                    WHEN iad.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day
+                                    ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
+                                END
+                        END
+                ) AS attend_info
+            ) < s.absent_male_count
+            THEN s.present_male_count - 1
+            ELSE s.present_male_count
+        END,
+
+        -- Update absent_female_count
+        absent_female_count = CASE
+            WHEN NEW.absence_type_id != 3 AND (
+                SELECT COUNT(*) FROM (
+                    SELECT 
+                        iad.academic_period_id,
+                        iad.institution_id,
+                        iad.education_grade_id,
+                        iad.institution_class_id,
+                        iad.student_id,
+                        iad.date AS absence_date,
+                        iad.subject_id,
+                        period_counter.attendance_per_day AS period_attendance_per_day,
+                        subject_counter.subjects_taken,
+                        ci.value
+                    FROM institution_student_absence_details iad
+                    INNER JOIN security_users su ON su.id = iad.student_id
+                    INNER JOIN academic_periods ap ON ap.id = iad.academic_period_id
+                    INNER JOIN (
+                        SELECT 
+                            student_mark_type_status_grades.education_grade_id,
+                            student_mark_type_statuses.academic_period_id,
+                            student_attendance_mark_types.attendance_per_day
+                        FROM student_mark_type_status_grades
+                        INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
+                        INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
+                        WHERE student_mark_type_statuses.academic_period_id = NEW.academic_period_id
+                          AND student_mark_type_status_grades.education_grade_id = NEW.education_grade_id
+                        GROUP BY 
+                            student_mark_type_status_grades.education_grade_id,
+                            student_mark_type_statuses.academic_period_id
+                    ) period_counter ON 
+                        period_counter.education_grade_id = iad.education_grade_id
+                        AND period_counter.academic_period_id = iad.academic_period_id
+                    LEFT JOIN (
+                        SELECT 
+                            institution_subject_students.academic_period_id,
+                            institution_subject_students.institution_id,
+                            institution_subject_students.education_grade_id,
+                            institution_subject_students.institution_class_id,
+                            institution_subject_students.student_id,
+                            COUNT(DISTINCT institution_subject_students.education_subject_id) AS subjects_taken
+                        FROM institution_subject_students
+                        INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id
+                        INNER JOIN security_users ON security_users.id = institution_subject_students.student_id
+                        WHERE academic_periods.id = NEW.academic_period_id
+                          AND institution_subject_students.student_status_id = 1
+                          AND security_users.gender_id = 2
+                          AND institution_subject_students.education_grade_id = NEW.education_grade_id
+                          AND institution_subject_students.institution_id = NEW.institution_id
+                        GROUP BY 
+                            institution_subject_students.academic_period_id,
+                            institution_subject_students.institution_id,
+                            institution_subject_students.education_grade_id,
+                            institution_subject_students.institution_class_id,
+                            institution_subject_students.student_id
+                    ) subject_counter ON 
+                        subject_counter.academic_period_id = iad.academic_period_id
+                        AND subject_counter.institution_id = iad.institution_id
+                        AND subject_counter.education_grade_id = iad.education_grade_id
+                        AND subject_counter.institution_class_id = iad.institution_class_id
+                        AND subject_counter.student_id = iad.student_id
+                    INNER JOIN (
+                        SELECT value FROM config_items WHERE code LIKE 'calculate_daily_attendance'
+                    ) ci ON 1=1
+                    WHERE
+                        iad.date = NEW.date
+                        AND iad.academic_period_id = NEW.academic_period_id
+                        AND iad.institution_id = NEW.institution_id
+                        AND iad.education_grade_id = NEW.education_grade_id
+                        AND iad.absence_type_id != 3
+                    GROUP BY
+                        iad.academic_period_id,
+                        iad.institution_id,
+                        iad.education_grade_id,
+                        iad.institution_class_id,
+                        iad.student_id,
+                        iad.date,
+                        iad.subject_id,
+                        ci.value
+                    HAVING
+                        CASE
+                            WHEN ci.value = 1 THEN COUNT(*) >= 1
+                            ELSE
+                                CASE
+                                    WHEN iad.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day
+                                    ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
+                                END
+                        END
+                ) AS attend_info
+            ) < s.absent_female_count
+            THEN s.absent_female_count + 1
+            ELSE s.absent_female_count
+        END,
+
+        -- Update absent_male_count
+        absent_male_count = CASE
+            WHEN NEW.absence_type_id != 3 AND (
+                SELECT COUNT(*) FROM (
+                    SELECT 
+                        iad.academic_period_id,
+                        iad.institution_id,
+                        iad.education_grade_id,
+                        iad.institution_class_id,
+                        iad.student_id,
+                        iad.date AS absence_date,
+                        iad.subject_id,
+                        period_counter.attendance_per_day AS period_attendance_per_day,
+                        subject_counter.subjects_taken,
+                        ci.value
+                    FROM institution_student_absence_details iad
+                    INNER JOIN security_users su ON su.id = iad.student_id
+                    INNER JOIN academic_periods ap ON ap.id = iad.academic_period_id
+                    INNER JOIN (
+                        SELECT 
+                            student_mark_type_status_grades.education_grade_id,
+                            student_mark_type_statuses.academic_period_id,
+                            student_attendance_mark_types.attendance_per_day
+                        FROM student_mark_type_status_grades
+                        INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
+                        INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
+                        WHERE student_mark_type_statuses.academic_period_id = NEW.academic_period_id
+                          AND student_mark_type_status_grades.education_grade_id = NEW.education_grade_id
+                        GROUP BY 
+                            student_mark_type_status_grades.education_grade_id,
+                            student_mark_type_statuses.academic_period_id
+                    ) period_counter ON 
+                        period_counter.education_grade_id = iad.education_grade_id
+                        AND period_counter.academic_period_id = iad.academic_period_id
+                    LEFT JOIN (
+                        SELECT 
+                            institution_subject_students.academic_period_id,
+                            institution_subject_students.institution_id,
+                            institution_subject_students.education_grade_id,
+                            institution_subject_students.institution_class_id,
+                            institution_subject_students.student_id,
+                            COUNT(DISTINCT institution_subject_students.education_subject_id) AS subjects_taken
+                        FROM institution_subject_students
+                        INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id
+                        INNER JOIN security_users ON security_users.id = institution_subject_students.student_id
+                        WHERE academic_periods.id = NEW.academic_period_id
+                          AND institution_subject_students.student_status_id = 1
+                          AND security_users.gender_id = 1
+                          AND institution_subject_students.education_grade_id = NEW.education_grade_id
+                          AND institution_subject_students.institution_id = NEW.institution_id
+                        GROUP BY 
+                            institution_subject_students.academic_period_id,
+                            institution_subject_students.institution_id,
+                            institution_subject_students.education_grade_id,
+                            institution_subject_students.institution_class_id,
+                            institution_subject_students.student_id
+                    ) subject_counter ON 
+                        subject_counter.academic_period_id = iad.academic_period_id
+                        AND subject_counter.institution_id = iad.institution_id
+                        AND subject_counter.education_grade_id = iad.education_grade_id
+                        AND subject_counter.institution_class_id = iad.institution_class_id
+                        AND subject_counter.student_id = iad.student_id
+                    INNER JOIN (
+                        SELECT value FROM config_items WHERE code LIKE 'calculate_daily_attendance'
+                    ) ci ON 1=1
+                    WHERE
+                        iad.date = NEW.date
+                        AND iad.academic_period_id = NEW.academic_period_id
+                        AND iad.institution_id = NEW.institution_id
+                        AND iad.education_grade_id = NEW.education_grade_id
+                        AND iad.absence_type_id != 3
+                    GROUP BY
+                        iad.academic_period_id,
+                        iad.institution_id,
+                        iad.education_grade_id,
+                        iad.institution_class_id,
+                        iad.student_id,
+                        iad.date,
+                        iad.subject_id,
+                        ci.value
+                    HAVING
+                        CASE
+                            WHEN ci.value = 1 THEN COUNT(*) >= 1
+                            ELSE
+                                CASE
+                                    WHEN iad.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day
+                                    ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
+                                END
+                        END
+                ) AS attend_info
+            ) < s.absent_male_count
+            THEN s.absent_male_count + 1
+            ELSE s.absent_male_count
+        END,
+
+        -- Late counts for female
+        late_female_count = CASE
+            WHEN NEW.absence_type_id = 3 AND (
+                SELECT COUNT(DISTINCT iad.student_id)
+                FROM institution_student_absence_details iad
+                INNER JOIN security_users su ON su.id = iad.student_id
+                WHERE
+                    iad.academic_period_id = NEW.academic_period_id
+                    AND iad.date = NEW.date
+                    AND iad.absence_type_id = NEW.absence_type_id
+                    AND su.gender_id = 2
+                    AND iad.education_grade_id = NEW.education_grade_id
+                    AND iad.institution_id = NEW.institution_id
+                GROUP BY iad.academic_period_id, iad.institution_id, iad.education_grade_id
+            ) > late_female_count
+            THEN late_female_count + 1
+            ELSE late_female_count
+        END,
+
+        -- Late counts for male
+        late_male_count = CASE
+            WHEN NEW.absence_type_id = 3 AND (
+                SELECT COUNT(DISTINCT iad.student_id)
+                FROM institution_student_absence_details iad
+                INNER JOIN security_users su ON su.id = iad.student_id
+                WHERE
+                    iad.academic_period_id = NEW.academic_period_id
+                    AND iad.date = NEW.date
+                    AND iad.absence_type_id = NEW.absence_type_id
+                    AND su.gender_id = 1
+                    AND iad.education_grade_id = NEW.education_grade_id
+                    AND iad.institution_id = NEW.institution_id
+                GROUP BY iad.academic_period_id, iad.institution_id, iad.education_grade_id
+            ) > late_male_count
+            THEN late_male_count + 1
+            ELSE late_male_count
+        END
+
+    WHERE
+        s.attendance_date = NEW.date
+        AND s.institution_id = NEW.institution_id
+        AND s.education_grade_id = NEW.education_grade_id
+        AND s.academic_period_id = NEW.academic_period_id;
+
+END$$
+
 DELIMITER ;
 DELIMITER $$
-CREATE TRIGGER `trigger_institution_student_absence_details_update` AFTER UPDATE ON `institution_student_absence_details` FOR EACH ROW BEGIN UPDATE summary_area_institution_grade_attendances INNER JOIN( SELECT IFNULL(female_absence_counter, 0) female_absence_counter ,IFNULL(male_absence_counter, 0) male_absence_counter ,IFNULL(female_late_counter, 0) female_late_counter ,IFNULL(male_late_counter, 0) male_late_counter FROM ( SELECT "dummy" AS dummy) dummy_source LEFT JOIN ( SELECT attend_info.academic_period_id ,attend_info.institution_id ,attend_info.education_grade_id ,attend_info.absence_date ,COUNT(DISTINCT(CASE WHEN attend_info.gender_id = 2 THEN attend_info.student_id END)) female_absence_counter ,COUNT(DISTINCT(CASE WHEN attend_info.gender_id = 1 THEN attend_info.student_id END)) male_absence_counter FROM ( SELECT institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date absence_date ,institution_student_absence_details.subject_id ,period_counter.attendance_per_day period_attendance_per_day ,subject_counter.subjects_taken ,attendance_type.value ,security_users.gender_id ,institution_student_absence_details.absence_type_id FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id INNER JOIN academic_periods ON academic_periods.id = institution_student_absence_details.academic_period_id INNER JOIN ( SELECT student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ,student_attendance_mark_types.attendance_per_day FROM student_mark_type_status_grades INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id INNER JOIN academic_periods ON academic_periods.id = student_mark_type_statuses.academic_period_id WHERE academic_periods.id = NEW.academic_period_id AND student_mark_type_status_grades.education_grade_id = NEW.education_grade_id GROUP BY student_mark_type_status_grades.education_grade_id ,student_mark_type_statuses.academic_period_id ) period_counter ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id LEFT JOIN ( SELECT institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ,COUNT(DISTINCT(institution_subject_students.education_subject_id)) subjects_taken FROM institution_subject_students INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id INNER JOIN security_users ON security_users.id = institution_subject_students.student_id WHERE academic_periods.id = NEW.academic_period_id AND institution_subject_students.student_status_id = 1 AND institution_subject_students.education_grade_id = NEW.education_grade_id AND institution_subject_students.institution_id = NEW.institution_id GROUP BY institution_subject_students.academic_period_id ,institution_subject_students.institution_id ,institution_subject_students.education_grade_id ,institution_subject_students.institution_class_id ,institution_subject_students.student_id ) subject_counter ON subject_counter.academic_period_id = institution_student_absence_details.academic_period_id AND subject_counter.institution_id = institution_student_absence_details.institution_id AND subject_counter.education_grade_id = institution_student_absence_details.education_grade_id AND subject_counter.institution_class_id = institution_student_absence_details.institution_class_id AND subject_counter.student_id = institution_student_absence_details.student_id INNER JOIN ( SELECT config_items.value FROM config_items WHERE config_items.code LIKE "calculate_daily_attendance" ) attendance_type WHERE academic_periods.id = NEW.academic_period_id AND institution_student_absence_details.absence_type_id != 3 AND institution_student_absence_details.date = NEW.date AND institution_student_absence_details.education_grade_id = NEW.education_grade_id AND institution_student_absence_details.institution_id = NEW.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.institution_class_id ,institution_student_absence_details.student_id ,institution_student_absence_details.date HAVING CASE WHEN attendance_type.value = 1 THEN COUNT(*) >= 1 ELSE CASE WHEN institution_student_absence_details.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0) END END ) attend_info GROUP BY attend_info.academic_period_id ,attend_info.institution_id ,attend_info.education_grade_id ) absence_calc ON 1=1 LEFT JOIN ( SELECT institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ,institution_student_absence_details.date late_date ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_student_absence_details.student_id END)) female_late_counter ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_student_absence_details.student_id END)) male_late_counter FROM institution_student_absence_details INNER JOIN security_users ON security_users.id = institution_student_absence_details.student_id WHERE institution_student_absence_details.academic_period_id = NEW.academic_period_id AND institution_student_absence_details.absence_type_id = 3 AND institution_student_absence_details.date = NEW.date AND institution_student_absence_details.education_grade_id = NEW.education_grade_id AND institution_student_absence_details.institution_id = NEW.institution_id GROUP BY institution_student_absence_details.academic_period_id ,institution_student_absence_details.institution_id ,institution_student_absence_details.education_grade_id ) late_calc ON 1=1 ) attendance_info SET summary_area_institution_grade_attendances.present_female_count = CASE WHEN attendance_info.female_absence_counter > summary_area_institution_grade_attendances.absent_female_count THEN summary_area_institution_grade_attendances.present_female_count - 1 WHEN attendance_info.female_absence_counter < summary_area_institution_grade_attendances.absent_female_count THEN summary_area_institution_grade_attendances.present_female_count + 1 ELSE summary_area_institution_grade_attendances.present_female_count END ,summary_area_institution_grade_attendances.present_male_count = CASE WHEN attendance_info.male_absence_counter > summary_area_institution_grade_attendances.absent_male_count THEN summary_area_institution_grade_attendances.present_male_count - 1 WHEN attendance_info.male_absence_counter < summary_area_institution_grade_attendances.absent_male_count THEN summary_area_institution_grade_attendances.present_male_count + 1 ELSE summary_area_institution_grade_attendances.present_male_count END ,summary_area_institution_grade_attendances.absent_female_count = CASE WHEN attendance_info.female_absence_counter > summary_area_institution_grade_attendances.absent_female_count THEN summary_area_institution_grade_attendances.absent_female_count + 1 WHEN attendance_info.female_absence_counter < summary_area_institution_grade_attendances.absent_female_count THEN summary_area_institution_grade_attendances.absent_female_count - 1 ELSE summary_area_institution_grade_attendances.absent_female_count END ,summary_area_institution_grade_attendances.absent_male_count = CASE WHEN attendance_info.male_absence_counter > summary_area_institution_grade_attendances.absent_male_count THEN summary_area_institution_grade_attendances.absent_male_count + 1 WHEN attendance_info.male_absence_counter < summary_area_institution_grade_attendances.absent_male_count THEN summary_area_institution_grade_attendances.absent_male_count - 1 ELSE summary_area_institution_grade_attendances.absent_male_count END ,summary_area_institution_grade_attendances.late_female_count = CASE WHEN attendance_info.female_late_counter > summary_area_institution_grade_attendances.late_female_count THEN summary_area_institution_grade_attendances.late_female_count + 1 WHEN attendance_info.female_late_counter < summary_area_institution_grade_attendances.late_female_count THEN summary_area_institution_grade_attendances.late_female_count - 1 ELSE summary_area_institution_grade_attendances.late_female_count END ,summary_area_institution_grade_attendances.late_male_count = CASE WHEN attendance_info.male_late_counter > summary_area_institution_grade_attendances.late_male_count THEN summary_area_institution_grade_attendances.late_male_count + 1 WHEN attendance_info.male_late_counter < summary_area_institution_grade_attendances.late_male_count THEN summary_area_institution_grade_attendances.late_male_count - 1 ELSE summary_area_institution_grade_attendances.late_male_count END WHERE summary_area_institution_grade_attendances.attendance_date = NEW.date AND summary_area_institution_grade_attendances.institution_id = NEW.institution_id AND summary_area_institution_grade_attendances.education_grade_id = NEW.education_grade_id AND summary_area_institution_grade_attendances.academic_period_id = NEW.academic_period_id; END
-$$
+
+DELIMITER $$
+
+CREATE TRIGGER `trigger_institution_student_absence_details_update`
+AFTER UPDATE ON `institution_student_absence_details`
+FOR EACH ROW
+BEGIN
+  UPDATE summary_area_institution_grade_attendances s
+  INNER JOIN (
+    SELECT 
+      -- Compute absence counts for female and male students
+      IFNULL(female_absence_counter, 0) AS female_absence_counter,
+      IFNULL(male_absence_counter, 0) AS male_absence_counter,
+      IFNULL(female_late_counter, 0) AS female_late_counter,
+      IFNULL(male_late_counter, 0) AS male_late_counter
+    FROM (
+      -- Dummy source for initial join
+      SELECT 1 AS dummy
+    ) dummy_source
+    LEFT JOIN (
+      -- Aggregate absence info
+      SELECT 
+        attend_info.academic_period_id,
+        attend_info.institution_id,
+        attend_info.education_grade_id,
+        attend_info.absence_date,
+        -- Count distinct students by gender
+        COUNT(DISTINCT CASE WHEN attend_info.gender_id = 2 THEN attend_info.student_id END) AS female_absence_counter,
+        COUNT(DISTINCT CASE WHEN attend_info.gender_id = 1 THEN attend_info.student_id END) AS male_absence_counter,
+        -- Late counts
+        COUNT(DISTINCT CASE WHEN attend_info.absence_type_id = 3 AND attend_info.gender_id = 2 THEN attend_info.student_id END) AS female_late_counter,
+        COUNT(DISTINCT CASE WHEN attend_info.absence_type_id = 3 AND attend_info.gender_id = 1 THEN attend_info.student_id END) AS male_late_counter
+      FROM (
+        -- Subquery: detailed absence info
+        SELECT 
+          iad.academic_period_id,
+          iad.institution_id,
+          iad.education_grade_id,
+          iad.institution_class_id,
+          iad.student_id,
+          iad.date AS absence_date,
+          iad.subject_id,
+          period_counter.attendance_per_day AS period_attendance_per_day,
+          subject_counter.subjects_taken,
+          ci.value,
+          su.gender_id,
+          iad.absence_type_id
+        FROM institution_student_absence_details iad
+        INNER JOIN security_users su ON su.id = iad.student_id
+        INNER JOIN academic_periods ap ON ap.id = iad.academic_period_id
+        INNER JOIN (
+          SELECT 
+            student_mark_type_status_grades.education_grade_id,
+            student_mark_type_statuses.academic_period_id,
+            student_attendance_mark_types.attendance_per_day
+          FROM student_mark_type_status_grades
+          INNER JOIN student_mark_type_statuses ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
+          INNER JOIN student_attendance_mark_types ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
+          WHERE student_mark_type_statuses.academic_period_id = NEW.academic_period_id
+            AND student_mark_type_status_grades.education_grade_id = NEW.education_grade_id
+          GROUP BY student_mark_type_status_grades.education_grade_id, student_mark_type_statuses.academic_period_id
+        ) period_counter ON 
+          period_counter.education_grade_id = iad.education_grade_id
+          AND period_counter.academic_period_id = iad.academic_period_id
+        LEFT JOIN (
+          SELECT 
+            institution_subject_students.academic_period_id,
+            institution_subject_students.institution_id,
+            institution_subject_students.education_grade_id,
+            institution_subject_students.institution_class_id,
+            institution_subject_students.student_id,
+            COUNT(DISTINCT institution_subject_students.education_subject_id) AS subjects_taken
+          FROM institution_subject_students
+          INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id
+          INNER JOIN security_users ON security_users.id = institution_subject_students.student_id
+          WHERE academic_periods.id = NEW.academic_period_id
+            AND institution_subject_students.student_status_id = 1
+            AND security_users.gender_id = 2
+            AND institution_subject_students.education_grade_id = NEW.education_grade_id
+            AND institution_subject_students.institution_id = NEW.institution_id
+          GROUP BY 
+            institution_subject_students.academic_period_id,
+            institution_subject_students.institution_id,
+            institution_subject_students.education_grade_id,
+            institution_subject_students.institution_class_id,
+            institution_subject_students.student_id
+        ) subject_counter ON 
+          subject_counter.academic_period_id = iad.academic_period_id
+          AND subject_counter.institution_id = iad.institution_id
+          AND subject_counter.education_grade_id = iad.education_grade_id
+          AND subject_counter.institution_class_id = iad.institution_class_id
+          AND subject_counter.student_id = iad.student_id
+        INNER JOIN (
+          SELECT value FROM config_items WHERE code LIKE 'calculate_daily_attendance'
+        ) ci ON 1=1
+        WHERE 
+          iad.date = NEW.date
+          AND iad.academic_period_id = NEW.academic_period_id
+          AND iad.institution_id = NEW.institution_id
+          AND iad.education_grade_id = NEW.education_grade_id
+          AND iad.absence_type_id != 3
+        GROUP BY 
+          iad.academic_period_id,
+          iad.institution_id,
+          iad.education_grade_id,
+          iad.institution_class_id,
+          iad.student_id,
+          iad.date,
+          iad.subject_id,
+          ci.value
+        HAVING 
+          CASE WHEN ci.value = 1 THEN COUNT(*) >= 1
+               ELSE CASE WHEN iad.subject_id = 0 THEN COUNT(*) >= period_counter.attendance_per_day
+                         ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
+                    END
+          END
+      ) attend_info
+      GROUP BY 
+        attend_info.academic_period_id,
+        attend_info.institution_id,
+        attend_info.education_grade_id,
+        attend_info.absence_date
+    ) attendance_stats ON 1=1
+  ) AS stats ON 1=1
+  SET
+    -- Adjust present and absent counts based on attendance
+    s.present_female_count = CASE
+      WHEN stats.female_absence_counter > s.absent_female_count THEN s.present_female_count - 1
+      WHEN stats.female_absence_counter < s.absent_female_count THEN s.present_female_count + 1
+      ELSE s.present_female_count
+    END,
+    s.present_male_count = CASE
+      WHEN stats.male_absence_counter > s.absent_male_count THEN s.present_male_count - 1
+      WHEN stats.male_absence_counter < s.absent_male_count THEN s.present_male_count + 1
+      ELSE s.present_male_count
+    END,
+    s.absent_female_count = CASE
+      WHEN stats.female_absence_counter > s.absent_female_count THEN s.absent_female_count + 1
+      WHEN stats.female_absence_counter < s.absent_female_count THEN s.absent_female_count - 1
+      ELSE s.absent_female_count
+    END,
+    s.absent_male_count = CASE
+      WHEN stats.male_absence_counter > s.absent_male_count THEN s.absent_male_count + 1
+      WHEN stats.male_absence_counter < s.absent_male_count THEN s.absent_male_count - 1
+      ELSE s.absent_male_count
+    END,
+    s.late_female_count = CASE
+      WHEN stats.female_late_counter > s.late_female_count THEN s.late_female_count + 1
+      WHEN stats.female_late_counter < s.late_female_count THEN s.late_female_count - 1
+      ELSE s.late_female_count
+    END,
+    s.late_male_count = CASE
+      WHEN stats.male_late_counter > s.late_male_count THEN s.late_male_count + 1
+      WHEN stats.male_late_counter < s.late_male_count THEN s.late_male_count - 1
+      ELSE s.late_male_count
+    END
+  WHERE 
+    s.attendance_date = NEW.date
+    AND s.institution_id = NEW.institution_id
+    AND s.education_grade_id = NEW.education_grade_id
+    AND s.academic_period_id = NEW.academic_period_id;
+
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -32740,8 +33555,96 @@ CREATE TABLE `student_attendance_marked_records` (
 -- Triggers `student_attendance_marked_records`
 --
 DELIMITER $$
-CREATE TRIGGER `trigger_student_attendance_marked_records_insert` AFTER INSERT ON `student_attendance_marked_records` FOR EACH ROW BEGIN UPDATE summary_area_institution_grade_attendances INNER JOIN( SELECT COUNT(DISTINCT(attendance_details.institution_class_id)) marked_classes_counter ,SUM(class_counter.present_female_count) present_female_count ,SUM(class_counter.present_male_count) present_male_count FROM ( SELECT student_attendance_marked_records.academic_period_id ,student_attendance_marked_records.institution_id ,student_attendance_marked_records.education_grade_id ,student_attendance_marked_records.institution_class_id FROM student_attendance_marked_records WHERE student_attendance_marked_records.academic_period_id = NEW.academic_period_id AND student_attendance_marked_records.institution_id = NEW.institution_id AND student_attendance_marked_records.education_grade_id = NEW.education_grade_id AND student_attendance_marked_records.date = NEW.date AND student_attendance_marked_records.no_scheduled_class != 1 GROUP BY student_attendance_marked_records.academic_period_id ,student_attendance_marked_records.institution_id ,student_attendance_marked_records.education_grade_id ,student_attendance_marked_records.institution_class_id) attendance_details INNER JOIN ( SELECT institution_class_students.education_grade_id ,institution_class_students.institution_id ,institution_class_students.academic_period_id ,institution_class_students.institution_class_id ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_class_students.student_id END)) present_male_count ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_class_students.student_id END)) present_female_count FROM institution_class_students INNER JOIN security_users ON security_users.id = institution_class_students.student_id INNER JOIN academic_periods ON academic_periods.id = institution_class_students.academic_period_id WHERE academic_periods.id = NEW.academic_period_id AND institution_class_students.institution_id = NEW.institution_id AND institution_class_students.education_grade_id = NEW.education_grade_id AND institution_class_students.student_status_id = 1 GROUP BY institution_class_students.education_grade_id ,institution_class_students.institution_id ,institution_class_students.academic_period_id ,institution_class_students.institution_class_id ) class_counter ON class_counter.education_grade_id = attendance_details.education_grade_id AND class_counter.institution_id = attendance_details.institution_id AND class_counter.institution_class_id = attendance_details.institution_class_id AND class_counter.academic_period_id = attendance_details.academic_period_id GROUP BY attendance_details.academic_period_id ,attendance_details.institution_id ,attendance_details.education_grade_id ) attendance_info SET summary_area_institution_grade_attendances.present_female_count = CASE WHEN attendance_info.present_female_count > summary_area_institution_grade_attendances.present_female_count THEN attendance_info.present_female_count - summary_area_institution_grade_attendances.absent_female_count ELSE summary_area_institution_grade_attendances.present_female_count END ,summary_area_institution_grade_attendances.present_male_count = CASE WHEN attendance_info.present_male_count > summary_area_institution_grade_attendances.present_male_count THEN attendance_info.present_male_count - summary_area_institution_grade_attendances.absent_male_count ELSE summary_area_institution_grade_attendances.present_male_count END ,summary_area_institution_grade_attendances.marked_classes = CASE WHEN attendance_info.marked_classes_counter > summary_area_institution_grade_attendances.marked_classes THEN attendance_info.marked_classes_counter ELSE summary_area_institution_grade_attendances.marked_classes END WHERE summary_area_institution_grade_attendances.attendance_date = NEW.date AND summary_area_institution_grade_attendances.institution_id = NEW.institution_id AND summary_area_institution_grade_attendances.education_grade_id = NEW.education_grade_id AND summary_area_institution_grade_attendances.academic_period_id = NEW.academic_period_id; END
-$$
+
+CREATE TRIGGER `trigger_student_attendance_marked_records_insert`
+AFTER INSERT ON `student_attendance_marked_records`
+FOR EACH ROW
+BEGIN
+  UPDATE summary_area_institution_grade_attendances
+  INNER JOIN (
+    SELECT 
+      COUNT(DISTINCT(attendance_details.institution_class_id)) AS marked_classes_counter,
+      SUM(class_counter.present_female_count) AS present_female_count,
+      SUM(class_counter.present_male_count) AS present_male_count
+    FROM (
+      SELECT 
+        student_attendance_marked_records.academic_period_id,
+        student_attendance_marked_records.institution_id,
+        student_attendance_marked_records.education_grade_id,
+        student_attendance_marked_records.institution_class_id
+      FROM student_attendance_marked_records
+      WHERE 
+        student_attendance_marked_records.academic_period_id = NEW.academic_period_id
+        AND student_attendance_marked_records.institution_id = NEW.institution_id
+        AND student_attendance_marked_records.education_grade_id = NEW.education_grade_id
+        AND student_attendance_marked_records.date = NEW.date
+        AND student_attendance_marked_records.no_scheduled_class != 1
+      GROUP BY 
+        student_attendance_marked_records.academic_period_id,
+        student_attendance_marked_records.institution_id,
+        student_attendance_marked_records.education_grade_id,
+        student_attendance_marked_records.institution_class_id
+    ) attendance_details
+    INNER JOIN (
+      SELECT 
+        institution_class_students.education_grade_id,
+        institution_class_students.institution_id,
+        institution_class_students.academic_period_id,
+        institution_class_students.institution_class_id,
+        COUNT(DISTINCT CASE WHEN security_users.gender_id = 1 THEN institution_class_students.student_id END) AS present_male_count,
+        COUNT(DISTINCT CASE WHEN security_users.gender_id = 2 THEN institution_class_students.student_id END) AS present_female_count
+      FROM institution_class_students
+      INNER JOIN security_users ON security_users.id = institution_class_students.student_id
+      INNER JOIN academic_periods ON academic_periods.id = institution_class_students.academic_period_id
+      WHERE 
+        academic_periods.id = NEW.academic_period_id
+        AND institution_class_students.institution_id = NEW.institution_id
+        AND institution_class_students.education_grade_id = NEW.education_grade_id
+        AND institution_class_students.student_status_id = 1
+      GROUP BY 
+        institution_class_students.education_grade_id,
+        institution_class_students.institution_id,
+        institution_class_students.academic_period_id,
+        institution_class_students.institution_class_id
+    ) class_counter ON 
+      class_counter.education_grade_id = attendance_details.education_grade_id
+      AND class_counter.institution_id = attendance_details.institution_id
+      AND class_counter.institution_class_id = attendance_details.institution_class_id
+      AND class_counter.academic_period_id = attendance_details.academic_period_id
+    GROUP BY 
+      attendance_details.academic_period_id,
+      attendance_details.institution_id,
+      attendance_details.education_grade_id
+  ) AS attendance_info ON 1=1
+  SET
+    -- Update present_female_count
+    summary_area_institution_grade_attendances.present_female_count = CASE
+      WHEN attendance_info.present_female_count > summary_area_institution_grade_attendances.present_female_count THEN
+        attendance_info.present_female_count - summary_area_institution_grade_attendances.absent_female_count
+      ELSE
+        summary_area_institution_grade_attendances.present_female_count
+    END,
+    -- Update present_male_count
+    summary_area_institution_grade_attendances.present_male_count = CASE
+      WHEN attendance_info.present_male_count > summary_area_institution_grade_attendances.present_male_count THEN
+        attendance_info.present_male_count - summary_area_institution_grade_attendances.absent_male_count
+      ELSE
+        summary_area_institution_grade_attendances.present_male_count
+    END,
+    -- Update marked_classes
+    summary_area_institution_grade_attendances.marked_classes = CASE
+      WHEN attendance_info.marked_classes_counter > summary_area_institution_grade_attendances.marked_classes THEN
+        attendance_info.marked_classes_counter
+      ELSE
+        summary_area_institution_grade_attendances.marked_classes
+    END
+  WHERE
+    summary_area_institution_grade_attendances.attendance_date = NEW.date
+    AND summary_area_institution_grade_attendances.institution_id = NEW.institution_id
+    AND summary_area_institution_grade_attendances.education_grade_id = NEW.education_grade_id
+    AND summary_area_institution_grade_attendances.academic_period_id = NEW.academic_period_id;
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -33675,8 +34578,17 @@ CREATE TABLE `summary_area_institution_grade_attendances` (
 -- Triggers `summary_area_institution_grade_attendances`
 --
 DELIMITER $$
-CREATE TRIGGER `trigger_summary_area_institution_grade_attendances_update` BEFORE UPDATE ON `summary_area_institution_grade_attendances` FOR EACH ROW BEGIN SET NEW.present_total_count = NEW.present_female_count + NEW.present_male_count, NEW.absent_total_count = NEW.absent_female_count + NEW.absent_male_count, NEW.late_total_count = NEW.late_female_count + NEW.late_male_count; END
-$$
+
+CREATE TRIGGER `trigger_summary_area_institution_grade_attendances_update`
+BEFORE UPDATE ON `summary_area_institution_grade_attendances`
+FOR EACH ROW
+BEGIN
+  SET 
+    NEW.present_total_count = NEW.present_female_count + NEW.present_male_count,
+    NEW.absent_total_count = NEW.absent_female_count + NEW.absent_male_count,
+    NEW.late_total_count = NEW.late_female_count + NEW.late_male_count;
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
