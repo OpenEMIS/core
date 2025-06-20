@@ -368,8 +368,7 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         // add student into institution_students
         $entity = $this->get($id);
-        Log::debug('Is Pproved');
-        $this->addInstitutionStudent($entity);
+        $this->ensureInstitutionStudentExists($entity);
     }
 
     public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
@@ -462,11 +461,8 @@ class StudentAdmissionTable extends ControllerActionTable
         if (!empty($entity->institution_class_id)) {
             $incomingStudent['class'] = $entity->institution_class_id;
         }
-        Log::debug('oxsdfasd1');
         $newEntity = $Students->newEntity($incomingStudent);
         $Students->save($newEntity);
-        Log::debug('oxsdfasd2');
-        $this->sendStudentAdmissionAlert($entity); // POCOR-9100
     }
 
     public function studentsAfterSave(Event $event, $student)
@@ -956,9 +952,8 @@ class StudentAdmissionTable extends ControllerActionTable
                     }
                 }
             }
-            $this->addInstitutionStudent($entity);
         }
-
+        $this->ensureInstitutionStudentExists($entity);
     }
 
     /*
@@ -1007,7 +1002,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
 
         //POCOR-8869[END]
-        $this->ensureInstitutionStudentExists($entity);
+
     }
 
     public function findWorkbench(Query $query, array $options)
@@ -1472,6 +1467,7 @@ class StudentAdmissionTable extends ControllerActionTable
         Log::debug(print_r([__FUNCTION__ => $studentEntity], true));
         if ($studentEntity) {
             Log::info("InstitutionStudent created for student_id {$entity->student_id}");
+            $this->sendStudentAdmissionAlert($entity);
         } else {
             Log::warning("Failed to create InstitutionStudent for student_id {$entity->student_id}");
             if (!empty($entity->previous('status_id'))) {
