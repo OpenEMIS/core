@@ -148,18 +148,26 @@ trait PdfReportTrait
 
         // Step 2: Convert dotted borders to solid in the <style> section
         $htmlHeader = $this->styleBorderToSolid($htmlHeader);
+        // POCOR-9210 start
+        // Remove old <meta charset> if it exists
+        $htmlHeader = preg_replace('/<meta\s+charset=["\']?[^"\'>]+["\']?\s*\/?>/i', '', $htmlHeader);
 
+// Remove bad font-family rules
+        $htmlHeader = preg_replace('/font-family\s*:\s*[^;"]+;?/i', '', $htmlHeader);
+
+// Inject correct UTF-8 meta and good font
+        $htmlHeader = preg_replace('/<head[^>]*>/i', '$0<meta charset="UTF-8">' .
+            '<style>{ font-family: "Arial Unicode MS", "DejaVu Sans", sans-serif !important; }</style>', $htmlHeader);
+        // POCOR-9210 end
         // Step 3: Normalize classes and inline styles including borders
+
         $processedBody = $this->processHtmlTable($cleanedBody, $htmlHeader);
-
-
 
         // Step 4: Remove page breaks that add an empty last page in PDF
         $updatedHeader = str_replace('page-break-after:always', '', $htmlHeader);
 
         // Combine everything back into the final processed HTML
         $finalHtml = $updatedHeader . $processedBody . $htmlFooter;
-
         return $finalHtml;
     }
 
@@ -366,17 +374,15 @@ trait PdfReportTrait
                             'style',
                             $cell->getAttribute('style') . '; white-space: normal; word-break: break-word;'
                         );
-                    }else{ // POCOR-9171 start
-
+                    } else { // POCOR-9171 start
                         $cell->nodeValue = ''; // Clear original
                         $div = $dom->createElement('div');
                         $div->setAttribute('style', 'margin-left: 5px !important; margin-right: 5px !important;');
                         $div->appendChild($dom->createTextNode($rawText));
-
                         $cell->appendChild($div);
-                        // POCOR-9171 end
                     }
                 }
+
 
                 $cell->setAttribute('style', trim($normalized));
             }
@@ -508,7 +514,12 @@ trait PdfReportTrait
 
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
-        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        // POCOR-9210 start
+        $utf8Wrapper = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><div id="wrap">';
+        $utf8Closer  = '</div></body></html>';
+        $wrappedHtml = $utf8Wrapper . $html . $utf8Closer;
+        $dom->loadHTML($wrappedHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        // POCOR-9210 end
         libxml_clear_errors();
 
         $this->inlineExcelStyles($dom, $headString);
@@ -629,6 +640,8 @@ trait PdfReportTrait
     {
         Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // Convert spreadsheet object into html
+        $objSpreadsheet->getDefaultStyle()->getFont()->setName('Arial Unicode MS'); // POCOR-9210
+        ob_start(); // POCOR-9210
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Html($objSpreadsheet);
 
         // This is to store to final processedHtml
@@ -687,7 +700,7 @@ trait PdfReportTrait
             if ($sheetStatus === 'visible') { // POCOR-7077
                 // Create new mPDF instance for the current sheet
                 $pdf = new \Mpdf\Mpdf([
-                    'mode' => 'utf-8',
+                    'mode' => 'UTF-8', // POCOR-9210
                     'format' => $pageSize // Custom landscape format (POCOR-7750)
                 ]);
                 $pdf->autoScriptToLang = true;  // Automatically select language-specific fonts (POCOR-7264)
@@ -697,8 +710,11 @@ trait PdfReportTrait
 
                 // Generate HTML from spreadsheet
                 $writer->setSheetIndex($sheetIndex);
-                $writer->save($outputPathBase);
-                $rawHtml = file_get_contents($outputPathBase, FILE_USE_INCLUDE_PATH);
+// POCOR-9210 start
+                $writer->save('php://output');
+                $rawHtml = ob_get_clean();
+// POCOR-9210 end
+//                $rawHtml = file_get_contents($outputPathBase, FILE_USE_INCLUDE_PATH);
 
                 // Clean and filter HTML content
                 $htmlCleaned = $this->processHtml($rawHtml, $sheetIndex);
@@ -726,6 +742,7 @@ trait PdfReportTrait
 
                 // Generate PDF
                 $pdf->SetFontSize(1);
+                $pdf->SetFont('sans-serif');
                 $pdf->SetDisplayMode('fullpage');
                 $pdf->AddPage('L');
                 $pdf->WriteHTML($htmlFiltered);
@@ -957,6 +974,10 @@ trait PdfReportTrait
     function extractHiddenClasses($html) {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
+        // POCOR-9210 start
+        $utf8Header = '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">';
+        $html = $utf8Header . $html;
+        // POCOR-9210 end
         $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         libxml_clear_errors();
 
@@ -983,6 +1004,10 @@ trait PdfReportTrait
     function removeHiddenElements($html, $hiddenClasses) {
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
+        // POCOR-9210 start
+        $utf8Header = '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">';
+        $html = $utf8Header . $html;
+        // POCOR-9210 end
         $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         libxml_clear_errors();
 
