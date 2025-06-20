@@ -297,9 +297,9 @@ class AssessmentItemResultsTable extends AppTable
             ])
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('assessment_id') => $assessmentId,
-                $this->aliasField('education_subject_id') => $subjectId,
-                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('assessment_id IS') => $assessmentId,
+                $this->aliasField('education_subject_id IS') => $subjectId,
+                $this->aliasField('student_id IS') => $studentId,
             ])
             ->group([$this->aliasField('assessment_period_id')])
             ->disableHydration();
