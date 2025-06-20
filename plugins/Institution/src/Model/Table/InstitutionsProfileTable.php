@@ -595,6 +595,7 @@ class InstitutionsProfileTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit(); // POCOR-9165
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
@@ -643,6 +644,7 @@ class InstitutionsProfileTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit(); // POCOR-9165
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
