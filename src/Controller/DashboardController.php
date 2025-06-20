@@ -825,14 +825,16 @@ class DashboardController extends AppController
     {
         $now = FrozenTime::now();
 
-        $process = $systemProcessesTable->newEntity([
+        $processValues = [
             'name' => $rule['feature'],
             'status' => 1,
             'start_date' => $now,
             'model' => $processName,
             'created_user_id' => $userId
-        ]);
-
+        ];
+        Log::debug(print_r($processValues, true));
+        $process = $systemProcessesTable->newEntity($processValues);
+        Log::debug(print_r($process, true));
         if ($systemProcessesTable->save($process)) {
             self::triggerAlertCommand($processName, $userId, $rule['id'], $process->id, $extraOptions);
         }
