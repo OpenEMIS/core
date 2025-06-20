@@ -311,36 +311,38 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldAssessmentPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $gradeId = $request->getData($this->getAlias())['education_grade_id'];
-        $academicPeriodId = $request->getData($this->getAlias())['academic_period_id'];
-        if ($gradeId > 0) {
-            $condition[$this->Assessments->aliasField('education_grade_id')] = $gradeId;
-        }
-        if (!empty($academicPeriodId)) {
-            $condition[$this->Assessments->aliasField('academic_period_id')] = $academicPeriodId;
-        }
-        $assessmentPeriodList = $this->AssessmentPeriods
-                        ->find('list', [
-                            'keyField' => 'id',
-                            'valueField' => 'code_name'
-                        ])
-                        ->leftJoin([$this->Assessments->getAlias() => $this->Assessments->getTable()], [
-                            $this->Assessments->aliasField('id = ') . $this->AssessmentPeriods->aliasField('assessment_id')
-                        ])
-                        ->where([$condition])
-                        ->toArray();
+        if($this->request->getData()['Performance']['feature'] == 'Report.Performance'){
+            $gradeId = $request->getData($this->getAlias())['education_grade_id'];
+            $academicPeriodId = $request->getData($this->getAlias())['academic_period_id'];
+            if ($gradeId > 0) {
+                $condition[$this->Assessments->aliasField('education_grade_id')] = $gradeId;
+            }
+            if (!empty($academicPeriodId)) {
+                $condition[$this->Assessments->aliasField('academic_period_id')] = $academicPeriodId;
+            }
+            $assessmentPeriodList = $this->AssessmentPeriods
+                            ->find('list', [
+                                'keyField' => 'id',
+                                'valueField' => 'code_name'
+                            ])
+                            ->leftJoin([$this->Assessments->getAlias() => $this->Assessments->getTable()], [
+                                $this->Assessments->aliasField('id = ') . $this->AssessmentPeriods->aliasField('assessment_id')
+                            ])
+                            ->where([$condition])
+                            ->toArray();
 
-        $attr['type'] = 'select';
-        $attr['select'] = false;
-        if (count($assessmentPeriodList) > 1) {
-            $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Periods')] + $assessmentPeriodList;
-        } else {
-            $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --'] + $assessmentPeriodList;
-        }
-        $attr['options'] = $assessmentPeriodOption;
-        $attr['onChangeReload'] = true;
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            if (count($assessmentPeriodList) > 1) {
+                $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Periods')] + $assessmentPeriodList;
+            } else {
+                $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --'] + $assessmentPeriodList;
+            }
+            $attr['options'] = $assessmentPeriodOption;
+            $attr['onChangeReload'] = true;
 
-        return $attr;
+            return $attr;
+        }
     }
 
     /**
