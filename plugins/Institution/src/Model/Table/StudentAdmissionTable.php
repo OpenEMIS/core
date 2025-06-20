@@ -368,6 +368,7 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         // add student into institution_students
         $entity = $this->get($id);
+        Log::debug('Is Pproved');
         $this->addInstitutionStudent($entity);
     }
 
@@ -799,6 +800,56 @@ class StudentAdmissionTable extends ControllerActionTable
         }
     }
 
+    /**
+     *
+     * Ensures that the `start_date` and `end_date` of the admission entity fall within
+     * the defined academic period. If either date is missing or invalid (i.e., outside
+     * the academic period boundaries), the method auto-corrects the values to appropriate defaults:
+     *
+     * - `start_date` is set to today if within the academic period, otherwise to the period's start date.
+     * - `end_date` is always set to the academic period's end date if missing or invalid.
+     *
+     * This logic enforces date consistency for admissions relative to their academic period.
+     *
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @since POCOR-9163
+     */
+    public function beforeSave($event, Entity $entity, ArrayObject $options)
+    {
+        if (!empty($entity->academic_period_id)) {
+            $academicPeriodId = $entity->academic_period_id;
+
+            if ($this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $academicPeriodId])) {
+                $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+                $periodStartDate = $academicPeriod->start_date;
+                $periodEndDate = $academicPeriod->end_date;
+
+                $today = FrozenDate::today();
+
+                // START DATE
+                if (
+                    empty($entity->start_date) ||
+                    $entity->start_date < $periodStartDate ||
+                    $entity->start_date > $periodEndDate
+                ) {
+                    $entity->start_date = ($today >= $periodStartDate && $today <= $periodEndDate)
+                        ? $today
+                        : $periodStartDate;
+                }
+
+                // END DATE
+                if (
+                    empty($entity->end_date) ||
+                    $entity->end_date < $periodStartDate ||
+                    $entity->end_date > $periodEndDate
+                ) {
+                    $entity->end_date = $periodEndDate;
+                }
+            }
+        }
+
+    }
+
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         //this is meant to force gender_id validation
@@ -860,8 +911,8 @@ class StudentAdmissionTable extends ControllerActionTable
     // POCOR-9100 changed sending email proc
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        Log::debug('AAasasda11');
         if ($entity->isNew()) {
+            Log::debug(print_r(['new' => $entity], true));
             if ($entity->has('action_type') && $entity->action_type == 'default') { // AngularJs logic
 
                 // auto approve admission and add student into the institution
@@ -954,8 +1005,10 @@ class StudentAdmissionTable extends ControllerActionTable
             Log::debug('xsdfasd6');
         }
 
-    }
 
+        //POCOR-8869[END]
+        $this->ensureInstitutionStudentExists($entity);
+    }
 
     public function findWorkbench(Query $query, array $options)
     {
@@ -1382,5 +1435,51 @@ class StudentAdmissionTable extends ControllerActionTable
              ]);
          return $caseResults->toArray();
      }
+
+    /**
+     * Ensures that an InstitutionStudent record exists for an approved admission.
+     *
+     * If no matching student record is found, attempts to create one.
+     * If creation fails, reverts the admission's status to its previous state.
+     *
+     * @param \Cake\ORM\Entity $entity The StudentAdmission entity
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @since POCOR-9163
+     **/
+    private function ensureInstitutionStudentExists(Entity $entity): void
+    {
+        $statuses = TableRegistry::get('Workflow.WorkflowModels')
+            ->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
+
+        if (!in_array($entity->status_id, array_keys($statuses))) {
+            return;
+        }
+
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $conditions = [
+            'student_id' => $entity->student_id,
+            'academic_period_id' => $entity->academic_period_id,
+            'start_date' => $entity->start_date,
+            'end_date' => $entity->end_date,
+        ];
+
+        $existing = $InstitutionStudents->find()->where($conditions)->first();
+        if ($existing) {
+            return;
+        }
+
+        $studentEntity = $this->addInstitutionStudent($entity);
+        Log::debug(print_r([__FUNCTION__ => $studentEntity], true));
+        if ($studentEntity) {
+            Log::info("InstitutionStudent created for student_id {$entity->student_id}");
+        } else {
+            Log::warning("Failed to create InstitutionStudent for student_id {$entity->student_id}");
+            if (!empty($entity->previous('status_id'))) {
+                $entity->status_id = $entity->previous('status_id');
+                $this->save($entity);
+                Log::info("Reverted status_id for admission ID {$entity->id} to previous value.");
+            }
+        }
+    }
 
 }

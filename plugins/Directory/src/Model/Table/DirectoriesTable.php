@@ -2316,9 +2316,17 @@ public function getIdentityTypeData($value_selection)
                     }
                     if ($item->code == 'directory_date_of_birth') {
                         if ($item->value == 1) {
-                            $this->field('date_of_birth', ['visible' => true, 'before' => 'student_status']);
+                            try{
+                                $this->field('date_of_birth', ['visible' => true, 'before' => 'student_status']);
+                            }catch (\Exception $exception){
+                                $this->field('date_of_birth', ['visible' => true]);
+                            }
                         } else {
-                            $this->field('date_of_birth', ['visible' => false, 'before' => 'student_status']);
+                            try {
+                                $this->field('date_of_birth', ['visible' => false, 'before' => 'student_status']);
+                            } catch (\Exception $exception) {
+                                $this->field('date_of_birth', ['visible' => true]);
+                            }
                         }
                     }
                     if ($item->code == 'directory_identity_number') {
