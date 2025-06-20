@@ -32,6 +32,7 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
      */
     public function execute(Arguments $args, ConsoleIo $io): int
     {
+        $this->loadModel('Institution.Students');
         if (!$this->prepareContext($args, $io)) {
             return static::CODE_SUCCESS;
         }
@@ -47,16 +48,8 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $feature): array
     {
-        $Students = TableRegistry::get('Institution.Students');
 
-        $this->loadModel('Institution.StaffLeave');
-        $approvedStatusIds = $this->getApprovedStepIds();
-//        $this->logMsg("Approved Statis: " . print_r($approvedStatusIds, true));
-//        $this->logMsg(print_r($approvedStatusIds,true));
-        $threshold = json_decode($this->rule['threshold'], true);
-        $daysBefore = (int)($threshold['value'] ?? 1); // default to 1 day
-        $targetDate = FrozenDate::now()->addDays($daysBefore)->format('Y-m-d');
-        $staff_leave_type = $threshold['staff_leave_type'];
+
         $userId = $this->userId;
         $isSuperAdmin = $this->Users->get($userId)->super_admin;
         $where = [
@@ -77,6 +70,48 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
                 'StaffLeaveTypes',
                 'Institutions'])
             ->where($where)->toArray();
+    }
+
+    public function prepareContext(Arguments $args, ConsoleIo $io): bool
+    {
+        $this->setIo($io);
+        $this->userId = (int)$args->getOption('user_id');
+        $this->ruleId = (int)$args->getOption('rule_id');
+        $this->processId = (int)$args->getOption('process_id');
+        $this->studentId = (int)$args->getOption('student_id');
+        $ruleId = $this->ruleId;
+
+
+        if (!$this->userId ||  $this->ruleId ) {
+            $io->error("Missing required --user_id or --rule_id.");
+            return false;
+        }
+        try {
+            $this->student = $this->Students->get($this->studentId);
+        } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
+            $io->error("Student with ID {$this->studentId} not found.");
+            return false;
+        }
+        try {
+            $this->rule = $this->AlertRules->get($ruleId, ['contain' => ['SecurityRoles']]);
+        } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
+            $io->error("Alert rule with ID {$ruleId} not found.");
+            return false;
+        }
+
+        if (empty($this->rule->security_roles)) {
+            $io->out("No roles assigned to alert rule ID {$ruleId}. Skipping.");
+            return false;
+        }
+
+        $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->student->student_id);
+
+        if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
+            $io->out("No contacts found for alert rule ID {$ruleId}. Skipping.");
+            return false;
+        }
+
+        return true;
     }
 
     /**

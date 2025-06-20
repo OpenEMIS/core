@@ -28,8 +28,7 @@ class StudentAdmissionTable extends ControllerActionTable
     const TO_DO = 1;
     const IN_PROGRESS = 2;
     const DONE = 3;
-    const ROLE_STUDENT = 8; //POCOR-9100
-    const ROLE_GUARDIAN = 9; //POCOR-9100
+
     private $workflowEvents = [
         [
             'value' => 'Workflow.onApprove',
@@ -444,7 +443,7 @@ class StudentAdmissionTable extends ControllerActionTable
     }
     //POCOR-8434 Ends
 
-    public function addInstitutionStudent(Entity $entity)
+    public function addInstitutionStudent($entity): void
     {
         $Students = TableRegistry::get('Institution.Students');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
@@ -462,9 +461,10 @@ class StudentAdmissionTable extends ControllerActionTable
         if (!empty($entity->institution_class_id)) {
             $incomingStudent['class'] = $entity->institution_class_id;
         }
-
+        Log::debug('oxsdfasd1');
         $newEntity = $Students->newEntity($incomingStudent);
         $Students->save($newEntity);
+        Log::debug('oxsdfasd2');
         $this->sendStudentAdmissionAlert($entity); // POCOR-9100
     }
 
@@ -860,17 +860,10 @@ class StudentAdmissionTable extends ControllerActionTable
     // POCOR-9100 changed sending email proc
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
+        Log::debug('AAasasda11');
         if ($entity->isNew()) {
-            if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
-                $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
-                $triggeringStep = $WorkflowActions->getEventTriggeringStep('Institution.StudentAdmission', 'Workflow.onApprove');
+            if ($entity->has('action_type') && $entity->action_type == 'default') { // AngularJs logic
 
-                if(!empty($triggeringStep) && $entity->status_id == $triggeringStep) {
-                    if ($this->save($entity)) {
-                        $this->addInstitutionStudent($entity);
-                    }
-                }
-            } else if ($entity->has('action_type') && $entity->action_type == 'default') { // AngularJs logic
                 // auto approve admission and add student into the institution
                 $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
                 $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
@@ -892,11 +885,7 @@ class StudentAdmissionTable extends ControllerActionTable
                         // update status_id and assignee_id of admission record
                         $entity->status_id = $approvedStatusEntity->id;
                         $this->autoAssignAssignee($entity);
-
                         if ($this->save($entity)) {
-                            // add student into institution_students
-                            $this->addInstitutionStudent($entity);
-
                             // add workflow transition
                             $transition = [
                                 'comment' => __('On Auto Approve Student Admission'),
@@ -916,6 +905,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     }
                 }
             }
+            $this->addInstitutionStudent($entity);
         }
 
     }
@@ -923,23 +913,27 @@ class StudentAdmissionTable extends ControllerActionTable
     /*
      * POCOR-9100 sending email about admission
      */
-    private function sendStudentAdmissionAlert($entity)
+    private function sendStudentAdmissionAlert($entity): void
     {
+        Log::debug('xsdfasd1');
         $user = $this->Auth->user();
         if(!$user){
             return;
         }
+        Log::debug('xsdfasd2');
         $userId = $user['id'];
         $alertsTable = TableRegistry::get('Alert.Alerts');
         $alertRulesTable = TableRegistry::get('Alert.AlertRules');
         $systemProcessesTable = TableRegistry::get('SystemProcesses');
 
+        Log::debug('xsdfasd3');
 
         $alert = $alertsTable
             ->find()
             ->where([$alertsTable->aliasName('process_name') => 'AlertStudentAdmission',
                 $alertsTable->aliasName('frequency') => 'once'])
             ->first();
+        Log::debug('xsdfasd4');
         if(!is_array($alert)){
             $alert = $alert->toArray();
         }
@@ -949,6 +943,7 @@ class StudentAdmissionTable extends ControllerActionTable
                         $alertRulesTable->aliasField('enabled') => 1
                     ])
                     ->toArray();
+        Log::debug('xsdfasd5');
 
 
         foreach ($activeRules as $rule) {
@@ -956,6 +951,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $rule = $rule->toArray();
             }
             DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['student_id' => $entity->id]);
+            Log::debug('xsdfasd6');
         }
 
     }

@@ -9,12 +9,14 @@ use App\Command\Traits\AlertProcessingTrait;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
+use Cake\ORM\TableRegistry;
 
 abstract class AlertCommandBase extends Command
 {
     use LocatorAwareTrait;
     use AlertProcessingTrait;
-
+    const ROLE_STUDENT = 8; //POCOR-9100
+    const ROLE_GUARDIAN = 9; //POCOR-9100
     protected string $processName = '';
     protected string $featureName = '';
 
@@ -129,19 +131,49 @@ abstract class AlertCommandBase extends Command
                     ->find('recipientList', ['recipients' => $link->security_user_id])
                     ->toArray();
 
-                foreach ($users as $user) {
-                    if (!empty($user->email)) {
-                        $email = $user->name . ' <' . $user->email . '>';
-                        if (!in_array($email, $contactList['email'])) {
-                            $contactList['email'][] = $email;
-                        }
-                    }
-                    if (!empty($user->mobile_number) && !in_array($user->mobile_number, $contactList['phone'])) {
-                        $contactList['phone'][] = $user->mobile_number;
-                    }
-                }
+                $contactList = $this->getContactsFromUsers($users, $contactList);
             }
         }
+
+        return $contactList;
+    }
+
+    public function getStudentAssociatedContactList(array $securityRoles, $studentUserId): array
+    {
+        $contactList = ['email' => [], 'phone' => []];
+        $recipients = [];
+        $securityRoleIds = [];
+        foreach ($securityRoles as $role) {
+            $securityRoleIds[] = $role['id'];
+        }
+        $StudentGuardians = TableRegistry::getTableLocator()->get('GuardianNav.StudentGuardians');
+        if (in_array(self::ROLE_GUARDIAN, $securityRoleIds)) {
+            $guardians = $StudentGuardians
+                ->find('all')
+                ->where([$StudentGuardians->aliasField('student_id') => $studentUserId])
+                ->disableHydration()
+                ->toArray();
+
+            if (!empty($guardians)) {
+                foreach ($guardians as $guardian) {
+                    $recipients[] = $guardian['guardian_id'];
+                }
+            } else {
+                Log::debug('No guardians found for student ID: ' . $entity->student_id);
+            }
+        }
+
+        if (in_array(self::ROLE_STUDENT, $securityRoleIds)) {
+            $recipients[] = $studentUserId;
+        }
+
+
+        $users = $this->Users
+            ->find('recipientList', ['recipients' => $recipients])
+            ->toArray();
+
+        $contactList = $this->getContactsFromUsers($users, $contactList);
+
 
         return $contactList;
     }
@@ -196,6 +228,27 @@ abstract class AlertCommandBase extends Command
         ], ['id' => $processId]);
 
         Log::debug("[SystemProcesses] Marked process $processId as completed.");
+    }
+
+    /**
+     * @param $users
+     * @param array $contactList
+     * @return array
+     */
+    private function getContactsFromUsers($users, array $contactList): array
+    {
+        foreach ($users as $user) {
+            if (!empty($user->email)) {
+                $email = $user->name . ' <' . $user->email . '>';
+                if (!in_array($email, $contactList['email'])) {
+                    $contactList['email'][] = $email;
+                }
+            }
+            if (!empty($user->mobile_number) && !in_array($user->mobile_number, $contactList['phone'])) {
+                $contactList['phone'][] = $user->mobile_number;
+            }
+        }
+        return $contactList;
     }
 
 
