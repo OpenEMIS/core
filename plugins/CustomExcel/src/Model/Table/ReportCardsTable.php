@@ -2065,7 +2065,11 @@ class ReportCardsTable extends AppTable
                         $entity->set('marks', $rawMark);
                         $entity = $AssessmentItemResults::evaluateGradingForMarks($entity);
 
-                        $resultType = $entity->get('assessment_grading_type')->get('result_type') ?? 'MARKS';
+                        //POCOR-9228[START]
+                        //$resultType = $entity->get('assessment_grading_type')->get('result_type') ?? 'MARKS';
+                        $gradingType = $entity->get('assessment_grading_type');
+                        $resultType = $gradingType ? $gradingType->get('result_type') : 'MARKS';
+                        //POCOR-9228[END]
 
                         switch ($resultType) {
                             case 'MARKS':
