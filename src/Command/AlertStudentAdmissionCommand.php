@@ -49,28 +49,16 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
-        return [];
-//
-//        $userId = $this->userId;
-//        $isSuperAdmin = $this->Users->get($userId)->super_admin;
-//        $where = [
-//            'StaffLeave.status_id IN' => $approvedStatusIds,
-//            'StaffLeave.date_to' => $targetDate,
-//            'StaffLeave.staff_leave_type_id' => $staff_leave_type,
-//        ];
-//        if(!$isSuperAdmin){
-//            $institutionIds = $this->SecurityGroupUsers->getInstitutionsByUser($userId);
-//            $where['StaffLeave.institution_id IN'] = $institutionIds;
-//        }
-//        $this->logMsg("Where: " . print_r($where, true));
-//
-//        return $this->StaffLeave->find()
-//            ->matching('StaffLeaveTypes')
-//            ->contain(['Users',
-//                'Statuses',
-//                'StaffLeaveTypes',
-//                'Institutions'])
-//            ->where($where)->toArray();
+        $where = [
+            'StudentAdmission.id' => $this->admissionId,
+        ];
+        $this->logMsg("Where: " . print_r($where, true));
+        return $this->StudentAdmission->find()
+            ->contain(['Users',
+                'Statuses',
+                'AcademicPeriods',
+                'Institutions'])
+            ->where($where)->toArray();
     }
 
     public function prepareContext(Arguments $args, ConsoleIo $io): bool
@@ -137,22 +125,22 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         $threshold = json_decode($thresholdValue, true);
 
         return [
-            '${threshold.value}' => $threshold['value'] ?? '',
-            '${staff_leave_type.name}' => $item['staff_leave_type']['name'] ?? '',
-            '${date_from}' => $item['date_from'] ?? '',
-            '${date_to}' => $item['date_to'] ?? '',
-            '${day_difference}' => (string)$dayDiff,
+            '${academic_period.name}' => $item['academic_period']['name'] ?? '',
+            '${start_date}' => $item['start_date'] ?? '',
+            '${end_date}' => $item['end_date'] ?? '',
+//            '${day_difference}' => (string)$dayDiff,
 
-            '${user.openemis_no}' => $item['user']['openemis_no'] ?? '',
-            '${user.first_name}' => $item['user']['first_name'] ?? '',
-            '${user.middle_name}' => $item['user']['middle_name'] ?? '',
-            '${user.third_name}' => $item['user']['third_name'] ?? '',
-            '${user.last_name}' => $item['user']['last_name'] ?? '',
-            '${user.preferred_name}' => $item['user']['preferred_name'] ?? '',
-            '${user.email}' => $item['user']['email'] ?? '',
-            '${user.address}' => $item['user']['address'] ?? '',
-            '${user.postal_code}' => $item['user']['postal_code'] ?? '',
-            '${user.date_of_birth}' => $item['user']['date_of_birth'] ?? '',
+            '${student.name}' => $item['user']['name'] ?? '',
+            '${student.openemis_no}' => $item['user']['openemis_no'] ?? '',
+            '${student.first_name}' => $item['user']['first_name'] ?? '',
+            '${student.middle_name}' => $item['user']['middle_name'] ?? '',
+            '${student.third_name}' => $item['user']['third_name'] ?? '',
+            '${student.last_name}' => $item['user']['last_name'] ?? '',
+            '${student.preferred_name}' => $item['user']['preferred_name'] ?? '',
+            '${student.email}' => $item['user']['email'] ?? '',
+            '${student.address}' => $item['user']['address'] ?? '',
+            '${student.postal_code}' => $item['user']['postal_code'] ?? '',
+            '${student.date_of_birth}' => $item['user']['date_of_birth'] ?? '',
 
             '${institution.name}' => $item['institution']['name'] ?? '',
             '${institution.code}' => $item['institution']['code'] ?? '',
