@@ -514,15 +514,15 @@ class InstitutionStandardsTable extends AppTable
         $query->join($join);
 
         $query->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
-            $ClassStudents->aliasField('student_id = ') . 'InstitutionStudent.student_id',
-            $ClassStudents->aliasField('institution_id = ') . 'InstitutionStudent.institution_id',
-            $ClassStudents->aliasField('education_grade_id = ') . 'InstitutionStudent.education_grade_id',
-            $ClassStudents->aliasField('student_status_id = ') . 'InstitutionStudent.student_status_id',
-            $ClassStudents->aliasField('academic_period_id = ') . 'InstitutionStudent.academic_period_id'
+            $ClassStudents->aliasField('student_id') . ' = InstitutionStudent.student_id',
+            $ClassStudents->aliasField('institution_id') . ' = InstitutionStudent.institution_id',
+            $ClassStudents->aliasField('education_grade_id') . ' = InstitutionStudent.education_grade_id',
+            $ClassStudents->aliasField('student_status_id') . ' = InstitutionStudent.student_status_id',
+            $ClassStudents->aliasField('academic_period_id') . ' = InstitutionStudent.academic_period_id'
         ]);
 
         $query->leftJoin([$Classes->getAlias() => $Classes->getTable()], [
-            $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
+    $Classes->aliasField('id') . ' = ' . $ClassStudents->aliasField('institution_class_id')
         ]);
         // END: JOINs
 
