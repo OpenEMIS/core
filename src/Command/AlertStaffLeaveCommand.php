@@ -42,10 +42,10 @@ class AlertStaffLeaveCommand extends AlertCommandBase
     /**
      * Get pending leave records to alert on.
      *
-     * @param string $feature Feature key
+     * @param string $featureKey Feature key
      * @return array List of leave entries to alert
      */
-    protected function getPendingItems(string $feature): array
+    protected function getPendingItems(string $featureKey): array
     {
         $this->loadModel('Institution.StaffLeave');
         $approvedStatusIds = $this->getApprovedStepIds();

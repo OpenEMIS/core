@@ -33,43 +33,44 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
     public function execute(Arguments $args, ConsoleIo $io): int
     {
         $this->loadModel('Institution.Students');
+        $this->loadModel('Institution.StudentAdmission');
         if (!$this->prepareContext($args, $io)) {
             return static::CODE_SUCCESS;
         }
 
-        return $this->runFeatureAlert('StaffLeave');
+        return $this->runFeatureAlert('StudentAdmission');
     }
 
     /**
      * Get pending leave records to alert on.
      *
-     * @param string $feature Feature key
+     * @param string $featureKey Feature key
      * @return array List of leave entries to alert
      */
-    protected function getPendingItems(string $feature): array
+    protected function getPendingItems(string $featureKey): array
     {
-
-
-        $userId = $this->userId;
-        $isSuperAdmin = $this->Users->get($userId)->super_admin;
-        $where = [
-            'StaffLeave.status_id IN' => $approvedStatusIds,
-            'StaffLeave.date_to' => $targetDate,
-            'StaffLeave.staff_leave_type_id' => $staff_leave_type,
-        ];
-        if(!$isSuperAdmin){
-            $institutionIds = $this->SecurityGroupUsers->getInstitutionsByUser($userId);
-            $where['StaffLeave.institution_id IN'] = $institutionIds;
-        }
-        $this->logMsg("Where: " . print_r($where, true));
-
-        return $this->StaffLeave->find()
-            ->matching('StaffLeaveTypes')
-            ->contain(['Users',
-                'Statuses',
-                'StaffLeaveTypes',
-                'Institutions'])
-            ->where($where)->toArray();
+        return [];
+//
+//        $userId = $this->userId;
+//        $isSuperAdmin = $this->Users->get($userId)->super_admin;
+//        $where = [
+//            'StaffLeave.status_id IN' => $approvedStatusIds,
+//            'StaffLeave.date_to' => $targetDate,
+//            'StaffLeave.staff_leave_type_id' => $staff_leave_type,
+//        ];
+//        if(!$isSuperAdmin){
+//            $institutionIds = $this->SecurityGroupUsers->getInstitutionsByUser($userId);
+//            $where['StaffLeave.institution_id IN'] = $institutionIds;
+//        }
+//        $this->logMsg("Where: " . print_r($where, true));
+//
+//        return $this->StaffLeave->find()
+//            ->matching('StaffLeaveTypes')
+//            ->contain(['Users',
+//                'Statuses',
+//                'StaffLeaveTypes',
+//                'Institutions'])
+//            ->where($where)->toArray();
     }
 
     public function prepareContext(Arguments $args, ConsoleIo $io): bool
@@ -78,18 +79,22 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         $this->userId = (int)$args->getOption('user_id');
         $this->ruleId = (int)$args->getOption('rule_id');
         $this->processId = (int)$args->getOption('process_id');
-        $this->studentId = (int)$args->getOption('student_id');
+        $this->admissionId = (int)$args->getOption('admission_id');
         $ruleId = $this->ruleId;
 
 
-        if (!$this->userId ||  $this->ruleId ) {
-            $io->error("Missing required --user_id or --rule_id.");
+        if (!$this->userId ||
+            !$this->ruleId ||
+            !$this->processId ||
+            !$this->admissionId
+        ) {
+            $io->error("Missing required option");
             return false;
         }
         try {
-            $this->student = $this->Students->get($this->studentId);
+            $this->admission = $this->StudentAdmission->get($this->admissionId);
         } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
-            $io->error("Student with ID {$this->studentId} not found.");
+            $io->error("Admission with ID {$this->admissionId} not found.");
             return false;
         }
         try {
@@ -104,13 +109,13 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
             return false;
         }
 
-        $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->student->student_id);
+        $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->admission->student_id);
 
         if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
             $io->out("No contacts found for alert rule ID {$ruleId}. Skipping.");
             return false;
         }
-
+        $this->logMsg(print_r($this->contacts, true));
         return true;
     }
 
@@ -168,31 +173,31 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
      *  @param string $code The code of the workflow status
      *  @return array The list of workflow steps id
      */
-    protected function getApprovedStepIds()
-    {
-        $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
-        $ids = $WorkflowModelsTable
-            ->find('all')
-            ->matching('Workflows.WorkflowSteps')
-            ->where([
-                $WorkflowModelsTable->aliasField('model') => 'Institution.StaffLeave',
-                'WorkflowSteps.name' => 'Approved'
-            ])
-            ->distinct(['WorkflowSteps.id'])
-            ->select(['id' => 'WorkflowSteps.id'])
-            ->toArray();
-        $distinctIds = array_column($ids, 'id');
-        return array_unique($distinctIds);
-    }
+//    protected function getApprovedStepIds()
+//    {
+//        $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+//        $ids = $WorkflowModelsTable
+//            ->find('all')
+//            ->matching('Workflows.WorkflowSteps')
+//            ->where([
+//                $WorkflowModelsTable->aliasField('model') => 'Institution.StaffLeave',
+//                'WorkflowSteps.name' => 'Approved'
+//            ])
+//            ->distinct(['WorkflowSteps.id'])
+//            ->select(['id' => 'WorkflowSteps.id'])
+//            ->toArray();
+//        $distinctIds = array_column($ids, 'id');
+//        return array_unique($distinctIds);
+//    }
 
-    public function getOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
+    public function getOptionParser(): ConsoleOptionParser
     {
-        $parser = parent::getOptionParser($parser);
+        $parser = parent::getOptionParser();
 
-        $parser->addOption('student_id', [
-            'help' => 'Specify the student ID for targeted alerts.',
+        $parser->addOption('admission_id', [
+            'help' => 'Specify the admission ID for targeted alerts.',
             'required' => true,
-            'short' => 's'
+            'short' => 'a'
         ]);
 
         return $parser;

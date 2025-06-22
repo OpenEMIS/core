@@ -48,7 +48,7 @@ class AlertRetirementWarningCommand extends AlertCommandBase
             ->toArray();
     }
 
-    protected function getPendingItems(string $feature): array
+    protected function getPendingItems(string $featureKey): array
     {
         $this->loadModel('Institution.Staff');
         $userId = $this->userId;
