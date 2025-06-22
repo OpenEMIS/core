@@ -22,6 +22,7 @@ use Cake\Routing\Router;
 use Cake\I18n\FrozenTime;
 use App\Controller\DashboardController;
 use Cake\I18n\FrozenDate;
+use Cake\ORM\Table;
 
 class StudentAdmissionTable extends ControllerActionTable
 {
@@ -132,7 +133,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     'rule' => ['checkValidAcademicPeriodId'],
                     'on' => function ($context) {
                         if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {
-                            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                            $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                             $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
                             return $academicPeriodExists;
@@ -155,7 +156,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                     'on' => function ($context) {
                         if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {
-                            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                            $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                             $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
                             return $academicPeriodExists;
@@ -169,7 +170,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                     'on' => function ($context) {
                         if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {
-                            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                            $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                             $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
                             return $academicPeriodExists;
@@ -188,17 +189,17 @@ class StudentAdmissionTable extends ControllerActionTable
                     'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
                     'on' => function ($context) {
                         //POCOR-6172-HINDOL[START]
-                        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
                         $multipleInstitutions = $ConfigItems->value('multiple_institutions_student_enrollment');
                         $multipleInstitutions = ($multipleInstitutions == "1") ? true : false ;
 //                        $this->log($multipleInstitutions);
                         if ($multipleInstitutions) return false;
                         //POCOR-6172-HINDOL[END]
                         if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
-                            $Institutions = TableRegistry::get('Institution.Institutions');
+                            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
                             $institutionExists = $Institutions->exists([$Institutions->getPrimaryKey() => $context['data']['institution_id']]);
 
-                            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                            $EducationGrades = self::getDynamicTableInstance('Education.EducationGrades');
                             $educationGradeExists = $EducationGrades->exists([$EducationGrades->getPrimaryKey() => $context['data']['education_grade_id']]);
 
                             return ($institutionExists && $educationGradeExists && $context['newRecord']);
@@ -216,10 +217,10 @@ class StudentAdmissionTable extends ControllerActionTable
                     'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
                     'on' => function ($context) {
                         if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
-                            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                            $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                             $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
-                            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                            $EducationGrades = self::getDynamicTableInstance('Education.EducationGrades');
                             $educationGradeExists = $EducationGrades->exists([$EducationGrades->getPrimaryKey() => $context['data']['education_grade_id']]);
 
                             return ($academicPeriodExists && $educationGradeExists && $context['newRecord']);
@@ -237,7 +238,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 'rule' => ['compareStudentGenderWithInstitution'],
                 'on' => function ($context) {
                     if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id'])) {
-                        $Institutions = TableRegistry::get('Institution.Institutions');
+                        $Institutions = self::getDynamicTableInstance('Institution.Institutions');
                         $institutionExists = $Institutions->exists([$Institutions->getPrimaryKey() => $context['data']['institution_id']]);
 
                         return ($institutionExists && $context['newRecord']);
@@ -250,10 +251,10 @@ class StudentAdmissionTable extends ControllerActionTable
                     'rule' => ['checkEducationGradeExist'],
                     'on' => function ($context) {
                         if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
-                            $Institutions = TableRegistry::get('Institution.Institutions');
+                            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
                             $institutionExists = $Institutions->exists([$Institutions->getPrimaryKey() => $context['data']['institution_id']]);
 
-                            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                            $EducationGrades = self::getDynamicTableInstance('Education.EducationGrades');
                             $educationGradeExists = $EducationGrades->exists([$EducationGrades->getPrimaryKey() => $context['data']['education_grade_id']]);
 
                             return ($institutionExists && $educationGradeExists && $context['newRecord']);
@@ -275,16 +276,16 @@ class StudentAdmissionTable extends ControllerActionTable
                             if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id'])) {
                                 if (array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
                                     if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])){
-                                        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+                                        $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
                                         $institutionClassExists = $InstitutionClasses->exists([$InstitutionClasses->getPrimaryKey() => $context['data']['institution_class_id']]);
 
-                                        $Institutions = TableRegistry::get('Institution.Institutions');
+                                        $Institutions = self::getDynamicTableInstance('Institution.Institutions');
                                         $institutionExists = $Institutions->exists([$Institutions->getPrimaryKey() => $context['data']['institution_id']]);
 
-                                        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                                        $EducationGrades = self::getDynamicTableInstance('Education.EducationGrades');
                                         $educationGradeExists = $EducationGrades->exists([$EducationGrades->getPrimaryKey() => $context['data']['education_grade_id']]);
 
-                                        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                                        $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                                         $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
                                         return ($institutionClassExists && $institutionExists && $educationGradeExists && $academicPeriodExists);
@@ -300,7 +301,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     'rule' => ['checkInstitutionClassMaxLimit'],
                     'on' => function ($context) {
                         if (array_key_exists('institution_class_id', $context['data']) && !empty($context['data']['institution_class_id'])) {
-                            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+                            $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
                             $institutionClassExists = $InstitutionClasses->exists([$InstitutionClasses->getPrimaryKey() => $context['data']['institution_class_id']]);
 
                             return $institutionClassExists;
@@ -368,15 +369,16 @@ class StudentAdmissionTable extends ControllerActionTable
     public function onApprove(Event $event, $id, Entity $workflowTransitionEntity)
     {
         // add student into institution_students
-        $entity = $this->get($id);
-        $this->ensureInstitutionStudentExists($entity);
+//        $entity = $this->get($id);
+//        Log::debug('calling ensure on approve')
+//        $this->ensureInstitutionStudentExists($entity);
     }
 
     public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
-        $Students = TableRegistry::get('Institution.Students');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $Students = self::getDynamicTableInstance('Institution.Students');
+        $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
 
         $newStudentRecord = $Students->find()
@@ -405,8 +407,8 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function triggerPendingEnrolmentForStudent(Entity $entity)
     {
-        $WorkflowsTbl = TableRegistry::get('Workflow.Workflows');
-        $WorkflowStepsTbl = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowsTbl = self::getDynamicTableInstance('Workflow.Workflows');
+        $WorkflowStepsTbl = self::getDynamicTableInstance('Workflow.WorkflowSteps');
         $WorkflowsRes = $WorkflowStepsTbl
                             ->find()
                             ->innerJoin([$WorkflowsTbl->getAlias() => $WorkflowsTbl->getTable()],
@@ -418,7 +420,7 @@ class StudentAdmissionTable extends ControllerActionTable
                                 $WorkflowStepsTbl->aliasField('name') => 'Open'
                             ])->first();
 
-        $StudentEnrolments = TableRegistry::get('Institution.StudentEnrolment');
+        $StudentEnrolments = self::getDynamicTableInstance('Institution.StudentEnrolment');
 
         $enrolmentArr = [
             'start_date' => $entity->start_date,
@@ -444,10 +446,10 @@ class StudentAdmissionTable extends ControllerActionTable
     }
     //POCOR-8434 Ends
 
-    public function addInstitutionStudent($entity): void
+    public function addInstitutionStudent($entity)
     {
-        $Students = TableRegistry::get('Institution.Students');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $Students = self::getDynamicTableInstance('Institution.Students');
+        $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
 
         $incomingStudent = [
@@ -464,11 +466,12 @@ class StudentAdmissionTable extends ControllerActionTable
         }
         $newEntity = $Students->newEntity($incomingStudent);
         $Students->save($newEntity);
+        return $newEntity;
     }
 
     public function studentsAfterSave(Event $event, $student)
     {
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
         $statusList = $StudentStatuses->findCodeList();
         $Enrolled = $statusList['CURRENT'];
         $Promoted = $statusList['PROMOTED'];
@@ -480,7 +483,7 @@ class StudentAdmissionTable extends ControllerActionTable
 //        $this->log($student, 'debug');
         //POCOR-6500 starts
         //get student role
-        $securityRolesTbl = TableRegistry::get('Security.SecurityRoles');
+        $securityRolesTbl = self::getDynamicTableInstance('Security.SecurityRoles');
         $securityRoles = $securityRolesTbl->find()
                                 ->where([
                                     $securityRolesTbl->aliasField('code') => 'STUDENT',
@@ -500,7 +503,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 //POCOR-6500 ends
                 // get the first step in 'REJECTED' workflow statuses
                 $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
-                $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                $WorkflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
                 $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'REJECTED');
                 ksort($statuses);
                 $rejectedStatusId = key($statuses);
@@ -527,7 +530,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
                         if ($this->save($entity)) {
                             // add workflow transition
-                            $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+                            $WorkflowTransitions = self::getDynamicTableInstance('Workflow.WorkflowTransitions');
                             $prevStepEntity = $this->Statuses->get($prevStep);
 
                             $transition = [
@@ -572,7 +575,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
     protected function removePendingAdmission($studentId, $institutionId)
     {
-        $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $StudentTransfers = self::getDynamicTableInstance('Institution.InstitutionStudentTransfers');
         $doneStatus = self::DONE;
 
         //remove all pending transfer requests
@@ -780,7 +783,7 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
-            $Classes = TableRegistry::get('Institution.InstitutionClasses');
+            $Classes = self::getDynamicTableInstance('Institution.InstitutionClasses');
 
             $options = $Classes->find('list')
                 ->innerJoinWith('ClassGrades')
@@ -840,13 +843,13 @@ class StudentAdmissionTable extends ControllerActionTable
         //POCOR-7716 start(setting default admission status during import)
         if($data['action_type'] == 'imported'){
             //getting default value of student admission status
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
             $configItemResult = $ConfigItems->find()->where([
                 $ConfigItems->aliasField('code') => "student_admission_status"
             ])->first();
             $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
-            $workflows = TableRegistry::get('Workflow.Workflows');
-            $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflows = self::getDynamicTableInstance('Workflow.Workflows');
+            $workflowSteps = self::getDynamicTableInstance('Workflow.WorkflowSteps');
             $workflowResults = $workflows->find()
                 ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
                 ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
@@ -882,7 +885,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
 
                     // get the first step in 'APPROVED' workflow statuses
-                    $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+                    $WorkflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
                     $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
                     ksort($statuses);
                     $approvedStatusId = key($statuses);
@@ -907,7 +910,7 @@ class StudentAdmissionTable extends ControllerActionTable
                                 'created' => new Time('NOW')
                             ];
 
-                            $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+                            $WorkflowTransitions = self::getDynamicTableInstance('Workflow.WorkflowTransitions');
                             $transitionEntity = $WorkflowTransitions->newEntity($transition);
                             $WorkflowTransitions->save($transitionEntity);
                         }
@@ -915,6 +918,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 }
             }
         }
+        Log::debug('calling ensure after save');
         $this->ensureInstitutionStudentExists($entity);
     }
 
@@ -930,16 +934,16 @@ class StudentAdmissionTable extends ControllerActionTable
         }
         Log::debug('xsdfasd2');
         $userId = $user['id'];
-        $alertsTable = TableRegistry::get('Alert.Alerts');
-        $alertRulesTable = TableRegistry::get('Alert.AlertRules');
-        $systemProcessesTable = TableRegistry::get('SystemProcesses');
+        $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
+        $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
+        $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
 
         Log::debug('xsdfasd3');
 
         $alert = $alertsTable
             ->find()
-            ->where([$alertsTable->aliasName('process_name') => 'AlertStudentAdmission',
-                $alertsTable->aliasName('frequency') => 'once'])
+            ->where([$alertsTable->aliasField('process_name') => 'AlertStudentAdmission',
+                $alertsTable->aliasField('frequency') => 'once'])
             ->first();
         Log::debug('xsdfasd4');
         if(!is_array($alert)){
@@ -1083,9 +1087,9 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Students > Student Admission';
-            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
+            $workflowStepsTable = self::getDynamicTableInstance('Workflow.WorkflowSteps');
+            $Workflows = self::getDynamicTableInstance('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
@@ -1113,12 +1117,12 @@ class StudentAdmissionTable extends ControllerActionTable
             $institutionId = $getInstitutionId = $this->getQueryString('institution_id');
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = self::getDynamicTableInstance('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = self::getDynamicTableInstance('Security.SecurityGroupUsers');
+                    $Areas = self::getDynamicTableInstance('Area.Areas');
+                    $Institutions = self::getDynamicTableInstance('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
@@ -1208,7 +1212,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
     {
-        $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
+        $securityGroupUsersTbl = self::getDynamicTableInstance('Security.SecurityGroupUsers');
         $securityGroupUsersTbl->updateAll(
             [
                 'security_group_id' => $security_group_id,
@@ -1232,9 +1236,9 @@ class StudentAdmissionTable extends ControllerActionTable
     private static function getPreviousSecurityGroupId($institution_id, $student_id)
     {
         $previous_security_group_id = 0;
-        $institutionTbl = TableRegistry::get('Institution.Institutions');
-        $InstitutionStudentsTbl = TableRegistry::get('Institution.InstitutionStudents');
-        $TransfersTbl = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $institutionTbl = self::getDynamicTableInstance('Institution.Institutions');
+        $InstitutionStudentsTbl = self::getDynamicTableInstance('Institution.InstitutionStudents');
+        $TransfersTbl = self::getDynamicTableInstance('Institution.InstitutionStudentTransfers');
         $StudentTransfers = $InstitutionStudentsTbl
             ->find()
             ->select([
@@ -1275,7 +1279,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function getStudentSecurityGroups($student_id, $student_role_id)
     {
-        $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
+        $securityGroupUsersTbl = self::getDynamicTableInstance('Security.SecurityGroupUsers');
         $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
             ->select('security_group_id')
             ->where([
@@ -1293,7 +1297,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function getStudentSecurityRoleId()
     {
-        $securityRolesTbl = TableRegistry::get('Security.SecurityRoles');
+        $securityRolesTbl = self::getDynamicTableInstance('Security.SecurityRoles');
         $securityRoles = $securityRolesTbl->find()
             ->where([
                 $securityRolesTbl->aliasField('code') => 'STUDENT',
@@ -1309,7 +1313,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function getInstitutionSecurityGroupId($institution_id)
     {
-        $institutionTbl = TableRegistry::get('Institution.Institutions');
+        $institutionTbl = self::getDynamicTableInstance('Institution.Institutions');
         $security_group_id = null;
         $institutions = $institutionTbl->find()
             ->where([
@@ -1319,7 +1323,7 @@ class StudentAdmissionTable extends ControllerActionTable
             $security_group_id = $institutions->security_group_id;
         }
         if ($security_group_id != null) {
-            $securityGroupInstitutionsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
+            $securityGroupInstitutionsTbl = self::getDynamicTableInstance('Security.SecurityGroupInstitutions');
             $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
                 ->where([
                     $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
@@ -1350,7 +1354,7 @@ class StudentAdmissionTable extends ControllerActionTable
     private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
     {
         $id = Text::uuid();
-        $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
+        $securityGroupUsersTbl = self::getDynamicTableInstance('Security.SecurityGroupUsers');
         // POCOR-9100 start
         $presentCount = $securityGroupUsersTbl->find('all')
             ->where([
@@ -1405,14 +1409,14 @@ class StudentAdmissionTable extends ControllerActionTable
      **/
     private function ensureInstitutionStudentExists(Entity $entity): void
     {
-        $statuses = TableRegistry::get('Workflow.WorkflowModels')
+        $statuses = self::getDynamicTableInstance('Workflow.WorkflowModels')
             ->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
 
         if (!in_array($entity->status_id, array_keys($statuses))) {
             return;
         }
 
-        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $InstitutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
         $conditions = [
             'student_id' => $entity->student_id,
             'academic_period_id' => $entity->academic_period_id,
@@ -1426,6 +1430,7 @@ class StudentAdmissionTable extends ControllerActionTable
         }
 
         $studentEntity = $this->addInstitutionStudent($entity);
+        Log::debug(print_r([__FUNCTION__ => $entity], true));
         Log::debug(print_r([__FUNCTION__ => $studentEntity], true));
         if ($studentEntity) {
             Log::info("InstitutionStudent created for student_id {$entity->student_id}");
@@ -1496,6 +1501,55 @@ class StudentAdmissionTable extends ControllerActionTable
             }
         }
         return $data;
+    }
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
     }
 
 }
