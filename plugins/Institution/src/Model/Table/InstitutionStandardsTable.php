@@ -379,10 +379,12 @@ class InstitutionStandardsTable extends AppTable
 
         // $birth_certificate_code_id = $IdentityTypesTable->getIdByName('Birth Certificate');
         // START:POCOR-6819
-        $birth_certificate_code_id = $IdentityTypesTable->find('all')
-                                     ->select('id')
-                                     ->where(['visible' => 1,'editable' => 1,'default' => 1])
-                                     ->first();
+        $birth_certificate_entity = $IdentityTypesTable->find('all')
+                           ->select('id')
+                           ->where(['visible' => 1,'editable' => 1,'default' => 1])
+                           ->first();
+
+        $birth_certificate_code_id = $birth_certificate_entity ? $birth_certificate_entity->id : null;
         // End:POCOR-6819
 
         // START: JOINs
@@ -429,11 +431,12 @@ class InstitutionStandardsTable extends AppTable
             $selectable['birth_certificate'] = 'Identities.number';
             $selectable['date_of_birth'] = $this->aliasField('date_of_birth');
             $selectable['nationality_name'] = 'MainNationalities.name';
-            $query->leftJoin([$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()], [
-                $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->aliasField('id'),
-                // $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id",
-                 $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id->id", //POCOR-6819
-            ]);
+            if ($birth_certificate_code_id) {
+                $query->leftJoin([$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()], [
+                    $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->aliasField('id'),
+                    $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id",
+                ]);
+            }
 
         } else if ( $sheet_tab_name == 'Academic' ) {
             $selectable['education_programme'] = 'EducationProgrammes.name';
