@@ -404,6 +404,10 @@ class StudentEnrolmentTable extends ControllerActionTable
             ->where([$alertsTable->aliasField('process_name') => 'AlertStudentEnrolment',
                 $alertsTable->aliasField('frequency') => 'once'])
             ->first();
+        if(!$alert){
+            Log::debug('No Alerts for AlertStudentEnrolment');
+            return;
+        }
         if(!is_array($alert)){
             $alert = $alert->toArray();
         }
@@ -419,7 +423,7 @@ class StudentEnrolmentTable extends ControllerActionTable
             if(!is_array($rule)){
                 $rule = $rule->toArray();
             }
-            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['admission_id' => $entity->id]);
+            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['enrolment_id' => $entity->id]);
 
         }
 

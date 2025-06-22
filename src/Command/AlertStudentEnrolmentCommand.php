@@ -49,7 +49,7 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
     protected function getPendingItems(string $featureKey): array
     {
         $where = [
-            'StudentEnrolment.id' => $this->EnrolmentId,
+            'StudentEnrolment.id' => $this->enrolmentId,
         ];
         $this->logMsg("Where: " . print_r($where, true));
         return $this->StudentEnrolment->find()
@@ -66,22 +66,22 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
         $this->userId = (int)$args->getOption('user_id');
         $this->ruleId = (int)$args->getOption('rule_id');
         $this->processId = (int)$args->getOption('process_id');
-        $this->EnrolmentId = (int)$args->getOption('Enrolment_id');
+        $this->enrolmentId = (int)$args->getOption('enrolment_id');
         $ruleId = $this->ruleId;
 
 
         if (!$this->userId ||
             !$this->ruleId ||
             !$this->processId ||
-            !$this->EnrolmentId
+            !$this->enrolmentId
         ) {
             $io->error("Missing required option");
             return false;
         }
         try {
-            $this->Enrolment = $this->StudentEnrolment->get($this->EnrolmentId);
+            $this->enrolment = $this->StudentEnrolment->get($this->enrolmentId);
         } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
-            $io->error("Enrolment with ID {$this->EnrolmentId} not found.");
+            $io->error("Enrolment with ID {$this->enrolmentId} not found.");
             return false;
         }
         try {
@@ -96,7 +96,7 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
             return false;
         }
 
-        $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->Enrolment->student_id);
+        $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->enrolment->student_id);
 
         if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
             $io->out("No contacts found for alert rule ID {$ruleId}. Skipping.");
@@ -181,7 +181,7 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
     {
         $parser = parent::getOptionParser();
 
-        $parser->addOption('Enrolment_id', [
+        $parser->addOption('enrolment_id', [
             'help' => 'Specify the Enrolment ID for targeted alerts.',
             'required' => true,
             'short' => 'a'

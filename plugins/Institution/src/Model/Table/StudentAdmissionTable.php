@@ -942,6 +942,10 @@ class StudentAdmissionTable extends ControllerActionTable
             ->where([$alertsTable->aliasField('process_name') => 'AlertStudentAdmission',
                 $alertsTable->aliasField('frequency') => 'once'])
             ->first();
+        if(!$alert){
+            Log::debug('No Alerts for AlertStudentAdmission');
+            return;
+        }
         if(!is_array($alert)){
             $alert = $alert->toArray();
         }
