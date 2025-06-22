@@ -927,25 +927,21 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private function sendStudentAdmissionAlert($entity): void
     {
-        Log::debug('xsdfasd1');
         $user = $this->Auth->user();
         if(!$user){
             return;
         }
-        Log::debug('xsdfasd2');
         $userId = $user['id'];
         $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
         $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
         $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
 
-        Log::debug('xsdfasd3');
 
         $alert = $alertsTable
             ->find()
             ->where([$alertsTable->aliasField('process_name') => 'AlertStudentAdmission',
                 $alertsTable->aliasField('frequency') => 'once'])
             ->first();
-        Log::debug('xsdfasd4');
         if(!is_array($alert)){
             $alert = $alert->toArray();
         }
@@ -955,7 +951,6 @@ class StudentAdmissionTable extends ControllerActionTable
                         $alertRulesTable->aliasField('enabled') => 1
                     ])
                     ->toArray();
-        Log::debug('xsdfasd5');
 
 
         foreach ($activeRules as $rule) {
@@ -963,11 +958,8 @@ class StudentAdmissionTable extends ControllerActionTable
                 $rule = $rule->toArray();
             }
             DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['admission_id' => $entity->id]);
-            Log::debug('xsdfasd6');
+
         }
-
-
-        //POCOR-8869[END]
 
     }
 

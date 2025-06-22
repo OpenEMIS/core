@@ -146,6 +146,7 @@ abstract class AlertCommandBase extends Command
         foreach ($securityRoles as $role) {
             $securityRoleIds[] = $role['id'];
         }
+        $this->logMsg(print_r($securityRoleIds));
         $StudentGuardians = TableRegistry::getTableLocator()->get('GuardianNav.StudentGuardians');
         if (in_array(self::ROLE_GUARDIAN, $securityRoleIds)) {
             $guardians = $StudentGuardians
@@ -159,10 +160,10 @@ abstract class AlertCommandBase extends Command
                     $recipients[] = $guardian['guardian_id'];
                 }
             } else {
-                Log::debug('No guardians found for student ID: ' . $entity->student_id);
+               $this->logMsg('No guardians found for student ID: ' . $studentUserId);
             }
         }
-
+        $this->logMsg(print_r(['guardians' => $recipients],true));
         if (in_array(self::ROLE_STUDENT, $securityRoleIds)) {
             $recipients[] = $studentUserId;
         }
