@@ -53,6 +53,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleCaseEscalation');//POCOR-7642
         $this->addBehavior('Alert.AlertRuleSystemUpdates');//POCOR-7642
         $this->addBehavior('Alert.AlertRuleStudentAdmission');//POCOR-8869
+        $this->addBehavior('Alert.AlertRuleStudentEnrollment');//POCOR-8869
     }
 
     public function validationDefault(Validator $validator): Validator
