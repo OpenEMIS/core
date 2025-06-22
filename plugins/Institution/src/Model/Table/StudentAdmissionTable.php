@@ -21,6 +21,7 @@ use Cake\Utility\Text;
 use Cake\Routing\Router;
 use Cake\I18n\FrozenTime;
 use App\Controller\DashboardController;
+use Cake\I18n\FrozenDate;
 
 class StudentAdmissionTable extends ControllerActionTable
 {
@@ -812,53 +813,14 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     public function beforeSave($event, Entity $entity, ArrayObject $options)
     {
-        if (!empty($entity->academic_period_id)) {
-            $academicPeriodId = $entity->academic_period_id;
-
-            if ($this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $academicPeriodId])) {
-                $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
-                $periodStartDate = $academicPeriod->start_date;
-                $periodEndDate = $academicPeriod->end_date;
-
-                $today = FrozenDate::today();
-
-                // START DATE
-                if (
-                    empty($entity->start_date) ||
-                    $entity->start_date < $periodStartDate ||
-                    $entity->start_date > $periodEndDate
-                ) {
-                    $entity->start_date = ($today >= $periodStartDate && $today <= $periodEndDate)
-                        ? $today
-                        : $periodStartDate;
-                }
-
-                // END DATE
-                if (
-                    empty($entity->end_date) ||
-                    $entity->end_date < $periodStartDate ||
-                    $entity->end_date > $periodEndDate
-                ) {
-                    $entity->end_date = $periodEndDate;
-                }
-            }
-        }
-
+        $entity = $this->checkStartEndDates($entity);
+        return $entity;
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         //this is meant to force gender_id validation
-        if ($data->offsetExists('student_id') && !empty($data['student_id'])) {
-            if ($this->Users->exists([$this->Users->getPrimaryKey() => $data['student_id']])) {
-                $studentId = $data['student_id'];
-
-                if (!$data->offsetExists('gender_id')) {
-                    $query = $this->Users->get($studentId);
-                    $data['gender_id'] = $query->gender_id;
-                }
-            }
-        }
+        $data = $this->checkGender($data);
 
         // For third party restful call
         if($data->offsetExists('action_type') && $data['action_type'] == 'third_party') {
@@ -1476,6 +1438,64 @@ class StudentAdmissionTable extends ControllerActionTable
                 Log::info("Reverted status_id for admission ID {$entity->id} to previous value.");
             }
         }
+    }
+
+    /**
+     * @param Entity $entity
+     * @return Entity
+     */
+    private function checkStartEndDates(Entity $entity): Entity
+    {
+        if (!empty($entity->academic_period_id)) {
+            $academicPeriodId = $entity->academic_period_id;
+            if ($this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $academicPeriodId])) {
+                $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+                $periodStartDate = $academicPeriod->start_date;
+                $periodEndDate = $academicPeriod->end_date;
+
+                $today = FrozenDate::today();
+
+                // START DATE
+                if (
+                    empty($entity->start_date) ||
+                    $entity->start_date < $periodStartDate ||
+                    $entity->start_date > $periodEndDate
+                ) {
+                    $entity->start_date = ($today >= $periodStartDate && $today <= $periodEndDate)
+                        ? $today
+                        : $periodStartDate;
+                }
+
+                // END DATE
+                if (
+                    empty($entity->end_date) ||
+                    $entity->end_date < $periodStartDate ||
+                    $entity->end_date > $periodEndDate
+                ) {
+                    $entity->end_date = $periodEndDate;
+                }
+            }
+        }
+        return $entity;
+    }
+
+    /**
+     * @param ArrayObject $data
+     * @return ArrayObject
+     */
+    private function checkGender(ArrayObject $data): ArrayObject
+    {
+        if ($data->offsetExists('student_id') && !empty($data['student_id'])) {
+            if ($this->Users->exists([$this->Users->getPrimaryKey() => $data['student_id']])) {
+                $studentId = $data['student_id'];
+
+                if (!$data->offsetExists('gender_id')) {
+                    $query = $this->Users->get($studentId);
+                    $data['gender_id'] = $query->gender_id;
+                }
+            }
+        }
+        return $data;
     }
 
 }
