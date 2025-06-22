@@ -9,7 +9,6 @@ class POCOR8286 extends AbstractMigration
 {
     private const CONFIG_TYPE = 'External Alert Service - SMS';
 
-
     public function up(): void
     {
 //        return;
@@ -97,17 +96,17 @@ class POCOR8286 extends AbstractMigration
         $this->execute("UPDATE `alerts` SET `name` = 'StudentAttendance' WHERE `name` = 'Student Attendance'");
         Log::info("Renamed 'Student Attendance' to 'StudentAttendance'");
 
-        // 2. Insert new alert for 'StudentEnrollment'
+        // 2. Insert new alert for 'StudentEnrolment'
         $this->execute("
         INSERT INTO alerts (
             id, name, process_name, process_id, frequency,
             modified_user_id, modified, created_user_id, created
         ) VALUES (
-            NULL, 'StudentEnrollment', 'AlertStudentEnrollment', NULL, 'Never',
+            NULL, 'StudentEnrolment', 'AlertStudentEnrolment', NULL, 'Never',
             NULL, NULL, 1, NOW()
         )
     ");
-        Log::info("Inserted new alert for 'StudentEnrollment'");
+        Log::info("Inserted new alert for 'StudentEnrolment'");
 
         // 3. Change frequency to 'Once' for specific alerts
         $this->execute("
