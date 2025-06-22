@@ -35,9 +35,9 @@ class SyncExamComponent extends Component
      * API endpoint base paths
      */
     private const API_ENDPOINTS = [
-        'login' => '/api/v5/login',
-        'result' => '/api/v5/results',
-        'register' => '/api/v5/examination/registration',
+        'login' => '/api/v2/login',
+        'result' => '/api/v2/results',
+        'register' => '/api/v2/examination/registration',
     ];
 
     /**

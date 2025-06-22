@@ -230,8 +230,6 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
 
         if ($syncUserConfigured) {
             $examinationId = $this->request->getQuery('examination_id');
-
-            if (($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute']) || $this->AccessControl->isAdmin())
             if (($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute']) || $this->AccessControl->isAdmin())
                 && !empty($examinationId) && $examinationId != -1
             ) {
