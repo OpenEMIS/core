@@ -365,15 +365,15 @@ class AlertsTable extends ControllerActionTable
     {
         // POCOR-8286 start
         $entity = $attr['entity'];
-        $restrictedProcesses = [
+        $oneTimeProcesses = [
             'AlertAttendance',
             'AlertStudentAdmission',
             'AlertStudentEnrollment'
         ];
 
-        if (in_array($entity->process_name, $restrictedProcesses, true)) {
+        if (in_array($entity->process_name, $oneTimeProcesses, true)) {
             $freqOptions = [
-                "Never" => __("Never"), // POCOR-8533
+                "Never" => __("Never"), // POCOR-8286
                 "Once" => __("Once")
             ];
         } else {
@@ -383,7 +383,7 @@ class AlertsTable extends ControllerActionTable
                 "Weekly" => __("Weekly"),
                 "Monthly" => __("Monthly"),
                 "Yearly" => __("Yearly"),
-                "Once" => __("Once")
+//                "Once" => __("Once")
             ];
         }
         // POCOR-8286 end
