@@ -26,6 +26,8 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
     public function logAlert($method, $feature, $recipient, $subject, $message)
     {
         $this->AlertLogs->insertAlertLog($method, $feature, $recipient, $subject, $message);
+        $this->logMsg("✅ Alert logged via {$method} to {$recipient}. Message: {$message}");
+        usleep(500000); // 500,000 microseconds = 0.5 seconds
     }
 
     /**
@@ -54,12 +56,10 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
         $value = (int)($thresholdArray['value'] ?? 0);
         $statusTypeId = (int) ($thresholdArray['employment_type'] ?? 0);
         $condition = (int) ($thresholdArray['condition'] ?? 0);
-        $this->logMsg(print_r($thresholdArray, true));
 
         if (!$statusTypeId || !$value || !in_array($condition, [self::CONDITION_DAYS_BEFORE, self::CONDITION_DAYS_AFTER], true)) {
             return [];
         }
-        $this->logMsg(print_r($condition, true));
 
         $statusDateField = $this->EmploymentStatuses->aliasField('status_date');
 
@@ -68,23 +68,43 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
             self::CONDITION_DAYS_AFTER  => "DATEDIFF(NOW(), $statusDateField) BETWEEN 0 AND $value",
             default => null
         };
-        $this->logMsg(print_r($condition, true));
-        $this->logMsg(print_r($dateCondition, true));
         if (!$dateCondition) {
             return [];
         }
 
         $alertData = $this->EmploymentStatuses->find()
             ->contain(['Users', 'EmploymentStatusTypes'])
+            ->select([
+                'institution_id' => 'InstitutionStaff.institution_id',
+                'institution_name' => 'Institutions.name',
+                'institution_code' => 'Institutions.code',
+                'institution_address' => 'Institutions.address',
+                'institution_postal_code' => 'Institutions.postal_code',
+                'institution_contact_person' => 'Institutions.contact_person',
+                'institution_telephone' => 'Institutions.telephone',
+                'institution_fax' => 'Institutions.fax',
+                'institution_email' => 'Institutions.email',
+                'institution_website' => 'Institutions.website'
+            ])
+            ->innerJoin(['InstitutionStaff' => 'institution_staff'],
+            ['InstitutionStaff.staff_id = EmploymentStatuses.staff_id',
+                ])
+            ->innerJoin(['Institutions' => 'institutions'],
+            ['InstitutionStaff.institution_id = Institutions.id',
+                ])
+            ->innerJoin(['StaffStatuses' => 'staff_statuses'],
+                ['InstitutionStaff.staff_status_id = StaffStatuses.id',
+                    'StaffStatuses.code = "ASSIGNED"'
+                ])
             ->where([
                 $this->EmploymentStatuses->aliasField('status_type_id') => $statusTypeId,
                 "$statusDateField IS NOT NULL",
                 $dateCondition
             ])
-            ->enableHydration(false);
-
-        $this->logMsg($alertData->sql());
-        return $alertData->toArray();
+            ->enableAutoFields()
+            ->disableHydration();
+        $alertData = $alertData->toArray();
+        return $alertData;
     }
 
     /**
@@ -95,10 +115,6 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
      */
     protected function fillPlaceholders($item): array
     {
-        // Calculate day difference
-        $today = FrozenDate::now();
-        $leaveEndDate = isset($item['date_to']) ? new FrozenDate($item['date_to']) : null;
-        $dayDiff = $leaveEndDate ? $today->diffInDays($leaveEndDate, false) : '';
 
         // This is assuming your rule is available here
         $thresholdValue = $this->rule['threshold'] ?? '{}';
@@ -106,11 +122,8 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
 
         return [
             '${threshold.value}' => $threshold['value'] ?? '',
-            '${staff_leave_type.name}' => $item['staff_leave_type']['name'] ?? '',
-            '${date_from}' => $item['date_from'] ?? '',
-            '${date_to}' => $item['date_to'] ?? '',
-            '${day_difference}' => (string)$dayDiff,
-
+            '${employment_type.name}' => $item['employment_status_type']['name'] ?? '',
+            '${employment_date}' => $item['status_date'] ?? '',
             '${user.openemis_no}' => $item['user']['openemis_no'] ?? '',
             '${user.first_name}' => $item['user']['first_name'] ?? '',
             '${user.middle_name}' => $item['user']['middle_name'] ?? '',
@@ -122,15 +135,15 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
             '${user.postal_code}' => $item['user']['postal_code'] ?? '',
             '${user.date_of_birth}' => $item['user']['date_of_birth'] ?? '',
 
-            '${institution.name}' => $item['institution']['name'] ?? '',
-            '${institution.code}' => $item['institution']['code'] ?? '',
-            '${institution.address}' => $item['institution']['address'] ?? '',
-            '${institution.postal_code}' => $item['institution']['postal_code'] ?? '',
-            '${institution.contact_person}' => $item['institution']['contact_person'] ?? '',
-            '${institution.telephone}' => $item['institution']['telephone'] ?? '',
-            '${institution.fax}' => $item['institution']['fax'] ?? '',
-            '${institution.email}' => $item['institution']['email'] ?? '',
-            '${institution.website}' => $item['institution']['website'] ?? '',
+            '${institution.name}' => $item['institution_name'] ?? '',
+            '${institution.code}' => $item['institution_code'] ?? '',
+            '${institution.address}' => $item['institution_address'] ?? '',
+            '${institution.postal_code}' => $item['institution_postal_code'] ?? '',
+            '${institution.contact_person}' => $item['institution_contact_person'] ?? '',
+            '${institution.telephone}' => $item['institution_telephone'] ?? '',
+            '${institution.fax}' => $item['institution_fax'] ?? '',
+            '${institution.email}' => $item['institution_email'] ?? '',
+            '${institution.website}' => $item['institution_website'] ?? '',
         ];
     }
 

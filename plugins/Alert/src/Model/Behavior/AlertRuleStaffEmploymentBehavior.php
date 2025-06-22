@@ -47,7 +47,6 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                 '${threshold.value}' => 'Threshold value.',
                 '${employment_type.name}' => 'Employment type.',
                 '${employment_date}' => 'Staff employment date.',
-                '${employment_period}' => 'Staff employment period.',
                 '${user.openemis_no}' => 'OpenEMIS ID.',
                 '${user.first_name}' => 'First name.',
                 '${user.middle_name}' => 'Middle name.',
