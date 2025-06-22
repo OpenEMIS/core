@@ -62,13 +62,6 @@ abstract class AlertCommandBase extends Command
             return false;
         }
 
-        $this->contacts = $this->getRoleAssociatedContactList($this->rule->security_roles);
-
-        if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
-            $io->out("No contacts found for alert rule ID {$ruleId}. Skipping.");
-            return false;
-        }
-
         return true;
     }
     /**
@@ -85,6 +78,17 @@ abstract class AlertCommandBase extends Command
                 $this->logMsg("✅ Alert {$featureKey} has no pending items");
             }
             foreach ($pendingItems as $item) {
+                $institutionId = $item['institution_id'] ?? null;
+                if ($institutionId) {
+                    $this->contacts = $this->getRoleAssociatedContactList($this->rule->security_roles, $institutionId);
+                } else {
+                    $this->contacts = $this->getRoleAssociatedContactList($this->rule->security_roles);
+                }
+
+                if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
+                    $this->logMsg("No contacts found for alert rule ID {$this->rule->id}. Skipping.");
+                    return false;
+                }
                $placeholders = $this->fillPlaceholders($item); // abstract
                $this->processContactList([$this->rule], $placeholders, fn() => $this->contacts);
             }
@@ -116,15 +120,24 @@ abstract class AlertCommandBase extends Command
      * @return array<string, string>
      */
     abstract protected function fillPlaceholders($item): array;
-    public function getRoleAssociatedContactList(array $securityRoles): array
+    public function getRoleAssociatedContactList(array $securityRoles, $institutionId = null): array
     {
         $contactList = ['email' => [], 'phone' => []];
 
         foreach ($securityRoles as $role) {
-            $userLinks = $this->SecurityGroupUsers
-                ->find()
-                ->where(['security_role_id' => $role['id']])
-                ->toArray();
+            if (!$institutionId) {
+                $userLinks = $this->SecurityGroupUsers
+                    ->find()
+                    ->where(['security_role_id' => $role['id']])
+                    ->toArray();
+            } else {
+                $userLinks = $this->SecurityGroupUsers
+                    ->find()
+                    ->innerJoin(['Institutions' => 'institutions'],
+                        'Institutions.id = ' . $institutionId)
+                    ->where(['security_role_id' => $role['id']])
+                    ->toArray();
+            }
 
             foreach ($userLinks as $link) {
                 $users = $this->Users

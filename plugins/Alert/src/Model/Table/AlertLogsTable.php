@@ -160,22 +160,32 @@ class AlertLogsTable extends ControllerActionTable
         $alertFeatures = $this->AlertRules->getFeatureOptions();
         $checksum = $this->generateChecksum($subject, $message);
 
-        if ($this->exists(['checksum' => $checksum])
-            && array_key_exists($feature, $alertFeatures)) {
-            $records = $this->find()->where([
-                'checksum' => $checksum,
-                'destination' => $recipient,
-                'status' => 0
-            ])->all();
-            if (!empty($records)) {
-                foreach ($records as $record) {
-                    $this->triggerSendingAlertCommand('sending_alert', $feature, $record->id);
-                }
-                return;
-            }
+        if (!array_key_exists($feature, $alertFeatures)) {
+            $this->logMsg("❌ Unknown feature '{$feature}' passed to insertAlertLog.");
+            return;
         }
 
-        $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
+        // Check if the exact same message exists in unsent logs for any recipients
+        $existingLogs = $this->find()
+            ->where([
+                'checksum' => $checksum,
+                'status' => 0
+            ])
+            ->all();
+
+        $alreadySentTo = [];
+
+        foreach ($existingLogs as $log) {
+            $alreadySentTo[] = $log->destination;
+
+            // Resend to all existing unsent logs
+            $this->triggerSendingAlertCommand('sending_alert', $feature, $log->id, __FUNCTION__, __LINE__);
+        }
+
+        // If the recipient is new, send it now
+        if (!in_array($recipient, $alreadySentTo)) {
+            $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
+        }
     }
 
 //    public function insertStudentAdmissionAlertLog(string $method, string $feature, string $recipient, ?string $subject = null, ?string $message = null): void
@@ -218,7 +228,7 @@ class AlertLogsTable extends ControllerActionTable
         }
 
         foreach ($savedIds as $id) {
-            $this->triggerSendingAlertCommand('sending_alert', $feature, $id);
+            $this->triggerSendingAlertCommand('sending_alert', $feature, $id, __FUNCTION__, __LINE__);
         }
     }
     // POCOR-8286 end
@@ -400,7 +410,7 @@ class AlertLogsTable extends ControllerActionTable
         return $message;
     }
 
-    public function triggerSendingAlertCommand(string $commandName, ?string $feature = null, int $alertLogId = 0): void
+    public function triggerSendingAlertCommand(string $commandName, ?string $feature = null, int $alertLogId = 0, $function = '', $line = 0): void
     {
         $args = '';
         if (!is_null($feature)) {
@@ -415,7 +425,7 @@ class AlertLogsTable extends ControllerActionTable
         $shellCmd = $cmdPath . ' >> ' . $logPath . ' & echo $!';
 
         exec($shellCmd);
-        Log::write('debug', 'Executing command: ' . $shellCmd);
+        Log::write('debug', "Executing command from $function $line: " . $shellCmd);
     }
 
     /** @deprecated Use triggerSendingAlertCommand() instead */

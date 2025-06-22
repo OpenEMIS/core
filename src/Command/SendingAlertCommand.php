@@ -56,7 +56,8 @@ class SendingAlertCommand extends Command
 
                 // Mark as processed
                 $this->AlertLogs->updateAll(
-                    ['status' => 1, 'processed_date' => $today],
+                    ['status' => 1,
+                        'processed_date' => $today],
                     ['id' => $log->id]
                 );
 
