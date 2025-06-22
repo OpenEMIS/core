@@ -18,6 +18,7 @@ use App\Model\Table\ControllerActionTable;
 use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Log\Log;
 use Cake\Utility\Text;
+use App\Controller\DashboardController;
 
 class StudentEnrolmentTable extends ControllerActionTable
 {
@@ -350,22 +351,77 @@ class StudentEnrolmentTable extends ControllerActionTable
         $Students = TableRegistry::get('Institution.Students');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
+        $student = null;
+// Check if student already exists
+        $existingStudent = $Students->find()
+            ->where([
+                'student_status_id' => $statuses['CURRENT'],
+                'student_id' => $entity->student_id,
+                'education_grade_id' => $entity->education_grade_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'institution_id' => $entity->institution_id
+            ])
+            ->first();
+        $student = $existingStudent;
+        if (!$existingStudent) {
+            $incomingStudent = [
+                'student_status_id' => $statuses['CURRENT'],
+                'student_id' => $entity->student_id,
+                'education_grade_id' => $entity->education_grade_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'start_date' => $entity->start_date,
+                'end_date' => $entity->end_date,
+                'institution_id' => $entity->institution_id
+            ];
 
-        $incomingStudent = [
-            'student_status_id' => $statuses['CURRENT'],
-            'student_id' => $entity->student_id,
-            'education_grade_id' => $entity->education_grade_id,
-            'academic_period_id' => $entity->academic_period_id,
-            'start_date' => $entity->start_date,
-            'end_date' => $entity->end_date,
-            'institution_id' => $entity->institution_id
-        ];
-        if (!empty($entity->institution_class_id)) {
-            $incomingStudent['class'] = $entity->institution_class_id;
+            if (!empty($entity->institution_class_id)) {
+                $incomingStudent['class'] = $entity->institution_class_id;
+            }
+
+            $newEntity = $Students->newEntity($incomingStudent);
+            $student = $Students->save($newEntity);
+        }
+        if($student){
+            $this->sendStudentEnrolmentAlert($entity);
+        }
+    }
+
+    private function sendStudentEnrolmentAlert($entity): void
+    {
+        $user = $this->Auth->user();
+        if(!$user){
+            return;
+        }
+        $userId = $user['id'];
+        $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
+        $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
+        $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
+
+
+        $alert = $alertsTable
+            ->find()
+            ->where([$alertsTable->aliasField('process_name') => 'AlertStudentEnrolment',
+                $alertsTable->aliasField('frequency') => 'once'])
+            ->first();
+        if(!is_array($alert)){
+            $alert = $alert->toArray();
+        }
+        $activeRules = $alertRulesTable->find()
+            ->where([
+                $alertRulesTable->aliasField('feature') => $alert['name'],
+                $alertRulesTable->aliasField('enabled') => 1
+            ])
+            ->toArray();
+
+
+        foreach ($activeRules as $rule) {
+            if(!is_array($rule)){
+                $rule = $rule->toArray();
+            }
+            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['admission_id' => $entity->id]);
+
         }
 
-        $newEntity = $Students->newEntity($incomingStudent);
-        $Students->save($newEntity);
     }
 
     public function studentsAfterSave(Event $event, $student)

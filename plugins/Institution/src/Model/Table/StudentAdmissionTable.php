@@ -1422,8 +1422,8 @@ class StudentAdmissionTable extends ControllerActionTable
         }
 
         $studentEntity = $this->addInstitutionStudent($entity);
-        Log::debug(print_r([__FUNCTION__ => $entity], true));
-        Log::debug(print_r([__FUNCTION__ => $studentEntity], true));
+//        Log::debug(print_r([__FUNCTION__ => $entity], true));
+//        Log::debug(print_r([__FUNCTION__ => $studentEntity], true));
         if ($studentEntity) {
             Log::info("InstitutionStudent created for student_id {$entity->student_id}");
             $this->sendStudentAdmissionAlert($entity);
