@@ -84,6 +84,11 @@ class AlertsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        if(empty($params)){
+            $extra['options']['direction'] = 'asc';
+            $extra['options']['limit'] = 20;
+            $extra['options']['sort'] = 'name';
+        }
          //POCOR-7558 start
         $systemProcess=TableRegistry::get('SystemProcesses');
         $query->select([

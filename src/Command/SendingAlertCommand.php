@@ -43,7 +43,7 @@ class SendingAlertCommand extends Command
                 fn($m) => strtolower(trim($m)),
                 explode(',', $log->method)
             );
-            $io->out("Methods" . print_r($methods, true));
+//            $io->out("Methods" . print_r($methods, true));
             if (intval($log->status) === 0) {
                 // Process only if status is pending
                 if (in_array('email', $methods)) {
@@ -79,8 +79,8 @@ class SendingAlertCommand extends Command
 
     private function sendEmail($log, ConsoleIo $io): void
     {
-        $io->out('Subject: ' . $log->subject);
-        $io->out('Message: ' . $log->message);
+//        $io->out('Subject: ' . $log->subject);
+//        $io->out('Message: ' . $log->message);
 
         $emailArray = explode(', ', $log->destination);
         $sendTo = [];
@@ -112,8 +112,8 @@ class SendingAlertCommand extends Command
 
     private function sendSms($log, ConsoleIo $io): void
     {
-        $io->out('Subject: ' . $log->subject);
-        $io->out('Message: ' . $log->message);
+//        $io->out('Subject: ' . $log->subject);
+//        $io->out('Message: ' . $log->message);
         $phones = array_map('trim', explode(',', $log->destination));
 
         foreach ($phones as $phone) {

@@ -214,10 +214,17 @@ class AlertRulesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $params = $this->request->getQuery();
+        if(empty($params)){
+            $extra['options']['direction'] = 'asc';
+            $extra['options']['limit'] = 20;
+            $extra['options']['sort'] = 'feature';
+        }
         $selectedFeature = $this->request->getQuery('feature');
         if ($selectedFeature != -1 && !empty($selectedFeature)) {
             $query->where(['feature' => $selectedFeature]);
         }
+
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -504,6 +511,10 @@ class AlertRulesTable extends ControllerActionTable
             return $this->assignToGuardianOnly($attr);
         }
 
+        if ($feature === 'StudentEnrollment') {
+            return $this->assignToGuardianOnly($attr);
+        }
+
         return $this->assignToAllRoles($attr);
     }
 
@@ -522,11 +533,17 @@ class AlertRulesTable extends ControllerActionTable
         $roleOptions = $this->getVisibleSecurityRoles();
 
         $filteredRoles = array_filter($roleOptions, function ($roleName) {
-            return $roleName === 'Guardian' || 'Student';
+            return in_array($roleName, ['Guardian', 'Student'], true);
         });
 
+// Apply translation after filtering
+        $translatedRoles = array_map(function ($roleName) {
+            return __($roleName);
+        }, $filteredRoles);
+
         $attr['type'] = 'chosenSelect';
-        $attr['options'] = $filteredRoles;
+        $attr['options'] = $translatedRoles;
+
         return $attr;
     }
 
@@ -545,8 +562,14 @@ class AlertRulesTable extends ControllerActionTable
 
     private function assignToAllRoles(array $attr): array
     {
+        $roles = $this->getVisibleSecurityRoles();
+
+        $translatedRoles = array_map(function ($roleName) {
+            return __($roleName);
+        }, $roles);
+
         $attr['type'] = 'chosenSelect';
-        $attr['options'] = $this->getVisibleSecurityRoles();
+        $attr['options'] = $translatedRoles;
 
         return $attr;
     }
@@ -680,12 +703,9 @@ class AlertRulesTable extends ControllerActionTable
                 return __('Method');
             case 'threshold':
                 return __('Threshold');
-            case 'enabled':
                 return __('Enabled');
             case 'name':
                 return __('Name');
-            case 'enabled':
-                return __('Enabled');
             case 'enabled':
                 return __('Enabled');
             case 'created':
