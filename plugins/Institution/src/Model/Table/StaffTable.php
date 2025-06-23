@@ -3469,6 +3469,23 @@ class StaffTable extends ControllerActionTable
             $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
             $SecurityGroupTbl = TableRegistry::get('Security.UserGroups');
             $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
+
+             //POCOR-9212[START] // Here is the logic change: instead of checking institution_id from the table SecurityGroupInstitutions 
+             // check for the security_group_id
+             $groupUserRecords = $SecurityGroupUserTbl->find()
+                        ->matching('SecurityGroups')
+                        ->matching('SecurityRoles')
+                        ->where([$SecurityGroupUserTbl->aliasField('security_user_id') => $staffId])
+                        ->group([
+                            $SecurityGroupUserTbl->aliasField('security_group_id'),
+                            $SecurityGroupUserTbl->aliasField('security_role_id')
+                        ])
+                        ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name', 'security_group_id' => $SecurityGroupUserTbl->aliasField('security_group_id')])
+                        ->toArray();
+            $security_group_id = $groupUserRecords[0]['security_group_id'];
+            //POCOR-9212[END]
+
+
             $SecurityGroup = $SecurityGroupTbl->find()
                 ->select([
                     $SecurityGroupUserTbl->aliasField('security_group_id'),
@@ -3478,7 +3495,8 @@ class StaffTable extends ControllerActionTable
                 ->leftJoin(
                     [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                     [
-                        $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                        // $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                        $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupTbl->aliasField('id')  //POCOR-9212
                     ]
                 )
                 ->leftJoin(
@@ -3488,7 +3506,8 @@ class StaffTable extends ControllerActionTable
                     ]
                 )
                 ->where([
-                    $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    // $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    $SecurityGroupTbl->aliasField('id') => $security_group_id, //POCOR-9212
                     $SecurityGroupUserTbl->aliasField('security_user_id') => $staffId,
                 ])->enableHydration(false)->toArray();
             $RoleArr = [];
@@ -4370,14 +4389,20 @@ class StaffTable extends ControllerActionTable
                     if ($dayId != -1) {
                         $row->date = $dateStr;
                     }
+                    // POCOR-9166 start
+                    $queryString = $this->getQueryString();
+                    $queryString['user_id'] = $staffId;
+                    $queryString['institution_id'] = $institution_id;
+                    $encodedQueryString = $this->paramsEncode($queryString);
                     $historyUrl = Router::url([
                         'plugin' => 'Staff',
                         'controller' => 'Staff',
                         'action' => 'InstitutionStaffAttendanceActivities',
-                        'index',
-                        '?' => ['user_id' => $staffId, 'institution_id' => $institution_id]
+                        '0' => 'index',
+                        '1' => $encodedQueryString
                        // 'user_id' => $staffId
                     ]);
+                    // POCOR-9166 end
                     $row->historyUrl = $historyUrl;
                 }
                 // gets all the staff leave
@@ -4511,6 +4536,8 @@ class StaffTable extends ControllerActionTable
                 $absenceTypes
             ) {
                 $staffId = $row->staff_id;
+                $institution_id = $row->institution_id; // POCOR-9166
+
                 $staffRecords = [];
                 $staffLeaveRecords = [];
 
@@ -4567,13 +4594,20 @@ class StaffTable extends ControllerActionTable
                     if ($day_id != -1) {
                         $row->date = $dateStr;
                     }
+                    // POCOR-9166 start
+                    $queryString = $this->getQueryString();
+                    $queryString['user_id'] = $staffId;
+                    $queryString['institution_id'] = $institution_id;
+                    $encodedQueryString = $this->paramsEncode($queryString);
                     $historyUrl = Router::url([
                         'plugin' => 'Staff',
                         'controller' => 'Staff',
                         'action' => 'InstitutionStaffAttendanceActivities',
-                        'index',
-                        'user_id' => $staffId
+                        '0' => 'index',
+                        '1' => $encodedQueryString
+                        // 'user_id' => $staffId
                     ]);
+                    // POCOR-9166 end
                     $row->historyUrl = $historyUrl;
                 }
                 // gets all the staff leave
