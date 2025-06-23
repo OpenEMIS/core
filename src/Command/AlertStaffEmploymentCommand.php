@@ -101,9 +101,11 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
                 "$statusDateField IS NOT NULL",
                 $dateCondition
             ])
+            ->distinct($this->EmploymentStatuses->aliasField('staff_id'))
             ->enableAutoFields()
             ->disableHydration();
         $alertData = $alertData->toArray();
+//        $this->logMsg(print_r($alertData, true));
         return $alertData;
     }
 

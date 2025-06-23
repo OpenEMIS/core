@@ -77,12 +77,37 @@ abstract class AlertCommandBase extends Command
             if(empty($pendingItems)){
                 $this->logMsg("✅ Alert {$featureKey} has no pending items");
             }
+//            $sizeofPendingItems = sizeof($pendingItems);
+//            if ($sizeofPendingItems > 1) {
+//                $pendingItems = [$pendingItems[0]];
+//            }
             foreach ($pendingItems as $item) {
-                $institutionId = $item['institution_id'] ?? null;
+                $institutionId = (int) $item['institution_id'] ?? null;
+//                $this->logMsg(print_r([$sizeofPendingItems => $item], true));
                 if ($institutionId) {
-                    $this->contacts = $this->getRoleAssociatedContactList($this->rule->security_roles, $institutionId);
+                    $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles, $institutionId);
+//                    $sizeofContactMails = sizeof($contacts['email']);
+//                    $sizeofContactPhones = sizeof($contacts['phone']);
+//                    $this->logMsg(print_r(['has institutions ' . $sizeofContactMails . ' ' . $sizeofContactPhones => $contacts], true));
+//                    if($sizeofContactMails > 0){
+//                        $contacts['email'] = [$contacts['email'][0]];
+//                    }
+//                    if($sizeofContactPhones > 0){
+//                        $contacts['phone'] = [$contacts['phone'][0]];
+//                    }
+                    $this->contacts = $contacts;
                 } else {
-                    $this->contacts = $this->getRoleAssociatedContactList($this->rule->security_roles);
+                    $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles);
+//                    $sizeofContactMails = sizeof($contacts['email']);
+//                    $sizeofContactPhones = sizeof($contacts['phone']);
+//                    $this->logMsg(print_r(['no institutions ' . $sizeofContactMails . ' ' . $sizeofContactPhones => $contacts], true));
+//                    if($sizeofContactMails > 0){
+//                        $contacts['email'] = [$contacts['email'][0]];
+//                    }
+//                    if($sizeofContactPhones > 0){
+//                        $contacts['phone'] = [$contacts['phone'][0]];
+//                    }
+                    $this->contacts = $contacts;
                 }
 
                 if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
@@ -134,7 +159,9 @@ abstract class AlertCommandBase extends Command
                 $userLinks = $this->SecurityGroupUsers
                     ->find()
                     ->innerJoin(['Institutions' => 'institutions'],
-                        'Institutions.id = ' . $institutionId)
+                        ['Institutions.id = ' . $institutionId,
+                            'Institutions.security_group_id = ' .
+                            $this->SecurityGroupUsers->aliasField('security_group_id')])
                     ->where(['security_role_id' => $role['id']])
                     ->toArray();
             }
