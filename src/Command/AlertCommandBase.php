@@ -73,6 +73,8 @@ abstract class AlertCommandBase extends \Cake\Command\Command
     protected function runFeatureAlert(string $featureKey): int
     {
         try {
+            $this->logMsg("✅ Alert {$featureKey} has no pending items");
+
             $pendingItems = $this->getPendingItems($featureKey); // abstract
             if(empty($pendingItems)){
                 $this->logMsg("✅ Alert {$featureKey} has no pending items");
@@ -82,17 +84,20 @@ abstract class AlertCommandBase extends \Cake\Command\Command
 //                $pendingItems = [$pendingItems[0]];
 //            }
             foreach ($pendingItems as $item) {
-                $institutionId = (int) $item['institution_id'] ?? null;
-//                $this->logMsg(print_r([$sizeofPendingItems => $item], true));
-                if ($institutionId) {
-                    $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles, $institutionId);
-                    $this->contacts = $contacts;
+                if (property_exists($this, 'studentId') && $this->studentId) {
+                    $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->studentId);
                 } else {
-                    $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles);
+                    $institutionId = (int)$item['institution_id'] ?? null;
+//                $this->logMsg(print_r([$sizeofPendingItems => $item], true));
+                    if ($institutionId) {
+                        $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles, $institutionId);
+                        $this->contacts = $contacts;
+                    } else {
+                        $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles);
 
-                    $this->contacts = $contacts;
+                        $this->contacts = $contacts;
+                    }
                 }
-
                 if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
                     $this->logMsg("No contacts found for alert rule ID {$this->rule->id}. Skipping.");
                     return false;

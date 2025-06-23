@@ -27,6 +27,7 @@ class AlertRuleStudentAdmissionBehavior extends AlertRuleBehavior
             ],
         ],
         'placeholder' => [
+            '${admission_status}' => 'Admission Status',
             '${academic_period.name}' => 'Academic Period Name',
             '${start_date}' => 'Student Study Start Date',
             '${end_date}' => 'Student Study End Date',

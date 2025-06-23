@@ -471,6 +471,8 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function studentsAfterSave(Event $event, $student)
     {
+        Log::debug(__FUNCTION__ . '3');
+
         $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
         $statusList = $StudentStatuses->findCodeList();
         $Enrolled = $statusList['CURRENT'];
@@ -872,10 +874,18 @@ class StudentAdmissionTable extends ControllerActionTable
     // POCOR-9100 changed sending email proc
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
+        Log::debug(__FUNCTION__ . '1');
         if ($entity->isNew()) {
-            Log::debug(print_r(['new' => $entity], true));
-            if ($entity->has('action_type') && $entity->action_type == 'default') { // AngularJs logic
+            if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
+                $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
+                $triggeringStep = $WorkflowActions->getEventTriggeringStep('Institution.StudentAdmission', 'Workflow.onApprove');
 
+                if(!empty($triggeringStep) && $entity->status_id == $triggeringStep) {
+                    if ($this->save($entity)) {
+                        $this->addInstitutionStudent($entity);
+                    }
+                }
+            } else { // AngularJs logic
                 // auto approve admission and add student into the institution
                 $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
                 $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
@@ -918,20 +928,24 @@ class StudentAdmissionTable extends ControllerActionTable
                 }
             }
         }
-        Log::debug('calling ensure after save');
+        $this->sendStudentAdmissionAlert($entity);
         $this->ensureInstitutionStudentExists($entity);
+        Log::debug(__FUNCTION__ . '2');
+
+//        dd($entity);
     }
 
     /*
      * POCOR-9100 sending email about admission
      */
-    private function sendStudentAdmissionAlert($entity): void
+    private function sendStudentAdmissionAlert($entity)
     {
-        $user = $this->Auth->user();
-        if(!$user){
-            return;
+        if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
+            $userId = $entity->modified_user_id;
+        } else {
+            $userId = $entity->created_user_id;
         }
-        $userId = $user['id'];
+
         $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
         $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
         $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
@@ -956,7 +970,9 @@ class StudentAdmissionTable extends ControllerActionTable
                     ])
                     ->toArray();
 
-
+        Log::debug(print_r($activeRules,true));
+        Log::debug(print_r($entity,true));
+//        return;
         foreach ($activeRules as $rule) {
             if(!is_array($rule)){
                 $rule = $rule->toArray();
@@ -1430,7 +1446,7 @@ class StudentAdmissionTable extends ControllerActionTable
 //        Log::debug(print_r([__FUNCTION__ => $studentEntity], true));
         if ($studentEntity) {
             Log::info("InstitutionStudent created for student_id {$entity->student_id}");
-            $this->sendStudentAdmissionAlert($entity);
+
         } else {
             Log::warning("Failed to create InstitutionStudent for student_id {$entity->student_id}");
             if (!empty($entity->previous('status_id'))) {

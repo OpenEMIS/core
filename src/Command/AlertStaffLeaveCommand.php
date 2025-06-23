@@ -72,7 +72,7 @@ class AlertStaffLeaveCommand extends AlertCommandBase
             $institutionIds = $this->SecurityGroupUsers->getInstitutionsByUser($userId);
             $where['StaffLeave.institution_id IN'] = $institutionIds;
         }
-        $this->logMsg("Where: " . print_r($where, true));
+//        $this->logMsg("Where: " . print_r($where, true));
 
         return $this->StaffLeave->find()
             ->matching('StaffLeaveTypes')

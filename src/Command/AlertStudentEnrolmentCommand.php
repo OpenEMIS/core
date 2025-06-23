@@ -55,7 +55,7 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
         $where = [
             'StudentEnrolment.id' => $this->enrolmentId,
         ];
-        $this->logMsg("Where: " . print_r($where, true));
+//        $this->logMsg("Where: " . print_r($where, true));
         return $this->StudentEnrolment->find()
             ->contain(['Users',
                 'Statuses',
@@ -84,6 +84,7 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
         }
         try {
             $this->enrolment = $this->StudentEnrolment->get($this->enrolmentId);
+            $this->studentId = $this->enrolment->student_id;
         } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
             $io->error("Enrolment with ID {$this->enrolmentId} not found.");
             return false;
@@ -99,14 +100,6 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
             $io->out("No roles assigned to alert rule ID {$ruleId}. Skipping.");
             return false;
         }
-
-        $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->enrolment->student_id);
-
-        if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
-            $io->out("No contacts found for alert rule ID {$ruleId}. Skipping.");
-            return false;
-        }
-        $this->logMsg(print_r($this->contacts, true));
         return true;
     }
 
@@ -131,7 +124,7 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
             '${academic_period.name}' => $item['academic_period']['name'] ?? '',
             '${start_date}' => $item['start_date'] ?? '',
             '${end_date}' => $item['end_date'] ?? '',
-//            '${day_difference}' => (string)$dayDiff,
+            '${enrolment_status}' => $item['status']['name'] ?? '',
 
             '${student.name}' => $item['user']['name'] ?? '',
             '${student.openemis_no}' => $item['user']['openemis_no'] ?? '',
@@ -157,29 +150,6 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
         ];
     }
 
-    /**
-     *  Function to get the list of the workflow steps by a given workflow model's model and the workflow status code
-     *
-     *  @param string $model The name of the model e.g. Institution.InstitutionSurveys
-     *  @param string $code The code of the workflow status
-     *  @return array The list of workflow steps id
-     */
-//    protected function getApprovedStepIds()
-//    {
-//        $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
-//        $ids = $WorkflowModelsTable
-//            ->find('all')
-//            ->matching('Workflows.WorkflowSteps')
-//            ->where([
-//                $WorkflowModelsTable->aliasField('model') => 'Institution.StaffLeave',
-//                'WorkflowSteps.name' => 'Approved'
-//            ])
-//            ->distinct(['WorkflowSteps.id'])
-//            ->select(['id' => 'WorkflowSteps.id'])
-//            ->toArray();
-//        $distinctIds = array_column($ids, 'id');
-//        return array_unique($distinctIds);
-//    }
 
     public function getOptionParser(): ConsoleOptionParser
     {

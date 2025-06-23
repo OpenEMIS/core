@@ -58,7 +58,7 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         $where = [
             'StudentAdmission.id' => $this->admissionId,
         ];
-        $this->logMsg("Where: " . print_r($where, true));
+//        $this->logMsg("Where: " . print_r($where, true));
         return $this->StudentAdmission->find()
             ->contain(['Users',
                 'Statuses',
@@ -87,6 +87,8 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         }
         try {
             $this->admission = $this->StudentAdmission->get($this->admissionId);
+            $this->logMsg(print_r($this->admission, true));
+            $this->studentId = $this->admission->student_id;
         } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
             $io->error("Admission with ID {$this->admissionId} not found.");
             return false;
@@ -102,14 +104,6 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
             $io->out("No roles assigned to alert rule ID {$ruleId}. Skipping.");
             return false;
         }
-
-        $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->admission->student_id);
-
-        if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
-            $io->out("No contacts found for alert rule ID {$ruleId}. Skipping.");
-            return false;
-        }
-        $this->logMsg(print_r($this->contacts, true));
         return true;
     }
 
@@ -134,7 +128,7 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
             '${academic_period.name}' => $item['academic_period']['name'] ?? '',
             '${start_date}' => $item['start_date'] ?? '',
             '${end_date}' => $item['end_date'] ?? '',
-//            '${day_difference}' => (string)$dayDiff,
+            '${admission_status}' => $item['status']['name'] ?? '',
 
             '${student.name}' => $item['user']['name'] ?? '',
             '${student.openemis_no}' => $item['user']['openemis_no'] ?? '',
@@ -160,29 +154,7 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         ];
     }
 
-    /**
-     *  Function to get the list of the workflow steps by a given workflow model's model and the workflow status code
-     *
-     *  @param string $model The name of the model e.g. Institution.InstitutionSurveys
-     *  @param string $code The code of the workflow status
-     *  @return array The list of workflow steps id
-     */
-//    protected function getApprovedStepIds()
-//    {
-//        $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
-//        $ids = $WorkflowModelsTable
-//            ->find('all')
-//            ->matching('Workflows.WorkflowSteps')
-//            ->where([
-//                $WorkflowModelsTable->aliasField('model') => 'Institution.StaffLeave',
-//                'WorkflowSteps.name' => 'Approved'
-//            ])
-//            ->distinct(['WorkflowSteps.id'])
-//            ->select(['id' => 'WorkflowSteps.id'])
-//            ->toArray();
-//        $distinctIds = array_column($ids, 'id');
-//        return array_unique($distinctIds);
-//    }
+
 
     public function getOptionParser(): ConsoleOptionParser
     {
@@ -197,122 +169,5 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         return $parser;
     }
 
-    /*
- * POCOR-9100
- */
-//    private static function sendAlert($admission, $recipient_id): void
-//    {
-//        $school_name = $admission['institution']['name'];
-//        $student_name = $admission['user']['first_name'] . " " . $admission['user']['last_name'];
-//        $academic_year = $admission['academic_period']['start_year'];
-//        $grade_name = $admission['education_grade']['name'];
-//
-//        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-//        $key = "StudentAdmission";
-//
-//        $AlertsTable->triggerStudentAdmissionFeatureShell($key, $school_name, $student_name, $academic_year, $grade_name, $recipient_id);
-//    }
 
-//        Log::debug('Processing student admission alert...');
-//        $AlertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
-//        $AlertRule = $AlertRulesTable
-//            ->find('all')
-//            ->select([
-//                'id' => $AlertRulesTable->aliasField('id'),
-//                'threshold' => $AlertRulesTable->aliasField('threshold')
-//            ])
-//            ->where([
-//                $AlertRulesTable->aliasField('feature') => 'StudentAdmission',
-//                $AlertRulesTable->aliasField('enabled') => 1
-//            ])
-//            ->disableHydration()
-//            ->first();
-//
-//        if (empty($AlertRule)) {
-//            Log::debug('No enabled alert rule found for StudentAdmission.');
-//            return;
-//        }
-//
-//        $thresholdValue = json_decode($AlertRule['threshold'], true);
-//
-//        if (empty($thresholdValue) || $thresholdValue['workflow_steps'][0] != 1) {
-//            Log::debug('Alert threshold condition not met for StudentAdmission.');
-//            return;
-//        }
-//
-//        $AlertRolesTable = TableRegistry::getTableLocator()->get('Alert.AlertsRoles');
-//        $AlertRoles = $AlertRolesTable
-//            ->find('all')
-//            ->select(['security_role_id' => $AlertRolesTable->aliasField('security_role_id')])
-//            ->where([$AlertRolesTable->aliasField('alert_rule_id') => $AlertRule['id']])
-//            ->disableHydration()
-//            ->toArray();
-//
-//        if (empty($AlertRoles)) {
-//            Log::debug('No alert roles found for the alert rule.');
-//            return;
-//        }
-//
-//        $securityRoleIds = array_map(function ($role) {
-//            return $role['security_role_id'];
-//        }, $AlertRoles);
-//
-//        if (empty($securityRoleIds)) {
-//            Log::debug('No security role IDs mapped for alert rule.');
-//            return;
-//        }
-//
-//        if (!in_array(self::ROLE_GUARDIAN, $securityRoleIds) && !in_array(self::ROLE_STUDENT, $securityRoleIds)) {
-//            Log::debug('Neither guardian nor student roles are configured for alerts.');
-//            return;
-//        }
-//
-//        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
-//        $stepEntity = $WorkflowSteps->find()
-//            ->matching('Workflows.WorkflowModels')
-//            ->where([$WorkflowSteps->aliasField('id') => $entity->status_id])
-//            ->disableHydration()
-//            ->first();
-//
-//        if (empty($stepEntity)) {
-//            Log::debug('No matching workflow step found for admission status.');
-//            return;
-//        }
-//
-////        if ($stepEntity['name'] !== 'Approved') {
-//        if ($stepEntity['name'] !== $stepEntity['name']) {
-//            Log::debug('Workflow step is not approved. Current step: ' . $stepEntity['name']);
-//            return;
-//        }
-//        else {
-//            Log::debug('Workflow step is ' . $stepEntity['name']);
-//        }
-//
-//        $StudentAdmissionsTable = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
-//        $admission = $StudentAdmissionsTable
-//            ->find('all')
-//            ->contain(['Users', 'AcademicPeriods', 'Institutions', 'EducationGrades'])
-//            ->where([$StudentAdmissionsTable->aliasField('id') => $entity->id])
-//            ->first();
-//
-//        if (in_array(self::ROLE_GUARDIAN, $securityRoleIds)) {
-//            $StudentGuardians = TableRegistry::getTableLocator()->get('GuardianNav.StudentGuardians');
-//            $guardians = $StudentGuardians
-//                ->find('all')
-//                ->where([$StudentGuardians->aliasField('student_id') => $entity->student_id])
-//                ->disableHydration()
-//                ->toArray();
-//
-//            if (!empty($guardians)) {
-//                foreach ($guardians as $guardian) {
-//                    self::sendAlert($admission, $guardian['guardian_id']);
-//                }
-//            } else {
-//                Log::debug('No guardians found for student ID: ' . $entity->student_id);
-//            }
-//        }
-//
-//        if (in_array(self::ROLE_STUDENT, $securityRoleIds)) {
-//            self::sendAlert($admission, $entity->student_id);
-//        }
 }
