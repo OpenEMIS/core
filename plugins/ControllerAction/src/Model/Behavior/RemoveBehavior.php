@@ -259,6 +259,10 @@ class RemoveBehavior extends Behavior
 
                 $controller->set('data', $entity);
             }
+            else{  //POCOR-9202[START]
+                $model->Alert->error('general.notExists');
+                return $model->controller->redirect($extra['redirect']);
+            }//POCOR-9202[END]
             return $entity;
 
         } else if ($request->is('delete') || $forceDeleteRecord ) {

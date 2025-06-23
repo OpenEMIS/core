@@ -118,7 +118,8 @@ class ProgrammesTable extends ControllerActionTable
 		$this->fields['openemis_no']['visible'] = 'false';
 		$this->fields['institution_id']['type'] = 'hidden'; // POCOR-8980 start
 		$this->field('institution'); // POCOR-8980 end
-		$this->fields['academic_period_id']['sort'] = ['field' => 'AcademicPeriods.name'];
+		// $this->fields['academic_period_id']['sort'] = ['field' => 'AcademicPeriods.name'];
+		$this->fields['academic_period_id']['sort'] = ['field' => 'academic_period_id']; //POCOR-9170
 		$this->fields['registration_number']['visible'] = 'false'; //POCOR-8870
 
 		$this->setFieldOrder([
@@ -529,12 +530,16 @@ class ProgrammesTable extends ControllerActionTable
 		$LabelTable = TableRegistry::get('Labels');
 		if ($field == 'name') {
 			return __('Name');
-		}elseif ($field == 'registration_number') {
+		}elseif ($field == 'registration_number') { //POCOR-9125, POCOR-9048
 		   $codeName = $LabelTable->find()->where(['module_name' =>'Institution-> Students-> Academic-> Programme' , 'field_name' =>'Registration Number'])->first();
-		   if($codeName != null){
-			  $codeName =  $codeName->name;
-		   }
-		   return  __((string)$codeName);
+		   if(empty($codeName->name)){
+					$fieldName = $LabelTable->find()->where(['module_name' =>'Institution-> Students-> Academic-> Programme' , 'field' =>'registration_number'])->first();
+					$fieldName =  $fieldName->field_name;
+					return  __((string)$fieldName);
+			}else{
+				$codeName =  $codeName->name;
+				return  __((string)$codeName);
+		 	}
 		}else {
 			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 		}

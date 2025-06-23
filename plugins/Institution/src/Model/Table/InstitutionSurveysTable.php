@@ -210,16 +210,39 @@ class InstitutionSurveysTable extends ControllerActionTable
             foreach ($rules as $key => $rule) {
                 foreach ($rule as $supportFieldKey => $options) {
                     $supportQuestionOptions = json_decode($options);
-                    if (isset($newData[$supportFieldKey])) {
-                        $userSelectedOption = $newData[$supportFieldKey]['number_value'];
-                        if (!(in_array($userSelectedOption, $supportQuestionOptions)) && $newData[$key]['mandatory'] == 1) {
-                            $dataAliasKey = $newData[$key]['dataKey'];
-                            $data[$this->getAlias()]['custom_field_values'][$dataAliasKey]['mandatory'] = 0;
+                    // POCOR-9147 start
+                    if (!empty($supportQuestionOptions)) {
+                    // POCOR-9129 start
+                    if(!is_array($supportQuestionOptions)) {
+                        $supportQuestionOptions = [];
+                    }
+                    // POCOR-9129 end
+                        if (isset($newData[$supportFieldKey])) {
+                            $userSelectedOption = $newData[$supportFieldKey]['number_value'];
+
+                            // Replacing in_array() with isset() to check keys instead
+                            if (!isset($supportQuestionOptions[$userSelectedOption]) && $newData[$key]['mandatory'] == 1) {
+                                $dataAliasKey = $newData[$key]['dataKey'];
+                                $data[$this->getAlias()]['custom_field_values'][$dataAliasKey]['mandatory'] = 0;
+                            }
+                        }
+                    } else {
+                        // supportQuestionOptions is empty or missing
+                        $this->Alert->error(
+                            __('There is a missing question option configuration. Please contact the administrator to check the form rules.'),
+                            ['type' => 'string', 'reset' => true]
+                        );
+
+                        if (isset($event)) {
+                            $event->stopPropagation();
+                            return $this->controller->redirect($this->url('view'));
                         }
                     }
+                    // POCOR-9147 end
                 }
             }
         }
+        $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]); // POCOR-9105
     }
     //POCOR-7171:Start
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -620,7 +643,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                         $this->aliasField('SurveyFilterAreas.area_education_id IN') => -1,
                     ]
                 ])->distinct([$this->aliasField('survey_form_id'), $this->aliasField('academic_period_id')]);
-        } elseif ($firstVal == 1) {  //POCOR-9089 
+        } elseif ($firstVal == 1) {  //POCOR-9089
             $extra['auto_contain'] = false;
             $todayDate = date("Y-m-d");
             $query

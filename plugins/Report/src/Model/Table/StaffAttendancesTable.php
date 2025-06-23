@@ -301,7 +301,7 @@ class StaffAttendancesTable extends ControllerActionTable
             'key' => 'openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => ''
+            'label' => __('OpenEMIS ID')
         ];
 
         $newArray[] = [
