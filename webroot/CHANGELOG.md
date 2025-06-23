@@ -1,3 +1,6 @@
+### [4.29.1] - 2025-06-23
+- Bug Fixed: Institutions > Performance > Assessment > Report: Certain users are unable to download mark sheet & are being redirected to homepage instead when doing so.
+
 ### [4.29.0] - 2025-06-20
 - Implemented: Develop a change to rename registration number to candidate number
 - Bug Fixed: Administration>Profile>Institution: The placeholder populating the attendance data stops at the end of the calendar year
