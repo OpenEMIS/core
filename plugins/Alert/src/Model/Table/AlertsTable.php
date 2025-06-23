@@ -373,7 +373,7 @@ class AlertsTable extends ControllerActionTable
         $oneTimeProcesses = [
             'AlertAttendance',
             'AlertStudentAdmission',
-            'AlertStudentEnrollment'
+            'AlertStudentEnrolment'
         ];
 
         if (in_array($entity->process_name, $oneTimeProcesses, true)) {
