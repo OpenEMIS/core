@@ -15,9 +15,17 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Database\Expression\QueryExpression;
 
+/**
+ * Data processing for generating 
+ * POCOR-9075
+ * Excel reports of student results for assessment items.
+ *
+ * This includes handling marks, weights, allowed subjects, and 
+ * internal tracking for calculations during report generation.
+ */
+
 class AssessmentsTable extends AppTable
 {
-       // For reports
     private $assessmentItemResults = [];
     private $lastQueriedClass = null;
     private $allowedSubjects = [];
@@ -55,6 +63,20 @@ class AssessmentsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
     
+    
+
+   public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+
+        return $validator
+            ->requirePresence('area_level_id')
+            ->requirePresence('area_education_id')
+            ->requirePresence('institution_id')
+            ->requirePresence('education_grade_id');
+    }
+        
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
         $requestData = json_decode($settings['process']['params']);
@@ -67,7 +89,6 @@ class AssessmentsTable extends AppTable
         $academicTerm = $requestData->academic_term ?? null;
 
         $StudentStatuses = $this->StudentStatuses;
-        $institutionIds = [];
         $conditions = [];
         $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         // Area filter
@@ -81,22 +102,8 @@ class AssessmentsTable extends AppTable
         }
 
         // Institution filter or fallback to accessible institutions
-        if (!empty($institutionId) && $institutionId > 0) {
+        if (!empty($institutionId) && $institutionId > 1) {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
-        } else {
-            if (!$superAdmin && !empty($userId)) {
-                $institutionObj = $this->Institutions->find('byAccess', ['userId' => $userId])->toArray();
-                if (!empty($institutionObj)) {
-                    foreach ($institutionObj as $value) {
-                        $institutionIds[] = $value->id;
-                    }
-                    $conditions[$this->aliasField('institution_id IN')] = $institutionIds;
-                } else {
-                    // If no accessible institutions, return empty
-                    $query->where(['1 = 0']);
-                    return;
-                }
-            }
         }
 
         // Exclude withdrawn/transferred students
@@ -107,7 +114,6 @@ class AssessmentsTable extends AppTable
                 'InstitutionClasses.Institutions',
                 'AcademicPeriods',
                 'Users.BirthplaceAreas',
-                'Users.Nationalities.NationalitiesLookUp'
             ])
             ->innerJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
                 'InstitutionClassGrades.institution_class_id = ' . $this->aliasField('institution_class_id')
@@ -115,16 +121,23 @@ class AssessmentsTable extends AppTable
             ->leftJoin(['StudentStatuses' => 'student_statuses'], [
                 'StudentStatuses.id = ' . $this->aliasField('student_status_id')
             ])
+             ->leftJoin(['UserNationalities' => 'user_nationalities'], [
+                'UserNationalities.security_user_id = ' . $this->aliasField('student_id'),
+            ])
+            ->leftJoin(['Nationalities' => 'nationalities'], [
+                'Nationalities.id = UserNationalities.nationality_id',
+            ])
             ->select([
                 'code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
                 'institution_id' => 'Institutions.id',
                 'openemis_number' => 'Users.openemis_no',
                 'birth_place_area' => 'BirthplaceAreas.name',
-                'dob' => 'Users.date_of_birth',
+                'date_of_birth' => 'Users.date_of_birth',
                 'class_name' => 'InstitutionClasses.name',
                 'academic_period_name' => 'AcademicPeriods.name',
                 'academic_period_id' => 'AcademicPeriods.id',
+                'nationality_name' => 'Nationalities.name',
                 'user_name' => $query->func()->concat([
                                 'Users.first_name' => 'literal',
                                 ' ',
@@ -134,11 +147,21 @@ class AssessmentsTable extends AppTable
                                 ' ',
                                 'Users.last_name' => 'literal',
                             ]),
-                'student_id' => 'Assessments.student_id',
+                'student_id' => $this->aliasField('student_id'),
+                'education_grade_id' => $this->aliasField('education_grade_id'),
                 'institution_class_id' => 'InstitutionClasses.id',
 
             ])
             ->where($conditions);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                if ($row['date_of_birth'] instanceof \Cake\I18n\FrozenDate) {
+                    $row['date_of_birth'] = $row['date_of_birth']->format('Y-m-d');
+                }
+                return $row;
+            });
+        });
+
            
     }
 
@@ -147,28 +170,8 @@ class AssessmentsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id ?? null;
         $academicPeriodId = $requestData->academic_period_id;
-        $educationGradeId = $requestData->education_grade_id;
         // Dynamically fetch assessment_id
-        $AssessmentsTable = TableRegistry::getTableLocator()->get('Assessment.Assessments');
-        $assessment = $AssessmentsTable->find()
-            ->where([
-                'academic_period_id IS' => $academicPeriodId,
-                'education_grade_id IS' => $educationGradeId // Optional: only active assessments
-            ])
-            ->orderDesc('id')
-            ->first();
-
-        if (!$assessment) {
-            // Exit or throw an exception gracefully
-            return;
-        }
-
-        $assessmentId = $assessment->id;
-
-        $AssessmentPeriodsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
-        $AssessmentItemsGradingTypesTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
-        $AssessmentItemsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
-
+        
         $fields = new ArrayObject();
         $fields[] = [
             'key' => 'AcademicPeriods.name',
@@ -211,10 +214,10 @@ class AssessmentsTable extends AppTable
         ];
 
         $fields[] = [
-            'key' => 'UserNationalities.nationality_id',
-            'field' => 'nationality',
-            'type' => 'nationality',
-            'label' => '',
+            'key' => 'nationality_name',
+            'field' => 'nationality_name',
+            'type' => 'string',
+            'label' => __('Nationality'),
         ];
 
         $fields[] = [
@@ -226,54 +229,101 @@ class AssessmentsTable extends AppTable
 
         $fields[] = [
             'key' => 'Users.date_of_birth',
-            'field' => 'dob',
-            'type' => 'date',
-            'label' => '',
+            'field' => 'date_of_birth',
+            'type' => 'string',
+            'label' => 'Date of Birth',
         ];
+        
+        $institutionStudentsTable = TableRegistry::getTableLocator()->get('InstitutionClassStudents');
+        $AssessmentsTable = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $AssessmentPeriodsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
+        $AssessmentItemsGradingTypesTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
+        $AssessmentItemsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
 
 
 
-        $assessmentPeriods = $AssessmentPeriodsTable
-            ->find()
-            ->where([$AssessmentPeriodsTable->aliasField('assessment_id IS') => $assessmentId])
-            ->order([$AssessmentPeriodsTable->aliasField('academic_term'), $AssessmentPeriodsTable->aliasField('start_date')])
-            ->toArray();
+        // Build the base assessment query
+        $assessmentsQuery = $AssessmentsTable->find()->where(['academic_period_id' => $academicPeriodId]);
 
-        $assessmentGradeTypes = $AssessmentItemsGradingTypesTable->getAssessmentGradeTypes($assessmentId);
-        $assessmentSubjects = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems')->getSubjects($assessmentId);
-        foreach ($assessmentSubjects as $subject) {
-            foreach ($assessmentPeriods as $period) {
-                $subjectId = $subject['subject_id'];
-                $assessmentPeriodId = $period->id;
-                $resultType = $assessmentGradeTypes[$subjectId][$assessmentPeriodId];
+        // Case 1: Specific grade
+        if ($requestData->education_grade_id != 0) {
+            $assessmentsQuery->where(['education_grade_id' => $requestData->education_grade_id]);
 
-                $label = __($subject['education_subject_name']).' - '.$period->name;
-                if ($resultType == 'MARKS') {
-                    $label = $label.' ('.$period->weight.') ';
+        // Case 2: All grades based on student enrollment
+        } else {
+            $gradeIds = $institutionStudentsTable->find()
+                ->distinct()
+                ->select(['education_grade_id'])
+                ->where(['academic_period_id' => $academicPeriodId])
+                ->enableHydration(false) // return as array
+                ->all()
+                ->extract('education_grade_id')
+                ->toArray();
+
+            if (!empty($gradeIds)) {
+                $assessmentsQuery->where(['education_grade_id IN' => $gradeIds]);
+            } else {
+                return; // no grades found for the academic period
+            }
+        }
+
+        // Fetch all assessments
+        $assessments = $assessmentsQuery->orderDesc('id')->all();
+
+        if ($assessments->isEmpty()) {
+            return;
+        }
+
+        // Loop through assessments
+        foreach ($assessments as $assessment) {
+            $assessmentId = $assessment->id;
+
+            $assessmentPeriods = $AssessmentPeriodsTable
+                ->find()
+                ->where([$AssessmentPeriodsTable->aliasField('assessment_id') => $assessmentId])
+                ->order([
+                    $AssessmentPeriodsTable->aliasField('academic_term'),
+                    $AssessmentPeriodsTable->aliasField('start_date')
+                ])
+                ->toArray();
+
+            $assessmentGradeTypes = $AssessmentItemsGradingTypesTable->getAssessmentGradeTypes($assessmentId);
+            $assessmentSubjects = $AssessmentItemsTable->getSubjects($assessmentId);
+
+            foreach ($assessmentSubjects as $subject) {
+                foreach ($assessmentPeriods as $period) {
+                    $subjectId = $subject['subject_id'];
+                    $assessmentPeriodId = $period->id;
+                    $resultType = $assessmentGradeTypes[$subjectId][$assessmentPeriodId] ?? 'MARKS';
+
+                    $label = __($subject['education_subject_name']) . ' - ' . $period->name;
+                    if ($resultType == 'MARKS') {
+                        $label .= ' (' . $period->weight . ') ';
+                    }
+
+                    $fields[] = [
+                        'key' => $subject['assessment_item_id'],
+                        'field' => 'assessment_item',
+                        'type' => 'subject',
+                        'label' => $label,
+                        'institutionId' => $institutionId,
+                        'assessmentId' => $assessmentId,
+                        'subjectId' => $subjectId,
+                        'assessmentPeriodWeight' => $period->weight,
+                        'academicPeriodId' => $academicPeriodId,
+                        'assessmentPeriodId' => $assessmentPeriodId,
+                        'resultType' => $resultType
+                    ];
                 }
-                $fields[] = [
-                    'key' => $subject['assessment_item_id'],
-                    'field' => 'assessment_item',
-                    'type' => 'subject',
-                    'label' => $label,
-                    'institutionId' => $institutionId,
-                    'assessmentId' => $assessmentId,
-                    'subjectId' => $subjectId,
-                    'assessmentPeriodWeight' => $period->weight,
-                    'academicPeriodId' => $academicPeriodId,
-                    'assessmentPeriodId' => $assessmentPeriodId,
-                    'resultType' => $resultType
 
+                $fields[] = [
+                    'key' => 'assessment_period_weighted_mark',
+                    'field' => 'assessment_item',
+                    'type' => 'assessment_period_weighted_mark',
+                    'label' => __('Weighted Marks') . ' (' . $subject['subject_weight'] . ') ',
+                    'subjectWeight' => $subject['subject_weight']
                 ];
             }
-
-            $fields[] = [
-                'key' => 'assessment_period_weighted_mark',
-                'field' => 'assessment_item',
-                'type' => 'assessment_period_weighted_mark',
-                'label' => __('Weighted Marks').' ('.$subject['subject_weight'].') ',
-                'subjectWeight' => $subject['subject_weight']
-            ];
         }
 
         $fields[] = [
@@ -293,66 +343,71 @@ class AssessmentsTable extends AppTable
         $originalField->exchangeArray($fields);
     }
 
-    public function onExcelRenderNationality(Event $event, Entity $entity, array $attr)
-    {
-        if ($entity->user->nationalities) {
-            $nationalities = $entity->user->nationalities;
-            $allNationalities = '';
-            foreach ($nationalities as $nationality) {
-                $allNationalities .= $nationality->nationalities_look_up->name . ', ';
-            }
-            return rtrim($allNationalities, ', ');
-        } else {
-            return '';
-        }
-    }
-
     public function onExcelRenderSubject(Event $event, Entity $entity, array $attr)
     {
+        $subjectId = $attr['subjectId'];
+        $assessmentPeriodId = $attr['assessmentPeriodId'];
+        $resultType = $attr['resultType'];
+        $assessmentId = $attr['assessmentId'];
         $studentId = $entity->student_id;
         $classId = $entity->institution_class_id;
+       // $institutionId = $attr['institutionId'] ?? null;
         $institutionId = $entity->institution_id ?? null;
         $academicPeriodId = $entity->academic_period_id ?? null;
-
-        if (!array_key_exists($studentId, $this->assessmentItemResults)) {
-            $this->assessmentItemResults[$studentId] = [];
+        $educationGradeId = $entity->education_grade_id ?? null;
+        $SubjectStudents = $this->SubjectStudents;
+        $AssessmentsTable = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $AssessmentItemResultsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
+        if (!empty($assessmentId)) {
+            $assessmentSubjects = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems')->getSubjects($assessmentId);
+        } else {
+            $assessmentSubjects = [];
         }
-
+         $options = [
+            'institution_id' => $institutionId,
+            'academic_period_id' => $academicPeriodId,
+            'institution_class_id' => $classId,
+            'assessment_id' => $assessmentId,
+            'education_grade_id' => $educationGradeId,
+        ];
+      
+        $results = $SubjectStudents->find('StudentResults', $options)
+            ->toArray();
+        $student_results = [];
+        $student_results = [];
+        $this->i = 1;
+        foreach ($results as $result){
+            $arresult = $result->toArray();
+            $arresult['i'] = $this->i;
+            $this->i = $this->i + 1;
+            $student_id = $result['student_id'];
+            $education_subject_id = $result['education_subject_id'];
+            $assessment_period_id = $result['assessment_period_id'];
+            if(!isset($student_results[$student_id])){
+                $student_results[$student_id] = [];
+            }
+            if(!isset($student_results[$student_id][$education_subject_id])){
+                $student_results[$student_id][$education_subject_id] = [];
+            }
+            if(!isset($student_results[$student_id][$education_subject_id][$assessment_period_id])){
+                $student_results[$student_id][$education_subject_id][$assessment_period_id] = $arresult;
+            } else {
+//                Log::debug('arresult');
+//                Log::debug($arresult);
+            }
+        }
+        $this->results = $student_results;
+        $this->assessmentItemResults = $student_results;
+        $this->i = 1;
+        if (!array_key_exists($studentId, $this->assessmentItemResults)) {
+                $this->assessmentItemResults[$studentId] = [];
+        }
         if (!array_key_exists($subjectId, $this->assessmentItemResults[$studentId])) {
-            $AssessmentItemResultsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
-
-            $studentResults = $AssessmentItemResultsTable->getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId, $classId);
+                $studentResults = $AssessmentItemResultsTable->getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId, $classId);
             if (isset($studentResults[$studentId][$subjectId])) {
                 $this->assessmentItemResults[$studentId][$subjectId] = $studentResults[$studentId][$subjectId];
             }
         }
-        /*$allSubjectsPermission = $this->allSubjectsPermission;
-        $mySubjectsPermission = $this->mySubjectsPermission;
-        $staffId = $this->staffId;
-        $printedResult = '';
-        $renderResult = true;
-        if (!$allSubjectsPermission && !$mySubjectsPermission) {
-            $printedResult = __('No Access');
-            $renderResult = false;
-        } elseif (!$allSubjectsPermission && $mySubjectsPermission) {
-            $classId = $this->institution_class_id;
-
-            if ($this->lastQueriedClass != $classId) {
-                $AssessmentItemsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
-                $allowedSubjects = $AssessmentItemsTable
-                ->find('list', [
-                    'keyField' => 'assessment_item_id',
-                    'valueField' => 'subject_id'
-                ])
-                ->find('staffSubjects', ['class_id' => $classId, 'staff_id' => $staffId])
-                ->select(['assessment_item_id' => $AssessmentItemsTable->aliasField('id'), 'subject_id' => $AssessmentItemsTable->aliasField('education_subject_id')])
-                ->where([$AssessmentItemsTable->aliasField('assessment_id') => $assessmentId])
-                ->enableHydration(false)
-                ->toArray();
-                $this->allowedSubjects = $allowedSubjects;
-                $this->lastQueriedClass = $classId;
-            }
-       // } */
         $renderResult = true;
         if ($renderResult) {
             if (isset($this->assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId])) {
@@ -423,5 +478,19 @@ class AssessmentsTable extends AppTable
         }
         return ' '.$totalMark;
     }
+
+    /*public function onExcelRenderNationality(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->user->nationalities) {
+            $nationalities = $entity->user->nationalities;
+            $allNationalities = '';
+            foreach ($nationalities as $nationality) {
+                $allNationalities .= $nationality->nationalities_look_up->name . ', ';
+            }
+            return rtrim($allNationalities, ', ');
+        } else {
+            return '';
+        }
+    }*/
 
 }
