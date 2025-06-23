@@ -114,9 +114,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
-        $this->field('date', ['visible' => false]);
+        $this->field('date', ['visible' => true]);
         $this->field('comment', ['visible' => false]);
-        $this->setFieldOrder(['special_need_type_id', 'special_need_difficulty_id','assessor_id']);  //POCOR-6873
+        $this->field('assessor_id', ['visible' => false]); //POCOR-9122
+        $this->setFieldOrder(['date','special_need_type_id', "special_need_difficulty_id"]); //POCOR-9122
 
 
         // Start POCOR-5188
@@ -405,8 +406,8 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->controller->autoRender = false;
         $this->ControllerAction->autoRender = false;
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->getQuery()['term'];
-            // $term = str_replace(' ', '%', $term);
+            $term = $this->request->getQuery('term'); // POCOR-9061
+            $term = str_replace(' ', '%', $term); // POCOR-9061
             $UserIdentitiesTable = TableRegistry::get('User.Identities');
 
             $query = $this->Assessor
@@ -432,6 +433,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 ->limit(100);
 
             $term = trim($term);
+
             if (!empty($term)) {
                 $query = $this->addSearchConditions($query, ['alias' => 'Assessor', 'searchTerm' => $term, 'OR' => ['`Identities`.number LIKE ' => $term . '%']]);
             }
