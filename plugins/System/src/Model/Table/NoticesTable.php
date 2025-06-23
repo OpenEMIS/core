@@ -80,23 +80,69 @@ class NoticesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->Auth->user('id');
-        $isSuperAdmin = $this->Auth->user('super_admin'); // true/false
-        $readStatus = $this->request->getQuery('notice_status'); // '1', '0', or null
+        $isSuperAdmin = $this->Auth->user('super_admin');
+        $readStatus = $this->request->getQuery('notice_status');
 
-        // Non-superadmin users: filter by assigned notice IDs
         if (!$isSuperAdmin) {
             $usersGroup = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
-            $assignedNoticeIdsQuery = $usersGroup->find()
-                ->select(['notice_id' => 'NoticeRoles.notice_id'])
-                ->innerJoin(
-                    ['NoticeRoles' => 'notice_roles'],
-                    ['SecurityGroupUsers.security_role_id = NoticeRoles.security_role_id']
-                )
-                ->where(['SecurityGroupUsers.security_user_id' => $userId])
-                ->enableHydration(false);
 
+            // Step 1: Get user's roles
+            $userRoleIdsQuery = $usersGroup->find()
+                ->select(['security_role_id'])
+                ->where(['security_user_id' => $userId])
+                ->enableHydration(false);
+            $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
+
+                $havePermissionToView = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
+                        ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                            [
+                                'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+                            ]
+                        ])
+                        ->where([
+                            'SecurityFunctions.controller' => 'Systems',
+                            'SecurityFunctions.name' => 'Notice Message',
+                            'SecurityRoleFunctions.security_role_id IN'=> $userRoleIds,
+                            'SecurityRoleFunctions._view' => 1,
+                        ])
+                        ->toArray();
+                if (empty($havePermissionToView)) {
+                    // no permission to view any notice
+                    return ;
+                }
+
+            // Step 2: If user has no roles, redirect as unauthorized
+            /*if (empty($userRoleIds)) {
+                
+                $this->Alert->error(__('You are not authorized to access this page'), [
+                    'type' => 'string',
+                    'reset' => true
+                ]);
+                $event->stopPropagation();
+                return $this->controller->redirect(['plugin'=>null 'controller' => 'Dashboard', 'action' => 'null']);
+            }*/
+
+            // Step 3: Get notice IDs assigned to their roles
+            $noticeRoles = TableRegistry::getTableLocator()->get('Alert.NoticeRoles');
+            $assignedNoticeIdsQuery = $noticeRoles->find()
+                ->select(['notice_id'])
+                ->where(['security_role_id IN' => $userRoleIds])
+                ->enableHydration(false);
             $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
 
+            // Step 4: If user has roles but no assigned notices
+            if (empty($assignedNoticeIds)) {
+                $query->where(['1 = 0']);
+                $this->Alert->info(__('There are no records.'), [
+                    'type' => 'string',
+                    'reset' => true
+                ]);
+                $event->stopPropagation();
+              
+                return false;
+            }
+
+            // Step 5: Filter by assigned notices
             $query->where([
                 $this->aliasField('id IN') => $assignedNoticeIds,
                 $this->aliasField('status') => 1
@@ -105,24 +151,24 @@ class NoticesTable extends ControllerActionTable
                 ['SecurityUserNotices' => 'security_user_notices'],
                 [
                     'SecurityUserNotices.notice_id = Notices.id',
-                    'SecurityUserNotices.security_user_id' => $userId
+                    'SecurityUserNotices.security_user_id IS' => $userId
                 ]
             );
         }
 
-        // Apply read/unread filter ONLY if user is not superadmin
+        // Step 6: Read/unread filters
         if (!$isSuperAdmin) {
             if ($readStatus === '1') {
-                $query->where(['SecurityUserNotices.id IS NOT' => null]); // Read
+                $query->where(['SecurityUserNotices.id IS NOT' => null]);
             } elseif ($readStatus === '0') {
-                $query->where(['SecurityUserNotices.id IS' => null]); // Unread
+                $query->where(['SecurityUserNotices.id IS' => null]);
             }
-        }else{
+        } else {
             if ($readStatus === '0') {
-                $query->where(['1 = 0']); // if user is superadmin, no unread message for user.
+                $query->where(['1 = 0']);
                 return;
             } else {
-                $query->where([$this->aliasField('status') => 1]); 
+                $query->where([$this->aliasField('status') => 1]);
             }
         }
     }
@@ -159,24 +205,27 @@ class NoticesTable extends ControllerActionTable
     {
         $noticeId = $entity->id;
         $loginUserId = $this->Auth->user()['id'];
+        $isSuperAdmin = $this->Auth->user('super_admin');
+        if(!$isSuperAdmin){
 
-        $userNoticesTable = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
-        $exists = $userNoticesTable->find()
-            ->where([
-                'security_user_id IS' => $loginUserId,
-                'notice_id IS' => $noticeId
-            ]);
+            $userNoticesTable = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
+            $exists = $userNoticesTable->find()
+                ->where([
+                    'security_user_id IS' => $loginUserId,
+                    'notice_id IS' => $noticeId
+                ]);
 
-        $record = $exists->first();
-       
-        if (!$record) {
-            // Create new record
-            $userNotice = $userNoticesTable->newEntity([
-                'security_user_id' => $loginUserId,
-                'notice_id' => $noticeId
-            ]);
+            $record = $exists->first();
+           
+            if (!$record) {
+                // Create new record
+                $userNotice = $userNoticesTable->newEntity([
+                    'security_user_id' => $loginUserId,
+                    'notice_id' => $noticeId
+                ]);
 
-            $userNoticesTable->save($userNotice);
+                $userNoticesTable->save($userNotice);
+            }
         }
     }
 

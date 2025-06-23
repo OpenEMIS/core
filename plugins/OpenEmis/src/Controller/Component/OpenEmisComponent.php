@@ -166,61 +166,88 @@ class OpenEmisComponent extends Component
 
     //POCOR-7210
     private function SystemNotices($userId = null)
-{
-    $userId  = $this->controller->Auth->user('id');
-    $isAdmin = $this->controller->AccessControl->isAdmin();
+    {
+        $userId  = $this->controller->Auth->user('id');
+        $isAdmin = $this->controller->AccessControl->isAdmin();
+        if(!$isAdmin){
+            $usersGroup   = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $userNotices  = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
 
-    $usersGroup   = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
-    $noticeRoles  = TableRegistry::getTableLocator()->get('Alert.NoticeRoles');
-    $userNotices  = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
-    $Notices  = TableRegistry::getTableLocator()->get('Alert.Notices');
+            // 1. Get user role IDs
+            $userRoleIdsQuery = $usersGroup->find()
+                ->select(['security_role_id'])
+                ->where(['security_user_id' => $userId])
+                ->enableHydration(false);
+            $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
 
-    // 1. Get notice_ids based on user’s role
-    $assignedNoticeIdsQuery = $usersGroup->find()
-        ->select(['notice_id' => 'NoticeRoles.notice_id'])
-        ->innerJoin(
-            ['NoticeRoles' => 'notice_roles'],
-            ['SecurityGroupUsers.security_role_id = NoticeRoles.security_role_id']
-        )
-        ->innerJoin(
-            ['Notices' => 'notices'],
-            ['Notices.id = NoticeRoles.notice_id']
-        )
-        ->where(['SecurityGroupUsers.security_user_id IS' => $userId, 'Notices.status' => 1])
-        ->enableHydration(false);
+            // 2. Check permission to view notices
+            $havePermissionToView = TableRegistry::getTableLocator()
+                ->get('Security.SecurityRoleFunctions')
+                ->find()
+                ->leftJoin(
+                    ['SecurityFunctions' => 'security_functions'],
+                    ['SecurityFunctions.id = SecurityRoleFunctions.security_function_id']
+                )
+                ->where([
+                    'SecurityFunctions.controller' => 'Systems',
+                    'SecurityFunctions.name' => 'Notice Message',
+                    'SecurityRoleFunctions.security_role_id IN' => $userRoleIds,
+                    'SecurityRoleFunctions._view' => 1
+                ])
+                ->toArray();
 
-    $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
+            if (empty($havePermissionToView)) {
+                // User has no permission to view notices → no red dot
+                return true;
+            }
 
-    // 2. Get notices the user has already seen
-    $seenNoticeIds = [];
-    if (!empty($assignedNoticeIds)) {
-        $seenNoticesQuery = $userNotices->find()
-            ->select(['notice_id'])
-            ->where([
-                'SecurityUserNotices.security_user_id IS' => $userId,
-                'SecurityUserNotices.notice_id IN' => $assignedNoticeIds
-            ])
-            ->enableHydration(false);
+            // 3. Get notice IDs assigned to user's roles
+            $assignedNoticeIdsQuery = $usersGroup->find()
+                ->select(['notice_id' => 'NoticeRoles.notice_id'])
+                ->innerJoin(
+                    ['NoticeRoles' => 'notice_roles'],
+                    ['SecurityGroupUsers.security_role_id = NoticeRoles.security_role_id']
+                )
+                ->innerJoin(
+                    ['Notices' => 'notices'],
+                    ['Notices.id = NoticeRoles.notice_id']
+                )
+                ->where([
+                    'SecurityGroupUsers.security_user_id IS' => $userId,
+                    'Notices.status' => 1
+                ])
+                ->enableHydration(false);
 
-        $seenNoticeIds = array_column($seenNoticesQuery->toArray(), 'notice_id');
+            $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
+
+            // 4. Admins always return true (no red dot)
+            if ($isAdmin) {
+                return true;
+            }
+
+            // 5. If no assigned notices, return true (no red dot)
+            if (empty($assignedNoticeIds)) {
+                return true;
+            }
+
+            // 6. Get seen notices
+            $seenNoticesQuery = $userNotices->find()
+                ->select(['notice_id'])
+                ->where([
+                    'SecurityUserNotices.security_user_id IS' => $userId,
+                    'SecurityUserNotices.notice_id IN' => $assignedNoticeIds
+                ])
+                ->enableHydration(false);
+
+            $seenNoticeIds = array_column($seenNoticesQuery->toArray(), 'notice_id');
+
+            // 7. Return true if all assigned notices are seen (no red dot), false if any unseen
+            $unseen = array_diff($assignedNoticeIds, $seenNoticeIds);
+            return empty($unseen);
+        }else{
+            return true;
+        }
     }
-
-    // 3. Determine the notice flag based on logic
-    if ($isAdmin) {
-        $SystemNotices = true;
-    } elseif (!empty($assignedNoticeIds) && empty($seenNoticeIds)) {
-        $SystemNotices = false;
-    } elseif (!empty($assignedNoticeIds) && !empty($seenNoticeIds)) {
-        // Only true if all assigned notices are seen
-        $unseen = array_diff($assignedNoticeIds, $seenNoticeIds);
-        $SystemNotices = empty($unseen);
-    } else {
-        $SystemNotices = false;
-    }
-
-    return $SystemNotices;
-}
-
 
     
 }
