@@ -20,7 +20,6 @@ class AlertSystemUpdatesCommand extends AlertCommandBase
     {
         $this->AlertLogs->insertAlertLog($method, $feature, $recipient, $subject, $message);
         $this->logMsg("✅ Alert logged via {$method} to {$recipient}. Message: {$message}");
-        usleep(500000); // 500,000 microseconds = 0.5 seconds
     }
 
     protected function getPendingItems(string $featureKey): array

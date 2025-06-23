@@ -27,13 +27,22 @@ trait AlertProcessingTrait
 
             $subject = str_replace(array_keys($replacements), array_values($replacements), $rule['subject']);
             $message = str_replace(array_keys($replacements), array_values($replacements), $rule['message']);
+            $methods = array_map('trim', explode(',', strtolower($rule['method'])));
 
-            foreach ($contacts['email'] ?? [] as $email) {
-                $this->logAlert('email', $rule['feature'], $email, $subject, $message);
+// Log emails if 'email' method is specified
+            if (in_array('email', $methods, true)) {
+                foreach ($contacts['email'] ?? [] as $email) {
+                    $this->logAlert('email', $rule['feature'], $email, $subject, $message);
+                    usleep(500000); // 500,000 microseconds = 0.5 seconds
+                }
             }
 
-            foreach ($contacts['phone'] ?? [] as $phone) {
-                $this->logAlert('sms', $rule['feature'], $phone, $subject, $message);
+// Log SMS if 'sms' method is specified
+            if (in_array('sms', $methods, true)) {
+                foreach ($contacts['phone'] ?? [] as $phone) {
+                    $this->logAlert('sms', $rule['feature'], $phone, $subject, $message);
+                    usleep(500000); // 500,000 microseconds = 0.5 seconds
+                }
             }
         }
     }
