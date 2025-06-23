@@ -382,18 +382,16 @@ class StudentEnrolmentTable extends ControllerActionTable
             $newEntity = $Students->newEntity($incomingStudent);
             $student = $Students->save($newEntity);
         }
-        if($student){
-            $this->sendStudentEnrolmentAlert($entity);
-        }
+
     }
 
     private function sendStudentEnrolmentAlert($entity): void
     {
-        $user = $this->Auth->user();
-        if(!$user){
-            return;
+        if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
+            $userId = $entity->modified_user_id;
+        } else {
+            $userId = $entity->created_user_id;
         }
-        $userId = $user['id'];
         $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
         $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
         $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
@@ -424,7 +422,6 @@ class StudentEnrolmentTable extends ControllerActionTable
                 $rule = $rule->toArray();
             }
             DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['enrolment_id' => $entity->id]);
-
         }
 
     }
@@ -511,7 +508,6 @@ class StudentEnrolmentTable extends ControllerActionTable
             }
 
         } else { // edit
-
             // to cater logic if during undo promoted / graduate (without immediate enrolled record), there is still pending admission / transfer
             if ($student->getDirty('student_status_id')) {
                 $oldStatus = $student->getOriginal('student_status_id');
@@ -877,6 +873,7 @@ class StudentEnrolmentTable extends ControllerActionTable
                 }
             }
         }
+        $this->sendStudentEnrolmentAlert($entity);
     }
 
     public function findWorkbench(Query $query, array $options)

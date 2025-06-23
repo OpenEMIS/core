@@ -562,11 +562,15 @@ class AlertRulesTable extends ControllerActionTable
 
     private function assignToAllRoles(array $attr): array
     {
-        $roles = $this->getVisibleSecurityRoles();
+        $roleOptions = $this->getVisibleSecurityRoles();
+
+        $filteredRoles = array_filter($roleOptions, function ($roleName) {
+            return !in_array($roleName, ['Guardian', 'Student'], true);
+        });
 
         $translatedRoles = array_map(function ($roleName) {
             return __($roleName);
-        }, $roles);
+        }, $filteredRoles);
 
         $attr['type'] = 'chosenSelect';
         $attr['options'] = $translatedRoles;
