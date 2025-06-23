@@ -81,24 +81,33 @@ class SendingAlertCommand extends Command
     {
         $io->out('Subject: ' . $log->subject);
         $io->out('Message: ' . $log->message);
+
         $emailArray = explode(', ', $log->destination);
         $sendTo = [];
 
         foreach ($emailArray as $item) {
             if (strpos($item, '<') !== false) {
                 [$name, $email] = explode('<', $item);
-                $sendTo[trim(str_replace('>', '', $email))] = trim($name);
+                $email = trim(str_replace('>', '', $email));
+                $name = trim($name);
+
+                if (str_ends_with($email, '.comz')) {
+                    $io->out("🛑 Skipped fake email: $email ($name)");
+                    continue;
+                }
+
+                $sendTo[$email] = $name;
             }
         }
 
-//        $emailObj = new Email('openemis');
-//        $emailObj->setTo($sendTo)
-//            ->setSubject($log->subject)
-//            ->send($log->message);
+        if (!empty($sendTo)) {
+            $emailObj = new Email('openemis');
+            $emailObj->setTo($sendTo)
+                ->setSubject($log->subject)
+                ->send($log->message);
 
-        $io->out('Email sent to: ' . implode(', ', array_keys($sendTo)));
-        $io->out('Subject: ' . $log->subject);
-        $io->out('Message: ' . $log->message);
+            $io->out('📧 Email sent to: ' . implode(', ', array_keys($sendTo)));
+        }
     }
 
     private function sendSms($log, ConsoleIo $io): void
@@ -108,9 +117,12 @@ class SendingAlertCommand extends Command
         $phones = array_map('trim', explode(',', $log->destination));
 
         foreach ($phones as $phone) {
-//            $this->sendTwilioSms($phone, $log->message, $io);
-            $io->out('SMS sent to: ' . $phone);
-            $io->out('Message: ' . $log->message);
+            if (str_ends_with($phone, 'zz')) {
+                $io->out("🛑 Skipped fake phone: $phone");
+                continue;
+            }
+
+            $this->sendTwilioSms($phone, $log->message, $io);
         }
     }
 
@@ -119,7 +131,7 @@ class SendingAlertCommand extends Command
         $ConfigItems = $this->getTableLocator()->get('Configuration.ConfigItems');
         $enabled = $ConfigItems->value('external_alert_service_sms_twilio');
 
-        if ($enabled !== '1') {
+        if ($enabled != '1') {
             $io->err("Twilio disabled. Cannot send to $to");
             return;
         }

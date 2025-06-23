@@ -6,7 +6,7 @@ use Cake\Console\Command;
 use Cake\Console\ConsoleIo;
 use Cake\ORM\Locator\LocatorAwareTrait;
 
-class EmptyCommand extends Command
+class EmptyCommand extends \Cake\Command\Command
 {
     use LocatorAwareTrait;
 

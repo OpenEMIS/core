@@ -4,7 +4,7 @@ use Cake\Console\Command;
 use Cake\Console\Arguments;
 use Cake\Console\ConsoleIo;
 
-class TestCommand extends Command
+class TestCommand extends \Cake\Command\Command
 {
     public function execute(Arguments $args, ConsoleIo $io): int
     {

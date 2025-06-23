@@ -24,7 +24,11 @@ class AlertRetirementWarningCommand extends AlertCommandBase
     public function logAlert($method, $feature, $recipient, $subject, $message): void
     {
         $this->AlertLogs->insertAlertLog($method, $feature, $recipient, $subject, $message);
-        $this->logMsg("✅ Alert {$feature} logged via {$method} to {$recipient}. Message: {$message}");
+        $shortSubject = mb_strimwidth((string)$subject, 0, 100, '...');
+        $shortMessage = mb_strimwidth((string)$message, 0, 100, '...');
+
+        $this->logMsg("✅ Alert {$feature} logged via {$method} to {$recipient}. Subject: {$shortSubject} Message: {$shortMessage}");
+
     }
 
     public function execute(Arguments $args, ConsoleIo $io): int
