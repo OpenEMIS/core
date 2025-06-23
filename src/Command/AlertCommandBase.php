@@ -73,7 +73,6 @@ abstract class AlertCommandBase extends \Cake\Command\Command
     protected function runFeatureAlert(string $featureKey): int
     {
         try {
-            $this->logMsg("✅ Alert {$featureKey} has no pending items");
 
             $pendingItems = $this->getPendingItems($featureKey); // abstract
             if(empty($pendingItems)){
@@ -88,7 +87,7 @@ abstract class AlertCommandBase extends \Cake\Command\Command
                     $this->contacts = $this->getStudentAssociatedContactList($this->rule->security_roles, $this->studentId);
                 } else {
                     $institutionId = (int)$item['institution_id'] ?? null;
-//                $this->logMsg(print_r([$sizeofPendingItems => $item], true));
+
                     if ($institutionId) {
                         $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles, $institutionId);
                         $this->contacts = $contacts;
@@ -139,24 +138,52 @@ abstract class AlertCommandBase extends \Cake\Command\Command
 
         foreach ($securityRoles as $role) {
             if (!$institutionId) {
-                $userLinks = $this->SecurityGroupUsers
+                $userQuery = $this->SecurityGroupUsers
                     ->find()
-                    ->where(['security_role_id' => $role['id']])
-                    ->toArray();
+                    ->select(['security_user_id'])
+                    ->distinct(['security_user_id'])
+                    ->where(['security_role_id' => $role['id']]);
+                $userIds = collection($userQuery->all())->extract('security_user_id')->toList();
+                $securityUserIds = array_unique($userIds);
+
             } else {
-                $userLinks = $this->SecurityGroupUsers
-                    ->find()
-                    ->innerJoin(['Institutions' => 'institutions'],
-                        ['Institutions.id = ' . $institutionId,
-                            'Institutions.security_group_id = ' .
-                            $this->SecurityGroupUsers->aliasField('security_group_id')])
-                    ->where(['security_role_id' => $role['id']])
-                    ->toArray();
+                foreach ($securityRoles as $role) {
+                    $directQuery = $this->SecurityGroupUsers->find()
+                        ->select(['security_user_id'])
+                        ->distinct(['security_user_id'])
+                        ->innerJoin(
+                            ['Institutions' => 'institutions'],
+                            [
+                                'Institutions.id' => $institutionId,
+                                'Institutions.security_group_id = ' . $this->SecurityGroupUsers->aliasField('security_group_id')
+                            ]
+                        )
+                        ->where(['security_role_id' => $role['id']]);
+
+                    $indirectQuery = $this->SecurityGroupUsers->find()
+                        ->select(['security_user_id'])
+                        ->distinct(['security_user_id'])
+                        ->innerJoin(
+                            ['SecurityGroupInstitutions' => 'security_group_institutions'],
+                            [
+                                'SecurityGroupInstitutions.institution_id' => $institutionId,
+                                'SecurityGroupInstitutions.security_group_id = ' . $this->SecurityGroupUsers->aliasField('security_group_id')
+                            ]
+                        )
+                        ->where(['security_role_id' => $role['id']]);
+
+                    // Merge both sets of IDs
+                    $directIds = collection($directQuery->all())->extract('security_user_id')->toList();
+                    $indirectIds = collection($indirectQuery->all())->extract('security_user_id')->toList();
+
+                    $securityUserIds = array_unique(array_merge($directIds, $indirectIds));
+
+                }
             }
 
-            foreach ($userLinks as $link) {
+            if (!empty($securityUserIds)) {
                 $users = $this->Users
-                    ->find('recipientList', ['recipients' => $link->security_user_id])
+                    ->find('recipientList', ['recipients' => $securityUserIds])
                     ->toArray();
 
                 $contactList = $this->getContactsFromUsers($users, $contactList);
