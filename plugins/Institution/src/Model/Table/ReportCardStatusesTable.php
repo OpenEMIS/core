@@ -430,7 +430,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     "  ",
                     $UsersTable->aliasfield('last_name') => 'literal']),
                 'openemis_no' => $UsersTable->aliasField('openemis_no'),
-                'report_card_status' => $this->StudentsReportCards->aliasField('status'),
+                'report_card_status' => $this->ReportCardProcesses->aliasField('status'), //POCOR-9228
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
@@ -466,7 +466,17 @@ class ReportCardStatusesTable extends ControllerActionTable
                     //$this->ReportCardEmailProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),//POCOR-8508
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $selectedReportCard
                 ]
-            )
+            )//POCOR-9228[START]
+            ->leftJoin([$this->ReportCardProcesses->getAlias() => $this->ReportCardProcesses->getTable()],
+                [
+                    $this->ReportCardProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $this->ReportCardProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->ReportCardProcesses->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->ReportCardProcesses->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    //$this->ReportCardProcesses->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),//POCOR-8508
+                    $this->ReportCardProcesses->aliasField('report_card_id = ') . $selectedReportCard
+                ]
+            )//POCOR-9228[END]
             ->where($where)
             ->all();
 
