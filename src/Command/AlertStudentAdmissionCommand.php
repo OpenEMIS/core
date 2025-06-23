@@ -87,7 +87,6 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         }
         try {
             $this->admission = $this->StudentAdmission->get($this->admissionId);
-            $this->logMsg(print_r($this->admission, true));
             $this->studentId = $this->admission->student_id;
         } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
             $io->error("Admission with ID {$this->admissionId} not found.");

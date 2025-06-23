@@ -569,15 +569,22 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $session = $this->request->getSession();
-        $paramInstitutionId = $this->request->getAttribute('param')['institutionId'];
-        $getInstitutionId = $this->getQueryString('institution_id');
-        $institutionId = isset($paramInstitutionId) ? $this->paramsDecode($paramInstitutionId)['id'] : $getInstitutionId;
-        $studentsUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'action' => 'Students'];
+        // Generate encoded query string once
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $studentsUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Students',
+            0 => 'index',
+            1 => $encodedQueryString
+        ];
         $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
 
         $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
         $Navigation->addCrumb($previousTitle);
+
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)

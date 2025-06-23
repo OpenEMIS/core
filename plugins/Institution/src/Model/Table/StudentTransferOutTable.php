@@ -14,6 +14,7 @@ use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
+use Cake\Controller\Component;
 
 
 class StudentTransferOutTable extends InstitutionStudentTransfersTable
@@ -149,6 +150,26 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $entity = $this->newEntity();
         $this->controller->set('data', $entity);
         return $entity;
+    }
+
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    {
+        // Generate encoded query string once
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $studentsUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Students',
+            0 => 'index',
+            1 => $encodedQueryString
+        ];
+        $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
+
+        $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
+        $Navigation->addCrumb($previousTitle);
+
     }
     /**
      * @return bool
