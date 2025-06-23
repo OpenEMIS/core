@@ -11,7 +11,7 @@ use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\TableRegistry;
 
-abstract class AlertCommandBase extends Command
+abstract class AlertCommandBase extends \Cake\Command\Command
 {
     use LocatorAwareTrait;
     use AlertProcessingTrait;
@@ -86,27 +86,10 @@ abstract class AlertCommandBase extends Command
 //                $this->logMsg(print_r([$sizeofPendingItems => $item], true));
                 if ($institutionId) {
                     $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles, $institutionId);
-//                    $sizeofContactMails = sizeof($contacts['email']);
-//                    $sizeofContactPhones = sizeof($contacts['phone']);
-//                    $this->logMsg(print_r(['has institutions ' . $sizeofContactMails . ' ' . $sizeofContactPhones => $contacts], true));
-//                    if($sizeofContactMails > 0){
-//                        $contacts['email'] = [$contacts['email'][0]];
-//                    }
-//                    if($sizeofContactPhones > 0){
-//                        $contacts['phone'] = [$contacts['phone'][0]];
-//                    }
                     $this->contacts = $contacts;
                 } else {
                     $contacts = $this->getRoleAssociatedContactList($this->rule->security_roles);
-//                    $sizeofContactMails = sizeof($contacts['email']);
-//                    $sizeofContactPhones = sizeof($contacts['phone']);
-//                    $this->logMsg(print_r(['no institutions ' . $sizeofContactMails . ' ' . $sizeofContactPhones => $contacts], true));
-//                    if($sizeofContactMails > 0){
-//                        $contacts['email'] = [$contacts['email'][0]];
-//                    }
-//                    if($sizeofContactPhones > 0){
-//                        $contacts['phone'] = [$contacts['phone'][0]];
-//                    }
+
                     $this->contacts = $contacts;
                 }
 
