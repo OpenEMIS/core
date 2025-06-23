@@ -353,33 +353,35 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldAcademicTerm(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $assessmentPeriodId = $this->request->getData($this->getAlias())['assessment_period_id'];
-        if ($assessmentPeriodId > 0) {
-            $condition[$this->AssessmentPeriods->aliasField('academic_term')] = $assessmentPeriodId;
-        }
-        
-        $academicTermList = $this->AssessmentPeriods
-                        ->find('list', [
-                            'keyField' => 'academic_term',
-                            'valueField' => 'academic_term'
-                        ])
-                        ->where([
-                            $condition, 
-                            $this->AssessmentPeriods->aliasField('academic_term !=') => 'NULL'
-                        ])
-                        ->toArray();
-     
-        $attr['type'] = 'select';
-        $attr['select'] = false;
-        if (count($academicTermList) > 1) {
-            $assessmentTermOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Terms')] + $academicTermList;
-        } else {
-            $assessmentTermOption = ['' => '-- ' . __('Select') . ' --'] + $academicTermList;
-        }
-        $attr['options'] = $assessmentTermOption;
-        $attr['onChangeReload'] = true;
+        if($this->request->getData()['Performance']['feature'] == 'Report.Performance'){
+            $assessmentPeriodId = $this->request->getData($this->getAlias())['assessment_period_id'];
+            if ($assessmentPeriodId > 0) {
+                $condition[$this->AssessmentPeriods->aliasField('academic_term')] = $assessmentPeriodId;
+            }
+            
+            $academicTermList = $this->AssessmentPeriods
+                            ->find('list', [
+                                'keyField' => 'academic_term',
+                                'valueField' => 'academic_term'
+                            ])
+                            ->where([
+                                $condition, 
+                                $this->AssessmentPeriods->aliasField('academic_term !=') => 'NULL'
+                            ])
+                            ->toArray();
+         
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            if (count($academicTermList) > 1) {
+                $assessmentTermOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Terms')] + $academicTermList;
+            } else {
+                $assessmentTermOption = ['' => '-- ' . __('Select') . ' --'] + $academicTermList;
+            }
+            $attr['options'] = $assessmentTermOption;
+            $attr['onChangeReload'] = true;
 
-        return $attr;
+            return $attr;
+        }
 
     }
 
