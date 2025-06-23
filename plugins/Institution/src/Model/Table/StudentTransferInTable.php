@@ -10,6 +10,8 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
+use Cake\Controller\Component;
+use Cake\Utility\Inflector;
 
 class StudentTransferInTable extends InstitutionStudentTransfersTable
 {
@@ -132,6 +134,26 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
             // close other pending RECEIVING transfer applications (in same education system) if the student is successfully transferred in one school
             $this->rejectPendingTransferRequests($this->getRegistryAlias(), $student);
         }
+    }
+
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    {
+        // Generate encoded query string once
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $studentsUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Students',
+                0 => 'index',
+                1 => $encodedQueryString
+            ];
+        $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
+
+        $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
+        $Navigation->addCrumb($previousTitle);
+
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
