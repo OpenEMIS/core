@@ -165,25 +165,26 @@ class AlertLogsTable extends ControllerActionTable
             return;
         }
 
-        // Check if the exact same message exists in unsent logs for any recipients
+        // Find any logs (sent, sending, or unsent) with the same checksum
         $existingLogs = $this->find()
             ->where([
-                'checksum' => $checksum,
-                'status' => 0
+                'checksum' => $checksum
             ])
             ->all();
 
-        $alreadySentTo = [];
+        $alreadyProcessed = [];
 
         foreach ($existingLogs as $log) {
-            $alreadySentTo[] = $log->destination;
+            $alreadyProcessed[] = $log->destination;
 
-            // Resend to all existing unsent logs
-            $this->triggerSendingAlertCommand('sending_alert', $feature, $log->id, __FUNCTION__, __LINE__);
+            // Only trigger resend if status is still 0 (unsent)
+            if ($log->status === 0) {
+                $this->triggerSendingAlertCommand('sending_alert', $feature, $log->id, __FUNCTION__, __LINE__);
+            }
         }
 
-        // If the recipient is new, send it now
-        if (!in_array($recipient, $alreadySentTo)) {
+        // If the recipient has not been processed yet (sent/sending/unsent), send it
+        if (!in_array($recipient, $alreadyProcessed, true)) {
             $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
         }
     }

@@ -25,8 +25,8 @@ class AlertStaffLeaveCommand extends AlertCommandBase
     public function logAlert($method, $feature, $recipient, $subject, $message)
     {
         $this->AlertLogs->insertAlertLog($method, $feature, $recipient, $subject, $message);
-        $this->logMsg("✅ Alert logged via {$method} to {$recipient}. Message: {$message}");
-        usleep(500000); // 500,000 microseconds = 0.5 seconds
+        $this->logMsg("✅ Alert {$feature} logged via {$method} to {$recipient}. Message: {$message}");
+
     }
 
     /**
