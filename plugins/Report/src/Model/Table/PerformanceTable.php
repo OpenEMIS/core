@@ -50,6 +50,37 @@ class PerformanceTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
+   public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data[$this->getAlias()]['feature'] == 'Report.Assessments') {
+            $options['validate'] = 'assessments';
+        }elseif($data[$this->getAlias()]['feature'] == 'Report.Performance'){
+            $options['validate'] = 'performance';
+        }
+    }
+
+    public function validationAssessments(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('institution_id')
+            ->notEmpty('education_grade_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+       return $validator;
+    }
+    public function validationPerformance(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('institution_id')
+            ->notEmpty('education_grade_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+       return $validator;
+    }
     public function beforeAction(Event $event)
     {
         $this->fields = [];

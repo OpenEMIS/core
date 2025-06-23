@@ -62,21 +62,7 @@ class AssessmentsTable extends AppTable
 
         $this->addBehavior('Report.ReportList');
     }
-    
-    
-
-   public function validationDefault(Validator $validator): Validator
-    {
-        $validator = parent::validationDefault($validator);
-        $validator->setProvider('custom', $this);
-
-        return $validator
-            ->requirePresence('area_level_id')
-            ->requirePresence('area_education_id')
-            ->requirePresence('institution_id')
-            ->requirePresence('education_grade_id');
-    }
-        
+       
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
         $requestData = json_decode($settings['process']['params']);
