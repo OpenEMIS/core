@@ -80,10 +80,12 @@ class StaffLeaveTable extends AppTable {
         $query
             ->select(['openemis_no' => 'Users.openemis_no',
                     'staff_id' => $this->aliasfield('staff_id'),
-                    'code' => 'Institutions.code', 
+                    'code' => 'Institutions.code',
                     'area_name' => 'Areas.name',
                     'area_code' => 'Areas.code',
-                    //'area_administrative_code' => 'AreaAdministratives.code',//POCOR-5762 
+                'date_from' => $this->aliasField('date_from'), // POCOR-9109
+                'date_to' => $this->aliasField('date_to'), // POCOR-9109
+                    //'area_administrative_code' => 'AreaAdministratives.code',//POCOR-5762
                     //'area_administrative_name' => 'AreaAdministratives.name',//POCOR-5762
                     'position_title' =>  $query->func()->concat([
                         'InstitutionPositions.position_no' => 'literal',
@@ -107,7 +109,7 @@ class StaffLeaveTable extends AppTable {
                 $query->where($conditions);
             }
             $query->order([$this->aliasField('date_from')]);
-           
+
             //POCOR-5762 starts
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
@@ -145,14 +147,14 @@ class StaffLeaveTable extends AppTable {
                         $without_default_arr = [];
                         foreach ($userData as $user) {
                             if($user->nationalities['default'] == 1){
-                                $with_default_arr['identity_type'] =  $user->identity_types['name'];  
-                                $with_default_arr['identity_number'] =  $user->number;  
+                                $with_default_arr['identity_type'] =  $user->identity_types['name'];
+                                $with_default_arr['identity_number'] =  $user->number;
                             }else{
-                                $without_default_arr['identity_type'] =  $user->identity_types['name'];  
+                                $without_default_arr['identity_type'] =  $user->identity_types['name'];
                                 $without_default_arr['identity_number'] =  $user->number;
                             }
                         }
-                    }                
+                    }
 
                     if(!empty($with_default_arr)){
                         $row['identity_type'] = $with_default_arr['identity_type'];
@@ -167,10 +169,10 @@ class StaffLeaveTable extends AppTable {
             //POCOR-5762 ends
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
     return $results->map(function ($row) {
-        
+
         $StaffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
         $StaffCustomField = TableRegistry::get('StaffCustomField.StaffCustomFields');
-        
+
         $customFieldData = $StaffCustomFieldValues->find()
             ->select([
                 'custom_field_id' => 'StaffCustomFields.id',
@@ -222,7 +224,7 @@ class StaffLeaveTable extends AppTable {
                     $row[$data->custom_field_name] = $data->date_value;
                 } else {
                     $row[$data->custom_field_name] = 'null';
-                } 
+                }
             }
         }
         //echo "<pre>";print_r($row);die('testt');
@@ -300,14 +302,14 @@ class StaffLeaveTable extends AppTable {
         ];
 
         $StaffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
-                    
+
         $customFieldData = $StaffCustomFields->find()
             ->select([
                 'custom_field_id' => 'StaffCustomFields.id',
                 'custom_field' => 'StaffCustomFields.name'
             ])
             ->toArray();
-        
+
         foreach($customFieldData as $data) {
            // $custom_field_id = $data->custom_field_id;
             $custom_field_id = $data->custom_field;
@@ -319,7 +321,7 @@ class StaffLeaveTable extends AppTable {
                 'label' => __($custom_field)
             ];
         }
-        
+
         $newFields[] = [
             'key' => 'StaffLeave.staff_id',
             'field' => 'staff_id',
@@ -334,18 +336,20 @@ class StaffLeaveTable extends AppTable {
             'label' => __('Leave Type')
         ];
 
+
+
         $newFields[] = [
             'key' => 'StaffLeave.date_from',
             'field' => 'date_from',
-            'type' => 'date',
-            'label' => ''
+            'type' => 'string', // POCOR-9109
+            'label' => __('Date From') // POCOR-9109
         ];
 
         $newFields[] = [
             'key' => 'StaffLeave.date_to',
             'field' => 'date_to',
-            'type' => 'date',
-            'label' => ''
+            'type' => 'string', // POCOR-9109
+            'label' => __('Date To') // POCOR-9109
         ];
 
         $newFields[] = [
@@ -361,7 +365,16 @@ class StaffLeaveTable extends AppTable {
             'type' => 'string',
             'label' => ''
         ];
-        
+
         $fields->exchangeArray($newFields);
     }
+
+    // POCOR-9109 start
+    public function onExcelGetDateFrom(Event $event, Entity $entity) {
+        return $this->formatDate($entity->date_from);
+    }
+    public function onExcelGetDateTO(Event $event, Entity $entity) {
+        return $this->formatDate($entity->date_to);
+    }
+    // POCOR-9109 end
 }

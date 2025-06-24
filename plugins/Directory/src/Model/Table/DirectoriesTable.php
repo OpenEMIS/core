@@ -224,6 +224,7 @@ class DirectoriesTable extends ControllerActionTable
                 'last_name' => $securityUsers->aliasField('last_name'),
                 'preferred_name' => $securityUsers->aliasField('preferred_name'),
                 'email' => $securityUsers->aliasField('email'),
+                'mobile_number' => $securityUsers->aliasField('mobile_number'), // POCOR-9011
                 'address' => $securityUsers->aliasField('address'),
                 'postal_code' => $securityUsers->aliasField('postal_code'),
                 'date_of_death' => $securityUsers->aliasField('date_of_death'),
@@ -351,6 +352,7 @@ class DirectoriesTable extends ControllerActionTable
                 'last_name' => $securityUsers->aliasField('last_name'),
                 'preferred_name' => $securityUsers->aliasField('preferred_name'),
                 'email' => $securityUsers->aliasField('email'),
+                'mobile_number' => $securityUsers->aliasField('mobile_number'), // POCOR-9011
                 'address' => $securityUsers->aliasField('address'),
                 'postal_code' => $securityUsers->aliasField('postal_code'),
                 'date_of_death' => $securityUsers->aliasField('date_of_death'),
@@ -493,6 +495,8 @@ class DirectoriesTable extends ControllerActionTable
             'postal_code' => $securityUser['postal_code'],
             'photo_name' => $securityUser['photo_name'],
             'photo_content' => $securityUser['photo_content'],
+            'email' => $securityUser['email'], // POCOR-9011
+            'mobile_number' => $securityUser['mobile_number'], // POCOR-9011
             // Add other fields as needed
         ];
 
@@ -1694,7 +1698,9 @@ public function getIdentityTypeData($value_selection)
             $this->field('openemis_no', ['user_type' => $userType]);
             switch ($userType) {
                 case self::STUDENT:
-                    $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities',
+//                        'Contacts'
+                    ]]);
                     $this->addBehavior('CustomField.Record', [
                         'model' => 'Student.Students',
                         'behavior' => 'Student',
@@ -1712,7 +1718,9 @@ public function getIdentityTypeData($value_selection)
                     ]);
                     break;
                 case self::STAFF:
-                    $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities',
+//                        'Contacts'
+                    ]]);
                     $this->addBehavior('CustomField.Record', [
                         'model' => 'Staff.Staff',
                         'behavior' => 'Staff',
@@ -1799,7 +1807,11 @@ public function getIdentityTypeData($value_selection)
     {
         switch ($userType) {
             case self::STUDENT:
-                $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' =>
+                    ['Identities',
+                        'Nationalities',
+//                        'Contacts'
+                    ]]);
                 $this->addBehavior('CustomField.Record', [
                     'model' => 'Student.Students',
                     'behavior' => 'Student',
@@ -1817,7 +1829,11 @@ public function getIdentityTypeData($value_selection)
                 ]);
                 break;
             case self::STAFF:
-                $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+                $this->addBehavior('User.Mandatory', ['userRole' => 'Staff',
+                    'roleFields' => ['Identities',
+                        'Nationalities',
+//                        'Contacts'
+                    ]]);
                 $this->addBehavior('CustomField.Record', [
                     'model' => 'Staff.Staff',
                     'behavior' => 'Staff',
