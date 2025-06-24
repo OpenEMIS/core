@@ -88,7 +88,8 @@ class AuditSecuritiesGroupUserRolesTable extends AppTable
             ])
             ->where([
                 $this->aliasField('created >= "') . $reportStartDate . '"',
-                $this->aliasField('created <= "') . $reportEndDate . '"'
+                $this->aliasField('created <= "') . $reportEndDate . '"',
+                'security_users.super_admin' => 0
             ])
             ->group(['AuditSecuritiesGroupUserRoles.security_group_id'
             ,'AuditSecuritiesGroupUserRoles.security_user_id'
