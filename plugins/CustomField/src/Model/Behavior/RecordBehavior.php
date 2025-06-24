@@ -464,7 +464,13 @@ class RecordBehavior extends Behavior
                                 if (!empty($rules)) {
                                     foreach ($rules as $rule) {
                                         $ruleShowOptions = json_decode($rule->show_options);
-                                        if (isset($entityCustomFieldValues[$rule->dependent_question_id]) && !in_array($entityCustomFieldValues[$rule->dependent_question_id]['number_value'], $ruleShowOptions)) {
+                                        // POCOR-9129 start
+                                        if(!is_array($ruleShowOptions)) {
+                                            $ruleShowOptions = [$ruleShowOptions];
+                                        }
+                                        // POCOR-9129 end
+                                        if (isset($entityCustomFieldValues[$rule->dependent_question_id])
+                                            && !in_array($entityCustomFieldValues[$rule->dependent_question_id]['number_value'], $ruleShowOptions)) {
                                             $settings['deleteFieldIds'][] = $rule->survey_question_id;
                                             foreach ($data[$alias]['custom_field_values'] as $key => $value) {
                                                 if ($value['survey_question_id'] == $rule->survey_question_id) {
@@ -640,7 +646,9 @@ class RecordBehavior extends Behavior
                                         foreach ($fields as $field) {
                                             if (isset($indexedErrors[$fieldId][$field])) {
                                                 $error = $indexedErrors[$fieldId][$field];
-                                                $entity->custom_field_values[$key]->getErrors($field, $error, true);
+                                                if (isset($entity->custom_field_values[$key])) { // POCOR-9147
+                                                    $entity->custom_field_values[$key]->getErrors($field, $error, true);
+                                                }
                                             }
                                         }
                                     }

@@ -22,7 +22,9 @@ class StaffUserTable extends ControllerActionTable
         // Behaviors
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-        $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
+        $this->addBehavior('User.Mandatory',
+            ['userRole' => 'Staff',
+                'roleFields' => ['Identities', 'Nationalities']]); // POCOR-9123
         $this->addBehavior('AdvanceSearch');
 
        $this->addBehavior('CustomField.Record', [
@@ -1047,7 +1049,8 @@ class StaffUserTable extends ControllerActionTable
 
                 $row['number'] = '';
                 if ($identy_num) {
-                    $d = array_shift(array_values($identy_num));
+                    $array_nums = array_values($identy_num); // POCOR-9123
+                    $d = array_shift($array_nums);
 
                     $row['number'] = $d->number;
                 } else {

@@ -114,9 +114,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
-        $this->field('date', ['visible' => false]);
+        $this->field('date', ['visible' => true]);
         $this->field('comment', ['visible' => false]);
-        $this->setFieldOrder(['special_need_type_id', 'special_need_difficulty_id','assessor_id']);  //POCOR-6873
+        $this->field('assessor_id', ['visible' => false]); //POCOR-9122
+        $this->setFieldOrder(['date','special_need_type_id', "special_need_difficulty_id"]); //POCOR-9122
 
 
         // Start POCOR-5188
