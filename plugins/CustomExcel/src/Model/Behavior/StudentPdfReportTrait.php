@@ -2,9 +2,9 @@
 namespace CustomExcel\Model\Behavior;
 
 use Cake\Log\Log;
-use Mpdf\MpdfException;
-use DOMDocument;
-use DOMXPath;
+use Mpdf\MpdfException; // POCOR-9153
+use DOMDocument; // POCOR-9153
+use DOMXPath; // POCOR-9153
 
 /*
     This trait is for ExcelReportBehavior.php
@@ -75,6 +75,7 @@ trait StudentPdfReportTrait
     }
 
     /**
+     * POCOR-9153
      * @throws MpdfException
      */
     private function savePDF($objSpreadsheet, $filepath, $student_id)
@@ -86,32 +87,44 @@ trait StudentPdfReportTrait
         // This is to store to final processedHtml
         $processedHtml = '';
         $filePaths = [];
+        $tempFiles = [];
         $basePath = $filepath;
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
-            $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [410, 280]]); //POCOR-8961
-            $mpdf->autoScriptToLang = true; //POCOR-7264
-            $mpdf->autoLangToFont = true; //POCOR-7264
+            $sheet = $objSpreadsheet->getSheet($sheetIndex);
+            $orientation = $sheet->getPageSetup()->getOrientation();
+
+            if ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE) {
+                $mpdfOrientation = 'L';
+                $mpdfFormat = 'A4-L'; // landscape
+            } else {
+                $mpdfOrientation = 'P';
+                $mpdfFormat = 'A4'; // portrait
+            }
+
+            $mpdf = new \Mpdf\Mpdf([
+                'mode' => 'utf-8',
+                'format' => $mpdfFormat,
+            ]);
+
+            $mpdf->autoScriptToLang = true;
+            $mpdf->autoLangToFont = true;
+
+            // Sheet index, HTML, and PDF generation follows...
             $filepath = $basePath . '_' . $sheetIndex;
+            $filepathxl = $filepath . '.xls';
+
             $writer->setSheetIndex($sheetIndex);
-            $writer->save($filepath);
-
-            // Read the html file and convert them into a variable
-            $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
-
-            // Remove all the redundant rows and columns
+            $writer->save($filepathxl);
+            $tempFiles[] = $filepathxl;
+            $file = file_get_contents($filepathxl, FILE_USE_INCLUDE_PATH);
             $processedHtml = $this->processHtml($file, $sheetIndex);
-//            file_put_contents(LOGS . 'debug_after_cleaning_' . $sheetIndex . '.html', $processedHtml);
 
-
-            // Save the processed html into a temp pdf
-            $mpdf->AddPage('L');
-
+            $mpdf->AddPage($mpdfOrientation);
             $mpdf->WriteHTML($processedHtml);
-            $filepath = $filepath . '.pdf';
+            $mpdf->Output($filepath . '.pdf', 'F');
 
-            $mpdf->Output($filepath, 'F');
-            $filePaths[] = $filepath;
-            unset($mdpf);
+            $filePaths[] = $filepath . '.pdf';
+            $tempFiles[] = $filepath . '.pdf';
         }
         // Merge all the pdf that belongs to one report
         if (!empty($student_id)) {
@@ -126,9 +139,9 @@ trait StudentPdfReportTrait
         $this->mergePDFFiles($filePaths, $fileName, $fileName);
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
         if ($this->getConfig('purge')) {
-            foreach ($filePaths as $filepath) {
+            foreach ($tempFiles as $tempFile) {
                 // delete excel file after successfully converted to pdf
-                $this->deleteFile($filepath);
+                $this->deleteFile($tempFile);
             }
         }
     }
@@ -160,7 +173,7 @@ trait StudentPdfReportTrait
         // To change the border to solid line instead of dotted line
         $processedHeadString = $this->styleBorderToSolid($headString);
 
-        $processedString = $this->processHtmlTable($processedString, $processedHeadString);
+        $processedString = $this->processHtmlTable($processedString, $processedHeadString); // POCOR-9153
 
 
         // To remove empty page at the end of the pdf
@@ -283,6 +296,7 @@ trait StudentPdfReportTrait
     }
 
     /**
+     * // POCOR-9153
      * Normalizes a single style string: colors and borders.
      */
 
@@ -395,19 +409,44 @@ trait StudentPdfReportTrait
 
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
-        // POCOR-9210 start
-        $utf8Header = '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">';
-        $html = $utf8Header . $html;
-        // POCOR-9210 end
-        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        // POCOR-9153 start
+        $utf8Wrapper = <<<HTML
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<div id="wrap">
+<table>
+HTML;
+
+        $utf8Closer = <<<HTML
+</table>
+</div>
+</body>
+</html>
+HTML;
+
+        $wrappedHtml = $utf8Wrapper . $html . $utf8Closer;
+
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($wrappedHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         libxml_clear_errors();
+        // POCOR-9153 end
+
         // Set table-wide defaults
 
         $this->inlineExcelStyles($dom, $headString);
 //        $this->applyClassStylesToInline($dom, $styleList);
 //        $this->neutralizeEmptyCells($dom);
-
-        return $dom->saveHTML();
+        // POCOR-9153 start
+        $body = $dom->getElementById('wrap');
+        $html = '';
+        foreach ($body->getElementsByTagName('table')->item(0)->childNodes as $node) {
+            $html .= $dom->saveHTML($node);
+        }
+        return $html;
+        // POCOR-9153 end
     }
 
     /**
@@ -468,14 +507,14 @@ trait StudentPdfReportTrait
                 if ($cell->childNodes->length === 1 && $cell->firstChild->nodeType === XML_TEXT_NODE) {
                     $rawText = trim($cell->textContent);
 
-                    if (mb_strlen($rawText) > 100) {
+                    if (mb_strlen($rawText) > 35) {
                         // Split long text into lines
                         $words = explode(' ', $rawText);
                         $lines = [];
                         $current = '';
 
                         foreach ($words as $word) {
-                            if (mb_strlen($current . ' ' . $word) > 100) {
+                            if (mb_strlen($current . ' ' . $word) > 35) {
                                 $lines[] = $current;
                                 $current = $word;
                             } else {
@@ -549,6 +588,7 @@ trait StudentPdfReportTrait
     //  ================ END REMOVE COLUMN AND ROW ================
 
     /**
+     * // POCOR-9153
      * Normalize inline CSS: deduplicate, reorder, and collapse borders.
      */
     function normalizeBorderStylesOnly(string $style): string
@@ -649,30 +689,69 @@ trait StudentPdfReportTrait
     }*/
 
     // POCOR-8298
-
+    // POCOR-9153
     private function mergePDFFiles(array $filenames, $outFile, $title = '', $author = '', $subject = '')
     {
         // Create a new Mpdf instance
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [410, 280]]); //POCOR-8961
-        $mpdf->autoScriptToLang = true; //POCOR-7264
-        $mpdf->autoLangToFont = true; //POCOR-7264
+        $tmpdf = new \Mpdf\Mpdf(['mode' => 'utf-8']); //POCOR-8961
+        $width = 297;
+        $height = 210;
+        if ($filenames) {
+            if (isset($filenames[0])) {
+                $curFile = $filenames[0];
+                if (file_exists($curFile)) {
+                    $tmpdf->SetSourceFile($curFile);
+                    $tplId = $tmpdf->ImportPage(1);
+                    $wh = $tmpdf->getTemplateSize($tplId);
+                    $orientation = trim($wh['orientation']) ?? 'L';
+                    $width = $wh['width'] ?? 297;
+                    $height = $wh['height'] ?? 210;
+                }
+            }
+        }
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8',
+            'format' => [$width,$height],
+//            'margin_left' => 40,
+//            'margin_right' => 10,
+//            'margin_top' => 30,
+//            'margin_bottom' => 30,
+        ]); //POCOR-8961
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
+        $mpdf->autoScriptToLang = true; //POCOR-7264
+        $mpdf->autoLangToFont = true; //POCOR-7264
+        if ($filenames) {
+            $filesTotal = sizeof($filenames);
+            // $mpdf->SetImportUse();
 
-        // Loop through each file and import its pages
-        foreach ($filenames as $curFile) {
-            if (file_exists($curFile)) {
-                $pageCount = $mpdf->SetSourceFile($curFile);
-                for ($p = 1; $p <= $pageCount; $p++) {
-                    $tplId = $mpdf->ImportPage($p);
-                    $wh = $mpdf->getTemplateSize($tplId, 410, 280);
-//                    Log::debug(print_r($wh,true));
-                    $orientation = ($wh['width'] > $wh['height']) ? 'L' : 'P';
-                    $mpdf->AddPage($orientation);
-                    $mpdf->UseTemplate($tplId);
-                    // Apply CSS styling for font size and right border
-                    $mpdf->WriteHTML('<div style="font-size: 10pt; border-right: 1px solid black;"></div>', \Mpdf\HTMLParserMode::HTML_BODY);
+            for ($i = 0; $i<count($filenames);$i++) {
+                $curFile = $filenames[$i];
+                if (file_exists($curFile)){
+                    $pageCount = $mpdf->SetSourceFile($curFile);
+                    for ($p = 1; $p <= $pageCount; $p++) {
+                        $tplId = $mpdf->ImportPage($p);
+                        $tplSize = $mpdf->getTemplateSize($tplId);
+                        $orientation = $tplSize['orientation'];
+                        $tplWidth = $tplSize['width'];
+                        $tplHeight = $tplSize['height'];
+
+                        $pageWidth = $mpdf->w;
+                        $pageHeight= $mpdf->h;
+
+// Calculate center offsets
+                        $offsetX = ($pageWidth - $tplWidth) / 2;
+                        $offsetY = ($pageHeight - $tplHeight) / 2;
+
+// Add page with exact orientation and size
+                        if (($p == 1)) {
+                            $mpdf->state = 0;
+                        } else {
+                            $mpdf->state = 1;
+                        }
+                        $mpdf->AddPage($orientation, '', '', '', '', '', '', '', '', '', '', [$tplWidth, $tplHeight]);
+                        $mpdf->UseTemplate($tplId);
+                    }
                 }
             }
         }
