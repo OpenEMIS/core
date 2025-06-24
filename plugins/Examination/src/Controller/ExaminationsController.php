@@ -303,7 +303,7 @@ class ExaminationsController extends AppController
      * 
      * @return \Cake\Http\Response|null Redirects the user back to the previous page after processing.
      */
-    public function syncStudentsToExam()
+   public function syncStudentsToExam()
     {
         error_reporting(0);
         $this->autoRender = false;
@@ -311,24 +311,31 @@ class ExaminationsController extends AppController
         $requestQuery = $this->request->getQuery();
 
         if (isset($requestQuery['queryString'])) {
-            $params = $this->ControllerAction->paramsDecode($requestQuery['queryString']);
-            $SecurityUsersTable = $this->getTableLocator()->get('Security.Users');
-            $params = $this->ControllerAction->paramsDecode($requestQuery['queryString']);
-            $SecurityUsersTable = $this->getTableLocator()->get('Security.Users');
-            $userData = $SecurityUsersTable->find()
-                ->where(['openemis_no' => $params['openemis_no']])
-                ->first();
 
-            if ($userData) {
-                $params['student_id'] = $userData->id;
+            $params = $this->ControllerAction->paramsDecode($requestQuery['queryString']);
+            $SecurityUsersTable = $this->getTableLocator()->get('Security.Users');
+            $params = $this->ControllerAction->paramsDecode($requestQuery['queryString']);
+
+            if (!empty($params['openemis_no'])) {
+                $SecurityUsersTable = $this->getTableLocator()->get('Security.Users');
+                $userData = $SecurityUsersTable->find()
+                    ->where(['openemis_no' => $params['openemis_no']])
+                    ->first();
+
+                if ($userData) {
+                    $params['student_id'] = $userData->id;
+                    $this->SyncExam->registerStudentsInExams($params);
+                }
+            } else {
+                $params['student_id'] = -1;
                 $this->SyncExam->registerStudentsInExams($params);
             }
         }
+        $referrerUrl = $params['referrer'] ??
+            $requestQuery['referrer'] ??
+            $this->request->getEnv('HTTP_REFERER') ??
+            '/';
 
-        $referrerUrl = $params['referrer'] ?? 
-                   $requestQuery['referrer'] ?? 
-                   $this->request->getEnv('HTTP_REFERER') ?? 
-                   '/';
         return $this->redirect($referrerUrl);
     }
 
