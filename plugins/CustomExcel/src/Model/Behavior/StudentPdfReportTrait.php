@@ -159,6 +159,8 @@ trait StudentPdfReportTrait
 
         // To change the border to solid line instead of dotted line
         $processedHeadString = $this->styleBorderToSolid($headString);
+        $processedHeadString = preg_replace('/<head[^>]*>/i', '$0<meta charset="UTF-8">' .
+            '<style>{ font-family: "Arial Unicode MS", "DejaVu Sans", sans-serif !important; }</style>', $processedHeadString);
 
         $processedString = $this->processHtmlTable($processedString, $processedHeadString);
 
@@ -396,8 +398,10 @@ trait StudentPdfReportTrait
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
         // POCOR-9253 start
-        $utf8Wrapper = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><div id="wrap">';
-        $utf8Closer  = '</div></body></html>';
+//        $utf8Wrapper = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><div id="wrap">';
+        $utf8Wrapper = '<meta charset="UTF-8">';
+//        $utf8Closer  = '</div></body></html>';
+        $utf8Closer  = '';
         $wrappedHtml = $utf8Wrapper . $html . $utf8Closer;
         $dom->loadHTML($wrappedHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         // POCOR-9253 end        libxml_clear_errors();
