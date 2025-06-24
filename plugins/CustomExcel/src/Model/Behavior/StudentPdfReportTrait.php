@@ -4,7 +4,6 @@ namespace CustomExcel\Model\Behavior;
 use Cake\Log\Log;
 use Mpdf\MpdfException;
 use DOMDocument;
-use DOMElement; //POCOR-9052
 use DOMXPath;
 
 /*
@@ -397,32 +396,20 @@ trait StudentPdfReportTrait
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
         // POCOR-9210 start
-        $utf8Wrapper = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><div id="wrap">';
-        $utf8Closer  = '</div></body></html>';
-        $wrappedHtml = $utf8Wrapper . $html . $utf8Closer;
-        $dom->loadHTML($wrappedHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $utf8Header = '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">';
+        $html = $utf8Header . $html;
         // POCOR-9210 end
+        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         libxml_clear_errors();
+        // Set table-wide defaults
 
         $this->inlineExcelStyles($dom, $headString);
 //        $this->applyClassStylesToInline($dom, $styleList);
-        $this->neutralizeEmptyCells($dom);
+//        $this->neutralizeEmptyCells($dom);
 
         return $dom->saveHTML();
     }
-    private function neutralizeEmptyCells(DOMDocument $dom): void
-    {
-//        return;
-        $xpath = new DOMXPath($dom);
-        foreach ($xpath->query('//td | //th') as $cell) {
-            $text = trim($cell->textContent);
-            if ( $text === ' ') {
-                $cell->removeAttribute('style');
-                $cell->setAttribute('style', 'border: none !important;');
-            }
 
-        }
-    }
     /**
      * Parses and applies Excel-style class styles inline, then removes the class attribute.
      */
