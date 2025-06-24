@@ -395,8 +395,12 @@ trait StudentPdfReportTrait
 
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
-        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-        libxml_clear_errors();
+        // POCOR-9253 start
+        $utf8Wrapper = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><div id="wrap">';
+        $utf8Closer  = '</div></body></html>';
+        $wrappedHtml = $utf8Wrapper . $html . $utf8Closer;
+        $dom->loadHTML($wrappedHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        // POCOR-9253 end        libxml_clear_errors();
         // Set table-wide defaults
 
         $this->inlineExcelStyles($dom, $headString);
