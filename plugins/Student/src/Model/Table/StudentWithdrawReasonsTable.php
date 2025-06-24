@@ -1,6 +1,10 @@
 <?php
+
 namespace Student\Model\Table;
 
+use Cake\ORM\Entity;
+use Cake\Event\Event;
+use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 
 class StudentWithdrawReasonsTable extends ControllerActionTable
@@ -15,4 +19,17 @@ class StudentWithdrawReasonsTable extends ControllerActionTable
 
         $this->addBehavior('FieldOption.FieldOption');
     }
+    //POCOR-9117 start
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+    //POCOR-9117 end
 }

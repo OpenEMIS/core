@@ -6396,9 +6396,12 @@ class InstitutionReportCardsTable extends AppTable
             return [];
         }
 
-        $year = $periodObj->start_year;
-        $startDate = FrozenDate::create($year, 1, 1);
-        $endDate = FrozenDate::create($year, 12, 31);
+        // $year = $periodObj->start_year;
+        // $startDate = FrozenDate::create($year, 1, 1);
+        // $endDate = FrozenDate::create($year, 12, 31);
+        // Use actual start and end dates
+        $startDate = new FrozenDate($periodObj->start_date);
+        $endDate = new FrozenDate($periodObj->end_date);
 
         $dateRange = $this->generateDateRange($startDate, $endDate);
         $entity = [];
