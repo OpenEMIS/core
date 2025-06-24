@@ -114,6 +114,7 @@ class AssessmentItemResultsTable extends AppTable
                             $assessmentItemResults->aliasField('assessment_period_id') => $entity->assessment_period_id,
                             $assessmentItemResults->aliasField('assessment_id') => $entity->assessment_id,
                             $assessmentItemResults->aliasField('education_subject_id') => $entity->education_subject_id,
+                            $assessmentItemResults->aliasField('institution_classes_id') => $entity->institution_classes_id,//POCOR-9184
                         ])
                         ->order([ //POCOR-7580-KHINDOL
                             $assessmentItemResults->aliasField('created') => 'DESC',
