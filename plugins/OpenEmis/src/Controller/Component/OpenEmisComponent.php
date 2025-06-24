@@ -169,7 +169,8 @@ class OpenEmisComponent extends Component
     {
         $userId  = $this->controller->Auth->user('id');
         $isAdmin = $this->controller->AccessControl->isAdmin();
-        if(!$isAdmin){
+
+        if(!$isAdmin && $userId != null){
             $usersGroup   = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $userNotices  = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
 
