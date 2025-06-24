@@ -363,6 +363,44 @@ class AccessControlComponent extends Component
                 return true;
             }
             //POCOR-8662 -- END
+
+            //POCOR-9198 -- START
+            if ($action === 'reportCardGenerate') {
+                $userId = $this->Auth->user('id');
+                $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+                $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+                $roleIds = $GroupRoles->find()
+                    ->where([$GroupRoles->aliasField('security_user_id') => $userId])
+                    ->group([$GroupRoles->aliasField('security_role_id')])
+                    ->select(['security_role_id' => $GroupRoles->aliasField('security_role_id')])
+                    ->extract('security_role_id')
+                    ->toArray();
+                $functions = $SecurityRoleFunctions->find()
+                    ->contain(['SecurityFunctions'])
+                    ->where([
+                        $SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roleIds,
+                        'SecurityFunctions.controller' => $controller,
+                        'SecurityFunctions.category' => 'Students',
+                        'SecurityFunctions.name' => 'Assessments'
+                    ])
+                    ->all();
+                $counter = 0;
+                foreach ($functions as $function) {
+                    if ($function->_execute == 1) {
+                        $counter++;
+                    }
+                }
+                // Cache the result for future permission checks in the session
+                if ($counter > 0) {
+                    $this->Session->write('Permissions.reportCardGenerateAllowed', true);
+                    return true;
+                } else {
+                    $this->Session->write('Permissions.reportCardGenerateAllowed', false);
+                    return false;
+                }
+            }
+            //POCOR-9198 -- END
+
         }
 
         if ($this->Session->check($permissionKey)) {
@@ -380,6 +418,10 @@ class AccessControlComponent extends Component
                 // Log::write('debug', $permissionKey);
                 return true;
             }
+        }
+        //POCOR-9198
+        if ($this->Session->read('Permissions.reportCardGenerateAllowed')) {
+            return true;
         }
         return false;
     }
