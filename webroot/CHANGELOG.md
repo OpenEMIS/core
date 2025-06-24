@@ -1,3 +1,22 @@
+### [4.29.1] - 2025-06-23
+- Bug Fixed: Institutions > Performance > Assessment > Report: Certain users are unable to download mark sheet & are being redirected to homepage instead when doing so.
+
+### [4.29.0] - 2025-06-20
+- Implemented: Develop a change to rename registration number to candidate number
+- Bug Fixed: Administration>Profile>Institution: The placeholder populating the attendance data stops at the end of the calendar year
+- Bug Fixed: Institutions>Report Card>Comments: Principal are not able to view Principal tab even though permission is given
+- Bug Fixed: Administration > Appraisals > Add : User receives a 404 error message when adding options for dropdown field type.
+- Bug Fixed: Administration > System Setup > Education Structure > Grade Subjects: Filter glitches out when selecting by grade level.
+- Bug Fixed: Institutions>Performance>Report Cards: Tonga macros are not working
+- Bug Fixed: Institutions > Performance > Assessments : User is unable to enter student's marks.
+- Bug Fixed: Institutions > General > Profiles > Students: User receives a 404 error message when exporting all excel sheets.
+- Bug Fixed: Administration>System Setup>Custom Fields>Institutions: Custom fields in field tab not showing in both Institution>Overview and Classes Page
+- Bug Fixed: Institutions > Academic > Programmes > Delete: User receives a 404 error message.
+- Bug Fixed: Administration>Performance>GPA: It should show GPA system
+
+### [4.28.2] - 2025-06-18
+- Bug Fixed: Institutions > Performance > Report Cards > Merge and Download: Report Cards are misaligned when using "Merge and Download", but is align when downloaded individually.
+
 ### [4.28.1] - 2025-06-13
 - Bug Fixed: Institutions > Performance > Report Cards > Download PDF: Principal placeholder is displaying teacher's name instead of principal
 - Bug Fixed: Institutions > Performance > Report Cards: Report doesn't display the correct GPA.

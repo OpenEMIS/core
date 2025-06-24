@@ -1,5 +1,6 @@
 <?php
 
+
 namespace Institution\Model\Table;
 
 use ArrayObject;
@@ -95,8 +96,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     }
     //POCOR-7512 end
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
-    {
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets){
         $sheets[] = [
             'name' => $this->getAlias(),
             'table' => $this,
@@ -977,6 +977,17 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'examination_id', 'registration_number', 'openemis_no', 'student_id', 'examination_subjects']);
     }
 
+    //POCOR-9169 start
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'registration_number':
+                return __('Candidate Number');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    //POCOR-9169 end
     //POCOR-7509 start
     /**
      * Update action buttons for the entity
