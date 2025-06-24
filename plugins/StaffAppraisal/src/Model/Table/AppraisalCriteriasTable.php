@@ -174,12 +174,12 @@ class AppraisalCriteriasTable extends ControllerActionTable
 
     public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if ($data->offsetExists($this->alias())) {
-            if (array_key_exists('appraisal_dropdown_options', $data[$this->alias()])) {
-                $dropdownOptions = $data[$this->alias()]['appraisal_dropdown_options'];
-                $data[$this->alias()]['appraisal_dropdown_options'] = array_values($dropdownOptions); // reindex array keys
+        if ($data->offsetExists($this->getAlias())) {//POCOR-9187[START] alias -> getAlias()
+            if (array_key_exists('appraisal_dropdown_options', $data[$this->getAlias()])) {
+                $dropdownOptions = $data[$this->getAlias()]['appraisal_dropdown_options'];
+                $data[$this->getAlias()]['appraisal_dropdown_options'] = array_values($dropdownOptions); // reindex array keys
             }
-            $data[$this->alias()]['appraisal_dropdown_options'][] = [
+            $data[$this->getAlias()]['appraisal_dropdown_options'][] = [
                 'name' => '',
                 'is_default' => 0
             ];
@@ -189,6 +189,14 @@ class AppraisalCriteriasTable extends ControllerActionTable
             'AppraisalDropdownOptions' => ['validate' => false]
         ];
     }
+
+    //POCOR-9187[START]
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+    //POCOR-9187[END]
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
