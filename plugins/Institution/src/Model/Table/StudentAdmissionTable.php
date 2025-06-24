@@ -1,4 +1,5 @@
 <?php
+
 namespace Institution\Model\Table;
 
 use ArrayObject;
@@ -10,7 +11,6 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
-use Cake\I18n\Time;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
 use Cake\ORM\RulesChecker;
@@ -23,6 +23,10 @@ use Cake\I18n\FrozenTime;
 use App\Controller\DashboardController;
 use Cake\I18n\FrozenDate;
 use Cake\ORM\Table;
+
+// POCOR-8286 start
+
+// POCOR-8286 end
 
 class StudentAdmissionTable extends ControllerActionTable
 {
@@ -120,7 +124,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->toggle('add', true);
         $this->addBehavior('Institution.InstitutionTab',
             ['appliedAction' => ['StudentAdmission' => ['id']]
-        ]);
+            ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -133,7 +137,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     'rule' => ['checkValidAcademicPeriodId'],
                     'on' => function ($context) {
                         if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {
-                            $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                            $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods'); // POCOR-8286
                             $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
                             return $academicPeriodExists;
@@ -189,9 +193,9 @@ class StudentAdmissionTable extends ControllerActionTable
                     'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
                     'on' => function ($context) {
                         //POCOR-6172-HINDOL[START]
-                        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+                        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems'); // POCOR-8286
                         $multipleInstitutions = $ConfigItems->value('multiple_institutions_student_enrollment');
-                        $multipleInstitutions = ($multipleInstitutions == "1") ? true : false ;
+                        $multipleInstitutions = ($multipleInstitutions == "1") ? true : false;
 //                        $this->log($multipleInstitutions);
                         if ($multipleInstitutions) return false;
                         //POCOR-6172-HINDOL[END]
@@ -275,7 +279,7 @@ class StudentAdmissionTable extends ControllerActionTable
                         if (array_key_exists('institution_class_id', $context['data']) && !empty($context['data']['institution_class_id'])) {
                             if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id'])) {
                                 if (array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
-                                    if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])){
+                                    if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {
                                         $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
                                         $institutionClassExists = $InstitutionClasses->exists([$InstitutionClasses->getPrimaryKey() => $context['data']['institution_class_id']]);
 
@@ -328,6 +332,56 @@ class StudentAdmissionTable extends ControllerActionTable
     }
 
     // foreign key rules
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
     public function buildRules(RulesChecker $rules): RulesChecker
     {
         $excludedFields = ['assignee_id'];//POCOR-7716
@@ -336,8 +390,8 @@ class StudentAdmissionTable extends ControllerActionTable
             $fieldName = $assoc->getForeignKey();
             //$associatedModel = TableRegistry::get($assoc->className());//not use in cakephp 4
             //$fieldName = $assoc->foreignKey();//not use in cakephp 4
-            if(!in_array($fieldName, $excludedFields)) {
-                $rules->add($rules->existsIn($fieldName, $associatedModel, $fieldName.' does not exists.'));
+            if (!in_array($fieldName, $excludedFields)) {
+                $rules->add($rules->existsIn($fieldName, $associatedModel, $fieldName . ' does not exists.'));
             }
         }
 
@@ -369,82 +423,60 @@ class StudentAdmissionTable extends ControllerActionTable
     public function onApprove(Event $event, $id, Entity $workflowTransitionEntity)
     {
         // add student into institution_students
-//        $entity = $this->get($id);
-//        Log::debug('calling ensure on approve')
-//        $this->ensureInstitutionStudentExists($entity);
-    }
-
-    public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
-    {
         $entity = $this->get($id);
-        $Students = self::getDynamicTableInstance('Institution.Students');
-        $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
-        $statuses = $StudentStatuses->findCodeList();
-
-        $newStudentRecord = $Students->find()
-            ->where([
-                $Students->aliasField('institution_id') => $entity->institution_id,
-                $Students->aliasField('student_id') => $entity->student_id,
-                $Students->aliasField('academic_period_id') => $entity->academic_period_id,
-                $Students->aliasField('education_grade_id') => $entity->education_grade_id,
-                $Students->aliasField('student_status_id') => $statuses['CURRENT']
-            ])
-            ->first();
-
-        if (!empty($newStudentRecord)) {
-            // delete student record in the new institution
-            $Students->delete($newStudentRecord);
-        }
+//        Log::debug('calling ensure on approve')
+        $this->ensureInstitutionStudentExists($entity);
     }
 
     //POCOR-8434 Starts
-    public function onTriggerPendingEnrolment(Event $event, $id, Entity $workflowTransitionEntity)
+
+    /**
+     * Ensures that an InstitutionStudent record exists for an approved admission.
+     *
+     * If no matching student record is found, attempts to create one.
+     * If creation fails, reverts the admission's status to its previous state.
+     *
+     * @param \Cake\ORM\Entity $entity The StudentAdmission entity
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @since POCOR-9163
+     **/
+    private function ensureInstitutionStudentExists($entity): void
     {
-        // add student into institution_students_enrolment
-        $entity = $this->get($id);
-        $this->triggerPendingEnrolmentForStudent($entity);
-    }
+        $statuses = self::getDynamicTableInstance('Workflow.WorkflowModels')
+            ->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
 
-    public function triggerPendingEnrolmentForStudent(Entity $entity)
-    {
-        $WorkflowsTbl = self::getDynamicTableInstance('Workflow.Workflows');
-        $WorkflowStepsTbl = self::getDynamicTableInstance('Workflow.WorkflowSteps');
-        $WorkflowsRes = $WorkflowStepsTbl
-                            ->find()
-                            ->innerJoin([$WorkflowsTbl->getAlias() => $WorkflowsTbl->getTable()],
-                            [
-                                $WorkflowsTbl->aliasField('id = ') . $WorkflowStepsTbl->aliasField('workflow_id')
-                            ])
-                            ->where([
-                                $WorkflowsTbl->aliasField('code') => 'STUDENT-Enrolment-1001',
-                                $WorkflowStepsTbl->aliasField('name') => 'Open'
-                            ])->first();
-
-        $StudentEnrolments = self::getDynamicTableInstance('Institution.StudentEnrolment');
-
-        $enrolmentArr = [
-            'start_date' => $entity->start_date,
-            'end_date' => $entity->end_date,
-            'student_id' => $entity->student_id,
-            'status_id' => $WorkflowsRes->id,
-            'assignee_id' => $this->Auth->user('id'),
-            'institution_id' => $entity->institution_id,
-            'academic_period_id' => $entity->academic_period_id,
-            'education_grade_id' => $entity->education_grade_id,
-            'test_score' => '',
-            'interview_score' => '',
-            'comment' => '',
-        ];
-        if (!empty($entity->institution_class_id)) {
-            $enrolmentArr['institution_class_id'] = $entity->institution_class_id;
-        }else{
-            $enrolmentArr['institution_class_id'] = 'NULL';
+        if (!in_array($entity->status_id, array_keys($statuses))) {
+            return;
         }
 
-        $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
-        $StudentEnrolments->save($newEntity);
+        $InstitutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
+        $conditions = [
+            'student_id' => $entity->student_id,
+            'academic_period_id' => $entity->academic_period_id,
+            'start_date' => $entity->start_date,
+            'end_date' => $entity->end_date,
+        ];
+
+        $existing = $InstitutionStudents->find()->where($conditions)->first();
+        if ($existing) {
+            return;
+        }
+
+        $studentEntity = $this->addInstitutionStudent($entity);
+//        Log::debug(print_r([__FUNCTION__ => $entity], true));
+//        Log::debug(print_r([__FUNCTION__ => $studentEntity], true));
+        if ($studentEntity) {
+            Log::info("InstitutionStudent created for student_id {$entity->student_id}");
+
+        } else {
+            Log::warning("Failed to create InstitutionStudent for student_id {$entity->student_id}");
+            if (!empty($entity->previous('status_id'))) {
+                $entity->status_id = $entity->previous('status_id');
+                $this->save($entity);
+                Log::info("Reverted status_id for admission ID {$entity->id} to previous value.");
+            }
+        }
     }
-    //POCOR-8434 Ends
 
     public function addInstitutionStudent($entity)
     {
@@ -469,9 +501,80 @@ class StudentAdmissionTable extends ControllerActionTable
         return $newEntity;
     }
 
+    //POCOR-8434 Ends
+
+    public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        $entity = $this->get($id);
+        $Students = self::getDynamicTableInstance('Institution.Students');
+        $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+
+        $newStudentRecord = $Students->find()
+            ->where([
+                $Students->aliasField('institution_id') => $entity->institution_id,
+                $Students->aliasField('student_id') => $entity->student_id,
+                $Students->aliasField('academic_period_id') => $entity->academic_period_id,
+                $Students->aliasField('education_grade_id') => $entity->education_grade_id,
+                $Students->aliasField('student_status_id') => $statuses['CURRENT']
+            ])
+            ->first();
+
+        if (!empty($newStudentRecord)) {
+            // delete student record in the new institution
+            $Students->delete($newStudentRecord);
+        }
+    }
+
+    public function onTriggerPendingEnrolment(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        // add student into institution_students_enrolment
+        $entity = $this->get($id);
+        $this->triggerPendingEnrolmentForStudent($entity);
+    }
+
+    public function triggerPendingEnrolmentForStudent(Entity $entity)
+    {
+        $WorkflowsTbl = self::getDynamicTableInstance('Workflow.Workflows');
+        $WorkflowStepsTbl = self::getDynamicTableInstance('Workflow.WorkflowSteps');
+        $WorkflowsRes = $WorkflowStepsTbl
+            ->find()
+            ->innerJoin([$WorkflowsTbl->getAlias() => $WorkflowsTbl->getTable()],
+                [
+                    $WorkflowsTbl->aliasField('id = ') . $WorkflowStepsTbl->aliasField('workflow_id')
+                ])
+            ->where([
+                $WorkflowsTbl->aliasField('code') => 'STUDENT-Enrolment-1001',
+                $WorkflowStepsTbl->aliasField('name') => 'Open'
+            ])->first();
+
+        $StudentEnrolments = self::getDynamicTableInstance('Institution.StudentEnrolment');
+
+        $enrolmentArr = [
+            'start_date' => $entity->start_date,
+            'end_date' => $entity->end_date,
+            'student_id' => $entity->student_id,
+            'status_id' => $WorkflowsRes->id,
+            'assignee_id' => $this->Auth->user('id'),
+            'institution_id' => $entity->institution_id,
+            'academic_period_id' => $entity->academic_period_id,
+            'education_grade_id' => $entity->education_grade_id,
+            'test_score' => '',
+            'interview_score' => '',
+            'comment' => '',
+        ];
+        if (!empty($entity->institution_class_id)) {
+            $enrolmentArr['institution_class_id'] = $entity->institution_class_id;
+        } else {
+            $enrolmentArr['institution_class_id'] = 'NULL';
+        }
+
+        $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
+        $StudentEnrolments->save($newEntity);
+    }
+
     public function studentsAfterSave(Event $event, $student)
     {
-        Log::debug(__FUNCTION__ . '3');
 
         $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
         $statusList = $StudentStatuses->findCodeList();
@@ -481,18 +584,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $Withdraw = $statusList['WITHDRAWN'];
         $institution_id = $student->institution_id;
         $student_id = $student->student_id;
-//        $this->log('studentsAfterSave', 'debug');
-//        $this->log($student, 'debug');
-        //POCOR-6500 starts
-        //get student role
-        $securityRolesTbl = self::getDynamicTableInstance('Security.SecurityRoles');
-        $securityRoles = $securityRolesTbl->find()
-                                ->where([
-                                    $securityRolesTbl->aliasField('code') => 'STUDENT',
-                                ])
-                                ->first();
-        //get student institution
-        //POCOR-6500 ends
+
         if ($student->isNew()) { // add
             // close other pending admission applications (in same education system) if the student is successfully enrolled in one school
             if ($student->student_status_id == $Enrolled) {
@@ -500,7 +592,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $educationGradesToUpdate = $this->EducationGrades->getEducationGradesBySystem($educationSystemId);
                 //POCOR-6500 starts
 
-                $securityGroupUsers = self::assignStudentRoleGroup($institution_id, $student_id);//POCOR-7146
+                self::assignStudentRoleGroup($institution_id, $student_id);//POCOR-7146
 
                 //POCOR-6500 ends
                 // get the first step in 'REJECTED' workflow statuses
@@ -528,9 +620,22 @@ class StudentAdmissionTable extends ControllerActionTable
 
                         // update status_id and assignee_id
                         $entity->status_id = $rejectedStatusEntity->id;
-                        $this->autoAssignAssignee($entity);
-
-                        if ($this->save($entity)) {
+                        $saved = false;
+                        try {
+                            $this->autoAssignAssignee($entity);
+                            $this->save($entity);
+                            $saved = true;
+                        } catch (\Exception $exception) {
+                            try {
+                                $this->save($entity);
+                                $saved = true;
+                            } catch (\Exception $exception) {
+                                $entity->assignee_id = $entity->created_user_id;
+                                $this->save($entity);
+                                $saved = true;
+                            }
+                        }
+                        if ($saved) {
                             // add workflow transition
                             $WorkflowTransitions = self::getDynamicTableInstance('Workflow.WorkflowTransitions');
                             $prevStepEntity = $this->Statuses->get($prevStep);
@@ -543,7 +648,7 @@ class StudentAdmissionTable extends ControllerActionTable
                                 'workflow_model_id' => $workflowEntity->workflow_model_id,
                                 'model_reference' => $entity->id,
                                 'created_user_id' => 1,
-                                'created' => new Time('NOW')
+                                'created' => new FrozenTime('NOW')
                             ];
                             $transitionEntity = $WorkflowTransitions->newEntity($transition);
                             $WorkflowTransitions->save($transitionEntity);
@@ -569,10 +674,215 @@ class StudentAdmissionTable extends ControllerActionTable
         }
     }
 
-    public function studentsAfterDelete(Event $event, Entity $student)
+    /**
+     * POCOR-7146
+     * POCOR-7224 refactored
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * assign Role and group to student while creating student
+     **/
+    private static function assignStudentRoleGroup($institution_id, $student_id)
     {
-        // check for enrolled status and delete admission record
-        $this->removePendingAdmission($student->student_id, $student->institution_id);
+        // POCOR-8683 removed logs
+        $student_role_id = self::getStudentSecurityRoleId();
+        $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
+        //check student already exist
+        $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
+        //Log::write('debug', $student_security_groups);
+        //check that the student is not in other groups
+        if (sizeof($student_security_groups) == 0) {
+            //Log::write('debug', $student_id);
+            //Log::write('debug', $security_group_id);
+            //Log::write('debug', $student_role_id);
+            self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+            return;
+        }
+        //update user's security_group_id in security_group_users table
+        $previous_security_group_id = self::getPreviousSecurityGroupId($institution_id, $student_id);
+        // Log::write('debug', $previous_security_group_id);
+        //check that the student is should be transferred
+        if (in_array($previous_security_group_id, $student_security_groups)) {
+            self::makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id);
+            return;
+        }
+        //if he/she is not transferred - create new security group
+        self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+        return;
+    }
+
+    /**
+     * @return int
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getStudentSecurityRoleId()
+    {
+        $securityRolesTbl = self::getDynamicTableInstance('Security.SecurityRoles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'STUDENT',
+            ])->first();
+        $student_role_id = $securityRoles->id;
+        return $student_role_id;
+    }
+
+    /**
+     * @param $institution_id
+     * @return integer
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getInstitutionSecurityGroupId($institution_id)
+    {
+        $institutionTbl = self::getDynamicTableInstance('Institution.Institutions');
+        $security_group_id = null;
+        $institutions = $institutionTbl->find()
+            ->where([
+                $institutionTbl->aliasField('id') => $institution_id
+            ])->first();
+        if (!empty($institutions)) {
+            $security_group_id = $institutions->security_group_id;
+        }
+        if ($security_group_id != null) {
+            $securityGroupInstitutionsTbl = self::getDynamicTableInstance('Security.SecurityGroupInstitutions');
+            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
+                ->where([
+                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
+                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
+                ])
+                ->first();
+            //save security group for institution
+            if (empty($securityGroupInstitutions)) {
+                $security_group_ins_data = [
+                    'security_group_id' => $security_group_id,
+                    'institution_id' => $institution_id,
+                    'created_user_id' => 1,
+                    'created' => new FrozenTime('NOW')
+                ];
+                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
+                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
+            }
+        }
+        return $security_group_id;
+    }
+
+    /**
+     * @param $student_id
+     * @param $student_role_id
+     * @return array
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getStudentSecurityGroups($student_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = self::getDynamicTableInstance('Security.SecurityGroupUsers');
+        $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
+            ->select('security_group_id')
+            ->where([
+                $securityGroupUsersTbl->aliasField('security_user_id') => $student_id,
+                $securityGroupUsersTbl->aliasField('security_role_id') => $student_role_id
+            ])
+            ->extract('security_group_id')
+            ->toArray();
+        return $countSecurityGroupStudent;
+    }
+
+    /**
+     * @param $student_id
+     * @param $security_group_id
+     * @param $student_role_id
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
+    {
+        $id = Text::uuid();
+        $securityGroupUsersTbl = self::getDynamicTableInstance('Security.SecurityGroupUsers');
+        // POCOR-9100 start
+        $presentCount = $securityGroupUsersTbl->find('all')
+            ->where([
+                $securityGroupUsersTbl->aliasField('security_group_id') => $security_group_id,
+                $securityGroupUsersTbl->aliasField('security_user_id') => $student_role_id,
+                $securityGroupUsersTbl->aliasField('security_role_id') => $student_id,
+            ])->count();
+        if ($presentCount > 0) {
+            return $presentCount;
+        }
+        // POCOR-9100 end
+        $security_group_data = [
+            'id' => $id,
+            'security_group_id' => $security_group_id,
+            'security_user_id' => $student_id,
+            'security_role_id' => $student_role_id,
+            'created_user_id' => 1,
+            'created' => new FrozenTime('NOW')
+        ];
+        $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
+        $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
+        return $newEntity;
+    }
+
+    /**
+     * @param $institution_id
+     * @param $student_id
+     * @param $institutionTbl
+     * @return mixed
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getPreviousSecurityGroupId($institution_id, $student_id)
+    {
+        $previous_security_group_id = 0;
+        $institutionTbl = self::getDynamicTableInstance('Institution.Institutions');
+        $InstitutionStudentsTbl = self::getDynamicTableInstance('Institution.InstitutionStudents');
+        $TransfersTbl = self::getDynamicTableInstance('Institution.InstitutionStudentTransfers');
+        $StudentTransfers = $InstitutionStudentsTbl
+            ->find()
+            ->select([
+                $InstitutionStudentsTbl->aliasField('student_id'),
+                $TransfersTbl->aliasField('institution_id'),
+                $TransfersTbl->aliasField('previous_institution_id')
+            ])
+            ->leftJoin([$TransfersTbl->getAlias() => $TransfersTbl->getTable()],
+                [
+                    $TransfersTbl->aliasField('student_id') . '=' . $student_id,
+                    $TransfersTbl->aliasField('institution_id') => $institution_id
+                ]
+            )
+            ->where([
+                $InstitutionStudentsTbl->aliasField('student_id') => $student_id,
+                $InstitutionStudentsTbl->aliasField('institution_id') => $institution_id,
+                $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
+            ])
+            ->first();
+        if (!empty($StudentTransfers)) {
+            if (!empty($StudentTransfers->institution_student_transfers['previous_institution_id'])) {
+                $PreviousInstitutions = $institutionTbl->find()
+                    ->where([
+                        $institutionTbl->aliasField('id') => $StudentTransfers->institution_student_transfers['previous_institution_id']
+                    ])
+                    ->first();
+                $previous_security_group_id = $PreviousInstitutions->security_group_id;
+            }
+        }
+        return $previous_security_group_id;
+    }
+
+    /**
+     * @param $student_id
+     * @param $security_group_id
+     * @param $previous_security_group_id
+     * @param $student_role_id
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = self::getDynamicTableInstance('Security.SecurityGroupUsers');
+        $securityGroupUsersTbl->updateAll(
+            [
+                'security_group_id' => $security_group_id,
+                'created' => new FrozenTime('NOW')
+            ],
+            [
+                'security_group_id' => $previous_security_group_id,
+                'security_user_id' => $student_id,
+                'security_role_id' => $student_role_id
+            ]
+        );
     }
 
     protected function removePendingAdmission($studentId, $institutionId)
@@ -613,9 +923,19 @@ class StudentAdmissionTable extends ControllerActionTable
         }
     }
 
+    //POCOR-7738 start
+
+    public function studentsAfterDelete(Event $event, Entity $student)
+    {
+        // check for enrolled status and delete admission record
+        $this->removePendingAdmission($student->student_id, $student->institution_id);
+    }
+
+    //POCOR-7738 end
+
     public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        // Generate encoded query string once
+        // POCOR-8286 start
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
 
@@ -626,9 +946,10 @@ class StudentAdmissionTable extends ControllerActionTable
             0 => 'index',
             1 => $encodedQueryString
         ];
+        // POCOR-8286 end
         $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
 
-        $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
+        $Navigation->substituteCrumb($previousTitle, __('Students'), $studentsUrl);
         $Navigation->addCrumb($previousTitle);
 
     }
@@ -739,13 +1060,13 @@ class StudentAdmissionTable extends ControllerActionTable
                 'title' => __('Undo')
             ],
         ];
-            $extraButtons['bulkAdmission'] = [
-                'permission' => ['Institutions', 'Students', 'add'],
-                'action' => 'BulkStudentAdmission',
-                'next_action' => 'edit',
-                'icon' => '<i class="fa kd-transfer"></i>',
-                'title' => __('Bulk Admission')
-            ];
+        $extraButtons['bulkAdmission'] = [
+            'permission' => ['Institutions', 'Students', 'add'],
+            'action' => 'BulkStudentAdmission',
+            'next_action' => 'edit',
+            'icon' => '<i class="fa kd-transfer"></i>',
+            'title' => __('Bulk Admission')
+        ];
 
         foreach ($extraButtons as $key => $config) {
             if (!empty($config['external'])) {
@@ -766,13 +1087,13 @@ class StudentAdmissionTable extends ControllerActionTable
                 continue;
             }
 
-        $url = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
                 'action' => $config['action'],
                 0 => $config['next_action'] ?? 'add',
                 1 => $encodedQueryString
-        ];
+            ];
 
             if (!empty($config['extraParams'])) {
                 $url = array_merge($url, ['?' => $config['extraParams']]);
@@ -799,6 +1120,8 @@ class StudentAdmissionTable extends ControllerActionTable
         }
     }
 
+    // POCOR-9100 changed sending email proc
+
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
@@ -811,6 +1134,10 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->setFieldOrder(['student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
     }
 
+    /*
+     * POCOR-9100 sending email about admission
+     */
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('openemis_no');//POCOR-7738
@@ -822,17 +1149,16 @@ class StudentAdmissionTable extends ControllerActionTable
         $value = '';
         if ($entity->has('user')) {
             //POCOR-7738 start
-            if (($this->request->getParam('pass'))[0] == "view"){
-                 $value = $entity->user->name;
-            }
-            else{
-                 $value = $entity->user->name_with_id;
+            if (($this->request->getParam('pass'))[0] == "view") {
+                $value = $entity->user->name;
+            } else {
+                $value = $entity->user->name_with_id;
             }
             //POCOR-7738 end
         }
         return $value;
     }
-    //POCOR-7738 start
+
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         $value = '';
@@ -849,7 +1175,10 @@ class StudentAdmissionTable extends ControllerActionTable
         ];
         return $event->getSubject()->HtmlField->link($value, $url);
     }
-    //POCOR-7738 end
+
+
+    //POCOR-6925
+
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
@@ -921,20 +1250,59 @@ class StudentAdmissionTable extends ControllerActionTable
         return $entity;
     }
 
+    /**
+     * @param Entity $entity
+     * @return Entity
+     */
+    private function checkStartEndDates(Entity $entity): Entity
+    {
+        if (!empty($entity->academic_period_id)) {
+            $academicPeriodId = $entity->academic_period_id;
+            if ($this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $academicPeriodId])) {
+                $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+                $periodStartDate = $academicPeriod->start_date;
+                $periodEndDate = $academicPeriod->end_date;
+
+                $today = FrozenDate::today();
+
+                // START DATE
+                if (
+                    empty($entity->start_date) ||
+                    $entity->start_date < $periodStartDate ||
+                    $entity->start_date > $periodEndDate
+                ) {
+                    $entity->start_date = ($today >= $periodStartDate && $today <= $periodEndDate)
+                        ? $today
+                        : $periodStartDate;
+                }
+
+                // END DATE
+                if (
+                    empty($entity->end_date) ||
+                    $entity->end_date < $periodStartDate ||
+                    $entity->end_date > $periodEndDate
+                ) {
+                    $entity->end_date = $periodEndDate;
+                }
+            }
+        }
+        return $entity;
+    }
+
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         //this is meant to force gender_id validation
         $data = $this->checkGender($data);
 
         // For third party restful call
-        if($data->offsetExists('action_type') && $data['action_type'] == 'third_party') {
-            if($data->offsetExists('academic_period_id')) {
+        if ($data->offsetExists('action_type') && $data['action_type'] == 'third_party') {
+            if ($data->offsetExists('academic_period_id')) {
                 if ($this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $data['academic_period_id']])) {
                     $data['end_date'] = $this->AcademicPeriods->get($data['academic_period_id'])->end_date->format('Y-m-d');
                 }
             }
 
-            if(!$data->offsetExists('institution_class_id')) {
+            if (!$data->offsetExists('institution_class_id')) {
                 $data['institution_class_id'] = null;
             }
 
@@ -942,7 +1310,7 @@ class StudentAdmissionTable extends ControllerActionTable
             $data['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
         }
         //POCOR-7716 start(setting default admission status during import)
-        if($data['action_type'] == 'imported'){
+        if ($data['action_type'] == 'imported') {
             //getting default value of student admission status
             $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
             $configItemResult = $ConfigItems->find()->where([
@@ -962,7 +1330,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 ])
                 ->first();
             if ($studentStatus == 0) {// for enrolled
-                $data['status_id']= $workflowResults->workflowSteps_id;
+                $data['status_id'] = $workflowResults->workflowSteps_id;
             } else {// for other statuses
                 $data['status_id'] = $workflowSteps->get($studentStatus)->id;
             }
@@ -970,21 +1338,38 @@ class StudentAdmissionTable extends ControllerActionTable
         }
     }
 
-    // POCOR-9100 changed sending email proc
+    /**
+     * @param ArrayObject $data
+     * @return ArrayObject
+     */
+    private function checkGender(ArrayObject $data): ArrayObject
+    {
+        if ($data->offsetExists('student_id') && !empty($data['student_id'])) {
+            if ($this->Users->exists([$this->Users->getPrimaryKey() => $data['student_id']])) {
+                $studentId = $data['student_id'];
+
+                if (!$data->offsetExists('gender_id')) {
+                    $query = $this->Users->get($studentId);
+                    $data['gender_id'] = $query->gender_id;
+                }
+            }
+        }
+        return $data;
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
     {
-        Log::debug(__FUNCTION__ . '1');
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
                 $triggeringStep = $WorkflowActions->getEventTriggeringStep('Institution.StudentAdmission', 'Workflow.onApprove');
 
-                if(!empty($triggeringStep) && $entity->status_id == $triggeringStep) {
+                if (!empty($triggeringStep) && $entity->status_id == $triggeringStep) {
                     if ($this->save($entity)) {
                         $this->addInstitutionStudent($entity);
                     }
                 }
-            } else { // AngularJs logic
+            } else if ($entity->has('action_type') && $entity->action_type == 'default') { // AngularJs logic
                 // auto approve admission and add student into the institution
                 $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
                 $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
@@ -1005,8 +1390,22 @@ class StudentAdmissionTable extends ControllerActionTable
 
                         // update status_id and assignee_id of admission record
                         $entity->status_id = $approvedStatusEntity->id;
-                        $this->autoAssignAssignee($entity);
-                        if ($this->save($entity)) {
+                        $saved = false;
+                        try {
+                            $this->autoAssignAssignee($entity);
+                            $this->save($entity);
+                            $saved = true;
+                        } catch (\Exception $exception) {
+                            try {
+                                $this->save($entity);
+                                $saved = true;
+                            } catch (\Exception $exception) {
+                                $entity->assignee_id = $entity->created_user_id;
+                                $this->save($entity);
+                                $saved = true;
+                            }
+                        }
+                        if ($saved) {
                             // add workflow transition
                             $transition = [
                                 'comment' => __('On Auto Approve Student Admission'),
@@ -1016,7 +1415,7 @@ class StudentAdmissionTable extends ControllerActionTable
                                 'workflow_model_id' => $workflowEntity->workflow_model_id,
                                 'model_reference' => $entity->id,
                                 'created_user_id' => 1,
-                                'created' => new Time('NOW')
+                                'created' => new FrozenTime('NOW')
                             ];
 
                             $WorkflowTransitions = self::getDynamicTableInstance('Workflow.WorkflowTransitions');
@@ -1029,14 +1428,8 @@ class StudentAdmissionTable extends ControllerActionTable
         }
         $this->sendStudentAdmissionAlert($entity);
         $this->ensureInstitutionStudentExists($entity);
-        Log::debug(__FUNCTION__ . '2');
-
-//        dd($entity);
     }
 
-    /*
-     * POCOR-9100 sending email about admission
-     */
     private function sendStudentAdmissionAlert($entity)
     {
         if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
@@ -1053,33 +1446,29 @@ class StudentAdmissionTable extends ControllerActionTable
         $alert = $alertsTable
             ->find()
             ->where([$alertsTable->aliasField('process_name') => 'AlertStudentAdmission',
-                $alertsTable->aliasField('frequency') => 'once'])
+                $alertsTable->aliasField('frequency') => 'Once'])
             ->first();
-        if(!$alert){
+        if (!$alert) {
             Log::debug('No Alerts for AlertStudentAdmission');
             return;
         }
-        if(!is_array($alert)){
+        if (!is_array($alert)) {
             $alert = $alert->toArray();
         }
         $activeRules = $alertRulesTable->find()
-                    ->where([
-                        $alertRulesTable->aliasField('feature') => $alert['name'],
-                        $alertRulesTable->aliasField('enabled') => 1
-                    ])
-                    ->toArray();
+            ->where([
+                $alertRulesTable->aliasField('feature') => $alert['name'],
+                $alertRulesTable->aliasField('enabled') => 1
+            ])
+            ->toArray();
 
-        Log::debug(print_r($activeRules,true));
-        Log::debug(print_r($entity,true));
 //        return;
         foreach ($activeRules as $rule) {
-            if(!is_array($rule)){
+            if (!is_array($rule)) {
                 $rule = $rule->toArray();
             }
             DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['admission_id' => $entity->id]);
-
         }
-
     }
 
     public function findWorkbench(Query $query, array $options)
@@ -1113,7 +1502,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->contain([$this->Users->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(), 'Assignees'])
             ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
@@ -1156,7 +1545,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $classId = isset($options['institution_class_id']) ? $options['institution_class_id'] : null;
         $conditions = [];
 
-        if(!is_null($classId)){
+        if (!is_null($classId)) {
             $query
                 ->select([
                     'pending_queue' => $query->func()->count('StudentAdmission.id')
@@ -1167,7 +1556,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
             $results = $query->first();
 
-            if(!empty($results->pending_queue)) {
+            if (!empty($results->pending_queue)) {
                 $query
                     ->contain([
                         'InstitutionClasses' => [
@@ -1192,8 +1581,6 @@ class StudentAdmissionTable extends ControllerActionTable
         return $query;
     }
 
-
-    //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -1202,24 +1589,24 @@ class StudentAdmissionTable extends ControllerActionTable
             $workflowStepsTable = self::getDynamicTableInstance('Workflow.WorkflowSteps');
             $Workflows = self::getDynamicTableInstance('Workflow.Workflows');
             $workModelId = $Workflows
-                            ->find()
-                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
-                            'workflow_id'=>$Workflows->aliasField('id'),
-                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
-                                [
-                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
-                                ])
-                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+                ->find()
+                ->select(['id' => $workflowModelsTable->aliasField('id'),
+                    'workflow_id' => $Workflows->aliasField('id'),
+                    'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
+                ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
+                    [
+                        $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
+                    ])
+                ->where([$workflowModelsTable->aliasField('name') => $workflowModel])->first();
             $workflowId = $workModelId->workflow_id;
             $isSchoolBased = $workModelId->is_school_based;
             $workflowStepsOptions = $workflowStepsTable
-                            ->find()
-                            ->select([
-                                'stepId'=>$workflowStepsTable->aliasField('id'),
-                            ])
-                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
-                            ->first();
+                ->find()
+                ->select([
+                    'stepId' => $workflowStepsTable->aliasField('id'),
+                ])
+                ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                ->first();
             $stepId = $workflowStepsOptions->stepId;
             /*$session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
@@ -1244,18 +1631,18 @@ class StudentAdmissionTable extends ControllerActionTable
                             // School based assignee
                             $where = [
                                 'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
-                                        ['Institutions.id' => $institutionId]],
+                                    ['Institutions.id' => $institutionId]],
                                 $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
                             ];
                             $schoolBasedAssigneeQuery = $SecurityGroupUsers
-                                    ->find('userList', ['where' => $where])
-                                    ->leftJoinWith('SecurityGroups.Institutions');
+                                ->find('userList', ['where' => $where])
+                                ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
 
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
-                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+                                ->find('UserList', ['where' => $where, 'area' => $areaObj]);
 
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
@@ -1264,8 +1651,8 @@ class StudentAdmissionTable extends ControllerActionTable
                     } else {
                         $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                         $assigneeQuery = $SecurityGroupUsers
-                                ->find('userList', ['where' => $where])
-                                ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                            ->find('userList', ['where' => $where])
+                            ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
                         $assigneeOptions = $assigneeQuery->toArray();
                     }
                 }
@@ -1279,388 +1666,22 @@ class StudentAdmissionTable extends ControllerActionTable
         }
     }
 
-    /**
-     * POCOR-7146
-     * POCOR-7224 refactored
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
-     * assign Role and group to student while creating student
-     **/
-    private static function assignStudentRoleGroup($institution_id, $student_id)
-    {
-        // POCOR-8683 removed logs
-        $student_role_id = self::getStudentSecurityRoleId();
-        $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
-        //check student already exist
-        $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
-        //Log::write('debug', $student_security_groups);
-        //check that the student is not in other groups
-        if (sizeof($student_security_groups) == 0) {
-            //Log::write('debug', $student_id);
-            //Log::write('debug', $security_group_id);
-            //Log::write('debug', $student_role_id);
-            self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
-            return;
-        }
-        //update user's security_group_id in security_group_users table
-        $previous_security_group_id = self::getPreviousSecurityGroupId($institution_id, $student_id);
-       // Log::write('debug', $previous_security_group_id);
-        //check that the student is should be transferred
-        if (in_array($previous_security_group_id, $student_security_groups)) {
-            self::makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id);
-            return;
-        }
-        //if he/she is not transferred - create new security group
-        self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
-        return;
-    }
-
-    /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
-     * @param $student_id
-     * @param $security_group_id
-     * @param $previous_security_group_id
-     * @param $student_role_id
-     */
-    private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
-    {
-        $securityGroupUsersTbl = self::getDynamicTableInstance('Security.SecurityGroupUsers');
-        $securityGroupUsersTbl->updateAll(
-            [
-                'security_group_id' => $security_group_id,
-                'created' => new Time('NOW')
-            ],
-            [
-                'security_group_id' => $previous_security_group_id,
-                'security_user_id' => $student_id,
-                'security_role_id' => $student_role_id
-            ]
-        );
-    }
-
-    /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
-     * @param $institution_id
-     * @param $student_id
-     * @param $institutionTbl
-     * @return mixed
-     */
-    private static function getPreviousSecurityGroupId($institution_id, $student_id)
-    {
-        $previous_security_group_id = 0;
-        $institutionTbl = self::getDynamicTableInstance('Institution.Institutions');
-        $InstitutionStudentsTbl = self::getDynamicTableInstance('Institution.InstitutionStudents');
-        $TransfersTbl = self::getDynamicTableInstance('Institution.InstitutionStudentTransfers');
-        $StudentTransfers = $InstitutionStudentsTbl
-            ->find()
-            ->select([
-                $InstitutionStudentsTbl->aliasField('student_id'),
-                $TransfersTbl->aliasField('institution_id'),
-                $TransfersTbl->aliasField('previous_institution_id')
-            ])
-            ->leftJoin([$TransfersTbl->getAlias() => $TransfersTbl->getTable()],
-                [
-                    $TransfersTbl->aliasField('student_id') . '=' . $student_id,
-                    $TransfersTbl->aliasField('institution_id') => $institution_id
-                ]
-            )
-            ->where([
-                $InstitutionStudentsTbl->aliasField('student_id') => $student_id,
-                $InstitutionStudentsTbl->aliasField('institution_id') => $institution_id,
-                $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
-            ])
-            ->first();
-        if (!empty($StudentTransfers)) {
-            if (!empty($StudentTransfers->institution_student_transfers['previous_institution_id'])) {
-                $PreviousInstitutions = $institutionTbl->find()
-                    ->where([
-                        $institutionTbl->aliasField('id') => $StudentTransfers->institution_student_transfers['previous_institution_id']
-                    ])
-                    ->first();
-                $previous_security_group_id = $PreviousInstitutions->security_group_id;
-            }
-        }
-        return $previous_security_group_id;
-    }
-
-    /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
-     * @param $student_id
-     * @param $student_role_id
-     * @return array
-     */
-    private static function getStudentSecurityGroups($student_id, $student_role_id)
-    {
-        $securityGroupUsersTbl = self::getDynamicTableInstance('Security.SecurityGroupUsers');
-        $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
-            ->select('security_group_id')
-            ->where([
-                $securityGroupUsersTbl->aliasField('security_user_id') => $student_id,
-                $securityGroupUsersTbl->aliasField('security_role_id') => $student_role_id
-            ])
-            ->extract('security_group_id')
-            ->toArray();
-        return $countSecurityGroupStudent;
-    }
-
-    /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
-     * @return int
-     */
-    private static function getStudentSecurityRoleId()
-    {
-        $securityRolesTbl = self::getDynamicTableInstance('Security.SecurityRoles');
-        $securityRoles = $securityRolesTbl->find()
-            ->where([
-                $securityRolesTbl->aliasField('code') => 'STUDENT',
-            ])->first();
-        $student_role_id = $securityRoles->id;
-        return $student_role_id;
-    }
-
-    /**
-     * @param $institution_id
-     * @return integer
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    private static function getInstitutionSecurityGroupId($institution_id)
-    {
-        $institutionTbl = self::getDynamicTableInstance('Institution.Institutions');
-        $security_group_id = null;
-        $institutions = $institutionTbl->find()
-            ->where([
-                $institutionTbl->aliasField('id') => $institution_id
-            ])->first();
-        if (!empty($institutions)) {
-            $security_group_id = $institutions->security_group_id;
-        }
-        if ($security_group_id != null) {
-            $securityGroupInstitutionsTbl = self::getDynamicTableInstance('Security.SecurityGroupInstitutions');
-            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
-                ->where([
-                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
-                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
-                ])
-                ->first();
-            //save security group for institution
-            if (empty($securityGroupInstitutions)) {
-                $security_group_ins_data = [
-                    'security_group_id' => $security_group_id,
-                    'institution_id' => $institution_id,
-                    'created_user_id' => 1,
-                    'created' => new FrozenTime('NOW')
-                ];
-                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
-                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
-            }
-        }
-        return $security_group_id;
-    }
-
-    /**
-     * @param $student_id
-     * @param $security_group_id
-     * @param $student_role_id
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
-    {
-        $id = Text::uuid();
-        $securityGroupUsersTbl = self::getDynamicTableInstance('Security.SecurityGroupUsers');
-        // POCOR-9100 start
-        $presentCount = $securityGroupUsersTbl->find('all')
-            ->where([
-                $securityGroupUsersTbl->aliasField('security_group_id') => $security_group_id,
-                $securityGroupUsersTbl->aliasField('security_user_id') => $student_role_id,
-                $securityGroupUsersTbl->aliasField('security_role_id') => $student_id,
-                ])->count();
-        if($presentCount > 0){
-            return $presentCount;
-        }
-        // POCOR-9100 end
-        $security_group_data = [
-            'id' => $id,
-            'security_group_id' => $security_group_id,
-            'security_user_id' => $student_id,
-            'security_role_id' => $student_role_id,
-            'created_user_id' => 1,
-            'created' => new FrozenTime('NOW')
-        ];
-        $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
-        $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
-        return $newEntity;
-    }
-
     public function getModelAlertData($threshold)
-     {
-         $dayBefore = $threshold['value'];
-         $workflowCategory = $threshold['workflow_steps'];
-         $sqlConditions = [
-             1 => ('DATEDIFF( NOW(),InstitutionCases.created)' . '>' . $dayBefore), // before
-         ];
-         $caseResults = $this->find()
-             ->contain(['Institutions', 'Assignees', 'Statuses'])
-             ->where([
-                 $this->Statuses->aliasField('id In') => $workflowCategory,
-                 $this->aliasField('modified is null'),
-                 $this->aliasField('modified_user_id is null'),
-                 $sqlConditions
-             ]);
-         return $caseResults->toArray();
-     }
-
-    /**
-     * Ensures that an InstitutionStudent record exists for an approved admission.
-     *
-     * If no matching student record is found, attempts to create one.
-     * If creation fails, reverts the admission's status to its previous state.
-     *
-     * @param \Cake\ORM\Entity $entity The StudentAdmission entity
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
-     * @since POCOR-9163
-     **/
-    private function ensureInstitutionStudentExists(Entity $entity): void
     {
-        $statuses = self::getDynamicTableInstance('Workflow.WorkflowModels')
-            ->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
-
-        if (!in_array($entity->status_id, array_keys($statuses))) {
-            return;
-        }
-
-        $InstitutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
-        $conditions = [
-            'student_id' => $entity->student_id,
-            'academic_period_id' => $entity->academic_period_id,
-            'start_date' => $entity->start_date,
-            'end_date' => $entity->end_date,
+        $dayBefore = $threshold['value'];
+        $workflowCategory = $threshold['workflow_steps'];
+        $sqlConditions = [
+            1 => ('DATEDIFF( NOW(),InstitutionCases.created)' . '>' . $dayBefore), // before
         ];
-
-        $existing = $InstitutionStudents->find()->where($conditions)->first();
-        if ($existing) {
-            return;
-        }
-
-        $studentEntity = $this->addInstitutionStudent($entity);
-//        Log::debug(print_r([__FUNCTION__ => $entity], true));
-//        Log::debug(print_r([__FUNCTION__ => $studentEntity], true));
-        if ($studentEntity) {
-            Log::info("InstitutionStudent created for student_id {$entity->student_id}");
-
-        } else {
-            Log::warning("Failed to create InstitutionStudent for student_id {$entity->student_id}");
-            if (!empty($entity->previous('status_id'))) {
-                $entity->status_id = $entity->previous('status_id');
-                $this->save($entity);
-                Log::info("Reverted status_id for admission ID {$entity->id} to previous value.");
-            }
-        }
-    }
-
-    /**
-     * @param Entity $entity
-     * @return Entity
-     */
-    private function checkStartEndDates(Entity $entity): Entity
-    {
-        if (!empty($entity->academic_period_id)) {
-            $academicPeriodId = $entity->academic_period_id;
-            if ($this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $academicPeriodId])) {
-                $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
-                $periodStartDate = $academicPeriod->start_date;
-                $periodEndDate = $academicPeriod->end_date;
-
-                $today = FrozenDate::today();
-
-                // START DATE
-                if (
-                    empty($entity->start_date) ||
-                    $entity->start_date < $periodStartDate ||
-                    $entity->start_date > $periodEndDate
-                ) {
-                    $entity->start_date = ($today >= $periodStartDate && $today <= $periodEndDate)
-                        ? $today
-                        : $periodStartDate;
-                }
-
-                // END DATE
-                if (
-                    empty($entity->end_date) ||
-                    $entity->end_date < $periodStartDate ||
-                    $entity->end_date > $periodEndDate
-                ) {
-                    $entity->end_date = $periodEndDate;
-                }
-            }
-        }
-        return $entity;
-    }
-
-    /**
-     * @param ArrayObject $data
-     * @return ArrayObject
-     */
-    private function checkGender(ArrayObject $data): ArrayObject
-    {
-        if ($data->offsetExists('student_id') && !empty($data['student_id'])) {
-            if ($this->Users->exists([$this->Users->getPrimaryKey() => $data['student_id']])) {
-                $studentId = $data['student_id'];
-
-                if (!$data->offsetExists('gender_id')) {
-                    $query = $this->Users->get($studentId);
-                    $data['gender_id'] = $query->gender_id;
-                }
-            }
-        }
-        return $data;
-    }
-
-    /**
-     * POCOR-8391 added
-     * Get a dynamic table instance with all associations.
-     *
-     * @param string $tableName
-     * @return \Cake\ORM\Table
-     */
-    private static function getDynamicTableInstance(string $tableName): Table
-    {
-        // Parse plugin and table names if dot notation is used
-        $locator = TableRegistry::getTableLocator();
-        try {
-            return $locator->get($tableName);
-        } catch (\Exception $exception) {
-
-        }
-        $parts = explode('.', $tableName);
-        $plugin = count($parts) > 1 ? $parts[0] : null;
-        $table = count($parts) > 1 ? $parts[1] : $parts[0];
-
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableFullAlias = Inflector::camelize($tableName);
-        $tableAlias = Inflector::camelize($table);
-
-        // Create the fully qualified class name if a plugin is specified
-        if ($plugin) {
-            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
-        } else {
-            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
-        }
-        // Check if the table instance already exists
-        if (!$locator->exists($tableFullAlias)) {
-            // Check if the specific table class exists
-            if (!class_exists($className)) {
-                $className = Table::class; // Fallback to generic Table class
-            }
-
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
-                'className' => $className,
-                'table' => $table,
-                'alias' => $tableAlias,
+        $caseResults = $this->find()
+            ->contain(['Institutions', 'Assignees', 'Statuses'])
+            ->where([
+                $this->Statuses->aliasField('id In') => $workflowCategory,
+                $this->aliasField('modified is null'),
+                $this->aliasField('modified_user_id is null'),
+                $sqlConditions
             ]);
-        }
-
-        // Return the table instance
-        return $locator->get($tableFullAlias);
+        return $caseResults->toArray();
     }
 
 }

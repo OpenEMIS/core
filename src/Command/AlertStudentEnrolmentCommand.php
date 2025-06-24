@@ -52,10 +52,14 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
+        $thresholdValue = $this->rule['threshold'] ?? '{}';
+        $threshold = json_decode($thresholdValue, true);
+        $workflowCategory = $threshold['workflow_steps'];
+
         $where = [
             'StudentEnrolment.id' => $this->enrolmentId,
+            'Statuses.id IN' => $workflowCategory,
         ];
-//        $this->logMsg("Where: " . print_r($where, true));
         return $this->StudentEnrolment->find()
             ->contain(['Users',
                 'Statuses',

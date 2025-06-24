@@ -54,7 +54,7 @@ class AlertsTable extends ControllerActionTable
         $this->field('process_name', ['visible' => false]);
         $this->field('process_id', ['visible' => false]);
         $this->field('frequency',['sort'=>false,'after'=>'name', 'entity' => $entity ]); //POCOR-7558
-        $this->field('last_run_date'); //POCOR-7558
+        $this->field('last_run_date', ['visible' => true]); //POCOR-7558
         // // $this->field('status', ['after' => 'name']); //POCOR-7558
 
     }
@@ -110,6 +110,11 @@ class AlertsTable extends ControllerActionTable
         ->distinct(  $this->aliasField('id'))
         ->order($this->aliasField('name'));
          //POCOR-7558 start
+        $this->field('name');
+        $this->field('process_name', ['visible' => false]);
+        $this->field('process_id', ['visible' => false]);
+        $this->field('frequency',['sort'=>true,'after'=>'name']); //POCOR-7558
+        $this->field('last_run_date', ['visible' => true]); //POCOR-7558
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -345,8 +350,6 @@ class AlertsTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
-            case 'last_run_date':
-                return __('Last Run');
             case 'frequency':
                 return __('Frequency');
             case 'name':

@@ -10,6 +10,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;
 
 abstract class AlertCommandBase extends \Cake\Command\Command
 {
@@ -282,7 +283,9 @@ abstract class AlertCommandBase extends \Cake\Command\Command
             'modified' => $now,
             'modified_user_id' => $userId
         ], ['id' => $processId]);
-
+        $this->Alerts->updateAll(['process_id' =>
+            getmypid(), 'modified' => FrozenTime::now()],
+            ['name' => $this->featureName]);
         Log::debug("[SystemProcesses] Marked process $processId as completed.");
     }
 
