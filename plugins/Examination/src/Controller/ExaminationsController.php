@@ -325,7 +325,10 @@ class ExaminationsController extends AppController
             }
         }
 
-        $referrerUrl = isset($params['referrer']) ? $params['referrer'] : '/';
+        $referrerUrl = $params['referrer'] ?? 
+                   $requestQuery['referrer'] ?? 
+                   $this->request->getEnv('HTTP_REFERER') ?? 
+                   '/';
         return $this->redirect($referrerUrl);
     }
 
