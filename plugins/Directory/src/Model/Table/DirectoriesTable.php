@@ -2560,7 +2560,7 @@ public function getIdentityTypeData($value_selection)
         if (!$entity->isNew()) {
             if (!$entity->is_student) {
                 $dirty = $entity->getDirty();
-                Log::debug(print_r($dirty,true));
+//                Log::debug(print_r($dirty,true));
                 if (in_array('gender_id', $dirty)) {
                     $this->Alert->error(__('Gender is not editable in Directories') , ['type' => 'string', 'reset' => true]);
                     $entity->setErrors(['gender_id', __('Gender is not editable in Directories')]);

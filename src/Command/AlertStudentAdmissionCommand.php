@@ -55,8 +55,13 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
+        $thresholdValue = $this->rule['threshold'] ?? '{}';
+        $threshold = json_decode($thresholdValue, true);
+        $workflowCategory = $threshold['workflow_steps'];
         $where = [
             'StudentAdmission.id' => $this->admissionId,
+            'Statuses.id IN' => $workflowCategory,
+
         ];
 //        $this->logMsg("Where: " . print_r($where, true));
         return $this->StudentAdmission->find()
@@ -64,7 +69,8 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
                 'Statuses',
                 'AcademicPeriods',
                 'Institutions'])
-            ->where($where)->toArray();
+            ->where($where)
+            ->toArray();
     }
 
     public function prepareContext(Arguments $args, ConsoleIo $io): bool
