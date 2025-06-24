@@ -233,12 +233,21 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
             if (($this->AccessControl->check(['Examinations', 'syncResultFromExam', 'execute']) || $this->AccessControl->isAdmin())
                 && !empty($examinationId) && $examinationId != -1
             ) {
+
+                $syncParams = [
+                    'examination_id' => $examinationId,
+                    'academic_period_id' => $this->request->getQuery('academic_period_id'),
+                    'referrer' => $this->request->getRequestTarget()
+                ];
+                $encodedParams = $this->ControllerAction->paramsEncode($syncParams);
+
                 $syncUrl = [
                     'plugin' => 'Examination',
                     'controller' => 'Examinations',
                     'plugin' => 'Examination',
                     'controller' => 'Examinations',
                     'action' => 'syncStudentsToExam',
+                    '?' => ['queryString' => $encodedParams]
                 ];
 
                 $syncButton =  [
