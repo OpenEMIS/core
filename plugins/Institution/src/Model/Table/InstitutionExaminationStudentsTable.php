@@ -96,7 +96,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     }
     //POCOR-7512 end
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets){
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
         $sheets[] = [
             'name' => $this->getAlias(),
             'table' => $this,
@@ -353,7 +354,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {     
+    {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
         if (isset($toolbarButtonsArray['add'])) {
@@ -415,13 +416,20 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 && !empty($examinationId) && $examinationId != -1
             ) {
 
+                $syncParams = [
+                    'examination_id' => $examinationId,
+                    'academic_period_id' => $this->request->getQuery('academic_period_id'),
+                    'institution_id' => $this->getInstitutionID(),
+                    'referrer' => $this->request->getRequestTarget()
+                ];
+                $encodedParams = $this->ControllerAction->paramsEncode($syncParams);
 
                 $syncUrl = [
                     'plugin' => 'Examination',
                     'controller' => 'Examinations',
                     'action' => 'syncStudentsToExam',
+                    '?' => ['queryString' => $encodedParams]
                 ];
-
 
                 $syncButton =  [
                     'url' => $syncUrl,
@@ -445,7 +453,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-       
+
         $query->select([
             'InstitutionExaminationStudents.id',
             'InstitutionExaminationStudents.student_id',
@@ -455,7 +463,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'InstitutionExaminationStudents.examination_centre_id',
             'InstitutionExaminationStudents.sync_status',
             'InstitutionExaminationStudents.last_synced',
-        
+
             'Users.openemis_no',
             'Users.first_name',
             'Users.middle_name',
@@ -464,15 +472,15 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'Users.preferred_name',
             'Users.date_of_birth',
             'Users.identity_number',
-        
+
             'MainIdentityTypes.name',
             'Genders.name',
             'MainNationalities.name',
-        
+
             'Institutions.code',
             'Institutions.name'
         ]);
-        
+
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
@@ -1063,7 +1071,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
      * @return string|null The formatted last synced date.
      */
     public function onGetLastSynced(Event $event, Entity $entity)
-    {     
+    {
         if ($entity->last_synced instanceof FrozenTime || $entity->last_synced instanceof \DateTime) {
             return $entity->last_synced->format('Y-m-d H:i:s');
         }
@@ -1090,7 +1098,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
         $this->field('sync_status', ['visible' => true, 'label' => 'Sync Status']);
         $this->field('last_synced', ['visible' => true, 'label' => 'Last Synced']);
-        
     }
 
     //POCOR-7509 end

@@ -437,7 +437,7 @@ class SyncExamComponent extends Component
 
         // Get student data to register
         [$studentData, $rawData] = $this->getRegisterStudentData($params);
-
+      
         if (empty($studentData)) {
             Log::write('error', 'No student data available for registration');
             $this->Alert->error(__('No student data available for registration'), ['type' => 'string', 'reset' => true]);
@@ -536,16 +536,18 @@ class SyncExamComponent extends Component
         $data = [];
 
         // Get the student user data with its related nationality
-        $SecurityUserTable = $this->getTableLocator()->get('Security.Users');
-        $userData = $SecurityUserTable->find()
-            ->contain('MainNationalities')  // Contain the necessary related data
-            ->where(['openemis_no' => $params['openemis_no']])
-            ->first();
+        if (isset($params['openemis_no']) && !empty($params['openemis_no'])) {
+            $SecurityUserTable = $this->getTableLocator()->get('Security.Users');
+            $userData = $SecurityUserTable->find()
+                ->contain('MainNationalities')  // Contain the necessary related data
+                ->where(['openemis_no' => $params['openemis_no']])
+                ->first();
 
-        if (!$userData) {
-            Log::write('error', "No user found for OpenEmis No: " . $params['openemis_no']);
-            Log::write('debug', '=================== END GET STUDENT DATA ===================');
-            return [$data, []];  // Return empty if no student found
+            if (!$userData) {
+                Log::write('error', "No user found for OpenEmis No: " . $params['openemis_no']);
+                Log::write('debug', '=================== END GET STUDENT DATA ===================');
+                return [$data, []];
+            }
         }
 
         // Conditions for examination centre and student data
