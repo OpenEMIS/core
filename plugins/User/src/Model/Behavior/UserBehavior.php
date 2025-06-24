@@ -14,6 +14,7 @@ use Cake\I18n\I18n;
 use Cake\Http\Session;
 use Cake\Routing\Router;
 use Cake\ORM\Locator\TableLocator;
+use Cake\Chronos\Chronos;
 
 
 class UserBehavior extends Behavior
@@ -188,9 +189,31 @@ class UserBehavior extends Behavior
             $this->_table->fields['last_name']['order'] = $i++;
             $this->_table->fields['preferred_name']['order'] = $i++;
             $this->_table->fields['gender_id']['order'] = $i++;
+            // POCOR-8286 date format start
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format');
+            $phpToDatepickerFormat = [
+                'd' => 'dd',
+                'j' => 'd',
+                'D' => 'D',        // Mon, Tue (short day)
+                'l' => 'DD',       // Monday, Tuesday (full day)
+                'm' => 'mm',
+                'n' => 'm',
+                'M' => 'M',        // Jan, Feb (short month)
+                'F' => 'MM',       // January, February (full month)
+                'y' => 'yy',       // 2-digit year
+                'Y' => 'yyyy'      // 4-digit year
+            ];
+
+            $datepickerFormat = preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($phpToDatepickerFormat) {
+                return $phpToDatepickerFormat[$matches[0]] ?? $matches[0];
+            }, $systemDateFormat);
+            // POCOR-8286 date format end
             if ($this->isCAv4()) {
+
                 $this->_table->field('date_of_birth', [
                     'date_options' => [
+                        'format' => $datepickerFormat, // POCOR-8286
                         'endDate' => date('d-m-Y')
                     ],
                     'default_date' => false,
@@ -200,6 +223,7 @@ class UserBehavior extends Behavior
                     'date_of_birth',
                     [
                         'date_options' => [
+                            'format' => $datepickerFormat, // POCOR-8286
                             'endDate' => date('d-m-Y')
                         ],
                         'default_date' => false,
@@ -711,5 +735,15 @@ class UserBehavior extends Behavior
                 $data[$value] = trim($data[$value]);
             }
         }
+        // POCOR-8286 start
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format');
+        try {
+            $date = Chronos::createFromFormat($systemDateFormat, $data['date_of_birth']);
+            $data['date_of_birth'] = $date->format('Y-m-d');
+        } catch (\Exception $e) {
+            Log::warning("Invalid date: " . $data['date_of_birth'] . ' with format ' . $systemDateFormat);
+        }
+        // POCOR-8286 end
     }
 }
