@@ -979,7 +979,8 @@ class InstitutionClassStudentsTable extends AppTable
                         $reportCardEntity = $ReportCards->find()
                             ->select([
                                 $ReportCards->aliasField('start_date'),
-                                $ReportCards->aliasField('end_date')
+                                $ReportCards->aliasField('end_date'),
+                                $ReportCards->aliasField('overall_result')
                             ])
                             ->where([
                                 $ReportCards->aliasField('id') => $reportCardId
@@ -989,10 +990,11 @@ class InstitutionClassStudentsTable extends AppTable
                         if (!$reportCardEntity->isEmpty()) {
                             $row->reportCardStartDate = NULL;
                             $row->reportCardEndDate = NULL;
+                            $row->overallResult = NULL;
                             $row->reportCardStartDate = $reportCardEntity->first()['start_date'];
                             $row->reportCardEndDate = $reportCardEntity->first()['end_date'];
+                            $row->overallResult = $reportCardEntity->first()['overall_result'];
                         }
-
                         // To get the report card template subjects
                         $ReportCardSubjects = self::getDynamicTableInstance('ReportCard.ReportCardSubjects');
                         $reportCardSubjectsEntity = $ReportCardSubjects->find()
@@ -1040,6 +1042,33 @@ class InstitutionClassStudentsTable extends AppTable
                             $total_mark = 0;
                             $subjectTaken = 0;
                             foreach($subjectStudentsEntities->toArray() as $studentEntity) {
+                                //POCOR-9201[START]
+                                if ($row->overallResult == 0) {
+                                    $conditions = [
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        /*POCOR-6443 ends*/
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ];
+                                }else{
+                                    $conditions = [
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                        // $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        // $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        /*POCOR-6443 ends*/
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ];
+                                }
+                                //POCOR-9201[END]
                                 // Getting all the subject marks based on report card start/end date
                                 $AssessmentItemResultsQuery = $AssessmentItemResults->find();
                                 $assessmentItemResultsEntities = $AssessmentItemResultsQuery
@@ -1057,17 +1086,7 @@ class InstitutionClassStudentsTable extends AppTable
                                     ->contain([
                                         'AssessmentPeriods'
                                     ])
-                                    ->where([
-                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
-                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
-                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
-                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
-                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
-                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
-                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
-                                        /*POCOR-6443 ends*/
-                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
-                                    ])
+                                    ->where($conditions)
                                     ->all();
                                     $studentSubArray = [];//POCOR-6501
                                     if (!$assessmentItemResultsEntities->isEmpty()) {
@@ -1186,6 +1205,33 @@ class InstitutionClassStudentsTable extends AppTable
 
                             foreach($subjectStudentsEntities->toArray() as $studentEntity) {
                                 // Getting all the subject marks based on report card start/end date
+                                //POCOR-9201[START]
+                                if ($row->overallResult == 0) {
+                                    $conditions = [
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        /*POCOR-6443 ends */
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ];
+                                }else{
+                                    $conditions = [
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        /*POCOR-6443 ends */
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ];
+                                }
+                                //POCOR-9201[END]
                                 $AssessmentItemResultsQuery = $AssessmentItemResults->find();
                                 $assessmentItemResultsEntities = $AssessmentItemResultsQuery
                                     ->select([
@@ -1201,17 +1247,7 @@ class InstitutionClassStudentsTable extends AppTable
                                     ->contain([
                                         'AssessmentPeriods'
                                     ])
-                                    ->where([
-                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
-                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
-                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
-                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
-                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
-                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
-                                        //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
-                                        /*POCOR-6443 ends */
-                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
-                                    ])
+                                    ->where($conditions)
                                     ->all();
                                 $studentSubArray = [];//POCOR-6501
                                 if (!$assessmentItemResultsEntities->isEmpty()) {
@@ -1338,6 +1374,35 @@ class InstitutionClassStudentsTable extends AppTable
                             }//POCOR-6501 ends
 
                             // Getting all the subject marks based on report card start/end date
+                            //POCOR-9201[START]
+                            if ($row->overallResult == 0) {
+                                $conditions = [
+                                    $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                    $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                    $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                    /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                    $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                    $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                    /*POCOR-6443 ends*/
+                                    $AssessmentItemResults->aliasField('marks IS NOT NULL'),
+                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id']
+                                ];
+                            }else{
+                                $conditions = [
+                                    $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                    $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                    $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                    /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                    //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                    //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                    /*POCOR-6443 ends*/
+                                    $AssessmentItemResults->aliasField('marks IS NOT NULL'),
+                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id']
+                                ];
+                            }
+                            //POCOR-9201[END]
                             $AssessmentItemResultsQuery = $AssessmentItemResults->find();
 
                             $assessmentItemResultsEntities = $AssessmentItemResultsQuery
@@ -1355,19 +1420,7 @@ class InstitutionClassStudentsTable extends AppTable
                                 ->contain([
                                     'AssessmentPeriods'
                                 ])
-                                ->where([
-                                    $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
-                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
-                                    $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
-                                    $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
-                                    /*POCOR-6443 starts - commented code was hiding overall marks*/
-                                    //$AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
-                                    //$AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
-                                    /*POCOR-6443 ends*/
-                                    $AssessmentItemResults->aliasField('marks IS NOT NULL'),
-                                    $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id']
-
-                                ])
+                                ->where($conditions)
                                 ->all();
 
                             $total_mark = 0;
