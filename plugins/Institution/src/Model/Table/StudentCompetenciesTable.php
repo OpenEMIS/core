@@ -102,7 +102,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->setFieldOrder(['name', 'academic_period_id', 'education_grade', 'competency_template', 'total_male_students', 'total_female_students']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Competency Comments','Students');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Competency Comments','Students');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -189,9 +189,9 @@ class StudentCompetenciesTable extends ControllerActionTable
         {
             if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles))
             {
-                $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
-            
-                if (!$classPermission)
+                $competenctPermission = $AccessControl->check(['Institutions', 'Competencies', 'index'], $roles); // POCOR-9235
+
+                if (!$competenctPermission)
                 {
                     $query->where(['1 = 0'], [], true);
                 } else
@@ -278,8 +278,8 @@ class StudentCompetenciesTable extends ControllerActionTable
     }
     //POCOR-7965 start
     public function onGetTotalMaleStudents(Event $event, Entity $entity)
-    { 
-        
+    {
+
         $gender_code = 'M';
         $grade_id = $entity->education_grade_id;
         $class_id = $entity->institution_class_id;
@@ -299,7 +299,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function onGetTotalFemaleStudents(Event $event, Entity $entity)
     {
-     
+
         $gender_code = 'F';
         $grade_id = $entity->education_grade_id;
         $class_id = $entity->institution_class_id;
