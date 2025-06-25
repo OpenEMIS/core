@@ -397,4 +397,18 @@ class InstitutionStatisticsTable extends AppTable
         }
 
     }
+
+    /**
+     * redirect to index page after save
+     * @param int $requestData
+     * @return object
+     * @author Ehteram Ahmad
+     */
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {
+        $param = $this->request->getParam('pass')[1];
+        $url = ['plugin' => $this->request->getParam('plugin'), 'controller' => $this->request->getParam('controller'), 'action' =>  'InstitutionStatistics', '0' => 'index','1' => $param ];
+        return $this->controller->redirect($url);
+    }
 }

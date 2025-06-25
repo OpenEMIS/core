@@ -462,19 +462,19 @@ class ControllerActionHelper extends Helper
                 $fieldName = $_fieldModel . '.' . $_field;
                 $options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 
-                if (is_null($table)) {
-
+                if (is_null($table) && isset($attr['className'])) { // POCOR-9227
                     $table = TableRegistry::get($attr['className']);
                 }
 
                 // attach event to get labels for fields
-
-                $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => true]);
-                $event = $table->getEventManager()->dispatch($event);
-                // end attach event
-                if ($event->getResult()) {
-                    $label = $event->getResult();
-                }
+                if ($table) { // POCOR-9227
+                    $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => true]);
+                    $event = $table->getEventManager()->dispatch($event);
+                    // end attach event
+                    if ($event->getResult()) {
+                        $label = $event->getResult();
+                    }
+                } // POCOR-9227
                 if ($label !== false) {
                     if (!isset($options['label'])) {
                         $_fieldAttr['label'] = $label;
