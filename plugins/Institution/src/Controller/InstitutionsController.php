@@ -1842,6 +1842,13 @@ class InstitutionsController extends AppController
             $this->set('ngController', 'AssessmentItemExemptionsCtrl as AssessmentItemExemptionsController');
             $backUrl = $this->referer();
             $this->set('backUrl', $backUrl);
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institution_id])
+            ];
+            $this->set('alertUrl', $alertUrl);
             $this->Navigation->addCrumb(__('Assessments'), ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institution_id])]);
             $this->Navigation->addCrumb(__('Results'), $backUrl);
             $this->render('assessment_item_exemptions_edit');
