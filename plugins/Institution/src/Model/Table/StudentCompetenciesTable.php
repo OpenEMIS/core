@@ -189,7 +189,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         {
             if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles))
             {
-                $competenctPermission = $AccessControl->check(['Institutions', 'Competencies', 'index'], $roles); // POCOR-9235
+                $competenctPermission = $AccessControl->check(['Students', 'Competencies', 'index'], $roles); // POCOR-9235
 
                 if (!$competenctPermission)
                 {
