@@ -2991,12 +2991,12 @@ class ReportCardsTable extends AppTable
     //POCOR-9232 starts
     public function onExcelTemplateInitialiseClassAndLevelRanking(Event $event, array $params, ArrayObject $extra)
     {
-        if (empty($params['academic_period_id']) && empty($params['student_id'])) {
+        if (empty($params['academic_period_id']) && empty($params['student_id']) && !empty($params['institution_id'])) {
             return [];
         }
         $studentId = $params['student_id'];
         $academicPeriodId = $params['academic_period_id'];
-
+        $institutionId = $params['institution_id'];
         $connection = ConnectionManager::get('default');
         $studentsData = $connection->execute("SELECT
             academic_periods.name AS 'academic_period',
@@ -3008,12 +3008,12 @@ class ReportCardsTable extends AppTable
             security_users.first_name AS 'student_first_name',
             security_users.last_name AS 'student_last_name',
             institution_subjects.name AS 'institution_subject',
-            CASE
-                WHEN institution_subject_students.total_mark IS NOT NULL THEN institution_subject_students.total_mark
+            CASE 
+                WHEN institution_subject_students.total_mark IS NOT NULL THEN institution_subject_students.total_mark 
             ELSE ''
                 END AS 'total_mark',
-            RANK() OVER ( PARTITION BY institution_classes.name, institution_subjects.name ORDER BY institution_subject_students.total_mark DESC) AS 'class_ranking',
-            RANK() OVER ( PARTITION BY institutions.name, education_grades.name, institution_subjects.name ORDER BY institution_subject_students.total_mark DESC) AS 'level_ranking'
+            RANK() OVER( PARTITION BY institution_classes.name, institution_subjects.name ORDER BY institution_subject_students.total_mark DESC ) AS 'class_ranking',
+            RANK() OVER( PARTITION BY institutions.name, education_grades.name, institution_subjects.name ORDER BY institution_subject_students.total_mark DESC ) AS 'level_ranking'
         FROM institution_subject_students
         INNER JOIN institution_classes ON institution_classes.id = institution_subject_students.institution_class_id
         INNER JOIN security_users ON security_users.id = institution_subject_students.student_id
@@ -3021,8 +3021,12 @@ class ReportCardsTable extends AppTable
         INNER JOIN institutions ON institutions.id = institution_subject_students.institution_id
         INNER JOIN education_grades ON education_grades.id = institution_subject_students.education_grade_id
         INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id
-        WHERE academic_periods.id = " . $academicPeriodId . " AND institution_subject_students.student_id = " . $studentId . " AND LENGTH(institution_subject_students.total_mark) > 0
-        ORDER BY institutions.name, education_grades.name, institution_subjects.name, 'Level Ranking', 'Class Ranking';")->fetchAll(\PDO::FETCH_ASSOC);
+        WHERE
+            academic_periods.id = " . $academicPeriodId . " AND institutions.id = " . $institutionId . " AND institution_subject_students.student_id = " . $studentId . "
+        ORDER BY
+            institution_subjects.name,
+            'level_ranking',
+            'class_ranking';")->fetchAll(\PDO::FETCH_ASSOC);
 
         $entity = $result = [];
         if (!empty($studentsData)) {
