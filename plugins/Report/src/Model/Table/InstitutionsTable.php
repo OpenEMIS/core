@@ -891,6 +891,7 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['options'] = $typeOptions;
+                $attr['onChangeReload'] = true;
                 return $attr;
             } else {
                 $attr['value'] = self::NO_FILTER;
@@ -931,6 +932,8 @@ class InstitutionsTable extends AppTable
                         foreach ($statusData as $key => $value) {
                             $statusOptions[$key] = $value;
                         }
+                        $statusOptions = [-1 => 'All Statuses'] + $statusOptions; //POCOR-9041
+
                         break;
 
 
@@ -965,6 +968,7 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['options'] = $statusOptions;
+                $attr['onChangeReload'] = true;
                 $attr['attr']['required'] = true;
                 return $attr;
             } else {
