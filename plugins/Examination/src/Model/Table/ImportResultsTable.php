@@ -48,7 +48,7 @@ class ImportResultsTable extends AppTable
         // show examination list distinct by code (user create same exam in different academic period)
         $modelData = $lookedUpTable->find('all')
             ->select($selectFields)
-            ->matching($AcademicPeriods->alias())
+            ->matching($AcademicPeriods->getAlias())
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -60,7 +60,7 @@ class ImportResultsTable extends AppTable
                     $row->code,
                     $row->name,
                     $row->{$lookupColumn},
-                    $row->_matchingData[$AcademicPeriods->alias()]->name
+                    $row->_matchingData[$AcademicPeriods->getAlias()]->name
                 ];
             }
         }
@@ -79,7 +79,7 @@ class ImportResultsTable extends AppTable
         // show distinct list of subjects which are added as exam items and subject weight is more than zero
         $modelData = $ExaminationCentreSubjects->find('all')
             ->select($selectFields)
-            ->matching($lookedUpTable->alias())
+            ->matching($lookedUpTable->getAlias())
             ->matching('Examinations.AcademicPeriods')
             ->where([$lookedUpTable->aliasField('weight > ') => 0])
             ->group([$ExaminationCentreSubjects->aliasField('examination_subject_id')])
@@ -91,10 +91,10 @@ class ImportResultsTable extends AppTable
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
-                    $row->_matchingData[$Examinations->alias()]->id,
-                    $row->_matchingData[$lookedUpTable->alias()]->name,
-                    $row->_matchingData[$lookedUpTable->alias()]->code,
-                    $row->_matchingData[$lookedUpTable->alias()]->{$lookupColumn}
+                    $row->_matchingData[$Examinations->getAlias()]->id,
+                    $row->_matchingData[$lookedUpTable->getAlias()]->name,
+                    $row->_matchingData[$lookedUpTable->getAlias()]->code,
+                    $row->_matchingData[$lookedUpTable->getAlias()]->{$lookupColumn}
                 ];
             }
         }
@@ -102,7 +102,26 @@ class ImportResultsTable extends AppTable
 
     public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        unset($data[$columnOrder]);
+        // $order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
+
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $selectFields = ['openemis_no', $lookupColumn];
+        $modelData = $lookedUpTable->find('all')
+                                ->select($selectFields)
+                                ;
+
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'openemis_no');
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+        if (!empty($modelData)) {
+            foreach ($modelData->toArray() as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->openemis_no,
+                    $row->{$lookupColumn}
+                ];
+            }
+        }
+        // unset($data[$columnOrder]);
     }
 
     public function onImportPopulateExaminationGradingOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
@@ -113,7 +132,7 @@ class ImportResultsTable extends AppTable
         $order = [$ExaminationGradingTypes->aliasField('name'), $lookupModel.'.order'];
         $modelData = $lookedUpTable->find('all')
             ->select($selectFields)
-            ->matching($ExaminationGradingTypes->alias())
+            ->matching($ExaminationGradingTypes->getAlias())
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -125,7 +144,7 @@ class ImportResultsTable extends AppTable
                     $row->name,
                     $row->code,
                     $row->{$lookupColumn},
-                    $row->_matchingData[$ExaminationGradingTypes->alias()]->name
+                    $row->_matchingData[$ExaminationGradingTypes->getAlias()]->name
                 ];
             }
         }
