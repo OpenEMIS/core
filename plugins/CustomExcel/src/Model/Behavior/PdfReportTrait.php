@@ -670,24 +670,6 @@ trait PdfReportTrait
             $orientation = $pageSetup->getOrientation();
             $pageSizeP = [230, 350]; // A4 in mm
             $pageSizeL = [350, 230]; // A4 in mm
-//            $fitToPage = $pageSetup->getFitToPage();     // true/false
-//            $fitToWidth = $pageSetup->getFitToWidth();   // integer
-//            $fitToHeight = $pageSetup->getFitToHeight(); // integer
-//            if ($pageSetup->getPaperSize() === PageSetup::PAPERSIZE_A4) {
-//                // If Excel used scaling (like 48%), adjust accordingly
-//                $scale = $pageSetup->getScale(); // 48
-//                if ($scale > 0 && $scale < 120) {
-//                    $pageSizeXP = [
-//                        round(210 * $scale / 100),
-//                        round(297 * $scale / 100)
-//                    ];
-//                    $pageSizeXL = [
-//                        round(297 * $scale / 100),
-//                        round(210 * $scale / 100)
-//                    ];
-//                    Log::debug(print_r([$pageSizeXP, $pageSizeXL],true));
-//                }
-//            }
 
             if ($orientation === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT) {
                 $pageSize = $pageSizeP; // A4
