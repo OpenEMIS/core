@@ -902,7 +902,7 @@ class AssessmentResultsTable extends AppTable
                                     $totalMarksPerStudent[$assessmentI]['marks'] = 'EXEMPT';
                                     $totalMarksPerStudent[$assessmentI]['academic_term_total_marks'] = 'EXEMPT';
                                     $totalMarksPerStudent[$assessmentI]['academic_term_total_weighted_marks'] = 'EXEMPT';
-                                }
+                                }                                
                             }
 //                            $totalMarksPerStudent[$assessmentI][$markkey] = $markval;
                             $assessmentI++;
