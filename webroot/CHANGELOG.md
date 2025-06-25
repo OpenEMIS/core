@@ -1,3 +1,17 @@
+### [4.30.0] - 2025-06-25
+- Implemented: Develop a configuration to change the overall mark and total mark in the report card comments feature between academic period and assessment period
+- Implemented: Develop change to Reports > Staff to include the option for all statuses
+- Implemented: Develop change to Reports > Students to include the option for all statuses
+- Bug Fixed: Institutions > Staff > Select > Edit: User receives a 404 error page.
+- Bug Fixed: Institutions > Performance > Assessments > Exempt/Unassign: Save button doesn't redirect user to exit the edit mode
+- Bug Fixed: Reports > Surveys > Add: Mandatory fields are missing only when save is clicked
+- Bug Fixed: Institutions > Institution Statistics > Add: User is not redirected out of edit page once changes have been saved.
+- Bug Fixed: Administration > Meals : Errors in Meals feature
+- Bug Fixed: Reports > Audits : Excel sheet should show all user roles except for super_admin
+- Bug Fixed: Institutions > Students > Academic > Risks: The risk showing under students profile is showing incorrect risk
+- Bug Fixed: Institutions > Examinations > Results: when viewing results in Institutions > Examinations > Results page, the page does not display all information etc weight, education subject
+- Bug Fixed: Administration > Examinations > Results > Import Template: The reference sheet in the import template for Examination Results is empty
+
 ### [4.29.1] - 2025-06-23
 - Bug Fixed: Institutions > Performance > Assessment > Report: Certain users are unable to download mark sheet & are being redirected to homepage instead when doing so.
 
