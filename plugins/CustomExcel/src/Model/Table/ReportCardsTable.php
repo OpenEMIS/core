@@ -2112,7 +2112,7 @@ class ReportCardsTable extends AppTable
             }
         }
 
-//        Log::debug(print_r([__FUNCTION__ => $entityResults], true));
+        Log::debug(print_r([__FUNCTION__ => $entityResults], true));
         return $entityResults;
 
     }
@@ -2738,7 +2738,7 @@ class ReportCardsTable extends AppTable
     }
 
     public function onExcelTemplateInitialiseInstitutionStudentsReportCardGpa(Event $event, array $params, ArrayObject $extra)
-    { 
+    {
         $student_id = $params['student_id'];
         $institution_id = $params['institution_id'];
         $education_grade_id = $params['education_grade_id'];
