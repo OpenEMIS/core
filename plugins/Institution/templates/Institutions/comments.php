@@ -63,9 +63,7 @@ $loginUserId = $_SESSION['Auth']['User']['id'];
             </scrollable-tabset>
 
             <div id="institution-comment-table" class="table-wrapper">
-                <div ng-if="InstitutionCommentsController.gridOptions"
-                     kd-ag-grid="InstitutionCommentsController.gridOptions"
-                     has-tabs="true" class="ag-height-fixed"></div>
+                <div ng-if="InstitutionCommentsController.gridOptions" kd-ag-grid="InstitutionCommentsController.gridOptions" has-tabs="true" class="ag-height-fixed"></div>
             </div>
         </div>
     </div>
@@ -79,7 +77,7 @@ $loginUserId = $_SESSION['Auth']['User']['id'];
         .ag-cell #absence_type_id select.error {
             border-color: #CC5C5C !important;
         }
-
+        
         .ag-cell textarea#comment:focus {
             outline: none;
         }
