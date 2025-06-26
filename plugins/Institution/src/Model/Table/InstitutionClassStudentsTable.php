@@ -962,124 +962,190 @@ class InstitutionClassStudentsTable extends AppTable
             ->order([
                 $Users->aliasField('first_name'), $Users->aliasField('last_name')
             ]);
-        $assessment_id = $this->getAssessmentId($academicPeriodId, $educationGradeId);
+        if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
+            $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
+        }
 
+        // Get the report card start/end date
         $reportCardEntity = $ReportCards->find()
-            ->select(['start_date', 'end_date', 'overall_result'])
-            ->where(['id' => $reportCardId])
-            ->first();
-
-        $reportCardStartDate = $reportCardEntity ? $reportCardEntity->start_date : null;
-        $reportCardEndDate = $reportCardEntity ? $reportCardEntity->end_date : null;
-        $overallResult = $reportCardEntity ? $reportCardEntity->overall_result : 0;
-
+            ->select([
+                $ReportCards->aliasField('start_date'),
+                $ReportCards->aliasField('end_date'),
+                $ReportCards->aliasField('overall_result')
+            ])
+            ->where([
+                $ReportCards->aliasField('id') => $reportCardId
+            ])
+            ->all();
         $ReportCardSubjects = self::getDynamicTableInstance('ReportCard.ReportCardSubjects');
         $reportCardSubjectsEntity = $ReportCardSubjects->find()
-            ->select(['education_subject_id'])
-            ->where(['report_card_id' => $reportCardId])
-            ->enableHydration(false)
-            ->all()
-            ->toArray();
-
+            ->select([
+                'education_subject_id'
+            ])
+            ->where([
+                $ReportCardSubjects->aliasField('report_card_id') => $reportCardId
+            ])
+            ->disableHydration()
+            ->all();
+        //POCOR-6501 starts
+        $Assessments = self::getDynamicTableInstance('Assessment.Assessments');
+        $assessmentResults = $Assessments
+            ->find()
+            ->where([
+                $Assessments->aliasField('academic_period_id') => $academicPeriodId,
+                $Assessments->aliasField('education_grade_id') => $educationGradeId
+            ])
+            ->first();
+        $assessment_id = 0;
+        if(!empty($assessmentResults)){
+            $assessment_id = $assessmentResults->id;
+        }//POCOR-6501 ends
         if ($type == 'PRINCIPAL') {
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('principal_comments')])
-                ->formatResults(function (ResultSetInterface $results) use (
-                    $academicPeriodId,
+                ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId,
                     $institutionId,
                     $SubjectStudents,
                     $AssessmentItemResults,
                     $educationSubjectId,
+                    $ReportCards,
+                    $reportCardId,
                     $educationGradeId,
                     $classId,
+                    $reportCardEntity,
                     $reportCardSubjectsEntity,
-                    $assessment_id,
-                    $reportCardStartDate,
-                    $reportCardEndDate,
-                    $overallResult
-                ) {
-                    return $results->map(function ($row) use (
-                        $academicPeriodId,
+                    $assessment_id
+                ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
+
+                    return $results->map(function ($row) use ($academicPeriodId,
                         $institutionId,
                         $SubjectStudents,
                         $AssessmentItemResults,
+                        $educationSubjectId,
+                        $ReportCards,
+                        $reportCardId,
                         $educationGradeId,
                         $classId,
+                        $reportCardEntity,
                         $reportCardSubjectsEntity,
-                        $assessment_id,
-                        $reportCardStartDate,
-                        $reportCardEndDate,
-                        $overallResult
-                    ) {
-                        $studentId = $row->student_id;
-                        $row->reportCardStartDate = $reportCardStartDate;
-                        $row->reportCardEndDate = $reportCardEndDate;
-                        $row->overallResult = $overallResult;
+                        $assessment_id
+                    ) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data
 
-                        // Get subjects for this student
+                        $studentId = $row->student_id;
+
+                        if (!$reportCardEntity->isEmpty()) {
+                            $row->reportCardStartDate = NULL;
+                            $row->reportCardEndDate = NULL;
+                            $row->overallResult = NULL;
+                            $row->reportCardStartDate = $reportCardEntity->first()['start_date'];
+                            $row->reportCardEndDate = $reportCardEntity->first()['end_date'];
+                            $row->overallResult = $reportCardEntity->first()['overall_result'];
+                        }
+                        // To get the report card template subjects
+
+                        // Check if the student belongs to any subject
                         $subjectStudentsEntities = $SubjectStudents->find()
-                            ->select(['student_id', 'education_subject_id'])
-                            ->where([
-                                'student_id' => $studentId,
-                                'academic_period_id' => $academicPeriodId,
-                                'institution_id' => $institutionId,
+                            ->select([
+                                $SubjectStudents->aliasField('student_id'),
+                                $SubjectStudents->aliasField('education_subject_id')
                             ])
-                            ->group(['education_subject_id'])
-                            ->enableHydration(false)
+                            ->where([
+                                $SubjectStudents->aliasField('student_id') => $studentId,
+                                $SubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
+                                $SubjectStudents->aliasField('institution_id') => $institutionId,
+                            ])
+                            ->group([
+                                'education_subject_id'
+                            ])
+                            ->disableHydration()
                             ->all();
 
-                        $total_mark = 0;
-                        $subjectTaken = 0;
-                        $studentSubArray = [];
 
+                        // If subjectStudentsEntities is not empty mean the student have a subject
                         if (!$subjectStudentsEntities->isEmpty()) {
-                            foreach ($subjectStudentsEntities as $studentEntity) {
-                                $conditions = [
-                                    'student_id' => $studentEntity['student_id'],
-                                    'education_subject_id' => $studentEntity['education_subject_id'],
-                                    'assessment_id' => $assessment_id,
-                                    'institution_classes_id' => $classId,
-                                    'marks IS NOT NULL'
-                                ];
 
-                                if ($overallResult == 0) {
-                                    $conditions['AssessmentPeriods.start_date >='] = $reportCardStartDate;
-                                    $conditions['AssessmentPeriods.end_date <='] = $reportCardEndDate;
+                            $total_mark = 0;
+                            $subjectTaken = 0;
+                            foreach($subjectStudentsEntities->toArray() as $studentEntity) {
+                                //POCOR-9201[START]
+                                if ($row->overallResult == 0) {
+                                    $conditions = [
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        /*POCOR-6443 ends*/
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ];
+                                }else{
+                                    $conditions = [
+                                        $AssessmentItemResults->aliasField('student_id') => $studentEntity['student_id'],
+                                        $AssessmentItemResults->aliasField('education_subject_id') => $studentEntity['education_subject_id'],
+                                        $AssessmentItemResults->aliasField('assessment_id') => $assessment_id, //POCOR-6501
+                                        $AssessmentItemResults->aliasField('institution_classes_id') => $classId, // POCOR-6750
+                                        /*POCOR-6443 starts - commented code was hiding overall marks*/
+                                        // $AssessmentItemResults->AssessmentPeriods->aliasField('start_date').' >= ' => $row->reportCardStartDate,
+                                        // $AssessmentItemResults->AssessmentPeriods->aliasField('end_date').' <= ' => $row->reportCardEndDate,
+                                        /*POCOR-6443 ends*/
+                                        $AssessmentItemResults->aliasField('marks IS NOT NULL')
+                                    ];
                                 }
-
-                                $assessmentItemResultsEntities = $AssessmentItemResults->find()
+                                //POCOR-9201[END]
+                                // Getting all the subject marks based on report card start/end date
+                                $AssessmentItemResultsQuery = $AssessmentItemResults->find();
+                                $assessmentItemResultsEntities = $AssessmentItemResultsQuery
                                     ->select([
-                                        'student_id',
-                                        'marks',
-                                        'education_subject_id',
-                                        'education_grade_id',
-                                        'academic_period_id',
-                                        'institution_id',
-                                        'institution_classes_id',
-                                        'weightage' => 'AssessmentPeriods.weight'
+                                        $AssessmentItemResults->aliasField('student_id'),
+                                        $AssessmentItemResults->aliasField('marks'),
+                                        $AssessmentItemResults->aliasField('education_subject_id'),
+                                        $AssessmentItemResults->aliasField('education_grade_id'),
+                                        $AssessmentItemResults->aliasField('academic_period_id'),
+                                        $AssessmentItemResults->aliasField('institution_id'),
+                                        $AssessmentItemResults->aliasField('institution_classes_id'), // POCOR-6750
+                                        'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
+
                                     ])
-                                    ->contain(['AssessmentPeriods'])
+                                    ->contain([
+                                        'AssessmentPeriods'
+                                    ])
                                     ->where($conditions)
                                     ->all();
-
-                                foreach ($assessmentItemResultsEntities as $entity) {
-                                    foreach ($reportCardSubjectsEntity as $subject) {
-                                        if ($entity['education_subject_id'] === $subject['education_subject_id']) {
-                                            $total_mark += $entity->marks * $entity->weightage;
-                                            if (!in_array($entity['education_subject_id'], $studentSubArray)) {
-                                                $studentSubArray[] = $entity['education_subject_id'];
-                                                $subjectTaken++;
+                                    $studentSubArray = [];//POCOR-6501
+                                    if (!$assessmentItemResultsEntities->isEmpty()) {
+                                    foreach ($assessmentItemResultsEntities as $entity) {
+                                        foreach ($reportCardSubjectsEntity as $reportCardSubjectEntity) {
+                                            if($entity['education_subject_id'] === $reportCardSubjectEntity['education_subject_id']) {
+                                                $total_mark += $entity->marks * $entity->weightage;
+                                                // Plus one to the subject so that we can keep track how many subject does this student is taking within the report card template.
+                                                //POCOR-6501 starts
+                                                if((!in_array($entity['education_subject_id'], $studentSubArray))){
+                                                    $studentSubArray [] = $entity['education_subject_id'];
+                                                    $subjectTaken++;
+                                                }//POCOR-6501 ends
                                             }
                                         }
+
                                     }
                                 }
                             }
                         }
+                        // echo "<pre>";print_r($studentSubArray);die;
+                        $row->subjectTaken = NULL;
+                        $row->total_mark = NULL;
+                        $row->average_mark = NULL;
+
 
                         $row->subjectTaken = $subjectTaken;
                         $row->total_mark = $total_mark;
-                        $row->average_mark = $subjectTaken > 0 ? number_format($total_mark / $subjectTaken, 2) : 0;
 
+                        if ($subjectTaken == 0) {
+                            $subjectTaken = 1;
+                        }
+
+                        $row->average_mark = number_format($total_mark / $subjectTaken, 2);
                         return $row;
                     });
                 });
